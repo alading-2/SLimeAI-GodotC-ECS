@@ -1,3 +1,5 @@
+using Godot;
+
 /// <summary>
 /// TestSystem 对通用鼠标选择结果事件的适配。
 /// </summary>
@@ -44,5 +46,67 @@ public partial class TestSystem
     private bool ShouldAcceptMouseSelection()
     {
         return _panelVisible && _selectionToggle.ButtonPressed;
+    }
+
+    //======================选中实体变化事件逻辑===============================
+
+    /// <summary>
+    /// 绑定选中实体变化事件
+    /// </summary>
+    private void BindSelectionContextEvents()
+    {
+        _selectionContext.Events.On<GameEventType.Global.TestSystemSelectionChangedEventData>(
+            GameEventType.Global.TestSystemSelectionChanged,
+            OnSelectionChanged
+        );
+    }
+
+    /// <summary>
+    /// 解绑选中实体变化事件。
+    /// </summary>
+    private void UnbindSelectionContextEvents()
+    {
+        _selectionContext.Events.Off<GameEventType.Global.TestSystemSelectionChangedEventData>(
+            GameEventType.Global.TestSystemSelectionChanged,
+            OnSelectionChanged
+        );
+    }
+
+    /// <summary>
+    /// 选中实体变化后的统一广播入口。
+    /// </summary>
+    private void OnSelectionChanged(GameEventType.Global.TestSystemSelectionChangedEventData evt)
+    {
+        // 显示选中实体名字+ID
+        UpdateSelectedEntityDisplay();
+        // 测试模块触发选中实体变化事件
+        foreach (var module in _modules)
+        {
+            module.OnSelectedEntityChanged(evt.Entity);
+        }
+    }
+
+    /// <summary>
+    /// 将当前选中实体显示到顶部信息栏。
+    /// <para>
+    /// 若实体没有名称数据，则回退到节点名，确保调试 UI 始终有可读信息。
+    /// </para>
+    /// </summary>
+    private void UpdateSelectedEntityDisplay()
+    {
+        if (SelectedEntity is not Node node)
+        {
+            _selectedEntityLabel.Text = "未选择";
+            return;
+        }
+
+        var name = SelectedEntity.Data.Get<string>(DataKey.Name.Key);
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            name = node.Name.ToString();
+        }
+
+        var id = SelectedEntity.Data.Get<string>(DataKey.Id.Key);
+        _selectedEntityLabel.Text = $"{name} | {node.GetType().Name} | {id}";
     }
 }

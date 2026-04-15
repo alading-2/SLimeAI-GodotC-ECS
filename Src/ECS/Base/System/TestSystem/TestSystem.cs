@@ -30,7 +30,7 @@ public partial class TestSystem : CanvasLayer
     private readonly Dictionary<string, ITestModule> _modulesById = new(StringComparer.Ordinal);
 
     /// <summary>所有测试模块 Id 的列表，用于下拉选择器的索引映射。</summary>
-    private readonly List<string> _moduleIdsByIndex = new();
+    private readonly List<string> _moduleIds = new();
 
     /// <summary>当前真正处于前台的测试模块。</summary>
     private ITestModule? _currentModule;
@@ -128,13 +128,16 @@ public partial class TestSystem : CanvasLayer
         BindUiEvents();
         // 初始化上下文
         InitializeContexts();
-        // 从场景中注册模块
+        // 绑定选中实体变化事件
+        BindSelectionContextEvents();
+        // 从ModuleHost节点中扫描并注册所有测试模块。
         RegisterModulesFromScene();
         // 设置默认模块
         if (_modules.Count > 0)
         {
-            TrySwitchModule(_moduleIdsByIndex[0]);
+            TrySwitchModule(_moduleIds[0]);
         }
+
         BindMouseSelectionEvents();
         // 更新选中实体显示
         UpdateSelectedEntityDisplay();
@@ -151,6 +154,7 @@ public partial class TestSystem : CanvasLayer
         {
             UnbindSelectionContextEvents();
         }
+
         UnbindMouseSelectionEvents();
 
         if (Instance == this)
@@ -158,6 +162,69 @@ public partial class TestSystem : CanvasLayer
             Instance = null;
         }
     }
+
+    //====================================================
+
+    /// <summary>
+    /// 缓存所有 UI 节点引用。
+    /// </summary>
+    private void CacheUiNodes()
+    {
+        // 缓存 UI 节点
+        _root = GetNode<Control>("Root");
+        _toggleButton = GetNode<Button>("Root/TopLeft/Layout/Toolbar/ToggleButton");
+        _moduleSelector = GetNode<OptionButton>("Root/TopLeft/Layout/Toolbar/ModuleSelector");
+        _panel = GetNode<PanelContainer>("Root/TopLeft/Layout/Panel");
+        _selectionHintLabel = GetNode<Label>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/SelectionHintLabel");
+        _selectionToggle =
+            GetNode<CheckButton>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/InfoRow/SelectionToggle");
+        _refreshButton = GetNode<Button>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/InfoRow/RefreshButton");
+        _clearSelectionButton =
+            GetNode<Button>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/InfoRow/ClearSelectionButton");
+        _selectedEntityLabel =
+            GetNode<Label>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/InfoRow/SelectedEntityLabel");
+        _moduleHost = GetNode<VBoxContainer>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/ModuleHost");
+
+        // 设置鼠标过滤：
+        // 1. 大部分容器和展示节点使用 Ignore，避免拦截鼠标，保证底层测试选取逻辑仍可正常响应。
+        // 2. 仅面板本体使用 Stop，作为调试 UI 的交互边界，防止点击穿透到游戏画面。
+        _root.MouseFilter = Control.MouseFilterEnum.Ignore;
+        GetNode<Control>("Root/TopLeft").MouseFilter = Control.MouseFilterEnum.Ignore;
+        GetNode<Control>("Root/TopLeft/Layout").MouseFilter = Control.MouseFilterEnum.Ignore;
+        GetNode<Control>("Root/TopLeft/Layout/Toolbar").MouseFilter = Control.MouseFilterEnum.Ignore;
+        _panel.MouseFilter = Control.MouseFilterEnum.Stop;
+        GetNode<Control>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout").MouseFilter =
+            Control.MouseFilterEnum.Ignore;
+        _selectionHintLabel.MouseFilter = Control.MouseFilterEnum.Ignore;
+        GetNode<Control>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/InfoRow").MouseFilter =
+            Control.MouseFilterEnum.Ignore;
+        _moduleHost.MouseFilter = Control.MouseFilterEnum.Ignore;
+    }
+
+    /// <summary>
+    /// 绑定所有 UI 事件。
+    /// </summary>
+    private void BindUiEvents()
+    {
+        _toggleButton.Pressed += OnTogglePressed; // 测试按钮事件：切换测试面板显示/隐藏
+        _moduleSelector.ItemSelected += OnModuleSelected; // 模块下拉选择器事件：切换测试模块
+        _refreshButton.Pressed += RefreshCurrentModule; // 刷新按钮事件：刷新当前测试模块
+        _clearSelectionButton.Pressed += () => SetSelectedEntity(null); // 清除选择按钮事件：清除选中实体
+    }
+
+    // 初始化上下文
+    private void InitializeContexts()
+    {
+        // TestSystem 的统一选中上下文
+        _selectionContext = new TestSelectionContext();
+        // TestSystem 统一刷新调度器
+        _refreshScheduler = new TestRefreshScheduler(QueueScheduledModuleFlush);
+        // TestSystem 模块上下文
+        _moduleContext = new TestModuleContext(this, _selectionContext, _refreshScheduler);
+    }
+
+
+    //====================================================
 
     /// <summary>
     /// 设置当前测试实体。
@@ -198,108 +265,19 @@ public partial class TestSystem : CanvasLayer
     /// <summary>当前激活模块 Id。</summary>
     public string CurrentModuleId => _currentModule?.Definition.Id ?? string.Empty;
 
+    //=========================测试模块注册===========================
     /// <summary>
-    /// 按稳定模块 Id 切换当前模块。
-    /// </summary>
-    public bool TrySwitchModule(string moduleId)
-    {
-        if (string.IsNullOrWhiteSpace(moduleId) || !_modulesById.ContainsKey(moduleId))
-        {
-            return false;
-        }
-
-        SwitchModule(moduleId);
-        var index = _moduleIdsByIndex.IndexOf(moduleId);
-        if (index >= 0)
-        {
-            _moduleSelector.Select(index); // 同步下拉框选中态
-        }
-
-        return true;
-    }
-
-    private void InitializeContexts()
-    {
-        _selectionContext = new TestSelectionContext();
-        BindSelectionContextEvents();
-        _refreshScheduler = new TestRefreshScheduler(QueueScheduledModuleFlush);
-        _moduleContext = new TestModuleContext(this, _selectionContext, _refreshScheduler);
-    }
-
-    /// <summary>
-    /// 缓存所有 UI 节点引用。
-    /// </summary>
-    private void CacheUiNodes()
-    {
-        // 缓存 UI 节点
-        _root = GetNode<Control>("Root");
-        _toggleButton = GetNode<Button>("Root/TopLeft/Layout/Toolbar/ToggleButton");
-        _moduleSelector = GetNode<OptionButton>("Root/TopLeft/Layout/Toolbar/ModuleSelector");
-        _panel = GetNode<PanelContainer>("Root/TopLeft/Layout/Panel");
-        _selectionHintLabel = GetNode<Label>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/SelectionHintLabel");
-        _selectionToggle = GetNode<CheckButton>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/InfoRow/SelectionToggle");
-        _refreshButton = GetNode<Button>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/InfoRow/RefreshButton");
-        _clearSelectionButton = GetNode<Button>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/InfoRow/ClearSelectionButton");
-        _selectedEntityLabel = GetNode<Label>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/InfoRow/SelectedEntityLabel");
-        _moduleHost = GetNode<VBoxContainer>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/ModuleHost");
-
-        // 设置鼠标过滤
-        _root.MouseFilter = Control.MouseFilterEnum.Ignore;
-        GetNode<Control>("Root/TopLeft").MouseFilter = Control.MouseFilterEnum.Ignore;
-        GetNode<Control>("Root/TopLeft/Layout").MouseFilter = Control.MouseFilterEnum.Ignore;
-        GetNode<Control>("Root/TopLeft/Layout/Toolbar").MouseFilter = Control.MouseFilterEnum.Ignore;
-        _panel.MouseFilter = Control.MouseFilterEnum.Stop;
-        GetNode<Control>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout").MouseFilter = Control.MouseFilterEnum.Ignore;
-        _selectionHintLabel.MouseFilter = Control.MouseFilterEnum.Ignore;
-        GetNode<Control>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/InfoRow").MouseFilter = Control.MouseFilterEnum.Ignore;
-        _moduleHost.MouseFilter = Control.MouseFilterEnum.Ignore;
-    }
-
-    /// <summary>
-    /// 绑定所有 UI 事件。
-    /// </summary>
-    private void BindUiEvents()
-    {
-        _toggleButton.Pressed += OnTogglePressed;
-        _moduleSelector.ItemSelected += OnModuleSelected;
-        _refreshButton.Pressed += RefreshCurrentModule;
-        _clearSelectionButton.Pressed += () => SetSelectedEntity(null);
-    }
-
-    /// <summary>
-    /// 注册一个测试模块，并把它挂到统一的 UI 宿主中。
-    /// </summary>
-    private void RegisterModule(ITestModule module)
-    {
-        // 1. 初始化模块
-        module.Initialize(_moduleContext);
-        // 2. 添加到模块列表
-        _modules.Add(module);
-        // 3. 添加到模块字典
-        _modulesById[module.Definition.Id] = module;
-        // 4. 添加到模块索引列表
-        _moduleIdsByIndex.Add(module.Definition.Id);
-        // 5. 添加到模块选择器
-        _moduleSelector.AddItem(module.Definition.DisplayName);
-        // 6. 通知模块当前选中实体（如果有的话）
-        module.OnSelectedEntityChanged(SelectedEntity);
-    }
-
-    /// <summary>
-    /// 从模块宿主节点中扫描并注册所有测试模块。
-    /// <para>
-    /// 宿主层不再直接依赖具体模块类型；后续新增模块只需要把模块场景挂到 ModuleHost 下即可接入。
-    /// </para>
+    /// 从ModuleHost节点中扫描并注册所有测试模块。
     /// </summary>
     private void RegisterModulesFromScene()
     {
         _modules.Clear();
         _modulesById.Clear();
-        _moduleIdsByIndex.Clear();
+        _moduleIds.Clear();
         _moduleSelector.Clear();
 
         var sceneModules = new List<TestModuleBase>();
-        foreach (Node child in _moduleHost.GetChildren())
+        foreach (Node child in _moduleHost.GetChildren()) // 获取ModuleHost节点下所有测试模块
         {
             if (child is not TestModuleBase module)
             {
@@ -309,6 +287,7 @@ public partial class TestSystem : CanvasLayer
             sceneModules.Add(module);
         }
 
+        // 对测试模块排序
         sceneModules.Sort(static (left, right) =>
         {
             var orderCompare = left.Definition.SortOrder.CompareTo(right.Definition.SortOrder);
@@ -344,39 +323,44 @@ public partial class TestSystem : CanvasLayer
     }
 
     /// <summary>
-    /// 切换测试面板显示与隐藏。
+    /// 注册一个测试模块，并把它挂到统一的 UI 宿主中。
     /// </summary>
-    private void OnTogglePressed()
+    private void RegisterModule(ITestModule module)
     {
-        _panelVisible = !_panelVisible;
-        _panel.Visible = _panelVisible;
-        _toggleButton.Text = _panelVisible ? "测试" : "测试(隐藏)";
-
-        if (_currentModule == null)
-        {
-            return;
-        }
-
-        if (_panelVisible)
-        {
-            _currentModule.ActivateModule();
-            return;
-        }
-
-        _currentModule.SuspendModule();
+        // 1. 初始化模块
+        module.Initialize(_moduleContext);
+        // 2. 添加到模块列表
+        _modules.Add(module);
+        // 3. 添加到模块字典
+        _modulesById[module.Definition.Id] = module;
+        // 4. 添加到模块索引列表
+        _moduleIds.Add(module.Definition.Id);
+        // 5. 添加到模块选择器
+        _moduleSelector.AddItem(module.Definition.DisplayName);
+        // 6. 通知模块当前选中实体（如果有的话）
+        module.OnSelectedEntityChanged(SelectedEntity);
     }
 
+    //=========================切换测试模块===========================
+
     /// <summary>
-    /// 模块下拉框回调，按索引切换当前测试模块。
+    /// 按稳定模块 Id 切换当前模块。
     /// </summary>
-    private void OnModuleSelected(long index)
+    public bool TrySwitchModule(string moduleId)
     {
-        if (index < 0 || index >= _moduleIdsByIndex.Count)
+        if (string.IsNullOrWhiteSpace(moduleId) || !_modulesById.ContainsKey(moduleId))
         {
-            return;
+            return false;
         }
 
-        TrySwitchModule(_moduleIdsByIndex[(int)index]);
+        SwitchModule(moduleId);
+        var index = _moduleIds.IndexOf(moduleId);
+        if (index >= 0)
+        {
+            _moduleSelector.Select(index); // 同步下拉框选中态
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -406,38 +390,41 @@ public partial class TestSystem : CanvasLayer
     }
 
     /// <summary>
-    /// 绑定选中上下文事件。
+    /// 测试面板显示与隐藏。
     /// </summary>
-    private void BindSelectionContextEvents()
+    private void OnTogglePressed()
     {
-        _selectionContext.Events.On<GameEventType.Global.TestSystemSelectionChangedEventData>(
-            GameEventType.Global.TestSystemSelectionChanged,
-            OnSelectionChanged
-        );
-    }
+        _panelVisible = !_panelVisible;
+        _panel.Visible = _panelVisible;
+        _toggleButton.Text = _panelVisible ? "测试" : "测试(隐藏)";
 
-    /// <summary>
-    /// 解绑选中上下文事件。
-    /// </summary>
-    private void UnbindSelectionContextEvents()
-    {
-        _selectionContext.Events.Off<GameEventType.Global.TestSystemSelectionChangedEventData>(
-            GameEventType.Global.TestSystemSelectionChanged,
-            OnSelectionChanged
-        );
-    }
-
-    /// <summary>
-    /// 选中实体变化后的统一广播入口。
-    /// </summary>
-    private void OnSelectionChanged(GameEventType.Global.TestSystemSelectionChangedEventData evt)
-    {
-        UpdateSelectedEntityDisplay();
-        foreach (var module in _modules)
+        if (_currentModule == null)
         {
-            module.OnSelectedEntityChanged(evt.Entity);
+            return;
         }
+
+        if (_panelVisible)
+        {
+            _currentModule.ActivateModule();
+            return;
+        }
+
+        _currentModule.SuspendModule();
     }
+
+    /// <summary>
+    /// 模块下拉框回调，按索引切换当前测试模块。
+    /// </summary>
+    private void OnModuleSelected(long index)
+    {
+        if (index < 0 || index >= _moduleIds.Count)
+        {
+            return;
+        }
+
+        TrySwitchModule(_moduleIds[(int)index]);
+    }
+
 
     /// <summary>
     /// 请求宿主在帧末统一冲刷模块刷新。
@@ -463,7 +450,7 @@ public partial class TestSystem : CanvasLayer
         {
             return;
         }
-
+        // 取出当前帧累计的全部待刷新模块。
         _refreshScheduler.DrainPending(_pendingRefreshModules);
         foreach (var module in _pendingRefreshModules)
         {
@@ -472,29 +459,4 @@ public partial class TestSystem : CanvasLayer
 
         _pendingRefreshModules.Clear();
     }
-
-    /// <summary>
-    /// 将当前选中实体显示到顶部信息栏。
-    /// <para>
-    /// 若实体没有名称数据，则回退到节点名，确保调试 UI 始终有可读信息。
-    /// </para>
-    /// </summary>
-    private void UpdateSelectedEntityDisplay()
-    {
-        if (SelectedEntity is not Node node)
-        {
-            _selectedEntityLabel.Text = "未选择";
-            return;
-        }
-
-        var name = SelectedEntity.Data.Get<string>(DataKey.Name.Key);
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            name = node.Name.ToString();
-        }
-
-        var id = SelectedEntity.Data.Get<string>(DataKey.Id.Key);
-        _selectedEntityLabel.Text = $"{name} | {node.GetType().Name} | {id}";
-    }
-
 }
