@@ -20,7 +20,7 @@
   - 移除或弱化 IFeatureHandler.FeatureGroup 与 FeatureHandlerRegistry 分组索引；运行时查找只根据 FeatureHandlerId。如果测试面板需要分组，使用 AbilityConfig.FeatureGroupId。
   - Ability 子域不再保留专属 FeatureHandler 基类；通用 Handler 直接实现 IFeatureHandler，并从 FeatureContext.ActivationData 读取上下文。
   - 更新 CircleDamage 等示例：技能 Handler 直接实现 IFeatureHandler.OnExecute；新模板型 AOE Handler 通过读取 ctx.Feature.Data 支持多个技能复用。
-  - 更新 addons/resources_spreadsheet_view/column_labels_zh.gd，至少补充 FeatureHandlerId、FeatureGroupId、后续如新增则补充 FeatureEndReason / FeatureExecutionMode 中文列名。
+  - 更新 addons/resources_table/column_labels_zh.gd，至少补充 FeatureHandlerId、FeatureGroupId、后续如新增则补充 FeatureEndReason / FeatureExecutionMode 中文列名。
 
   ## 数据与配置目标
 

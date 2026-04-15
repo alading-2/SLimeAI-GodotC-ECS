@@ -32,7 +32,7 @@
 
 **之前尝试过纯 C# 方案又改回 .tres 的原因：**
 1. **Godot UI 支持**：.tres 可在检查器中直接编辑
-2. **现成插件**：`resources_spreadsheet_view` 提供了表格视图
+2. **现成插件**：`resources_table` 提供了表格视图
 3. **PackedScene 拖拽**：资源引用可通过拖拽设置
 
 ---
@@ -211,9 +211,9 @@ private static void CollectPropertiesRecursive(Type type, List<PropertyInfo> res
 | 注释支持 | Excel 备注 | C# `<summary>` |
 | Godot 集成 | 需要适配 | 原生 EditorPlugin |
 
-### 5.2 resources_spreadsheet_view
+### 5.2 resources_table
 
-| 对比项 | resources_spreadsheet_view | DataConfigEditor |
+| 对比项 | resources_table | DataConfigEditor |
 |--------|---------------------------|------------------|
 | 数据源 | .tres 文件 | 纯 C# |
 | Enum 显示 | 整数 | 中文下拉 |
