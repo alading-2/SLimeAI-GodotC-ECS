@@ -26,15 +26,6 @@ internal interface ITestModule
     /// <summary>停用模块。</summary>
     void DeactivateModule();
 
-    /// <summary>暂停模块。</summary>
-    void SuspendModule();
-
     /// <summary>请求刷新模块。</summary>
     void Refresh();
-
-    /// <summary>冲刷模块挂起的刷新请求。</summary>
-    void FlushScheduledRefreshInternal();
-
-    /// <summary>取消挂起的刷新请求。</summary>
-    void CancelScheduledRefresh();
 }

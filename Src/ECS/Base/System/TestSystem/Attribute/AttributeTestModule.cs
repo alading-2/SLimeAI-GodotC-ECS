@@ -75,8 +75,7 @@ public partial class AttributeTestModule : TestModuleBase
     /// <summary>模块定义信息。</summary>
     internal override TestModuleDefinition Definition => new(
         "attribute", // 模块稳定 Id
-        "属性测试", // 模块显示名
-        100 // 模块排序
+        $"{TestModuleGroupId.Attribute}.属性测试" // 模块分组路径
     );
 
     /// <summary>
@@ -649,13 +648,13 @@ public partial class AttributeTestModule : TestModuleBase
     /// </summary>
     private void QueueRefresh()
     {
-        RequestScheduledRefresh();
+        RefreshNow();
     }
 
     /// <summary>
-    /// 在帧末统一执行属性模块刷新：优先重建，否则只 patch 脏行。
+    /// 立即执行属性模块刷新：优先重建，否则只 patch 脏行。
     /// </summary>
-    protected override void FlushScheduledRefresh()
+    private void RefreshNow()
     {
         if (!CanRefresh)
         {

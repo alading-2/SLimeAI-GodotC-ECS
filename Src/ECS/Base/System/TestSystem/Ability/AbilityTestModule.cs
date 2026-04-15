@@ -71,8 +71,7 @@ public partial class AbilityTestModule : TestModuleBase
     /// <summary>模块定义信息。</summary>
     internal override TestModuleDefinition Definition => new(
         "ability", // 模块稳定 Id
-        "技能测试", // 模块显示名
-        200 // 模块排序
+        $"{TestModuleGroupId.Ability}.技能测试" // 模块分组路径
     );
 
     /// <summary>
@@ -438,7 +437,7 @@ public partial class AbilityTestModule : TestModuleBase
         }
 
         _dirtyOwnedAbilityIds.Add(abilityId);
-        RequestScheduledRefresh();
+        RefreshNow();
     }
 
     /// <summary>
@@ -456,13 +455,13 @@ public partial class AbilityTestModule : TestModuleBase
     {
         _rebuildAvailableRequested |= rebuildAvailable;
         _rebuildCurrentRequested |= rebuildCurrent;
-        RequestScheduledRefresh();
+        RefreshNow();
     }
 
     /// <summary>
-    /// 执行延迟刷新。
+    /// 立即执行当前模块刷新。
     /// </summary>
-    protected override void FlushScheduledRefresh()
+    private void RefreshNow()
     {
         if (!IsInsideTree())
         {

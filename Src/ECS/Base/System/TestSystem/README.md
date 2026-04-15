@@ -27,14 +27,14 @@
 | `TestSystem.cs` | 调试系统宿主，负责 AutoLoad、场景骨架绑定、扫描 `ModuleHost` 子节点注册模块与切换 |
 | `TestSystem.MouseSelection.cs` | 鼠标选择适配，负责在“选择实体”开关开启时消费全局选择完成事件 |
 | `Core/ITestModule.cs` | 模块协议，定义宿主依赖的最小模块接口 |
-| `Core/ITestModuleContext.cs` | 模块上下文协议，统一注入宿主、选择上下文和刷新调度 |
-| `Core/TestModuleDefinition.cs` | 模块定义，统一描述模块稳定 Id、显示名和排序 |
-| `Core/TestSelectionContext.cs` | 统一选中上下文，收口当前选中实体，并通过 `EventBus` 广播选中变化 |
-| `Core/TestRefreshScheduler.cs` | 统一刷新调度器，负责合并模块刷新请求并在帧末冲刷 |
-| `Core/TestModuleContext.cs` | 模块共享上下文，向模块注入宿主、选中实体上下文与刷新调度器 |
-| `Core/TestModuleRunState.cs` | 模块运行态枚举，统一 Active / Inactive / Suspended 语义 |
-| `../../../Data/EventType/Global/GameEventType_Global_TestSystem.cs` | TestSystem 事件协议定义，当前承载 `TestSystemSelectionChanged` |
-| `TestSystem.tscn` | 测试系统主面板骨架，承载顶部工具栏、信息栏与模块宿主区，并直接挂载模块场景 |
+| `Core/ITestModuleContext.cs` | 模块上下文协议，统一注入宿主和选择上下文 |
+| `Core/TestModuleDefinition.cs` | 模块定义，统一描述模块稳定 Id 与点分 `ModulePath` |
+| `Core/TestModulePath.cs` | 模块路径工具，负责标准化点分路径和解析模块显示名 |
+| `Core/TestModuleGroupId.cs` | 模块分组常量，统一属性、技能等测试模块分组根路径 |
+| `Core/TestSelectionContext.cs` | 统一选中上下文，只收口当前选中实体状态 |
+| `Core/TestModuleContext.cs` | 模块共享上下文，向模块注入宿主与选中实体上下文 |
+| `../../../Data/EventType/Global/GameEventType_Global_TestSystem.cs` | TestSystem 事件协议定义，当前承载 `GameEventType.TestSystem.SelectionChanged` |
+| `TestSystem.tscn` | 测试系统主面板骨架，承载顶部工具栏、信息栏、可隐藏模块树与模块宿主区 |
 | `TestModuleBase.cs` | 所有测试模块的统一基类 |
 | `FeatureDebugService.cs` | 调试适配层，负责把调试操作转发到正式 Feature / Ability 生命周期 |
 | `Attribute/AttributeTestModule.cs` | 属性测试模块，负责 Data 编辑与临时加成 UI 绑定 |
@@ -59,8 +59,9 @@
 - `ModuleInitializer + AutoLoad.Register(...)`：系统为什么会自动出现
 - `_Ready()`：当前会扫描哪些模块，默认打开哪个模块
 - `TestSystem.tscn + CacheUiNodes()`：主面板骨架在哪里、代码如何拿到关键节点
-- `SetSelectedEntity(...)`：选中实体后，状态如何通过 `TestSelectionContext.Events` 广播给各模块
+- `SetSelectedEntity(...)`：选中实体后，状态如何通过 `TestSystem.Events` 广播给各模块
 - `SwitchModule(...)`：模块切换时，生命周期是怎么流转的
+- `RebuildModuleTree(...)`：模块路径如何自动生成左侧分组树
 - `OnMouseSelectionCompleted(...)`：宿主如何监听全局鼠标选择结果并切换测试实体
 
 如果你只想先建立全局认知，**先把这个文件看明白，其他文件就不会散**。
@@ -76,8 +77,6 @@
 - `OnSelectedEntityChanged(IEntity? entity)`
 - `OnActivated()`
 - `OnDeactivated()`
-- `OnSuspended()`
-- `OnResumed()`
 - `Refresh()`
 
 看懂它之后，你就知道所有模块都应该把逻辑挂在哪个阶段，不会在读具体模块时迷路。
@@ -182,7 +181,7 @@
 
 1. 点击左上角“测试”按钮
 2. 打开或隐藏测试面板
-3. 通过下拉框切换“属性测试”与“技能测试”模块
+3. 通过左侧模块树切换“属性测试”与“技能测试”模块；模块树可用顶部按钮隐藏
 
 ### 3.2 选择实体
 
@@ -193,7 +192,7 @@
 - 打开“选择实体”开关
 - 鼠标点击场景中的目标实体，或拖拽框选多个实体
 - 通用选择系统会完成拾取，并通过全局事件广播结果集合
-- `TestSystem` 只在面板可见且“选择实体”开关开启时消费结果；选中变化会继续通过 `TestSelectionContext.Events.Emit(GameEventType.Global.TestSystemSelectionChanged, ...)` 广播给宿主与模块；正式玩法系统应监听同一选择结果后自行按 `EntityType / Team` 收窄候选
+- `TestSystem` 只在面板可见且“选择实体”开关开启时消费结果；选中变化会通过 `TestSystem.Events.Emit(GameEventType.TestSystem.SelectionChanged, ...)` 广播给宿主与模块；正式玩法系统应监听鼠标选择系统的全局结果后自行按 `EntityType / Team` 收窄候选
 
 #### 方式 B：代码主动指定
 
@@ -293,8 +292,7 @@ public partial class MyTestModule : TestModuleBase
 {
     internal override TestModuleDefinition Definition => new(
         "my-module",
-        "我的测试",
-        300
+        "属性.我的测试"
     );
 
     internal override void Initialize(ITestModuleContext context)
@@ -310,13 +308,13 @@ public partial class MyTestModule : TestModuleBase
 
 ### 第二步：注册模块
 
-在 `TestSystem.tscn` 的 `ModuleHost` 下直接挂载 `MyTestModule.tscn`，宿主会在 `_Ready()` 自动扫描注册，并按 `TestModuleDefinition.SortOrder` 排序。
+在 `TestSystem.tscn` 的 `ModuleHost` 下直接挂载 `MyTestModule.tscn`，宿主会在 `_Ready()` 自动扫描注册，并按场景子节点顺序确定默认顺序。
 
 模块必须保证：
 
 - `Definition.Id` 稳定且不重复
-- `Definition.DisplayName` 只负责显示
-- `Definition.SortOrder` 负责排序，不依赖场景挂载顺序
+- `Definition.ModulePath` 使用点分路径，最后一段是模块名，前面的段会成为左侧树分组
+- 模块路径根分组优先复用 `TestModuleGroupId`
 
 ### 第三步：处理订阅生命周期
 
@@ -344,10 +342,11 @@ public partial class MyTestModule : TestModuleBase
 维护此目录时请遵守以下边界：
 
 - `TestSystem` 只做宿主与模块切换
-- `TestSelectionContext` 的共享状态广播统一走 `EventBus`，不要再新增 C# `event`
+- `TestSelectionContext` 只保存选中实体；TestSystem 专属事件统一走 `TestSystem.Events`
 - `TestModuleBase` 只做统一生命周期协议
 - UI 模块只做展示和输入转发
 - Feature / Ability 生命周期优先复用正式链路
+- TestSystem 模块是调试 UI，不要用 `IFeatureHandler` 或伪造 FeatureEntity 管理模块生命周期
 - 不要在这里新增一套测试版技能执行系统
 - 不要直接编辑计算属性
 
@@ -404,7 +403,7 @@ TestSystem UI 控件统一使用以下日志级别：
 
 - 分类切换/实体切换时重建
 - 普通属性变化只 patch 单行
-- 同一帧累计多个脏 key 后再统一刷新
+- 普通属性变化只 patch 对应行；结构变化才重建
 
 ### 扩展技能管理
 

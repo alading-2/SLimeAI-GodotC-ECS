@@ -55,8 +55,8 @@ public partial class TestSystem
     /// </summary>
     private void BindSelectionContextEvents()
     {
-        _selectionContext.Events.On<GameEventType.Global.TestSystemSelectionChangedEventData>(
-            GameEventType.Global.TestSystemSelectionChanged,
+        Events.On<GameEventType.TestSystem.SelectionChangedEventData>(
+            GameEventType.TestSystem.SelectionChanged,
             OnSelectionChanged
         );
     }
@@ -66,8 +66,8 @@ public partial class TestSystem
     /// </summary>
     private void UnbindSelectionContextEvents()
     {
-        _selectionContext.Events.Off<GameEventType.Global.TestSystemSelectionChangedEventData>(
-            GameEventType.Global.TestSystemSelectionChanged,
+        Events.Off<GameEventType.TestSystem.SelectionChangedEventData>(
+            GameEventType.TestSystem.SelectionChanged,
             OnSelectionChanged
         );
     }
@@ -75,7 +75,7 @@ public partial class TestSystem
     /// <summary>
     /// 选中实体变化后的统一广播入口。
     /// </summary>
-    private void OnSelectionChanged(GameEventType.Global.TestSystemSelectionChangedEventData evt)
+    private void OnSelectionChanged(GameEventType.TestSystem.SelectionChangedEventData evt)
     {
         // 显示选中实体名字+ID
         UpdateSelectedEntityDisplay();

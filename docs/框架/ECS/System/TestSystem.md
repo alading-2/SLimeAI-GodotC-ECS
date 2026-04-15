@@ -23,8 +23,9 @@
 - `Src/ECS/Base/System/TestSystem/Core/ITestModule.cs`
 - `Src/ECS/Base/System/TestSystem/Core/ITestModuleContext.cs`
 - `Src/ECS/Base/System/TestSystem/Core/TestModuleDefinition.cs`
+- `Src/ECS/Base/System/TestSystem/Core/TestModulePath.cs`
+- `Src/ECS/Base/System/TestSystem/Core/TestModuleGroupId.cs`
 - `Src/ECS/Base/System/TestSystem/Core/TestSelectionContext.cs`
-- `Src/ECS/Base/System/TestSystem/Core/TestRefreshScheduler.cs`
 - `Src/ECS/Base/System/TestSystem/Core/TestModuleContext.cs`
 - `Data/EventType/Global/GameEventType_Global_TestSystem.cs`
 - `Src/ECS/Base/System/TestSystem/Attribute/AttributeTestModule.cs`
@@ -131,7 +132,7 @@
 
 | 层级 | 责任 | 典型内容 |
 |------|------|----------|
-| **Core** | 统一宿主、模块协议、模块定义、模块生命周期、选择上下文、刷新调度 | `TestSystem`、`ITestModule`、`ITestModuleContext`、`TestModuleDefinition`、`TestModuleBase`、`TestModuleContext`、`TestSelectionContext`、`TestRefreshScheduler` |
+| **Core** | 统一宿主、模块协议、模块定义、模块生命周期、选择上下文、模块路径分组 | `TestSystem`、`ITestModule`、`ITestModuleContext`、`TestModuleDefinition`、`TestModuleBase`、`TestModuleContext`、`TestSelectionContext`、`TestModulePath`、`TestModuleGroupId` |
 | **Modules** | 每个测试模块自己的状态、订阅、渲染与操作 | `Attribute`、`Ability`、未来的 `Buff` / `AI` / `Damage` 等 |
 | **Shared UI** | 跨模块可复用的复合控件，不承载具体业务 | `SectionPanel`、`EmptyStateView`、`LabeledValueRow` |
 | **Services** | 复用正式系统的调试适配层，不直接渲染 UI | `FeatureDebugService`、后续的 `TestSelectionService` 等 |
@@ -146,9 +147,9 @@
 - 当前激活模块
 - 面板显隐
 - 模块注册与切换
-- 统一调度刷新
-- 通过 `TestSelectionContext.Events` 广播选中实体变化，不再直接暴露 C# `event`
-- 按 `TestModuleDefinition` 维护稳定模块 Id 和排序
+- 通过 `TestSystem.Events` 广播 TestSystem 局部事件，不再直接暴露 C# `event`
+- 按 `TestModuleDefinition.ModulePath` 生成左侧模块树
+- 按 `ModuleHost` 场景挂载顺序维护默认模块顺序
 - 监听通用鼠标选择系统的全局结果事件，并在“选择实体”开关开启时消费 `PrimaryEntity / Entities`
 
 `TestSystem` 不应该负责：
@@ -165,7 +166,7 @@
 - 选择事件支持单击和框选；`MouseSelectionSystem` 主动广播 `PreviewUpdated / Completed / Missed`，调用方不再通过请求占用普通选择入口
 - 结果统一通过实体集合表达，调用方再决定替换、追加或切换选择
 - 通用层只做宽松物理拾取与生命周期过滤，正式玩法监听方应自行按 `EntityType / Team / 当前输入状态` 做语义过滤
-- `TestSystem` 只在调试面板可见且“选择实体”开关开启时消费结果，不拥有 MouseSelection 模式；消费后再通过 `GameEventType.Global.TestSystemSelectionChanged` 把当前选中实体广播给宿主与模块
+- `TestSystem` 只在调试面板可见且“选择实体”开关开启时消费结果，不拥有 MouseSelection 模式；消费后再通过 `GameEventType.TestSystem.SelectionChanged` 把当前选中实体广播给宿主与模块
 
 ### 4.2.2 模块只做本模块的事
 
@@ -184,8 +185,8 @@
 模块接入时必须给出稳定的 `TestModuleDefinition`：
 
 - `Id` 是宿主切换、日志定位、后续模块状态持久化的稳定键
-- `DisplayName` 只负责显示
-- `SortOrder` 决定模块顺序，宿主不再依赖场景挂载顺序
+- `ModulePath` 是点分展示路径，最后一段是模块名，前面的段是多级分组
+- 模块默认顺序由 `TestSystem.tscn` 的 `ModuleHost` 子节点顺序决定，不再使用 `SortOrder`
 
 ### 4.2.3 刷新必须分层
 
@@ -215,8 +216,6 @@
 | `OnSelectedEntityChanged` | 切换监听目标，标记需要同步 |
 | `OnActivated` | 开始订阅、恢复刷新 |
 | `OnDeactivated` | 解除订阅、停止刷新 |
-| `OnSuspended` | 宿主面板隐藏时停止后台空转 |
-| `OnResumed` | 宿主面板恢复显示时重新进入前台 |
 | `BuildView` | 首次构建结构化 UI |
 | `PatchView` | 局部更新已有 UI |
 | `DisposeView` | 清理动态节点和临时状态 |
@@ -233,22 +232,22 @@
 
 - `ITestModule`：宿主只依赖模块协议，不依赖具体模块实现
 - `ITestModuleContext`：模块初始化时只拿统一上下文，不直接耦合宿主内部字段
-- `TestModuleDefinition`：模块提供稳定 `Id / DisplayName / SortOrder`
+- `TestModuleDefinition`：模块提供稳定 `Id / ModulePath`
 
 ### 5.1 激活态规则
 
 - 只有当前激活模块允许响应运行时事件
-- 面板隐藏时，当前模块应进入休眠态
+- 面板隐藏时，当前模块应直接 `Deactivate`
 - 非激活模块不应保持高频订阅
 - 不能用单一 `Visible` 替代完整激活态
 
-### 5.2 刷新调度规则
+### 5.2 刷新规则
 
 统一建议：
 
-- 模块接收事件后不立刻重建 UI
-- 先记录“哪些键脏了”或“哪块结构脏了”
-- 由调度器在同一帧末合并刷新一次
+- 模块接收事件后自行判断 patch 或 rebuild
+- 结构变化才重建，普通值变化只更新受影响控件
+- 不再引入宿主级 `TestRefreshScheduler`；刷新保持在模块内部，避免简单动作绕多层协议
 
 这套规则对于属性模块尤其重要，否则多目标命中时很容易被 `PropertyChanged` 打爆。
 
@@ -296,7 +295,8 @@ Src/ECS/Base/System/TestSystem/
 │   ├── TestSystem.cs
 │   ├── TestModuleBase.cs
 │   ├── TestSelectionContext.cs
-│   └── TestRefreshScheduler.cs
+│   ├── TestModulePath.cs
+│   └── TestModuleGroupId.cs
 ├── Modules/
 │   ├── Attribute/
 │   ├── Ability/
@@ -327,14 +327,14 @@ Src/ECS/Base/System/TestSystem/
 ### 7.2 宿主接入规范
 
 - 模块必须继承 `TestModuleBase`
-- 模块通过统一宿主上下文拿到当前实体和刷新能力
+- 模块通过统一宿主上下文拿到当前实体
+- 模块必须填写稳定 `Id` 和完整点分 `ModulePath`
 - 模块接入不应要求修改宿主核心流程
 
 ### 7.3 刷新规范
 
 - 数据变化优先走局部更新
 - 结构变化才允许重建
-- 同一帧多次变化必须合并
 - 模块隐藏或失活时必须停止高频刷新
 
 ### 7.4 服务调用规范
@@ -361,7 +361,7 @@ Src/ECS/Base/System/TestSystem/
 
 ## 8.2 AbilityTestModule
 
-技能模块比属性模块稍好，因为已经有 deferred refresh 思路，但还不够：
+技能模块使用“结构重建 + 状态 patch”双模式：
 
 - 列表增删时允许重建
 - 启用/禁用状态变化优先更新单条
@@ -374,7 +374,7 @@ Src/ECS/Base/System/TestSystem/
 
 - 严格管理当前模块激活态
 - 面板隐藏时统一停更
-- 去掉重复刷新
+- 去掉宿主级刷新调度
 - 让实体切换广播只通知必要对象
 
 ---

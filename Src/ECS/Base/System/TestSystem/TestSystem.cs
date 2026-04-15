@@ -23,20 +23,20 @@ public partial class TestSystem : CanvasLayer
     /// <summary>当前被测试面板选中的实体；属性面板、技能面板等都会围绕它刷新。</summary>
     public IEntity? SelectedEntity => _selectionContext?.SelectedEntity;
 
-    /// <summary>当前已注册的测试模块列表，顺序就是下拉菜单显示顺序。</summary>
+    /// <summary>TestSystem 局部事件总线，仅用于测试面板内部通信。</summary>
+    public EventBus Events { get; } = new();
+
+    /// <summary>当前已注册的测试模块列表，顺序就是场景挂载顺序。</summary>
     private readonly List<ITestModule> _modules = new();
 
     /// <summary>模块 Id 到模块实例的快速映射。</summary>
     private readonly Dictionary<string, ITestModule> _modulesById = new(StringComparer.Ordinal);
 
-    /// <summary>所有测试模块 Id 的列表，用于下拉选择器的索引映射。</summary>
+    /// <summary>所有测试模块 Id 的列表，用于默认模块与顺序定位。</summary>
     private readonly List<string> _moduleIds = new();
 
     /// <summary>当前真正处于前台的测试模块。</summary>
     private ITestModule? _currentModule;
-
-    /// <summary>模块待刷新缓冲区，供统一刷新调度器在帧末冲刷。</summary>
-    private readonly List<TestModuleBase> _pendingRefreshModules = new();
 
     /// <summary>测试面板根节点，作为所有 UI 的父容器。</summary>
     private Control _root = null!;
@@ -44,8 +44,11 @@ public partial class TestSystem : CanvasLayer
     /// <summary>总开关按钮，用来显示或隐藏测试面板。</summary>
     private Button _toggleButton = null!;
 
-    /// <summary>模块下拉选择器，用来切换属性测试、技能测试等子模块。</summary>
-    private OptionButton _moduleSelector = null!;
+    /// <summary>模块导航显示开关。</summary>
+    private Button _moduleNavToggleButton = null!;
+
+    /// <summary>当前模块路径显示。</summary>
+    private Label _currentModulePathLabel = null!;
 
     /// <summary>承载整个调试界面的面板容器。</summary>
     private PanelContainer _panel = null!;
@@ -65,23 +68,29 @@ public partial class TestSystem : CanvasLayer
     /// <summary>显示当前选中实体名称、类型和 ID 的标签。</summary>
     private Label _selectedEntityLabel = null!;
 
+    /// <summary>模块导航面板。</summary>
+    private Control _moduleNavPanel = null!;
+
+    /// <summary>模块导航树，按模块路径自动分组。</summary>
+    private Tree _moduleTree = null!;
+
     /// <summary>真正放置各个测试模块实例的宿主容器。</summary>
     private VBoxContainer _moduleHost = null!;
 
     /// <summary>面板当前可见性缓存，用于避免重复处理隐藏/显示逻辑。</summary>
     private bool _panelVisible = true;
 
+    /// <summary>模块导航当前是否可见。</summary>
+    private bool _moduleNavVisible = true;
+
+    /// <summary>当前是否正在由代码同步模块树选中态。</summary>
+    private bool _syncingModuleTreeSelection;
+
     /// <summary>统一选中实体上下文。</summary>
     private TestSelectionContext _selectionContext = null!;
 
-    /// <summary>统一刷新调度器。</summary>
-    private TestRefreshScheduler _refreshScheduler = null!;
-
     /// <summary>模块共享上下文。</summary>
     private TestModuleContext _moduleContext = null!;
-
-    /// <summary>当前帧是否已经安排过一次模块刷新冲刷。</summary>
-    private bool _refreshFlushQueued;
 
     /// <summary>
     /// 模块初始化入口。
@@ -173,7 +182,8 @@ public partial class TestSystem : CanvasLayer
         // 缓存 UI 节点
         _root = GetNode<Control>("Root");
         _toggleButton = GetNode<Button>("Root/TopLeft/Layout/Toolbar/ToggleButton");
-        _moduleSelector = GetNode<OptionButton>("Root/TopLeft/Layout/Toolbar/ModuleSelector");
+        _moduleNavToggleButton = GetNode<Button>("Root/TopLeft/Layout/Toolbar/ModuleNavToggleButton");
+        _currentModulePathLabel = GetNode<Label>("Root/TopLeft/Layout/Toolbar/CurrentModulePathLabel");
         _panel = GetNode<PanelContainer>("Root/TopLeft/Layout/Panel");
         _selectionHintLabel = GetNode<Label>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/SelectionHintLabel");
         _selectionToggle =
@@ -183,7 +193,9 @@ public partial class TestSystem : CanvasLayer
             GetNode<Button>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/InfoRow/ClearSelectionButton");
         _selectedEntityLabel =
             GetNode<Label>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/InfoRow/SelectedEntityLabel");
-        _moduleHost = GetNode<VBoxContainer>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/ModuleHost");
+        _moduleNavPanel = GetNode<Control>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/ModuleSplit/ModuleNavPanel");
+        _moduleTree = GetNode<Tree>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/ModuleSplit/ModuleNavPanel/ModuleNavMargin/ModuleNavLayout/ModuleTree");
+        _moduleHost = GetNode<VBoxContainer>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/ModuleSplit/ModuleHost");
 
         // 设置鼠标过滤：
         // 1. 大部分容器和展示节点使用 Ignore，避免拦截鼠标，保证底层测试选取逻辑仍可正常响应。
@@ -198,7 +210,10 @@ public partial class TestSystem : CanvasLayer
         _selectionHintLabel.MouseFilter = Control.MouseFilterEnum.Ignore;
         GetNode<Control>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/InfoRow").MouseFilter =
             Control.MouseFilterEnum.Ignore;
+        _moduleNavPanel.MouseFilter = Control.MouseFilterEnum.Stop;
+        _moduleTree.MouseFilter = Control.MouseFilterEnum.Stop;
         _moduleHost.MouseFilter = Control.MouseFilterEnum.Ignore;
+        _moduleTree.HideRoot = true;
     }
 
     /// <summary>
@@ -207,7 +222,8 @@ public partial class TestSystem : CanvasLayer
     private void BindUiEvents()
     {
         _toggleButton.Pressed += OnTogglePressed; // 测试按钮事件：切换测试面板显示/隐藏
-        _moduleSelector.ItemSelected += OnModuleSelected; // 模块下拉选择器事件：切换测试模块
+        _moduleNavToggleButton.Pressed += OnModuleNavTogglePressed; // 模块列表显示/隐藏
+        _moduleTree.ItemSelected += OnModuleTreeItemSelected; // 模块树选择事件：切换测试模块
         _refreshButton.Pressed += RefreshCurrentModule; // 刷新按钮事件：刷新当前测试模块
         _clearSelectionButton.Pressed += () => SetSelectedEntity(null); // 清除选择按钮事件：清除选中实体
     }
@@ -217,10 +233,8 @@ public partial class TestSystem : CanvasLayer
     {
         // TestSystem 的统一选中上下文
         _selectionContext = new TestSelectionContext();
-        // TestSystem 统一刷新调度器
-        _refreshScheduler = new TestRefreshScheduler(QueueScheduledModuleFlush);
         // TestSystem 模块上下文
-        _moduleContext = new TestModuleContext(this, _selectionContext, _refreshScheduler);
+        _moduleContext = new TestModuleContext(this, _selectionContext);
     }
 
 
@@ -240,7 +254,16 @@ public partial class TestSystem : CanvasLayer
         }
 
         // 设置选中的实体
-        if (!_selectionContext.SetSelectedEntity(entity))
+        if (_selectionContext.SetSelectedEntity(entity))
+        {
+            Events.Emit(
+                GameEventType.TestSystem.SelectionChanged,
+                new GameEventType.TestSystem.SelectionChangedEventData(
+                    entity // 当前选中实体
+                )
+            );
+        }
+        else
         {
             RefreshCurrentModule();
         }
@@ -249,7 +272,7 @@ public partial class TestSystem : CanvasLayer
     /// <summary>
     /// 刷新当前显示的测试模块。
     /// <para>
-    /// 通过模块下拉框选中的索引找到对应模块，再触发其 Refresh。
+    /// 直接触发当前模块 Refresh。
     /// </para>
     /// </summary>
     public void RefreshCurrentModule()
@@ -274,9 +297,8 @@ public partial class TestSystem : CanvasLayer
         _modules.Clear();
         _modulesById.Clear();
         _moduleIds.Clear();
-        _moduleSelector.Clear();
+        _moduleTree.Clear();
 
-        var sceneModules = new List<TestModuleBase>();
         foreach (Node child in _moduleHost.GetChildren()) // 获取ModuleHost节点下所有测试模块
         {
             if (child is not TestModuleBase module)
@@ -284,26 +306,16 @@ public partial class TestSystem : CanvasLayer
                 continue;
             }
 
-            sceneModules.Add(module);
-        }
-
-        // 对测试模块排序
-        sceneModules.Sort(static (left, right) =>
-        {
-            var orderCompare = left.Definition.SortOrder.CompareTo(right.Definition.SortOrder);
-            if (orderCompare != 0)
-            {
-                return orderCompare;
-            }
-
-            return string.Compare(left.Definition.DisplayName, right.Definition.DisplayName, StringComparison.Ordinal);
-        });
-
-        foreach (var module in sceneModules)
-        {
             if (string.IsNullOrWhiteSpace(module.Definition.Id))
             {
                 _log.Error($"TestSystem 模块缺少稳定 Id: module={module.Name}");
+                continue;
+            }
+
+            var modulePath = TestModulePath.Normalize(module.Definition.ModulePath);
+            if (string.IsNullOrWhiteSpace(modulePath))
+            {
+                _log.Error($"TestSystem 模块缺少有效路径: id={module.Definition.Id} module={module.Name}");
                 continue;
             }
 
@@ -315,6 +327,8 @@ public partial class TestSystem : CanvasLayer
 
             RegisterModule(module);
         }
+
+        RebuildModuleTree();
 
         if (_modules.Count == 0)
         {
@@ -335,10 +349,48 @@ public partial class TestSystem : CanvasLayer
         _modulesById[module.Definition.Id] = module;
         // 4. 添加到模块索引列表
         _moduleIds.Add(module.Definition.Id);
-        // 5. 添加到模块选择器
-        _moduleSelector.AddItem(module.Definition.DisplayName);
-        // 6. 通知模块当前选中实体（如果有的话）
+        // 5. 通知模块当前选中实体（如果有的话）
         module.OnSelectedEntityChanged(SelectedEntity);
+    }
+
+    /// <summary>
+    /// 根据模块路径重建左侧导航树。
+    /// </summary>
+    private void RebuildModuleTree()
+    {
+        _moduleTree.Clear();
+        var root = _moduleTree.CreateItem();
+        var groupItems = new Dictionary<string, TreeItem>(StringComparer.Ordinal);
+
+        foreach (var module in _modules)
+        {
+            var parts = TestModulePath.Split(module.Definition.ModulePath);
+            if (parts.Length == 0)
+            {
+                continue;
+            }
+
+            var parent = root;
+            var groupPath = string.Empty;
+            for (int i = 0; i < parts.Length - 1; i++)
+            {
+                groupPath = string.IsNullOrEmpty(groupPath) ? parts[i] : $"{groupPath}.{parts[i]}";
+                if (!groupItems.TryGetValue(groupPath, out var groupItem))
+                {
+                    groupItem = _moduleTree.CreateItem(parent);
+                    groupItem.SetText(0, parts[i]);
+                    groupItem.SetSelectable(0, false);
+                    groupItems[groupPath] = groupItem;
+                }
+
+                parent = groupItem;
+            }
+
+            var moduleItem = _moduleTree.CreateItem(parent);
+            moduleItem.SetText(0, parts[^1]);
+            moduleItem.SetMetadata(0, module.Definition.Id); // 模块稳定 Id
+            moduleItem.SetTooltipText(0, module.Definition.ModulePath);
+        }
     }
 
     //=========================切换测试模块===========================
@@ -353,13 +405,13 @@ public partial class TestSystem : CanvasLayer
             return false;
         }
 
-        SwitchModule(moduleId);
-        var index = _moduleIds.IndexOf(moduleId);
-        if (index >= 0)
+        SelectModuleTreeItem(moduleId); // 同步模块树选中态
+        if (string.Equals(CurrentModuleId, moduleId, StringComparison.Ordinal))
         {
-            _moduleSelector.Select(index); // 同步下拉框选中态
+            return true;
         }
 
+        SwitchModule(moduleId);
         return true;
     }
 
@@ -386,6 +438,8 @@ public partial class TestSystem : CanvasLayer
             {
                 currentModule.ActivateModule();
             }
+
+            UpdateCurrentModulePathDisplay();
         }
     }
 
@@ -409,54 +463,99 @@ public partial class TestSystem : CanvasLayer
             return;
         }
 
-        _currentModule.SuspendModule();
+        _currentModule.DeactivateModule();
     }
 
     /// <summary>
-    /// 模块下拉框回调，按索引切换当前测试模块。
+    /// 模块导航显隐按钮回调。
     /// </summary>
-    private void OnModuleSelected(long index)
+    private void OnModuleNavTogglePressed()
     {
-        if (index < 0 || index >= _moduleIds.Count)
+        _moduleNavVisible = !_moduleNavVisible;
+        _moduleNavPanel.Visible = _moduleNavVisible;
+        _moduleNavToggleButton.Text = _moduleNavVisible ? "隐藏模块" : "显示模块";
+    }
+
+    /// <summary>
+    /// 模块树选择回调。
+    /// </summary>
+    private void OnModuleTreeItemSelected()
+    {
+        if (_syncingModuleTreeSelection)
         {
             return;
         }
 
-        TrySwitchModule(_moduleIds[(int)index]);
-    }
-
-
-    /// <summary>
-    /// 请求宿主在帧末统一冲刷模块刷新。
-    /// </summary>
-    private void QueueScheduledModuleFlush()
-    {
-        if (_refreshFlushQueued)
+        var item = _moduleTree.GetSelected();
+        if (item == null)
         {
             return;
         }
 
-        _refreshFlushQueued = true;
-        CallDeferred(nameof(FlushScheduledModuleRefreshes));
-    }
-
-    /// <summary>
-    /// 执行当前帧累计的模块刷新请求。
-    /// </summary>
-    private void FlushScheduledModuleRefreshes()
-    {
-        _refreshFlushQueued = false;
-        if (!IsInsideTree())
+        var moduleId = item.GetMetadata(0).AsString();
+        if (string.IsNullOrWhiteSpace(moduleId))
         {
             return;
         }
-        // 取出当前帧累计的全部待刷新模块。
-        _refreshScheduler.DrainPending(_pendingRefreshModules);
-        foreach (var module in _pendingRefreshModules)
+
+        TrySwitchModule(moduleId);
+    }
+
+    /// <summary>
+    /// 同步模块树选中态。
+    /// </summary>
+    /// <param name="moduleId">模块稳定 Id。</param>
+    private void SelectModuleTreeItem(string moduleId)
+    {
+        var root = _moduleTree.GetRoot();
+        if (root == null)
         {
-            module.FlushScheduledRefreshInternal();
+            return;
         }
 
-        _pendingRefreshModules.Clear();
+        var item = FindModuleTreeItem(root, moduleId);
+        if (item == null)
+        {
+            return;
+        }
+
+        _syncingModuleTreeSelection = true;
+        item.Select(0);
+        _syncingModuleTreeSelection = false;
+    }
+
+    /// <summary>
+    /// 递归查找模块树叶子节点。
+    /// </summary>
+    private static TreeItem? FindModuleTreeItem(TreeItem item, string moduleId)
+    {
+        if (item.GetMetadata(0).AsString() == moduleId)
+        {
+            return item;
+        }
+
+        var child = item.GetFirstChild();
+        while (child != null)
+        {
+            var matched = FindModuleTreeItem(child, moduleId);
+            if (matched != null)
+            {
+                return matched;
+            }
+
+            child = child.GetNext();
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// 更新当前模块路径显示。
+    /// </summary>
+    private void UpdateCurrentModulePathDisplay()
+    {
+        _currentModulePathLabel.Text = _currentModule == null
+            ? "未选择模块"
+            : _currentModule.Definition.ModulePath;
     }
 }

@@ -125,7 +125,8 @@ Src/ECS/Base/System/TestSystem/
 │   ├── TestModuleBase.cs
 │   ├── TestModuleContext.cs
 │   ├── TestSelectionContext.cs
-│   └── TestRefreshScheduler.cs
+│   ├── TestModulePath.cs
+│   └── TestModuleGroupId.cs
 ├── Modules/
 │   ├── Attribute/
 │   │   ├── AttributeTestModule.cs
@@ -155,7 +156,7 @@ Src/ECS/Base/System/TestSystem/
 
 | 角色 | 负责内容 | 不负责内容 |
 |------|----------|------------|
-| `TestSystem` | 宿主、模块切换、实体选择、面板显隐、统一刷新调度 | 具体模块渲染逻辑 |
+| `TestSystem` | 宿主、模块树、模块切换、实体选择、面板显隐、局部事件广播 | 具体模块渲染逻辑 |
 | `TestModuleBase` | 定义标准生命周期和上下文约束 | 具体业务细节 |
 | 模块 | 本模块事件订阅、视图构建、局部更新 | 正式系统底层逻辑 |
 | `Shared` 控件 | 跨模块复用的复合控件 | 具体模块业务 |
@@ -165,43 +166,41 @@ Src/ECS/Base/System/TestSystem/
 
 ## 5. 关键重构点
 
-## 5.1 引入统一刷新调度器
+## 5.1 简化刷新与模块路径注册
 
-建议新增 `TestRefreshScheduler`，负责：
+当前结论是不再保留宿主级刷新调度器。刷新由模块内部直接处理，模块只需要把变化分成两类：
 
-- 收集脏标记
-- 同帧合并刷新
-- 区分 patch 与 rebuild
-- 统一控制模块激活态下的刷新时机
+- 结构变化：重建当前模块局部 UI
+- 数值或状态变化：patch 受影响控件
 
 ### 价值
 
-- 避免每个模块自己乱用 `CallDeferred`
-- 避免同一帧重复刷新多次
-- 给后续更多模块提供统一规则
+- 避免简单刷新动作绕过多层协议
+- 模块刷新逻辑更容易读懂和调试
+- 宿主专注模块切换、选择实体和模块树导航
 
 当前已落地：
 
 - `ITestModule` / `ITestModuleContext` 作为宿主与模块之间的统一协议
-- `TestModuleDefinition` 统一描述模块 `Id / DisplayName / SortOrder`
-- `TestRefreshScheduler` 统一收口模块刷新请求
-- `TestSelectionContext` 统一维护选中实体与变更广播
-- `TestModuleContext` 统一注入宿主 / 选择上下文 / 调度器
-- `TestModuleBase` 增加 `Active / Inactive / Suspended` 运行态收口
+- `TestModuleDefinition` 统一描述模块 `Id / ModulePath`
+- `TestModulePath` / `TestModuleGroupId` 支撑点分路径分组
+- `TestSelectionContext` 只维护选中实体状态
+- `TestSystem.Events` 统一广播 TestSystem 局部事件
+- `TestModuleContext` 统一注入宿主 / 选择上下文
+- `TestModuleBase` 保留简单 `Active / Inactive` 激活态
 
 ## 5.1.1 描述驱动的模块注册
 
-当前进一步建议宿主按模块定义驱动注册，而不是依赖场景子节点的物理顺序：
+当前宿主按场景子节点顺序注册模块，并按 `ModulePath` 自动生成左侧模块树：
 
 - `TestModuleDefinition.Id`
-- `TestModuleDefinition.DisplayName`
-- `TestModuleDefinition.SortOrder`
+- `TestModuleDefinition.ModulePath`
 
 价值：
 
-- 模块增删不再破坏顺序
+- 模块路径天然支持多级分组
 - 宿主可以按稳定 Id 切换模块
-- 后续做“默认模块”“记住上次打开模块”“模块过滤”时有稳定主键
+- 后续做“记住上次打开模块”“模块过滤”时有稳定主键
 
 ## 5.2 属性模块改为行缓存模型
 
@@ -297,7 +296,7 @@ Src/ECS/Base/System/TestSystem/
 工作项：
 
 - 抽出 `Core / Modules / Shared / Services`
-- 引入刷新调度器
+- 模块刷新保持简单直接，结构变化重建，状态变化 patch
 - 模块目录按边界收敛
 - 合并过碎的小输入器场景
 
