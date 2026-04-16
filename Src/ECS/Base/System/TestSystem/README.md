@@ -47,8 +47,8 @@
 | `Ability/AbilityGroupSection.tscn / AbilityCatalogItem.tscn / AbilityOwnedItem.tscn` | 技能条目复用场景，负责分组区块与卡片结构 |
 | `ResourceCatalog/ResourcePickerControl.cs` | 通用资源选择控件，基于 `ResourceCatalog` 提供分组、搜索和条目选择 |
 | `ResourceCatalog/ResourcePickerControl.tscn` | 资源选择控件场景骨架 |
-| `ResourceCatalog/ResourceCatalogTestModule.cs` | 资源目录测试模块，默认只展示 `ResourceCatalog.GetGroups()` 返回的分类，按按钮查看单个分类资源 |
-| `ResourceCatalog/ResourceCatalogTestModule.tscn` | 资源目录测试模块固定布局骨架，提供分类选择、按分类显示、刷新和详情展示 |
+| `ResourceCatalog/ResourceCatalogTestModule.cs` | 资源目录测试模块，通过分类下拉框展示 `ResourceCatalog.GetGroups()` 返回的分类，选择分类后自动显示该分类资源 |
+| `ResourceCatalog/ResourceCatalogTestModule.tscn` | 资源目录测试模块固定布局骨架，提供分类选择、分类资源列表和详情展示 |
 | `Spawn/SpawnTestModule.cs` | 敌人生成测试模块，选择 `EnemyConfig` 后通过正式 `SpawnSystem.SpawnBatch(...)` 生成敌人 |
 | `Spawn/SpawnTestModule.tscn` | 敌人生成测试模块固定布局骨架 |
 
@@ -324,12 +324,11 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 ### 当前支持
 
 - 调用 `ResourceCatalog.GetGroups()` 展示所有分类
-- 默认只显示分类，不一次性展开全部资源
-- 选择分类后点击“显示分类资源”，只查看该分类下的资源
+- 不一次性展开全部资源
+- 选择分类后自动显示该分类下的资源
 - 顶部显示分类总数与资源总数
 - 选中分类时显示分类路径和资源数
 - 选中资源时显示 `ResourceKey / CatalogPath / Category / ResourceType / Path`
-- 点击“刷新资源目录”时先 `ResourceCatalog.ClearCache()`，再重新读取分类并回到分类总览
 
 ### 边界
 
@@ -499,7 +498,7 @@ TestSystem UI 控件统一使用以下日志级别：
 - 是否绕开了正式 `EntityManager / FeatureSystem`
 - 是否错误地把技能测试做成了执行入口
 - 敌人生成测试是否只允许选择 `Unit.Enemy`
-- 资源目录测试是否默认只显示分类，并能按按钮查看单个分类资源
+- 资源目录测试是否切换分类后自动显示该分类资源
 - Data.Get/Set 调用是否使用 `DataKey.XXX.Key` 显式访问
 - 日志是否仅使用 `Info / Warn / Error`，无 `Debug` 级别
 - 文档、项目索引、skill 是否同步更新

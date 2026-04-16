@@ -15,8 +15,6 @@ public partial class ResourceCatalogTestModule : TestModuleBase
 
     private Label _summaryLabel = null!;
     private OptionButton _categoryOption = null!;
-    private Button _showCategoryButton = null!;
-    private Button _reloadButton = null!;
     private Tree _catalogTree = null!;
     private Label _detailsLabel = null!;
     private Label _statusLabel = null!;
@@ -31,18 +29,18 @@ public partial class ResourceCatalogTestModule : TestModuleBase
         base.Initialize(context);
         CacheUiNodes();
         BindUiEvents();
-        ReloadCatalog(false); // 初次进入时使用现有缓存，避免重复加载资源
+        ReloadCatalog(); // 初次进入时读取分类，并显示默认分类资源
     }
 
     internal override void OnActivated()
     {
         base.OnActivated();
-        ReloadCatalog(false); // 切回模块时刷新视图，保持和 ResourceCatalog 缓存一致
+        ReloadCatalog(); // 切回模块时刷新视图，保持和 ResourceCatalog 缓存一致
     }
 
     internal override void Refresh()
     {
-        ReloadCatalog(false); // TestSystem 顶部刷新按钮只重建视图，不强制清缓存
+        ReloadCatalog(); // TestSystem 顶部刷新按钮只重建视图，不强制清缓存
     }
 
     /// <summary>
@@ -53,8 +51,6 @@ public partial class ResourceCatalogTestModule : TestModuleBase
         MouseFilter = Control.MouseFilterEnum.Stop;
         _summaryLabel = GetNode<Label>("SummaryLabel");
         _categoryOption = GetNode<OptionButton>("Actions/CategoryOption");
-        _showCategoryButton = GetNode<Button>("Actions/ShowCategoryButton");
-        _reloadButton = GetNode<Button>("Actions/ReloadButton");
         _catalogTree = GetNode<Tree>("CatalogTree");
         _detailsLabel = GetNode<Label>("DetailsLabel");
         _statusLabel = GetNode<Label>("StatusLabel");
@@ -66,23 +62,15 @@ public partial class ResourceCatalogTestModule : TestModuleBase
     /// </summary>
     private void BindUiEvents()
     {
-        _categoryOption.ItemSelected += OnCategorySelected; // 分类下拉框：只切换当前待查看分类
-        _showCategoryButton.Pressed += OnShowCategoryPressed; // 显示按钮：只展开当前分类资源
-        _reloadButton.Pressed += OnReloadPressed; // 刷新按钮：清理 ResourceCatalog 缓存后重建列表
+        _categoryOption.ItemSelected += OnCategorySelected; // 分类下拉框：选择后立即显示该分类资源
         _catalogTree.ItemSelected += OnCatalogItemSelected; // 树节点选择：显示资源或分类详情
     }
 
     /// <summary>
-    /// 重新加载并渲染 ResourceCatalog 当前的分类和资源。
+    /// 重新加载 ResourceCatalog 当前的分类，并显示当前分类资源。
     /// </summary>
-    /// <param name="clearCache">是否先清理 ResourceCatalog 缓存。</param>
-    private void ReloadCatalog(bool clearCache)
+    private void ReloadCatalog()
     {
-        if (clearCache)
-        {
-            ResourceCatalog.ClearCache();
-        }
-
         _entriesByTreeKey.Clear();
         _groupsByCatalogPath.Clear();
 
@@ -95,9 +83,8 @@ public partial class ResourceCatalogTestModule : TestModuleBase
         }
 
         RebuildCategoryOptions();
-        ShowCategoryOverview(resourceCount);
-        _detailsLabel.Text = "选择分类后点击“显示分类资源”查看该分类资源";
-        _statusLabel.Text = clearCache ? "已清理缓存并重新读取资源分类" : "已读取资源分类";
+        ShowCategoryResources(GetSelectedCatalogPath());
+        _statusLabel.Text = $"已读取 {groups.Count} 个分类，共 {resourceCount} 个资源";
     }
 
     /// <summary>
@@ -113,7 +100,7 @@ public partial class ResourceCatalogTestModule : TestModuleBase
             var index = _categoryOption.ItemCount;
             var group = _groupsByCatalogPath[catalogPath];
             _categoryOption.AddItem($"{catalogPath} ({group.Items.Count})");
-            _categoryOption.SetItemMetadata(index, catalogPath); // 保存完整 CatalogPath，按钮点击时按分类查询
+            _categoryOption.SetItemMetadata(index, catalogPath); // 保存完整 CatalogPath，选择后按分类显示资源
             if (string.Equals(catalogPath, previousCatalogPath, StringComparison.Ordinal))
             {
                 _categoryOption.Select(index);
@@ -127,26 +114,6 @@ public partial class ResourceCatalogTestModule : TestModuleBase
     }
 
     /// <summary>
-    /// 只显示分类总览，不展开具体资源。
-    /// </summary>
-    /// <param name="resourceCount">当前 ResourceCatalog 中的资源总数。</param>
-    private void ShowCategoryOverview(int resourceCount)
-    {
-        _entriesByTreeKey.Clear();
-        _catalogTree.Clear();
-
-        var root = _catalogTree.CreateItem();
-        foreach (var group in _groupsByCatalogPath.Values)
-        {
-            var groupItem = _catalogTree.CreateItem(root);
-            groupItem.SetText(0, $"{group.CatalogPath} ({group.Items.Count})");
-            groupItem.SetMetadata(0, BuildGroupTreeKey(group.CatalogPath)); // 分类节点用 group: 前缀标识
-        }
-
-        _summaryLabel.Text = $"分类 {_groupsByCatalogPath.Count} 个，资源 {resourceCount} 个，当前仅显示分类";
-    }
-
-    /// <summary>
     /// 只显示指定分类下的资源。
     /// </summary>
     /// <param name="catalogPath">要显示的 CatalogPath。</param>
@@ -154,6 +121,9 @@ public partial class ResourceCatalogTestModule : TestModuleBase
     {
         if (!_groupsByCatalogPath.TryGetValue(catalogPath, out var group))
         {
+            _catalogTree.Clear();
+            _detailsLabel.Text = "没有可显示的资源分类";
+            _summaryLabel.Text = $"分类 {_groupsByCatalogPath.Count} 个，资源 0 个";
             _statusLabel.Text = "请选择一个有效分类";
             return;
         }
@@ -178,7 +148,7 @@ public partial class ResourceCatalogTestModule : TestModuleBase
         }
 
         groupItem.SetCollapsed(false);
-        _summaryLabel.Text = $"当前分类 {group.CatalogPath}，资源 {group.Items.Count} 个";
+        _summaryLabel.Text = $"分类 {_groupsByCatalogPath.Count} 个，当前 {group.CatalogPath} 资源 {group.Items.Count} 个";
         ShowGroupDetails(group);
     }
 
@@ -290,7 +260,7 @@ public partial class ResourceCatalogTestModule : TestModuleBase
         _detailsLabel.Text =
             $"分类：{group.CatalogPath}\n" +
             $"资源数：{group.Items.Count}\n" +
-            "点击“显示分类资源”查看该分类下的资源";
+            "切换分类会自动显示该分类下的资源";
         _statusLabel.Text = $"已选择分类 {group.CatalogPath}";
     }
 
@@ -300,26 +270,6 @@ public partial class ResourceCatalogTestModule : TestModuleBase
     /// <param name="index">当前选项索引。</param>
     private void OnCategorySelected(long index)
     {
-        var catalogPath = GetSelectedCatalogPath();
-        if (_groupsByCatalogPath.TryGetValue(catalogPath, out var group))
-        {
-            ShowGroupDetails(group);
-        }
-    }
-
-    /// <summary>
-    /// 处理显示分类资源按钮点击。
-    /// </summary>
-    private void OnShowCategoryPressed()
-    {
-        ShowCategoryResources(GetSelectedCatalogPath()); // 按当前分类显示资源，避免一次性展开全部资源
-    }
-
-    /// <summary>
-    /// 处理刷新按钮点击。
-    /// </summary>
-    private void OnReloadPressed()
-    {
-        ReloadCatalog(true); // 手动刷新时强制清理缓存，验证最新 ResourcePaths 结果
+        ShowCategoryResources(GetSelectedCatalogPath()); // 选择分类后立即显示资源
     }
 }

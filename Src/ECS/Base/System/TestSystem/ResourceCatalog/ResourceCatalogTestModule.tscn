@@ -9,7 +9,7 @@ script = ExtResource("1_resource_catalog_test_script")
 
 [node name="InstructionLabel" type="Label" parent="."]
 layout_mode = 2
-text = "从 ResourceCatalog 读取资源分类，选择分类后再查看该分类资源"
+text = "从 ResourceCatalog 读取资源分类，选择分类后自动显示该分类资源"
 autowrap_mode = 3
 
 [node name="SummaryLabel" type="Label" parent="."]
@@ -24,14 +24,6 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ShowCategoryButton" type="Button" parent="Actions"]
-layout_mode = 2
-text = "显示分类资源"
-
-[node name="ReloadButton" type="Button" parent="Actions"]
-layout_mode = 2
-text = "刷新资源目录"
-
 [node name="CatalogTree" type="Tree" parent="."]
 custom_minimum_size = Vector2(0, 300)
 layout_mode = 2
@@ -41,7 +33,7 @@ hide_root = true
 
 [node name="DetailsLabel" type="Label" parent="."]
 layout_mode = 2
-text = "选择分类后点击“显示分类资源”查看该分类资源"
+text = "选择分类后自动显示该分类资源"
 autowrap_mode = 3
 
 [node name="StatusLabel" type="Label" parent="."]
