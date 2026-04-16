@@ -32,6 +32,10 @@
 - `Src/ECS/Base/System/TestSystem/Ability/AbilityTestModule.cs`
 - `Src/ECS/Base/System/TestSystem/Ability/AbilityTestService.cs`
 - `Src/ECS/Base/System/TestSystem/Ability/AbilityTestViewModels.cs`
+- `Src/ECS/Base/System/TestSystem/ResourceCatalog/ResourcePickerControl.cs`
+- `Src/ECS/Base/System/TestSystem/ResourceCatalog/ResourceCatalogTestModule.cs`
+- `Src/ECS/Base/System/TestSystem/Spawn/SpawnTestModule.cs`
+- `Data/ResourceManagement/ResourceCatalog.cs`
 - `Src/ECS/Base/System/TestSystem/FeatureDebugService.cs`
 
 ---
@@ -70,6 +74,9 @@
 - `TestModuleBase` 已经抽出了基础生命周期，方向是对的
 - `FeatureDebugService` 把调试动作转发到正式运行时链路，方向是对的
 - `AbilityTestService` 把 UI 与技能目录/业务操作做了初步隔离，并按完整 `FeatureGroupId` 构建技能库 / 当前技能分组，方向也是对的
+- `ResourceCatalog` 将单位、技能、特效的选择目录收口到 `ResourcePaths.Resources`，并按路径自动推导分类，敌人生成测试可以复用正式资源索引而不运行时扫目录
+- `ResourceCatalogTestModule` 默认只展示 `ResourceCatalog.GetGroups()` 的分类树和资源总数，再通过按钮按分类查看资源明细，可用于运行时确认当前索引是否覆盖所有分类与资源
+- `SpawnTestModule` 通过 `ResourcePickerControl` 按 `Unit.Enemy` 目录前缀只选择敌人配置，再转发到正式 `SpawnSystem.SpawnBatch(...)`
 
 也就是说，当前问题不是“完全推翻重来”，而是**架构概念有雏形，但实现细节不成熟**。
 
@@ -136,6 +143,14 @@
 | **Modules** | 每个测试模块自己的状态、订阅、渲染与操作 | `Attribute`、`Ability`、未来的 `Buff` / `AI` / `Damage` 等 |
 | **Shared UI** | 跨模块可复用的复合控件，不承载具体业务 | `SectionPanel`、`EmptyStateView`、`LabeledValueRow` |
 | **Services** | 复用正式系统的调试适配层，不直接渲染 UI | `FeatureDebugService`、后续的 `TestSelectionService` 等 |
+
+补充：通用资源选择相关能力分两层：
+
+- `Data/ResourceManagement/ResourceCatalog.cs` 负责从 `ResourcePaths.Resources` 构建单位、技能、特效目录，分类来自资源路径，路径中的 `Resource` 目录会被跳过
+- `ResourceCatalog/ResourcePickerControl.cs` 负责 TestSystem 内的分组、搜索与选择 UI
+- `ResourceCatalog/ResourceCatalogTestModule.cs` 负责在 TestSystem 中展示完整资源分类树，并按按钮只展开单个分类资源，用于验证资源索引覆盖情况
+
+运行时测试面板不要全盘扫描 `res://` 作为主数据源；新增 `.tres` / `.tscn` 后应运行 `Tools/ResourceGenerator` 更新 `ResourcePaths.cs`。
 
 ## 4.2 核心原则
 

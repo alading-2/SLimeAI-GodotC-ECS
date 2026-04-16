@@ -1,0 +1,25 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Src/ECS/Base/System/TestSystem/ResourceCatalog/ResourcePickerControl.cs" id="1_resource_picker_script"]
+
+[node name="ResourcePickerControl" type="VBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_resource_picker_script")
+
+[node name="SearchBox" type="LineEdit" parent="."]
+layout_mode = 2
+placeholder_text = "搜索名称 / 资源键 / 分组 / 路径"
+
+[node name="GroupOption" type="OptionButton" parent="."]
+layout_mode = 2
+
+[node name="ItemList" type="ItemList" parent="."]
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SummaryLabel" type="Label" parent="."]
+layout_mode = 2
+text = "显示 0 / 0 个资源"

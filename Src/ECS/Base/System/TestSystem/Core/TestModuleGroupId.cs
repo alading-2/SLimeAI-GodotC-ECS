@@ -6,6 +6,8 @@
 /// </summary>
 internal static class TestModuleGroupId
 {
+    public const string Common = "通用";
+    public const string Resource = "资源";
     public const string Attribute = "属性";
     public const string Ability = "技能";
 }

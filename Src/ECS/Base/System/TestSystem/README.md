@@ -2,7 +2,7 @@
 
 ## 1. 目录定位
 
-`Src/ECS/Base/System/TestSystem/` 用来承载项目的运行时测试系统源码，属性测试模块位于 `Attribute/` 子目录，技能测试模块位于 `Ability/` 子目录。
+`Src/ECS/Base/System/TestSystem/` 用来承载项目的运行时测试系统源码，属性测试模块位于 `Attribute/` 子目录，技能测试模块位于 `Ability/` 子目录，资源目录测试与选择控件位于 `ResourceCatalog/` 子目录，敌人生成测试模块位于 `Spawn/` 子目录。
 
 这套系统面向开发调试阶段，目标是：
 
@@ -45,6 +45,12 @@
 | `Ability/AbilityTestModule.cs` | 技能测试 UI，负责左右双列列表、卡片交互与事件刷新 |
 | `Ability/AbilityTestModule.tscn` | 技能测试固定布局骨架，提供左右滚动区与卡片宿主节点 |
 | `Ability/AbilityGroupSection.tscn / AbilityCatalogItem.tscn / AbilityOwnedItem.tscn` | 技能条目复用场景，负责分组区块与卡片结构 |
+| `ResourceCatalog/ResourcePickerControl.cs` | 通用资源选择控件，基于 `ResourceCatalog` 提供分组、搜索和条目选择 |
+| `ResourceCatalog/ResourcePickerControl.tscn` | 资源选择控件场景骨架 |
+| `ResourceCatalog/ResourceCatalogTestModule.cs` | 资源目录测试模块，默认只展示 `ResourceCatalog.GetGroups()` 返回的分类，按按钮查看单个分类资源 |
+| `ResourceCatalog/ResourceCatalogTestModule.tscn` | 资源目录测试模块固定布局骨架，提供分类选择、按分类显示、刷新和详情展示 |
+| `Spawn/SpawnTestModule.cs` | 敌人生成测试模块，选择 `EnemyConfig` 后通过正式 `SpawnSystem.SpawnBatch(...)` 生成敌人 |
+| `Spawn/SpawnTestModule.tscn` | 敌人生成测试模块固定布局骨架 |
 
 ## 2.1 第一次看这个系统，推荐按这个顺序读
 
@@ -181,7 +187,7 @@
 
 1. 点击左上角“测试”按钮
 2. 打开或隐藏测试面板
-3. 通过左侧模块树切换“属性测试”与“技能测试”模块；模块树可用顶部按钮隐藏
+3. 通过左侧模块树切换“属性测试”、“技能测试”、“资源目录”与“敌人生成”模块；模块树可用顶部按钮隐藏
 
 ### 3.2 选择实体
 
@@ -281,7 +287,57 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 
 完成转发。
 
-## 6. 新增测试模块的推荐步骤
+## 6. 敌人生成测试怎么用
+
+敌人生成测试模块只负责**手动批量生成敌人**，不负责完整波次演示。
+
+### 当前支持
+
+- 从 `ResourceCatalog.GetEntries("Unit.Enemy")` 选择敌人 `.tres`
+- 选择 `SpawnPositionStrategy`
+- 设置生成数量
+- 调用 `SpawnSystem.SpawnBatch(...)`
+- 调用 `SpawnSystem.KillAllEnemies()` 清空敌人
+- 显示 `EnemyPool` 活跃与池内数量
+
+### 数据来源
+
+敌人列表来自：
+
+- `ResourceCatalog.GetEntries("Unit.Enemy")`
+- `ResourcePaths.Resources[ResourceCategory.DataUnit]`
+- `ResourceManagement.Load<EnemyConfig>(...)`
+
+模块按目录前缀 `Unit.Enemy` 过滤，不展示玩家、目标指示器、技能或特效资源，避免把非敌人配置传入 `SpawnSystem`。
+
+### 边界
+
+- 只生成 `EnemyEntity`
+- 只使用 `ObjectPoolNames.EnemyPool`
+- 不直接 `new Entity()`，不直接 `QueueFree()`
+- 不复制波次计时逻辑，波次测试仍应使用 `SpawnSystem.StartWave(...)` 或正式事件
+
+## 7. 资源目录测试怎么用
+
+资源目录测试模块用于验证 `ResourceCatalog` 当前能拿到的**全部分类**，并按分类查看资源明细。
+
+### 当前支持
+
+- 调用 `ResourceCatalog.GetGroups()` 展示所有分类
+- 默认只显示分类，不一次性展开全部资源
+- 选择分类后点击“显示分类资源”，只查看该分类下的资源
+- 顶部显示分类总数与资源总数
+- 选中分类时显示分类路径和资源数
+- 选中资源时显示 `ResourceKey / CatalogPath / Category / ResourceType / Path`
+- 点击“刷新资源目录”时先 `ResourceCatalog.ClearCache()`，再重新读取分类并回到分类总览
+
+### 边界
+
+- 不扫描 `res://`
+- 不加载或实例化资源内容，只验证目录索引和分类结果
+- 如果新增、移动、重命名资源后这里看不到，优先检查是否运行过 `Tools/ResourceGenerator`
+
+## 8. 新增测试模块的推荐步骤
 
 ### 第一步：创建模块类
 
@@ -337,7 +393,7 @@ public partial class MyTestModule : TestModuleBase
 
 推荐先写一层 Service / Adapter，再由 UI 转发调用。
 
-## 7. 开发约束
+## 9. 开发约束
 
 维护此目录时请遵守以下边界：
 
@@ -350,7 +406,7 @@ public partial class MyTestModule : TestModuleBase
 - 不要在这里新增一套测试版技能执行系统
 - 不要直接编辑计算属性
 
-### 7.1 DataKey 访问规范
+### 9.1 DataKey 访问规范
 
 在 TestSystem 内部访问 `Data.Get/Set` 时，**必须使用 `DataKey.XXX.Key` 显式取键名**，不要依赖 `DataMeta` 的隐式转换：
 
@@ -359,12 +415,12 @@ public partial class MyTestModule : TestModuleBase
 ability.Data.Get<string>(DataKey.Name.Key);
 
 // ❌ 错误：依赖隐式转换（某些工程上下文下编译兼容性差）
-ability.Data.Get<string>(DataKey.Name.Key);
+ability.Data.Get<string>(DataKey.Name);
 ```
 
 原因：规避不同工程上下文下 `DataMeta` 到 `string` 的编译兼容差异。
 
-### 7.2 日志级别规范
+### 9.2 日志级别规范
 
 TestSystem UI 控件统一使用以下日志级别：
 
@@ -378,7 +434,7 @@ TestSystem UI 控件统一使用以下日志级别：
 
 **不要使用 `LogLevel.Debug`**。运行时测试系统的日志面向开发者调试，Debug 级别在测试面板中属于冗余输出。
 
-## 8. 你通常会改哪些地方
+## 10. 你通常会改哪些地方
 
 ### 新增调试模块
 
@@ -414,7 +470,27 @@ TestSystem UI 控件统一使用以下日志级别：
 - 必要时 `FeatureDebugService.cs`
 - 正式说明文档与 skill
 
-## 9. 快速自检清单
+### 扩展资源选择 / 生成测试
+
+通常要改：
+
+- `Data/ResourceManagement/ResourceCatalog.cs`
+- `ResourceCatalog/ResourcePickerControl.cs`
+- `Spawn/SpawnTestModule.cs`
+- `TestSystem.tscn`
+- `Data/ResourceManagement/README.md`
+- 正式说明文档与 skill
+
+资源选择扩展规则：
+
+- 可选资源来自 `ResourcePaths.Resources`
+- 选择器分类来自资源路径，`Data/Data/Unit/Enemy/Resource/x.tres` 会归到 `Unit.Enemy`
+- 路径中的 `Resource` 目录只表示存放位置，不参与分类
+- 新 `.tres` / `.tscn` 必须运行 `Tools/ResourceGenerator`
+- 不要让运行时测试面板全盘扫描目录作为主数据源
+- 具体模块只消费自己允许的目录前缀，例如敌人生成只消费 `Unit.Enemy`
+
+## 11. 快速自检清单
 
 提交前建议检查：
 
@@ -422,6 +498,8 @@ TestSystem UI 控件统一使用以下日志级别：
 - 未选中实体时是否有明确提示
 - 是否绕开了正式 `EntityManager / FeatureSystem`
 - 是否错误地把技能测试做成了执行入口
+- 敌人生成测试是否只允许选择 `Unit.Enemy`
+- 资源目录测试是否默认只显示分类，并能按按钮查看单个分类资源
 - Data.Get/Set 调用是否使用 `DataKey.XXX.Key` 显式访问
 - 日志是否仅使用 `Info / Warn / Error`，无 `Debug` 级别
 - 文档、项目索引、skill 是否同步更新

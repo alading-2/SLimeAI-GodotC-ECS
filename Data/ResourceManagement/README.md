@@ -7,6 +7,7 @@
 1. **禁止硬编码**: 严禁在业务代码中使用 `res://` 开头的字符串路径。统一管理有利于路径变更时的重构。
 2. **统一分类**: 资源必须属于 `ResourceCategory` 中的某一分类。
 3. **类型安全**: 优先使用 `ResourceManagement.Load<T>` 进行加载。
+4. **目录选择**: UI / 编辑器需要“列出可选资源”时，优先使用 `ResourceCatalog`，不要在运行时全盘扫描 `res://`。
 
 ## 使用方法
 
@@ -20,16 +21,40 @@ var scene = ResourceManagement.Load<PackedScene>(typeof(PlayerEntity).Name, Reso
 ### 2. 加载配置 (Resource/tres)
 ```csharp
 // 加载单个配置
-var config = ResourceManagement.Load<Resource>("德鲁伊", ResourceCategory.PlayerConfig);
+var config = ResourceManagement.Load<Resource>(ResourcePaths.DataUnit_deluyi, ResourceCategory.DataUnit);
 
 // 加载分类下所有配置
-var allEnemies = ResourceManagement.LoadAll<Resource>(ResourceCategory.EnemyConfig);
+var allEnemies = ResourceManagement.LoadAll<Resource>(ResourceCategory.DataUnit, "Unit/Enemy");
 ```
 
 ### 3. 加载 UI
 ```csharp
 var uiScene = ResourceManagement.Load<PackedScene>("HealthBarUI", ResourceCategory.UI);
 ```
+
+### 4. 构建资源选择列表
+
+`ResourceCatalog` 基于 `ResourcePaths.Resources` 生成选择器条目，分类由资源路径自动推导：
+
+- `Data/Data/Unit/Enemy/Resource/chailangren.tres` => `Unit.Enemy`
+- `Data/Data/Unit/Player/Resource/deluyi.tres` => `Unit.Player`
+- `Data/Data/Ability/Resource/Movement/DashConfig.tres` => `Ability.Movement`
+- `assets/Effect/Explosion/Explosion.tscn` => `Effect.Explosion`
+
+路径中的 `Resource` 目录只是资源存放目录，不参与分类名。
+
+示例：
+
+```csharp
+var enemyEntries = ResourceCatalog.GetEntries("Unit.Enemy");
+var allGroups = ResourceCatalog.GetGroups(
+    "Unit", // 全部单位
+    "Ability", // 全部技能配置
+    "Effect" // 全部特效资源
+);
+```
+
+目录服务只负责发现与展示分组；真正加载仍通过 `ResourceManagement.Load<T>(entry.ResourceKey, entry.Category)` 完成。
 
 ## 🛠️ 最佳实践
 

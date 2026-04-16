@@ -1,0 +1,237 @@
+using Godot;
+using Slime.Config.Units;
+using System;
+using ECS.Base.System.TestSystem.Core;
+
+/// <summary>
+/// 敌人生成测试模块。
+/// <para>
+/// 通过 ResourceCatalog 选择敌人目录下的 EnemyConfig，并复用正式 SpawnSystem 执行批量生成。
+/// </para>
+/// </summary>
+public partial class SpawnTestModule : TestModuleBase
+{
+    private const string EnemyCatalogPath = "Unit.Enemy";
+
+    private static readonly Log _log = new(nameof(SpawnTestModule));
+
+    [Export] private PackedScene? _resourcePickerScene;
+
+    private ResourcePickerControl _enemyPicker = null!;
+    private OptionButton _strategyOption = null!;
+    private SpinBox _countSpinBox = null!;
+    private Button _spawnButton = null!;
+    private Button _clearButton = null!;
+    private Button _reloadButton = null!;
+    private Label _selectedLabel = null!;
+    private Label _statusLabel = null!;
+    private Label _poolStatsLabel = null!;
+
+    internal override TestModuleDefinition Definition => new(
+        "spawn-enemy", // 模块稳定 Id
+        $"{TestModuleGroupId.Common}.敌人生成" // 模块导航路径
+    );
+
+    internal override void Initialize(ITestModuleContext context)
+    {
+        base.Initialize(context);
+        CacheUiNodes();
+        BuildEnemyPicker();
+        BuildStrategyOptions();
+        BindUiEvents();
+        SetProcess(false);
+        RefreshSelectionLabel();
+        UpdatePoolStats();
+    }
+
+    internal override void OnActivated()
+    {
+        base.OnActivated();
+        SetProcess(true);
+        _enemyPicker.Reload();
+        RefreshSelectionLabel();
+        UpdatePoolStats();
+    }
+
+    internal override void OnDeactivated()
+    {
+        base.OnDeactivated();
+        SetProcess(false);
+    }
+
+    internal override void Refresh()
+    {
+        _enemyPicker.Reload();
+        RefreshSelectionLabel();
+        UpdatePoolStats();
+    }
+
+    public override void _Process(double delta)
+    {
+        if (!IsModuleActive)
+        {
+            return;
+        }
+
+        UpdatePoolStats();
+    }
+
+    private void CacheUiNodes()
+    {
+        MouseFilter = Control.MouseFilterEnum.Stop;
+        _strategyOption = GetNode<OptionButton>("Controls/StrategyRow/StrategyOption");
+        _countSpinBox = GetNode<SpinBox>("Controls/CountRow/CountSpinBox");
+        _spawnButton = GetNode<Button>("Actions/SpawnButton");
+        _clearButton = GetNode<Button>("Actions/ClearButton");
+        _reloadButton = GetNode<Button>("Actions/ReloadButton");
+        _selectedLabel = GetNode<Label>("SelectedLabel");
+        _statusLabel = GetNode<Label>("StatusLabel");
+        _poolStatsLabel = GetNode<Label>("PoolStatsLabel");
+    }
+
+    private void BuildEnemyPicker()
+    {
+        _enemyPicker = TestSceneHelper.InstantiateScene<ResourcePickerControl>(
+            _resourcePickerScene, // 通用资源选择控件场景
+            nameof(ResourcePickerControl) // 场景名称用于错误提示
+        );
+        _enemyPicker.Name = "EnemyPicker";
+        AddChild(_enemyPicker);
+        MoveChild(
+            _enemyPicker, // 资源选择控件
+            2 // 放在说明与当前选择标签之后
+        );
+        _enemyPicker.Configure(EnemyCatalogPath); // 生成模块只允许选择 Data/Data/Unit/Enemy 下的配置
+    }
+
+    private void BuildStrategyOptions()
+    {
+        _strategyOption.Clear();
+        foreach (var strategy in Enum.GetValues<SpawnPositionStrategy>())
+        {
+            _strategyOption.AddItem(
+                strategy.ToString(), // 策略显示名
+                (int)strategy // 策略枚举值
+            );
+        }
+
+        _strategyOption.Select((int)SpawnPositionStrategy.Rectangle);
+    }
+
+    private void BindUiEvents()
+    {
+        _enemyPicker.SelectionChanged += OnEnemySelectionChanged;
+        _strategyOption.ItemSelected += OnStrategySelected;
+        _spawnButton.Pressed += SpawnSelectedEnemies;
+        _clearButton.Pressed += ClearEnemies;
+        _reloadButton.Pressed += ReloadCatalog;
+    }
+
+    private void SpawnSelectedEnemies()
+    {
+        if (!_enemyPicker.TryGetSelectedEntry(out var entry))
+        {
+            ShowStatus("请先选择一个敌人配置");
+            return;
+        }
+
+        var config = ResourceManagement.Load<EnemyConfig>(
+            entry.ResourceKey, // 敌人配置资源键
+            entry.Category // DataUnit 分类
+        );
+        if (config == null)
+        {
+            _log.Error($"[敌人生成测试] 加载敌人配置失败: key={entry.ResourceKey} path={entry.Path}");
+            ShowStatus($"加载失败: {entry.ResourceKey}");
+            return;
+        }
+
+        var spawnSystem = SpawnSystem.Instance;
+        if (spawnSystem == null)
+        {
+            ShowStatus("SpawnSystem 未初始化");
+            return;
+        }
+
+        var count = Math.Max(1, (int)_countSpinBox.Value);
+        var strategy = GetSelectedStrategy();
+
+        _log.Info($"[敌人生成测试] 生成敌人: name={entry.DisplayName} key={entry.ResourceKey} count={count} strategy={strategy}");
+        spawnSystem.SpawnBatch(
+            count, // 生成数量
+            config, // 敌人配置
+            strategy // 生成策略
+        );
+        ShowStatus($"已生成 {count} 个 {entry.DisplayName}，策略 {strategy}");
+        UpdatePoolStats();
+    }
+
+    private void ClearEnemies()
+    {
+        var spawnSystem = SpawnSystem.Instance;
+        if (spawnSystem == null)
+        {
+            ShowStatus("SpawnSystem 未初始化");
+            return;
+        }
+
+        spawnSystem.KillAllEnemies();
+        ShowStatus("已清空敌人池中的活跃敌人");
+        UpdatePoolStats();
+    }
+
+    private void ReloadCatalog()
+    {
+        ResourceCatalog.ClearCache();
+        _enemyPicker.Reload();
+        RefreshSelectionLabel();
+        ShowStatus("资源目录已刷新");
+    }
+
+    private SpawnPositionStrategy GetSelectedStrategy()
+    {
+        var selectedId = _strategyOption.GetSelectedId();
+        return Enum.IsDefined(typeof(SpawnPositionStrategy), selectedId)
+            ? (SpawnPositionStrategy)selectedId
+            : SpawnPositionStrategy.Rectangle;
+    }
+
+    private void RefreshSelectionLabel()
+    {
+        if (!_enemyPicker.TryGetSelectedEntry(out var entry))
+        {
+            _selectedLabel.Text = "当前敌人：未选择";
+            return;
+        }
+
+        _selectedLabel.Text = $"当前敌人：{entry.DisplayName} [{entry.ResourceKey}]";
+    }
+
+    private void UpdatePoolStats()
+    {
+        var pool = ObjectPoolManager.GetPool<EnemyEntity>(ObjectPoolNames.EnemyPool);
+        if (pool == null)
+        {
+            _poolStatsLabel.Text = $"{ObjectPoolNames.EnemyPool} 未初始化";
+            return;
+        }
+
+        var stats = pool.GetStats();
+        _poolStatsLabel.Text = $"敌人池 Active: {stats.ActiveCount} | Pool: {stats.Count} | Created: {stats.TotalCreated}";
+    }
+
+    private void ShowStatus(string message)
+    {
+        _statusLabel.Text = message;
+    }
+
+    private void OnEnemySelectionChanged(string resourceKey)
+    {
+        RefreshSelectionLabel();
+    }
+
+    private void OnStrategySelected(long index)
+    {
+        ShowStatus($"生成策略：{GetSelectedStrategy()}");
+    }
+}

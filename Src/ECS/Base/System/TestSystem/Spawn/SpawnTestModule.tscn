@@ -1,0 +1,78 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Src/ECS/Base/System/TestSystem/Spawn/SpawnTestModule.cs" id="1_spawn_module_script"]
+[ext_resource type="PackedScene" path="res://Src/ECS/Base/System/TestSystem/ResourceCatalog/ResourcePickerControl.tscn" id="2_resource_picker"]
+
+[node name="SpawnTestModule" type="VBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_spawn_module_script")
+_resourcePickerScene = ExtResource("2_resource_picker")
+
+[node name="InstructionLabel" type="Label" parent="."]
+layout_mode = 2
+text = "选择敌人配置后，通过正式 SpawnSystem 批量生成敌人"
+autowrap_mode = 3
+
+[node name="SelectedLabel" type="Label" parent="."]
+layout_mode = 2
+text = "当前敌人：未选择"
+autowrap_mode = 3
+
+[node name="Controls" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="StrategyRow" type="HBoxContainer" parent="Controls"]
+layout_mode = 2
+
+[node name="StrategyLabel" type="Label" parent="Controls/StrategyRow"]
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+vertical_alignment = 1
+text = "策略"
+
+[node name="StrategyOption" type="OptionButton" parent="Controls/StrategyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CountRow" type="HBoxContainer" parent="Controls"]
+layout_mode = 2
+
+[node name="CountLabel" type="Label" parent="Controls/CountRow"]
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+vertical_alignment = 1
+text = "数量"
+
+[node name="CountSpinBox" type="SpinBox" parent="Controls/CountRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 500.0
+value = 10.0
+
+[node name="Actions" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="SpawnButton" type="Button" parent="Actions"]
+layout_mode = 2
+text = "生成"
+
+[node name="ClearButton" type="Button" parent="Actions"]
+layout_mode = 2
+text = "清空敌人"
+
+[node name="ReloadButton" type="Button" parent="Actions"]
+layout_mode = 2
+text = "刷新资源"
+
+[node name="PoolStatsLabel" type="Label" parent="."]
+layout_mode = 2
+text = "敌人池 Active: 0 | Pool: 0 | Created: 0"
+autowrap_mode = 3
+
+[node name="StatusLabel" type="Label" parent="."]
+layout_mode = 2
+text = ""
+autowrap_mode = 3

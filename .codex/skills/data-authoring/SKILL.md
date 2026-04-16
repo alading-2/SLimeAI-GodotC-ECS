@@ -84,6 +84,16 @@ public static readonly DataMeta BaseHp = DataRegistry.Register(
 - 事件数据结构
 - Base / Unit / Ability / Data 等分域事件定义
 
+### `Data/ResourceManagement/`
+
+放资源索引与资源目录辅助：
+
+- `ResourcePaths.cs` 是 `Tools/ResourceGenerator` 自动生成的资源路径索引，禁止手改
+- `ResourceManagement.cs` 是统一加载入口
+- `ResourceCatalog.cs` 是运行时/测试面板/编辑器选择器使用的资源目录服务
+
+`ResourceCatalog` 只基于 `ResourcePaths.Resources` 整理单位、技能、特效条目，分类从资源路径推导，`Resource` 目录会被跳过；不要把运行时全盘扫描 `res://` 当成主数据源。
+
 ## 决策规则
 
 ### 什么时候字段要进 `Data/Data/`
@@ -113,9 +123,21 @@ public static readonly DataMeta BaseHp = DataRegistry.Register(
 5. 默认值优先直接读取 `DataKey.Xxx.DefaultValue`
 6. 如涉及通信，再补 `Data/EventType/` 契约
 
+## 新增资源文件标准流程
+
+当新增、移动、重命名或删除 `.tres` / `.tscn`：
+
+1. 保持资源路径落在 `Tools/ResourceGenerator/ResourceGenerator.cs` 的扫描范围内
+2. 运行 `dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj`
+3. 检查 `Data/ResourceManagement/ResourcePaths.cs` 是否出现预期条目
+4. 如果资源需要出现在通用选择器中，检查路径是否能推导出正确 `CatalogPath`；`Data/Data` 下按目录名分类，`Resource` 目录会被跳过
+5. 更新 `Docs/框架/项目索引.md` 和相关系统文档
+
 ## 禁止事项
 
 - ❌ 在 `Data/Data/` 里直接发明字符串键
+- ❌ 手动修改 `Data/ResourceManagement/ResourcePaths.cs`
+- ❌ 运行时全盘扫描目录替代 `ResourcePaths.Resources`
 - ❌ 新增 `const string` DataKey（特殊引用键除外）
 - ❌ 把系统配置误塞到 `Data/Data/`
 - ❌ 把某个 Entity 的初始字段误塞到 `Data/Config/`
@@ -128,4 +150,4 @@ public static readonly DataMeta BaseHp = DataRegistry.Register(
 - `Src/ECS/Base/Data/README.md` 是否仍和现状一致
 - `Docs/框架/项目索引.md` 是否需要补导航
 - `Docs/框架/ECS/Data/` 主文档是否需要同步
-- `.windsurf/skills/ecs-data/SKILL.md` 是否需要联动更新
+- `.codex/skills/ecs-data/SKILL.md` 是否需要联动更新

@@ -106,7 +106,10 @@ public static class ResourcePaths
     public const string System_DamageStatisticsSystem = "DamageStatisticsSystem";
     public const string System_MouseSelectionSystem = "MouseSelectionSystem";
     public const string System_RecoverySystem = "RecoverySystem";
+    public const string System_ResourceCatalogTestModule = "ResourceCatalogTestModule";
+    public const string System_ResourcePickerControl = "ResourcePickerControl";
     public const string System_SpawnSystem = "SpawnSystem";
+    public const string System_SpawnTestModule = "SpawnTestModule";
     public const string System_TestSystem = "TestSystem";
 
     // --- Tools ---
@@ -262,7 +265,10 @@ public static class ResourcePaths
                 { System_DamageStatisticsSystem, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/DamageSystem/DamageStatisticsSystem.tscn") },
                 { System_MouseSelectionSystem, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/MouseSelection/MouseSelectionSystem.tscn") },
                 { System_RecoverySystem, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/RecoverySystem/RecoverySystem.tscn") },
+                { System_ResourceCatalogTestModule, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/TestSystem/ResourceCatalog/ResourceCatalogTestModule.tscn") },
+                { System_ResourcePickerControl, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/TestSystem/ResourceCatalog/ResourcePickerControl.tscn") },
                 { System_SpawnSystem, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/Spawn/SpawnSystem.tscn") },
+                { System_SpawnTestModule, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/TestSystem/Spawn/SpawnTestModule.tscn") },
                 { System_TestSystem, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/TestSystem/TestSystem.tscn") },
             }
         },
