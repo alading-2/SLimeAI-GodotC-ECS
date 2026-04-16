@@ -61,6 +61,11 @@ public void OnPoolReset()   { /* 数据重置，通常留空 */ }
 
 API 文档：`Src/ECS/Tools/ObjectPool/ObjectPool.md`
 
+统计口径约定：
+
+- 对象池效率指标统一使用 `ReuseRate`（复用率），表示 `TotalReused / TotalAcquired`
+- `TotalCreatedOnAcquire` 只统计获取时扩容新建，不包含预热创建
+
 ### 对象池实体激活时序（重要）
 
 对象池中的 **IEntity** 必须使用“两阶段激活”：

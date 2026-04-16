@@ -13,7 +13,7 @@
 - **两阶段激活时序** - `Get(false)` 不提前触发 `OnPoolAcquire`，而是等 `Activate()` 时才真正完成挂树保障、恢复节点并触发生命周期。
 - **生命周期回调** - 通过 `IPoolable` 接口实现精准的对象重置逻辑。
 - **全局管理器** - `ObjectPoolManager` 自动管理所有创建的池，支持**静态归还**与**按名查找**。
-- **详细统计** - 实时追踪命中率、活跃数、闲置数及创建/销毁总量。
+- **详细统计** - 实时追踪复用率、活跃数、闲置数及创建/销毁总量。
 - **线程安全** - 内部使用 `lock` 确保管理器操作的安全性。
 
 ## 文件组织
@@ -205,7 +205,14 @@ AutoLoad 加载顺序（按 Priority）：
 | `Warmup(int count)`                  | 手动预热，提前实例化指定数量的对象。                 |
 | `Cleanup(int retainCount)`           | 清理闲置对象，仅保留指定数量。                       |
 | `Clear()`                            | 销毁池内所有闲置对象。                               |
-| `GetStats()`                         | 获取命中率、活跃数等统计信息。                       |
+| `GetStats()`                         | 获取复用率、活跃数等统计信息。                       |
+
+`PoolStats` 关键口径：
+
+- `TotalCreated`：总创建次数（包含预热）。
+- `TotalCreatedOnAcquire`：获取流程中因池空触发的扩容新建次数（不含预热）。
+- `TotalReused`：获取流程中直接从闲置池复用的次数。
+- `ReuseRate`：`TotalReused / TotalAcquired`，表示获取时来自池内复用的比例。
 
 ### ObjectPoolManager (全局管理器)
 

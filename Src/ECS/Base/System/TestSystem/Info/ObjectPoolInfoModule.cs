@@ -10,6 +10,8 @@ using System.Collections.Generic;
 /// </summary>
 public partial class ObjectPoolInfoModule : TestModuleBase
 {
+    private const float AutoRefreshIntervalSeconds = 1f;
+
     private readonly ObjectPoolInfoService _service = new();
     private readonly List<ObjectPoolInfoSnapshot> _snapshots = new();
 
@@ -18,6 +20,7 @@ public partial class ObjectPoolInfoModule : TestModuleBase
     private Label _overviewLabel = null!;
     private Label _detailsLabel = null!;
     private Label _statusLabel = null!;
+    private float _autoRefreshElapsed;
 
     internal override TestModuleDefinition Definition => new(
         "object-pool-info", // 模块稳定 Id
@@ -29,17 +32,45 @@ public partial class ObjectPoolInfoModule : TestModuleBase
         base.Initialize(context);
         CacheUiNodes();
         BindUiEvents();
+        SetProcess(false);
         ReloadSnapshots();
     }
 
     internal override void OnActivated()
     {
         base.OnActivated();
+        _autoRefreshElapsed = 0f;
+        SetProcess(true);
         ReloadSnapshots();
+    }
+
+    internal override void OnDeactivated()
+    {
+        base.OnDeactivated();
+        SetProcess(false);
+        _autoRefreshElapsed = 0f;
     }
 
     internal override void Refresh()
     {
+        _autoRefreshElapsed = 0f;
+        ReloadSnapshots();
+    }
+
+    public override void _Process(double delta)
+    {
+        if (!CanRefresh)
+        {
+            return;
+        }
+
+        _autoRefreshElapsed += (float)delta; // 累积模块激活后的运行时间
+        if (_autoRefreshElapsed < AutoRefreshIntervalSeconds)
+        {
+            return;
+        }
+
+        _autoRefreshElapsed = 0f;
         ReloadSnapshots();
     }
 
@@ -69,9 +100,10 @@ public partial class ObjectPoolInfoModule : TestModuleBase
     /// </summary>
     private void ReloadSnapshots()
     {
+        var selectedPoolName = GetSelectedPoolName();
         _snapshots.Clear();
         _snapshots.AddRange(_service.GetSnapshots());
-        RebuildPoolList();
+        RebuildPoolList(selectedPoolName);
         UpdateSummary();
 
         if (_snapshots.Count == 0)
@@ -93,12 +125,29 @@ public partial class ObjectPoolInfoModule : TestModuleBase
     /// <summary>
     /// 重建对象池总览列表。
     /// </summary>
-    private void RebuildPoolList()
+    /// <param name="selectedPoolName">刷新前选中的对象池名称。</param>
+    private void RebuildPoolList(string selectedPoolName)
     {
         _poolList.Clear();
-        foreach (var snapshot in _snapshots)
+        var selectedIndex = -1;
+        for (var i = 0; i < _snapshots.Count; i++)
         {
+            var snapshot = _snapshots[i];
             _poolList.AddItem(snapshot.PoolName);
+            if (selectedIndex >= 0)
+            {
+                continue;
+            }
+
+            if (string.Equals(snapshot.PoolName, selectedPoolName, StringComparison.Ordinal))
+            {
+                selectedIndex = i;
+            }
+        }
+
+        if (selectedIndex >= 0)
+        {
+            _poolList.Select(selectedIndex);
         }
     }
 
@@ -150,10 +199,12 @@ public partial class ObjectPoolInfoModule : TestModuleBase
             $"闲置数量：{snapshot.Stats.Count}\n" +
             $"使用中数量：{snapshot.Stats.ActiveCount}\n" +
             $"累计创建：{snapshot.Stats.TotalCreated}\n" +
-            $"命中率：{snapshot.Stats.HitRate:P2}";
+            $"复用率：{snapshot.Stats.ReuseRate:P2}";
 
         _detailsLabel.Text =
             $"累计获取：{snapshot.Stats.TotalAcquired}\n" +
+            $"累计池内复用：{snapshot.Stats.TotalReused}\n" +
+            $"累计扩容新建：{snapshot.Stats.TotalCreatedOnAcquire}\n" +
             $"累计归还：{snapshot.Stats.TotalReleased}\n" +
             $"累计丢弃：{snapshot.Stats.TotalDiscarded}\n" +
             $"\n" +
@@ -169,6 +220,23 @@ public partial class ObjectPoolInfoModule : TestModuleBase
     private void OnPoolSelected(long index)
     {
         UpdateSelectedSnapshotDetails();
+    }
+
+    /// <summary>
+    /// 获取当前选中的对象池名称，供刷新后恢复选择。
+    /// </summary>
+    private string GetSelectedPoolName()
+    {
+        var selectedItems = _poolList.GetSelectedItems();
+        if (selectedItems.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var itemIndex = selectedItems[0];
+        return itemIndex >= 0 && itemIndex < _snapshots.Count
+            ? _snapshots[itemIndex].PoolName
+            : string.Empty;
     }
 
     /// <summary>

@@ -236,7 +236,7 @@ public partial class ObjectPoolManagerTest : Control
             var statsStr = $"[{name}]\n" +
                            $"闲置: {stats.Count} | 活跃: {stats.ActiveCount}\n" +
                            $"总创建: {stats.TotalCreated} | 总回收: {stats.TotalReleased}\n" +
-                           $"利用率: {stats.HitRate:P0}";
+                           $"复用率: {stats.ReuseRate:P0}";
 
             var label = new Label
             {

@@ -80,7 +80,7 @@
 - `ResourceCatalog` 将单位、技能、特效和单位 Asset 的选择目录收口到 `ResourcePaths.Resources`，并按路径自动推导分类，敌人生成测试等模块可以复用正式资源索引而不运行时扫目录
 - `ResourceCatalogTestModule` 通过分类下拉框展示 `ResourceCatalog.GetGroups()` 的分类和资源总数，选择分类后自动显示该分类资源明细，可用于运行时确认当前索引是否覆盖所有分类与资源
 - `SpawnTestModule` 通过 `ResourcePickerControl` 按 `Unit.Enemy` 目录前缀只选择敌人配置，再转发到正式 `SpawnSystem.SpawnBatch(...)`
-- `ObjectPoolInfoModule` 把 `ObjectPoolManager` 运行时统计和对象池容量元数据合并到同一只读面板，并改为中文字段展示，适合调试对象池容量与复用情况
+- `ObjectPoolInfoModule` 把 `ObjectPoolManager` 运行时统计和对象池容量元数据合并到同一只读面板，并改为中文字段展示；模块激活时每秒自动刷新，同时保留当前对象池选择，适合持续观察对象池容量与复用情况
 - 视觉预览已迁出 `TestSystem`，独立场景位于 `Src/ECS/Test/GlobalTest/VisualPreview/`；它按 `ResourcePaths.Resources` 中全部 `Asset*` 分类生成 `VisualPreviewEntity`，直接扫描并控制 `VisualRoot` 下的 `AnimatedSprite2D` 进行动作预览，并直接消费 `MouseSelectionSystem` 的选中结果
 
 也就是说，当前问题不是“完全推翻重来”，而是**架构概念有雏形，但实现细节不成熟**。

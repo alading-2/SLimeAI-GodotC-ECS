@@ -21,16 +21,20 @@ public struct PoolStats
     public int TotalCreated;
     /// <summary> 自创建以来，外部总共从池中获取对象的次数 </summary>
     public int TotalAcquired;
+    /// <summary> 自创建以来，从池内闲置栈直接复用对象的次数 </summary>
+    public int TotalReused;
+    /// <summary> 自创建以来，在获取流程中因池空而扩容新建对象的次数（不含预热） </summary>
+    public int TotalCreatedOnAcquire;
     /// <summary> 自创建以来，外部成功归还对象到池中的次数 </summary>
     public int TotalReleased;
     /// <summary> 因达到 MaxSize 容量限制而被直接销毁的对象总数 </summary>
     public int TotalDiscarded;
 
     /// <summary>
-    /// 计算池的命中率（0.0 - 1.0）
-    /// 命中率越高表示对象复用效率越高
+    /// 计算池的复用率（0.0 - 1.0）
+    /// 表示获取时有多少比例来自池内复用，而不是扩容新建。
     /// </summary>
-    public float HitRate => TotalAcquired > 0 ? (float)(TotalAcquired - TotalCreated) / TotalAcquired : 0;
+    public float ReuseRate => TotalAcquired > 0 ? (float)TotalReused / TotalAcquired : 0;
 }
 
 /// <summary>
@@ -132,6 +136,8 @@ public class ObjectPool<T> where T : class
             ActiveCount = 0,
             TotalCreated = 0,
             TotalAcquired = 0,
+            TotalReused = 0,
+            TotalCreatedOnAcquire = 0,
             TotalReleased = 0,
             TotalDiscarded = 0
         };
@@ -351,10 +357,12 @@ public class ObjectPool<T> where T : class
         {
             obj = _stack.Pop();
             _stats.Count = _stack.Count;
+            _stats.TotalReused++;
         }
         else
         {
             obj = CreateNew();
+            _stats.TotalCreatedOnAcquire++;
         }
 
         _stats.ActiveCount++;

@@ -20,8 +20,8 @@
         - 对象池注册时登记的容量元数据 InitialSize / MaxSize
     - 模块 UI 采用“总览列表 + 详情面板”
     - 第一版只读，不暴露 CleanupAll、DestroyAll
-    - 总览至少显示：池名、闲置数、活跃数、总创建数、命中率、异常提示
-    - 详情至少显示：Count / ActiveCount / TotalCreated / TotalAcquired / TotalReleased / TotalDiscarded / HitRate / InitialSize / MaxSize
+    - 总览至少显示：池名、闲置数、活跃数、总创建数、复用率、异常提示
+    - 详情至少显示：Count / ActiveCount / TotalCreated / TotalAcquired / TotalReused / TotalCreatedOnAcquire / TotalReleased / TotalDiscarded / ReuseRate / InitialSize / MaxSize
 - ObjectPool / 初始化链路：
     - 在对象池创建时同步登记观测元数据，避免 UI 层反查源码
     - 第一版元数据只要求：池名、InitialSize、MaxSize
