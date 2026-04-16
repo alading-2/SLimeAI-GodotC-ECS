@@ -26,7 +26,7 @@ internal class BezierShotExecutor : AbilityFeatureHandler
         var damage = GetScaledAbilityDamage(context);
 
         // 查找最近敌人作为终点
-        var targetPos = GetNearestEnemyPos(caster, casterNode);
+        var targetPos = GetNearestEnemyPos(caster, casterNode, ability.Data.Get<float>(DataKey.AbilityCastRange));
         var startPos = casterNode.GlobalPosition;
         var midPoint = (startPos + targetPos) / 2f;
         var controlPoint = midPoint + new Vector2(0f, -180f);
@@ -64,19 +64,19 @@ internal class BezierShotExecutor : AbilityFeatureHandler
         return new AbilityExecutedResult { TargetsHit = 1 }; // 返回命中结果
     }
 
-    private static Vector2 GetNearestEnemyPos(IEntity caster, Node2D casterNode)
+    private static Vector2 GetNearestEnemyPos(IEntity caster, Node2D casterNode, float castRange)
     {
-        var query = new TargetSelectorQuery
+        float effectiveRange = castRange > 0f ? castRange : 600f; //查询半径
+        var targets = EntityTargetSelector.Query(new TargetSelectorQuery
         {
-            Geometry = GeometryType.Circle, // 圆形范围
-            Origin = casterNode.GlobalPosition, // 查询原点
-            Range = 600f, // 查询范围
-            CenterEntity = caster, // 中心实体
-            TeamFilter = AbilityTargetTeamFilter.Enemy, // 过滤敌方
-            Sorting = TargetSorting.Nearest, // 按最近排序
-            MaxTargets = 1 // 最大目标数
-        };
-        var targets = EntityTargetSelector.Query(query);
+            Geometry = GeometryType.Circle, //查询形状
+            Origin = casterNode.GlobalPosition, //查询中心
+            Range = effectiveRange, //查询半径
+            CenterEntity = caster, //中心实体
+            TeamFilter = AbilityTargetTeamFilter.Enemy, //阵营过滤
+            Sorting = TargetSorting.Nearest, //排序方式
+            MaxTargets = 1 //最大目标数
+        });
         if (targets.Count > 0 && targets[0] is Node2D t)
             return t.GlobalPosition;
         return casterNode.GlobalPosition + new Vector2(400f, 0f); // 无目标时返回前方位置

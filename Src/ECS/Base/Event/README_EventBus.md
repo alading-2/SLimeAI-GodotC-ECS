@@ -174,7 +174,7 @@ GlobalEventBus.TriggerWaveStarted(waveIndex);
 | 触发实体 (Trigger) | 负责逻辑 | 典型事件示例 |
 | :--- | :--- | :--- |
 | **PlayerEntity** | **控制/选中/汇总**：玩家切换了当前技能、玩家升级、获得新技能 | `UI.ActiveSkillSelected`, `Ability.Added`, `Unit.LevelUp` |
-| **AbilityEntity** | **内部生命周期/冷却**：技能转好了、能量变了、开始选目标、正式激活 | `Ability.Ready`, `Ability.SelectTargets`, `Ability.Activated` |
+| **AbilityEntity** | **内部生命周期/冷却**：技能转好了、能量变了、正式激活 | `Ability.Ready`, `Ability.Activated` |
 | **Item/Buff Entity** | **模块自身逻辑**：被动触发、Buff 叠加、Buff 消失 | `Item.Triggered`, `Buff.Stacked`, `Buff.Expired` |
 
 ### 为什么这样划分？ (必读)

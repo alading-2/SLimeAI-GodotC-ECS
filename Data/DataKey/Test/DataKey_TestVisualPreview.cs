@@ -3,17 +3,6 @@
 /// </summary>
 public static partial class DataKey
 {
-    public static readonly DataMeta AnimationAutoDriveEnabled = DataRegistry.Register(
-        new DataMeta
-        {
-            Key = nameof(AnimationAutoDriveEnabled),
-            DisplayName = "动画自动驱动",
-            Description = "是否允许 UnitAnimationComponent 根据实体运动状态自动切换 idle/run。",
-            Category = DataCategory_Test.VisualPreview,
-            Type = typeof(bool),
-            DefaultValue = true
-        });
-
     public static readonly DataMeta PreviewResourceKey = DataRegistry.Register(
         new DataMeta { Key = nameof(PreviewResourceKey), DisplayName = "预览资源键", Category = DataCategory_Test.VisualPreview, Type = typeof(string), DefaultValue = string.Empty });
 

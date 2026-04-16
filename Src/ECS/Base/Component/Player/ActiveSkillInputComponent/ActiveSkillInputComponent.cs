@@ -123,8 +123,8 @@ public partial class ActiveSkillInputComponent : Node, IComponent
 
     /// <summary>
     /// 执行当前选中的主动技能。
-    /// 统一入口：所有目标类型（Entity/Point/EntityOrPoint/None）
-    /// 均通过 AbilitySystem.TryTriggerAbility 处理，由流水线内部决定同步执行或异步瞄准。
+    /// 统一入口：所有目标类型都走 TryTrigger。
+    /// 具体是直接释放、自动索敌失败还是进入点选，由对应 AbilityHandler.PrepareCast 决定。
     /// </summary>
     private void TryUseCurrentActiveAbility()
     {
@@ -147,7 +147,7 @@ public partial class ActiveSkillInputComponent : Node, IComponent
         var ability = activeAbilities[currentIndex];
         var abilityName = ability.Data.Get<string>(DataKey.Name);
 
-        // 统一走 AbilitySystem 流水线（内部自动判断同步/异步）
+        // 统一走 AbilitySystem 流水线；目标决策由对应 Handler 的 PrepareCast 负责
         if (_entity is IEntity caster)
         {
             var context = new CastContext

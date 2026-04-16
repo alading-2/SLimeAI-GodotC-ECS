@@ -20,12 +20,5 @@ public static partial class GameEventType
         /// <summary>技能取消事件数据</summary>
         public readonly record struct CancelledEventData(string Reason);
 
-        /// <summary>
-        /// 请求选择目标（AbilitySystem -> 目标选择组件）
-        /// 接收者：AbilityTargetSelectionComponent
-        /// </summary>
-        public const string SelectTargets = "ability:select_targets";
-        /// <summary>选择目标事件数据</summary>
-        public readonly record struct SelectTargetsEventData(CastContext Context);
     }
 }

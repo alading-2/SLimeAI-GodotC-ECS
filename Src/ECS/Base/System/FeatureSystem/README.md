@@ -196,7 +196,7 @@
 
 ```text
 TryTrigger
-→ AbilitySystem 做 CanUse / SelectTargets / ConsumeCharge / StartCooldown / ConsumeCost
+→ AbilitySystem 做 CanUse / Handler.PrepareCast / ConsumeCharge / StartCooldown / ConsumeCost
 → AbilitySystem 构建 FeatureContext
 → FeatureContext.ActivationData = CastContext
 → FeatureSystem.OnFeatureActivated(featureCtx)

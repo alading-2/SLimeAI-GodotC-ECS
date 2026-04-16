@@ -2,24 +2,26 @@
 
 ## 概述
 
-`TargetingManager` 是 Point / EntityOrPoint 技能的异步瞄准状态机。
+`TargetingManager` 是技能系统的异步点选基础设施。
 
-它的职责是把“需要玩家选择位置”的技能流程，从 `AbilitySystem` 的同步流水线中拆出来：
+它只负责“已经决定要进入点选以后”的会话管理，不负责决定某个技能到底要不要点选。当前职责：
 
-- 接收 `StartTargeting` 全局事件并进入瞄准态
+- 接收 `Targeting.StartTargeting` 全局事件并进入瞄准态
 - 生成并销毁 `TargetingIndicatorEntity`
-- 响应确认 (`TargetConfirmed`) 与取消 (`TargetCancelled`)
+- 响应确认（`TargetConfirmed`）与取消（`TargetCancelled`）
 - 在确认时回调 `AbilitySystem.ResumeAfterTargeting(context)` 恢复施法流水线
 - 在玩家死亡或外部强制打断时退出瞄准态
+
+通常由具体 `AbilityHandler.PrepareCast` 发起 `StartTargeting`。
 
 ---
 
 ## 设计目标
 
-1. **解耦**：`AbilitySystem` 只负责施法流水线，不处理右摇杆移动与确认输入。
-2. **单一瞄准会话**：同一时刻只允许一个技能处于瞄准态。
-3. **可恢复流水线**：确认时只填充 `CastContext.TargetPosition`，再回到统一流水线继续执行。
-4. **可强制中断**：支持玩家死亡、控制效果等场景的外部取消。
+1. `AbilitySystem` 不处理右摇杆输入，只负责流水线编排。
+2. `AbilityHandler` 决定何时点选，`TargetingManager` 负责点选会话本身。
+3. 同一时刻只允许一个技能处于瞄准态。
+4. 确认时只回填 `CastContext.TargetPosition`，再回到统一流水线继续执行。
 
 ---
 
@@ -34,7 +36,7 @@
 - `CurrentRange`：当前技能射程
 - `_currentIndicator`：当前瞄准指示器实体
 
-> `CurrentContext` 是“恢复流水线”的关键：确认时将目标点写回该上下文，再交还 `AbilitySystem`。
+`CurrentContext` 是恢复流水线的关键：确认时把目标点写回这个上下文，再交还 `AbilitySystem`。
 
 ---
 
@@ -42,12 +44,13 @@
 
 ```mermaid
 sequenceDiagram
-    participant AS as AbilitySystem
+    participant AH as AbilityHandler.PrepareCast
     participant GB as GlobalEventBus
     participant TM as TargetingManager
     participant TI as TargetingIndicatorControlComponent
+    participant AS as AbilitySystem
 
-    AS->>GB: Emit(Targeting.StartTargeting, StartTargetingEventData(context))
+    AH->>GB: Emit(Targeting.StartTargeting, StartTargetingEventData(context))
     GB->>TM: OnStartTargeting
     TM->>TM: 保存 CurrentContext/Range
     TM->>TM: SpawnIndicator(casterPos)
@@ -73,20 +76,25 @@ sequenceDiagram
 
 ## 与技能系统协作边界
 
+### AbilityHandler 负责
+
+- 决定是否进入点选
+- 决定无目标时是失败还是点选
+- 调用 `RequestPointTarget(context)` 或直接发 `Targeting.StartTargeting`
+
 ### AbilitySystem 负责
 
-- 触发前检查（`CanUse`）
-- 资源消耗（Charge/Cost）
-- 冷却启动
-- 效果执行
-- 在 Point / EntityOrPoint 无预选位置时发起 `StartTargeting`
+- 统一触发入口
+- 就绪检查
+- 成功后的消耗、冷却、执行
+- 在确认后通过 `ResumeAfterTargeting(context)` 重跑流水线
 
 ### TargetingManager 负责
 
 - 异步瞄准状态管理
 - 指示器实体创建与销毁
 - 确认/取消事件处理
-- 确认后调用 `ResumeAfterTargeting` 恢复统一流水线
+- 确认后回填 `TargetPosition`
 
 ---
 
@@ -98,6 +106,8 @@ sequenceDiagram
   - `B`：取消
 - 指示器实体：`TargetingIndicatorEntity`
   - 仅作可视化容器，业务逻辑在控制组件中
+
+`TargetingIndicatorControlComponent` 目前不需要感知具体技能类型；它只消费 `TargetingManager` 提供的会话参数。
 
 ---
 
@@ -114,10 +124,10 @@ sequenceDiagram
 
 ## 扩展建议
 
-1. **合法落点校验**：在确认前增加导航可达/地形阻挡检查。
-2. **多模式指示器**：根据 `AbilityTargetGeometry` 切换圆形、扇形、直线预览。
-3. **瞄准超时**：为瞄准会话增加超时自动取消。
-4. **多人控制权**：将全局单例扩展为“按施法者实例隔离”的会话管理。
+1. 合法落点校验：在确认前增加导航可达或地形阻挡检查。
+2. 多模式指示器：根据具体 Handler 传入的点选元数据切换圆形、扇形、直线预览。
+3. 瞄准超时：为会话增加超时自动取消。
+4. 多人控制权：将全局单会话扩展为按施法者隔离的多会话。
 
 ---
 

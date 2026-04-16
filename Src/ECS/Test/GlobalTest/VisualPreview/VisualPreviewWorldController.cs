@@ -2,19 +2,30 @@ using Godot;
 using Slime.Config.Test;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 /// <summary>
 /// 独立视觉预览世界控制器。
 /// </summary>
 internal sealed class VisualPreviewWorldController
 {
+    private sealed class PreviewRuntimeState
+    {
+        public required VisualPreviewEntity Entity { get; init; }
+        public AnimatedSprite2D? Sprite { get; init; }
+        public required List<string> AvailableAnimations { get; init; }
+        public Action? AnimationFinishedHandler { get; set; }
+        public string CurrentPreviewAnimation { get; set; } = string.Empty;
+    }
+
     private const int ColumnCount = 5;
     private const float ColumnSpacing = 220f;
     private const float RowSpacing = 220f;
 
+    private static readonly Log _log = new(nameof(VisualPreviewWorldController));
+
     private readonly List<VisualPreviewEntity> _entities = new();
     private readonly Dictionary<VisualPreviewEntity, VisualPreviewEntry> _entriesByEntity = new();
+    private readonly Dictionary<VisualPreviewEntity, PreviewRuntimeState> _runtimeByEntity = new();
 
     public IReadOnlyList<VisualPreviewEntity> Entities => _entities;
 
@@ -38,6 +49,10 @@ internal sealed class VisualPreviewWorldController
 
             _entities.Add(entity);
             _entriesByEntity[entity] = entries[i];
+            _runtimeByEntity[entity] = BuildRuntimeState(
+                entity, // 预览实体
+                entries[i] // 资源条目
+            );
         }
     }
 
@@ -46,6 +61,11 @@ internal sealed class VisualPreviewWorldController
     /// </summary>
     public void Clear()
     {
+        foreach (var runtime in _runtimeByEntity.Values)
+        {
+            UnbindAnimationFinished(runtime);
+        }
+
         foreach (var entity in _entities)
         {
             if (GodotObject.IsInstanceValid(entity))
@@ -56,6 +76,7 @@ internal sealed class VisualPreviewWorldController
 
         _entities.Clear();
         _entriesByEntity.Clear();
+        _runtimeByEntity.Clear();
     }
 
     /// <summary>
@@ -127,13 +148,24 @@ internal sealed class VisualPreviewWorldController
                 continue;
             }
 
-            foreach (var animationName in GetAvailableAnimations(entity))
+            if (!_runtimeByEntity.TryGetValue(entity, out var runtime))
+            {
+                continue;
+            }
+
+            foreach (var animationName in runtime.AvailableAnimations)
             {
                 result.Add(animationName);
             }
         }
 
-        return result.ToArray();
+        var animations = new List<string>(result.Count);
+        foreach (var animationName in result)
+        {
+            animations.Add(animationName);
+        }
+
+        return animations;
     }
 
     /// <summary>
@@ -151,25 +183,19 @@ internal sealed class VisualPreviewWorldController
                 continue;
             }
 
-            var resolvedAnimation = ResolveAnimation(
-                entity, // 目标实体
-                entry, // 资源条目
-                animationName // 用户选择动作
-            );
-            entity.Data.Set(DataKey.PreviewCurrentAnimation, resolvedAnimation);
-            if (string.IsNullOrWhiteSpace(resolvedAnimation))
+            if (!_runtimeByEntity.TryGetValue(entity, out var runtime))
             {
-                entity.Events.Emit(GameEventType.Unit.StopAnimationRequested, new GameEventType.Unit.StopAnimationRequestedEventData());
                 continue;
             }
 
-            entity.Events.Emit(
-                GameEventType.Unit.PlayAnimationRequested,
-                new GameEventType.Unit.PlayAnimationRequestedEventData(
-                    resolvedAnimation, // 动作名
-                    true, // 强制重播
-                    -1f // 不限制播放时长
-                )
+            var resolvedAnimation = ResolveAnimation(
+                runtime, // 预览缓存
+                entry, // 资源条目
+                animationName // 用户选择动作
+            );
+            PlayResolvedAnimation(
+                runtime, // 预览缓存
+                resolvedAnimation // 最终动作
             );
         }
     }
@@ -194,8 +220,7 @@ internal sealed class VisualPreviewWorldController
         {
             Name = entry.SceneName,
             VisualScenePath = visualScene,
-            PreviewDefaultAnimation = entry.DefaultAnimation,
-            AnimationAutoDriveEnabled = false
+            PreviewDefaultAnimation = entry.DefaultAnimation
         };
 
         var entity = EntityManager.Spawn<VisualPreviewEntity>(new EntitySpawnConfig
@@ -220,12 +245,12 @@ internal sealed class VisualPreviewWorldController
     /// <summary>
     /// 解析最终要播放的动作。
     /// </summary>
-    /// <param name="entity">目标实体。</param>
+    /// <param name="runtime">预览运行时状态。</param>
     /// <param name="entry">资源条目。</param>
     /// <param name="requestedAnimation">用户选择动作。</param>
-    private static string ResolveAnimation(VisualPreviewEntity entity, VisualPreviewEntry entry, string requestedAnimation)
+    private static string ResolveAnimation(PreviewRuntimeState runtime, VisualPreviewEntry entry, string requestedAnimation)
     {
-        var available = GetAvailableAnimations(entity);
+        var available = runtime.AvailableAnimations;
         if (!string.IsNullOrWhiteSpace(requestedAnimation) && available.Contains(requestedAnimation))
         {
             return requestedAnimation;
@@ -240,15 +265,164 @@ internal sealed class VisualPreviewWorldController
     }
 
     /// <summary>
-    /// 获取实体可用动作列表。
+    /// 构建预览实体运行时状态。
     /// </summary>
-    /// <param name="entity">目标实体。</param>
-    private static List<string> GetAvailableAnimations(VisualPreviewEntity entity)
+    /// <param name="entity">预览实体。</param>
+    /// <param name="entry">资源条目。</param>
+    private PreviewRuntimeState BuildRuntimeState(VisualPreviewEntity entity, VisualPreviewEntry entry)
     {
-        return entity.Data.Get<List<string>>(
-            DataKey.AvailableAnimations, // UnitAnimationComponent 缓存的动作列表
-            new List<string>() // 非 AnimatedSprite2D 资源兜底为空列表
+        var sprite = FindPreviewSprite(entity);
+        var availableAnimations = GetSpriteAnimationNames(sprite);
+        var runtime = new PreviewRuntimeState
+        {
+            Entity = entity,
+            Sprite = sprite,
+            AvailableAnimations = availableAnimations
+        };
+
+        BindAnimationFinished(runtime);
+        entity.Data.Set(DataKey.PreviewCurrentAnimation, string.Empty);
+        return runtime;
+    }
+
+    /// <summary>
+    /// 在预览实体上查找唯一 AnimatedSprite2D。
+    /// </summary>
+    /// <param name="entity">预览实体。</param>
+    private static AnimatedSprite2D? FindPreviewSprite(VisualPreviewEntity entity)
+    {
+        var visualRoot = entity.GetNodeOrNull("VisualRoot");
+        if (visualRoot == null)
+        {
+            return null;
+        }
+
+        var foundSprites = new List<AnimatedSprite2D>();
+        CollectAnimatedSprites(
+            visualRoot, // 视觉根节点
+            foundSprites // 收集结果
         );
+
+        if (foundSprites.Count > 1)
+        {
+            _log.Error($"[{entity.Name}] VisualRoot 下找到 {foundSprites.Count} 个 AnimatedSprite2D，只会控制第一个，这属于异常资源结构");
+        }
+
+        return foundSprites.Count > 0 ? foundSprites[0] : null;
+    }
+
+    /// <summary>
+    /// 递归收集视觉节点树中的 AnimatedSprite2D。
+    /// </summary>
+    /// <param name="node">起始节点。</param>
+    /// <param name="result">收集列表。</param>
+    private static void CollectAnimatedSprites(Node node, List<AnimatedSprite2D> result)
+    {
+        if (node is AnimatedSprite2D sprite)
+        {
+            result.Add(sprite);
+        }
+
+        foreach (Node child in node.GetChildren())
+        {
+            CollectAnimatedSprites(
+                child, // 子节点
+                result // 收集列表
+            );
+        }
+    }
+
+    /// <summary>
+    /// 读取 SpriteFrames 里的全部动画名称。
+    /// </summary>
+    /// <param name="sprite">目标动画节点。</param>
+    private static List<string> GetSpriteAnimationNames(AnimatedSprite2D? sprite)
+    {
+        var result = new List<string>();
+        var spriteFrames = sprite?.SpriteFrames;
+        if (spriteFrames == null)
+        {
+            return result;
+        }
+
+        foreach (var animationName in spriteFrames.GetAnimationNames())
+        {
+            result.Add(animationName);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// 绑定预览动画结束回调，用于持续回放当前预览动作。
+    /// </summary>
+    /// <param name="runtime">预览运行时状态。</param>
+    private void BindAnimationFinished(PreviewRuntimeState runtime)
+    {
+        if (runtime.Sprite == null)
+        {
+            return;
+        }
+
+        Action handler = () => OnPreviewAnimationFinished(
+            runtime.Entity // 当前预览实体
+        );
+        runtime.AnimationFinishedHandler = handler;
+        runtime.Sprite.AnimationFinished += handler;
+    }
+
+    /// <summary>
+    /// 解绑预览动画结束回调。
+    /// </summary>
+    /// <param name="runtime">预览运行时状态。</param>
+    private static void UnbindAnimationFinished(PreviewRuntimeState runtime)
+    {
+        if (runtime.Sprite == null || runtime.AnimationFinishedHandler == null)
+        {
+            return;
+        }
+
+        runtime.Sprite.AnimationFinished -= runtime.AnimationFinishedHandler;
+        runtime.AnimationFinishedHandler = null;
+    }
+
+    /// <summary>
+    /// 预览动画结束后重新播放当前预览动作。
+    /// </summary>
+    /// <param name="entity">对应的预览实体。</param>
+    private void OnPreviewAnimationFinished(VisualPreviewEntity entity)
+    {
+        if (!_runtimeByEntity.TryGetValue(entity, out var runtime)
+            || runtime.Sprite == null
+            || string.IsNullOrWhiteSpace(runtime.CurrentPreviewAnimation)
+            || !runtime.AvailableAnimations.Contains(runtime.CurrentPreviewAnimation))
+        {
+            return;
+        }
+
+        runtime.Sprite.Play(runtime.CurrentPreviewAnimation); // 预览场景下持续回放当前动作
+    }
+
+    /// <summary>
+    /// 播放已解析出的目标动作。
+    /// </summary>
+    /// <param name="runtime">预览运行时状态。</param>
+    /// <param name="animationName">最终动作名。</param>
+    private static void PlayResolvedAnimation(PreviewRuntimeState runtime, string animationName)
+    {
+        runtime.CurrentPreviewAnimation = animationName;
+        runtime.Entity.Data.Set(
+            DataKey.PreviewCurrentAnimation,
+            animationName // 当前预览动作
+        );
+
+        if (runtime.Sprite == null || string.IsNullOrWhiteSpace(animationName))
+        {
+            runtime.Sprite?.Stop();
+            return;
+        }
+
+        runtime.Sprite.Play(animationName);
     }
 
     /// <summary>

@@ -2,7 +2,7 @@ using Godot;
 using Slime.Config.Units;
 using System.Runtime.CompilerServices;
 /// <summary>
-/// 瞄准状态管理器 - 管理Point类型技能的异步目标选择
+/// 瞄准状态管理器 - 管理由 AbilityHandler 发起的异步点选会话
 /// 
 /// 职责：
 /// - 维护当前瞄准状态（是否正在瞄准、挂起的技能请求）
@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 /// - 响应确认/取消事件，完成技能释放或取消流程
 /// 
 /// 设计理念：
-/// - 使用全局事件解耦技能系统和瞄准指示器
+/// - 使用全局事件解耦 AbilityHandler、瞄准指示器和 AbilitySystem
 /// - 支持单一激活瞄准（同时只能有一个技能在瞄准状态）
 /// </summary>
 public static class TargetingManager

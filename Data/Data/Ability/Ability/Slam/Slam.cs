@@ -33,7 +33,7 @@ internal class SlamExecutor : AbilityFeatureHandler
         // 1. 获取技能参数
         var abilityRange = ability.Data.Get<float>(DataKey.AbilityCastRange);      // 选点范围（角色周围圆环半径）
         var damageRadius = ability.Data.Get<float>(DataKey.AbilityEffectRadius);   // 伤害范围（圆形半径）
-        var maxTargets = ability.Data.Get<int>(DataKey.AbilityMaxTargets);
+        const int maxTargets = -1; //不限制命中数量
 
         // 2. 在角色周围随机选点
         var pointQuery = new TargetSelectorQuery

@@ -105,22 +105,6 @@ namespace Slime.Config.Abilities
         [DataKey(nameof(DataKey.AbilityTargetSelection))]
         [Export] public AbilityTargetSelection AbilityTargetSelection { get; set; }
         /// <summary>
-        /// 目标几何形状
-        /// </summary>
-        [DataKey(nameof(DataKey.AbilityTargetGeometry))]
-        [Export] public GeometryType AbilityTargetGeometry { get; set; }
-        /// <summary>
-        /// 目标阵营过滤
-        /// </summary>
-        [DataKey(nameof(DataKey.AbilityTargetTeamFilter))]
-        [Export] public AbilityTargetTeamFilter AbilityTargetTeamFilter { get; set; }
-        /// <summary>
-        /// 目标排序方式
-        /// </summary>
-        [DataKey(nameof(DataKey.TargetSorting))]
-        [Export] public TargetSorting TargetSorting { get; set; }
-
-        /// <summary>
         /// 施法距离
         /// </summary>
         [DataKey(nameof(DataKey.AbilityCastRange))]
@@ -130,22 +114,6 @@ namespace Slime.Config.Abilities
         /// </summary>
         [DataKey(nameof(DataKey.AbilityEffectRadius))]
         [Export] public float AbilityEffectRadius { get; set; }
-        /// <summary>
-        /// 效果长度（矩形/线形 AOE 长度维度）
-        /// </summary>
-        [DataKey(nameof(DataKey.AbilityEffectLength))]
-        [Export] public float AbilityEffectLength { get; set; }
-        /// <summary>
-        /// 效果宽度（矩形/线形 AOE 宽度维度）
-        /// </summary>
-        [DataKey(nameof(DataKey.AbilityEffectWidth))]
-        [Export] public float AbilityEffectWidth { get; set; }
-
-        /// <summary>
-        /// 最大目标数量
-        /// </summary>
-        [DataKey(nameof(DataKey.AbilityMaxTargets))]
-        [Export] public int AbilityMaxTargets { get; set; } = (int)DataKey.AbilityMaxTargets.DefaultValue!;
 
         /// <summary>
         /// 技能表现特效（施法/命中/爆炸等通用表现）

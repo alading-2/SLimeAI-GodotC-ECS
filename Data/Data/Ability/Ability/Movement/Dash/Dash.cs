@@ -49,8 +49,8 @@ internal class DashExecutor : AbilityFeatureHandler
         var damageRadius = ability.Data.Get<float>(DataKey.AbilityEffectRadius);
         // 落地特效场景：冲刺完成后的视觉表现
         var effectScene = ability.Data.Get<PackedScene>(DataKey.EffectScene);
-        // 最大伤害目标数：限制一次冲刺能命中的敌人上限
-        var maxTargets = ability.Data.Get<int>(DataKey.AbilityMaxTargets);
+        // 最大伤害目标数：当前固定为不限制，由技能逻辑自行决定
+        const int maxTargets = -1;
 
         // 2. 策略逻辑：确定冲刺方向
         // 规则：优先取当前移动速度方向（顺滑衔接移动），若完全静止（速度接近0）则根据当前模型的左右朝向

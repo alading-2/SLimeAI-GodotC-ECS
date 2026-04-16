@@ -26,7 +26,7 @@ internal class SineWaveShotExecutor : AbilityFeatureHandler
         var damage = GetScaledAbilityDamage(context);
 
         // 确定射击方向：优先最近敌人，否则朝右
-        var dir = GetShootDirection(caster, casterNode);
+        var dir = GetShootDirection(caster, casterNode, ability.Data.Get<float>(DataKey.AbilityCastRange));
         var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
 
         var projectile = ProjectileTool.Spawn(
@@ -64,19 +64,19 @@ internal class SineWaveShotExecutor : AbilityFeatureHandler
         return new AbilityExecutedResult { TargetsHit = 1 };
     }
 
-    private static Vector2 GetShootDirection(IEntity caster, Node2D casterNode)
+    private static Vector2 GetShootDirection(IEntity caster, Node2D casterNode, float castRange)
     {
-        var query = new TargetSelectorQuery
+        float effectiveRange = castRange > 0f ? castRange : 600f; //查询半径
+        var targets = EntityTargetSelector.Query(new TargetSelectorQuery
         {
-            Geometry = GeometryType.Circle,
-            Origin = casterNode.GlobalPosition,
-            Range = 600f,
-            CenterEntity = caster,
-            TeamFilter = AbilityTargetTeamFilter.Enemy,
-            Sorting = TargetSorting.Nearest,
-            MaxTargets = 1
-        };
-        var targets = EntityTargetSelector.Query(query);
+            Geometry = GeometryType.Circle, //查询形状
+            Origin = casterNode.GlobalPosition, //查询中心
+            Range = effectiveRange, //查询半径
+            CenterEntity = caster, //中心实体
+            TeamFilter = AbilityTargetTeamFilter.Enemy, //阵营过滤
+            Sorting = TargetSorting.Nearest, //排序方式
+            MaxTargets = 1 //最大目标数
+        });
         if (targets.Count > 0 && targets[0] is Node2D targetNode)
             return (targetNode.GlobalPosition - casterNode.GlobalPosition).Normalized();
         return Vector2.Right;

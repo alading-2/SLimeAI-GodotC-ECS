@@ -17,9 +17,6 @@ namespace Slime.Config.Test
         [DataKey(nameof(DataKey.EntityType))]
         [Export] public EntityType EntityType { get; set; } = EntityType.Unit;
 
-        [DataKey(nameof(DataKey.AnimationAutoDriveEnabled))]
-        [Export] public bool AnimationAutoDriveEnabled { get; set; } = false;
-
         [DataKey(nameof(DataKey.PreviewDefaultAnimation))]
         [Export] public string PreviewDefaultAnimation { get; set; } = string.Empty;
 

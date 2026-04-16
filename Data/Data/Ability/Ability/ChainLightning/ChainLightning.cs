@@ -42,6 +42,36 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
     /// <returns>返回执行结果，主要包含命中目标数</returns>
     public override string FeatureId => global::FeatureId.Ability.Active.ChainLightning;
 
+    public override TriggerResult PrepareCast(CastContext context)
+    {
+        var ability = GetAbility(context);
+        var casterNode = GetCasterNode2D(context);
+        float castRange = ability.Data.Get<float>(DataKey.AbilityCastRange); //索敌半径
+        var targets = castRange > 0f
+            ? EntityTargetSelector.Query(new TargetSelectorQuery
+            {
+                Geometry = GeometryType.Circle, //查询形状
+                Origin = casterNode.GlobalPosition, //查询中心
+                Range = castRange, //查询半径
+                CenterEntity = context.Caster, //中心实体
+                TeamFilter = AbilityTargetTeamFilter.Enemy, //阵营过滤
+                Sorting = TargetSorting.Nearest, //排序方式
+                MaxTargets = 1 //最大目标数
+            })
+            : new List<IEntity>();
+        if (targets.Count == 0)
+        {
+            _log.Warn("链式闪电准备失败：没有有效目标");
+            return TriggerResult.Failed;
+        }
+
+        context.Targets = new List<IEntity>
+        {
+            targets[0]
+        };
+        return TriggerResult.Success;
+    }
+
     protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
         var ability = GetAbility(context);
@@ -66,8 +96,8 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
             Delay = ability.Data.Get<float>(DataKey.AbilityChainDelay),
             Range = ability.Data.Get<float>(DataKey.AbilityChainRange),
             DamageDecay = ability.Data.Get<float>(DataKey.AbilityChainDamageDecay) / 100f,
-            TeamFilter = ability.Data.Get<AbilityTargetTeamFilter>(DataKey.AbilityTargetTeamFilter),
-            Sorting = ability.Data.Get<TargetSorting>(DataKey.TargetSorting),
+            TeamFilter = AbilityTargetTeamFilter.Enemy,
+            Sorting = TargetSorting.Nearest,
             LineScene = ability.Data.Get<PackedScene>(DataKey.AbilityChainLineEffect)
         };
 

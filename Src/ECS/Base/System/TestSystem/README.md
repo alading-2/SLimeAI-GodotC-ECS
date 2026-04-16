@@ -367,7 +367,9 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 
 - 通过 `ResourcePaths.Resources` 收集全部 `Asset*` 分类
 - 为每个资源生成 `VisualPreviewEntity`，并把视觉场景注入为 `VisualRoot`
-- 通过 `UnitAnimationComponent` 统一动作预览
+- 由预览场景直接扫描并控制 `VisualRoot` 下的唯一 `AnimatedSprite2D`；非循环动作播完后会持续回放当前预览动作
+- 鼠标移到动作下拉框上滚轮切换动作
+- 刷新时保留当前分类和动作选择
 - 鼠标选择后显示 `DataKey.Name`、资源键、资源路径、分类、默认动作和当前动作
 - `AssetUnit*` 默认动作为 `idle`，`AssetEffect` 默认动作为 `Effect`，其他 AnimatedSprite2D 资源默认取第一个动作
 - `AssetProjectile` 只要求展示和选择，不强制参与 AnimatedSprite2D 动作控制
@@ -375,8 +377,8 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 ### 边界
 
 - 第一版只支持 `AnimatedSprite2D + SpriteFrames`
-- 第一版只预览单位 Asset，不预览特效和投射物
-- 不支持拖拽摆位和运行时调节网格参数
+- 默认每个预览资源只应有一个 `AnimatedSprite2D`；若发现多个则报错并只控制第一个
+- 第一版不支持拖拽摆位和运行时调节网格参数
 - 不走对象池，属于低频调试实例化
 
 ## 10. 新增测试模块的推荐步骤

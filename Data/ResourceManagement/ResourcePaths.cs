@@ -34,7 +34,6 @@ public static class ResourcePaths
 
     // --- Component ---
     public const string Component_AbilityPreset = "AbilityPreset";
-    public const string Component_AbilityTargetSelectionComponent = "AbilityTargetSelectionComponent";
     public const string Component_ActiveSkillInputComponent = "ActiveSkillInputComponent";
     public const string Component_AIComponent = "AIComponent";
     public const string Component_AttackComponent = "AttackComponent";
@@ -141,6 +140,7 @@ public static class ResourcePaths
     public const string DataUnit_yuren = "yuren";
 
     // --- Test ---
+    public const string Test_AbilitySystemPipelineTest = "AbilitySystemPipelineTest";
     public const string Test_ActiveSkillInputTest = "ActiveSkillInputTest";
     public const string Test_DamageSystemTest = "DamageSystemTest";
     public const string Test_DataTestScene = "DataTestScene";
@@ -179,7 +179,6 @@ public static class ResourcePaths
         { ResourceCategory.Component, new Dictionary<string, ResourceData>
             {
                 { Component_AbilityPreset, new ResourceData(ResourceCategory.Component, "res://Src/ECS/Base/Component/Presets/Ability/AbilityPreset.tscn") },
-                { Component_AbilityTargetSelectionComponent, new ResourceData(ResourceCategory.Component, "res://Src/ECS/Base/Component/Ability/AbilityTargetSelectionComponent/AbilityTargetSelectionComponent.tscn") },
                 { Component_ActiveSkillInputComponent, new ResourceData(ResourceCategory.Component, "res://Src/ECS/Base/Component/Player/ActiveSkillInputComponent/ActiveSkillInputComponent.tscn") },
                 { Component_AIComponent, new ResourceData(ResourceCategory.Component, "res://Src/ECS/Base/Component/Unit/Enemy/AI/AIComponent.tscn") },
                 { Component_AttackComponent, new ResourceData(ResourceCategory.Component, "res://Src/ECS/Base/Component/Unit/Common/AttackComponent/AttackComponent.tscn") },
@@ -312,6 +311,7 @@ public static class ResourcePaths
         },
         { ResourceCategory.Test, new Dictionary<string, ResourceData>
             {
+                { Test_AbilitySystemPipelineTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/System/AbilitySystemTest/AbilitySystemPipelineTest.tscn") },
                 { Test_ActiveSkillInputTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/System/ActiveSkillInputTest/ActiveSkillInputTest.tscn") },
                 { Test_DamageSystemTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/System/DamageSystemTest/DamageSystemTest.tscn") },
                 { Test_DataTestScene, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/Data/DataTestScene.tscn") },

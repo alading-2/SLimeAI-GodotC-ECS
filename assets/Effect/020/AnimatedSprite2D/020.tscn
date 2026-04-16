@@ -7,6 +7,7 @@ radius = 94.0
 height = 206.0
 
 [node name="020" type="AnimatedSprite2D" unique_id=46673686]
+scale = Vector2(0.8, 0.8)
 sprite_frames = ExtResource("1_nturd")
 animation = &"Effect"
 

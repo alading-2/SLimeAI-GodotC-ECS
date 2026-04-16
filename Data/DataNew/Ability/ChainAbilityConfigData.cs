@@ -46,9 +46,6 @@ namespace Slime.ConfigNew.Abilities
             AbilityCostType = AbilityCostType.Mana,
             AbilityCooldown = 1.0f,
             AbilityTargetSelection = AbilityTargetSelection.Entity,
-            AbilityTargetGeometry = GeometryType.Circle,
-            AbilityTargetTeamFilter = AbilityTargetTeamFilter.Enemy,
-            TargetSorting = TargetSorting.Nearest,
             AbilityCastRange = 600f,
             AbilityDamage = 50f,
         };

@@ -6,7 +6,7 @@ using Godot;
 /// 职责：
 /// - 接收 TryTrigger 请求（统一施法入口）
 /// - 激活技能（就绪检查 → 消耗 → 冷却 → 执行）
-/// - 目标选择（5 层目标系统）
+/// - 调用 AbilityHandler 的前置施法准备
 /// - 通过 FeatureSystem / IFeatureHandler.OnExecute 执行具体技能逻辑并回传 AbilityExecutedResult
 /// 
 /// 注意：技能的增删查由 EntityManager.AddAbility/RemoveAbility/GetAbilities 负责
@@ -59,39 +59,14 @@ public static class AbilitySystem
             return TriggerResult.Failed;
         }
 
-        // 发送事件：进行目标解析
-        // 注意：这里是流水线的核心环节，AbilityTargetSelectionComponent 会在此处填充 context.Targets 或 context.TargetPosition
-        ability.Events.Emit(
-            GameEventType.Ability.SelectTargets,
-            new GameEventType.Ability.SelectTargetsEventData(abilityContext)
-        );
-
-        // ==================== 目标解析阶段（统一处理 Entity / Point / EntityOrPoint） ====================
-        var targetSelection = (AbilityTargetSelection)ability.Data.Get<int>(DataKey.AbilityTargetSelection);
-
-        // Entity 类型：必须有目标，否则中止流水线（避免空放浪费充能/冷却）
-        if (targetSelection == AbilityTargetSelection.Entity
-            && !abilityContext.HasPreselectedTargets)
+        // 由具体 AbilityHandler 在消耗前决定：
+        // - 是否自行自动索敌
+        // - 是否直接失败
+        // - 是否进入异步点选
+        var prepareResult = PrepareAbilityCast(abilityContext);
+        if (prepareResult != TriggerResult.Success)
         {
-            var abilityName = ability.Data.Get<string>(DataKey.Name);
-            _log.Debug($"目标验证失败: {abilityName} 需要 Entity 目标但未找到");
-            return TriggerResult.Failed;
-        }
-
-        // Point 类型：需要玩家指定位置，如果还没有则进入异步瞄准
-        if (targetSelection == AbilityTargetSelection.Point
-            && !abilityContext.HasPreselectedPosition)
-        {
-            RequestPlayerTargeting(abilityContext);
-            return TriggerResult.WaitingForTarget;
-        }
-
-        // EntityOrPoint 类型：先尝试 Entity 自动索敌，未命中则回退 Point 异步瞄准
-        if (targetSelection == AbilityTargetSelection.EntityOrPoint
-            && !abilityContext.HasPreselectedTargets && !abilityContext.HasPreselectedPosition)
-        {
-            RequestPlayerTargeting(abilityContext);
-            return TriggerResult.WaitingForTarget;
+            return prepareResult;
         }
 
         // ==================== 资源消耗阶段 ====================
@@ -202,29 +177,34 @@ public static class AbilitySystem
         return true;
     }
 
-    // ==================== 异步瞄准支持 ====================
+    // ==================== 施法前置准备 ====================
 
     /// <summary>
-    /// 请求玩家异步瞄准（Point 类型技能）
-    /// 发送 StartTargeting 全局事件，由 TargetingManager 接管后续流程
+    /// 调用 AbilityHandler 的前置钩子。
     /// </summary>
-    private static void RequestPlayerTargeting(CastContext context)
+    /// <param name="context">施法上下文。</param>
+    /// <returns>继续、失败或等待点选。</returns>
+    private static TriggerResult PrepareAbilityCast(CastContext context)
     {
-        var ability = context.Ability!;
-        var range = ability.Data.Get<float>(DataKey.AbilityCastRange);
-        var abilityName = ability.Data.Get<string>(DataKey.Name);
+        var ability = context.Ability;
+        if (ability == null)
+        {
+            return TriggerResult.Failed;
+        }
 
-        _log.Debug($"技能 {abilityName} 需要玩家瞄准，进入异步模式，射程: {range}");
+        var handlerId = ability.Data.Get<string>(DataKey.FeatureHandlerId);
+        var handler = FeatureHandlerRegistry.Get(handlerId);
+        if (handler is AbilityFeatureHandler abilityHandler)
+        {
+            return abilityHandler.PrepareCast(context);
+        }
 
-        GlobalEventBus.Global.Emit(
-            GameEventType.Targeting.StartTargeting,
-            new GameEventType.Targeting.StartTargetingEventData(context)
-        );
+        return TriggerResult.Success;
     }
 
     /// <summary>
-    /// 瞄准完成后恢复流水线（由 TargetingManager 回调）
-    /// context.TargetPosition 已由 TargetingManager 填充
+     /// 瞄准完成后恢复流水线（由 TargetingManager 回调）
+     /// context.TargetPosition 已由 TargetingManager 填充
     /// </summary>
     public static TriggerResult ResumeAfterTargeting(CastContext context)
     {
@@ -235,7 +215,7 @@ public static class AbilitySystem
         }
 
         // 重新走完整流水线（CanUse 会再次检查，因为瞄准期间时间已过）
-        // SelectTargets 事件仍会发出，但 HasPreselectedPosition=true 时组件会跳过
+        // 具体 Handler 会看到 TargetPosition/Targets 已存在并决定是否放行
         return TryTriggerAbilityWithContext(context);
     }
 

@@ -38,5 +38,6 @@ Description = "投掷回旋镖，飞出后自动返回，来回命中敌人（�
 AbilityIcon = ExtResource("2_icon")
 AbilityTriggerMode = 1
 AbilityCooldown = 1.0
+AbilityCastRange = 600.0
 ProjectileScene = SubResource("PackedScene_t04fo")
 AbilityDamage = 22.0

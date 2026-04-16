@@ -29,6 +29,19 @@ internal abstract class AbilityFeatureHandler : IFeatureHandler
     }
 
     /// <summary>
+    /// 执行前置施法准备。
+    /// 只允许做“是否继续 / 是否等待点选 / 是否直接失败”的决定，不做任何资源消耗。
+    /// </summary>
+    /// <param name="context">施法上下文。</param>
+    /// <returns>继续执行、失败或等待点选。</returns>
+    public virtual TriggerResult PrepareCast(CastContext context)
+    {
+        _ = GetCaster(context);
+        _ = GetAbility(context);
+        return TriggerResult.Success;
+    }
+
+    /// <summary>
     /// 执行具体技能逻辑。
     /// </summary>
     /// <param name="context">施法上下文。</param>
@@ -57,7 +70,7 @@ internal abstract class AbilityFeatureHandler : IFeatureHandler
             ?? throw new System.InvalidOperationException($"技能 {GetAbility(context).Data.Get<string>(DataKey.Name)} 的施法者必须是 Node2D");
     }
 
-    /// <summary>获取第一个目标实体。Entity 目标技能应由 AbilitySystem 在执行前保证目标存在。</summary>
+    /// <summary>获取第一个目标实体。需要目标的技能应在 PrepareCast 中先保证目标已写入上下文。</summary>
     protected static IEntity GetFirstTarget(CastContext context)
     {
         if (context.Targets == null || context.Targets.Count == 0 || context.Targets[0] == null)
@@ -76,6 +89,12 @@ internal abstract class AbilityFeatureHandler : IFeatureHandler
             ?? throw new System.InvalidOperationException($"技能 {GetAbility(context).Data.Get<string>(DataKey.Name)} 的目标必须是 Node2D");
     }
 
+    /// <summary>请求进入统一点选流程。</summary>
+    protected static TriggerResult RequestPointTarget(CastContext context)
+    {
+        return AbilityTargetingTool.RequestPointTarget(context);
+    }
+
     /// <summary>按施法者技能伤害倍率计算最终技能伤害。</summary>
     protected static float GetScaledAbilityDamage(CastContext context)
     {
@@ -86,7 +105,7 @@ internal abstract class AbilityFeatureHandler : IFeatureHandler
     }
 
     /// <summary>
-    /// 对运动碰撞目标造成技能伤害。默认按技能配置的阵营过滤；未配置时默认只打敌人。
+    /// 对运动碰撞目标造成技能伤害。未显式指定阵营时默认只打敌人。
     /// </summary>
     protected static bool ApplyCollisionDamage(
         CastContext context,
@@ -101,11 +120,7 @@ internal abstract class AbilityFeatureHandler : IFeatureHandler
         var caster = GetCaster(context);
         var effectiveFilter = teamFilter != AbilityTargetTeamFilter.None
             ? teamFilter
-            : GetAbility(context).Data.Get<AbilityTargetTeamFilter>(DataKey.AbilityTargetTeamFilter);
-        if (effectiveFilter == AbilityTargetTeamFilter.None)
-        {
-            effectiveFilter = AbilityTargetTeamFilter.Enemy;
-        }
+            : AbilityTargetTeamFilter.Enemy;
 
         if (!PassTeamFilter(targetEntity, caster, effectiveFilter)) return false;
 

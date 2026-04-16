@@ -18,8 +18,6 @@ public class AbilityConfigData
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCostType = AbilityCostType.Mana,
         AbilityCooldown = 1.0f,
-        AbilityTargetGeometry = GeometryType.Circle,
-        AbilityTargetTeamFilter = AbilityTargetTeamFilter.Enemy,
         AbilityCastRange = 400f,
         AbilityEffectRadius = 300f,
         EffectScenePath = "res://assets/Effect/020/AnimatedSprite2D/020.tscn",
@@ -37,8 +35,6 @@ public class AbilityConfigData
         AbilityCostType = AbilityCostType.Mana,
         AbilityCooldown = 1.0f,
         AbilityTargetSelection = AbilityTargetSelection.Point,
-        AbilityTargetGeometry = GeometryType.Circle,
-        AbilityTargetTeamFilter = AbilityTargetTeamFilter.Enemy,
         AbilityCastRange = 400f,
         AbilityEffectRadius = 200f,
         AbilityDamage = 10f
@@ -107,10 +103,7 @@ public class AbilityConfigData
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
         AbilityTargetSelection = AbilityTargetSelection.Entity,
-        AbilityTargetGeometry = GeometryType.Circle,
-        AbilityTargetTeamFilter = AbilityTargetTeamFilter.Enemy,
-        TargetSorting = TargetSorting.Nearest,
-        AbilityMaxTargets = 1,
+        AbilityCastRange = 700f,
         AbilityEffectRadius = 700f,
         AbilityDamage = 26f
     };
@@ -154,8 +147,6 @@ public class AbilityConfigData
         AbilityType = AbilityType.Passive,
         AbilityTriggerMode = AbilityTriggerMode.Permanent,
         AbilityCooldown = 1.0f,
-        AbilityTargetGeometry = GeometryType.Circle,
-        AbilityTargetTeamFilter = AbilityTargetTeamFilter.Enemy,
         AbilityEffectRadius = 500f,
         EffectScenePath = "res://assets/Effect/003/AnimatedSprite2D/003.tscn",
         AbilityDamage = 10f
@@ -269,44 +260,14 @@ public class AbilityConfigData
     public AbilityTargetSelection AbilityTargetSelection { get; set; }
 
     /// <summary>
-    ///     目标几何形状
-    /// </summary>
-    public GeometryType AbilityTargetGeometry { get; set; }
-
-    /// <summary>
-    ///     目标阵营过滤
-    /// </summary>
-    public AbilityTargetTeamFilter AbilityTargetTeamFilter { get; set; }
-
-    /// <summary>
-    ///     目标排序方式
-    /// </summary>
-    public TargetSorting TargetSorting { get; set; }
-
-    /// <summary>
-    ///     施法距离（索敌/瞄准射程；0=无限制）
+    ///     施法距离（由具体 Handler 决定如何解释）
     /// </summary>
     public float AbilityCastRange { get; set; }
 
     /// <summary>
-    ///     效果半径（圆形/扇形 AOE 半径）
+    ///     效果半径（命中范围 / AOE 半径）
     /// </summary>
     public float AbilityEffectRadius { get; set; }
-
-    /// <summary>
-    ///     效果长度（矩形/线形 AOE 长度维度）
-    /// </summary>
-    public float AbilityEffectLength { get; set; }
-
-    /// <summary>
-    ///     效果宽度（矩形/线形 AOE 宽度维度）
-    /// </summary>
-    public float AbilityEffectWidth { get; set; }
-
-    /// <summary>
-    ///     最大目标数量
-    /// </summary>
-    public int AbilityMaxTargets { get; set; }
 
     // ====== 视觉与表现 ======
 

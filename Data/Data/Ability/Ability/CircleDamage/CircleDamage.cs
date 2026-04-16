@@ -29,7 +29,6 @@ internal class CircleDamageExecutor : AbilityFeatureHandler
 
         // 从技能配置中读取参数
         var range = ability.Data.Get<float>(DataKey.AbilityEffectRadius);            // 伤害半径
-        var teamFilter = ability.Data.Get<AbilityTargetTeamFilter>(DataKey.AbilityTargetTeamFilter); // 阵营过滤
         var effectScene = ability.Data.Get<PackedScene>(DataKey.EffectScene);        // 特效场景
 
         // 执行命中（目标查询 + 特效 + 伤害，三步合一；位置来源统一收口到 Query / Effect 参数中）
@@ -42,7 +41,7 @@ internal class CircleDamageExecutor : AbilityFeatureHandler
                 OriginProvider = () => casterNode2D.GlobalPosition, // DoT tick 时持续跟随施法者当前位置
                 Range = range,                          // 查询半径
                 CenterEntity = caster,                  // 阵营判断基准
-                TeamFilter = teamFilter,                // 阵营过滤
+                TeamFilter = AbilityTargetTeamFilter.Enemy, // 阵营过滤
                 MaxTargets = -1                         // 不限命中数量
             },
             Effect = effectScene != null
