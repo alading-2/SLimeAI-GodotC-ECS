@@ -136,6 +136,8 @@ public class ObjectPool<T> where T : class
             TotalDiscarded = 0
         };
 
+        ObjectPoolObservability.RegisterMetadata(config);
+
         // 自动注册父节点
         if (!string.IsNullOrEmpty(_config.Name) && !string.IsNullOrEmpty(_config.ParentPath))
         {

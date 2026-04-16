@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Src/ECS/Base/Entity/Preview/VisualPreviewEntity.cs" id="1_preview_entity"]
+[ext_resource type="PackedScene" path="res://Src/ECS/Base/Component/Unit/Common/UnitAnimationComponent/UnitAnimationComponent.tscn" id="2_animation"]
+
+[node name="VisualPreviewEntity" type="Node2D"]
+script = ExtResource("1_preview_entity")
+
+[node name="Component" type="Node2D" parent="."]
+
+[node name="UnitAnimationComponent" parent="Component" instance=ExtResource("2_animation")]

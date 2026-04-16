@@ -30,6 +30,7 @@ public static class ResourcePaths
     public const string Entity_PlayerEntity = "PlayerEntity";
     public const string Entity_ProjectileEntity = "ProjectileEntity";
     public const string Entity_TargetingIndicatorEntity = "TargetingIndicatorEntity";
+    public const string Entity_VisualPreviewEntity = "VisualPreviewEntity";
 
     // --- Component ---
     public const string Component_AbilityPreset = "AbilityPreset";
@@ -105,6 +106,7 @@ public static class ResourcePaths
     public const string System_DamageService = "DamageService";
     public const string System_DamageStatisticsSystem = "DamageStatisticsSystem";
     public const string System_MouseSelectionSystem = "MouseSelectionSystem";
+    public const string System_ObjectPoolInfoModule = "ObjectPoolInfoModule";
     public const string System_RecoverySystem = "RecoverySystem";
     public const string System_ResourceCatalogTestModule = "ResourceCatalogTestModule";
     public const string System_ResourcePickerControl = "ResourcePickerControl";
@@ -143,7 +145,6 @@ public static class ResourcePaths
     public const string Test_DamageSystemTest = "DamageSystemTest";
     public const string Test_DataTestScene = "DataTestScene";
     public const string Test_ECSTestScene = "ECSTestScene";
-    public const string Test_ExportTest = "ExportTest";
     public const string Test_InputTest = "InputTest";
     public const string Test_LogTest = "LogTest";
     public const string Test_MainTest = "MainTest";
@@ -156,6 +157,7 @@ public static class ResourcePaths
     public const string Test_TargetSelectorTest = "TargetSelectorTest";
     public const string Test_TestDataKeyMapping = "TestDataKeyMapping";
     public const string Test_TestEntity = "TestEntity";
+    public const string Test_VisualPreviewScene = "VisualPreviewScene";
 
     // --- Other ---
 
@@ -171,6 +173,7 @@ public static class ResourcePaths
                 { Entity_PlayerEntity, new ResourceData(ResourceCategory.Entity, "res://Src/ECS/Base/Entity/Unit/Player/PlayerEntity.tscn") },
                 { Entity_ProjectileEntity, new ResourceData(ResourceCategory.Entity, "res://Src/ECS/Base/Entity/Projectile/ProjectileEntity.tscn") },
                 { Entity_TargetingIndicatorEntity, new ResourceData(ResourceCategory.Entity, "res://Src/ECS/Base/Entity/Unit/TargetingIndicator/TargetingIndicatorEntity.tscn") },
+                { Entity_VisualPreviewEntity, new ResourceData(ResourceCategory.Entity, "res://Src/ECS/Base/Entity/Preview/VisualPreviewEntity.tscn") },
             }
         },
         { ResourceCategory.Component, new Dictionary<string, ResourceData>
@@ -264,6 +267,7 @@ public static class ResourcePaths
                 { System_DamageService, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/DamageSystem/DamageService.tscn") },
                 { System_DamageStatisticsSystem, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/DamageSystem/DamageStatisticsSystem.tscn") },
                 { System_MouseSelectionSystem, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/MouseSelection/MouseSelectionSystem.tscn") },
+                { System_ObjectPoolInfoModule, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/TestSystem/Info/ObjectPoolInfoModule.tscn") },
                 { System_RecoverySystem, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/RecoverySystem/RecoverySystem.tscn") },
                 { System_ResourceCatalogTestModule, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/TestSystem/ResourceCatalog/ResourceCatalogTestModule.tscn") },
                 { System_ResourcePickerControl, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/TestSystem/ResourceCatalog/ResourcePickerControl.tscn") },
@@ -312,7 +316,6 @@ public static class ResourcePaths
                 { Test_DamageSystemTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/System/DamageSystemTest/DamageSystemTest.tscn") },
                 { Test_DataTestScene, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/Data/DataTestScene.tscn") },
                 { Test_ECSTestScene, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/ECSTest/ECSTestScene.tscn") },
-                { Test_ExportTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/Test/ExportTest/ExportTest.tscn") },
                 { Test_InputTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/Tools/Input/InputTest.tscn") },
                 { Test_LogTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/Tools/Log/LogTest.tscn") },
                 { Test_MainTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/GlobalTest/MainTest/MainTest.tscn") },
@@ -325,6 +328,7 @@ public static class ResourcePaths
                 { Test_TargetSelectorTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/Tools/TargetSelector/TargetSelectorTest.tscn") },
                 { Test_TestDataKeyMapping, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/Data/TestDataKeyMapping.tscn") },
                 { Test_TestEntity, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/ECSTest/Entity/TestEntity.tscn") },
+                { Test_VisualPreviewScene, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/GlobalTest/VisualPreview/VisualPreviewScene.tscn") },
             }
         },
         { ResourceCategory.Other, new Dictionary<string, ResourceData>

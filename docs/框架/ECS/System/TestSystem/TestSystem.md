@@ -36,9 +36,6 @@
 - `Src/ECS/Base/System/TestSystem/ResourceCatalog/ResourceCatalogTestModule.cs`
 - `Src/ECS/Base/System/TestSystem/Info/ObjectPoolInfoModule.cs`
 - `Src/ECS/Base/System/TestSystem/Info/ObjectPoolInfoService.cs`
-- `Src/ECS/Base/System/TestSystem/VisualPreview/AssetVisualPreviewModule.cs`
-- `Src/ECS/Base/System/TestSystem/VisualPreview/AssetVisualPreviewService.cs`
-- `Src/ECS/Base/System/TestSystem/VisualPreview/AssetVisualPreviewController.cs`
 - `Src/ECS/Base/System/TestSystem/Spawn/SpawnTestModule.cs`
 - `Data/ResourceManagement/ResourceCatalog.cs`
 - `Src/ECS/Base/System/TestSystem/FeatureDebugService.cs`
@@ -52,6 +49,7 @@
 ### 2.1 必须满足的目标
 
 - **宿主稳定**：实体选择、模块切换、激活态管理必须统一收口
+- **局部失败隔离**：单个测试模块初始化失败时不能把整个 TestSystem 宿主一起拖垮
 - **通用选择复用**：鼠标点选/框选实体能力要能被多个调试系统复用，而不是绑死在 `TestSystem`
 - **模块解耦**：新增或删除测试模块时，不应频繁修改宿主核心代码
 - **增量刷新**：数据变化后只更新受影响的 UI，不允许默认整页重建
@@ -79,11 +77,11 @@
 - `TestModuleBase` 已经抽出了基础生命周期，方向是对的
 - `FeatureDebugService` 把调试动作转发到正式运行时链路，方向是对的
 - `AbilityTestService` 把 UI 与技能目录/业务操作做了初步隔离，并按完整 `FeatureGroupId` 构建技能库 / 当前技能分组，方向也是对的
-- `ResourceCatalog` 将单位、技能、特效和单位 Asset 的选择目录收口到 `ResourcePaths.Resources`，并按路径自动推导分类，敌人生成测试和视觉预览都可以复用正式资源索引而不运行时扫目录
+- `ResourceCatalog` 将单位、技能、特效和单位 Asset 的选择目录收口到 `ResourcePaths.Resources`，并按路径自动推导分类，敌人生成测试等模块可以复用正式资源索引而不运行时扫目录
 - `ResourceCatalogTestModule` 通过分类下拉框展示 `ResourceCatalog.GetGroups()` 的分类和资源总数，选择分类后自动显示该分类资源明细，可用于运行时确认当前索引是否覆盖所有分类与资源
 - `SpawnTestModule` 通过 `ResourcePickerControl` 按 `Unit.Enemy` 目录前缀只选择敌人配置，再转发到正式 `SpawnSystem.SpawnBatch(...)`
-- `ObjectPoolInfoModule` 把 `ObjectPoolManager` 运行时统计和对象池容量元数据合并到同一只读面板，适合调试对象池容量与复用情况
-- `AssetVisualPreviewModule` 按 `AssetUnit.*` 分类把单位视觉场景批量实例化到当前世界，并通过动作并集统一预览表现
+- `ObjectPoolInfoModule` 把 `ObjectPoolManager` 运行时统计和对象池容量元数据合并到同一只读面板，并改为中文字段展示，适合调试对象池容量与复用情况
+- 视觉预览已迁出 `TestSystem`，独立场景位于 `Src/ECS/Test/GlobalTest/VisualPreview/`；它按 `ResourcePaths.Resources` 中全部 `Asset*` 分类生成 `VisualPreviewEntity`，通过 `UnitAnimationComponent` 统一动作预览，并直接消费 `MouseSelectionSystem` 的选中结果
 
 也就是说，当前问题不是“完全推翻重来”，而是**架构概念有雏形，但实现细节不成熟**。
 
@@ -156,7 +154,7 @@
 - `Data/ResourceManagement/ResourceCatalog.cs` 负责从 `ResourcePaths.Resources` 构建单位配置、技能配置、特效目录和单位 Asset 目录，分类来自资源路径，路径中的 `Resource` 目录会被跳过
 - `ResourceCatalog/ResourcePickerControl.cs` 负责 TestSystem 内的分组、搜索与选择 UI
 - `ResourceCatalog/ResourceCatalogTestModule.cs` 负责在 TestSystem 中展示完整资源分类，并在分类选择变化时自动刷新对应资源列表，用于验证资源索引覆盖情况
-- `VisualPreview/AssetVisualPreviewModule.cs` 负责在 TestSystem 中消费 `AssetUnit.*` 分类，并把视觉场景批量放到当前世界预览
+- 视觉预览不再作为 TestSystem 模块存在；独立入口为 `Src/ECS/Test/GlobalTest/VisualPreview/VisualPreviewScene.tscn`
 
 运行时测试面板不要全盘扫描 `res://` 作为主数据源；新增 `.tres` / `.tscn` 后应运行 `Tools/ResourceGenerator` 更新 `ResourcePaths.cs`。
 
@@ -169,10 +167,10 @@
 - 当前选中对象
 - 当前激活模块
 - 面板显隐
-- 模块注册与切换
+- 模块清单注册与动态切换
 - 通过 `TestSystem.Events` 广播 TestSystem 局部事件，不再直接暴露 C# `event`
 - 按 `TestModuleDefinition.ModulePath` 生成左侧模块树
-- 按 `ModuleHost` 场景挂载顺序维护默认模块顺序
+- 按 `TestModuleSceneRegistry` 清单顺序维护默认模块顺序
 - 监听通用鼠标选择系统的全局结果事件，并在“选择实体”开关开启时消费 `PrimaryEntity / Entities`
 
 `TestSystem` 不应该负责：
@@ -209,7 +207,7 @@
 
 - `Id` 是宿主切换、日志定位、后续模块状态持久化的稳定键
 - `ModulePath` 是点分展示路径，最后一段是模块名，前面的段是多级分组
-- 模块默认顺序由 `TestSystem.tscn` 的 `ModuleHost` 子节点顺序决定，不再使用 `SortOrder`
+- 模块默认顺序由 `TestModuleSceneRegistry` 清单顺序决定，不再使用 `SortOrder`
 
 ### 4.2.3 刷新必须分层
 

@@ -43,6 +43,8 @@ public static class ObjectPoolManager
             // 注意：这里很难高效清理 _objectToPoolMap 中属于该池的对象，
             // 但通常 Unregister 只在销毁时发生，此时 Map 也会被清理。
         }
+
+        ObjectPoolObservability.UnregisterMetadata(pool.PoolName);
     }
 
     /// <summary>
@@ -204,6 +206,8 @@ public static class ObjectPoolManager
             _pools.Clear();
             _objectToPoolMap.Clear();
         }
+
+        ObjectPoolObservability.Clear();
         _log.Info("所有对象池已销毁并清空。");
     }
 }

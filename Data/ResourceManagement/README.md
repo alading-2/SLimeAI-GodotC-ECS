@@ -40,6 +40,8 @@ var uiScene = ResourceManagement.Load<PackedScene>("HealthBarUI", ResourceCatego
 - `Data/Data/Unit/Player/Resource/deluyi.tres` => `Unit.Player`
 - `Data/Data/Ability/Resource/Movement/DashConfig.tres` => `Ability.Movement`
 - `assets/Effect/Explosion/Explosion.tscn` => `Effect.Explosion`
+- `assets/Unit/Enemy/chailangren/AnimatedSprite2D/chailangren.tscn` => `AssetUnit.Enemy`
+- `assets/Unit/Player/deluyi/AnimatedSprite2D/deluyi.tscn` => `AssetUnit.Player`
 
 路径中的 `Resource` 目录只是资源存放目录，不参与分类名。
 
@@ -50,11 +52,12 @@ var enemyEntries = ResourceCatalog.GetEntries("Unit.Enemy");
 var allGroups = ResourceCatalog.GetGroups(
     "Unit", // 全部单位
     "Ability", // 全部技能配置
-    "Effect" // 全部特效资源
+    "Effect", // 全部特效资源
+    "AssetUnit" // 全部单位视觉 Asset
 );
 ```
 
-目录服务只负责发现与展示分组；真正加载仍通过 `ResourceManagement.Load<T>(entry.ResourceKey, entry.Category)` 完成。
+目录服务只负责发现与展示分组；真正加载仍通过 `ResourceManagement.Load<T>(entry.ResourceKey, entry.Category)` 完成。独立视觉预览场景位于 `Src/ECS/Test/GlobalTest/VisualPreview/`，它直接基于 `ResourcePaths.Resources` 收集全部 `Asset*` 分类并批量生成可选中的预览 Entity。
 
 ## 🛠️ 最佳实践
 

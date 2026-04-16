@@ -92,7 +92,7 @@ public static readonly DataMeta BaseHp = DataRegistry.Register(
 - `ResourceManagement.cs` 是统一加载入口
 - `ResourceCatalog.cs` 是运行时/测试面板/编辑器选择器使用的资源目录服务
 
-`ResourceCatalog` 只基于 `ResourcePaths.Resources` 整理单位、技能、特效条目，分类从资源路径推导，`Resource` 目录会被跳过；不要把运行时全盘扫描 `res://` 当成主数据源。
+`ResourceCatalog` 只基于 `ResourcePaths.Resources` 整理单位配置、技能配置、特效场景和单位 Asset 场景条目，分类从资源路径推导，`Resource` 目录会被跳过；不要把运行时全盘扫描 `res://` 当成主数据源。
 
 ## 决策规则
 

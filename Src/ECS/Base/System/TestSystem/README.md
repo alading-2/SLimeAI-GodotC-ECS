@@ -2,7 +2,7 @@
 
 ## 1. 目录定位
 
-`Src/ECS/Base/System/TestSystem/` 用来承载项目的运行时测试系统源码，属性测试模块位于 `Attribute/` 子目录，技能测试模块位于 `Ability/` 子目录，资源目录测试与选择控件位于 `ResourceCatalog/` 子目录，敌人生成测试模块位于 `Spawn/` 子目录。
+`Src/ECS/Base/System/TestSystem/` 用来承载项目的运行时测试系统源码，属性测试模块位于 `Attribute/` 子目录，技能测试模块位于 `Ability/` 子目录，对象池信息模块位于 `Info/` 子目录，资源目录模块位于 `ResourceCatalog/` 子目录，敌人生成测试模块位于 `Spawn/` 子目录。视觉预览已迁出 TestSystem，独立入口位于 `Src/ECS/Test/GlobalTest/VisualPreview/`。
 
 这套系统面向开发调试阶段，目标是：
 
@@ -24,17 +24,19 @@
 | 文件 | 职责 |
 |------|------|
 | `../MouseSelection/README.md` | 通用鼠标选择系统说明，负责汇总当前 `MouseSelectionSystem` 主文件 + `Interaction / Picking / SelectionBoxUi` 3 个 partial 的阅读入口、职责边界与事件协议 |
-| `TestSystem.cs` | 调试系统宿主，负责 AutoLoad、场景骨架绑定、扫描 `ModuleHost` 子节点注册模块与切换 |
+| `TestSystem.cs` | 调试系统宿主，负责 AutoLoad、场景骨架绑定、读取模块清单、动态实例化当前模块与切换；单个模块初始化失败时记录错误并跳过，不中断整个宿主；支持放大 / 缩小测试面板 |
 | `TestSystem.MouseSelection.cs` | 鼠标选择适配，负责在“选择实体”开关开启时消费全局选择完成事件 |
 | `Core/ITestModule.cs` | 模块协议，定义宿主依赖的最小模块接口 |
 | `Core/ITestModuleContext.cs` | 模块上下文协议，统一注入宿主和选择上下文 |
 | `Core/TestModuleDefinition.cs` | 模块定义，统一描述模块稳定 Id 与点分 `ModulePath` |
+| `Core/TestModuleSceneDefinition.cs` | 模块场景定义，统一描述导航元数据和对应的模块场景资源键 |
+| `Core/TestModuleSceneRegistry.cs` | 模块场景清单，集中维护模块顺序、路径和对应场景 |
 | `Core/TestModulePath.cs` | 模块路径工具，负责标准化点分路径和解析模块显示名 |
 | `Core/TestModuleGroupId.cs` | 模块分组常量，统一属性、技能等测试模块分组根路径 |
 | `Core/TestSelectionContext.cs` | 统一选中上下文，只收口当前选中实体状态 |
 | `Core/TestModuleContext.cs` | 模块共享上下文，向模块注入宿主与选中实体上下文 |
 | `../../../Data/EventType/Global/GameEventType_Global_TestSystem.cs` | TestSystem 事件协议定义，当前承载 `GameEventType.TestSystem.SelectionChanged` |
-| `TestSystem.tscn` | 测试系统主面板骨架，承载顶部工具栏、信息栏、可隐藏模块树与模块宿主区 |
+| `TestSystem.tscn` | 测试系统主面板骨架，承载顶部工具栏、信息栏、可隐藏模块树与动态模块挂载槽位 |
 | `TestModuleBase.cs` | 所有测试模块的统一基类 |
 | `FeatureDebugService.cs` | 调试适配层，负责把调试操作转发到正式 Feature / Ability 生命周期 |
 | `Attribute/AttributeTestModule.cs` | 属性测试模块，负责 Data 编辑与临时加成 UI 绑定 |
@@ -49,6 +51,9 @@
 | `ResourceCatalog/ResourcePickerControl.tscn` | 资源选择控件场景骨架 |
 | `ResourceCatalog/ResourceCatalogTestModule.cs` | 资源目录测试模块，通过分类下拉框展示 `ResourceCatalog.GetGroups()` 返回的分类，选择分类后自动显示该分类资源 |
 | `ResourceCatalog/ResourceCatalogTestModule.tscn` | 资源目录测试模块固定布局骨架，提供分类选择、分类资源列表和详情展示 |
+| `Info/ObjectPoolInfoService.cs` | 对象池信息服务，负责把 `ObjectPoolManager` 统计与容量元数据合并成测试面板快照 |
+| `Info/ObjectPoolInfoModule.cs` | 对象池信息模块，负责用中文展示对象池名称列表、当前池概览和紧凑详情 |
+| `Info/ObjectPoolInfoModule.tscn` | 对象池信息模块固定布局骨架，提供左侧名称列表和右侧概览 / 详情区 |
 | `Spawn/SpawnTestModule.cs` | 敌人生成测试模块，选择 `EnemyConfig` 后通过正式 `SpawnSystem.SpawnBatch(...)` 生成敌人 |
 | `Spawn/SpawnTestModule.tscn` | 敌人生成测试模块固定布局骨架 |
 
@@ -187,7 +192,8 @@
 
 1. 点击左上角“测试”按钮
 2. 打开或隐藏测试面板
-3. 通过左侧模块树切换“属性测试”、“技能测试”、“资源目录”与“敌人生成”模块；模块树可用顶部按钮隐藏
+3. 通过左侧模块树切换“属性测试”、“技能测试”、“资源目录”、“对象池”与“敌人生成”模块；模块树可用顶部按钮隐藏
+4. 通过顶部“缩小 / 放大”按钮调整测试面板尺寸
 
 ### 3.2 选择实体
 
@@ -336,7 +342,44 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 - 不加载或实例化资源内容，只验证目录索引和分类结果
 - 如果新增、移动、重命名资源后这里看不到，优先检查是否运行过 `Tools/ResourceGenerator`
 
-## 8. 新增测试模块的推荐步骤
+## 8. 对象池信息怎么用
+
+对象池信息模块用于查看当前已注册对象池的**运行时统计**和**容量配置**。
+
+### 当前支持
+
+- 左侧只展示对象池名称列表，避免被长统计文案挤占宽度
+- 选中单个对象池后右侧用中文查看“风险提示 / 闲置数量 / 使用中数量 / 累计创建 / 命中率”
+- 详情区继续显示“累计获取 / 累计归还 / 累计丢弃 / 初始容量 / 最大容量”
+- 显示 `InitialSize / MaxSize`
+- 给出“缺少容量元数据 / 发生过容量丢弃 / 容量接近上限”等提示
+
+### 边界
+
+- 只读观测，不执行 `CleanupAll / DestroyAll`
+- 容量信息来自对象池注册时记录的元数据，不从源码反查
+
+## 9. 视觉预览怎么用
+
+视觉预览已迁出 TestSystem，不再作为运行时测试面板模块存在。请单独运行 `res://Src/ECS/Test/GlobalTest/VisualPreview/VisualPreviewScene.tscn`。
+
+### 当前支持
+
+- 通过 `ResourcePaths.Resources` 收集全部 `Asset*` 分类
+- 为每个资源生成 `VisualPreviewEntity`，并把视觉场景注入为 `VisualRoot`
+- 通过 `UnitAnimationComponent` 统一动作预览
+- 鼠标选择后显示 `DataKey.Name`、资源键、资源路径、分类、默认动作和当前动作
+- `AssetUnit*` 默认动作为 `idle`，`AssetEffect` 默认动作为 `Effect`，其他 AnimatedSprite2D 资源默认取第一个动作
+- `AssetProjectile` 只要求展示和选择，不强制参与 AnimatedSprite2D 动作控制
+
+### 边界
+
+- 第一版只支持 `AnimatedSprite2D + SpriteFrames`
+- 第一版只预览单位 Asset，不预览特效和投射物
+- 不支持拖拽摆位和运行时调节网格参数
+- 不走对象池，属于低频调试实例化
+
+## 10. 新增测试模块的推荐步骤
 
 ### 第一步：创建模块类
 
@@ -363,7 +406,7 @@ public partial class MyTestModule : TestModuleBase
 
 ### 第二步：注册模块
 
-在 `TestSystem.tscn` 的 `ModuleHost` 下直接挂载 `MyTestModule.tscn`，宿主会在 `_Ready()` 自动扫描注册，并按场景子节点顺序确定默认顺序。
+在 `Core/TestModuleSceneRegistry.cs` 里登记 `MyTestModule` 的稳定 `Id`、`ModulePath` 和对应场景资源键，宿主会在切换模块时动态实例化 `MyTestModule.tscn`。
 
 模块必须保证：
 
@@ -392,7 +435,7 @@ public partial class MyTestModule : TestModuleBase
 
 推荐先写一层 Service / Adapter，再由 UI 转发调用。
 
-## 9. 开发约束
+## 11. 开发约束
 
 维护此目录时请遵守以下边界：
 
@@ -405,7 +448,7 @@ public partial class MyTestModule : TestModuleBase
 - 不要在这里新增一套测试版技能执行系统
 - 不要直接编辑计算属性
 
-### 9.1 DataKey 访问规范
+### 11.1 DataKey 访问规范
 
 在 TestSystem 内部访问 `Data.Get/Set` 时，**必须使用 `DataKey.XXX.Key` 显式取键名**，不要依赖 `DataMeta` 的隐式转换：
 
@@ -419,7 +462,7 @@ ability.Data.Get<string>(DataKey.Name);
 
 原因：规避不同工程上下文下 `DataMeta` 到 `string` 的编译兼容差异。
 
-### 9.2 日志级别规范
+### 11.2 日志级别规范
 
 TestSystem UI 控件统一使用以下日志级别：
 
@@ -433,14 +476,14 @@ TestSystem UI 控件统一使用以下日志级别：
 
 **不要使用 `LogLevel.Debug`**。运行时测试系统的日志面向开发者调试，Debug 级别在测试面板中属于冗余输出。
 
-## 10. 你通常会改哪些地方
+## 12. 你通常会改哪些地方
 
 ### 新增调试模块
 
 通常要改：
 
 - 新模块源码文件
-- `TestSystem.tscn` 的 `ModuleHost` 下挂载新模块场景
+- `Core/TestModuleSceneRegistry.cs` 中登记新模块场景与路径
 - `Docs/框架/ECS/System/TestSystem.md`
 - `.codex/skills/test-system/SKILL.md`
 - `Docs/框架/项目索引.md`
@@ -475,6 +518,8 @@ TestSystem UI 控件统一使用以下日志级别：
 
 - `Data/ResourceManagement/ResourceCatalog.cs`
 - `ResourceCatalog/ResourcePickerControl.cs`
+- `Info/ObjectPoolInfoModule.cs`
+- 独立视觉预览场景：`Src/ECS/Test/GlobalTest/VisualPreview/VisualPreviewScene.cs`
 - `Spawn/SpawnTestModule.cs`
 - `TestSystem.tscn`
 - `Data/ResourceManagement/README.md`
@@ -484,12 +529,14 @@ TestSystem UI 控件统一使用以下日志级别：
 
 - 可选资源来自 `ResourcePaths.Resources`
 - 选择器分类来自资源路径，`Data/Data/Unit/Enemy/Resource/x.tres` 会归到 `Unit.Enemy`
+- 单位视觉 Asset 会按 `ResourceCategory.AssetUnitEnemy / AssetUnitPlayer` 推导到 `AssetUnit.Enemy / AssetUnit.Player`
+- 独立视觉预览场景不走 `ResourceCatalog` 前缀过滤，而是直接收集 `ResourcePaths.Resources` 中全部 `Asset*` 分类
 - 路径中的 `Resource` 目录只表示存放位置，不参与分类
 - 新 `.tres` / `.tscn` 必须运行 `Tools/ResourceGenerator`
 - 不要让运行时测试面板全盘扫描目录作为主数据源
 - 具体模块只消费自己允许的目录前缀，例如敌人生成只消费 `Unit.Enemy`
 
-## 11. 快速自检清单
+## 13. 快速自检清单
 
 提交前建议检查：
 
@@ -499,6 +546,8 @@ TestSystem UI 控件统一使用以下日志级别：
 - 是否错误地把技能测试做成了执行入口
 - 敌人生成测试是否只允许选择 `Unit.Enemy`
 - 资源目录测试是否切换分类后自动显示该分类资源
+- 独立视觉预览场景是否覆盖全部 `Asset*` 分类，且退出场景时会通过 `EntityManager.Destroy` 清空预览实体
+- 对象池信息是否仍保持只读观测
 - Data.Get/Set 调用是否使用 `DataKey.XXX.Key` 显式访问
 - 日志是否仅使用 `Info / Warn / Error`，无 `Debug` 级别
 - 文档、项目索引、skill 是否同步更新

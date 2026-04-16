@@ -5,7 +5,7 @@ using Godot;
 /// 正弦波弹技能执行器 - 验证 SineWave 运动模式
 /// 向最近敌人方向发射正弦波前进的投射物
 /// </summary>
-internal class SineWaveShotExecutor : IFeatureHandler
+internal class SineWaveShotExecutor : AbilityFeatureHandler
 {
     private static readonly Log _log = new(nameof(SineWaveShotExecutor));
 
@@ -15,18 +15,15 @@ internal class SineWaveShotExecutor : IFeatureHandler
         FeatureHandlerRegistry.Register(new SineWaveShotExecutor());
     }
 
-    public string FeatureId => global::FeatureId.Ability.Projectile.SineWaveShot;
+    public override string FeatureId => global::FeatureId.Ability.Projectile.SineWaveShot;
 
-    public object? OnExecute(FeatureContext featureContext)
+    protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        var context = featureContext.GetActivationData<CastContext>();
-        var caster = context.Caster;
-        var ability = context.Ability;
-        if (caster == null || ability == null || caster is not Node2D casterNode)
-            return new AbilityExecutedResult { TargetsHit = 0 };
+        var caster = GetCaster(context);
+        var ability = GetAbility(context);
+        var casterNode = GetCasterNode2D(context);
 
-        var damage = ability.Data.Get<float>(DataKey.AbilityDamage)
-                   * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f;
+        var damage = GetScaledAbilityDamage(context);
 
         // 确定射击方向：优先最近敌人，否则朝右
         var dir = GetShootDirection(caster, casterNode);
@@ -38,11 +35,11 @@ internal class SineWaveShotExecutor : IFeatureHandler
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
         float cachedDamage = damage;
-        IEntity cachedCaster = caster;
+        CastContext cachedContext = context;
 
         projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
             GameEventType.Unit.MovementCollision,
-            (evt) => OnHit(evt, cachedCaster, cachedDamage));
+            (evt) => OnHit(evt, cachedContext, cachedDamage));
 
         projectile.Events.Emit(
             GameEventType.Unit.MovementStarted,
@@ -85,18 +82,14 @@ internal class SineWaveShotExecutor : IFeatureHandler
         return Vector2.Right;
     }
 
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, IEntity caster, float damage)
+    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, CastContext context, float damage)
     {
-        if (evt.Target is IUnit victim)
-        {
-            DamageService.Instance.Process(new DamageInfo
-            {
-                Attacker = caster as Godot.Node,
-                Victim = victim,
-                Damage = damage,
-                Type = DamageType.Physical,
-                Tags = DamageTags.Ability
-            });
-        }
+        ApplyCollisionDamage(
+            context, // 施法上下文
+            evt, // 碰撞事件
+            damage, // 伤害值
+            DamageType.Physical, // 伤害类型
+            DamageTags.Ability | DamageTags.Ranged, // 伤害标签
+            AbilityTargetTeamFilter.Enemy); // 仅命中敌方
     }
 }

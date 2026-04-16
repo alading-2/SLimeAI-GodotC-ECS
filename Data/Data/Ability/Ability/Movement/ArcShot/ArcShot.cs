@@ -3,9 +3,9 @@ using Godot;
 
 /// <summary>
 /// 圆弧弹技能执行器 - 验证 CircularArc 运动模式
-/// 向最近敌人发射沿圆弧轨迹飞行的投射物
+/// 向 AbilitySystem 预选中的敌人发射沿圆弧轨迹跟踪飞行的投射物
 /// </summary>
-internal class ArcShotExecutor : IFeatureHandler
+internal class ArcShotExecutor : AbilityFeatureHandler
 {
     private static readonly Log _log = new(nameof(ArcShotExecutor));
 
@@ -15,33 +15,29 @@ internal class ArcShotExecutor : IFeatureHandler
         FeatureHandlerRegistry.Register(new ArcShotExecutor());
     }
 
-    public string FeatureId => global::FeatureId.Ability.Projectile.ArcShot;
+    public override string FeatureId => global::FeatureId.Ability.Projectile.ArcShot;
 
-    public object? OnExecute(FeatureContext featureContext)
+    protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        var context = featureContext.GetActivationData<CastContext>();
-        var caster = context.Caster;
-        var ability = context.Ability;
-        if (caster == null || ability == null || caster is not Node2D casterNode)
-            return new AbilityExecutedResult { TargetsHit = 0 };
+        var casterNode = GetCasterNode2D(context);
+        var ability = GetAbility(context);
+        var targetNode = GetFirstTargetNode2D(context);
 
-        var damage = ability.Data.Get<float>(DataKey.AbilityDamage)
-                   * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f;
+        var damage = GetScaledAbilityDamage(context);
 
-        var targetPos = GetNearestEnemyPos(caster, casterNode);
         var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
 
         var projectile = ProjectileTool.Spawn(
-            casterNode.GlobalPosition,
-            new ProjectileSpawnOptions(projectileScene, "ArcShotProjectile"));
+            casterNode.GlobalPosition, // 生成位置
+            new ProjectileSpawnOptions(projectileScene, "ArcShotProjectile")); // 投射物配置
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
         float cachedDamage = damage;
-        IEntity cachedCaster = caster;
+        CastContext cachedContext = context;
 
         projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
             GameEventType.Unit.MovementCollision,
-            (evt) => OnHit(evt, cachedCaster, cachedDamage));
+            (evt) => OnHit(evt, cachedContext, cachedDamage));
 
         projectile.Events.Emit(
             GameEventType.Unit.MovementStarted,
@@ -50,7 +46,9 @@ internal class ArcShotExecutor : IFeatureHandler
                 new MovementParams
                 {
                     Mode = MoveMode.CircularArc,
-                    TargetPoint = targetPos,
+                    TargetPoint = targetNode.GlobalPosition,
+                    TargetNode = targetNode,
+                    isTrackTarget = true,
                     ActionSpeed = 360f,
                     CircularArcRadius = 220f,
                     CircularArcClockwise = true,
@@ -62,40 +60,18 @@ internal class ArcShotExecutor : IFeatureHandler
             )
         );
 
-        _log.Info($"圆弧弹: 目标={targetPos}");
+        _log.Info($"圆弧弹: 跟踪目标={targetNode.Name}, 初始位置={targetNode.GlobalPosition}");
         return new AbilityExecutedResult { TargetsHit = 1 };
     }
 
-    private static Vector2 GetNearestEnemyPos(IEntity caster, Node2D casterNode)
+    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, CastContext context, float damage)
     {
-        var query = new TargetSelectorQuery
-        {
-            Geometry = GeometryType.Circle,
-            Origin = casterNode.GlobalPosition,
-            Range = 700f,
-            CenterEntity = caster,
-            TeamFilter = AbilityTargetTeamFilter.Enemy,
-            Sorting = TargetSorting.Nearest,
-            MaxTargets = 1
-        };
-        var targets = EntityTargetSelector.Query(query);
-        if (targets.Count > 0 && targets[0] is Node2D t)
-            return t.GlobalPosition;
-        return casterNode.GlobalPosition + new Vector2(400f, 0f);
-    }
-
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, IEntity caster, float damage)
-    {
-        if (evt.Target is IUnit victim)
-        {
-            DamageService.Instance.Process(new DamageInfo
-            {
-                Attacker = caster as Godot.Node,
-                Victim = victim,
-                Damage = damage,
-                Type = DamageType.Physical,
-                Tags = DamageTags.Ability
-            });
-        }
+        ApplyCollisionDamage(
+            context, // 施法上下文
+            evt, // 碰撞事件
+            damage, // 伤害值
+            DamageType.Physical, // 伤害类型
+            DamageTags.Ability | DamageTags.Ranged, // 伤害标签
+            AbilityTargetTeamFilter.Enemy); // 仅命中敌方
     }
 }

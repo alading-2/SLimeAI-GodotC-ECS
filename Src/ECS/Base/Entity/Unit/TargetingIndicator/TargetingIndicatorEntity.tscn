@@ -16,4 +16,5 @@ script = ExtResource("1_indicator")
 [node name="TargetingIndicatorControlComponent" parent="Component" unique_id=95939578 instance=ExtResource("2_control")]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=554318557]
+visible = false
 texture = ExtResource("3_ogl56")

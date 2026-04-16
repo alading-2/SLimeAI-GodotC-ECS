@@ -52,8 +52,8 @@ ability.Data.Set(DataKey.AbilityTriggerMode, (int)AbilityTriggerMode.Manual);
 // 目标选择配置
 ability.Data.Set(DataKey.AbilityTargetSelection, (int)AbilityTargetSelection.Entity);
 ability.Data.Set(DataKey.AbilityTargetGeometry, (int)GeometryType.Circle);
-ability.Data.Set(DataKey.AbilityCastRange, 200f);      // 施法距离（索敌/瞄准射程，0=无限制）
-ability.Data.Set(DataKey.AbilityEffectRadius, 150f);   // 效果半径（AOE范围/冲刺位移距离）
+ability.Data.Set(DataKey.AbilityCastRange, 200f);      // 施法距离（索敌/瞄准射程）
+ability.Data.Set(DataKey.AbilityEffectRadius, 150f);   // 效果半径（AOE范围/冲刺位移距离；Entity 索敌未配置 CastRange 时可回退使用）
 ability.Data.Set(DataKey.AbilityMaxTargets, 5);
 ability.Data.Set(DataKey.AbilityTargetTeamFilter, (int)AbilityTargetTeamFilter.Enemy);
 ability.Data.Set(DataKey.TargetSorting, (int)TargetSorting.Nearest);
@@ -112,7 +112,7 @@ var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions
         : null,
     Damage = new DamageApplyOptions
     {
-        Damage = AbilityImpactTool.GetScaledAbilityDamage(context),
+        Damage = GetScaledAbilityDamage(context),
         Type = DamageType.Magical,
         Tags = DamageTags.Ability | DamageTags.Area,
         Attacker = casterNode
@@ -140,7 +140,7 @@ var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions
         : null,
     Damage = new DamageApplyOptions
     {
-        Damage = AbilityImpactTool.GetScaledAbilityDamage(context),
+        Damage = GetScaledAbilityDamage(context),
         Type = DamageType.Magical,
         Tags = DamageTags.Ability | DamageTags.Area,
         Attacker = casterNode,
@@ -163,9 +163,9 @@ var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions
 - `Damage != null` 但 `Query == null` 时不会隐式兜底选目标；此时应直接使用 `EffectTool` 或补齐 Query
 - DoT 调度与重复命中控制由 `DamageTool` 统一管理（见 damage-system Skill）
 
-## 什么时候写在 OnExecute，什么时候写在 OnGranted
+## 什么时候写在 ExecuteAbility，什么时候写在 OnGranted
 
-- 写在 `IFeatureHandler.OnExecute(FeatureContext)`：表示“每次技能被触发时执行一次”
+- 写在 `AbilityFeatureHandler.ExecuteAbility(CastContext)`：表示“每次技能被触发时执行一次”
 - 配合 `TriggerComponent.Periodic`：表示“每隔一段时间重新执行一次技能”
 - 配合 `DamageApplyOptions.TickInterval / TotalDuration`：表示“这次技能执行内部再挂一段 DoT”
 
@@ -175,9 +175,9 @@ var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions
 
 推荐判断：
 
-- “每隔 N 秒释放一次技能” → `TriggerComponent.Periodic + OnExecute`
+- “每隔 N 秒释放一次技能” → `TriggerComponent.Periodic + ExecuteAbility`
 - “能力授予后持续存在，直到被移除” → `OnGranted + OnRemoved`
-- “单次技能命中后内部继续跳伤害” → `OnExecute + DamageApplyOptions.TickInterval / TotalDuration`
+- “单次技能命中后内部继续跳伤害” → `ExecuteAbility + DamageApplyOptions.TickInterval / TotalDuration`
 
 ## 目标选择类型
 
@@ -190,10 +190,10 @@ var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions
 ## 实现技能效果处理器
 
 ```csharp
-// 推荐：直接实现 IFeatureHandler，Ability 通过 ActivationData 提供 CastContext
-internal class MyAbilityHandler : IFeatureHandler
+// 推荐：Ability 技能统一继承 AbilityFeatureHandler，由基类读取 CastContext 并校验 Caster / Ability
+internal class MyAbilityHandler : AbilityFeatureHandler
 {
-    public string FeatureId => "技能.主动.我的技能";
+    public override string FeatureId => "技能.主动.我的技能";
 
     [ModuleInitializer]
     public static void Initialize()
@@ -201,28 +201,33 @@ internal class MyAbilityHandler : IFeatureHandler
         FeatureHandlerRegistry.Register(new MyAbilityHandler());
     }
 
-    public object? OnExecute(FeatureContext featureContext)
+    protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        var context = featureContext.GetActivationData<CastContext>();
-        var targets = context.Targets;       // Entity 类型目标列表
-        var position = context.TargetPosition; // Point 类型目标位置
-        var caster = context.Caster;
+        var caster = GetCaster(context);
+        var casterNode = GetCasterNode2D(context);
+        var ability = GetAbility(context);
 
-        int hit = 0;
-        foreach (var target in targets)
+        var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions
         {
-            // 造成伤害
-            DamageService.Instance.Process(new DamageInfo
+            Query = new TargetSelectorQuery
             {
-                Attacker = context.Ability,
-                Instigator = caster,
-                Victim = target,
-                BaseDamage = caster.Data.Get<float>(DataKey.AttackDamage),
-                DamageType = DamageType.Physical
-            });
-            hit++;
-        }
-        return new AbilityExecutedResult { TargetsHit = hit };
+                Geometry = GeometryType.Circle,
+                Origin = casterNode.GlobalPosition,
+                Range = ability.Data.Get<float>(DataKey.AbilityEffectRadius),
+                CenterEntity = caster,
+                TeamFilter = AbilityTargetTeamFilter.Enemy,
+                MaxTargets = ability.Data.Get<int>(DataKey.AbilityMaxTargets)
+            },
+            Damage = new DamageApplyOptions
+            {
+                Damage = GetScaledAbilityDamage(context),
+                Type = DamageType.Physical,
+                Tags = DamageTags.Ability,
+                Attacker = casterNode
+            }
+        });
+
+        return new AbilityExecutedResult { TargetsHit = result.TargetsHit };
     }
 }
 ```
@@ -243,15 +248,14 @@ internal class MyAbilityHandler : IFeatureHandler
 技能执行时通过 `EffectTool.Spawn` 生成特效（详见 `Docs/框架/ECS/System/特效系统使用指南.md`）：
 
 ```csharp
-public object? OnExecute(FeatureContext featureContext)
+protected override AbilityExecutedResult ExecuteAbility(CastContext context)
 {
-    var context = featureContext.GetActivationData<CastContext>();
-    var casterNode = context.Caster as Node2D;
+    var casterNode = GetCasterNode2D(context);
 
     // 在施法者位置生成独立特效（播完自动销毁）
     var effectScene = ResourceManagement.Load<PackedScene>(
         ResourcePaths.Asset_Effect_020, ResourceCategory.Asset);
-    if (effectScene != null && casterNode != null)
+    if (effectScene != null)
     {
         EffectTool.Spawn(new EffectSpawnOptions(
             VisualScene: effectScene,
@@ -264,14 +268,14 @@ public object? OnExecute(FeatureContext featureContext)
     // 附着特效（跟随施法者移动，播完自动销毁）
     var dashEffectScene = ResourceManagement.Load<PackedScene>(
         ResourcePaths.Asset_Effect_004龙卷风, ResourceCategory.Asset);
-    if (dashEffectScene != null && casterNode != null)
+    if (dashEffectScene != null)
     {
         EffectTool.Spawn(new EffectSpawnOptions(
             VisualScene: dashEffectScene,
             Host: casterNode   // 传 Host 则为附着模式
         ));
     }
-    // ...
+    return new AbilityExecutedResult { TargetsHit = 0 };
 }
 ```
 
@@ -287,15 +291,10 @@ public object? OnExecute(FeatureContext featureContext)
 投射物技能直接从 `AbilityConfig.ProjectileScene` 读取视觉场景，通过 `ProjectileTool.Spawn` 生成，不再维护独立的 `Data/Data/Projectile/*.tres`：
 
 ```csharp
-public object? OnExecute(FeatureContext featureContext)
+protected override AbilityExecutedResult ExecuteAbility(CastContext context)
 {
-    var context = featureContext.GetActivationData<CastContext>();
-    var casterNode = context.Caster as Node2D;
-    var ability = context.Ability;
-    if (casterNode == null || ability == null)
-    {
-        return new AbilityExecutedResult { TargetsHit = 0 };
-    }
+    var casterNode = GetCasterNode2D(context);
+    var ability = GetAbility(context);
 
     var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
     var projectile = ProjectileTool.Spawn(
@@ -350,7 +349,8 @@ EntityManager.RemoveAbility(ownerEntity, ability);
 - ❌ 同类技能重复手写“查目标 + 发伤害 + DoT 定时” → 优先复用 `AbilityImpactTool`
 - ❌ 绕过 `TryTrigger` 直接调用执行逻辑
 - ❌ 新增 `IAbilityExecutor` / `AbilityExecutorRegistry`
-- ❌ 新增或恢复 `AbilityFeatureHandlerBase` 等 Ability 专属 FeatureHandler 基类
+- ❌ 在具体技能中重复读取 `FeatureContext.GetActivationData<CastContext>()` 或重复判断 `Caster / Ability` 是否为空
+- ❌ 新增第二套 Ability 专属 Handler 基类；统一使用现有 `AbilityFeatureHandler`
 - ❌ 绕过 `FeatureSystem` 直接手工分发技能效果
 - ❌ 在 `_Process` 中直接触发技能（用 `TriggerComponent` 的 Periodic 模式）
 
@@ -358,6 +358,7 @@ EntityManager.RemoveAbility(ownerEntity, ability);
 
 - **架构设计（唯一概念文档）** → `Docs/框架/ECS/Ability/技能系统架构设计理念.md`
 - **核心系统** → `Src/ECS/Base/System/AbilitySystem/AbilitySystem.cs`
+- **Ability Handler 中转层** → `Src/ECS/Base/System/AbilitySystem/AbilityFeatureHandler.cs`
 - **技能命中工具** → `Src/ECS/Base/System/AbilitySystem/AbilityImpactTool.cs`
 - **技能 CRUD** → `Src/ECS/Base/System/AbilitySystem/EntityManager_Ability.cs`
 - **模块说明** → `Src/ECS/Base/System/AbilitySystem/README.md`

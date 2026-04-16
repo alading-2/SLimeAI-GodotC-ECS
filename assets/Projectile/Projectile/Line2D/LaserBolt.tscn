@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://uyv0t7r2aml0"]
 
 [node name="LaserBolt" type="Node2D" unique_id=399837031]
+scale = Vector2(3, 3)
 
 [node name="Beam" type="Line2D" parent="." unique_id=922866151]
 points = PackedVector2Array(-18, 0, 12, 0)

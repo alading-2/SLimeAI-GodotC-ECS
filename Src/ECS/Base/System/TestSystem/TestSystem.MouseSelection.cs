@@ -79,10 +79,10 @@ public partial class TestSystem
     {
         // 显示选中实体名字+ID
         UpdateSelectedEntityDisplay();
-        // 测试模块触发选中实体变化事件
-        foreach (var module in _modules)
+        // 当前激活模块触发选中实体变化事件
+        if (_currentModule != null)
         {
-            module.OnSelectedEntityChanged(evt.Entity);
+            _currentModule.OnSelectedEntityChanged(evt.Entity);
         }
     }
 

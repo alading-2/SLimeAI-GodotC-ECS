@@ -12,7 +12,7 @@ using Godot;
 /// 特效：Effect_020（在随机选点位置播放）
 /// 伤害：物理伤害，带 Area + Melee 标签
 /// </summary>
-internal class SlamExecutor : IFeatureHandler
+internal class SlamExecutor : AbilityFeatureHandler
 {
     private static readonly Log _log = new(nameof(SlamExecutor));
 
@@ -22,26 +22,13 @@ internal class SlamExecutor : IFeatureHandler
         FeatureHandlerRegistry.Register(new SlamExecutor());
     }
 
-    public string FeatureId => global::FeatureId.Ability.Active.Slam;
+    public override string FeatureId => global::FeatureId.Ability.Active.Slam;
 
-    public object? OnExecute(FeatureContext featureContext)
+    protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        var context = featureContext.GetActivationData<CastContext>();
-        var caster = context.Caster;
-        var ability = context.Ability;
-
-        // 安全检查
-        if (caster == null || ability == null)
-        {
-            return new AbilityExecutedResult { TargetsHit = 0 };
-        }
-
-        var casterNode = caster as Node2D;
-        if (casterNode == null)
-        {
-            _log.Warn("施法者不是 Node2D");
-            return new AbilityExecutedResult { TargetsHit = 0 };
-        }
+        var caster = GetCaster(context);
+        var ability = GetAbility(context);
+        var casterNode = GetCasterNode2D(context);
 
         // 1. 获取技能参数
         var abilityRange = ability.Data.Get<float>(DataKey.AbilityCastRange);      // 选点范围（角色周围圆环半径）
@@ -82,14 +69,14 @@ internal class SlamExecutor : IFeatureHandler
                 : null,
             Damage = new DamageApplyOptions
             {
-                Damage = ability.Data.Get<float>(nameof(DataKey.FinalAbilityDamage)), // 技能最终伤害
+                Damage = GetScaledAbilityDamage(context), // 技能最终伤害
                 Type = DamageType.Magical,                                   // 魔法伤害
                 Tags = DamageTags.Area | DamageTags.Ability,                 // 范围技能标签
                 Attacker = casterNode                                        // 伤害来源
             }
         });
 
-        _log.Info($"裂地猛击: 选点范围 {abilityRange}, 伤害半径 {damageRadius}, 最终伤害 {ability.Data.Get<float>(nameof(DataKey.FinalAbilityDamage)):F1}, 命中 {result.TargetsHit}");
+        _log.Info($"裂地猛击: 选点范围 {abilityRange}, 伤害半径 {damageRadius}, 最终伤害 {GetScaledAbilityDamage(context):F1}, 命中 {result.TargetsHit}");
         return new AbilityExecutedResult { TargetsHit = result.TargetsHit };
     }
 }

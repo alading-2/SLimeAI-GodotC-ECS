@@ -44,6 +44,8 @@ public static class ResourceCatalog
     // 目录推导只处理这两类根：Data/Data 下的配置资源，以及 Effect 视觉资源。
     private const string DataRoot = "Data/Data";
     private const string EffectRoot = "assets/Effect";
+    private const string AssetUnitEnemyRoot = "assets/Unit/Enemy";
+    private const string AssetUnitPlayerRoot = "assets/Unit/Player";
     // 资源目录里的 Resource 只是存放目录，不参与分类名。
     private const string ResourceFolderName = "Resource";
     // 极端情况下用于兜底显示，避免空分类进入 UI。
@@ -197,6 +199,11 @@ public static class ResourceCatalog
             return true;
         }
 
+        if (TryCreateAssetUnitEntry(resourceKey, data, out entry))
+        {
+            return true;
+        }
+
         entry = default;
         return false;
     }
@@ -257,6 +264,49 @@ public static class ResourceCatalog
     }
 
     /// <summary>
+    /// 尝试从单位 Asset 场景构建目录条目。
+    /// </summary>
+    /// <param name="resourceKey">ResourcePaths 中的资源键。</param>
+    /// <param name="data">资源元数据。</param>
+    /// <param name="entry">转换后的目录条目。</param>
+    private static bool TryCreateAssetUnitEntry(string resourceKey, ResourceData data, out ResourceCatalogEntry entry)
+    {
+        string rootPath;
+        string rootCatalogName;
+        switch (data.Category)
+        {
+            case ResourceCategory.AssetUnitEnemy:
+                rootPath = AssetUnitEnemyRoot;
+                rootCatalogName = "AssetUnit.Enemy";
+                break;
+            case ResourceCategory.AssetUnitPlayer:
+                rootPath = AssetUnitPlayerRoot;
+                rootCatalogName = "AssetUnit.Player";
+                break;
+            default:
+                entry = default;
+                return false;
+        }
+
+        var catalogPath = ResolveCatalogPath(data.Path, rootPath, rootCatalogName);
+        if (string.IsNullOrWhiteSpace(catalogPath))
+        {
+            entry = default;
+            return false;
+        }
+
+        entry = new ResourceCatalogEntry(
+            resourceKey, // ResourcePaths 资源键
+            data.Category, // ResourceManagement 分类
+            data.Path, // res:// 路径
+            ResolveAssetDisplayName(data.Path), // UI 显示名
+            catalogPath, // 点分分类路径
+            typeof(PackedScene) // 单位 Asset 使用 PackedScene 加载
+        );
+        return true;
+    }
+
+    /// <summary>
     /// 解析配置资源在选择器里显示的名称。
     /// </summary>
     /// <param name="resourceKey">ResourcePaths 中的资源键。</param>
@@ -302,6 +352,19 @@ public static class ResourceCatalog
             ResourceCategory.DataAbility => typeof(AbilityConfig),
             _ => typeof(Resource)
         };
+    }
+
+    /// <summary>
+    /// 解析 Asset 资源在选择器里显示的名称。
+    /// </summary>
+    /// <param name="path">完整资源路径。</param>
+    private static string ResolveAssetDisplayName(string path)
+    {
+        var relativePath = ToRelativePath(path);
+        var parts = relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 0
+            ? path
+            : RemoveExtension(parts[^1]);
     }
 
     /// <summary>

@@ -21,6 +21,7 @@
 ```text
 Src/ECS/Base/System/AbilitySystem/
 ├── AbilitySystem.cs          # 施法流水线（统一入口）
+├── AbilityFeatureHandler.cs  # Ability 子域 Handler 中转层
 ├── EntityManager_Ability.cs  # 技能 CRUD + 事件接线
 ├── AbilityCheckPhase.cs      # CheckCanUse 检查优先级
 ├── TriggerResult.cs          # Success/Failed/WaitingForTarget
@@ -79,11 +80,14 @@ ability.Events.Emit(
 - 构建 `FeatureContext`，把 `CastContext` 放入 `ActivationData`
 - 调用 `FeatureSystem.OnFeatureActivated(...)`
 - 由对应 `IFeatureHandler.OnActivated(...)` 标记本次运行开始
-- 由对应 `IFeatureHandler.OnExecute(...)` 执行具体技能逻辑，并写入 `FeatureContext.ExecuteResult`
+- Ability 技能 Handler 统一继承 `AbilityFeatureHandler`，由它把 `FeatureContext.ActivationData` 转为 `CastContext`
+- 由对应 `AbilityFeatureHandler.ExecuteAbility(...)` 执行具体技能逻辑，并写入 `FeatureContext.ExecuteResult`
 - 发送 `Ability.Executed`
 - 同步技能立即调用 `FeatureSystem.OnFeatureEnded(..., FeatureEndReason.Completed)`
 
 其中 `AbilityConfig.FeatureHandlerId` 必须直接填写完整唯一 `FeatureId`，例如 `技能.位移.冲刺`；`FeatureGroupId` 只作为技能展示分组，不参与运行时处理器查找。
+
+Entity 目标技能如果未找到目标，会在 `SelectTargets` 后由 `AbilitySystem` 返回 `TriggerResult.Failed`，这个失败发生在充能、冷却、成本消耗之前。自动索敌范围优先读取 `AbilityCastRange`；若未配置正数，则回退读取 `AbilityEffectRadius`，适合 ArcShot 这类把效果半径当索敌半径的投射物技能。
 
 ---
 

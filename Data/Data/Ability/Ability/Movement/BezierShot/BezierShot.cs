@@ -5,7 +5,7 @@ using Godot;
 /// 贝塞尔曲线弹技能执行器 - 验证 BezierCurve 运动模式
 /// 向最近敌人发射沿二次贝塞尔曲线飞行的投射物（弓形抛射）
 /// </summary>
-internal class BezierShotExecutor : IFeatureHandler
+internal class BezierShotExecutor : AbilityFeatureHandler
 {
     private static readonly Log _log = new(nameof(BezierShotExecutor));
 
@@ -15,18 +15,15 @@ internal class BezierShotExecutor : IFeatureHandler
         FeatureHandlerRegistry.Register(new BezierShotExecutor());
     }
 
-    public string FeatureId => global::FeatureId.Ability.Projectile.BezierShot;
+    public override string FeatureId => global::FeatureId.Ability.Projectile.BezierShot;
 
-    public object? OnExecute(FeatureContext featureContext)
+    protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        var context = featureContext.GetActivationData<CastContext>();
-        var caster = context.Caster;
-        var ability = context.Ability;
-        if (caster == null || ability == null || caster is not Node2D casterNode)
-            return new AbilityExecutedResult { TargetsHit = 0 };
+        var caster = GetCaster(context);
+        var ability = GetAbility(context);
+        var casterNode = GetCasterNode2D(context);
 
-        var damage = ability.Data.Get<float>(DataKey.AbilityDamage)
-                   * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f;
+        var damage = GetScaledAbilityDamage(context);
 
         // 查找最近敌人作为终点
         var targetPos = GetNearestEnemyPos(caster, casterNode);
@@ -41,11 +38,11 @@ internal class BezierShotExecutor : IFeatureHandler
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
         float cachedDamage = damage; // 缓存伤害
-        IEntity cachedCaster = caster; // 缓存施法者
+        CastContext cachedContext = context; // 缓存施法上下文
 
         projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
             GameEventType.Unit.MovementCollision, // 碰撞事件
-            (evt) => OnHit(evt, cachedCaster, cachedDamage)); // 碰撞回调
+            (evt) => OnHit(evt, cachedContext, cachedDamage)); // 碰撞回调
 
         projectile.Events.Emit(
             GameEventType.Unit.MovementStarted, // 开始移动事件
@@ -85,18 +82,14 @@ internal class BezierShotExecutor : IFeatureHandler
         return casterNode.GlobalPosition + new Vector2(400f, 0f); // 无目标时返回前方位置
     }
 
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, IEntity caster, float damage)
+    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, CastContext context, float damage)
     {
-        if (evt.Target is IUnit victim)
-        {
-            DamageService.Instance.Process(new DamageInfo
-            {
-                Attacker = caster as Godot.Node, // 攻击者
-                Victim = victim, // 受害者
-                Damage = damage, // 伤害值
-                Type = DamageType.Physical, // 伤害类型：物理
-                Tags = DamageTags.Ability // 伤害标签：技能
-            });
-        }
+        ApplyCollisionDamage(
+            context, // 施法上下文
+            evt, // 碰撞事件
+            damage, // 伤害值
+            DamageType.Physical, // 伤害类型：物理
+            DamageTags.Ability | DamageTags.Ranged, // 伤害标签：技能投射物
+            AbilityTargetTeamFilter.Enemy); // 仅命中敌方
     }
 }

@@ -209,14 +209,15 @@ Ability.TryTrigger
 
 ### Ability 子域推荐写法
 
-不要再实现 `IAbilityExecutor`，也不要新增 Ability 专属 FeatureHandler 基类。
+不要再实现 `IAbilityExecutor`，也不要让具体技能直接实现 `IFeatureHandler`。
+Ability 子域统一通过 `AbilityFeatureHandler` 这一层接入 `FeatureSystem`。
 
 请改为：
 
-1. 直接实现 `IFeatureHandler`
-2. 实现 `FeatureId`
-3. 实现 `OnExecute(FeatureContext context)`
-4. 通过 `context.GetActivationData<CastContext>()` 读取施法上下文；AbilitySystem 已在进入 FeatureSystem 前校验上下文类型
+1. 继承 `AbilityFeatureHandler`
+2. `override FeatureId`
+3. 实现 `ExecuteAbility(CastContext context)`
+4. 使用 `GetCaster / GetAbility / GetCasterNode2D / GetScaledAbilityDamage` 等基类工具
 5. 在 `[ModuleInitializer]` 中注册到 `FeatureHandlerRegistry`
 6. 在 `.tres` 中显式填写 `FeatureHandlerId`；`FeatureGroupId` 只用于技能展示分组
 
@@ -225,9 +226,9 @@ Ability.TryTrigger
 ```csharp
 using System.Runtime.CompilerServices;
 
-internal class DashExecutor : IFeatureHandler
+internal class DashExecutor : AbilityFeatureHandler
 {
-    public string FeatureId => "技能.位移.冲刺";
+    public override string FeatureId => "技能.位移.冲刺";
 
     [ModuleInitializer]
     public static void Initialize()
@@ -235,10 +236,8 @@ internal class DashExecutor : IFeatureHandler
         FeatureHandlerRegistry.Register(new DashExecutor());
     }
 
-    public object? OnExecute(FeatureContext context)
+    protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        var castContext = context.GetActivationData<CastContext>();
-
         return new AbilityExecutedResult();
     }
 }
@@ -287,8 +286,8 @@ internal class DashExecutor : IFeatureHandler
 
 如果 Feature 被 Ability 子域调用，允许：
 
-- 在 `IFeatureHandler.OnExecute` 中通过 `context.GetActivationData<CastContext>()` 读取施法上下文
-- 从 `OnExecute` 返回 `AbilityExecutedResult`，由 FeatureSystem 写入 `context.ExecuteResult`
+- 在 `AbilityFeatureHandler.ExecuteAbility(CastContext)` 中使用施法上下文
+- 从 `ExecuteAbility` 返回 `AbilityExecutedResult`，由 FeatureSystem 写入 `context.ExecuteResult`
 
 不允许：
 

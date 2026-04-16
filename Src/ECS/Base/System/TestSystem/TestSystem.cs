@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using ECS.Base.System.TestSystem.Core;
 
 /// <summary>
 /// 运行时测试系统入口。
@@ -14,6 +15,15 @@ using System.Runtime.CompilerServices;
 /// </summary>
 public partial class TestSystem : CanvasLayer
 {
+    private const float PanelMargin = 24f;
+    private const float PanelWidthStep = 160f;
+    private const float PanelHeightStep = 120f;
+    private const float PanelMinWidth = 520f;
+    private const float PanelMinHeight = 420f;
+    private const float PanelMaxWidthPadding = 24f;
+    private const float PanelMaxHeightPadding = 24f;
+    private const float PanelToolbarHeight = 72f;
+
     /// <summary>测试系统日志器，用于记录初始化与关键调试操作。</summary>
     private static readonly Log _log = new(nameof(TestSystem));
 
@@ -26,11 +36,11 @@ public partial class TestSystem : CanvasLayer
     /// <summary>TestSystem 局部事件总线，仅用于测试面板内部通信。</summary>
     public EventBus Events { get; } = new();
 
-    /// <summary>当前已注册的测试模块列表，顺序就是场景挂载顺序。</summary>
-    private readonly List<ITestModule> _modules = new();
+    /// <summary>当前已注册的模块场景清单，顺序就是导航展示顺序。</summary>
+    private readonly List<TestModuleSceneDefinition> _moduleScenes = new();
 
-    /// <summary>模块 Id 到模块实例的快速映射。</summary>
-    private readonly Dictionary<string, ITestModule> _modulesById = new(StringComparer.Ordinal);
+    /// <summary>模块 Id 到模块场景定义的快速映射。</summary>
+    private readonly Dictionary<string, TestModuleSceneDefinition> _moduleScenesById = new(StringComparer.Ordinal);
 
     /// <summary>所有测试模块 Id 的列表，用于默认模块与顺序定位。</summary>
     private readonly List<string> _moduleIds = new();
@@ -47,8 +57,17 @@ public partial class TestSystem : CanvasLayer
     /// <summary>模块导航显示开关。</summary>
     private Button _moduleNavToggleButton = null!;
 
+    /// <summary>缩小面板按钮。</summary>
+    private Button _panelShrinkButton = null!;
+
+    /// <summary>放大面板按钮。</summary>
+    private Button _panelExpandButton = null!;
+
     /// <summary>当前模块路径显示。</summary>
     private Label _currentModulePathLabel = null!;
+
+    /// <summary>测试面板左上容器，用于调整整体可视尺寸。</summary>
+    private Control _topLeft = null!;
 
     /// <summary>承载整个调试界面的面板容器。</summary>
     private PanelContainer _panel = null!;
@@ -74,8 +93,8 @@ public partial class TestSystem : CanvasLayer
     /// <summary>模块导航树，按模块路径自动分组。</summary>
     private Tree _moduleTree = null!;
 
-    /// <summary>真正放置各个测试模块实例的宿主容器。</summary>
-    private VBoxContainer _moduleHost = null!;
+    /// <summary>右侧当前模块实例的挂载槽位。</summary>
+    private Control _moduleViewport = null!;
 
     /// <summary>面板当前可见性缓存，用于避免重复处理隐藏/显示逻辑。</summary>
     private bool _panelVisible = true;
@@ -135,14 +154,16 @@ public partial class TestSystem : CanvasLayer
         CacheUiNodes();
         // 绑定 UI 事件
         BindUiEvents();
+        // 初始化面板尺寸
+        ApplyPanelFrameSize(_panel.Size);
         // 初始化上下文
         InitializeContexts();
         // 绑定选中实体变化事件
         BindSelectionContextEvents();
-        // 从ModuleHost节点中扫描并注册所有测试模块。
+        // 注册 TestSystem 支持的模块清单。
         RegisterModulesFromScene();
         // 设置默认模块
-        if (_modules.Count > 0)
+        if (_moduleIds.Count > 0)
         {
             TrySwitchModule(_moduleIds[0]);
         }
@@ -158,7 +179,7 @@ public partial class TestSystem : CanvasLayer
     /// </summary>
     public override void _ExitTree()
     {
-        _currentModule?.DeactivateModule();
+        DisposeCurrentModule();
         if (_selectionContext != null)
         {
             UnbindSelectionContextEvents();
@@ -181,8 +202,11 @@ public partial class TestSystem : CanvasLayer
     {
         // 缓存 UI 节点
         _root = GetNode<Control>("Root");
+        _topLeft = GetNode<Control>("Root/TopLeft");
         _toggleButton = GetNode<Button>("Root/TopLeft/Layout/Toolbar/ToggleButton");
         _moduleNavToggleButton = GetNode<Button>("Root/TopLeft/Layout/Toolbar/ModuleNavToggleButton");
+        _panelShrinkButton = GetNode<Button>("Root/TopLeft/Layout/Toolbar/PanelShrinkButton");
+        _panelExpandButton = GetNode<Button>("Root/TopLeft/Layout/Toolbar/PanelExpandButton");
         _currentModulePathLabel = GetNode<Label>("Root/TopLeft/Layout/Toolbar/CurrentModulePathLabel");
         _panel = GetNode<PanelContainer>("Root/TopLeft/Layout/Panel");
         _selectionHintLabel = GetNode<Label>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/SelectionHintLabel");
@@ -195,7 +219,7 @@ public partial class TestSystem : CanvasLayer
             GetNode<Label>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/InfoRow/SelectedEntityLabel");
         _moduleNavPanel = GetNode<Control>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/ModuleSplit/ModuleNavPanel");
         _moduleTree = GetNode<Tree>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/ModuleSplit/ModuleNavPanel/ModuleNavMargin/ModuleNavLayout/ModuleTree");
-        _moduleHost = GetNode<VBoxContainer>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/ModuleSplit/ModuleHost");
+        _moduleViewport = GetNode<Control>("Root/TopLeft/Layout/Panel/PanelMargin/PanelLayout/ModuleSplit/ModuleViewport");
 
         // 设置鼠标过滤：
         // 1. 大部分容器和展示节点使用 Ignore，避免拦截鼠标，保证底层测试选取逻辑仍可正常响应。
@@ -212,7 +236,7 @@ public partial class TestSystem : CanvasLayer
             Control.MouseFilterEnum.Ignore;
         _moduleNavPanel.MouseFilter = Control.MouseFilterEnum.Stop;
         _moduleTree.MouseFilter = Control.MouseFilterEnum.Stop;
-        _moduleHost.MouseFilter = Control.MouseFilterEnum.Ignore;
+        _moduleViewport.MouseFilter = Control.MouseFilterEnum.Stop;
         _moduleTree.HideRoot = true;
     }
 
@@ -223,6 +247,8 @@ public partial class TestSystem : CanvasLayer
     {
         _toggleButton.Pressed += OnTogglePressed; // 测试按钮事件：切换测试面板显示/隐藏
         _moduleNavToggleButton.Pressed += OnModuleNavTogglePressed; // 模块列表显示/隐藏
+        _panelShrinkButton.Pressed += ShrinkPanelFrame; // 缩小面板
+        _panelExpandButton.Pressed += ExpandPanelFrame; // 放大面板
         _moduleTree.ItemSelected += OnModuleTreeItemSelected; // 模块树选择事件：切换测试模块
         _refreshButton.Pressed += RefreshCurrentModule; // 刷新按钮事件：刷新当前测试模块
         _clearSelectionButton.Pressed += () => SetSelectedEntity(null); // 清除选择按钮事件：清除选中实体
@@ -290,67 +316,47 @@ public partial class TestSystem : CanvasLayer
 
     //=========================测试模块注册===========================
     /// <summary>
-    /// 从ModuleHost节点中扫描并注册所有测试模块。
+    /// 注册当前 TestSystem 支持的模块清单。
     /// </summary>
     private void RegisterModulesFromScene()
     {
-        _modules.Clear();
-        _modulesById.Clear();
+        _moduleScenes.Clear();
+        _moduleScenesById.Clear();
         _moduleIds.Clear();
         _moduleTree.Clear();
 
-        foreach (Node child in _moduleHost.GetChildren()) // 获取ModuleHost节点下所有测试模块
+        foreach (var moduleScene in TestModuleSceneRegistry.Entries)
         {
-            if (child is not TestModuleBase module)
+            if (string.IsNullOrWhiteSpace(moduleScene.Definition.Id))
             {
+                _log.Error($"TestSystem 模块缺少稳定 Id: scene={moduleScene.SceneResourceKey}");
                 continue;
             }
 
-            if (string.IsNullOrWhiteSpace(module.Definition.Id))
-            {
-                _log.Error($"TestSystem 模块缺少稳定 Id: module={module.Name}");
-                continue;
-            }
-
-            var modulePath = TestModulePath.Normalize(module.Definition.ModulePath);
+            var modulePath = TestModulePath.Normalize(moduleScene.Definition.ModulePath);
             if (string.IsNullOrWhiteSpace(modulePath))
             {
-                _log.Error($"TestSystem 模块缺少有效路径: id={module.Definition.Id} module={module.Name}");
+                _log.Error($"TestSystem 模块缺少有效路径: id={moduleScene.Definition.Id} scene={moduleScene.SceneResourceKey}");
                 continue;
             }
 
-            if (_modulesById.ContainsKey(module.Definition.Id))
+            if (_moduleScenesById.ContainsKey(moduleScene.Definition.Id))
             {
-                _log.Error($"TestSystem 模块 Id 重复: id={module.Definition.Id} module={module.Name}");
+                _log.Error($"TestSystem 模块 Id 重复: id={moduleScene.Definition.Id} scene={moduleScene.SceneResourceKey}");
                 continue;
             }
 
-            RegisterModule(module);
+            _moduleScenes.Add(moduleScene);
+            _moduleScenesById[moduleScene.Definition.Id] = moduleScene;
+            _moduleIds.Add(moduleScene.Definition.Id);
         }
 
         RebuildModuleTree();
 
-        if (_modules.Count == 0)
+        if (_moduleScenes.Count == 0)
         {
-            _log.Warn("TestSystem 未在 ModuleHost 下找到任何测试模块，请检查 TestSystem.tscn 挂载配置");
+            _log.Warn("TestSystem 模块清单为空，请检查 TestModuleSceneRegistry 配置");
         }
-    }
-
-    /// <summary>
-    /// 注册一个测试模块，并把它挂到统一的 UI 宿主中。
-    /// </summary>
-    private void RegisterModule(ITestModule module)
-    {
-        // 1. 初始化模块
-        module.Initialize(_moduleContext);
-        // 2. 添加到模块列表
-        _modules.Add(module);
-        // 3. 添加到模块字典
-        _modulesById[module.Definition.Id] = module;
-        // 4. 添加到模块索引列表
-        _moduleIds.Add(module.Definition.Id);
-        // 5. 通知模块当前选中实体（如果有的话）
-        module.OnSelectedEntityChanged(SelectedEntity);
     }
 
     /// <summary>
@@ -362,9 +368,9 @@ public partial class TestSystem : CanvasLayer
         var root = _moduleTree.CreateItem();
         var groupItems = new Dictionary<string, TreeItem>(StringComparer.Ordinal);
 
-        foreach (var module in _modules)
+        foreach (var moduleScene in _moduleScenes)
         {
-            var parts = TestModulePath.Split(module.Definition.ModulePath);
+            var parts = TestModulePath.Split(moduleScene.Definition.ModulePath);
             if (parts.Length == 0)
             {
                 continue;
@@ -388,8 +394,8 @@ public partial class TestSystem : CanvasLayer
 
             var moduleItem = _moduleTree.CreateItem(parent);
             moduleItem.SetText(0, parts[^1]);
-            moduleItem.SetMetadata(0, module.Definition.Id); // 模块稳定 Id
-            moduleItem.SetTooltipText(0, module.Definition.ModulePath);
+            moduleItem.SetMetadata(0, moduleScene.Definition.Id); // 模块稳定 Id
+            moduleItem.SetTooltipText(0, moduleScene.Definition.ModulePath);
         }
     }
 
@@ -400,7 +406,7 @@ public partial class TestSystem : CanvasLayer
     /// </summary>
     public bool TrySwitchModule(string moduleId)
     {
-        if (string.IsNullOrWhiteSpace(moduleId) || !_modulesById.ContainsKey(moduleId))
+        if (string.IsNullOrWhiteSpace(moduleId) || !_moduleScenesById.ContainsKey(moduleId))
         {
             return false;
         }
@@ -423,24 +429,35 @@ public partial class TestSystem : CanvasLayer
     /// </summary>
     private void SwitchModule(string moduleId)
     {
-        if (_currentModule != null)
+        DisposeCurrentModule();
+        if (!_moduleScenesById.TryGetValue(moduleId, out var moduleScene))
         {
-            _currentModule.DeactivateModule();
-            _currentModule.ModuleRoot.Visible = false;
+            UpdateCurrentModulePathDisplay();
+            return;
         }
 
-        _currentModule = null;
-        if (_modulesById.TryGetValue(moduleId, out var currentModule))
+        try
         {
+            var scene = ResourceManagement.Load<PackedScene>(moduleScene.SceneResourceKey, ResourceCategory.System);
+            var currentModule = TestSceneHelper.InstantiateScene<TestModuleBase>(scene, moduleScene.SceneResourceKey);
+            PrepareModuleRoot(currentModule);
+            _moduleViewport.AddChild(currentModule);
+            currentModule.Initialize(_moduleContext);
+            currentModule.Visible = true;
+            currentModule.OnSelectedEntityChanged(SelectedEntity);
             _currentModule = currentModule;
-            currentModule.ModuleRoot.Visible = true;
             if (_panelVisible)
             {
                 currentModule.ActivateModule();
             }
-
-            UpdateCurrentModulePathDisplay();
         }
+        catch (Exception ex)
+        {
+            _log.Error(
+                $"TestSystem 模块初始化失败: id={moduleScene.Definition.Id} path={moduleScene.Definition.ModulePath} error={ex.Message}");
+        }
+
+        UpdateCurrentModulePathDisplay();
     }
 
     /// <summary>
@@ -474,6 +491,51 @@ public partial class TestSystem : CanvasLayer
         _moduleNavVisible = !_moduleNavVisible;
         _moduleNavPanel.Visible = _moduleNavVisible;
         _moduleNavToggleButton.Text = _moduleNavVisible ? "隐藏模块" : "显示模块";
+    }
+
+    /// <summary>
+    /// 缩小测试面板整体尺寸。
+    /// </summary>
+    private void ShrinkPanelFrame()
+    {
+        ApplyPanelFrameSize(new Vector2(
+            _panel.Size.X - PanelWidthStep, // 目标宽度
+            _panel.Size.Y - PanelHeightStep // 目标高度
+        ));
+    }
+
+    /// <summary>
+    /// 放大测试面板整体尺寸。
+    /// </summary>
+    private void ExpandPanelFrame()
+    {
+        ApplyPanelFrameSize(new Vector2(
+            _panel.Size.X + PanelWidthStep, // 目标宽度
+            _panel.Size.Y + PanelHeightStep // 目标高度
+        ));
+    }
+
+    /// <summary>
+    /// 按当前视口限制应用测试面板尺寸。
+    /// </summary>
+    /// <param name="targetSize">希望应用的面板尺寸。</param>
+    private void ApplyPanelFrameSize(Vector2 targetSize)
+    {
+        var viewportSize = GetViewport().GetVisibleRect().Size;
+        var maxWidth = Mathf.Max(PanelMinWidth, viewportSize.X - PanelMaxWidthPadding);
+        var maxHeight = Mathf.Max(PanelMinHeight, viewportSize.Y - PanelMaxHeightPadding);
+        var minWidth = Mathf.Min(PanelMinWidth, maxWidth);
+        var minHeight = Mathf.Min(PanelMinHeight, maxHeight);
+        var width = Mathf.Clamp(targetSize.X, minWidth, maxWidth);
+        var height = Mathf.Clamp(targetSize.Y, minHeight, maxHeight);
+
+        _panel.CustomMinimumSize = new Vector2(width, height);
+        _topLeft.OffsetRight = _topLeft.OffsetLeft + width + PanelMargin;
+        _topLeft.OffsetBottom = _topLeft.OffsetTop + height + PanelMargin + PanelToolbarHeight;
+        _panelShrinkButton.Disabled = width <= minWidth && height <= minHeight;
+        _panelExpandButton.Disabled =
+            width >= viewportSize.X - PanelMaxWidthPadding
+            && height >= viewportSize.Y - PanelMaxHeightPadding;
     }
 
     /// <summary>
@@ -557,5 +619,43 @@ public partial class TestSystem : CanvasLayer
         _currentModulePathLabel.Text = _currentModule == null
             ? "未选择模块"
             : _currentModule.Definition.ModulePath;
+    }
+
+    /// <summary>
+    /// 释放当前已挂载模块实例。
+    /// </summary>
+    private void DisposeCurrentModule()
+    {
+        if (_currentModule == null)
+        {
+            return;
+        }
+
+        _currentModule.DeactivateModule();
+        var moduleRoot = _currentModule.ModuleRoot;
+        _currentModule = null;
+        if (IsInstanceValid(moduleRoot))
+        {
+            moduleRoot.QueueFree();
+        }
+    }
+
+    /// <summary>
+    /// 把模块根节点铺满右侧挂载槽位。
+    /// </summary>
+    /// <param name="moduleRoot">当前模块根节点。</param>
+    private static void PrepareModuleRoot(Control moduleRoot)
+    {
+        moduleRoot.Visible = true;
+        moduleRoot.AnchorLeft = 0f;
+        moduleRoot.AnchorTop = 0f;
+        moduleRoot.AnchorRight = 1f;
+        moduleRoot.AnchorBottom = 1f;
+        moduleRoot.OffsetLeft = 0f;
+        moduleRoot.OffsetTop = 0f;
+        moduleRoot.OffsetRight = 0f;
+        moduleRoot.OffsetBottom = 0f;
+        moduleRoot.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        moduleRoot.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
     }
 }

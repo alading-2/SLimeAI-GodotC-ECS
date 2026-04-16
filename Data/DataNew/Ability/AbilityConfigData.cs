@@ -106,6 +106,12 @@ public class AbilityConfigData
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
+        AbilityTargetSelection = AbilityTargetSelection.Entity,
+        AbilityTargetGeometry = GeometryType.Circle,
+        AbilityTargetTeamFilter = AbilityTargetTeamFilter.Enemy,
+        TargetSorting = TargetSorting.Nearest,
+        AbilityMaxTargets = 1,
+        AbilityEffectRadius = 700f,
         AbilityDamage = 26f
     };
 

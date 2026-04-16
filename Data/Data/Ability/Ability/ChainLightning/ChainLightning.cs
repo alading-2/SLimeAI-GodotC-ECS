@@ -25,7 +25,7 @@ public readonly record struct ChainBounceContext(
 /// 特效：在每个被命中目标位置生成独立特效
 /// 伤害：魔法伤害，每次弹跳衰减
 /// </summary>
-internal class ChainLightningExecutor : IFeatureHandler
+internal class ChainLightningExecutor : AbilityFeatureHandler
 {
     private static readonly Log _log = new(nameof(ChainLightningExecutor));
 
@@ -40,13 +40,12 @@ internal class ChainLightningExecutor : IFeatureHandler
     /// </summary>
     /// <param name="context">施法上下文，包含施法者、技能对象、初始目标等</param>
     /// <returns>返回执行结果，主要包含命中目标数</returns>
-    public string FeatureId => global::FeatureId.Ability.Active.ChainLightning;
+    public override string FeatureId => global::FeatureId.Ability.Active.ChainLightning;
 
-    public object? OnExecute(FeatureContext featureContext)
+    protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        var context = featureContext.GetActivationData<CastContext>();
-        var ability = context.Ability;
-        if (ability == null) return new AbilityExecutedResult();
+        var ability = GetAbility(context);
+        var caster = GetCaster(context);
 
         var initialTargets = context.Targets;
         if (initialTargets == null || initialTargets.Count == 0 || initialTargets[0] == null)
@@ -55,15 +54,11 @@ internal class ChainLightningExecutor : IFeatureHandler
             return new AbilityExecutedResult();
         }
 
-        var caster = context.Caster;
-        if (caster == null) return new AbilityExecutedResult();
-
         var chainCount = ability.Data.Get<int>(DataKey.AbilityChainCount);
         if (chainCount <= 0) chainCount = 1;
 
         // 计算初始伤害：技能基础伤害 × 施法者技能伤害倍率
-        var initialDamage = ability.Data.Get<float>(DataKey.AbilityDamage)
-                          * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f;
+        var initialDamage = GetScaledAbilityDamage(context);
 
         var bounceContext = new ChainBounceContext
         {

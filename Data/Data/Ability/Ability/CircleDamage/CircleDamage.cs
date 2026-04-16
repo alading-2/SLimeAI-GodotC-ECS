@@ -9,7 +9,7 @@ using Godot;
 /// 特效：Effect_003（每次触发在施法者位置播放一次独立特效）
 /// 伤害：魔法伤害，带 Area 标签；当前未配置 TickInterval/TotalDuration，因此重复触发仅来自 TriggerComponent 的 Periodic 轴
 /// </summary>
-internal class CircleDamageExecutor : IFeatureHandler
+internal class CircleDamageExecutor : AbilityFeatureHandler
 {
     private static readonly Log _log = new(nameof(CircleDamageExecutor));
 
@@ -19,19 +19,13 @@ internal class CircleDamageExecutor : IFeatureHandler
         FeatureHandlerRegistry.Register(new CircleDamageExecutor());
     }
 
-    public string FeatureId => global::FeatureId.Ability.Passive.CircleDamage;
+    public override string FeatureId => global::FeatureId.Ability.Passive.CircleDamage;
 
-    public object? OnExecute(FeatureContext featureContext)
+    protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        var context = featureContext.GetActivationData<CastContext>();
-        var caster = context.Caster;
-        var ability = context.Ability;
-
-        // 安全检查：确保施法者和技能实体存在
-        if (caster == null || ability == null) return new AbilityExecutedResult();
-
-        var casterNode2D = caster as Node2D;
-        if (casterNode2D == null) return new AbilityExecutedResult();
+        var caster = GetCaster(context);
+        var ability = GetAbility(context);
+        var casterNode2D = GetCasterNode2D(context);
 
         // 从技能配置中读取参数
         var range = ability.Data.Get<float>(DataKey.AbilityEffectRadius);            // 伤害半径
@@ -51,7 +45,7 @@ internal class CircleDamageExecutor : IFeatureHandler
                 TeamFilter = teamFilter,                // 阵营过滤
                 MaxTargets = -1                         // 不限命中数量
             },
-            Effect = effectScene != null && casterNode2D != null
+            Effect = effectScene != null
                 ? new EffectSpawnOptions(
                     effectScene,
                     Name: "烈焰光环特效",
@@ -59,7 +53,7 @@ internal class CircleDamageExecutor : IFeatureHandler
                 : null,
             Damage = new DamageApplyOptions
             {
-                Damage = ability.Data.Get<float>(nameof(DataKey.FinalAbilityDamage)), // 技能最终伤害
+                Damage = GetScaledAbilityDamage(context), // 技能最终伤害
                 Type = DamageType.Magical,                                   // 魔法伤害
                 Tags = DamageTags.Area | DamageTags.Ability,                 // 范围技能标签
                 Attacker = casterNode2D,                                     // 伤害来源

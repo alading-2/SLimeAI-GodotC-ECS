@@ -121,12 +121,12 @@ namespace Slime.Config.Abilities
         [Export] public TargetSorting TargetSorting { get; set; }
 
         /// <summary>
-        /// 施法距离（索敌/瞄准射程；Dash 等位移技能可复用为位移距离；0=无限制）
+        /// 施法距离
         /// </summary>
         [DataKey(nameof(DataKey.AbilityCastRange))]
         [Export] public float AbilityCastRange { get; set; }
         /// <summary>
-        /// 效果半径（圆形/扇形 AOE 半径；Dash 等落点结算技能可复用为伤害范围）
+        /// 效果范围
         /// </summary>
         [DataKey(nameof(DataKey.AbilityEffectRadius))]
         [Export] public float AbilityEffectRadius { get; set; }

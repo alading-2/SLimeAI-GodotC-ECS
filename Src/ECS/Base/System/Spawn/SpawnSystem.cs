@@ -18,6 +18,7 @@ public partial class SpawnSystem : Node
     [ModuleInitializer]
     public static void Initialize()
     {
+        // return;
         // 注册到 AutoLoad，传递 PackedScene 由 AutoLoad 负责实例化
         AutoLoad.Register(new AutoLoad.AutoLoadConfig
         {
@@ -44,15 +45,18 @@ public partial class SpawnSystem : Node
     public bool IsWaveActive { get; private set; }
 
     // === 内部组件 ===
-    private GameTimer? _waveTimer;       // 控制波次总时长
-    private GameTimer? _checkTimer;      // 核心轮询计时器(替代大量独立的 Rule Timer)）
+    private GameTimer? _waveTimer; // 控制波次总时长
+    private GameTimer? _checkTimer; // 核心轮询计时器(替代大量独立的 Rule Timer)）
+
     private const float CheckInterval = 0.1f;
+
     // 运行时状态跟踪 - 使用 struct 避免每波生成大量状态对象导致的 GC 压力
     private struct RuleRuntimeState
     {
         public EnemyConfig Config; // 敌人配置
         public float AccumulatedTime; // 累积时间
     }
+
     private List<RuleRuntimeState> _activeStates = new();
 
     /// <summary>
@@ -68,7 +72,6 @@ public partial class SpawnSystem : Node
 
         _log.Info("SpawnSystem (TimerManager Architecture) 初始化完成");
     }
-
 
 
     /// <summary>
@@ -125,7 +128,6 @@ public partial class SpawnSystem : Node
     /// <param name="waveIndex">波次索引 (1-based)</param>
     public void StartWave(int waveIndex)
     {
-
         // 检查是否超过最大波次（如果 SpawnSystemConfig.MaxWaves > 0）
         if (SpawnSystemConfig.MaxWaves > 0 && waveIndex > SpawnSystemConfig.MaxWaves)
         {
@@ -172,7 +174,8 @@ public partial class SpawnSystem : Node
 
         _log.Info($"波次 {waveIndex} 开始! 持续时间: {SpawnSystemConfig.WaveDuration}s, 激活规则数: {_activeStates.Count}");
         // 通过事件总线通知 UI 和其他系统
-        GlobalEventBus.Global.Emit(GameEventType.Global.WaveStarted, new GameEventType.Global.WaveStartedEventData(waveIndex));
+        GlobalEventBus.Global.Emit(GameEventType.Global.WaveStarted,
+            new GameEventType.Global.WaveStartedEventData(waveIndex));
     }
 
     /// <summary>
@@ -189,7 +192,8 @@ public partial class SpawnSystem : Node
 
         _log.Info($"第 {CurrentWaveIndex}波进攻结束!");
         // 触发波次完成事件,通常用于开启商店界面或奖励选择
-        GlobalEventBus.Global.Emit(GameEventType.Global.WaveCompleted, new GameEventType.Global.WaveCompletedEventData(CurrentWaveIndex));
+        GlobalEventBus.Global.Emit(GameEventType.Global.WaveCompleted,
+            new GameEventType.Global.WaveCompletedEventData(CurrentWaveIndex));
     }
 
     // ========================================

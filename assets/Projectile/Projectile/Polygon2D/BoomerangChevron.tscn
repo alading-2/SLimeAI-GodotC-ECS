@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://co376pqsoi2pv"]
 
 [node name="BoomerangChevron" type="Node2D" unique_id=44933928]
+scale = Vector2(3, 3)
 
 [node name="LeftWing" type="Polygon2D" parent="." unique_id=849877618]
 position = Vector2(0, -3)

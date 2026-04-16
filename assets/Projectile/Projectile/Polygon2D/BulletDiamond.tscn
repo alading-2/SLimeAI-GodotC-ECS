@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cekjro5qlnlu6"]
 
 [node name="BulletDiamond" type="Node2D" unique_id=1381755510]
+scale = Vector2(2, 2)
 
 [node name="Body" type="Polygon2D" parent="." unique_id=1313758739]
 color = Color(0.360784, 0.823529, 1, 1)

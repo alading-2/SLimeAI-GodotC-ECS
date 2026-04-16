@@ -5,7 +5,7 @@ using Godot;
 /// 回旋镖技能执行器 - 验证 Boomerang 运动模式
 /// 向最近敌人投掷回旋镖，飞出后自动返回，过程中碰撞造成伤害
 /// </summary>
-internal class BoomerangThrowExecutor : IFeatureHandler
+internal class BoomerangThrowExecutor : AbilityFeatureHandler
 {
     private static readonly Log _log = new(nameof(BoomerangThrowExecutor));
 
@@ -15,18 +15,15 @@ internal class BoomerangThrowExecutor : IFeatureHandler
         FeatureHandlerRegistry.Register(new BoomerangThrowExecutor());
     }
 
-    public string FeatureId => global::FeatureId.Ability.Projectile.BoomerangThrow;
+    public override string FeatureId => global::FeatureId.Ability.Projectile.BoomerangThrow;
 
-    public object? OnExecute(FeatureContext featureContext)
+    protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        var context = featureContext.GetActivationData<CastContext>();
-        var caster = context.Caster;
-        var ability = context.Ability;
-        if (caster == null || ability == null || caster is not Node2D casterNode)
-            return new AbilityExecutedResult { TargetsHit = 0 };
+        var caster = GetCaster(context);
+        var ability = GetAbility(context);
+        var casterNode = GetCasterNode2D(context);
 
-        var damage = ability.Data.Get<float>(DataKey.AbilityDamage)
-                   * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f;
+        var damage = GetScaledAbilityDamage(context);
 
         var throwTarget = GetThrowTarget(caster, casterNode);
         var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
@@ -37,12 +34,12 @@ internal class BoomerangThrowExecutor : IFeatureHandler
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
         float cachedDamage = damage;
-        IEntity cachedCaster = caster;
+        CastContext cachedContext = context;
 
         // 回旋镖不销毁于碰撞，继续飞行并返回
         projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
             GameEventType.Unit.MovementCollision,
-            (evt) => OnHit(evt, cachedCaster, cachedDamage));
+            (evt) => OnHit(evt, cachedContext, cachedDamage));
 
         projectile.Events.Emit(
             GameEventType.Unit.MovementStarted,
@@ -87,18 +84,14 @@ internal class BoomerangThrowExecutor : IFeatureHandler
         return casterNode.GlobalPosition + new Vector2(280f, 0f);
     }
 
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, IEntity caster, float damage)
+    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, CastContext context, float damage)
     {
-        if (evt.Target is IUnit victim)
-        {
-            DamageService.Instance.Process(new DamageInfo
-            {
-                Attacker = caster as Godot.Node,
-                Victim = victim,
-                Damage = damage,
-                Type = DamageType.Physical,
-                Tags = DamageTags.Ability
-            });
-        }
+        ApplyCollisionDamage(
+            context, // 施法上下文
+            evt, // 碰撞事件
+            damage, // 伤害值
+            DamageType.Physical, // 伤害类型
+            DamageTags.Ability | DamageTags.Ranged, // 伤害标签
+            AbilityTargetTeamFilter.Enemy); // 仅命中敌方
     }
 }

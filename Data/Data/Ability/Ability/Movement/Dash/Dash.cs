@@ -9,7 +9,7 @@ using Godot;
 /// 运动模式：Charge（向当前移动方向或面朝方向高速冲刺，完成后自动回退默认模式）
 /// 特效：可在技能数据中配置落地特效
 /// </summary>
-internal class DashExecutor : IFeatureHandler
+internal class DashExecutor : AbilityFeatureHandler
 {
     private static readonly Log _log = new(nameof(DashExecutor));
 
@@ -28,27 +28,19 @@ internal class DashExecutor : IFeatureHandler
     /// <summary>
     /// 技能功能 ID：对应配置中的 技能.位移.冲刺
     /// </summary>
-    public string FeatureId => global::FeatureId.Ability.Movement.Dash;
+    public override string FeatureId => global::FeatureId.Ability.Movement.Dash;
 
     /// <summary>
     /// 执行冲刺逻辑的主入口
     /// </summary>
     /// <param name="context">施法上下文</param>
     /// <returns>执行结果</returns>
-    public object? OnExecute(FeatureContext featureContext)
+    protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        var context = featureContext.GetActivationData<CastContext>();
         // 施法上下文包含施法者 <IEntity> 和技能实体 <AbilityEntity> 信息
-        var caster = context.Caster;
-        var ability = context.Ability;
-        var casterNode2D = caster as Node2D;
-
-        // 安全性检查：冲刺需要基于物理位置，因此施法者必须是 Node2D
-        if (casterNode2D == null)
-        {
-            _log.Warn("Dash 施法者不是 Node2D，无法执行冲刺。");
-            return new AbilityExecutedResult { TargetsHit = 0 };
-        }
+        var caster = GetCaster(context);
+        var ability = GetAbility(context);
+        var casterNode2D = GetCasterNode2D(context);
 
         // 1. 数据驱动：从技能动态 Data 容器中读取运行时配置
         // 冲刺距离：决定位移终点
