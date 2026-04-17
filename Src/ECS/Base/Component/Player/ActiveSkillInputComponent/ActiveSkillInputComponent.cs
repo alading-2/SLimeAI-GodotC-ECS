@@ -8,7 +8,7 @@ using System.Collections.Generic;
 /// <list type="bullet">
 ///   <item>监听 LB/RB 切换当前选中的主动技能。</item>
 ///   <item>监听 X 键（或对应映射）尝试释放当前选中的主动技能。</item>
-///   <item>智能目标解析：根据技能配置（单位/点/混合）自动完成索敌或方向预测。</item>
+///   <item>Point 技能进入点选输入；其他目标策略由技能 Handler 在执行阶段自行处理。</item>
 /// </list>
 /// </summary>
 public partial class ActiveSkillInputComponent : Node, IComponent
@@ -123,8 +123,8 @@ public partial class ActiveSkillInputComponent : Node, IComponent
 
     /// <summary>
     /// 执行当前选中的主动技能。
-    /// 统一入口：所有目标类型都走 TryTrigger。
-    /// 具体是直接释放、自动索敌失败还是进入点选，由对应 AbilityHandler.PrepareCast 决定。
+    /// Point 目标先进入输入点选阶段；确认目标点后再走正式 TryTrigger 流水线。
+    /// 其他技能直接提交给 AbilitySystem，目标查询由具体 Handler 在执行阶段自行处理。
     /// </summary>
     private void TryUseCurrentActiveAbility()
     {
@@ -147,7 +147,6 @@ public partial class ActiveSkillInputComponent : Node, IComponent
         var ability = activeAbilities[currentIndex];
         var abilityName = ability.Data.Get<string>(DataKey.Name);
 
-        // 统一走 AbilitySystem 流水线；目标决策由对应 Handler 的 PrepareCast 负责
         if (_entity is IEntity caster)
         {
             var context = new CastContext
@@ -156,22 +155,66 @@ public partial class ActiveSkillInputComponent : Node, IComponent
                 Caster = caster,
                 ResponseContext = new EventContext(),
             };
-            ability.Events.Emit(
-                GameEventType.Ability.TryTrigger,
-                new GameEventType.Ability.TryTriggerEventData(context)
-            );
-            var result = context.ResponseContext?.HasResult == true
-                ? (TriggerResult)context.ResponseContext.GetResult<TriggerResult>()
-                : TriggerResult.Failed;
 
-            if (result == TriggerResult.Failed)
+            var targetSelection = (AbilityTargetSelection)ability.Data.Get<int>(DataKey.AbilityTargetSelection);
+            if (targetSelection == AbilityTargetSelection.Point)
             {
-                _log.Debug($"技能触发失败: {abilityName}");
+                TryBeginPointTargeting(
+                    ability, //技能实体
+                    context, //施法上下文
+                    abilityName); //技能名称
+                return;
             }
-            else if (result == TriggerResult.WaitingForTarget)
-            {
-                _log.Debug($"技能 {abilityName} 进入瞄准模式");
-            }
+
+            TriggerAbility(
+                ability, //技能实体
+                context, //施法上下文
+                abilityName); //技能名称
+        }
+    }
+
+    /// <summary>
+    /// 发起 Point 技能的点选输入阶段。只做可用性预检查，不消耗资源或启动冷却。
+    /// </summary>
+    /// <param name="ability">准备释放的技能实体。</param>
+    /// <param name="context">点选会话携带的施法上下文。</param>
+    /// <param name="abilityName">技能名称，用于日志。</param>
+    private void TryBeginPointTargeting(
+        AbilityEntity ability,
+        CastContext context,
+        string abilityName)
+    {
+        if (!AbilitySystem.CanUseAbility(ability)) //技能实体
+        {
+            _log.Debug($"技能触发失败: {abilityName}");
+            return;
+        }
+
+        GlobalEventBus.Global.Emit(
+            GameEventType.Targeting.StartTargeting,
+            new GameEventType.Targeting.StartTargetingEventData(context)); //施法上下文
+        _log.Debug($"技能 {abilityName} 进入瞄准模式");
+    }
+
+    /// <summary>
+    /// 正式提交技能请求。AbilitySystem 会再次检查可用性并负责消耗、冷却和执行。
+    /// </summary>
+    /// <param name="ability">准备释放的技能实体。</param>
+    /// <param name="context">施法上下文。</param>
+    /// <param name="abilityName">技能名称，用于日志。</param>
+    private void TriggerAbility(AbilityEntity ability, CastContext context, string abilityName)
+    {
+        ability.Events.Emit(
+            GameEventType.Ability.TryTrigger,
+            new GameEventType.Ability.TryTriggerEventData(context) //施法上下文
+        );
+        var result = context.ResponseContext?.HasResult == true
+            ? (TriggerResult)context.ResponseContext.GetResult<TriggerResult>()
+            : TriggerResult.Failed;
+
+        if (result == TriggerResult.Failed)
+        {
+            _log.Debug($"技能触发失败: {abilityName}");
         }
     }
 

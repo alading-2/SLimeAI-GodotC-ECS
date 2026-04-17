@@ -9,19 +9,19 @@
 - 接收 `Targeting.StartTargeting` 全局事件并进入瞄准态
 - 生成并销毁 `TargetingIndicatorEntity`
 - 响应确认（`TargetConfirmed`）与取消（`TargetCancelled`）
-- 在确认时回调 `AbilitySystem.ResumeAfterTargeting(context)` 恢复施法流水线
+- 在确认时回填 `CastContext.TargetPosition` 并发正式 `Ability.TryTrigger`
 - 在玩家死亡或外部强制打断时退出瞄准态
 
-通常由具体 `AbilityHandler.PrepareCast` 发起 `StartTargeting`。
+通常由输入层在识别到 `AbilityTargetSelection.Point` 且 `AbilitySystem.CanUseAbility` 预检查通过后发起 `StartTargeting`。
 
 ---
 
 ## 设计目标
 
-1. `AbilitySystem` 不处理右摇杆输入，只负责流水线编排。
-2. `AbilityHandler` 决定何时点选，`TargetingManager` 负责点选会话本身。
+1. `AbilitySystem` 不处理右摇杆输入，只负责正式施法提交。
+2. 输入层决定何时点选，`TargetingManager` 负责点选会话本身。
 3. 同一时刻只允许一个技能处于瞄准态。
-4. 确认时只回填 `CastContext.TargetPosition`，再回到统一流水线继续执行。
+4. 确认时回填 `CastContext.TargetPosition`，再发起正式 `TryTrigger`。
 
 ---
 
@@ -36,7 +36,7 @@
 - `CurrentRange`：当前技能射程
 - `_currentIndicator`：当前瞄准指示器实体
 
-`CurrentContext` 是恢复流水线的关键：确认时把目标点写回这个上下文，再交还 `AbilitySystem`。
+`CurrentContext` 是正式提交的关键：确认时把目标点写回这个上下文，再通过技能实体事件发给 `AbilitySystem`。
 
 ---
 
@@ -44,13 +44,14 @@
 
 ```mermaid
 sequenceDiagram
-    participant AH as AbilityHandler.PrepareCast
+    participant Input as ActiveSkillInputComponent
     participant GB as GlobalEventBus
     participant TM as TargetingManager
     participant TI as TargetingIndicatorControlComponent
     participant AS as AbilitySystem
 
-    AH->>GB: Emit(Targeting.StartTargeting, StartTargetingEventData(context))
+    Input->>AS: CanUseAbility(ability)
+    Input->>GB: Emit(Targeting.StartTargeting, StartTargetingEventData(context))
     GB->>TM: OnStartTargeting
     TM->>TM: 保存 CurrentContext/Range
     TM->>TM: SpawnIndicator(casterPos)
@@ -63,7 +64,7 @@ sequenceDiagram
         TI->>GB: Emit(Targeting.TargetConfirmed, pos)
         GB->>TM: OnTargetConfirmed
         TM->>TM: CurrentContext.TargetPosition = pos
-        TM->>AS: ResumeAfterTargeting(CurrentContext)
+        TM->>AS: Emit(Ability.TryTrigger, CurrentContext)
         TM->>TM: EndTargeting(wasConfirmed=true)
     else B取消/强制取消
         TI->>GB: Emit(Targeting.TargetCancelled)
@@ -76,25 +77,24 @@ sequenceDiagram
 
 ## 与技能系统协作边界
 
-### AbilityHandler 负责
+### ActiveSkillInputComponent 负责
 
-- 决定是否进入点选
-- 决定无目标时是失败还是点选
-- 调用 `RequestPointTarget(context)` 或直接发 `Targeting.StartTargeting`
+- 根据 `AbilityTargetSelection.Point` 决定是否进入点选
+- 点选前调用 `AbilitySystem.CanUseAbility(ability)` 做不消耗资源的预检查
+- 直接发 `Targeting.StartTargeting` 事件
 
 ### AbilitySystem 负责
 
-- 统一触发入口
-- 就绪检查
+- 正式触发入口
+- 确认点位后再次做就绪检查
 - 成功后的消耗、冷却、执行
-- 在确认后通过 `ResumeAfterTargeting(context)` 重跑流水线
 
 ### TargetingManager 负责
 
 - 异步瞄准状态管理
 - 指示器实体创建与销毁
 - 确认/取消事件处理
-- 确认后回填 `TargetPosition`
+- 确认后回填 `TargetPosition` 并发正式 `TryTrigger`
 
 ---
 
@@ -125,7 +125,7 @@ sequenceDiagram
 ## 扩展建议
 
 1. 合法落点校验：在确认前增加导航可达或地形阻挡检查。
-2. 多模式指示器：根据具体 Handler 传入的点选元数据切换圆形、扇形、直线预览。
+2. 多模式指示器：根据输入层传入的点选元数据切换圆形、扇形、直线预览。
 3. 瞄准超时：为会话增加超时自动取消。
 4. 多人控制权：将全局单会话扩展为按施法者隔离的多会话。
 

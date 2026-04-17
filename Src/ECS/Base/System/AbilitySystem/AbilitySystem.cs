@@ -6,7 +6,6 @@ using Godot;
 /// 职责：
 /// - 接收 TryTrigger 请求（统一施法入口）
 /// - 激活技能（就绪检查 → 消耗 → 冷却 → 执行）
-/// - 调用 AbilityHandler 的前置施法准备
 /// - 通过 FeatureSystem / IFeatureHandler.OnExecute 执行具体技能逻辑并回传 AbilityExecutedResult
 /// 
 /// 注意：技能的增删查由 EntityManager.AddAbility/RemoveAbility/GetAbilities 负责
@@ -38,13 +37,13 @@ public static class AbilitySystem
 
     /// <summary>
     /// 使用施法上下文触发技能（统一流水线入口）
-    /// <returns>触发结果：Success / Failed / WaitingForTarget</returns>
     /// </summary>
+    /// <returns>触发结果：Success / Failed</returns>
     private static TriggerResult TryTriggerAbilityWithContext(CastContext abilityContext)
     {
         if (abilityContext.Ability == null || abilityContext.Caster == null) return TriggerResult.Failed;
 
-        // 【新增】拦截已死亡角色的技能请求（防止周期性光环等技能死后继续触发新一轮的伤害判定）
+        // 拦截已死亡角色的技能请求，防止周期性光环等技能死后继续触发新一轮伤害判定。
         if (abilityContext.Caster != null && abilityContext.Caster.Data.Get<bool>(DataKey.IsDead))
         {
             _log.Debug($"技能触发失败: 施法者已阵亡");
@@ -57,16 +56,6 @@ public static class AbilitySystem
         if (!CanUseAbility(ability))
         {
             return TriggerResult.Failed;
-        }
-
-        // 由具体 AbilityHandler 在消耗前决定：
-        // - 是否自行自动索敌
-        // - 是否直接失败
-        // - 是否进入异步点选
-        var prepareResult = PrepareAbilityCast(abilityContext);
-        if (prepareResult != TriggerResult.Success)
-        {
-            return prepareResult;
         }
 
         // ==================== 资源消耗阶段 ====================
@@ -132,11 +121,6 @@ public static class AbilitySystem
             ActivationData = abilityContext,
             SourceEventData = abilityContext.SourceEventData
         };
-        if (!ValidateAbilityFeatureContext(featureCtx))
-        {
-            return TriggerResult.Failed;
-        }
-
         FeatureSystem.OnFeatureActivated(featureCtx);
 
         EmitAbilityExecutedEvent(abilityContext, featureCtx);
@@ -147,76 +131,6 @@ public static class AbilitySystem
         var name = ability.Data.Get<string>(DataKey.Name);
         _log.Debug($"激活技能: {name}");
         return TriggerResult.Success;
-    }
-
-    /// <summary>
-    /// 校验 Ability 接入 FeatureSystem 时必须携带 CastContext。
-    /// </summary>
-    /// <param name="featureCtx">准备传入 FeatureSystem 的上下文。</param>
-    /// <returns>上下文完整时返回 true，否则返回 false。</returns>
-    private static bool ValidateAbilityFeatureContext(FeatureContext featureCtx)
-    {
-        if (featureCtx.Owner == null || featureCtx.Feature == null)
-        {
-            _log.Error("Ability FeatureContext 缺少 Owner 或 Feature");
-            return false;
-        }
-
-        if (featureCtx.ActivationData is not CastContext castContext)
-        {
-            _log.Error("Ability FeatureContext.ActivationData 必须是 CastContext");
-            return false;
-        }
-
-        if (castContext.Ability == null || castContext.Caster == null)
-        {
-            _log.Error("CastContext 缺少 Ability 或 Caster");
-            return false;
-        }
-
-        return true;
-    }
-
-    // ==================== 施法前置准备 ====================
-
-    /// <summary>
-    /// 调用 AbilityHandler 的前置钩子。
-    /// </summary>
-    /// <param name="context">施法上下文。</param>
-    /// <returns>继续、失败或等待点选。</returns>
-    private static TriggerResult PrepareAbilityCast(CastContext context)
-    {
-        var ability = context.Ability;
-        if (ability == null)
-        {
-            return TriggerResult.Failed;
-        }
-
-        var handlerId = ability.Data.Get<string>(DataKey.FeatureHandlerId);
-        var handler = FeatureHandlerRegistry.Get(handlerId);
-        if (handler is AbilityFeatureHandler abilityHandler)
-        {
-            return abilityHandler.PrepareCast(context);
-        }
-
-        return TriggerResult.Success;
-    }
-
-    /// <summary>
-     /// 瞄准完成后恢复流水线（由 TargetingManager 回调）
-     /// context.TargetPosition 已由 TargetingManager 填充
-    /// </summary>
-    public static TriggerResult ResumeAfterTargeting(CastContext context)
-    {
-        if (context.Ability == null || context.Caster == null)
-        {
-            _log.Warn("ResumeAfterTargeting: 上下文无效");
-            return TriggerResult.Failed;
-        }
-
-        // 重新走完整流水线（CanUse 会再次检查，因为瞄准期间时间已过）
-        // 具体 Handler 会看到 TargetPosition/Targets 已存在并决定是否放行
-        return TryTriggerAbilityWithContext(context);
     }
 
     // ==================== 就绪检查 ====================
@@ -239,7 +153,7 @@ public static class AbilitySystem
             return false;
         }
 
-        // 检查是否正在执行
+        // 检查Feature是否激活，也就是技能是否在执行中
         if (isActive)
         {
             _log.Debug($"技能 {abilityName} 正在执行中");

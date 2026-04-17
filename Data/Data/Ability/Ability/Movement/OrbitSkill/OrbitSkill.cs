@@ -19,11 +19,16 @@ internal class OrbitSkillExecutor : AbilityFeatureHandler
 
     protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        var caster = GetCaster(context);
-        var ability = GetAbility(context);
-        var casterNode = GetCasterNode2D(context);
+        var caster = context.Caster!;
+        var ability = context.Ability!;
+        if (caster is not Node2D casterNode)
+        {
+            _log.Warn("环绕护盾施法失败：施法者不是 Node2D");
+            return new AbilityExecutedResult();
+        }
 
-        var damage = GetScaledAbilityDamage(context);
+        var damage = ability.Data.Get<float>(DataKey.AbilityDamage) // 技能基础伤害
+            * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f; // 施法者技能伤害倍率
         var orbitCount = 3;
         var orbitRadius = 100f;
         var orbitDuration = 6f;
@@ -37,12 +42,9 @@ internal class OrbitSkillExecutor : AbilityFeatureHandler
                 new ProjectileSpawnOptions(projectileScene, "OrbitSkillProjectile"));
             if (projectile == null) continue;
 
-            float cachedDamage = damage;
-            CastContext cachedContext = context;
-
             projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
                 GameEventType.Unit.MovementCollision,
-                (evt) => OnHit(evt, cachedContext, cachedDamage));
+                (evt) => OnHit(evt, caster, casterNode, damage));
 
             projectile.Events.Emit(
                 GameEventType.Unit.MovementStarted,
@@ -69,14 +71,21 @@ internal class OrbitSkillExecutor : AbilityFeatureHandler
         return new AbilityExecutedResult { TargetsHit = orbitCount };
     }
 
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, CastContext context, float damage)
+    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, IEntity caster, Node2D casterNode, float damage)
     {
-        ApplyCollisionDamage(
-            context, // 施法上下文
-            evt, // 碰撞事件
-            damage, // 伤害值
-            DamageType.Magical, // 伤害类型
-            DamageTags.Area | DamageTags.Ability, // 伤害标签
-            AbilityTargetTeamFilter.Enemy); // 仅命中敌方
+        if (evt.Target is not IEntity targetEntity) return;
+        if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, AbilityTargetTeamFilter.Enemy)) return;
+
+        AbilityImpactTool.Execute(caster, new AbilityImpactOptions
+        {
+            Targets = new[] { targetEntity },
+            Damage = new DamageApplyOptions
+            {
+                Damage = damage, // 伤害值
+                Type = DamageType.Magical, // 伤害类型
+                Tags = DamageTags.Area | DamageTags.Ability, // 伤害标签
+                Attacker = casterNode // 伤害来源
+            }
+        });
     }
 }

@@ -183,7 +183,7 @@ public void OnRemoved(FeatureContext ctx)
 
 ```text
 TryTrigger
-→ AbilitySystem 完成 CanUse / Handler.PrepareCast / ConsumeCharge / StartCooldown / ConsumeCost
+→ AbilitySystem 完成 CanUse / ConsumeCharge / StartCooldown / ConsumeCost
 → AbilitySystem 构建 FeatureContext（ActivationData = CastContext）
 → FeatureSystem.OnFeatureActivated(featureCtx)
 → FeatureHandlerRegistry.Get(完整 FeatureHandlerId)?.OnActivated(featureCtx)
@@ -195,7 +195,7 @@ TryTrigger
 这意味着：
 
 - `AbilitySystem` 仍然负责施法编排、消耗、冷却
-- `AbilityHandler.PrepareCast` 负责具体目标决策，实体查询直接调用 `EntityTargetSelector.Query`
+- 具体 Ability Handler 在 `ExecuteAbility` 中负责目标决策，实体查询直接调用 `EntityTargetSelector.Query`
 - `FeatureSystem` 负责统一生命周期钩子
 - 具体技能效果逻辑不再经过 `AbilityExecutorRegistry`
 - 每个技能逻辑类直接实现 `IFeatureHandler`，从 `FeatureContext.ActivationData` 读取 `CastContext`
@@ -225,7 +225,7 @@ EntityManager.AddAbility(owner, featureDefinition)
 ```
  TriggerComponent → owner.Events.Emit(Ability.TryTrigger)
  AbilitySystem.HandleTryTrigger
-  └─ CheckCanUse / Handler.PrepareCast / Consume / StartCooldown
+  └─ CheckCanUse / Consume / StartCooldown
   └─ ability.Events.Emit(Ability.Activated)
   └─ 构建 FeatureContext（ActivationData = CastContext）
   └─ FeatureSystem.OnFeatureActivated(featureCtx)
@@ -366,7 +366,7 @@ if (feature != null)
 | 系统 | 边界 |
 |:---|:---|
 | `DamageSystem` | 伤害计算仍走 DamageService，Feature 可在 OnActivated 触发 |
-| `TargetSelector` | Ability Handler 在 `PrepareCast` 或 `ExecuteAbility` 中按需直接调用 |
+| `TargetSelector` | Ability Handler 在 `ExecuteAbility` 中按需直接调用 |
 | `ResourceManagement` | 资源加载仍走 ResourceManagement.Load |
 | `TimerManager` | Feature 内定时器需在 OnGranted 注册、OnRemoved 取消 |
 | `AbilitySystem` | FeatureSystem 是通用核心；AbilitySystem 只是适配层，负责透传完整 `FeatureHandlerId` 并在 Activated/Ended 阶段传入 CastContext |

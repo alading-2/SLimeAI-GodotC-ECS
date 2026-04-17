@@ -1,7 +1,7 @@
 using Godot;
 using Slime.Config.Units;
 /// <summary>
-/// 瞄准状态管理器 - 管理由 AbilityHandler 发起的异步点选会话
+/// 瞄准状态管理器 - 管理由输入层发起的异步点选会话
 /// 
 /// 职责：
 /// - 维护当前瞄准状态（是否正在瞄准、挂起的技能请求）
@@ -9,7 +9,7 @@ using Slime.Config.Units;
 /// - 响应确认/取消事件，完成技能释放或取消流程
 /// 
 /// 设计理念：
-/// - 使用全局事件解耦 AbilityHandler、瞄准指示器和 AbilitySystem
+/// - 使用全局事件解耦输入层、瞄准指示器和 AbilitySystem
 /// - 支持单一激活瞄准（同时只能有一个技能在瞄准状态）
 /// </summary>
 public static class TargetingManager
@@ -161,8 +161,21 @@ public static class TargetingManager
         var abilityName = CurrentAbility.Data.Get<string>(DataKey.Name);
         _log.Info($"瞄准确认: {abilityName} -> {evt.TargetPosition}");
 
-        // 2. 恢复 AbilitySystem 流水线（CanUse 会重新检查，因为瞄准期间时间已过）
-        AbilitySystem.ResumeAfterTargeting(CurrentContext);
+        // 2. 确认后才正式提交 TryTrigger；AbilitySystem 会再次检查可用性并负责消耗/冷却。
+        var responseContext = new EventContext();
+        CurrentContext.ResponseContext = responseContext;
+        CurrentAbility.Events.Emit(
+            GameEventType.Ability.TryTrigger,
+            new GameEventType.Ability.TryTriggerEventData(CurrentContext) //施法上下文
+        );
+
+        var result = responseContext.HasResult
+            ? responseContext.GetResult<TriggerResult>()
+            : TriggerResult.Failed;
+        if (result == TriggerResult.Failed)
+        {
+            _log.Debug($"点选确认后技能触发失败: {abilityName}");
+        }
 
         // 3. 清理状态并销毁指示器
         EndTargeting(wasConfirmed: true, _currentIndicator);

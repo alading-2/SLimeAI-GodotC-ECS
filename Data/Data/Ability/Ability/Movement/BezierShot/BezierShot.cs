@@ -19,11 +19,12 @@ internal class BezierShotExecutor : AbilityFeatureHandler
 
     protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        var caster = GetCaster(context);
-        var ability = GetAbility(context);
-        var casterNode = GetCasterNode2D(context);
+        var caster = context.Caster!;
+        var ability = context.Ability!;
+        var casterNode = (Node2D)caster;
 
-        var damage = GetScaledAbilityDamage(context);
+        var damage = ability.Data.Get<float>(DataKey.AbilityDamage) // 技能基础伤害
+            * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f; // 施法者技能伤害倍率
 
         // 查找最近敌人作为终点
         var targetPos = GetNearestEnemyPos(caster, casterNode, ability.Data.Get<float>(DataKey.AbilityCastRange));
@@ -37,12 +38,9 @@ internal class BezierShotExecutor : AbilityFeatureHandler
             new ProjectileSpawnOptions(projectileScene, "BezierShotProjectile")); // 投射物配置
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
-        float cachedDamage = damage; // 缓存伤害
-        CastContext cachedContext = context; // 缓存施法上下文
-
         projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
             GameEventType.Unit.MovementCollision, // 碰撞事件
-            (evt) => OnHit(evt, cachedContext, cachedDamage)); // 碰撞回调
+            (evt) => OnHit(evt, caster, casterNode, damage)); // 碰撞回调
 
         projectile.Events.Emit(
             GameEventType.Unit.MovementStarted, // 开始移动事件
@@ -82,14 +80,21 @@ internal class BezierShotExecutor : AbilityFeatureHandler
         return casterNode.GlobalPosition + new Vector2(400f, 0f); // 无目标时返回前方位置
     }
 
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, CastContext context, float damage)
+    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, IEntity caster, Node2D casterNode, float damage)
     {
-        ApplyCollisionDamage(
-            context, // 施法上下文
-            evt, // 碰撞事件
-            damage, // 伤害值
-            DamageType.Physical, // 伤害类型：物理
-            DamageTags.Ability | DamageTags.Ranged, // 伤害标签：技能投射物
-            AbilityTargetTeamFilter.Enemy); // 仅命中敌方
+        if (evt.Target is not IEntity targetEntity) return;
+        if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, AbilityTargetTeamFilter.Enemy)) return;
+
+        AbilityImpactTool.Execute(caster, new AbilityImpactOptions
+        {
+            Targets = new[] { targetEntity },
+            Damage = new DamageApplyOptions
+            {
+                Damage = damage, // 伤害值
+                Type = DamageType.Physical, // 伤害类型
+                Tags = DamageTags.Ability | DamageTags.Ranged, // 伤害标签
+                Attacker = casterNode // 伤害来源
+            }
+        });
     }
 }

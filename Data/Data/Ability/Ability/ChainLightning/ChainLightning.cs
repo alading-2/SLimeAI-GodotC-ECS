@@ -42,53 +42,29 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
     /// <returns>返回执行结果，主要包含命中目标数</returns>
     public override string FeatureId => global::FeatureId.Ability.Active.ChainLightning;
 
-    public override TriggerResult PrepareCast(CastContext context)
+    protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        var ability = GetAbility(context);
-        var casterNode = GetCasterNode2D(context);
-        float castRange = ability.Data.Get<float>(DataKey.AbilityCastRange); //索敌半径
-        var targets = castRange > 0f
-            ? EntityTargetSelector.Query(new TargetSelectorQuery
-            {
-                Geometry = GeometryType.Circle, //查询形状
-                Origin = casterNode.GlobalPosition, //查询中心
-                Range = castRange, //查询半径
-                CenterEntity = context.Caster, //中心实体
-                TeamFilter = AbilityTargetTeamFilter.Enemy, //阵营过滤
-                Sorting = TargetSorting.Nearest, //排序方式
-                MaxTargets = 1 //最大目标数
-            })
-            : new List<IEntity>();
-        if (targets.Count == 0)
+        var caster = context.Caster!;
+        var ability = context.Ability!;
+
+        var firstTarget = FindInitialTarget(caster, ability);
+        if (firstTarget == null)
         {
-            _log.Warn("链式闪电准备失败：没有有效目标");
-            return TriggerResult.Failed;
+            _log.Warn("链式闪电执行跳过：没有有效目标");
+            return new AbilityExecutedResult();
         }
 
         context.Targets = new List<IEntity>
         {
-            targets[0]
+            firstTarget
         };
-        return TriggerResult.Success;
-    }
-
-    protected override AbilityExecutedResult ExecuteAbility(CastContext context)
-    {
-        var ability = GetAbility(context);
-        var caster = GetCaster(context);
-
-        var initialTargets = context.Targets;
-        if (initialTargets == null || initialTargets.Count == 0 || initialTargets[0] == null)
-        {
-            _log.Warn("链式闪电施法失败：没有有效目标");
-            return new AbilityExecutedResult();
-        }
 
         var chainCount = ability.Data.Get<int>(DataKey.AbilityChainCount);
         if (chainCount <= 0) chainCount = 1;
 
         // 计算初始伤害：技能基础伤害 × 施法者技能伤害倍率
-        var initialDamage = GetScaledAbilityDamage(context);
+        var initialDamage = ability.Data.Get<float>(DataKey.AbilityDamage)
+            * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f;
 
         var bounceContext = new ChainBounceContext
         {
@@ -101,14 +77,40 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
             LineScene = ability.Data.Get<PackedScene>(DataKey.AbilityChainLineEffect)
         };
 
-        var firstTarget = initialTargets[0];
-        _log.Debug($"[Execute起步] 目标数: {initialTargets.Count}, 施法者: {(caster as Node)?.Name}, 第一目标: {(firstTarget as Node)?.Name}, 第一目标类型: {firstTarget.GetType().Name}, 第一目标是否死亡: {firstTarget.Data.Get<bool>(DataKey.IsDead)}");
+        _log.Debug($"[Execute起步] 目标数: 1, 施法者: {(caster as Node)?.Name}, 第一目标: {(firstTarget as Node)?.Name}, 第一目标类型: {firstTarget.GetType().Name}, 第一目标是否死亡: {firstTarget.Data.Get<bool>(DataKey.IsDead)}");
 
         // 发起第一击
         ExecuteBounce(bounceContext, caster, firstTarget, initialDamage, chainCount, new HashSet<IEntity>());
 
         // 立即返回（后续弹跳通过 Timer 异步执行）
         return new AbilityExecutedResult { TargetsHit = 1 };
+    }
+
+    /// <summary>
+    /// 在技能执行阶段选择链式闪电的第一跳目标。
+    /// </summary>
+    /// <param name="caster">施法实体。</param>
+    /// <param name="ability">技能实体。</param>
+    /// <returns>第一跳敌方目标，找不到则返回 null。</returns>
+    private static IEntity? FindInitialTarget(IEntity caster, AbilityEntity ability)
+    {
+        if (caster is not Node2D casterNode) return null;
+
+        float castRange = ability.Data.Get<float>(DataKey.AbilityCastRange); //索敌半径
+        if (castRange <= 0f) return null;
+
+        var targets = EntityTargetSelector.Query(new TargetSelectorQuery
+        {
+            Geometry = GeometryType.Circle, //查询形状
+            Origin = casterNode.GlobalPosition, //查询中心
+            Range = castRange, //查询半径
+            CenterEntity = caster, //中心实体
+            TeamFilter = AbilityTargetTeamFilter.Enemy, //阵营过滤
+            Sorting = TargetSorting.Nearest, //排序方式
+            MaxTargets = 1 //最大目标数
+        });
+
+        return targets.Count > 0 ? targets[0] : null;
     }
 
     /// <summary>

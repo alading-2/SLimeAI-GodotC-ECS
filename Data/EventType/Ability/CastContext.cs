@@ -22,7 +22,7 @@ public class CastContext
     /// <summary>
     /// 请求的目标列表
     /// - 手动指定时由 TriggerComponent 或输入系统填充
-    /// - 自动选择时由 AbilitySystem 填充
+    /// - 自动选择时由具体技能 Handler 在 ExecuteAbility 中填充
     /// </summary>
     public List<IEntity>? Targets { get; set; }
 
@@ -50,7 +50,7 @@ public class CastContext
 
     /// <summary>
     /// 是否已预选目标
-    /// true = 已由外部指定目标，AbilitySystem 跳过自动选取
+    /// true = 已由外部或具体技能 Handler 指定目标
     /// </summary>
     public bool HasPreselectedTargets => Targets != null && Targets.Count > 0;
 

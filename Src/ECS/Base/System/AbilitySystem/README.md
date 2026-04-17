@@ -2,16 +2,17 @@
 
 ## 概述
 
-技能系统拆成两层：
+技能系统拆成三层：
 
 1. `EntityManager_Ability`：技能生命周期管理（增删查、Owner 关系、`TryTrigger` 接线）
-2. `AbilitySystem`：施法流水线编排（检查 -> Handler 前置准备 -> 消耗 -> 执行）
+2. 输入 / 点选层：根据 `AbilityTargetSelection` 决定是否先进入点选
+3. `AbilitySystem`：正式施法提交（检查 -> 消耗 -> 冷却 -> 执行）
 
 当前版本的关键边界：
 
-- `AbilitySystem` 只负责编排，不负责通用自动索敌或通用点选决策
-- 具体技能如何找目标、是否直接失败、是否进入点选，都由 `AbilityFeatureHandler.PrepareCast` 决定
-- `TargetingManager` 只负责异步点选会话，不负责决定“何时开始瞄准”
+- `AbilitySystem` 只负责编排正式施法提交，不做通用自动索敌或通用点选决策
+- 具体技能如何找目标、无目标时打空还是降级，由 `AbilityFeatureHandler.ExecuteAbility` 内部决定
+- `TargetingManager` 只负责异步点选会话；确认点位后重新发起正式 `TryTrigger`
 
 ---
 
@@ -19,67 +20,44 @@
 
 ```text
 Src/ECS/Base/System/AbilitySystem/
-├── AbilitySystem.cs          # 施法流水线（统一入口）
-├── AbilityFeatureHandler.cs  # Ability 子域 Handler 中转层 + PrepareCast 钩子
-├── AbilityTargetingTool.cs   # Ability 子域点选请求工具
+├── AbilitySystem.cs          # 正式施法流水线（统一入口）
+├── AbilityFeatureHandler.cs  # Ability 子域 Handler 中转层
+├── AbilityTool.cs            # Ability 子域薄工具（阵营过滤判断）
+├── AbilityImpactTool.cs      # 技能命中工具（Query/Targets -> 特效/伤害）
 ├── EntityManager_Ability.cs  # 技能 CRUD + 事件接线
 ├── AbilityCheckPhase.cs      # CheckCanUse 检查优先级
-├── TriggerResult.cs          # Success/Failed/WaitingForTarget
+├── TriggerResult.cs          # Success/Failed
 └── README.md                 # 本文档
 ```
 
 ---
 
-## 核心流程（Trigger -> Cast -> Execute）
+## 核心流程
 
-### 1) Trigger（触发）
+### 1) 输入阶段
 
-触发源通常来自：
+`ActiveSkillInputComponent` 读取当前主动技能：
 
-- `ActiveSkillInputComponent`（玩家手动）
-- `TriggerComponent`（事件触发 / 周期触发）
+- `AbilityTargetSelection.Point`：先调用 `AbilitySystem.CanUseAbility(ability)` 做预检查，通过后直接发 `Targeting.StartTargeting` 进入点选
+- 其他类型：直接向技能实体发 `TryTrigger`
 
-统一方式：向技能实体发 `TryTrigger` 事件，并携带 `CastContext`。
+点选取消不会扣资源、启动冷却或执行技能。点选确认时，`TargetingManager` 写入 `CastContext.TargetPosition`，再向技能实体发正式 `TryTrigger`。
 
-```csharp
-var context = new CastContext
-{
-    Ability = ability,
-    Caster = caster,
-    ResponseContext = new EventContext()
-};
-
-ability.Events.Emit(
-    GameEventType.Ability.TryTrigger,
-    new GameEventType.Ability.TryTriggerEventData(context)
-);
-```
-
-### 2) Cast（施法）
+### 2) Cast（正式提交）
 
 `AbilitySystem.TryTriggerAbilityWithContext(context)` 当前流水线：
 
 1. `CanUseAbility`
-2. `PrepareAbilityCast`
-3. `ConsumeCharge`
-4. `StartCooldown`（周期技能跳过）
-5. `ConsumeCost`
+2. `ConsumeCharge`
+3. `StartCooldown`（周期技能跳过）
+4. `ConsumeCost`
+5. `FeatureSystem.OnFeatureActivated`
 
-`PrepareAbilityCast` 会读取当前 `AbilityConfig.FeatureHandlerId` 对应的处理器，并在进入任何消耗前调用：
-
-- `AbilityFeatureHandler.PrepareCast(context)`
-
-这个钩子只允许做三件事：
-
-- 补齐 `context.Targets`
-- 请求点选并返回 `WaitingForTarget`
-- 直接返回 `Failed`
-
-不允许在这里做任何资源消耗或冷却启动。
+`CanUseAbility` 只做只读检查：启用状态、激活状态、冷却、充能、资源是否足够。正式 `TryTrigger` 会再次检查一次，防止点选期间状态变化。
 
 ### 3) Execute（执行）
 
-施法前置准备成功后：
+正式提交成功后：
 
 - 发送 `Ability.Activated`
 - 构建 `FeatureContext`，把 `CastContext` 放入 `ActivationData`
@@ -97,24 +75,29 @@ ability.Events.Emit(
 
 ### AbilitySystem 负责
 
-- 接收 `TryTrigger`
+- 接收正式 `TryTrigger`
 - 做统一就绪检查
-- 在消耗前调用 Handler 的 `PrepareCast`
-- 成功后再做充能、冷却、成本消耗
+- 成功后做充能、冷却、成本消耗
 - 接入 `FeatureSystem` 执行技能
 
 ### AbilityFeatureHandler 负责
 
-- 决定这次施法是否需要自动索敌
-- 决定无目标时是 `Failed` 还是进入点选
-- 决定如何把结果写入 `context.Targets` / `context.TargetPosition`
+- 把 `FeatureContext.ActivationData` 转回 `CastContext`
+- 只暴露 `ExecuteAbility` 给具体技能实现
+- 不承载索敌、点选或 Ability 领域 helper
+
+### 具体技能 Handler 负责
+
+- 在 `ExecuteAbility` 中读取 `CastContext`
+- 自行查询目标、读取点位、生成投射物或结算伤害
+- 自行决定无目标时返回 0 命中、朝默认方向释放、打空或执行降级逻辑
 
 ### TargetingManager 负责
 
 - 接收 `Targeting.StartTargeting`
 - 维护单一瞄准会话
 - 管理指示器输入与确认/取消
-- 在确认后回调 `AbilitySystem.ResumeAfterTargeting(context)`
+- 确认后发正式 `Ability.TryTrigger`
 
 当前实现已删除 `AbilityTargetSelectionComponent`。实体目标查询直接写在具体 Handler 内部，使用 `EntityTargetSelector.Query(...)`。
 
@@ -122,25 +105,27 @@ ability.Events.Emit(
 
 ## 典型模式
 
-### 1) 需要实体目标，否则失败
+### 1) 需要实体目标
 
 例如 `ArcShot`、`ChainLightning`：
 
-- 在 `PrepareCast` 中查询主目标
-- 查到后写入 `context.Targets`
-- 查不到直接返回 `TriggerResult.Failed`
+- 在 `ExecuteAbility` 开始时查询主目标
+- 查到后可写入 `context.Targets` 供本次执行链路使用
+- 查不到时返回 `new AbilityExecutedResult { TargetsHit = 0 }`
 
 ### 2) 需要玩家点位置
 
-- 在 `PrepareCast` 中检查 `context.TargetPosition`
-- 如果没有，则调用 `RequestPointTarget(context)` 并返回 `WaitingForTarget`
-- 玩家确认后由 `TargetingManager` 调 `ResumeAfterTargeting(context)` 重跑流水线
+- 输入层识别 `AbilityTargetSelection.Point`
+- 输入层调用 `AbilitySystem.CanUseAbility(ability)` 预检查
+- 通过后直接发 `Targeting.StartTargeting` 进入点选
+- `TargetingManager` 确认后写入 `context.TargetPosition` 并发正式 `TryTrigger`
+- 具体 Handler 在 `ExecuteAbility` 中读取 `context.TargetPosition`
 
 ### 3) 无目标也可释放
 
 例如按朝向飞行、按默认前方点落地的技能：
 
-- `PrepareCast` 直接返回 `Success`
+- 直接走正式 `TryTrigger`
 - 在 `ExecuteAbility` 里自行做“有目标更好、没目标也能继续”的逻辑
 
 ---
@@ -150,8 +135,8 @@ ability.Events.Emit(
 Ability 子域里有两套不同的时间语义：
 
 1. `TriggerComponent.Periodic`
-- 控制技能多久重新执行一次整条流水线
-- 每次都会重新进入 `TryTrigger / PrepareCast / ExecuteAbility`
+- 控制技能多久重新执行一次整条正式施法流水线
+- 每次都会重新进入 `TryTrigger / ExecuteAbility`
 
 2. `DamageApplyOptions.TickInterval / TotalDuration`
 - 控制单次技能执行内部是否继续跳 DoT
@@ -163,11 +148,11 @@ Ability 子域里有两套不同的时间语义：
 
 ## 返回值与请求-响应
 
-`TryTrigger` 的结果统一写回 `CastContext.ResponseContext`：
+正式 `TryTrigger` 的结果统一写回 `CastContext.ResponseContext`：
 
 ```csharp
 var result = context.ResponseContext?.HasResult == true
-    ? (TriggerResult)context.ResponseContext.GetResult<TriggerResult>()
+    ? context.ResponseContext.GetResult<TriggerResult>()
     : TriggerResult.Failed;
 ```
 
@@ -175,7 +160,8 @@ var result = context.ResponseContext?.HasResult == true
 
 - `Success`
 - `Failed`
-- `WaitingForTarget`
+
+点选等待不是 `AbilitySystem` 的返回状态，而是输入 / Targeting 层的会话状态。
 
 ---
 
@@ -195,17 +181,28 @@ var result = context.ResponseContext?.HasResult == true
 
 | 方法 | 说明 |
 | :--- | :--- |
-| `HandleTryTrigger` | `TryTrigger` 事件入口；写入 `ResponseContext` |
-| `CanUseAbility` | 仅检查可用性（不消耗） |
-| `ResumeAfterTargeting` | 点选确认后重跑整条流水线 |
+| `HandleTryTrigger` | 正式 `TryTrigger` 事件入口；写入 `ResponseContext` |
+| `CanUseAbility` | 仅检查可用性（不消耗），可供输入层点选前预检查 |
 
 ### AbilityFeatureHandler
 
 | 方法 | 说明 |
 | :--- | :--- |
-| `PrepareCast` | 消耗前前置钩子；决定成功/失败/等待点选 |
 | `ExecuteAbility` | 具体技能执行逻辑 |
-| `RequestPointTarget` | 发起统一点选请求 |
+
+### AbilityTool
+
+| 方法 | 说明 |
+| :--- | :--- |
+| `MatchesTeamFilter` | 按 Ability 阵营过滤判断能否命中 |
+
+### AbilityImpactTool
+
+| 方法/字段 | 说明 |
+| :--- | :--- |
+| `Execute` | 统一命中入口 |
+| `Query` | 通过范围查询生成目标列表 |
+| `Targets` | 已明确目标时直接结算，适合碰撞命中 |
 
 ---
 

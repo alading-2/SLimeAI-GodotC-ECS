@@ -37,10 +37,9 @@ internal class DashExecutor : AbilityFeatureHandler
     /// <returns>执行结果</returns>
     protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        // 施法上下文包含施法者 <IEntity> 和技能实体 <AbilityEntity> 信息
-        var caster = GetCaster(context);
-        var ability = GetAbility(context);
-        var casterNode2D = GetCasterNode2D(context);
+        var caster = context.Caster!;
+        var ability = context.Ability!;
+        var casterNode2D = (Node2D)caster;
 
         // 1. 数据驱动：从技能动态 Data 容器中读取运行时配置
         // 冲刺距离：决定位移终点

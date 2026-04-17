@@ -197,7 +197,7 @@ internal class MyFeatureHandler : IFeatureHandler
 
 ```text
 Ability.TryTrigger
-→ AbilitySystem 完成 CanUse / SelectTargets / ConsumeCharge / StartCooldown / ConsumeCost
+→ AbilitySystem 完成 CanUse / ConsumeCharge / StartCooldown / ConsumeCost
 → AbilitySystem 构建 FeatureContext
 → FeatureContext.ActivationData = CastContext
 → FeatureSystem.OnFeatureActivated(featureCtx)
@@ -217,7 +217,7 @@ Ability 子域统一通过 `AbilityFeatureHandler` 这一层接入 `FeatureSyste
 1. 继承 `AbilityFeatureHandler`
 2. `override FeatureId`
 3. 实现 `ExecuteAbility(CastContext context)`
-4. 使用 `GetCaster / GetAbility / GetCasterNode2D / GetScaledAbilityDamage` 等基类工具
+4. `AbilityTool` 只保留不读取 `CastContext` 的薄工具（当前为阵营过滤）；目标查询、节点判断和伤害计算写在具体技能 Handler 中
 5. 在 `[ModuleInitializer]` 中注册到 `FeatureHandlerRegistry`
 6. 在 `.tres` 中显式填写 `FeatureHandlerId`；`FeatureGroupId` 只用于技能展示分组
 
@@ -287,6 +287,7 @@ internal class DashExecutor : AbilityFeatureHandler
 如果 Feature 被 Ability 子域调用，允许：
 
 - 在 `AbilityFeatureHandler.ExecuteAbility(CastContext)` 中使用施法上下文
+- `AbilityFeatureHandler` 只做 `FeatureContext -> CastContext` 桥接；`AbilityTool` 不读取 `CastContext`
 - 从 `ExecuteAbility` 返回 `AbilityExecutedResult`，由 FeatureSystem 写入 `context.ExecuteResult`
 
 不允许：

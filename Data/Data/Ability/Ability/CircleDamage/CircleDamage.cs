@@ -23,13 +23,15 @@ internal class CircleDamageExecutor : AbilityFeatureHandler
 
     protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        var caster = GetCaster(context);
-        var ability = GetAbility(context);
-        var casterNode2D = GetCasterNode2D(context);
+        var caster = context.Caster!;
+        var ability = context.Ability!;
+        var casterNode2D = (Node2D)caster;
 
         // 从技能配置中读取参数
         var range = ability.Data.Get<float>(DataKey.AbilityEffectRadius);            // 伤害半径
         var effectScene = ability.Data.Get<PackedScene>(DataKey.EffectScene);        // 特效场景
+        var damage = ability.Data.Get<float>(DataKey.AbilityDamage)                  // 技能基础伤害
+            * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f;             // 施法者技能伤害倍率
 
         // 执行命中（目标查询 + 特效 + 伤害，三步合一；位置来源统一收口到 Query / Effect 参数中）
         var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions
@@ -52,7 +54,7 @@ internal class CircleDamageExecutor : AbilityFeatureHandler
                 : null,
             Damage = new DamageApplyOptions
             {
-                Damage = GetScaledAbilityDamage(context), // 技能最终伤害
+                Damage = damage, // 技能最终伤害
                 Type = DamageType.Magical,                                   // 魔法伤害
                 Tags = DamageTags.Area | DamageTags.Ability,                 // 范围技能标签
                 Attacker = casterNode2D,                                     // 伤害来源

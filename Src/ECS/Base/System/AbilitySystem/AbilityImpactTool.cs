@@ -8,6 +8,8 @@ internal sealed record AbilityImpactOptions
 {
     /// <summary>目标查询参数；null 时不执行查询（无目标则不造成伤害）。</summary>
     public TargetSelectorQuery? Query { get; init; }
+    /// <summary>显式目标列表；用于碰撞命中等已拿到目标的场景。</summary>
+    public IReadOnlyList<IEntity>? Targets { get; init; }
     /// <summary>特效生成参数；null 时不生成特效。</summary>
     public EffectSpawnOptions? Effect { get; init; }
     /// <summary>伤害参数；null 时不造成伤害。</summary>
@@ -38,10 +40,12 @@ internal static class AbilityImpactTool
     {
         var query = ResolveQuery(options.Query);
 
-        // 1. 目标查询：统一从 Query 内部解析本次命中中心
-        List<IEntity>? targets = query.HasValue
-            ? EntityTargetSelector.Query(query.Value)
-            : null;
+        // 1. 目标解析：优先使用显式目标列表，其次才走 Query 查询
+        IReadOnlyList<IEntity>? targets = options.Targets;
+        if (targets == null && query.HasValue)
+        {
+            targets = EntityTargetSelector.Query(query.Value);
+        }
 
         // 2. 特效生成
         if (options.Effect.HasValue)
@@ -53,9 +57,9 @@ internal static class AbilityImpactTool
         if (options.Damage == null)
             return new AbilityImpactResult(targets?.Count ?? 0, null);
 
-        if (!query.HasValue)
+        if (targets == null)
         {
-            _log.Warn("AbilityImpactTool.Execute: Damage 已配置但 Query 为空，跳过伤害结算"); // 伤害必须依赖 Query 选目标
+            _log.Warn("AbilityImpactTool.Execute: Damage 已配置但缺少 Query/Targets，跳过伤害结算");
             return new AbilityImpactResult(0, null);
         }
 
@@ -82,10 +86,18 @@ internal static class AbilityImpactTool
             timer = DamageTool.ScheduleDoT(
                 () =>
                 {
+                    if (options.Targets != null)
+                    {
+                        return options.Targets;
+                    }
+
                     var tickQuery = ResolveQuery(options.Query);
-                    return tickQuery.HasValue
-                        ? EntityTargetSelector.Query(tickQuery.Value)
-                        : null;
+                    if (!tickQuery.HasValue)
+                    {
+                        return null;
+                    }
+
+                    return EntityTargetSelector.Query(tickQuery.Value);
                 },
                 dmg,
                 caster as Node,     // guardian：施法者失效时自动终止 DoT

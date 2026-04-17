@@ -4,7 +4,7 @@ using Godot;
 
 /// <summary>
 /// 圆弧弹技能执行器 - 验证 CircularArc 运动模式
-/// 向 AbilitySystem 预选中的敌人发射沿圆弧轨迹跟踪飞行的投射物
+/// 在执行阶段自行选择最近敌人，并发射沿圆弧轨迹跟踪飞行的投射物。
 /// </summary>
 internal class ArcShotExecutor : AbilityFeatureHandler
 {
@@ -18,48 +18,25 @@ internal class ArcShotExecutor : AbilityFeatureHandler
 
     public override string FeatureId => global::FeatureId.Ability.Projectile.ArcShot;
 
-    public override TriggerResult PrepareCast(CastContext context)
+    protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
-        var ability = GetAbility(context);
-        var casterNode = GetCasterNode2D(context);
-        float castRange = ability.Data.Get<float>(DataKey.AbilityCastRange); //索敌半径
-        if (castRange <= 0f)
+        var caster = context.Caster!;
+        var ability = context.Ability!;
+        var casterNode = (Node2D)caster;
+        var target = FindTarget(caster, ability, casterNode);
+        if (target is not Node2D targetNode)
         {
-            castRange = ability.Data.Get<float>(DataKey.AbilityEffectRadius); //回退半径
-        }
-
-        var targets = castRange > 0f
-            ? EntityTargetSelector.Query(new TargetSelectorQuery
-            {
-                Geometry = GeometryType.Circle, //查询形状
-                Origin = casterNode.GlobalPosition, //查询中心
-                Range = castRange, //查询半径
-                CenterEntity = context.Caster, //中心实体
-                TeamFilter = AbilityTargetTeamFilter.Enemy, //阵营过滤
-                Sorting = TargetSorting.Nearest, //排序方式
-                MaxTargets = 1 //最大目标数
-            })
-            : new List<IEntity>();
-        if (targets.Count == 0)
-        {
-            _log.Debug("圆弧弹准备失败：未找到可用目标");
-            return TriggerResult.Failed;
+            _log.Debug("圆弧弹执行跳过：未找到可用目标");
+            return new AbilityExecutedResult { TargetsHit = 0 };
         }
 
         context.Targets = new List<IEntity>
         {
-            targets[0]
+            target
         };
-        return TriggerResult.Success;
-    }
 
-    protected override AbilityExecutedResult ExecuteAbility(CastContext context)
-    {
-        var casterNode = GetCasterNode2D(context);
-        var ability = GetAbility(context);
-        var targetNode = GetFirstTargetNode2D(context);
-
-        var damage = GetScaledAbilityDamage(context);
+        var damage = ability.Data.Get<float>(DataKey.AbilityDamage) // 技能基础伤害
+            * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f; // 施法者技能伤害倍率
 
         var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
 
@@ -68,12 +45,9 @@ internal class ArcShotExecutor : AbilityFeatureHandler
             new ProjectileSpawnOptions(projectileScene, "ArcShotProjectile")); // 投射物配置
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
-        float cachedDamage = damage;
-        CastContext cachedContext = context;
-
         projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
             GameEventType.Unit.MovementCollision,
-            (evt) => OnHit(evt, cachedContext, cachedDamage));
+            (evt) => OnHit(evt, caster, casterNode, damage));
 
         projectile.Events.Emit(
             GameEventType.Unit.MovementStarted,
@@ -100,14 +74,52 @@ internal class ArcShotExecutor : AbilityFeatureHandler
         return new AbilityExecutedResult { TargetsHit = 1 };
     }
 
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, CastContext context, float damage)
+    /// <summary>
+    /// 在技能执行阶段选择本次追踪目标；无目标时让技能打空而不是阻断流水线。
+    /// </summary>
+    /// <param name="caster">施法实体。</param>
+    /// <param name="ability">技能实体。</param>
+    /// <param name="casterNode">施法者节点。</param>
+    /// <returns>最近敌方目标，找不到则返回 null。</returns>
+    private static IEntity? FindTarget(IEntity caster, AbilityEntity ability, Node2D casterNode)
     {
-        ApplyCollisionDamage(
-            context, // 施法上下文
-            evt, // 碰撞事件
-            damage, // 伤害值
-            DamageType.Physical, // 伤害类型
-            DamageTags.Ability | DamageTags.Ranged, // 伤害标签
-            AbilityTargetTeamFilter.Enemy); // 仅命中敌方
+        float castRange = ability.Data.Get<float>(DataKey.AbilityCastRange); //索敌半径
+        if (castRange <= 0f)
+        {
+            castRange = ability.Data.Get<float>(DataKey.AbilityEffectRadius); //回退半径
+        }
+
+        if (castRange <= 0f) return null;
+
+        var targets = EntityTargetSelector.Query(new TargetSelectorQuery
+        {
+            Geometry = GeometryType.Circle, //查询形状
+            Origin = casterNode.GlobalPosition, //查询中心
+            Range = castRange, //查询半径
+            CenterEntity = caster, //中心实体
+            TeamFilter = AbilityTargetTeamFilter.Enemy, //阵营过滤
+            Sorting = TargetSorting.Nearest, //排序方式
+            MaxTargets = 1 //最大目标数
+        });
+
+        return targets.Count > 0 ? targets[0] : null;
+    }
+
+    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, IEntity caster, Node2D casterNode, float damage)
+    {
+        if (evt.Target is not IEntity targetEntity) return;
+        if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, AbilityTargetTeamFilter.Enemy)) return;
+
+        AbilityImpactTool.Execute(caster, new AbilityImpactOptions
+        {
+            Targets = new[] { targetEntity },
+            Damage = new DamageApplyOptions
+            {
+                Damage = damage, // 伤害值
+                Type = DamageType.Physical, // 伤害类型
+                Tags = DamageTags.Ability | DamageTags.Ranged, // 伤害标签
+                Attacker = casterNode // 伤害来源
+            }
+        });
     }
 }
