@@ -101,6 +101,11 @@ public partial class AIComponent : Node, IComponent
             return;
         }
 
+        if (_data.Has(DataKey.StatusCanThink) && !_data.Get<bool>(DataKey.StatusCanThink))
+        {
+            return;
+        }
+
         // 构建上下文（复用对象，避免 GC）
         _context.Entity = _entity;
 

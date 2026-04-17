@@ -26,6 +26,12 @@ public class PlayerInputStrategy : IMovementStrategy
     /// </summary>
     public MovementUpdateResult Update(IEntity entity, Data data, float delta, MovementParams @params)
     {
+        if (data.Has(DataKey.StatusCanMoveInput) && !data.Get<bool>(DataKey.StatusCanMoveInput))
+        {
+            data.Set(DataKey.Velocity, Vector2.Zero);
+            return MovementUpdateResult.Continue(0f);
+        }
+
         float speed = data.Get<float>(DataKey.FinalMoveSpeed); // 最终移动速度
         float acceleration = data.Get<float>(DataKey.Acceleration); // 速度插値系数，越大响应越快
 

@@ -1,6 +1,5 @@
 using Godot;
 using Slime.Config.Units;
-using System.Runtime.CompilerServices;
 /// <summary>
 /// 瞄准状态管理器 - 管理由 AbilityHandler 发起的异步点选会话
 /// 
@@ -15,18 +14,8 @@ using System.Runtime.CompilerServices;
 /// </summary>
 public static class TargetingManager
 {
-    [ModuleInitializer]
-    public static void Initialize()
-    {
-        AutoLoad.Register(new AutoLoad.AutoLoadConfig
-        {
-            Name = nameof(TargetingManager),
-            InitAction = () => Init(),
-            Priority = AutoLoad.Priority.System
-        });
-    }
-
     private static readonly Log _log = new(nameof(TargetingManager));
+    private static bool _isSubscribed;
 
     // ================= 状态 =================
 
@@ -52,8 +41,10 @@ public static class TargetingManager
     /// 初始化瞄准管理器 - 订阅全局事件
     /// 应在游戏初始化时调用（如 AutoLoad）
     /// </summary>
-    public static void Init()
+    public static void EnableRuntime()
     {
+        if (_isSubscribed) return;
+
         // 订阅瞄准开始事件
         GlobalEventBus.Global.On<GameEventType.Targeting.StartTargetingEventData>(
             GameEventType.Targeting.StartTargeting,
@@ -78,7 +69,40 @@ public static class TargetingManager
             OnUnitKilled
         );
 
-        _log.Info("TargetingManager 已初始化");
+        _isSubscribed = true;
+        _log.Info("TargetingManager 已启用");
+    }
+
+    /// <summary>
+    /// 停止瞄准运行时，解除事件订阅并清理悬挂会话。
+    /// </summary>
+    public static void DisableRuntime()
+    {
+        if (!_isSubscribed) return;
+
+        GlobalEventBus.Global.Off<GameEventType.Targeting.StartTargetingEventData>(
+            GameEventType.Targeting.StartTargeting,
+            OnStartTargeting
+        );
+
+        GlobalEventBus.Global.Off<GameEventType.Targeting.TargetConfirmedEventData>(
+            GameEventType.Targeting.TargetConfirmed,
+            OnTargetConfirmed
+        );
+
+        GlobalEventBus.Global.Off<GameEventType.Targeting.TargetCancelledEventData>(
+            GameEventType.Targeting.TargetCancelled,
+            OnTargetCancelled
+        );
+
+        GlobalEventBus.Global.Off<GameEventType.Unit.KilledEventData>(
+            GameEventType.Unit.Killed,
+            OnUnitKilled
+        );
+
+        _isSubscribed = false;
+        ForceCancelTargeting();
+        _log.Info("TargetingManager 已禁用");
     }
 
     // ================= 事件处理 =================

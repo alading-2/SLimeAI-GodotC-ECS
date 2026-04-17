@@ -33,6 +33,12 @@ public class AIControlledStrategy : IMovementStrategy
     /// </summary>
     public MovementUpdateResult Update(IEntity entity, Data data, float delta, MovementParams @params)
     {
+        if (data.Has(DataKey.StatusCanMoveInput) && !data.Get<bool>(DataKey.StatusCanMoveInput))
+        {
+            data.Set(DataKey.Velocity, Vector2.Zero);
+            return MovementUpdateResult.Continue(0f);
+        }
+
         Vector2 moveDirection = data.Get<Vector2>(DataKey.AIMoveDirection); // AI请求移动方向
         float speedMultiplier = data.Get<float>(DataKey.AIMoveSpeedMultiplier); // AI移动速度倍率
         float moveSpeed = data.Get<float>(DataKey.FinalMoveSpeed); // 最终移动速度

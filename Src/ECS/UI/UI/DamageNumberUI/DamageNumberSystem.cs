@@ -1,5 +1,4 @@
 using Godot;
-using System.Runtime.CompilerServices;
 
 /// <summary>
 /// 伤害飘字系统 (AutoLoad via ModuleInitializer)
@@ -17,13 +16,15 @@ using System.Runtime.CompilerServices;
 public static class DamageNumberSystem
 {
     private static readonly Log _log = new("DamageNumberSystem");
+    private static bool _isSubscribed;
 
     /// <summary>
-    /// 模块初始化：直接监听全局战斗结果事件
+    /// 启用运行时事件监听。
     /// </summary>
-    [ModuleInitializer]
-    public static void Initialize()
+    public static void EnableRuntime()
     {
+        if (_isSubscribed) return;
+
         GlobalEventBus.Global.On<GameEventType.Unit.DamagedEventData>(
             GameEventType.Unit.Damaged, OnDamaged);
 
@@ -33,7 +34,28 @@ public static class DamageNumberSystem
         GlobalEventBus.Global.On<GameEventType.Unit.DodgedEventData>(
             GameEventType.Unit.Dodged, OnDodged);
 
-        _log.Success("DamageNumberSystem 初始化完成（全局事件模式）");
+        _isSubscribed = true;
+        _log.Success("DamageNumberSystem 已启用（全局事件模式）");
+    }
+
+    /// <summary>
+    /// 禁用运行时事件监听。
+    /// </summary>
+    public static void DisableRuntime()
+    {
+        if (!_isSubscribed) return;
+
+        GlobalEventBus.Global.Off<GameEventType.Unit.DamagedEventData>(
+            GameEventType.Unit.Damaged, OnDamaged);
+
+        GlobalEventBus.Global.Off<GameEventType.Unit.HealAppliedEventData>(
+            GameEventType.Unit.HealApplied, OnHealApplied);
+
+        GlobalEventBus.Global.Off<GameEventType.Unit.DodgedEventData>(
+            GameEventType.Unit.Dodged, OnDodged);
+
+        _isSubscribed = false;
+        _log.Info("DamageNumberSystem 已禁用");
     }
 
     // ============================================================

@@ -1,7 +1,6 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 
@@ -85,6 +84,10 @@ public partial class AutoLoad : Node
     /// </summary>
     private readonly HashSet<string> _loadedModules = new();
 
+    /// <summary>
+    /// 新系统生命周期入口。
+    /// </summary>
+    private SystemManager? _systemManager;
 
 
     /// <summary>
@@ -118,6 +121,9 @@ public partial class AutoLoad : Node
 
         // 2. 执行加载流程
         LoadAll();
+
+        // 3. 启动新的系统管理器（兼容旧 AutoLoad 与新 SystemRegistry 双轨）
+        EnsureSystemManager();
     }
 
     /// <summary>
@@ -166,6 +172,26 @@ public partial class AutoLoad : Node
         _staticConfigs.Clear();
 
         _log.Success($"✅ 初始化序列完成! 共激活 {_singletons.Count} 个节点模块, {_loadedModules.Count} 个总模块。");
+    }
+
+    /// <summary>
+    /// 确保新的 SystemManager 已经挂入并完成注册系统的启动。
+    /// </summary>
+    private void EnsureSystemManager()
+    {
+        if (_systemManager != null) return;
+
+        _systemManager = new SystemManager
+        {
+            Name = nameof(SystemManager)
+        };
+
+        AddChild(_systemManager);
+        _systemManager.Initialize();
+        _systemManager.BootstrapRegisteredSystems();
+        _singletons[nameof(SystemManager)] = _systemManager;
+
+        _log.Info("SystemManager 已接管 SystemRegistry 注册的系统");
     }
 
     /// <summary>
@@ -246,6 +272,7 @@ public partial class AutoLoad : Node
         var name = typeof(T).Name;
         if (_singletons.TryGetValue(name, out var node))
             return node as T;
-        return null;
+
+        return _systemManager?.Resolve<T>();
     }
 }

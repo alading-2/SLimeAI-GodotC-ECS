@@ -333,6 +333,7 @@ public partial class AttackComponent : Node, IComponent
 
         // 自身合规
         if (_data.Get<bool>(DataKey.IsDead)) return false;
+        if (_data.Has(DataKey.StatusCanAttack) && !_data.Get<bool>(DataKey.StatusCanAttack)) return false;
         if (_data.Get<bool>(DataKey.IsStunned)) return false;
 
         // 目标合规
@@ -369,6 +370,12 @@ public partial class AttackComponent : Node, IComponent
         if (_data.Get<bool>(DataKey.IsDead))
         {
             CancelAttack(AttackCancelReason.SelfDead);
+            return;
+        }
+
+        if (_data.Has(DataKey.StatusCanAttack) && !_data.Get<bool>(DataKey.StatusCanAttack))
+        {
+            CancelAttack(AttackCancelReason.SelfDisabled);
             return;
         }
 
