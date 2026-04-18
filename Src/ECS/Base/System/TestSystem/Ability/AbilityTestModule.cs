@@ -242,6 +242,10 @@ public partial class AbilityTestModule : TestModuleBase
         _log.Info($"[技能测试UI] 点击添加技能: resourceKey={resourceKey}");
         var result = _service.AddAbility(selectedEntity, resourceKey);
         ShowStatus(result.Message);
+        if (result.Success)
+        {
+            RequestStructureRefresh(rebuildAvailable: true, rebuildCurrent: true); // 添加成功后立即刷新技能库与当前技能列表
+        }
     }
 
     /// <summary>
@@ -258,6 +262,10 @@ public partial class AbilityTestModule : TestModuleBase
         _log.Info($"[技能测试UI] 点击切换技能启用状态: abilityId={abilityId} targetEnabled={targetEnabled}");
         var result = _service.SetAbilityEnabled(selectedEntity, abilityId, targetEnabled);
         ShowStatus(result.Message);
+        if (result.Success)
+        {
+            RequestStructureRefresh(rebuildAvailable: false, rebuildCurrent: true); // 启停后强制刷新当前技能列表，避免面板等待事件补丁
+        }
     }
 
     /// <summary>
@@ -274,6 +282,10 @@ public partial class AbilityTestModule : TestModuleBase
         _log.Info($"[技能测试UI] 点击移除技能: abilityId={abilityId}");
         var result = _service.RemoveAbility(selectedEntity, abilityId);
         ShowStatus(result.Message);
+        if (result.Success)
+        {
+            RequestStructureRefresh(rebuildAvailable: true, rebuildCurrent: true); // 移除成功后同步刷新左右列表
+        }
     }
 
     /// <summary>

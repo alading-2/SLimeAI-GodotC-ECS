@@ -274,6 +274,14 @@ public static partial class EntityManager
         var existingVisual = entity.GetNodeOrNull("VisualRoot");
         if (existingVisual != null) existingVisual.Free();
 
+        // 并非所有 Entity 都要求视觉场景。
+        // AbilityEntity / 纯逻辑测试实体等配置可能完全没有 VisualScenePath，此时直接跳过即可。
+        if (scene == null)
+        {
+            _log.Debug($"[{entity.Name}] 未配置 VisualScene，跳过视觉注入");
+            return;
+        }
+
         // 实例化
         var visual = scene.Instantiate();
         visual.Name = "VisualRoot";
