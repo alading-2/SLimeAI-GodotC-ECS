@@ -10,7 +10,9 @@ public readonly record struct TargetSelectorQuery
     /// <summary>
     /// 初始化 TargetSelectorQuery，设置默认不限目标数。
     /// </summary>
-    public TargetSelectorQuery() { }
+    public TargetSelectorQuery()
+    {
+    }
 
     // ==================== 几何参数 ====================
 
@@ -20,91 +22,90 @@ public readonly record struct TargetSelectorQuery
     /// </summary>
     public required GeometryType Geometry { get; init; }
 
-/// <summary>
-/// 查询原点（必填）。
-/// 所有几何计算都基于该点。
-/// </summary>
-public required Vector2 Origin
-{ get; init; }
+    /// <summary>
+    /// 查询原点（必填）。
+    /// 所有几何计算都基于该点。
+    /// </summary>
+    public required Vector2 Origin { get; init; }
 
-/// <summary>
-/// 查询原点提供器（可选）。
-/// 非 null 时优先使用，用于光环/持续范围等需要实时跟随的场景。
-/// </summary>
-public Func<Vector2>? OriginProvider { get; init; }
+    /// <summary>
+    /// 查询原点提供器（可选）。
+    /// 非 null 时优先使用，用于光环/持续范围等需要实时跟随的场景。
+    /// </summary>
+    public Func<Vector2>? OriginProvider { get; init; }
 
-/// <summary>
-/// 方向向量（可选）。
-/// Box / Line / Cone 需要朝向，不传时通常默认使用 Vector2.Right。
-/// </summary>
-public Vector2? Forward { get; init; }
+    /// <summary>
+    /// 方向向量（可选）。
+    /// Box / Line / Cone 需要朝向，不传时通常默认使用 Vector2.Right。
+    /// </summary>
+    public Vector2? Forward { get; init; }
 
-/// <summary>
-/// 半径或最大距离（可选）。
-/// Circle / Ring / Cone 等几何会使用该值。
-/// </summary>
-public float Range { get; init; }
+    /// <summary>
+    /// 半径或最大距离（可选）。
+    /// Circle / Ring / Cone 等几何会使用该值。
+    /// </summary>
+    public float Range { get; init; }
 
-/// <summary>
-/// 圆环内半径（可选，默认 0）。
-/// 仅 Ring 使用。
-/// </summary>
-public float InnerRange { get; init; }
+    /// <summary>
+    /// 圆环内半径（可选，默认 0）。
+    /// 仅 Ring 使用。
+    /// </summary>
+    public float InnerRange { get; init; }
 
-/// <summary>
-/// 宽度（可选）。
-/// Box / Line 使用。
-/// </summary>
-public float Width { get; init; }
+    /// <summary>
+    /// 宽度（可选）。
+    /// Box / Line 使用。
+    /// </summary>
+    public float Width { get; init; }
 
-/// <summary>
-/// 长度（可选）。
-/// Box / Line 使用。
-/// </summary>
-public float Length { get; init; }
+    /// <summary>
+    /// 长度（可选）。
+    /// Box / Line 使用。
+    /// </summary>
+    public float Length { get; init; }
 
-/// <summary>
-/// 扇形角度（可选，单位：度）。
-/// 仅 Cone 使用。
-/// </summary>
-public float Angle { get; init; }
+    /// <summary>
+    /// 扇形角度（可选，单位：度）。
+    /// 仅 Cone 使用。
+    /// </summary>
+    public float Angle { get; init; }
 
 // ==================== 过滤参数 ====================
 
-/// <summary>
-/// 阵营过滤器（可选）。
-/// 支持 Friendly / Enemy / Neutral / Self 组合。
-/// </summary>
-public AbilityTargetTeamFilter TeamFilter { get; init; }
+    /// <summary>
+    /// 阵营过滤器（可选）。
+    /// 支持 Friendly / Enemy / Neutral / Self 组合。
+    /// </summary>
+    public TeamFilter TeamFilter { get; init; }
 
-/// <summary>
-/// 类型过滤器（可选）。
-/// 通过 EntityType 位掩码筛选目标类型。
-/// </summary>
-public EntityType TypeFilter { get; init; }
+    /// <summary>
+    /// 类型过滤器（可选）。
+    /// 通过 EntityType 位掩码筛选目标类型。
+    /// </summary>
+    public EntityType TypeFilter { get; init; }
 
-/// <summary>
-/// 阵营过滤参照实体（可选）。
-/// 判断 Self / Friendly / Enemy 时需要。
-/// </summary>
-public IEntity? CenterEntity { get; init; }
+    /// <summary>
+    /// 阵营过滤参照实体（可选）。
+    /// 判断 Self / Friendly / Enemy 时需要。
+    /// </summary>
+    public IEntity? CenterEntity { get; init; }
 
 // ==================== 排序与限制 ====================
 
-/// <summary>
-/// 排序规则（可选）。
-/// 如 Nearest / Farthest / LowestHealth / Random。
-/// </summary>
-public TargetSorting Sorting { get; init; }
+    /// <summary>
+    /// 排序规则（可选）。
+    /// 如 Nearest / Farthest / LowestHealth / Random。
+    /// </summary>
+    public TargetSorting Sorting { get; init; }
 
-/// <summary>
-/// 最大目标数量（可选）。
-/// -1 表示不限。
-/// </summary>
-public int MaxTargets { get; init; } = -1;
+    /// <summary>
+    /// 最大目标数量（可选）。
+    /// -1 表示不限。
+    /// </summary>
+    public int MaxTargets { get; init; } = -1;
 
-/// <summary>
-/// 解析本次查询应使用的原点。
-/// </summary>
-public Vector2 ResolveOrigin() => OriginProvider?.Invoke() ?? Origin;
+    /// <summary>
+    /// 解析本次查询应使用的原点。
+    /// </summary>
+    public Vector2 ResolveOrigin() => OriginProvider?.Invoke() ?? Origin;
 }

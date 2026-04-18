@@ -15,6 +15,5 @@ AbilityTriggerMode = 1
 AbilityCooldown = 1.0
 AbilityTargetSelection = 1
 AbilityCastRange = 700.0
-AbilityEffectRadius = 700.0
 ProjectileScene = ExtResource("2_b33iq")
 AbilityDamage = 26.0

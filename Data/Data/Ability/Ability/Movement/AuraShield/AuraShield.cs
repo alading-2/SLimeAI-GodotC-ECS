@@ -23,8 +23,7 @@ internal class AuraShieldExecutor : AbilityFeatureHandler
         var ability = context.Ability!;
         var casterNode = (Node2D)caster;
 
-        var damage = ability.Data.Get<float>(DataKey.AbilityDamage) // 技能基础伤害
-            * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f; // 施法者技能伤害倍率
+        var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 技能最终伤害
         var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
 
         var projectile = ProjectileTool.Spawn(
@@ -60,10 +59,13 @@ internal class AuraShieldExecutor : AbilityFeatureHandler
         return new AbilityExecutedResult { TargetsHit = 1 };
     }
 
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, IEntity caster, Node2D casterNode, float damage)
+    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt,
+        IEntity caster,
+        Node2D casterNode,
+        float damage)
     {
         if (evt.Target is not IEntity targetEntity) return;
-        if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, AbilityTargetTeamFilter.Enemy)) return;
+        if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return;
 
         AbilityImpactTool.Execute(caster, new AbilityImpactOptions
         {

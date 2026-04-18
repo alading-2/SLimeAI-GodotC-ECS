@@ -31,19 +31,18 @@ internal class SlamExecutor : AbilityFeatureHandler
         var casterNode = (Node2D)caster;
 
         // 1. 获取技能参数
-        var abilityRange = ability.Data.Get<float>(DataKey.AbilityCastRange);      // 选点范围（角色周围圆环半径）
-        var damageRadius = ability.Data.Get<float>(DataKey.AbilityEffectRadius);   // 伤害范围（圆形半径）
+        var abilityRange = ability.Data.Get<float>(DataKey.AbilityCastRange); // 选点范围（角色周围圆环半径）
+        var damageRadius = ability.Data.Get<float>(DataKey.AbilityEffectRadius); // 伤害范围（圆形半径）
         const int maxTargets = -1; //不限制命中数量
-        var damage = ability.Data.Get<float>(DataKey.AbilityDamage)                // 技能基础伤害
-            * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f;           // 施法者技能伤害倍率
+        var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 最终技能伤害
 
         // 2. 在角色周围随机选点
         var pointQuery = new TargetSelectorQuery
         {
-            Geometry = GeometryType.Circle,         // 形状：圆形
-            Origin = casterNode.GlobalPosition,     // 位置：施法者位置
-            Range = abilityRange,                   // 半径：选点半径
-            MaxTargets = 1                          // 只取一个随机点
+            Geometry = GeometryType.Circle, // 形状：圆形
+            Origin = casterNode.GlobalPosition, // 位置：施法者位置
+            Range = abilityRange, // 半径：选点半径
+            MaxTargets = 1 // 只取一个随机点
         };
         var randomPoint = PositionTargetSelector.Query(pointQuery)[0];
 
@@ -55,13 +54,13 @@ internal class SlamExecutor : AbilityFeatureHandler
         {
             Query = new TargetSelectorQuery
             {
-                Geometry = GeometryType.Circle,                 // 圆形范围
-                Origin = randomPoint,                           // 以随机点为圆心
-                Range = damageRadius,                           // 伤害半径
-                CenterEntity = caster,                          // 施法者作为阵营判断基准
-                TeamFilter = AbilityTargetTeamFilter.Enemy,     // 只打敌人
-                Sorting = TargetSorting.HighestThreat,          // 优先威胁最高的目标
-                MaxTargets = maxTargets                         // 最大命中数
+                Geometry = GeometryType.Circle, // 圆形范围
+                Origin = randomPoint, // 以随机点为圆心
+                Range = damageRadius, // 伤害半径
+                CenterEntity = caster, // 施法者作为阵营判断基准
+                TeamFilter = TeamFilter.Enemy, // 只打敌人
+                Sorting = TargetSorting.HighestThreat, // 优先威胁最高的目标
+                MaxTargets = maxTargets // 最大命中数
             },
             Effect = effectScene != null
                 ? new EffectSpawnOptions(
@@ -72,9 +71,9 @@ internal class SlamExecutor : AbilityFeatureHandler
             Damage = new DamageApplyOptions
             {
                 Damage = damage, // 技能最终伤害
-                Type = DamageType.Magical,                                   // 魔法伤害
-                Tags = DamageTags.Area | DamageTags.Ability,                 // 范围技能标签
-                Attacker = casterNode                                        // 伤害来源
+                Type = DamageType.Magical, // 魔法伤害
+                Tags = DamageTags.Area | DamageTags.Ability, // 范围技能标签
+                Attacker = casterNode // 伤害来源
             }
         });
 

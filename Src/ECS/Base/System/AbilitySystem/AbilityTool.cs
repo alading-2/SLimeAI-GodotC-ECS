@@ -10,37 +10,37 @@ internal static class AbilityTool
     public static bool MatchesTeamFilter(
         IEntity caster,
         IEntity target,
-        AbilityTargetTeamFilter filter)
+        TeamFilter filter)
     {
-        if (filter == AbilityTargetTeamFilter.None || filter == AbilityTargetTeamFilter.All)
+        if (filter == TeamFilter.None || filter == TeamFilter.All)
         {
             return true;
         }
 
         if (ReferenceEquals(caster, target))
         {
-            return filter.HasFlag(AbilityTargetTeamFilter.Self);
+            return filter.HasFlag(TeamFilter.Self);
         }
 
         var casterId = caster.Data.Get<string>(DataKey.Id);
         var targetId = target.Data.Get<string>(DataKey.Id);
         if (!string.IsNullOrEmpty(casterId) && casterId == targetId)
         {
-            return filter.HasFlag(AbilityTargetTeamFilter.Self);
+            return filter.HasFlag(TeamFilter.Self);
         }
 
         var casterTeam = caster.Data.Get<Team>(DataKey.Team);
         var targetTeam = target.Data.Get<Team>(DataKey.Team);
         if (targetTeam == Team.Neutral)
         {
-            return filter.HasFlag(AbilityTargetTeamFilter.Neutral);
+            return filter.HasFlag(TeamFilter.Neutral);
         }
 
         if (casterTeam == targetTeam)
         {
-            return filter.HasFlag(AbilityTargetTeamFilter.Friendly);
+            return filter.HasFlag(TeamFilter.Friendly);
         }
 
-        return filter.HasFlag(AbilityTargetTeamFilter.Enemy);
+        return filter.HasFlag(TeamFilter.Enemy);
     }
 }

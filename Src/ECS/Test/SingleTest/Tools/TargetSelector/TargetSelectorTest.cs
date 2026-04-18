@@ -70,7 +70,7 @@ public partial class TargetSelectorTest : Node
                 Origin = center.GlobalPosition,
                 Range = 100f,
                 CenterEntity = center,
-                TeamFilter = AbilityTargetTeamFilter.Enemy,
+                TeamFilter = TeamFilter.Enemy,
                 TypeFilter = EntityType.Unit,
                 Sorting = TargetSorting.Nearest,
                 MaxTargets = 2
@@ -122,6 +122,7 @@ public partial class TargetSelectorTest : Node
                 validCount++;
             }
         }
+
         AssertTrue(validCount == 10, $"所有点都应在 [50, 150] 距离内 (有效: {validCount}/10)");
     }
 
@@ -158,25 +159,36 @@ public partial class TargetSelectorTest : Node
         AssertTrue(GeometryCalculator.IsPointInBox(new Vector2(25, 0), origin, forward, boxWidth, boxLength), "Box内");
         AssertTrue(GeometryCalculator.IsPointInBox(new Vector2(0, 10), origin, forward, boxWidth, boxLength), "Box边缘");
         AssertTrue(!GeometryCalculator.IsPointInBox(new Vector2(-1, 0), origin, forward, boxWidth, boxLength), "Box后方");
-        AssertTrue(!GeometryCalculator.IsPointInBox(new Vector2(25, 11), origin, forward, boxWidth, boxLength), "Box外部(宽)");
-        AssertTrue(!GeometryCalculator.IsPointInBox(new Vector2(51, 0), origin, forward, boxWidth, boxLength), "Box外部(长)");
+        AssertTrue(!GeometryCalculator.IsPointInBox(new Vector2(25, 11), origin, forward, boxWidth, boxLength),
+            "Box外部(宽)");
+        AssertTrue(!GeometryCalculator.IsPointInBox(new Vector2(51, 0), origin, forward, boxWidth, boxLength),
+            "Box外部(长)");
 
         // --- Line (Capsule) Test ---
         float lineWidth = 20f; // R = 10
         float lineLength = 50f; // X 0->50
-        AssertTrue(GeometryCalculator.IsPointInCapsule(new Vector2(25, 0), origin, forward, lineLength, lineWidth), "Line内");
-        AssertTrue(GeometryCalculator.IsPointInCapsule(new Vector2(-5, 5), origin, forward, lineLength, lineWidth), "Line起点半圆内");
-        AssertTrue(GeometryCalculator.IsPointInCapsule(new Vector2(55, 5), origin, forward, lineLength, lineWidth), "Line终点半圆内");
-        AssertTrue(!GeometryCalculator.IsPointInCapsule(new Vector2(25, 11), origin, forward, lineLength, lineWidth), "Line外部");
+        AssertTrue(GeometryCalculator.IsPointInCapsule(new Vector2(25, 0), origin, forward, lineLength, lineWidth),
+            "Line内");
+        AssertTrue(GeometryCalculator.IsPointInCapsule(new Vector2(-5, 5), origin, forward, lineLength, lineWidth),
+            "Line起点半圆内");
+        AssertTrue(GeometryCalculator.IsPointInCapsule(new Vector2(55, 5), origin, forward, lineLength, lineWidth),
+            "Line终点半圆内");
+        AssertTrue(!GeometryCalculator.IsPointInCapsule(new Vector2(25, 11), origin, forward, lineLength, lineWidth),
+            "Line外部");
 
         // --- Cone Test ---
         float coneRange = 50f;
         float coneAngle = 90f; // +/- 45 度
-        AssertTrue(GeometryCalculator.IsPointInCone(new Vector2(25, 0), origin, forward, coneRange, coneAngle), "Cone内");
-        AssertTrue(GeometryCalculator.IsPointInCone(new Vector2(25, 25), origin, forward, coneRange, coneAngle), "Cone边缘(45度)");
-        AssertTrue(!GeometryCalculator.IsPointInCone(new Vector2(25, 26), origin, forward, coneRange, coneAngle), "Cone外部(角度)");
-        AssertTrue(!GeometryCalculator.IsPointInCone(new Vector2(51, 0), origin, forward, coneRange, coneAngle), "Cone外部(距离)");
-        AssertTrue(!GeometryCalculator.IsPointInCone(new Vector2(-10, 0), origin, forward, coneRange, coneAngle), "Cone后方");
+        AssertTrue(GeometryCalculator.IsPointInCone(new Vector2(25, 0), origin, forward, coneRange, coneAngle),
+            "Cone内");
+        AssertTrue(GeometryCalculator.IsPointInCone(new Vector2(25, 25), origin, forward, coneRange, coneAngle),
+            "Cone边缘(45度)");
+        AssertTrue(!GeometryCalculator.IsPointInCone(new Vector2(25, 26), origin, forward, coneRange, coneAngle),
+            "Cone外部(角度)");
+        AssertTrue(!GeometryCalculator.IsPointInCone(new Vector2(51, 0), origin, forward, coneRange, coneAngle),
+            "Cone外部(距离)");
+        AssertTrue(!GeometryCalculator.IsPointInCone(new Vector2(-10, 0), origin, forward, coneRange, coneAngle),
+            "Cone后方");
     }
 
     private void AssertTrue(bool condition, string message)

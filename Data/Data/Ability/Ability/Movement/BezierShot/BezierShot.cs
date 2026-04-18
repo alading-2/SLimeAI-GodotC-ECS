@@ -23,8 +23,7 @@ internal class BezierShotExecutor : AbilityFeatureHandler
         var ability = context.Ability!;
         var casterNode = (Node2D)caster;
 
-        var damage = ability.Data.Get<float>(DataKey.AbilityDamage) // 技能基础伤害
-            * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f; // 施法者技能伤害倍率
+        var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 最终技能伤害
 
         // 查找最近敌人作为终点
         var targetPos = GetNearestEnemyPos(caster, casterNode, ability.Data.Get<float>(DataKey.AbilityCastRange));
@@ -71,7 +70,7 @@ internal class BezierShotExecutor : AbilityFeatureHandler
             Origin = casterNode.GlobalPosition, //查询中心
             Range = effectiveRange, //查询半径
             CenterEntity = caster, //中心实体
-            TeamFilter = AbilityTargetTeamFilter.Enemy, //阵营过滤
+            TeamFilter = TeamFilter.Enemy, //阵营过滤
             Sorting = TargetSorting.Nearest, //排序方式
             MaxTargets = 1 //最大目标数
         });
@@ -80,10 +79,13 @@ internal class BezierShotExecutor : AbilityFeatureHandler
         return casterNode.GlobalPosition + new Vector2(400f, 0f); // 无目标时返回前方位置
     }
 
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, IEntity caster, Node2D casterNode, float damage)
+    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt,
+        IEntity caster,
+        Node2D casterNode,
+        float damage)
     {
         if (evt.Target is not IEntity targetEntity) return;
-        if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, AbilityTargetTeamFilter.Enemy)) return;
+        if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return;
 
         AbilityImpactTool.Execute(caster, new AbilityImpactOptions
         {

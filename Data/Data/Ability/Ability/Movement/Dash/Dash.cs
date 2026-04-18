@@ -79,7 +79,8 @@ internal class DashExecutor : AbilityFeatureHandler
                     MaxDuration = DashDuration, // 设置超时限制
                     RotateToVelocity = false, // 冲刺期间保持原有朝向
                     // 回调函数：当移动系统完成位移或因碰撞停止时，触发 OnDashStop
-                    OnStop = stopCtx => OnDashStop(stopCtx, caster, casterNode2D, effectScene, damageRadius, maxTargets),
+                    OnStop =
+                        stopCtx => OnDashStop(stopCtx, caster, casterNode2D, effectScene, damageRadius, maxTargets),
                 }
             )
         );
@@ -117,23 +118,23 @@ internal class DashExecutor : AbilityFeatureHandler
         {
             Query = new TargetSelectorQuery
             {
-                Geometry = GeometryType.Circle,                 // 圆形范围
-                Origin = impactPosition,                        // 落点为圆心
-                Range = damageRadius,                           // 技能配置的半径
-                CenterEntity = caster,                          // 施法者作为阵营判断基准
-                TeamFilter = AbilityTargetTeamFilter.Enemy,     // 仅筛选敌方单位
-                Sorting = TargetSorting.Nearest,                // 优先最近目标
-                MaxTargets = maxTargets                         // 限制命中数量
+                Geometry = GeometryType.Circle, // 圆形范围
+                Origin = impactPosition, // 落点为圆心
+                Range = damageRadius, // 技能配置的半径
+                CenterEntity = caster, // 施法者作为阵营判断基准
+                TeamFilter = TeamFilter.Enemy, // 仅筛选敌方单位
+                Sorting = TargetSorting.Nearest, // 优先最近目标
+                MaxTargets = maxTargets // 限制命中数量
             },
             Effect = effectScene != null
                 ? new EffectSpawnOptions(effectScene, Name: "冲刺落地特效")
                 : null,
             Damage = new DamageApplyOptions
             {
-                Damage = caster.Data.Get<float>(DataKey.FinalAttack),   // 施法者最终攻击力
-                Type = DamageType.Physical,                              // 物理伤害
-                Tags = DamageTags.Ability | DamageTags.Area,             // 技能范围伤害
-                Attacker = casterNode2D                                  // 伤害来源节点
+                Damage = caster.Data.Get<float>(DataKey.FinalAttack), // 施法者最终攻击力
+                Type = DamageType.Physical, // 物理伤害
+                Tags = DamageTags.Ability | DamageTags.Area, // 技能范围伤害
+                Attacker = casterNode2D // 伤害来源节点
             }
         });
 

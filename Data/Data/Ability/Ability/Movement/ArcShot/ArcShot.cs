@@ -35,8 +35,7 @@ internal class ArcShotExecutor : AbilityFeatureHandler
             target
         };
 
-        var damage = ability.Data.Get<float>(DataKey.AbilityDamage) // 技能基础伤害
-            * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f; // 施法者技能伤害倍率
+        var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 最终技能伤害
 
         var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
 
@@ -84,12 +83,6 @@ internal class ArcShotExecutor : AbilityFeatureHandler
     private static IEntity? FindTarget(IEntity caster, AbilityEntity ability, Node2D casterNode)
     {
         float castRange = ability.Data.Get<float>(DataKey.AbilityCastRange); //索敌半径
-        if (castRange <= 0f)
-        {
-            castRange = ability.Data.Get<float>(DataKey.AbilityEffectRadius); //回退半径
-        }
-
-        if (castRange <= 0f) return null;
 
         var targets = EntityTargetSelector.Query(new TargetSelectorQuery
         {
@@ -97,18 +90,21 @@ internal class ArcShotExecutor : AbilityFeatureHandler
             Origin = casterNode.GlobalPosition, //查询中心
             Range = castRange, //查询半径
             CenterEntity = caster, //中心实体
-            TeamFilter = AbilityTargetTeamFilter.Enemy, //阵营过滤
-            Sorting = TargetSorting.Nearest, //排序方式
+            TeamFilter = TeamFilter.Enemy, //阵营过滤
+            Sorting = TargetSorting.HighestThreat, //排序方式
             MaxTargets = 1 //最大目标数
         });
 
         return targets.Count > 0 ? targets[0] : null;
     }
 
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, IEntity caster, Node2D casterNode, float damage)
+    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt,
+        IEntity caster,
+        Node2D casterNode,
+        float damage)
     {
         if (evt.Target is not IEntity targetEntity) return;
-        if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, AbilityTargetTeamFilter.Enemy)) return;
+        if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return;
 
         AbilityImpactTool.Execute(caster, new AbilityImpactOptions
         {

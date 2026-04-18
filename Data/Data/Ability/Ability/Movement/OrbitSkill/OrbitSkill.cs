@@ -27,8 +27,7 @@ internal class OrbitSkillExecutor : AbilityFeatureHandler
             return new AbilityExecutedResult();
         }
 
-        var damage = ability.Data.Get<float>(DataKey.AbilityDamage) // 技能基础伤害
-            * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f; // 施法者技能伤害倍率
+        var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 最终技能伤害
         var orbitCount = 3;
         var orbitRadius = 100f;
         var orbitDuration = 6f;
@@ -71,10 +70,13 @@ internal class OrbitSkillExecutor : AbilityFeatureHandler
         return new AbilityExecutedResult { TargetsHit = orbitCount };
     }
 
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt, IEntity caster, Node2D casterNode, float damage)
+    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt,
+        IEntity caster,
+        Node2D casterNode,
+        float damage)
     {
         if (evt.Target is not IEntity targetEntity) return;
-        if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, AbilityTargetTeamFilter.Enemy)) return;
+        if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return;
 
         AbilityImpactTool.Execute(caster, new AbilityImpactOptions
         {

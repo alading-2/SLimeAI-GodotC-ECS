@@ -45,6 +45,7 @@ public static class EntityTargetSelector
                     }
                 }
             }
+
             candidates = FilterTargets(candidates, query.CenterEntity, query.TeamFilter, query.TypeFilter);
         }
 
@@ -65,7 +66,10 @@ public static class EntityTargetSelector
     /// 对候选目标执行通用过滤：阵营、类型、生命周期状态。
     /// 会过滤 Dead / Reviving 实体，避免选中无效目标。
     /// </summary>
-    private static List<IEntity> FilterTargets(List<IEntity> targets, IEntity? centerEntity, AbilityTargetTeamFilter teamFilter, EntityType typeFilter)
+    private static List<IEntity> FilterTargets(List<IEntity> targets,
+        IEntity? centerEntity,
+        TeamFilter teamFilter,
+        EntityType typeFilter)
     {
         var filtered = new List<IEntity>();
         foreach (var target in targets)
@@ -77,8 +81,10 @@ public static class EntityTargetSelector
                 var state = target.Data.Get<LifecycleState>(DataKey.LifecycleState);
                 if (state == LifecycleState.Dead || state == LifecycleState.Reviving) continue;
             }
+
             filtered.Add(target);
         }
+
         return filtered;
     }
 
@@ -88,18 +94,18 @@ public static class EntityTargetSelector
     /// 若目标为自身则仅由 Self 标志决定；
     /// 其余按 center 与 target 阵营关系判定 Friendly / Enemy / Neutral。
     /// </summary>
-    private static bool PassTeamFilter(IEntity target, IEntity? center, AbilityTargetTeamFilter filter)
+    private static bool PassTeamFilter(IEntity target, IEntity? center, TeamFilter filter)
     {
-        if (filter == AbilityTargetTeamFilter.None || filter == AbilityTargetTeamFilter.All) return true;
+        if (filter == TeamFilter.None || filter == TeamFilter.All) return true;
         bool isSelf = IsSameEntity(target, center);
-        if (isSelf) return filter.HasFlag(AbilityTargetTeamFilter.Self);
+        if (isSelf) return filter.HasFlag(TeamFilter.Self);
         Team targetTeam = target.Data.Get<Team>(DataKey.Team);
-        if (targetTeam == Team.Neutral) return filter.HasFlag(AbilityTargetTeamFilter.Neutral);
+        if (targetTeam == Team.Neutral) return filter.HasFlag(TeamFilter.Neutral);
         if (center == null) return false;
         Team centerTeam = center.Data.Get<Team>(DataKey.Team);
         bool isSameTeam = centerTeam == targetTeam;
-        if (isSameTeam) return filter.HasFlag(AbilityTargetTeamFilter.Friendly);
-        return filter.HasFlag(AbilityTargetTeamFilter.Enemy);
+        if (isSameTeam) return filter.HasFlag(TeamFilter.Friendly);
+        return filter.HasFlag(TeamFilter.Enemy);
     }
 
     /// <summary>
@@ -124,22 +130,28 @@ public static class EntityTargetSelector
         {
             case TargetSorting.None: break;
             case TargetSorting.Nearest:
-                targets.Sort((a, b) => GetEntityPosition(a).DistanceTo(origin).CompareTo(GetEntityPosition(b).DistanceTo(origin)));
+                targets.Sort((a, b) =>
+                    GetEntityPosition(a).DistanceTo(origin).CompareTo(GetEntityPosition(b).DistanceTo(origin)));
                 break;
             case TargetSorting.Farthest:
-                targets.Sort((a, b) => GetEntityPosition(b).DistanceTo(origin).CompareTo(GetEntityPosition(a).DistanceTo(origin)));
+                targets.Sort((a, b) =>
+                    GetEntityPosition(b).DistanceTo(origin).CompareTo(GetEntityPosition(a).DistanceTo(origin)));
                 break;
             case TargetSorting.LowestHealth:
-                targets.Sort((a, b) => a.Data.Get<float>(DataKey.CurrentHp).CompareTo(b.Data.Get<float>(DataKey.CurrentHp)));
+                targets.Sort((a, b) =>
+                    a.Data.Get<float>(DataKey.CurrentHp).CompareTo(b.Data.Get<float>(DataKey.CurrentHp)));
                 break;
             case TargetSorting.HighestHealth:
-                targets.Sort((a, b) => b.Data.Get<float>(DataKey.CurrentHp).CompareTo(a.Data.Get<float>(DataKey.CurrentHp)));
+                targets.Sort((a, b) =>
+                    b.Data.Get<float>(DataKey.CurrentHp).CompareTo(a.Data.Get<float>(DataKey.CurrentHp)));
                 break;
             case TargetSorting.HighestHealthPercent:
-                targets.Sort((a, b) => b.Data.Get<float>(DataKey.HpPercent).CompareTo(a.Data.Get<float>(DataKey.HpPercent)));
+                targets.Sort((a, b) =>
+                    b.Data.Get<float>(DataKey.HpPercent).CompareTo(a.Data.Get<float>(DataKey.HpPercent)));
                 break;
             case TargetSorting.LowestHealthPercent:
-                targets.Sort((a, b) => a.Data.Get<float>(DataKey.HpPercent).CompareTo(b.Data.Get<float>(DataKey.HpPercent)));
+                targets.Sort((a, b) =>
+                    a.Data.Get<float>(DataKey.HpPercent).CompareTo(b.Data.Get<float>(DataKey.HpPercent)));
                 break;
             case TargetSorting.Random:
                 Random rng = new Random();
@@ -148,10 +160,12 @@ public static class EntityTargetSelector
                     int j = rng.Next(i + 1);
                     (targets[i], targets[j]) = (targets[j], targets[i]);
                 }
+
                 break;
             case TargetSorting.HighestThreat:
                 targets.Sort((a, b) =>
-                    (b.Data.Has(DataKey.Threat) ? b.Data.Get<float>(DataKey.Threat) : 0).CompareTo(a.Data.Has(DataKey.Threat) ? a.Data.Get<float>(DataKey.Threat) : 0));
+                    (b.Data.Has(DataKey.Threat) ? b.Data.Get<float>(DataKey.Threat) : 0).CompareTo(
+                        a.Data.Has(DataKey.Threat) ? a.Data.Get<float>(DataKey.Threat) : 0));
                 break;
         }
     }

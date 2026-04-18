@@ -7,14 +7,14 @@ using Godot;
 /// </summary>
 internal sealed record DamageApplyOptions
 {
-    public float Damage { get; init; }                                  // 每次命中伤害量
-    public DamageType Type { get; init; }                               // 伤害类型
-    public DamageTags Tags { get; init; } = DamageTags.None;            // 伤害标签（位掩码）
-    public Node? Attacker { get; init; }                                // 伤害来源节点（null 时由上层决定）
-    public float TickInterval { get; init; }                            // DoT 间隔（秒），<=0 表示单次
-    public float TotalDuration { get; init; }                           // DoT 总时长（秒），<=0 表示单次
-    public bool AllowRepeatHitSameTarget { get; init; } = true;         // 是否允许重复命中同一目标
-    public bool ApplyImmediateTick { get; init; } = true;               // DoT 开始时是否先同步结算一次
+    public float Damage { get; init; } // 每次命中伤害量
+    public DamageType Type { get; init; } // 伤害类型
+    public DamageTags Tags { get; init; } = DamageTags.None; // 伤害标签（位掩码）
+    public Node? Attacker { get; init; } // 伤害来源节点（null 时由上层决定）
+    public float TickInterval { get; init; } // DoT 间隔（秒），<=0 表示单次
+    public float TotalDuration { get; init; } // DoT 总时长（秒），<=0 表示单次
+    public bool AllowRepeatHitSameTarget { get; init; } = true; // 是否允许重复命中同一目标
+    public bool ApplyImmediateTick { get; init; } = true; // 是否立即造成一次伤害再开始 DoT 计时
 }
 
 /// <summary>
@@ -60,8 +60,8 @@ internal static class DamageTool
         int count = 0;
         foreach (var target in targets)
         {
-            if (target is not IUnit victim) continue;       // 非战斗单位跳过
-            if (!CanHit(target, hitRegistry)) continue;     // 重复命中检查
+            if (target is not IUnit victim) continue; // 非战斗单位跳过
+            if (!CanHit(target, hitRegistry)) continue; // 重复命中检查
 
             DamageService.Instance.Process(new DamageInfo
             {
@@ -138,9 +138,9 @@ internal static class DamageTool
     /// <param name="hitRegistry">命中注册表；null 表示不限制，允许无限次命中</param>
     public static bool CanHit(IEntity target, HashSet<ulong>? hitRegistry)
     {
-        if (hitRegistry == null) return true;                                               // 不限制重复命中
-        if (target is not Node node || !GodotObject.IsInstanceValid(node)) return false;    // 无效节点不可命中
-        return hitRegistry.Add(node.GetInstanceId());                                       // Add 返回 false = 已命中过
+        if (hitRegistry == null) return true; // 不限制重复命中
+        if (target is not Node node || !GodotObject.IsInstanceValid(node)) return false; // 无效节点不可命中
+        return hitRegistry.Add(node.GetInstanceId()); // Add 返回 false = 已命中过
     }
 
     /// <summary>

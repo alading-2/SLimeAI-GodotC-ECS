@@ -28,23 +28,22 @@ internal class CircleDamageExecutor : AbilityFeatureHandler
         var casterNode2D = (Node2D)caster;
 
         // 从技能配置中读取参数
-        var range = ability.Data.Get<float>(DataKey.AbilityEffectRadius);            // 伤害半径
-        var effectScene = ability.Data.Get<PackedScene>(DataKey.EffectScene);        // 特效场景
-        var damage = ability.Data.Get<float>(DataKey.AbilityDamage)                  // 技能基础伤害
-            * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f;             // 施法者技能伤害倍率
+        var range = ability.Data.Get<float>(DataKey.AbilityEffectRadius); // 伤害半径
+        var effectScene = ability.Data.Get<PackedScene>(DataKey.EffectScene); // 特效场景
+        var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 技能最终伤害
 
         // 执行命中（目标查询 + 特效 + 伤害，三步合一；位置来源统一收口到 Query / Effect 参数中）
         var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions
         {
             Query = new TargetSelectorQuery
             {
-                Geometry = GeometryType.Circle,         // 圆形范围，以施法者为圆心
-                Origin = casterNode2D.GlobalPosition,   // 初始位置
+                Geometry = GeometryType.Circle, // 圆形范围，以施法者为圆心
+                Origin = casterNode2D.GlobalPosition, // 初始位置
                 OriginProvider = () => casterNode2D.GlobalPosition, // DoT tick 时持续跟随施法者当前位置
-                Range = range,                          // 查询半径
-                CenterEntity = caster,                  // 阵营判断基准
-                TeamFilter = AbilityTargetTeamFilter.Enemy, // 阵营过滤
-                MaxTargets = -1                         // 不限命中数量
+                Range = range, // 查询半径
+                CenterEntity = caster, // 阵营判断基准
+                TeamFilter = TeamFilter.Enemy, // 阵营过滤
+                MaxTargets = -1 // 不限命中数量
             },
             Effect = effectScene != null
                 ? new EffectSpawnOptions(
@@ -55,10 +54,9 @@ internal class CircleDamageExecutor : AbilityFeatureHandler
             Damage = new DamageApplyOptions
             {
                 Damage = damage, // 技能最终伤害
-                Type = DamageType.Magical,                                   // 魔法伤害
-                Tags = DamageTags.Area | DamageTags.Ability,                 // 范围技能标签
-                Attacker = casterNode2D,                                     // 伤害来源
-                ApplyImmediateTick = ability.Data.Get<bool>(DataKey.AbilityApplyImmediateDamage) // 当前未配置 DoT 时间参数，此字段暂不生效；补上 TickInterval/TotalDuration 后才会参与首跳控制
+                Type = DamageType.Magical, // 魔法伤害
+                Tags = DamageTags.Area | DamageTags.Ability, // 范围技能标签
+                Attacker = casterNode2D, // 伤害来源
             }
         });
 

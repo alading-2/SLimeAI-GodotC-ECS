@@ -193,7 +193,7 @@ public partial class AbilitySystemPipelineTest : Node
         );
 
         AbilityToolPipelineTestHandler.ExecuteCount = 0;
-        AbilityToolPipelineTestHandler.LastDamage = 0f;
+        AbilityToolPipelineTestHandler.finalDamage = 0f;
         AbilityToolPipelineTestHandler.LastCasterName = string.Empty;
 
         var context = new CastContext
@@ -220,7 +220,7 @@ public partial class AbilitySystemPipelineTest : Node
         AssertEqual(
             "AbilityTool 应能正确计算技能伤害倍率",
             30f, //期望伤害
-            AbilityToolPipelineTestHandler.LastDamage //实际伤害
+            AbilityToolPipelineTestHandler.finalDamage //实际伤害
         );
         AssertEqual(
             "AbilityTool 应能读取施法者节点",
@@ -296,7 +296,7 @@ internal sealed class AbilityToolPipelineTestHandler : AbilityFeatureHandler
     public const string HandlerId = "测试.技能.流水线.AbilityToolBridgeAbility";
 
     public static int ExecuteCount { get; set; }
-    public static float LastDamage { get; set; }
+    public static float finalDamage { get; set; }
     public static string LastCasterName { get; set; } = string.Empty;
 
     [ModuleInitializer]
@@ -314,8 +314,7 @@ internal sealed class AbilityToolPipelineTestHandler : AbilityFeatureHandler
         var casterNode = (Node2D)caster;
 
         ExecuteCount++;
-        LastDamage = ability.Data.Get<float>(DataKey.AbilityDamage)
-            * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f;
+        finalDamage = ability.Data.Get<float>(DataKey.FinalAbilityDamage);
         LastCasterName = casterNode.Name.ToString();
 
         return new AbilityExecutedResult

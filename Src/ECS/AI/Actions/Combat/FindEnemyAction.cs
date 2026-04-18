@@ -19,7 +19,9 @@ public class FindEnemyAction : BehaviorNode
     /// <summary>
     /// 创建索敌动作节点
     /// </summary>
-    public FindEnemyAction() : base("索敌") { }
+    public FindEnemyAction() : base("索敌")
+    {
+    }
 
     /// <inheritdoc/>
     public override NodeState Evaluate(AIContext ctx)
@@ -53,7 +55,7 @@ public class FindEnemyAction : BehaviorNode
             Origin = selfNode.GlobalPosition,
             Range = detectionRange,
             CenterEntity = ctx.Entity,
-            TeamFilter = AbilityTargetTeamFilter.Enemy,
+            TeamFilter = TeamFilter.Enemy,
             Sorting = TargetSorting.HighestThreat,
             MaxTargets = 1
         });

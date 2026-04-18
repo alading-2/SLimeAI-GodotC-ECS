@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Godot;
@@ -11,7 +10,7 @@ public readonly record struct ChainBounceContext(
     float Range,
     float Delay,
     float DamageDecay,
-    AbilityTargetTeamFilter TeamFilter,
+    TeamFilter TeamFilter,
     TargetSorting Sorting,
     PackedScene? LineScene
 );
@@ -50,7 +49,7 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
         var firstTarget = FindInitialTarget(caster, ability);
         if (firstTarget == null)
         {
-            _log.Warn("链式闪电执行跳过：没有有效目标");
+            _log.Info("链式闪电执行跳过：没有有效目标");
             return new AbilityExecutedResult();
         }
 
@@ -63,21 +62,21 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
         if (chainCount <= 0) chainCount = 1;
 
         // 计算初始伤害：技能基础伤害 × 施法者技能伤害倍率
-        var initialDamage = ability.Data.Get<float>(DataKey.AbilityDamage)
-            * caster.Data.Get<float>(DataKey.AbilityDamageBonus) / 100f;
+        var initialDamage = ability.Data.Get<float>(DataKey.FinalAbilityDamage);
 
         var bounceContext = new ChainBounceContext
         {
-            Caster = caster,
-            Delay = ability.Data.Get<float>(DataKey.AbilityChainDelay),
-            Range = ability.Data.Get<float>(DataKey.AbilityChainRange),
-            DamageDecay = ability.Data.Get<float>(DataKey.AbilityChainDamageDecay) / 100f,
-            TeamFilter = AbilityTargetTeamFilter.Enemy,
-            Sorting = TargetSorting.Nearest,
-            LineScene = ability.Data.Get<PackedScene>(DataKey.AbilityChainLineEffect)
+            Caster = caster, // 技能施法者
+            Delay = ability.Data.Get<float>(DataKey.AbilityChainDelay), // 技能链式延迟
+            Range = ability.Data.Get<float>(DataKey.AbilityChainRange), // 技能链式范围
+            DamageDecay = ability.Data.Get<float>(DataKey.AbilityChainDamageDecay) / 100f, // 技能链式伤害衰减
+            TeamFilter = TeamFilter.Enemy, // 技能链式目标阵营
+            Sorting = TargetSorting.Nearest, // 技能链式目标排序
+            LineScene = ability.Data.Get<PackedScene>(DataKey.AbilityChainLineEffect) // 技能链式特效
         };
 
-        _log.Debug($"[Execute起步] 目标数: 1, 施法者: {(caster as Node)?.Name}, 第一目标: {(firstTarget as Node)?.Name}, 第一目标类型: {firstTarget.GetType().Name}, 第一目标是否死亡: {firstTarget.Data.Get<bool>(DataKey.IsDead)}");
+        _log.Debug(
+            $"[Execute起步] 目标数: 1, 施法者: {(caster as Node)?.Name}, 第一目标: {(firstTarget as Node)?.Name}, 第一目标类型: {firstTarget.GetType().Name}, 第一目标是否死亡: {firstTarget.Data.Get<bool>(DataKey.IsDead)}");
 
         // 发起第一击
         ExecuteBounce(bounceContext, caster, firstTarget, initialDamage, chainCount, new HashSet<IEntity>());
@@ -105,7 +104,7 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
             Origin = casterNode.GlobalPosition, //查询中心
             Range = castRange, //查询半径
             CenterEntity = caster, //中心实体
-            TeamFilter = AbilityTargetTeamFilter.Enemy, //阵营过滤
+            TeamFilter = TeamFilter.Enemy, //阵营过滤
             Sorting = TargetSorting.Nearest, //排序方式
             MaxTargets = 1 //最大目标数
         });
@@ -132,7 +131,8 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
         }
 
         bool isDead = currentTarget.Data.Get<bool>(DataKey.IsDead);
-        _log.Debug($"[弹跳准备] 起点: {(fromEntity as Node)?.Name}, 终点Entity: {(currentTarget as Node)?.Name}, 类型: {currentTarget.GetType().Name}, 死亡状态: {isDead}, 节点有效: {GodotObject.IsInstanceValid(currentTarget as GodotObject)}, 实例ID: {(currentTarget as Node)?.GetInstanceId()}");
+        _log.Debug(
+            $"[弹跳准备] 起点: {(fromEntity as Node)?.Name}, 终点Entity: {(currentTarget as Node)?.Name}, 类型: {currentTarget.GetType().Name}, 死亡状态: {isDead}, 节点有效: {GodotObject.IsInstanceValid(currentTarget as GodotObject)}, 实例ID: {(currentTarget as Node)?.GetInstanceId()}");
 
         // 2. 造成伤害与画线
         if (currentTarget is IUnit unitVictim && currentTarget is Node2D targetNode)
@@ -149,9 +149,11 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
             };
 
             float dodgeChance = unitVictim.Data.Get<float>(DataKey.DodgeChance);
-            _log.Debug($"[伤害发送前] 期望结算伤害: {currentDamage}, 目标当前Hp: {unitVictim.Data.Get<float>(DataKey.CurrentHp)}, IsDead: {isDead}, IsInvulnerable: {unitVictim.Data.Get<bool>(DataKey.IsInvulnerable)}, LifecycleState: {unitVictim.Data.Get<LifecycleState>(DataKey.LifecycleState)}, DodgeChance: {dodgeChance}");
+            _log.Debug(
+                $"[伤害发送前] 期望结算伤害: {currentDamage}, 目标当前Hp: {unitVictim.Data.Get<float>(DataKey.CurrentHp)}, IsDead: {isDead}, IsInvulnerable: {unitVictim.Data.Get<bool>(DataKey.IsInvulnerable)}, LifecycleState: {unitVictim.Data.Get<LifecycleState>(DataKey.LifecycleState)}, DodgeChance: {dodgeChance}");
             DamageService.Instance.Process(damageInfo);
-            _log.Debug($"[伤害发送后] 实际最终伤害: {damageInfo.FinalDamage}, 目标当前Hp: {unitVictim.Data.Get<float>(DataKey.CurrentHp)} (如果无伤害，可能是被闪避或因为目标已标记为Dead)");
+            _log.Debug(
+                $"[伤害发送后] 实际最终伤害: {damageInfo.FinalDamage}, 目标当前Hp: {unitVictim.Data.Get<float>(DataKey.CurrentHp)} (如果无伤害，可能是被闪避或因为目标已标记为Dead)");
 
             // 绘制特效
             if (context.LineScene != null)
@@ -229,13 +231,15 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
 
         // 执行查询
         var candidates = EntityTargetSelector.Query(query);
-        _log.Debug($"[TargetQuery] 在 {searchOrigin} 半径 {context.Range} 内搜到 {candidates.Count} 个候选者, TeamFilter={context.TeamFilter}");
+        _log.Debug(
+            $"[TargetQuery] 在 {searchOrigin} 半径 {context.Range} 内搜到 {candidates.Count} 个候选者, TeamFilter={context.TeamFilter}");
 
         // 遍历候选目标，返回第一个不在排除列表中的目标
         foreach (var candidate in candidates)
         {
             bool isExcluded = excludeTargets.Contains(candidate);
-            _log.Debug($"[TargetQuery - 候选] Entity: {(candidate as Node)?.Name}, 类型: {candidate.GetType().Name}, 是否死亡: {candidate.Data.Get<bool>(DataKey.IsDead)}, 是否已命中: {isExcluded}");
+            _log.Debug(
+                $"[TargetQuery - 候选] Entity: {(candidate as Node)?.Name}, 类型: {candidate.GetType().Name}, 是否死亡: {candidate.Data.Get<bool>(DataKey.IsDead)}, 是否已命中: {isExcluded}");
             if (!isExcluded)
             {
                 _log.Debug($"[TargetQuery - 选中] 决定弹跳至: {(candidate as Node)?.Name}");
