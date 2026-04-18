@@ -121,7 +121,7 @@ Player / Enemy (CharacterBody2D)
 - 视觉体根节点是 `Area2D` 时，优先复用 `CollisionComponent`
 - 受击区业务优先复用 `HurtboxComponent`
 - 不要试图让 `CollisionComponent` 统一接管 `CharacterBody2D` 的运动碰撞
-- 若需要从任意碰撞节点回溯宿主实体，优先使用 `EntityManager.ResolveOwningIEntity(...)`
+- 运动碰撞链路当前约定 `CollisionEntered/Exited.Target` 直接就是 `IEntity` 根节点；不要再依赖 `EntityManager.ResolveOwningIEntity(...)` 做宿主回溯
 
 ## 7. 关键文件
 

@@ -205,11 +205,6 @@ namespace Slime.Test
             var source = new MockEntity("ArcSource", Team.Player, EntityType.Projectile);
             var trackedEnemy = new MockEntity("TrackedEnemy", Team.Enemy, EntityType.Unit);
             var otherEnemy = new MockEntity("OtherEnemy", Team.Enemy, EntityType.Unit);
-            var trackedHurtbox = new Area2D();
-            var otherHurtbox = new Area2D();
-
-            trackedEnemy.AddChild(trackedHurtbox);
-            otherEnemy.AddChild(otherHurtbox);
             AddChild(source);
             AddChild(trackedEnemy);
             AddChild(otherEnemy);
@@ -228,10 +223,11 @@ namespace Slime.Test
             };
             policy.Reset(@params);
 
-            bool otherAccepted = policy.TryAccept(source, MoveMode.CircularArc, @params, otherHurtbox, out _);
+            // 现行契约：运动碰撞目标直接就是 IEntity 根节点，不再从 hurtbox 子节点向上回溯宿主。
+            bool otherAccepted = policy.TryAccept(source, MoveMode.CircularArc, @params, otherEnemy, out _);
             AssertEqual("非锁定目标应被拒绝", false, otherAccepted);
 
-            bool trackedAccepted = policy.TryAccept(source, MoveMode.CircularArc, @params, trackedHurtbox, out var trackedContext);
+            bool trackedAccepted = policy.TryAccept(source, MoveMode.CircularArc, @params, trackedEnemy, out var trackedContext);
             AssertEqual("锁定目标应通过匹配", true, trackedAccepted);
             AssertEqual("锁定目标首碰即停", true, trackedContext.WillStop);
             AssertEqual("锁定目标实体解析", trackedEnemy, trackedContext.TargetEntity);

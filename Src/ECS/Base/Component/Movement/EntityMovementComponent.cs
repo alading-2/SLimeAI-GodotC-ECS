@@ -372,78 +372,6 @@ public partial class EntityMovementComponent : Node, IComponent
         }
     }
 
-    // ================= 碰撞处理 =================
-
-    /// <summary>
-    /// 碰撞进入回调（由 CollisionComponent 通过 Entity.Events 转发，仅 Area2D Entity 根节点触发）
-    /// <para>仅在非默认运动模式下响应，避免常驻 AI/Player 模式产生噪声事件。</para>
-    /// </summary>
-    private void OnCollisionDetected(GameEventType.Collision.CollisionEnteredEventData evt)
-    {
-        if (_entity == null || _data == null) return;
-        if (_moveCompleted) return;
-
-        var mode = _data.Get<MoveMode>(DataKey.MoveMode);
-        var defaultMode = _data.Get<MoveMode>(DataKey.DefaultMoveMode);
-        // 移动模式为defaultMode或None不运行
-        if (mode == defaultMode || mode == MoveMode.None) return;
-
-        TryHandleRawCollision(evt.Target);
-    }
-
-    /// <summary>
-    /// 处理一次原始碰撞候选。
-    /// </summary>
-    private void TryHandleRawCollision(Node2D? target)
-    {
-        if (_moveCompleted) return;
-        if (_entity == null || _data == null) return;
-        if (!_collisionPolicy.IsEnabled) return;
-
-        var moveMode = _data.Get<MoveMode>(DataKey.MoveMode);
-        var defaultMode = _data.Get<MoveMode>(DataKey.DefaultMoveMode);
-        if (moveMode == MoveMode.None || moveMode == defaultMode) return;
-
-        if (!_collisionPolicy.TryAccept(_entity, moveMode, _params, target, out var context))
-        {
-            return;
-        }
-
-        if (_params.Collision.HasValue)
-        {
-            var collision = _params.Collision.Value;
-            collision.OnCollision?.Invoke(context);
-
-            if (collision.EmitCollisionEvent)
-            {
-                _entity.Events.Emit(
-                    GameEventType.Unit.MovementCollision,
-                    new GameEventType.Unit.MovementCollisionEventData(
-                        context.Mode,
-                        context.TargetNode,
-                        context.TargetEntity,
-                        context.CollisionCount,
-                        context.WillStop));
-            }
-
-            _log.Debug(
-                $"[{(_entity as Node)?.Name}] 运动碰撞 Mode={moveMode}, Target={context.TargetNode.Name}, Count={context.CollisionCount}, WillStop={context.WillStop}");
-
-            if (context.WillStop)
-            {
-                _entity.Events.Emit(
-                    GameEventType.Unit.MovementStopRequested,
-                    new GameEventType.Unit.MovementStopRequestedEventData
-                    {
-                        Reason = MovementStopReason.Collision,
-                        EmitCompletedEvent = true,
-                        CollisionTarget = context.TargetNode, //碰撞目标
-                        DestroyEntity = collision.DestroyOnStop //停止后销毁
-                    });
-            }
-        }
-    }
-
     /// <summary>
     /// 停止请求回调。
     /// </summary>
@@ -459,7 +387,13 @@ public partial class EntityMovementComponent : Node, IComponent
 
     /// <summary>
     /// 统一执行当前运动的停止流程。
+    /// <para>流程：1.协调器解析停止决议 → 2.标记完成 → 3.停止策略 → 4.发事件 → 5.销毁/切换/归零</para>
     /// </summary>
+    /// <param name="reason">停止原因（Completed/Collision/Interrupted/ComponentUnregistered）</param>
+    /// <param name="emitCompletedEvent">是否请求发出 MovementCompleted 事件（协调器可能覆盖）</param>
+    /// <param name="requestedNextMode">请求的后续运动模式（协调器可能覆盖）</param>
+    /// <param name="collisionTarget">碰撞目标节点（仅 Collision 原因时有效）</param>
+    /// <param name="destroyEntity">是否请求销毁实体（协调器可能覆盖）</param>
     private void StopMovement(
         MovementStopReason reason,
         bool emitCompletedEvent = true,
@@ -467,11 +401,15 @@ public partial class EntityMovementComponent : Node, IComponent
         Node2D? collisionTarget = null,
         bool destroyEntity = false)
     {
+        // 前置守卫：实体/数据/策略任一无效则跳过
         if (_entity == null || _data == null) return;
         if (_currentStrategy == null) return;
 
+        // 读取当前模式与默认模式，供协调器裁决
         var mode = _data.Get<MoveMode>(DataKey.MoveMode);
         var defaultMode = _data.Get<MoveMode>(DataKey.DefaultMoveMode);
+
+        // 协调器根据当前模式、停止原因、请求参数，输出最终决议
         var resolution = MovementStopCoordinator.Resolve(
             mode,
             defaultMode,
@@ -481,11 +419,14 @@ public partial class EntityMovementComponent : Node, IComponent
             requestedNextMode,
             destroyEntity);
 
+        // 标记运动已完成，防止重复停止
         _moveCompleted = true;
 
+        // 通知策略执行 OnStop 回调，传入停止上下文
         StopCurrentStrategy(reason, resolution.NextMode, collisionTarget);
         _currentStrategy = null;
 
+        // 按决议发出 MovementCompleted 事件
         if (resolution.EmitCompletedEvent)
         {
             _entity.Events.Emit(
@@ -501,6 +442,7 @@ public partial class EntityMovementComponent : Node, IComponent
         _log.Debug(
             $"[{(_entity as Node)?.Name}] 停止运动 Mode={mode}, Reason={reason}, EmitCompleted={resolution.EmitCompletedEvent}, Destroy={resolution.DestroyEntity}, NextMode={resolution.NextMode}");
 
+        // 决议要求销毁实体（如炮弹碰撞后 DestroyOnCollision）
         if (resolution.DestroyEntity)
         {
             if (_entity is Node entityNode)
@@ -510,12 +452,14 @@ public partial class EntityMovementComponent : Node, IComponent
             return;
         }
 
+        // 决议要求切换到后续运动模式（如冲刺结束后回到巡逻）
         if (resolution.NextMode != MoveMode.None)
         {
             SwitchStrategy(new MovementParams { Mode = resolution.NextMode });
             return;
         }
 
+        // 无后续模式，归零当前运动模式
         _data.Set(DataKey.MoveMode, MoveMode.None);
     }
 

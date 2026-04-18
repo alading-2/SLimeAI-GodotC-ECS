@@ -26,7 +26,7 @@ public readonly record struct MovementCollisionParams
     /// <summary>目标匹配模式。</summary>
     public MovementCollisionTargetMatchMode TargetMatchMode { get; init; } = MovementCollisionTargetMatchMode.Any;
 
-    /// <summary>当 <see cref="TargetMatchMode"/> 为 <c>SpecificNode</c> 时使用的目标节点。</summary>
+    /// <summary>当 <see cref="TargetMatchMode"/> 为 <c>SpecificNode</c> 指定节点时使用的目标节点。</summary>
     public Node2D? SpecificTargetNode { get; init; } = null;
 
     /// <summary>
@@ -35,7 +35,13 @@ public readonly record struct MovementCollisionParams
     /// </summary>
     public int StopAfterCollisionCount { get; init; } = -1;
 
-    /// <summary>因碰撞停止后是否销毁实体。</summary>
+    /// <summary>
+    /// 因碰撞触发停止后是否销毁实体。
+    /// <para>
+    /// 只有当 <see cref="StopAfterCollisionCount"/> 达到阈值并触发“碰撞停止”（WillStop=true）时才会生效；
+    /// 若 <see cref="StopAfterCollisionCount"/> = -1（只通知不停止），该值不会被检查。
+    /// </para>
+    /// </summary>
     public bool DestroyOnStop { get; init; } = false;
 
     /// <summary>是否对有效碰撞发出 <c>MovementCollision</c> 事件。</summary>

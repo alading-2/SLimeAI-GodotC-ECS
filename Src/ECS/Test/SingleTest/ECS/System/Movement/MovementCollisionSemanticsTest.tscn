@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://blgn24xnb4nk6"]
-
-[ext_resource type="Script" path="res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionSemanticsTest.cs" id="1_script"]
-
-[node name="MovementCollisionSemanticsTest" type="Node" unique_id=869046992]
-script = ExtResource("1_script")

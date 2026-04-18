@@ -50,8 +50,8 @@ public sealed class MovementCollisionPolicy
         }
 
         var config = _config.Value;
-        // 将碰撞节点解析为其所属的 IEntity（可能为 null，如静态障碍物）
-        var targetEntity = EntityManager.ResolveOwningIEntity(target);
+        // 运动系统约定碰撞目标直接就是 IEntity；非 IEntity 目标只参与节点级匹配，不参与阵营/类型过滤。
+        var targetEntity = target as IEntity;
         // 阵营 / 实体类型 / 目标匹配 三重过滤
         if (!PassFilters(sourceEntity, config, @params, target, targetEntity))
         {
@@ -159,7 +159,7 @@ public sealed class MovementCollisionPolicy
     }
 
     /// <summary>
-    /// 判断实际碰撞目标是否为期望目标：先比较节点实例ID，再比较所属 IEntity 引用。
+    /// 判断实际碰撞目标是否为期望目标：优先比较节点实例ID，必要时再比较 IEntity 引用。
     /// </summary>
     private static bool MatchesTarget(Node2D? expectedNode, Node2D actualTarget, IEntity? actualTargetEntity)
     {
@@ -174,8 +174,8 @@ public sealed class MovementCollisionPolicy
             return true;
         }
 
-        // 节点不同但可能属于同一 Entity（如子节点碰撞），比较 Entity 引用
-        var expectedEntity = EntityManager.ResolveOwningIEntity(expectedNode);
+        // 约定运动系统显式传入的目标就是 IEntity，本分支只做 IEntity 引用比对，不再向上回溯宿主。
+        var expectedEntity = expectedNode as IEntity;
         if (expectedEntity == null || actualTargetEntity == null)
         {
             return false;
