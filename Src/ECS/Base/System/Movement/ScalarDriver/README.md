@@ -235,7 +235,7 @@ if (_radiusScalarDriver.HasValue)
 
 建议按以下顺序阅读：
 
-1. `Src/ECS/Base/System/Movement/MovementParams.cs`
+1. `Src/ECS/Base/System/Movement/Config/MovementParams.cs`
 2. `Src/ECS/Base/System/Movement/ScalarDriver/ScalarMotion.cs`
 3. `Src/ECS/Base/System/Movement/Strategies/Orbit/OrbitStrategy.cs`
 4. `Src/ECS/Base/System/Movement/Strategies/Wave/SineWaveStrategy.cs`

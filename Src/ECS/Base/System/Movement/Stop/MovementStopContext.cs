@@ -58,6 +58,11 @@ public readonly struct MovementStopContext
     public bool IsInterrupted => Reason == MovementStopReason.Interrupted;
 
     /// <summary>
+    /// 当前停止是否由外部停止请求触发。
+    /// </summary>
+    public bool IsRequested => Reason == MovementStopReason.Requested;
+
+    /// <summary>
     /// 当前停止是否由碰撞触发。
     /// </summary>
     public bool IsCollision => Reason == MovementStopReason.Collision;

@@ -61,7 +61,13 @@ internal class OrbitSkillExecutor : AbilityFeatureHandler
                         IsOrbitClockwise = true,
                         MaxDuration = orbitDuration,
                         DestroyOnComplete = true,
-                        DestroyOnCollision = false,
+                        Collision = new MovementCollisionParams
+                        {
+                            TeamFilter = TeamFilter.Enemy, //阵营过滤
+                            EntityTypeFilter = EntityType.Unit, //实体类型过滤
+                            StopAfterCollisionCount = -1, //只通知不停止
+                            DestroyOnStop = false //不因碰撞销毁
+                        },
                         RotateToVelocity = false,
                     }
                 )
@@ -77,7 +83,8 @@ internal class OrbitSkillExecutor : AbilityFeatureHandler
         Node2D casterNode,
         float damage)
     {
-        if (evt.Target is not IEntity targetEntity) return;
+        if (evt.TargetEntity == null) return;
+        var targetEntity = evt.TargetEntity;
         if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return;
 
         AbilityImpactTool.Execute(caster, new AbilityImpactOptions

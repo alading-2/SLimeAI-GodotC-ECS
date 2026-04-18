@@ -2,7 +2,7 @@
 
 ## 核心定位
 
-让实体按照指定轨迹稳定移动。策略只写 `DataKey.Velocity`，调度器统一执行位移。
+让实体按照指定轨迹稳定移动。策略只写 `DataKey.Velocity`，调度器统一执行位移、停止、碰撞筛选与生命周期收口。
 
 ## 调用方式
 
@@ -13,10 +13,10 @@ entity.Events.Emit(
     GameEventType.Unit.MovementStarted,
     new GameEventType.Unit.MovementStartedEventData(MoveMode.TargetPoint, new MovementParams
     {
-        Mode        = MoveMode.TargetPoint,
+        Mode = MoveMode.TargetPoint,
         TargetPoint = new Vector2(900, 360),
-        MaxDistance = 300f,         // 可选，-1 不限制
-        DestroyOnComplete = true,   // 可选
+        MaxDistance = 300f, // 可选，-1 不限制
+        DestroyOnComplete = true, // 可选
     }));
 ```
 
@@ -24,101 +24,151 @@ entity.Events.Emit(
 
 | MoveMode | 策略类 | 典型用途 | 关键 MovementParams 字段 |
 |----------|--------|----------|--------------------------|
-| `FixedDirection` | FixedDirectionStrategy | 直线飞行 | MaxDistance（先写 DataKey.Velocity） |
-| `TargetPoint` | TargetPointStrategy | 冲向指定坐标 | TargetPoint, ReachDistance |
-| `TargetEntity` | TargetEntityStrategy | 追踪实体 | TargetNode, ReachDistance |
-| `OrbitPoint` | OrbitPointStrategy | 围绕固定点环绕 | OrbitCenter, OrbitRadius, OrbitAngularSpeed |
-| `OrbitEntity` | OrbitEntityStrategy | 围绕目标实体 | TargetNode, OrbitRadius, OrbitAngularSpeed |
-| `Spiral` | SpiralStrategy | 螺旋收缩/扩张 | OrbitCenter, OrbitRadius, OrbitTargetRadius, OrbitAngularSpeed |
-| `SineWave` | SineWaveStrategy | 正弦波弹道 | WaveAmplitude / WaveFrequency + 可选 `WaveAmplitudeScalarDriver` / `WaveFrequencyScalarDriver` |
-| `BezierCurve` | BezierCurveStrategy | 曲线弹道 | BezierPoints, MaxDuration（必须 > 0） |
-| `Boomerang` | BoomerangStrategy | 双半椭圆回旋弹道 | TargetPoint, TargetNode, ActionSpeed 或 MaxDuration, BoomerangPauseTime, BoomerangReturnSpeedMultiplier, BoomerangArcHeight, BoomerangIsClockwise |
-| `Parabola` | ParabolaStrategy | 抛物线弹道 / 跳跃位移 | TargetPoint 或 TargetNode, ParabolaApexHeight, ActionSpeed, ReachDistance |
-| `CircularArc` | CircularArcStrategy | 单段圆弧弹道 / 侧切轨迹 | TargetPoint 或 TargetNode, CircularArcRadius, CircularArcClockwise, ActionSpeed, ReachDistance |
-| `AttachToHost` | AttachToHostStrategy | 附着特效 | TargetNode（+DataKey.EffectOffset） |
-| `PlayerInput` | PlayerInputStrategy | 玩家常驻（DefaultMoveMode） | 无，读 DataKey.MoveSpeed/Acceleration |
-| `AIControlled` | AIControlledStrategy | AI 常驻（DefaultMoveMode） | 无，读 DataKey.AIMoveDirection 等 |
+| `FixedDirection` | FixedDirectionStrategy | 直线飞行 | `ActionSpeed` / `MaxDistance`（先写 `DataKey.Velocity`） |
+| `TargetPoint` | TargetPointStrategy | 冲向指定坐标 | `TargetPoint`, `ReachDistance` |
+| `TargetEntity` | TargetEntityStrategy | 追踪实体 | `TargetNode`, `ReachDistance` |
+| `OrbitPoint` | OrbitPointStrategy | 围绕固定点环绕 | `OrbitCenter`, `OrbitRadius`, `OrbitAngularSpeed` |
+| `OrbitEntity` | OrbitEntityStrategy | 围绕目标实体 | `TargetNode`, `OrbitRadius`, `OrbitAngularSpeed` |
+| `Spiral` | SpiralStrategy | 螺旋收缩/扩张 | `OrbitCenter`, `OrbitRadius`, `OrbitTargetRadius`, `OrbitAngularSpeed` |
+| `SineWave` | SineWaveStrategy | 正弦波弹道 | `WaveAmplitude` / `WaveFrequency` + 可选 `Wave*ScalarDriver` |
+| `BezierCurve` | BezierCurveStrategy | 曲线弹道 | `BezierPoints`, `ActionSpeed` 或 `MaxDuration` |
+| `Boomerang` | BoomerangStrategy | 双半椭圆回旋弹道 | `TargetPoint`, `TargetNode`, `ActionSpeed` 或 `MaxDuration`, `Boomerang*` |
+| `Parabola` | ParabolaStrategy | 抛物线弹道 / 跳跃位移 | `TargetPoint` 或 `TargetNode`, `ParabolaApexHeight`, `ActionSpeed`, `ReachDistance` |
+| `CircularArc` | CircularArcStrategy | 单段圆弧弹道 / 侧切轨迹 | `TargetPoint` 或 `TargetNode`, `CircularArcRadius`, `CircularArcClockwise`, `ActionSpeed`, `ReachDistance` |
+| `AttachToHost` | AttachToHostStrategy | 附着特效 | `TargetNode`（+ `DataKey.EffectOffset`） |
+| `PlayerInput` | PlayerInputStrategy | 玩家常驻（DefaultMoveMode） | 无，读 `DataKey.MoveSpeed/Acceleration` |
+| `AIControlled` | AIControlledStrategy | AI 常驻（DefaultMoveMode） | 无，读 `DataKey.AIMoveDirection` 等 |
 
 ## 职责分工
 
-- **业务层**：构建 `MovementParams`，触发 `MovementStarted` 事件，监听 `MovementCompleted`
-- **策略**：读 `MovementParams`，计算本帧意图写入 `DataKey.Velocity`，私有字段存运行时状态；停止时通过 `OnStop(in MovementStopContext)` 接收统一结束语义
-- **组件**：持有 `_params`/`_elapsedTime`/`_traveledDistance`，切换策略，执行位移，检查结束，发事件，并统一分发停止原因
+- **业务层**：构建 `MovementParams`，触发 `MovementStarted`，必要时监听 `MovementCollision` / `MovementCompleted`
+- **策略**：读 `MovementParams`，计算本帧意图写入 `DataKey.Velocity`，需要时通过 `MovementUpdateResult` 显式返回 `FacingDirection`
+- **组件**：持有 `_params` / `_elapsedTime` / `_traveledDistance`，切换策略，执行位移，消费碰撞候选，统一停止流程
+- **碰撞策略子模块**：`MovementCollisionPolicy` 负责过滤、去重、计数、生成 `MovementCollisionContext`
+- **停止协调子模块**：`MovementStopCoordinator` 统一决定是否发完成事件、是否销毁、切到哪个模式
 
 ## 结束条件
 
-- `MaxDuration >= 0`：时间限制（-1=不限制）
-- `MaxDistance >= 0`：距离限制（-1=不限制）
+- `MaxDuration >= 0`：时间限制（`-1` = 不限制）
+- `MaxDistance >= 0`：距离限制（`-1` = 不限制）
 - 策略返回 `MovementUpdateResult.Complete()`：主动完成
-- `DestroyOnComplete = true`：完成后销毁；否则回退 `DefaultMoveMode`
-- `DestroyOnCollision = true`：碰撞后销毁（同时先触发 `MovementCollision` 事件）
+- `DestroyOnComplete = true`：自然完成后销毁；否则按默认逻辑回退 `DefaultMoveMode`
+- 外部或内部都可以发送 `MovementStopRequested` 停止当前运动，并用 `EmitCompletedEvent / DestroyEntity / NextMode` 控制收口行为
 
 ## 生命周期
 
 - `OnEnter`：策略进入时初始化运行时缓存
 - `Update`：每帧计算运动意图
 - `OnStop`：统一停止回调，`MovementStopContext` 会携带 `Reason / Params / CollisionTarget / NextMode`
-- `MovementStopReason`：当前内置 `Completed / Collision / Interrupted / ComponentUnregistered`
+- `MovementStopReason`：当前内置 `Completed / Collision / Requested / Interrupted / ComponentUnregistered`
 
-`MovementCompletedEventData` 直接携带 `ElapsedTime` / `TraveledDistance`，无需读 DataKey。
+`MovementCompletedEventData` 直接携带 `ElapsedTime / TraveledDistance / Reason / CollisionTarget`，无需读 DataKey。
 
-## 碰撞处理（OnCollision）
+## 移动碰撞语义（2026-04 重构）
 
-### 触发条件
-- **仅在非默认运动模式下生效**（非 `AIControlled` / `PlayerInput`），避免常驻移动频繁触发。
-- `Area2D` 实体：`CollisionComponent` 将 `BodyEntered/AreaEntered` 信号转发为 `CollisionEntered` 事件，`EntityMovementComponent` 订阅后触发。
-- `CharacterBody2D` 实体：`ApplyMovement` 在 `MoveAndSlide()` 后检测 `GetSlideCollisionCount() > 0`，**同一次运动内只触发一次**（由 `_hasCollided` 防止连续帧重复）。
+### 1. 分层语义
 
-### 事件流程
+移动层现在把碰撞拆成 4 段，而不是“碰到就结束”：
 
-```
-碰撞发生
-  ↓
-EntityMovementComponent.HandleMovementCollision()
-  ↓
-1. 发布 GameEventType.Unit.MovementCollision（含 Mode / Target）
-  ↓
-2. 若 DestroyOnCollision=true → OnMoveComplete(byCollision=true)
-     → 发布 MovementCompleted
-     → EntityManager.Destroy
-```
+1. 原始碰撞候选：来自 `CollisionComponent` 或 `CharacterBody2D.MoveAndSlide()`
+2. `MovementCollisionPolicy` 过滤：判断这次碰撞是否有效
+3. 碰撞通知：执行 `MovementCollisionParams.OnCollision`，可选发 `MovementCollision`
+4. 停止收口：只有达到 `StopAfterCollisionCount` 阈值时，才发 `MovementStopRequested`
 
-其中：
+因此 `MovementCollision` 现在表示“有效碰撞通知”，不再等价于“运动已经结束”。
 
-- `Target` 是碰撞到的 `Node2D?`
-- 如果业务要拿到目标实体，应自行从 `evt.Target` 回溯宿主 `IEntity`
+### 2. `MovementParams.Collision`
 
-### 典型用法：发射炮弹打敌人
+旧字段 `DestroyOnCollision` 已废弃，改为：
 
 ```csharp
-// 1. 发射前订阅碰撞事件
-bullet.Events.On<GameEventType.Unit.MovementCollisionEventData>(
-    GameEventType.Unit.MovementCollision, OnBulletHit);
-
-// 2. 启动运动
-bullet.Events.Emit(GameEventType.Unit.MovementStarted,
-    new GameEventType.Unit.MovementStartedEventData(MoveMode.FixedDirection, new MovementParams
-    {
-        MaxDistance       = 600f,
-        DestroyOnCollision = true,   // 命中即销毁
-    }));
-
-// 3. 命中回调（在炮弹所属的技能组件中）
-private void OnBulletHit(GameEventType.Unit.MovementCollisionEventData evt)
+Collision = new MovementCollisionParams
 {
-    var targetEntity = EntityManager.ResolveOwningIEntity(evt.Target);
-    if (targetEntity == null) return;
-    DamageService.Instance.Process(new DamageInfo { ... });
-}
+    TeamFilter = TeamFilter.Enemy, // 阵营过滤
+    EntityTypeFilter = EntityType.Unit, // 实体类型过滤
+    TargetMatchMode = MovementCollisionTargetMatchMode.Any, // 目标匹配
+    StopAfterCollisionCount = 2, // 第 2 个有效碰撞后停止，-1 = 只通知不停止
+    DestroyOnStop = true, // 停止后销毁
+    EmitCollisionEvent = true, // 是否发 MovementCollision
+    OnCollision = ctx => { } // 本地碰撞回调
+};
 ```
 
-### `DestroyOnCollision` vs `DestroyOnComplete`
+### 3. `Area2D` 与 `CharacterBody2D` 分工
 
-| 参数 | 触发时机 |
-|------|---------|
-| `DestroyOnComplete` | 时间/距离/策略主动完成时销毁 |
-| `DestroyOnCollision` | 碰撞时销毁（MovementCollision 事件已先发布） |
-| 两者同时为 true | 先到者触发销毁 |
+- `Area2D` 路径：由 `CollisionComponent` 统一桥接 `CollisionEntered`
+- `CharacterBody2D` 路径：仍需在 `MoveAndSlide()` 之后读取 `GetSlideCollisionCount() / GetSlideCollision(i)`
+
+这不是补丁式做法，而是 Godot 物理模型本身的差异。`CharacterBody2D` 没有 `Area2D` 那组 entered/exited 事件，移动组件只能消费 slide collision 作为原始候选。
+
+### 4. 去重与计数
+
+- 同一目标在同一次运动内只计数一次
+- 优先用宿主实体实例 ID 去重；没有宿主实体时回退到碰撞节点实例 ID
+- 因此可以正确支持“穿透 2 个敌人后结束”“只对锁定目标计数”“只通知不停止”
+
+### 5. 停止请求事件
+
+统一停止入口为：
+
+```csharp
+entity.Events.Emit(
+    GameEventType.Unit.MovementStopRequested,
+    new GameEventType.Unit.MovementStopRequestedEventData
+    {
+        Reason = MovementStopReason.Requested,
+        EmitCompletedEvent = false,
+        NextMode = MoveMode.None,
+        DestroyEntity = false
+    });
+```
+
+语义说明：
+
+- `EmitCompletedEvent = false`：只停当前运动，不发 `MovementCompleted`
+- `NextMode = MoveMode.None`：表示“沿用默认回退逻辑”，不是“强制停到 None”
+- 若确实要强制切到某模式，显式填写 `NextMode`
+
+## 典型用法
+
+### 1. 命中即停的直线子弹
+
+```csharp
+projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
+    GameEventType.Unit.MovementCollision,
+    evt =>
+    {
+        if (evt.TargetEntity == null) return;
+        // 伤害逻辑
+    });
+
+projectile.Events.Emit(
+    GameEventType.Unit.MovementStarted,
+    new GameEventType.Unit.MovementStartedEventData(
+        MoveMode.FixedDirection,
+        new MovementParams
+        {
+            MaxDistance = 800f,
+            DestroyOnComplete = true,
+            Collision = new MovementCollisionParams
+            {
+                TeamFilter = TeamFilter.Enemy,
+                EntityTypeFilter = EntityType.Unit,
+                StopAfterCollisionCount = 1,
+                DestroyOnStop = true
+            }
+        }));
+```
+
+### 2. ArcShot 追踪特定目标
+
+`ArcShot` 不再监听 `MovementCollision`。正确写法是：
+
+- `CircularArc + isTrackTarget + ReachDistance`
+- 不配置 `Collision`
+- 在 `MovementParams.OnStop` 中只对 `Reason == Completed` 结算伤害
+
+也就是说，ArcShot 的命中语义是“自然到达锁定目标后完成”，不是“物理碰到任意单位就结束”。
 
 ## Velocity 分层合成
 
@@ -131,31 +181,22 @@ VelocityOverride ≠ Zero  → VelocityOverride（击退/硬控）
 ## 扩展新策略
 
 1. `MovementEnums.cs` 新增 `MoveMode`
-2. `MovementParams` 新增所需 `init` 字段（附默认值）；若参数需要在同一策略内连续变化，优先复用 `ScalarDriverParams`
+2. `MovementParams` 新增所需 `init` 字段；若是策略内部连续变化的标量，优先复用 `ScalarDriverParams`
 3. 新建策略类，私有字段存运行时状态，`[ModuleInitializer]` 注册工厂
-4. 补全策略类头注释（描述 + 使用示例 + 典型用途）
+4. 若视觉朝向不应直接取 `Velocity`，通过 `MovementUpdateResult.Continue(distance, facingDirection)` 显式返回朝向
+5. 补全策略类头注释
 
-## 通用标量驱动
+## 测试
 
-- `ScalarDriverParams` 用于描述同一策略内部的标量参数演化，当前已接入：`OrbitRadiusScalarDriver`、`WaveAmplitudeScalarDriver`、`WaveFrequencyScalarDriver`
-- 基础字段仍保留为静态/初始值，例如 `OrbitRadius`、`WaveAmplitude`、`WaveFrequency`
-- `MovementParams` 中驱动字段推荐使用可空：`null` = 不启用驱动；非 `null` 时再由策略私有 `ScalarDriverState` 接管后续演化
-- 已新增 `ScalarDriver/README.md`，集中说明 `ScalarDriver` 的职责边界、边界模式语义、日志上下文和接入方式
-- 边界响应支持 `Clamp / PingPong / Wrap / Complete / Freeze`；`PingPong` 额外支持 `BounceDecay` 与 `StopSpeedThreshold`
-- Orbit 半径演化统一由 `OrbitRadiusScalarDriver` 管理；Wave 侧则分别由 `WaveAmplitudeScalarDriver`、`WaveFrequencyScalarDriver` 管理
-- Boomerang 不是直线往返，而是双半椭圆回旋采样；`BoomerangArcHeight` 控制弧线张力，`BoomerangIsClockwise` 控制偏移方向
+- `Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn`
+- `Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn`
 
-## 曲线策略设计原则
-
-- 曲线策略（Parabola / CircularArc / Boomerang）每帧直接调用 `Evaluate(t)` / `EvaluateTangent(t)` 采样，无需弧长查找表
-- 进度推进统一使用 `speed * delta / curveLength` 驱动，`curveLength` 通过 `ApproximateLength()` 获取
-- 静态目标（`!isTrackTarget`）在 `OnEnter` 时缓存曲线对象和长度，避免每帧重建；动态追踪目标每帧重建曲线
-- `BezierCurveStrategy` 由 `ElapsedTime / MaxDuration` 驱动参数 t，直接调用 `BezierCurve.Evaluate/EvaluateTangent`，无缓存需求
-- 每帧直接参数采样在游戏精度范围内已足够；不追求数学上的绝对匀速
+第二个场景专门锁定移动碰撞协议默认值、过滤/计数、`TrackedTargetOnly`、`MovementStopRequested` 默认语义与 `MovementStopCoordinator` 行为。
 
 ## 阅读顺序
 
-1. `EntityMovementComponent说明.md`：总流程与切换规则
-2. `ScalarDriver/README.md`：通用标量驱动层的职责、调用方式和边界模式语义
-3. 对应策略类头注释：所需 `MovementParams` 字段
+1. `EntityMovementComponent说明.md`：调度器流程与停止收口
+2. `ScalarDriver/README.md`：通用标量驱动职责
+3. 对应策略类头注释：各模式参数语义
 4. `VelocityResolver.cs`：速度是否会被上层覆盖
+5. `Docs/框架/ECS/System/Movement/移动系统设计说明.md`：完整设计说明

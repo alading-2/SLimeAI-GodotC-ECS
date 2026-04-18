@@ -60,16 +60,10 @@ public record struct MovementParams
     /// <summary>移动完成后是否自动销毁实体</summary>
     public bool DestroyOnComplete { get; init; } = false;
     /// <summary>
-    /// 碰撞时是否自动销毁实体。
-    /// <para>
-    /// - Area2D 实体：由 CollisionComponent 发出 CollisionEntered 信号，EntityMovementComponent 监听后触发。
-    /// - CharacterBody2D 实体：MoveAndSlide 检测到碰撞后首次触发（同一次运动内只触发一次）。
-    /// - 碰撞发生时会先发布 <c>GameEventType.Unit.MovementCollision</c> 事件（无论本字段值），
-    ///   业务方可在该事件中执行伤害/特效逻辑，再由本字段决定是否回收实体。
-    /// - 仅在非默认运动模式（非 AIControlled/PlayerInput）下生效，避免常驻移动被误触发。
-    /// </para>
+    /// 本次运动的碰撞策略。
+    /// <para><c>null</c> = 完全忽略移动碰撞语义，不发 <c>MovementCollision</c>，也不因碰撞自动停止。</para>
     /// </summary>
-    public bool DestroyOnCollision { get; init; } = false;
+    public MovementCollisionParams? Collision { get; init; } = null;
 
     // ======== 目标 / 方向 ========
     /// <summary>
@@ -224,7 +218,7 @@ public record struct MovementParams
     /// <summary>
     /// 运动停止时的回调（可选）。
     /// <para>在策略 <c>OnStop</c> 之后、<c>MovementCompleted</c> 事件之前调用。</para>
-    /// <para>通过 <c>context.IsCompleted</c> 区分自然完成与打断/碰撞停止。</para>
+    /// <para>若需要精确区分停止语义，请优先读取 <c>context.Reason</c>。</para>
     /// <para>技能等业务方可用此替代订阅全局 <c>MovementCompleted</c> 事件，避免跨帧事件管理。</para>
     /// </summary>
     public Action<MovementStopContext>? OnStop { get; init; } = null;

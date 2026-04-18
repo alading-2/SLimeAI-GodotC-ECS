@@ -392,11 +392,32 @@ protected override AbilityExecutedResult ExecuteAbility(CastContext context)
         GameEventType.Unit.MovementStarted,
         new GameEventType.Unit.MovementStartedEventData(
             MoveMode.SineWave,
-            new MovementParams { DestroyOnCollision = true }));
+            new MovementParams
+            {
+                Mode = MoveMode.SineWave,
+                ActionSpeed = 360f,
+                MaxDistance = 800f,
+                DestroyOnComplete = true,
+                Collision = new MovementCollisionParams
+                {
+                    TeamFilter = TeamFilter.Enemy,
+                    EntityTypeFilter = EntityType.Unit,
+                    StopAfterCollisionCount = 1,
+                    DestroyOnStop = true
+                }
+            }));
 
     return new AbilityExecutedResult { TargetsHit = 1 };
 }
 ```
+
+投射物命中语义约定（2026-04）：
+
+- `MovementCollision` 现在表示“有效碰撞通知”，不再等价于“运动已经结束”
+- 命中即停子弹：配置 `Collision.StopAfterCollisionCount = 1`
+- 穿透子弹：配置 `Collision.StopAfterCollisionCount = N`
+- 只通知不停止：配置 `Collision.StopAfterCollisionCount = -1`
+- `ArcShot` 这类“追踪特定目标并自然到达后命中”的技能，不应订阅 `MovementCollision` 作为命中入口，而应使用 `MovementParams.OnStop` 并判断 `stopCtx.Reason == MovementStopReason.Completed`
 
 投射物接入运动策略时，必须保证 `MovementParams` 和策略契约一致：
 

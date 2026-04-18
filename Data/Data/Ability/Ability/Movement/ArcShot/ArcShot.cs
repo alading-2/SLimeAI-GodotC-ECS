@@ -1,5 +1,5 @@
-using System.Runtime.CompilerServices;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Godot;
 
 /// <summary>
@@ -45,7 +45,7 @@ internal class ArcShotExecutor : AbilityFeatureHandler
             "ArcShotProjectile" // 投射物名称
         );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
-        // 圆弧运动
+
         projectile.Events.Emit(
             GameEventType.Unit.MovementStarted,
             new GameEventType.Unit.MovementStartedEventData(
@@ -61,15 +61,12 @@ internal class ArcShotExecutor : AbilityFeatureHandler
                     CircularArcClockwise = true, // 圆弧方向
                     BowWorldUp = true, // 弓方向
                     DestroyOnComplete = true, // 完成销毁
-                    DestroyOnCollision = true, // 碰撞销毁
                     RotateToVelocity = true, // 旋转到速度
+                    ReachDistance = 20f, //到达阈值
+                    OnStop = stopCtx => OnArcShotStop(stopCtx, caster, casterNode, target, damage) //停止回调
                 }
             )
         );
-        projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
-            GameEventType.Unit.MovementCollision,
-            (evt) => OnHit(evt, caster, casterNode, damage));
-
 
         _log.Info($"圆弧弹: 跟踪目标={targetNode.Name}, 初始位置={targetNode.GlobalPosition}");
         return new AbilityExecutedResult { TargetsHit = 1 };
@@ -100,12 +97,19 @@ internal class ArcShotExecutor : AbilityFeatureHandler
         return targets.Count > 0 ? targets[0] : null;
     }
 
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt,
+    private static void OnArcShotStop(
+        MovementStopContext stopCtx,
         IEntity caster,
         Node2D casterNode,
+        IEntity target,
         float damage)
     {
-        if (evt.Target is not IEntity targetEntity) return;
+        if (stopCtx.Reason != MovementStopReason.Completed) return;
+        if (target is not Node2D targetNode) return;
+        if (!GodotObject.IsInstanceValid(targetNode)) return;
+        if (target.Data.Has(DataKey.IsDead) && target.Data.Get<bool>(DataKey.IsDead)) return;
+
+        var targetEntity = target;
         if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return;
 
         AbilityImpactTool.Execute(caster, new AbilityImpactOptions

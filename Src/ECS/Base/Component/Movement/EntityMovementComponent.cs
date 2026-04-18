@@ -51,8 +51,8 @@ public partial class EntityMovementComponent : Node, IComponent
     /// <summary>当前帧显式朝向意图（由策略通过 MovementUpdateResult 返回；Zero = 回退到 Velocity 方向）</summary>
     private Vector2 _facingDirection;
 
-    /// <summary>本次运动是否已触发过碰撞事件（CharacterBody2D 防止连续帧重复触发 MovementCollision）</summary>
-    private bool _hasCollided;
+    /// <summary>本次运动的碰撞策略状态。</summary>
+    private readonly MovementCollisionPolicy _collisionPolicy = new();
 
     // ================= 节点类型缓存 =================
 
@@ -91,6 +91,10 @@ public partial class EntityMovementComponent : Node, IComponent
         _entity.Events.On<GameEventType.Collision.CollisionEnteredEventData>(
             GameEventType.Collision.CollisionEntered, OnCollisionDetected);
 
+        // 订阅停止请求事件（外部系统或内部碰撞策略均可通过事件驱动停止当前运动）
+        _entity.Events.On<GameEventType.Unit.MovementStopRequestedEventData>(
+            GameEventType.Unit.MovementStopRequested, OnMovementStopRequested);
+
         // 根据 DefaultMoveMode 初始化默认策略（无 MovementParams，使用空参数）
         var defaultMode = _data.Get<MoveMode>(DataKey.DefaultMoveMode);
         if (defaultMode != MoveMode.None)
@@ -117,7 +121,7 @@ public partial class EntityMovementComponent : Node, IComponent
         _body = null;
         _visualRoot = null;
         _facingDirection = Vector2.Zero;
-        _hasCollided = false;
+        _collisionPolicy.Reset(_params);
     }
 
     // ================= Godot 生命周期 =================
@@ -213,6 +217,7 @@ public partial class EntityMovementComponent : Node, IComponent
 
         // 存储新参数，并统一推导 ActionSpeed（三选二：ActionSpeed / MaxDistance+MaxDuration）
         _params = newParams with { ActionSpeed = MovementHelper.ResolveActionSpeed(newParams) };
+        _collisionPolicy.Reset(_params);
 
         // 创建新策略实例并进入
         _currentStrategy = MovementStrategyRegistry.Create(newMode);
@@ -248,7 +253,7 @@ public partial class EntityMovementComponent : Node, IComponent
         // 策略主动完成
         if (result.IsCompleted)
         {
-            OnMoveComplete();
+            StopMovement(MovementStopReason.Completed);
             return;
         }
 
@@ -284,22 +289,15 @@ public partial class EntityMovementComponent : Node, IComponent
             // 同步碰撞修正后的实际速度回 Data
             _data.Set(DataKey.Velocity, _body.Velocity);
 
-            // CharacterBody2D 碰撞检测：手动模拟 Area2D body_entered 的"首次进入"语义
-            // （Area2D 路径由 OnCollisionDetected 订阅 CollisionEntered 事件处理，此处仅处理 CharacterBody2D）
-            if (_body.GetSlideCollisionCount() > 0  // MoveAndSlide 本帧检测到物理碰撞
-                && !_moveCompleted                   // 运动尚未因策略/时间/距离提前完成，避免重复触发
-                && !_hasCollided)                    // 同一次运动内只响应第一次碰撞，防止持续推墙时每帧刷事件
+            // CharacterBody2D 路径没有 Area2D 的 entered 事件，
+            // 因此这里仍需从 MoveAndSlide 的滑动碰撞中采样原始碰撞候选。
+            int slideCollisionCount = _body.GetSlideCollisionCount();
+            if (slideCollisionCount > 0 && !_moveCompleted)
             {
-                var curMode = _data.Get<MoveMode>(DataKey.MoveMode);
-                var defMode = _data.Get<MoveMode>(DataKey.DefaultMoveMode);
-                // 仅在非默认运动模式（如 FixedDirection 冲锋/发射）下响应；
-                // 默认移动模式 AI/Player 移动撞墙属正常现象，不应触发 MovementCollision 事件
-                if (curMode != defMode && curMode != MoveMode.None)
+                for (int i = 0; i < slideCollisionCount && !_moveCompleted; i++)
                 {
-                    _hasCollided = true; // 立即标记，确保后续帧不再重入
-                    // 取第一个碰撞结果；Collider 可能已释放（地形 StaticBody2D 等），as Node2D 自动返回 null
-                    var slideCollision = _body.GetSlideCollision(0);
-                    HandleMovementCollision(slideCollision.GetCollider() as Node2D);
+                    var slideCollision = _body.GetSlideCollision(i);
+                    TryHandleRawCollision(slideCollision.GetCollider() as Node2D);
                 }
             }
         }
@@ -334,7 +332,6 @@ public partial class EntityMovementComponent : Node, IComponent
 
         // 重置组件内部完成标志
         _moveCompleted = false;
-        _hasCollided = false;
         // _params 由 SwitchStrategy 在调用此方法后立即替换，无需在此清零
     }
 
@@ -365,63 +362,13 @@ public partial class EntityMovementComponent : Node, IComponent
 
         if (_params.MaxDuration >= 0f && _params.ElapsedTime >= _params.MaxDuration)
         {
-            OnMoveComplete();
+            StopMovement(MovementStopReason.Completed);
             return;
         }
 
         if (_params.MaxDistance >= 0f && _params.TraveledDistance >= _params.MaxDistance)
         {
-            OnMoveComplete();
-        }
-    }
-
-    /// <summary>
-    /// 触发运动完成流程
-    /// <para>执行序列：记录完成模式 -> 标记完成 -> 发送事件 -> (可选)自动销毁 -> 回退默认模式。</para>
-    /// <para>数据清理由后续调用的 SwitchStrategy 统一负责，此处只处理完成语义。</para>
-    /// </summary>
-    /// <param name="byCollision">
-    /// true = 由碰撞触发的完成，额外检查 <c>DestroyOnCollision</c>；
-    /// false（默认）= 时间/距离/策略主动触发，只检查 <c>DestroyOnComplete</c>。
-    /// </param>
-    /// <param name="collisionTarget">若由碰撞触发，则为碰撞目标；否则为 null。</param>
-    private void OnMoveComplete(bool byCollision = false, Node2D? collisionTarget = null)
-    {
-        if (_data == null || _entity == null) return;
-
-        var mode = _data.Get<MoveMode>(DataKey.MoveMode);
-        var defaultMode = _data.Get<MoveMode>(DataKey.DefaultMoveMode);
-        var willDestroy = _params.DestroyOnComplete || (byCollision && _params.DestroyOnCollision);
-        var nextMode = !willDestroy && defaultMode != MoveMode.None && defaultMode != mode
-            ? defaultMode
-            : MoveMode.None;
-
-        // 标记完成（防止本帧重复触发）
-        _moveCompleted = true;
-
-        // 调用策略统一停止回调
-        StopCurrentStrategy(byCollision ? MovementStopReason.Collision : MovementStopReason.Completed, nextMode, collisionTarget);
-        _currentStrategy = null;
-
-        // 发送 MovementCompleted 事件，携带本次运动统计数据
-        _entity.Events.Emit(
-            GameEventType.Unit.MovementCompleted,
-            new GameEventType.Unit.MovementCompletedEventData(mode, _params.ElapsedTime, _params.TraveledDistance));
-
-        _log.Debug($"[{(_entity as Node)?.Name}] 运动完成 Mode={mode} byCollision={byCollision}");
-
-        // 如果配置了自动销毁（按完成 or 按碰撞），则通知 EntityManager 回收本实体
-        if (_params.DestroyOnComplete || (byCollision && _params.DestroyOnCollision))
-        {
-            if (_entity is Node entityNode)
-                EntityManager.Destroy(entityNode);
-            return;
-        }
-
-        // 回退到默认运动模式
-        if (defaultMode != MoveMode.None && defaultMode != mode)
-        {
-            SwitchStrategy(new MovementParams { Mode = defaultMode });
+            StopMovement(MovementStopReason.Completed);
         }
     }
 
@@ -441,32 +388,135 @@ public partial class EntityMovementComponent : Node, IComponent
         // 移动模式为defaultMode或None不运行
         if (mode == defaultMode || mode == MoveMode.None) return;
 
-        HandleMovementCollision(evt.Target);
+        TryHandleRawCollision(evt.Target);
     }
 
     /// <summary>
-    /// 运动碰撞统一处理：发布 MovementCollision 事件，若配置了 DestroyOnCollision 则触发完成流程。
-    /// <para>
-    /// 设计意图：碰撞事件与销毁逻辑解耦。
-    /// 业务方（技能/子弹组件）订阅 <c>MovementCollision</c> 事件执行伤害/特效，
-    /// <c>DestroyOnCollision=true</c> 仅控制实体回收，无需业务方关心生命周期。
-    /// </para>
+    /// 处理一次原始碰撞候选。
     /// </summary>
-    /// <param name="target">碰撞目标节点（可能为 null，例如 CharacterBody2D 碰到地形时 Collider 已释放）</param>
-    private void HandleMovementCollision(Node2D? target)
+    private void TryHandleRawCollision(Node2D? target)
     {
         if (_moveCompleted) return;
         if (_entity == null || _data == null) return;
+        if (!_collisionPolicy.IsEnabled) return;
 
         var moveMode = _data.Get<MoveMode>(DataKey.MoveMode);
+        var defaultMode = _data.Get<MoveMode>(DataKey.DefaultMoveMode);
+        if (moveMode == MoveMode.None || moveMode == defaultMode) return;
 
-        _entity.Events.Emit(
-            GameEventType.Unit.MovementCollision,
-            new GameEventType.Unit.MovementCollisionEventData(moveMode, target));
+        if (!_collisionPolicy.TryAccept(_entity, moveMode, _params, target, out var context))
+        {
+            return;
+        }
 
-        _log.Debug($"[{(_entity as Node)?.Name}] 运动碰撞 Mode={moveMode}, Target={target?.Name}");
+        if (_params.Collision.HasValue)
+        {
+            var collision = _params.Collision.Value;
+            collision.OnCollision?.Invoke(context);
 
-        OnMoveComplete(byCollision: true, collisionTarget: target);
+            if (collision.EmitCollisionEvent)
+            {
+                _entity.Events.Emit(
+                    GameEventType.Unit.MovementCollision,
+                    new GameEventType.Unit.MovementCollisionEventData(
+                        context.Mode,
+                        context.TargetNode,
+                        context.TargetEntity,
+                        context.CollisionCount,
+                        context.WillStop));
+            }
+
+            _log.Debug(
+                $"[{(_entity as Node)?.Name}] 运动碰撞 Mode={moveMode}, Target={context.TargetNode.Name}, Count={context.CollisionCount}, WillStop={context.WillStop}");
+
+            if (context.WillStop)
+            {
+                _entity.Events.Emit(
+                    GameEventType.Unit.MovementStopRequested,
+                    new GameEventType.Unit.MovementStopRequestedEventData
+                    {
+                        Reason = MovementStopReason.Collision,
+                        EmitCompletedEvent = true,
+                        CollisionTarget = context.TargetNode, //碰撞目标
+                        DestroyEntity = collision.DestroyOnStop //停止后销毁
+                    });
+            }
+        }
+    }
+
+    /// <summary>
+    /// 停止请求回调。
+    /// </summary>
+    private void OnMovementStopRequested(GameEventType.Unit.MovementStopRequestedEventData evt)
+    {
+        StopMovement(
+            evt.Reason,
+            evt.EmitCompletedEvent,
+            evt.NextMode,
+            evt.CollisionTarget,
+            evt.DestroyEntity);
+    }
+
+    /// <summary>
+    /// 统一执行当前运动的停止流程。
+    /// </summary>
+    private void StopMovement(
+        MovementStopReason reason,
+        bool emitCompletedEvent = true,
+        MoveMode requestedNextMode = MoveMode.None,
+        Node2D? collisionTarget = null,
+        bool destroyEntity = false)
+    {
+        if (_entity == null || _data == null) return;
+        if (_currentStrategy == null) return;
+
+        var mode = _data.Get<MoveMode>(DataKey.MoveMode);
+        var defaultMode = _data.Get<MoveMode>(DataKey.DefaultMoveMode);
+        var resolution = MovementStopCoordinator.Resolve(
+            mode,
+            defaultMode,
+            _params,
+            reason,
+            emitCompletedEvent,
+            requestedNextMode,
+            destroyEntity);
+
+        _moveCompleted = true;
+
+        StopCurrentStrategy(reason, resolution.NextMode, collisionTarget);
+        _currentStrategy = null;
+
+        if (resolution.EmitCompletedEvent)
+        {
+            _entity.Events.Emit(
+                GameEventType.Unit.MovementCompleted,
+                new GameEventType.Unit.MovementCompletedEventData(
+                    mode,
+                    _params.ElapsedTime,
+                    _params.TraveledDistance,
+                    reason,
+                    collisionTarget));
+        }
+
+        _log.Debug(
+            $"[{(_entity as Node)?.Name}] 停止运动 Mode={mode}, Reason={reason}, EmitCompleted={resolution.EmitCompletedEvent}, Destroy={resolution.DestroyEntity}, NextMode={resolution.NextMode}");
+
+        if (resolution.DestroyEntity)
+        {
+            if (_entity is Node entityNode)
+            {
+                EntityManager.Destroy(entityNode);
+            }
+            return;
+        }
+
+        if (resolution.NextMode != MoveMode.None)
+        {
+            SwitchStrategy(new MovementParams { Mode = resolution.NextMode });
+            return;
+        }
+
+        _data.Set(DataKey.MoveMode, MoveMode.None);
     }
 
     /// <summary>

@@ -53,7 +53,13 @@ internal class SineWaveShotExecutor : AbilityFeatureHandler
                     WaveFrequency = 2f,
                     MaxDistance = 900f,
                     DestroyOnComplete = true,
-                    DestroyOnCollision = true,
+                    Collision = new MovementCollisionParams
+                    {
+                        TeamFilter = TeamFilter.Enemy, //阵营过滤
+                        EntityTypeFilter = EntityType.Unit, //实体类型过滤
+                        StopAfterCollisionCount = 1, //首个有效碰撞停止
+                        DestroyOnStop = true //停止后销毁
+                    },
                     RotateToVelocity = true,
                 }
             )
@@ -86,7 +92,8 @@ internal class SineWaveShotExecutor : AbilityFeatureHandler
         Node2D casterNode,
         float damage)
     {
-        if (evt.Target is not IEntity targetEntity) return;
+        if (evt.TargetEntity == null) return;
+        var targetEntity = evt.TargetEntity;
         if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return;
 
         AbilityImpactTool.Execute(caster, new AbilityImpactOptions

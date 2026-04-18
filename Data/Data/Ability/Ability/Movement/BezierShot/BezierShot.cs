@@ -53,7 +53,13 @@ internal class BezierShotExecutor : AbilityFeatureHandler
                     BezierPoints = new Vector2[] { startPos, controlPoint, targetPos }, // 控制点数组
                     ActionSpeed = 420f, // 移动速度
                     DestroyOnComplete = true, // 到达后销毁
-                    DestroyOnCollision = true, // 碰撞后销毁
+                    Collision = new MovementCollisionParams
+                    {
+                        TeamFilter = TeamFilter.Enemy, //阵营过滤
+                        EntityTypeFilter = EntityType.Unit, //实体类型过滤
+                        StopAfterCollisionCount = 1, //首个有效碰撞停止
+                        DestroyOnStop = true //停止后销毁
+                    },
                     RotateToVelocity = true, // 旋转朝向速度
                 }
             )
@@ -86,7 +92,8 @@ internal class BezierShotExecutor : AbilityFeatureHandler
         Node2D casterNode,
         float damage)
     {
-        if (evt.Target is not IEntity targetEntity) return;
+        if (evt.TargetEntity == null) return;
+        var targetEntity = evt.TargetEntity;
         if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return;
 
         AbilityImpactTool.Execute(caster, new AbilityImpactOptions

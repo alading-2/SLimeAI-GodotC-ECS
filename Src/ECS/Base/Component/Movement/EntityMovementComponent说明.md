@@ -2,46 +2,49 @@
 
 ## 1. 组件定位
 
-运动系统的调度器，不决定"为什么移动"，只负责把当前运动策略稳定地跑起来。
+运动系统的调度器，不决定“为什么移动”，只负责把当前运动策略稳定跑起来，并把移动碰撞、停止事件、生命周期收口统一在组件内编排。
 
-- 业务层构建 `MovementParams` 并通过事件传入，不再向 DataKey 写入运动参数
+- 业务层构建 `MovementParams` 并通过事件传入
 - 策略负责计算本帧位移意图，写入 `DataKey.Velocity`
-- 如需将视觉朝向与位移方向解耦，策略可通过 `MovementUpdateResult` 显式返回 `FacingDirection`
-- 组件持有 `MovementParams`、统计字段，执行位移、检查结束、触发事件
+- 组件持有 `MovementParams`、统计字段和碰撞策略状态，执行位移、检查结束、发事件
 - 适用于 `Node2D + IEntity`、`Area2D + IEntity`、`CharacterBody2D + IEntity`
 
 ## 2. 私有状态
 
 ```csharp
-private MovementParams _params;          // 本次运动输入参数（由事件传入）
-private float _elapsedTime;              // 已持续时间（秒）
-private float _traveledDistance;         // 已移动距离（像素）
-private bool _moveCompleted;             // 完成标志（防止重复触发）
-private bool _hasCollided;               // 碰撞已触发标志（CharacterBody2D 防止同次运动重复发 MovementCollision）
-private Vector2 _facingDirection;        // 当前帧显式朝向意图（Zero=回退到 Velocity）
+private MovementParams _params;              // 本次运动输入参数（由事件传入）
+private bool _moveCompleted;                 // 停止标志（防止重复收口）
+private Vector2 _facingDirection;            // 当前帧显式朝向意图
 private IMovementStrategy? _currentStrategy; // 当前策略实例（每次切换新建）
+private readonly MovementCollisionPolicy _collisionPolicy = new(); // 碰撞过滤/计数状态
 ```
+
+说明：
+
+- `_params.ElapsedTime / _params.TraveledDistance` 由组件每帧累加
+- `_collisionPolicy` 不是全局系统，只是“本实体这次运动”的局部状态容器
+- 旧 `_hasCollided` 语义已移除，不再用“本次运动只碰一次”这种粗粒度锁
 
 ## 3. 执行路径
 
 ```text
-死亡检查 / _moveCompleted 守卫
-  -> 策略 Update(entity, data, delta, elapsedTime, in _params) 写入 DataKey.Velocity
-  -> 策略可选返回 FacingDirection（例如正弦波/曲线切线）
-  -> 策略主动返回 Complete -> OnMoveComplete()
-  -> AccumulateTravel(_elapsedTime, _traveledDistance)
-  -> CheckEndConditions() 读 _params.MaxDuration / MaxDistance
-  -> VelocityResolver.Resolve(data) 合成最终速度
-  -> CharacterBody2D: MoveAndSlide()
-       GetSlideCollisionCount() > 0 && 非默认模式 -> HandleMovementCollision()
-     其他 Node2D/Area2D: GlobalPosition += velocity * delta
-       （Area2D 碰撞由 OnCollisionDetected 订阅 CollisionEntered 事件处理）
-  -> MovementHelper.UpdateOrientation(entity, in _params, facingDirection ?? intentVelocity, visualRoot)
+_Process / _PhysicsProcess
+  -> RunMovementLogic()
+     -> 策略 Update(...) 写 DataKey.Velocity
+     -> 策略可选返回 FacingDirection
+     -> 若策略主动完成 -> StopMovement(Completed)
+     -> AccumulateTravel()
+     -> CheckEndConditions()
+  -> ApplyMovement()
+     -> VelocityResolver.Resolve()
+     -> CharacterBody2D: MoveAndSlide() + slide collision 采样
+     -> 其他 Node2D/Area2D: GlobalPosition += velocity * delta
+     -> UpdateOrientation()
 ```
 
 帧率路径由策略 `UsePhysicsProcess` 决定，与节点类型无关。
 
-## 4. 参数传递方式（新 API）
+## 4. 参数传递方式
 
 所有运动参数通过 `MovementParams` 一次性传入，不再分散写 DataKey：
 
@@ -50,78 +53,157 @@ entity.Events.Emit(
     GameEventType.Unit.MovementStarted,
     new GameEventType.Unit.MovementStartedEventData(MoveMode.TargetPoint, new MovementParams
     {
-        Mode            = MoveMode.TargetPoint,
-        TargetPoint     = new Vector2(900, 360),
-        MaxDuration     = -1f,          // 可选，-1 不限制
-        DestroyOnComplete = false,      // 可选
+        Mode = MoveMode.TargetPoint,
+        TargetPoint = new Vector2(900, 360),
+        MaxDuration = -1f, // 可选，-1 不限制
+        DestroyOnComplete = false, // 可选
     }));
 ```
 
-`MovementParams` 是 `record struct`，所有字段均为 `init` 属性，策略只读访问（`in` 参数），无法修改。
+`MovementParams` 是 `record struct`，输入字段均为 `init`，策略只能只读访问。
 
 ## 5. DefaultMoveMode 与临时模式
 
-实体初始化时写入 `DataKey.DefaultMoveMode`，组件注册后自动进入该模式（用空参数构建 `MovementParams`）。
+实体初始化时写入 `DataKey.DefaultMoveMode`，组件注册后自动进入该模式。
 
-```csharp
-// Entity 初始化
-entity.Data.Set(DataKey.DefaultMoveMode, MoveMode.PlayerInput);
-entity.Data.Set(DataKey.MoveSpeed, 240f);
-entity.Data.Set(DataKey.Acceleration, 10f);
-```
+临时运动结束后：
 
-临时运动结束后若 `DefaultMoveMode` 有效，组件自动回退。
+- 若停止解析结果给出 `NextMode`，则切回对应模式
+- 若未销毁且 `NextMode == MoveMode.None`，组件会把 `DataKey.MoveMode` 置为 `None`
+- 默认场景下 `MovementStopCoordinator` 会在“未销毁且当前模式不是默认模式”时自动回退 `DefaultMoveMode`
 
 ### 打断规则
 
 - 当前是默认模式：允许直接切换
-- 当前是临时模式且 `CanBeInterrupted = false`：拒绝新 `MovementStarted`，直到自然完成
+- 当前是临时模式且 `CanBeInterrupted = false`：拒绝新的 `MovementStarted`
 
 ## 6. SwitchStrategy 重置
 
-每次切换只重置三个共享 DataKey（Velocity / VelocityOverride / VelocityImpulse）和组件私有统计字段，其余实体属性（MoveSpeed、IsMovementLocked 等）保持不变。旧策略会先收到一次 `OnStop(in MovementStopContext)`，停止原因通常为 `Interrupted`，之后其运行时状态（角度、起点等）随实例一起丢弃，无需手动清理。
+每次切换会：
 
-## 7. 结束条件
+1. 对旧策略发送一次 `OnStop(Interrupted)`
+2. 重置 `Velocity / VelocityOverride / VelocityImpulse`
+3. 清空 `_moveCompleted / _facingDirection`
+4. 用新 `MovementParams` 重置 `_collisionPolicy`
+5. 新建策略实例并调用 `OnEnter`
 
-### MovementParams 通用条件
+## 7. 统一停止流程
 
-- `MaxDuration >= 0`：累计时间到达后完成
-- `MaxDistance >= 0`：累计距离到达后完成
-- `DestroyOnComplete = true`：完成后销毁实体，否则发事件并回退默认模式
-- `DestroyOnCollision = true`：碰撞后销毁（先发布 `MovementCollision` 事件再销毁）
+停止入口统一为 `StopMovement(...)`，来源包括：
 
-### 策略主动完成
+- 策略主动完成
+- 时间/距离达到阈值
+- 碰撞策略命中自动停止阈值后发出的 `MovementStopRequested`
+- 外部系统主动发送 `MovementStopRequested`
 
-返回 `MovementUpdateResult.Complete()` 即可，组件统一处理后续清理与回退。
-
-### 完成事件
-
-`MovementCompletedEventData` 直接携带统计数据，无需读 DataKey：
-
-```csharp
-entity.Events.On<GameEventType.Unit.MovementCompletedEventData>(
-    GameEventType.Unit.MovementCompleted,
-    evt => _log.Info($"Mode={evt.Mode} Elapsed={evt.ElapsedTime:F2}s Dist={evt.TraveledDistance:F1}px"));
-```
-
-### 统一停止回调
-
-策略接口不再区分 `OnEnd` / `OnExit`，统一改为：
+### `MovementStopRequested`
 
 ```csharp
-void OnStop(IEntity entity, Data data, in MovementStopContext context)
+entity.Events.Emit(
+    GameEventType.Unit.MovementStopRequested,
+    new GameEventType.Unit.MovementStopRequestedEventData
+    {
+        Reason = MovementStopReason.Requested,
+        EmitCompletedEvent = false,
+        NextMode = MoveMode.None,
+        DestroyEntity = false
+    });
 ```
 
-其中 `context` 至少包含：
+### `StopMovement` 内部顺序
 
-- `Reason`：`Completed / Collision / Interrupted / ComponentUnregistered`
-- `Params`：本次运动最终参数与统计快照
-- `CollisionTarget`：若因碰撞停止则提供目标
-- `NextMode`：停止后即将切换的模式（例如回退默认模式）
+```text
+MovementStopCoordinator.Resolve(...)
+  -> _moveCompleted = true
+  -> StopCurrentStrategy(reason, resolution.NextMode, collisionTarget)
+  -> 可选发 MovementCompleted(Mode / ElapsedTime / TraveledDistance / Reason / CollisionTarget)
+  -> 可选销毁实体
+  -> 否则按 resolution.NextMode 切换，或把 MoveMode 置为 None
+```
 
-## 8. Velocity 分层合成
+## 8. 移动碰撞处理
 
-策略写的 `Velocity` 先经过 `VelocityResolver` 再执行位移：
+### 8.1 触发路径
+
+| 实体类型 | 原始候选来源 | 说明 |
+|----------|--------------|------|
+| `Area2D` | `CollisionComponent -> CollisionEntered` | 只有实体根节点是 `Area2D` 才走这条 |
+| `CharacterBody2D` | `MoveAndSlide()` 后 `GetSlideCollision(i)` | Godot 标准做法，不是“人工补事件” |
+
+### 8.2 为什么 `CharacterBody2D` 还要手动采样
+
+因为 `CharacterBody2D` 没有 `Area2D` 那组 entered/exited 信号。`MoveAndSlide()` 给的是“这一帧撞到了谁”，移动组件只能把它当作原始碰撞候选再交给策略层过滤。
+
+问题从来不在“要不要采样 slide collision”，而在旧实现把“采样到碰撞”直接等同于“停止并销毁”。这次重构改掉的是后半段硬编码，不是删掉采样入口。
+
+### 8.3 新碰撞链路
+
+```text
+原始碰撞候选
+  -> TryHandleRawCollision(target)
+  -> MovementCollisionPolicy.TryAccept(...)
+  -> OnCollision 回调（可选）
+  -> MovementCollision 事件（可选）
+  -> 若达到 StopAfterCollisionCount
+       -> 发 MovementStopRequested(Reason=Collision, DestroyEntity=DestroyOnStop)
+```
+
+### 8.4 `MovementCollisionPolicy`
+
+负责：
+
+- 阵营过滤：`TeamFilter`
+- 实体类型过滤：`EntityTypeFilter`
+- 目标匹配：`Any / TrackedTargetOnly / SpecificNode`
+- 同一次运动内去重计数
+- 判断本次是否会停止，并生成 `MovementCollisionContext`
+
+### 8.5 `MovementCollisionEventData`
+
+有效碰撞事件现在包含：
+
+- `Mode`
+- `Target`
+- `TargetEntity`
+- `CollisionCount`
+- `WillStop`
+
+所以技能层不需要再自己从 `evt.Target` 手动回溯宿主实体，除非有特殊需求。
+
+## 9. ArcShot 语义
+
+`ArcShot` 不再依赖 `MovementCollision`。
+
+正确写法：
+
+- `MoveMode.CircularArc`
+- `isTrackTarget = true`
+- `ReachDistance > 0`
+- `OnStop` 中判断 `Reason == Completed`
+
+这样它只会在“自然追到锁定目标”时结算，而不会被沿路碰到的任意敌人/玩家打断。
+
+## 10. `MovementStopReason` / `MovementStopContext`
+
+当前停止原因：
+
+- `Completed`
+- `Collision`
+- `Requested`
+- `Interrupted`
+- `ComponentUnregistered`
+
+`MovementStopContext` 常用字段：
+
+- `Reason`
+- `Params`
+- `CollisionTarget`
+- `NextMode`
+- `IsCompleted / IsCollision / IsRequested / IsInterrupted`
+
+注意：`IsCompleted` 仍只对 `Completed / Collision` 为 `true`。若业务要精确分支，应直接判断 `Reason`。
+
+## 11. Velocity 分层合成
 
 ```text
 IsMovementLocked = true  → Zero
@@ -129,78 +211,9 @@ VelocityOverride ≠ Zero  → VelocityOverride
 否则                      → Velocity + VelocityImpulse（用后清零）
 ```
 
-## 9. 朝向语义（2026-03 更新）
-
-- `Velocity`：表示“本帧要如何移动”，服务于位移执行与速度分层合成
-- `FacingDirection`：表示“本帧应该朝哪看”，服务于视觉翻面与旋转
-- 默认情况下若策略未显式提供朝向，组件仍回退到 `Velocity` 方向
-
-这能解决曲线路径中的语义混淆：
-
-- 直线/追踪/输入移动：通常 `FacingDirection == Velocity方向`
-- `SineWaveStrategy`：`Velocity` 是本帧去往下一采样点的纠偏速度，`FacingDirection` 应取正弦轨迹切线
-- `BezierCurveStrategy`：`FacingDirection` 取曲线参数点的一阶导数切线，而非当前位置到采样点的纠偏向量
-- `OrbitStrategy`：`FacingDirection` 取切向速度与径向速度的解析合成方向，螺旋时也能正确朝向
-- 其它曲线路径若后续加入，只要视觉朝向不应直接取 `Velocity`，也应复用同一机制
-
-## 10. 碰撞处理（OnCollision）
-
-### 触发路径
-
-| 实体类型 | 触发方式 | 特点 |
-|--------|---------|------|
-| `Area2D` | `CollisionComponent` 发出 `CollisionEntered` → `EntityMovementComponent.OnCollisionDetected` | 每次进入均触发 |
-| `CharacterBody2D` | `ApplyMovement` 中 `MoveAndSlide` 后检测 `GetSlideCollisionCount()` | 同一次运动内只触发一次（`_hasCollided` 防重） |
-
-> **仅在非默认运动模式下响应**（`curMode != defaultMode`），避免 AI/Player 常驻移动产生噪声事件。
-
-### 事件与销毁
-
-```text
-HandleMovementCollision(target)
-  -> 发布 GameEventType.Unit.MovementCollision（Mode/Target）
-  -> 若 DestroyOnCollision=true -> OnMoveComplete(byCollision=true)
-       -> 发布 MovementCompleted
-       -> EntityManager.Destroy
-```
-
-其中：
-
-- `Target` 是命中的 `Node2D?`
-- 如果业务需要目标实体，应从 `evt.Target` 回溯宿主 `IEntity`
-
-### 典型用法：发射子弹
-
-```csharp
-// 1. 发射前订阅碰撞事件（在技能/武器组件中）
-bullet.Events.On<GameEventType.Unit.MovementCollisionEventData>(
-    GameEventType.Unit.MovementCollision, OnBulletHit);
-
-// 2. 启动运动（子弹自己的初始化代码）
-bullet.Events.Emit(GameEventType.Unit.MovementStarted,
-    new GameEventType.Unit.MovementStartedEventData(MoveMode.FixedDirection, new MovementParams
-    {
-        MaxDistance        = 800f,
-        DestroyOnCollision = true,
-    }));
-
-// 3. 命中处理
-private void OnBulletHit(GameEventType.Unit.MovementCollisionEventData evt)
-{
-    var target = EntityManager.ResolveOwningIEntity(evt.Target);
-    if (target == null) return;
-    DamageService.Instance.Process(new DamageInfo { ... });
-}
-```
-
-## 11. 扩展新运动模式
-
-1. `MovementEnums.cs` 新增枚举值
-2. `MovementParams` 新增所需 `init` 字段（附默认值）
-3. 新建策略类，私有字段存运行时状态，`[ModuleInitializer]` 注册工厂到 `MovementStrategyRegistry`
-4. 如视觉朝向不应直接取 `Velocity`，通过 `MovementUpdateResult.Continue(distance, facingDirection)` 显式返回朝向
-5. 补全策略类头注释
-
 ## 12. 测试场景
 
-`Src/Test/SingleTest/ECS/Movement/MovementComponentTestScene.tscn`
+- `Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn`
+- `Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn`
+
+后者专门锁定移动碰撞协议、停止请求默认值、停止协调器行为和 `TrackedTargetOnly` 过滤语义。

@@ -10,9 +10,9 @@ using Godot;
 /// 
 /// 使用方式：
 /// 1. EntityManager.Spawn 生成
-/// 2. 订阅 MovementCollision 事件处理命中
+/// 2. 根据技能语义选择订阅 MovementCollision 或使用 MovementParams.OnStop
 /// 3. 发送 MovementStarted 事件启动轨迹
-/// 4. 配置 DestroyOnCollision / DestroyOnComplete 自动回收
+/// 4. 通过 MovementParams.Collision / DestroyOnComplete 配置碰撞通知、停止和自动回收
 /// </summary>
 public partial class ProjectileEntity : Area2D, IEntity, IPoolable
 {

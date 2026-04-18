@@ -14,6 +14,11 @@ public enum MovementStopReason
     Collision,
 
     /// <summary>
+    /// 由外部停止请求触发。
+    /// </summary>
+    Requested,
+
+    /// <summary>
     /// 被新的运动请求打断并切换策略。
     /// </summary>
     Interrupted,

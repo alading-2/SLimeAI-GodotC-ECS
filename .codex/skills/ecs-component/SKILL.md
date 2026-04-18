@@ -104,7 +104,7 @@ _entity.Events.On<GameEventType.Data.PropertyChangedEventData>(
 - `CollisionComponent` 现在只桥接 **Entity 根节点为 `Area2D` 的视觉体碰撞**，负责把 `CollisionEntered / CollisionExited(Source, Target)` 转发到 `Entity.Events`
 - `HurtboxComponent` 现在本身就是 `Area2D` 受击区组件，直接在 Entity 场景里配置 `collision_layer / collision_mask` 和 `CollisionShape2D`
 - 接触伤害组件应直接消费 `HurtboxEntered / HurtboxExited`，不要再通过统一碰撞事件里的 `CollisionType.Hurtbox` 做业务过滤
-- `EntityMovementComponent` 仅在非默认运动模式下消费视觉体碰撞；`CharacterBody2D` 路径仍由 `MoveAndSlide()` 触发 slide collision
+- `EntityMovementComponent` 仅在非默认运动模式下消费视觉体碰撞；`CharacterBody2D` 路径仍由 `MoveAndSlide()` 触发 slide collision 候选，再交给 `MovementCollisionPolicy` 过滤/计数
 - 若需要从任意碰撞节点回溯宿主实体，优先在组件内沿父链回溯 `IEntity`，不要把宿主解析逻辑散落到业务层
 - 需要调整碰撞形状时，应优先修改 Entity 场景里的 `HurtboxComponent` / 根物理体配置，而不是把 shape 硬编码回多个模板场景
 
@@ -121,7 +121,8 @@ _entity.Events.On<GameEventType.Data.PropertyChangedEventData>(
 - **帧率选择**：由策略 `UsePhysicsProcess` 声明走 `_Process` 或 `_PhysicsProcess`，与节点类型无关，两条路径逻辑完全相同
 - **策略约束**：禁止直接操作 `GlobalPosition`，所有位移由调度器统一执行
 - **曲线采样原则**：所有曲线策略每帧直接调用 `Evaluate(t)` / `EvaluateTangent(t)` 采样，进度由 `speed * delta / ApproximateLength()` 驱动；无需弧长查找表
-- **停止语义**：调度器统一通过 `MovementStopContext` 向策略分发停止原因，当前内置 `Completed / Collision / Interrupted / ComponentUnregistered`
+- **移动碰撞语义**：`MovementParams.Collision` 负责声明“哪些碰撞有效、是否通知、累计多少次后停止、停止后是否销毁”；`MovementCollision` 不再等价于“运动完成”
+- **停止语义**：调度器统一通过 `MovementStopContext` 向策略分发停止原因，当前内置 `Completed / Collision / Requested / Interrupted / ComponentUnregistered`
 
 ### 朝向语义
 - `Velocity` = “本帧怎么移动”，服务于位移执行与速度分层合成
@@ -169,9 +170,9 @@ FixedDirection / TargetPoint / TargetEntity / OrbitPoint / OrbitEntity / Spiral 
 - **现有通用组件** → `Src/ECS/Base/Component/Unit/Common/`（HealthComponent、AttackComponent 等）
 - **技能组件** → `Src/ECS/Base/Component/Ability/`（CooldownComponent、ChargeComponent 等）
 - **运动策略调度器** → `Src/ECS/Base/Component/Movement/EntityMovementComponent.cs`
-- **运动策略接口** → `Src/ECS/Base/System/Movement/IMovementStrategy.cs`
+- **运动策略接口** → `Src/ECS/Base/System/Movement/Core/IMovementStrategy.cs`
 - **运动策略实现** → `Src/ECS/Base/System/Movement/Strategies/`
-- **速度合成** → `Src/ECS/Base/System/Movement/VelocityResolver.cs`
+- **速度合成** → `Src/ECS/Base/System/Movement/Utils/VelocityResolver.cs`
 - **运动说明文档** → `Src/ECS/Base/Component/Movement/EntityMovementComponent说明.md`
 - **移动系统README** → `Src/ECS/Base/System/Movement/README.md`
-- **移动系统设计文档** → `Docs/框架/ECS/System/移动系统设计说明.md`
+- **移动系统设计文档** → `Docs/框架/ECS/System/Movement/移动系统设计说明.md`
