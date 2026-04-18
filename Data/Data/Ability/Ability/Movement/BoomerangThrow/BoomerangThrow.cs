@@ -29,8 +29,10 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
         var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
 
         var projectile = ProjectileTool.Spawn(
-            casterNode.GlobalPosition,
-            new ProjectileSpawnOptions(projectileScene, "BoomerangThrowProjectile"));
+            casterNode.GlobalPosition, // 生成位置
+            projectileScene, // 投射物视觉
+            "BoomerangThrowProjectile" // 投射物名称
+        );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
         // 回旋镖不销毁于碰撞，继续飞行并返回

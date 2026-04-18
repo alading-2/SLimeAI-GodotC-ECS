@@ -29,8 +29,10 @@ internal class ParabolaShotExecutor : AbilityFeatureHandler
         var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
 
         var projectile = ProjectileTool.Spawn(
-            casterNode.GlobalPosition,
-            new ProjectileSpawnOptions(projectileScene, "ParabolaShotProjectile"));
+            casterNode.GlobalPosition, // 生成位置
+            projectileScene, // 投射物视觉
+            "ParabolaShotProjectile" // 投射物名称
+        );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
         projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(

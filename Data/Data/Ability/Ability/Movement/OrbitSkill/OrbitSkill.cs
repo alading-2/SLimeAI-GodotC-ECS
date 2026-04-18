@@ -37,8 +37,10 @@ internal class OrbitSkillExecutor : AbilityFeatureHandler
         {
             float initAngle = i * (360f / orbitCount);
             var projectile = ProjectileTool.Spawn(
-                casterNode.GlobalPosition,
-                new ProjectileSpawnOptions(projectileScene, "OrbitSkillProjectile"));
+                casterNode.GlobalPosition, // 生成位置
+                projectileScene, // 投射物视觉
+                "OrbitSkillProjectile" // 投射物名称
+            );
             if (projectile == null) continue;
 
             projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(

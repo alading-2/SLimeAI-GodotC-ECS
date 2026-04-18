@@ -34,7 +34,9 @@ internal class BezierShotExecutor : AbilityFeatureHandler
 
         var projectile = ProjectileTool.Spawn(
             startPos, // 生成位置
-            new ProjectileSpawnOptions(projectileScene, "BezierShotProjectile")); // 投射物配置
+            projectileScene, // 投射物视觉
+            "BezierShotProjectile" // 投射物名称
+        );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
         projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(

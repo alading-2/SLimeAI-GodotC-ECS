@@ -14,6 +14,7 @@ description: 创建新 Entity、管理 Entity 生命周期（Spawn/Register/Dest
 ## VisualRoot / 碰撞约定（2026-04）
 
 - `EntityManager.Spawn` 会在组件注册前按 `VisualScenePath` 注入 `VisualRoot`
+- `EntityManager.Spawn` 支持通过 `EntitySpawnConfig.VisualSceneOverride` 显式覆盖视觉场景；未提供时再回退读取 `Config.VisualScenePath`
 - 注入不再局限于 `UnitConfig` / `IUnit`；任意配置资源只要暴露 `VisualScenePath`（如 `ProjectileConfig`）即可复用同一套视觉挂载流程
 - `SpriteFramesGenerator` / 视觉场景可提供 `VisualRoot/CollisionShape2D` 或 `VisualRoot/CollisionPolygon2D` 作为碰撞模板
 - 受击区、拾取区等业务碰撞节点直接作为 `Area2D` 挂在 Entity 场景里

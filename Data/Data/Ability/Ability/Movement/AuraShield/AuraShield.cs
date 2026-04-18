@@ -27,8 +27,10 @@ internal class AuraShieldExecutor : AbilityFeatureHandler
         var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
 
         var projectile = ProjectileTool.Spawn(
-            casterNode.GlobalPosition + new Vector2(80f, 0f),
-            new ProjectileSpawnOptions(projectileScene, "AuraShieldProjectile"));
+            casterNode.GlobalPosition + new Vector2(80f, 0f), // 生成位置
+            projectileScene, // 投射物视觉
+            "AuraShieldProjectile" // 投射物名称
+        );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
         // 通过 Data 设置相对宿主偏移（AttachToHostStrategy 读取 DataKey.EffectOffset）

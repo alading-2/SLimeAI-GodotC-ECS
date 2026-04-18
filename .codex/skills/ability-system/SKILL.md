@@ -379,8 +379,10 @@ protected override AbilityExecutedResult ExecuteAbility(CastContext context)
 
     var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
     var projectile = ProjectileTool.Spawn(
-        casterNode.GlobalPosition,
-        new ProjectileSpawnOptions(projectileScene, "AbilityProjectile"));
+        casterNode.GlobalPosition, // 生成位置
+        projectileScene, // 投射物视觉
+        "AbilityProjectile" // 投射物名称
+    );
     if (projectile == null)
     {
         return new AbilityExecutedResult { TargetsHit = 0 };

@@ -41,33 +41,35 @@ internal class ArcShotExecutor : AbilityFeatureHandler
 
         var projectile = ProjectileTool.Spawn(
             casterNode.GlobalPosition, // 生成位置
-            new ProjectileSpawnOptions(projectileScene, "ArcShotProjectile")); // 投射物配置
+            projectileScene, // 投射物视觉
+            "ArcShotProjectile" // 投射物名称
+        );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
-
-        projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
-            GameEventType.Unit.MovementCollision,
-            (evt) => OnHit(evt, caster, casterNode, damage));
-
+        // 圆弧运动
         projectile.Events.Emit(
             GameEventType.Unit.MovementStarted,
             new GameEventType.Unit.MovementStartedEventData(
                 MoveMode.CircularArc,
                 new MovementParams
                 {
-                    Mode = MoveMode.CircularArc,
-                    TargetPoint = targetNode.GlobalPosition,
-                    TargetNode = targetNode,
-                    isTrackTarget = true,
-                    ActionSpeed = 360f,
-                    CircularArcRadius = 220f,
-                    CircularArcClockwise = true,
-                    BowWorldUp = true,
-                    DestroyOnComplete = true,
-                    DestroyOnCollision = true,
-                    RotateToVelocity = true,
+                    Mode = MoveMode.CircularArc, // 运动模式
+                    TargetPoint = targetNode.GlobalPosition, // 目标点
+                    TargetNode = targetNode, // 目标节点
+                    isTrackTarget = true, // 是否追踪目标
+                    ActionSpeed = 360f, // 行动速度
+                    CircularArcRadius = 220f, // 圆弧半径
+                    CircularArcClockwise = true, // 圆弧方向
+                    BowWorldUp = true, // 弓方向
+                    DestroyOnComplete = true, // 完成销毁
+                    DestroyOnCollision = true, // 碰撞销毁
+                    RotateToVelocity = true, // 旋转到速度
                 }
             )
         );
+        projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
+            GameEventType.Unit.MovementCollision,
+            (evt) => OnHit(evt, caster, casterNode, damage));
+
 
         _log.Info($"圆弧弹: 跟踪目标={targetNode.Name}, 初始位置={targetNode.GlobalPosition}");
         return new AbilityExecutedResult { TargetsHit = 1 };
@@ -113,7 +115,7 @@ internal class ArcShotExecutor : AbilityFeatureHandler
             {
                 Damage = damage, // 伤害值
                 Type = DamageType.Physical, // 伤害类型
-                Tags = DamageTags.Ability | DamageTags.Ranged, // 伤害标签
+                Tags = DamageTags.Attack, // 伤害标签
                 Attacker = casterNode // 伤害来源
             }
         });

@@ -23,6 +23,9 @@ public Vector2? Position { get; init; }
 
 /// <summary>初始旋转角度（度，可选，仅对 Node2D 生效；2D 下 0=右、90=下、180=左，正值顺时针）</summary>
 public float? Rotation { get; init; }
+
+/// <summary>运行时视觉场景覆盖（可选；优先级高于 Config.VisualScenePath）</summary>
+public PackedScene? VisualSceneOverride { get; init; }
 }
 
 /// <summary>
@@ -149,6 +152,7 @@ public static partial class EntityManager
                 _log.Error($"对象池不存在: 期望名称 '{config.PoolName}' (类型: {typeof(T).Name})");
                 return null;
             }
+
             entity = pool.Get(false);
             _log.Debug($"从对象池获取 Entity: {typeof(T).Name} (池名: {config.PoolName})");
         }
@@ -163,6 +167,7 @@ public static partial class EntityManager
                 _log.Error($"场景加载失败: {typeof(T).Name} (请检查 ResourceGenerator 是否运行)");
                 return null;
             }
+
             entity = scene.Instantiate<T>();
             _log.Debug($"从场景实例化 Entity: {typeof(T).Name}");
 
@@ -178,7 +183,11 @@ public static partial class EntityManager
         entity.Data.LoadFromResource(config.Config);
 
         // 3. 自动加载 VisualScene (如有)
-        InjectVisualScene(entity, config.Config);
+        InjectVisualScene(
+            entity, // 实体节点
+            config.Config, // 配置资源
+            config.VisualSceneOverride // 运行时视觉覆盖
+        );
 
         // 4. 设置位置和旋转（仅对 Node2D 生效）
         // 关键时序：必须先设置变换，再做组件注册。
@@ -214,7 +223,8 @@ public static partial class EntityManager
             }
         }
 
-        GlobalEventBus.Global.Emit(GameEventType.Global.EntitySpawned, new GameEventType.Global.EntitySpawnedEventData(entity));
+        GlobalEventBus.Global.Emit(GameEventType.Global.EntitySpawned,
+            new GameEventType.Global.EntitySpawnedEventData(entity));
 
         return entity;
     }
@@ -243,25 +253,22 @@ public static partial class EntityManager
     /// <summary>
     /// 自动加载 VisualScene
     /// </summary>
-    private static void InjectVisualScene(Node entity, Resource config)
+    private static void InjectVisualScene(Node entity, Resource config, PackedScene? visualSceneOverride = null)
     {
-        PackedScene? scene = null;
+        PackedScene? scene = visualSceneOverride;
 
-        // 尝试通过反射获取 VisualScenePath 属性 (UnitConfig)
-        var prop = config.GetType().GetProperty(DataKey.VisualScenePath);
-        if (prop != null)
-        {
-            var value = prop.GetValue(config);
-            if (value is PackedScene ps) scene = ps;
-            else if (value is string path && !string.IsNullOrEmpty(path)) scene = GD.Load<PackedScene>(path);
-        }
-
+        // 显式覆盖优先，其次才回退到配置资源上的 VisualScenePath。
         if (scene == null)
         {
-            // 如果反射没找到，也可以尝试从 Data 中读取（因为 LoadFromResource 已经执行）
-            // 但这需要 IEntity.Data 支持获取对象，目前 Data 主要存值类型和路径字符串
-            return;
+            var prop = config.GetType().GetProperty(DataKey.VisualScenePath);
+            if (prop != null)
+            {
+                var value = prop.GetValue(config);
+                if (value is PackedScene ps) scene = ps;
+                else if (value is string path && !string.IsNullOrEmpty(path)) scene = GD.Load<PackedScene>(path);
+            }
         }
+
 
         // 清理旧的
         var existingVisual = entity.GetNodeOrNull("VisualRoot");
@@ -389,7 +396,8 @@ public static partial class EntityManager
         if (entity is IEntity iEntity)
         {
             // 通用 Entity 销毁事件（所有 IEntity）
-            GlobalEventBus.Global.Emit(GameEventType.Global.EntityDestroyed, new GameEventType.Global.EntityDestroyedEventData(iEntity));
+            GlobalEventBus.Global.Emit(GameEventType.Global.EntityDestroyed,
+                new GameEventType.Global.EntityDestroyedEventData(iEntity));
         }
 
         // 1. 注销（内部已清理 Component、关系、Data、Events）

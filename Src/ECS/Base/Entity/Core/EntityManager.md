@@ -94,7 +94,7 @@ var bullet = EntityManager.Spawn<Bullet>(new EntitySpawnConfig
 
 - ✅ **模式自适应**：根据 `UsingObjectPool` 自动选择对象池获取或场景实例化
 - ✅ **数据注入**：将 Config 数据自动注入到 `Data` 容器
-- ✅ **视觉加载**：自动加载 VisualScene（如果配置了 `VisualScenePath`）
+- ✅ **视觉加载**：优先使用 `EntitySpawnConfig.VisualSceneOverride`，否则自动加载 `Config.VisualScenePath`
 - ✅ **组件管理**：自动注册所有 Component 并建立 Entity-Component 关系
 - ✅ **生命周期注册**：将 Entity 注册到 EntityManager 进行统一管理
 
@@ -340,6 +340,7 @@ public partial class Enemy : CharacterBody2D, IEntity, IPoolable
 - `PoolName`：**必填** (当 `UsingObjectPool` 为 true 时)。对象池名称（如 `ObjectPoolNames.EnemyPool`）。
 - `Position`：(可选) 初始位置 `Vector2`。
 - `Rotation`：(可选) 初始旋转角度（角度）。
+- `VisualSceneOverride`：(可选) 运行时视觉场景覆盖，优先级高于 `Config.VisualScenePath`。
 
 **代码示例**：
 
