@@ -107,18 +107,7 @@ public partial class EffectComponent : Node, IComponent
         if (!IsAttached) return;
         if (_entity is not Node effectNode) return;
 
-        var parentIds = EntityRelationshipManager.GetParentEntitiesByChildAndType(
-            effectNode.GetInstanceId().ToString(),
-            EntityRelationshipType.ENTITY_TO_EFFECT);
-
-        var hostEntityId = parentIds.FirstOrDefault();
-        if (string.IsNullOrEmpty(hostEntityId))
-        {
-            _log.Warn("附着模式但未找到宿主关系");
-            return;
-        }
-
-        var hostNode = EntityManager.GetEntityById(hostEntityId);
+        var hostNode = EntityRelationshipTraversal.GetDirectParent(effectNode); // 统一通过 PARENT 追溯直接宿主
         if (hostNode is Node2D host2D)
         {
             _hostNode = host2D;
@@ -137,7 +126,7 @@ public partial class EffectComponent : Node, IComponent
         }
         else
         {
-            _log.Warn($"未找到宿主 Entity: {hostEntityId}");
+            _log.Warn("附着模式但未找到宿主关系");
         }
     }
 

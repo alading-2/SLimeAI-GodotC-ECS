@@ -7,9 +7,13 @@ internal static partial class ProjectileTool
         public string? Name { get; set; }
     }
 
+    /// <summary>
+    /// 生成投射物实体，并自动建立“拥有者 → 投射物”的关系链。
+    /// </summary>
     public static ProjectileEntity? Spawn(
-        Vector2 position,
-        PackedScene? visualScene,
+        IEntity owner, // 投射物归属者
+        Vector2 position, // 投射物初始位置
+        PackedScene? visualScene, // 投射物视觉场景
         string name = "Projectile"
     )
     {
@@ -18,13 +22,26 @@ internal static partial class ProjectileTool
             Name = name
         };
 
-        return EntityManager.Spawn<ProjectileEntity>(new EntitySpawnConfig
+        var projectile = EntityManager.Spawn<ProjectileEntity>(new EntitySpawnConfig
         {
             Config = config, // 运行时最小配置
             UsingObjectPool = true, // 投射物统一走对象池
             PoolName = ObjectPoolNames.ProjectilePool, // 投射物对象池名
             Position = position, // 初始位置
-            VisualSceneOverride = visualScene // 运行时视觉覆盖
+            VisualSceneOverride = visualScene, // 运行时视觉覆盖
+            ParentEntity = owner, // 父实体/归属者
+            AutoAddParentRelation = true, // 自动补 PARENT，供归属链统一溯源
+            ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively, // 归属者销毁时递归销毁投射物
+            ParentRelationTypes = [EntityRelationshipType.ENTITY_TO_PROJECTILE] // 业务关系：拥有者 -> 投射物
         });
+
+        if (projectile == null)
+        {
+            return null;
+        }
+
+        projectile.Data.Set(DataKey.EntityType, EntityType.Projectile); // 标记实体类型为投射物
+
+        return projectile;
     }
 }

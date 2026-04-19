@@ -8,6 +8,7 @@ using System.Linq;
 /// <param name="Name">特效名称（用于调试）</param>
 /// <param name="MaxLifeTime">特效持续时间，-1 表示由动画结束控制</param>
 /// <param name="Host">宿主 Entity 节点（非 null 时为附着模式，跟随宿主位置）</param>
+/// <param name="Owner">归属 Entity（独立特效可填写；Host 非 null 时忽略此字段）</param>
 /// <param name="Scale">特效缩放</param>
 /// <param name="Rotation">旋转角度（度，2D 下 0=右、90=下、180=左，正值顺时针；内部按需转弧度）</param>
 /// <param name="PlayRate">播放倍率</param>
@@ -19,6 +20,7 @@ public readonly record struct EffectSpawnOptions(
     string Name = "Effect",
     float MaxLifeTime = -1f,
     Node? Host = null,
+    IEntity? Owner = null,
     Vector2? Scale = null,
     float Rotation = 0f,
     float PlayRate = 1f,
@@ -41,7 +43,7 @@ public readonly record struct EffectSpawnOptions(
 /// 使用示例：
 /// <code>
 /// // 独立特效（在指定位置播放，播完自动销毁）
-/// EffectTool.Spawn(new EffectSpawnOptions(hitEffectScene, EffectPosition: position));
+/// EffectTool.Spawn(new EffectSpawnOptions(hitEffectScene, EffectPosition: position, Owner: caster));
 ///
 /// // 附着特效（跟随宿主，宿主销毁时自动销毁）
 /// EffectTool.Spawn(new EffectSpawnOptions(buffEffectScene, Host: hostEntity));
@@ -60,6 +62,7 @@ public static partial class EffectTool
     /// 生成特效（统一入口）
     /// - Host 为 null：独立特效，在 EffectPosition 指定的位置播放
     /// - Host 非 null：附着特效，跟随宿主位置，自动建立关系
+    /// - 关系溯源统一补一条 PARENT，供 FindAncestorOfType 使用
     /// </summary>
     /// <param name="options">特效参数</param>
     /// <returns>生成的 EffectEntity，失败返回 null</returns>
@@ -101,12 +104,26 @@ public static partial class EffectTool
         // 应用初始变换
         ApplyInitialTransform(entity, position, options, isAttached);
 
-        // 附着模式：必须先建立关系，再注册组件，避免 EffectComponent.OnComponentRegistered 取不到宿主
-        if (isAttached)
+        // 必须先建立关系，再注册组件，避免 EffectComponent.OnComponentRegistered 取不到宿主。
+        if (isAttached && options.Host is IEntity hostEntity)
         {
-            string hostId = options.Host!.GetInstanceId().ToString();
-            EntityRelationshipManager.AddRelationship(
-                hostId, effectId, EntityRelationshipType.ENTITY_TO_EFFECT);
+            EntityManager.BindParentRelationships(
+                entity, // 子实体：特效
+                hostEntity, // 父实体：宿主
+                autoAddParentRelation: true, // 自动补 PARENT，供统一溯源
+                parentDestroyPolicy: ParentDestroyPolicy.DestroyRecursively, // 宿主销毁时递归销毁附着特效
+                EntityRelationshipType.ENTITY_TO_EFFECT // 业务关系：宿主 -> 特效
+            );
+        }
+        else if (options.Owner != null)
+        {
+            EntityManager.BindParentRelationships(
+                entity, // 子实体：特效
+                options.Owner, // 父实体：归属者
+                autoAddParentRelation: true, // 自动补 PARENT，供统一溯源
+                parentDestroyPolicy: ParentDestroyPolicy.DestroyRecursively, // 归属者销毁时默认递归销毁该特效
+                EntityRelationshipType.ENTITY_TO_EFFECT // 业务关系：归属者 -> 特效
+            );
         }
 
         // 注册 Entity / Component（对象池复用后需要重新注册）

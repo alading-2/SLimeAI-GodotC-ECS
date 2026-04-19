@@ -105,7 +105,7 @@ public partial class DamageStatisticsSystem : Node
         if (data.Killer is not Godot.Node killerNode) return;
 
         // 遍历攻击链，为 IUnit 和 IWeapon 记录击杀
-        var ancestorChain = EntityRelationshipManager.GetAncestorChain(killerNode);
+        var ancestorChain = EntityRelationshipTraversal.GetAncestorChain(killerNode);
         bool foundAnyTarget = false;
 
         foreach (var entity in ancestorChain)
@@ -127,4 +127,3 @@ public partial class DamageStatisticsSystem : Node
     }
 
 }
-

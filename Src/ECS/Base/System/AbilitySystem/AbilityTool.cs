@@ -1,3 +1,5 @@
+using Godot;
+
 /// <summary>
 /// Ability 子域工具。
 /// 只保留跨技能确实复用、且不读取 CastContext 的薄逻辑。
@@ -42,5 +44,24 @@ internal static class AbilityTool
         }
 
         return filter.HasFlag(TeamFilter.Enemy);
+    }
+
+    /// <summary>
+    /// 将生成点沿给定方向前推一段距离，减少投射物贴在施法者中心导致的首帧重叠。
+    /// </summary>
+    public static Vector2 ResolveSpawnPosition(
+        Vector2 startPos, // 原始生成点
+        Vector2 direction, // 出生朝向
+        float forwardOffset) // 前推距离
+    {
+        if (forwardOffset <= 0f)
+        {
+            return startPos;
+        }
+
+        Vector2 normalizedDirection = direction.LengthSquared() >= 0.001f
+            ? direction.Normalized()
+            : Vector2.Right;
+        return startPos + normalizedDirection * forwardOffset;
     }
 }

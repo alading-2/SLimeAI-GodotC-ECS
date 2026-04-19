@@ -20,7 +20,7 @@ public class LifestealProcessor : IDamageProcessor
         if (info.Attacker == null) return;
 
         // 查找归属的 IUnit（自身或沿 PARENT 向上）
-        var targetUnit = EntityRelationshipManager.FindAncestorOfType<IUnit>(info.Attacker);
+        var targetUnit = EntityRelationshipTraversal.FindAncestorOfType<IUnit>(info.Attacker);
         if (targetUnit == null)
         {
             _log.Error($"吸血处理失败：无法找到归属的 IUnit，Attacker={info.Attacker}");
@@ -42,4 +42,3 @@ public class LifestealProcessor : IDamageProcessor
         }
     }
 }
-

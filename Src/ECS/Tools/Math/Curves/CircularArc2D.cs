@@ -82,6 +82,32 @@ public readonly struct CircularArc2D
     }
 
     /// <summary>
+    /// 根据起点、终点和半径创建一段“尽量朝屏幕上方弯曲”的圆弧。
+    /// <para>
+    /// 该方法会同时尝试顺时针与逆时针两条候选弧，并比较中点的世界坐标 Y。
+    /// 在 Godot 2D 中，Y 越小表示越靠上，因此会优先选择中点 Y 更小的那条弧。
+    /// 若两条弧等高，则回退到 <paramref name="preferClockwise"/> 指定的默认方向。
+    /// </para>
+    /// </summary>
+    public static CircularArc2D CreateWorldUp(Vector2 start, Vector2 end, float radius, bool preferClockwise)
+    {
+        var clockwiseCurve = Create(start, end, radius, true);
+        var counterClockwiseCurve = Create(start, end, radius, false);
+
+        if (!clockwiseCurve.IsValid) return counterClockwiseCurve;
+        if (!counterClockwiseCurve.IsValid) return clockwiseCurve;
+
+        float clockwiseMidY = clockwiseCurve.Evaluate(0.5f).Y;
+        float counterClockwiseMidY = counterClockwiseCurve.Evaluate(0.5f).Y;
+        if (!Mathf.IsEqualApprox(clockwiseMidY, counterClockwiseMidY))
+        {
+            return clockwiseMidY < counterClockwiseMidY ? clockwiseCurve : counterClockwiseCurve;
+        }
+
+        return preferClockwise ? clockwiseCurve : counterClockwiseCurve;
+    }
+
+    /// <summary>
     /// 按参数 t 采样点，t ∈ [0, 1]。
     /// </summary>
     public Vector2 Evaluate(float t)

@@ -5,22 +5,21 @@ using System.Runtime.CompilerServices;
 /// 【模式】抛物线移动。
 /// <para>
 /// 该策略由起点、终点和顶高（Apex Height）通过数学公式构建单段抛物线路径。
-/// 支持静态目标点或动态追踪 <c>TargetNode</c>。
+/// 推荐用于“固定终点”的投掷 / 炸弹 / 跳斩类运动。
 /// 数学原理：
 /// 1. 建立局部坐标系：将起点映射为 (0,0)，终点映射为 (L, 0)，其中 L 是起点到终点的欧氏距离。
 /// 2. 在局部系下，抛物线方程为 y = ax^2 + bx + c。由于过 (0,0) 则 c=0。
 /// 3. 通过顶点高度 H（在 L/2 处达到）和终点 (L,0) 求解系数 a, b。
 /// 4. 进度推进：每帧根据 speed * delta / curveLength 计算进度增量，直接按参数 t 采样曲线点。
 /// <code>
-/// 【使用示例：抛物线追踪目标（终点每帧跟随 TargetNode）】
+/// 【使用示例：固定落点抛物线（推荐用法）】
 /// entity.Events.Emit(GameEventType.Unit.MovementStarted,
 ///     new GameEventType.Unit.MovementStartedEventData(MoveMode.Parabola, new MovementParams
 ///     {
 ///         Mode = MoveMode.Parabola,
+///         TargetPoint = landingPoint,      // 固定落点
 ///         MaxDuration = 2f,                // 最大持续时间
 ///         DestroyOnComplete = true,        // 结束销毁
-///         isTrackTarget = true,            // 每帧将终点更新到 TargetNode 位置
-///         TargetNode = enemyNode,          // 追踪目标
 ///         ReachDistance = 20f,             // 到达距离阈值
 ///         ParabolaApexHeight = 180f,       // 必须：抛物线顶高
 ///         // 抛物线
@@ -29,7 +28,11 @@ using System.Runtime.CompilerServices;
 ///     }));
 /// </code>
 /// </para>
-/// <para>【典型用途】投掷物、跳斩位移、带拱形弹道的技能特效。</para>
+/// <para>
+/// 说明：参数层虽然仍兼容 <c>TargetNode / isTrackTarget</c>，但追踪模式会在运动过程中不断改变终点，
+/// 更适合调试或特殊位移，不推荐作为游戏内标准投射物弹道。
+/// </para>
+/// <para>【典型用途】投掷物、定点炸弹、跳斩位移、带拱形弹道的技能特效。</para>
 /// </summary>
 public class ParabolaStrategy : IMovementStrategy
 {

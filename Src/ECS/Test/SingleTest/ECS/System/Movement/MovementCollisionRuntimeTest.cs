@@ -41,7 +41,12 @@ namespace Slime.Test
                 TestStopRequestedDefaults();
                 TestMovementCompletedEventCarriesReason();
                 TestStopCoordinatorResolution();
+                TestBindParentRelationshipsCreatesOwnershipChain();
+                TestBindParentRelationshipsRejectsSecondParent();
+                TestDestroyRecursivelyDestroysOwnedChildren();
+                TestDestroyDetachKeepsOwnedChildrenAlive();
                 TestCollisionPolicyCountsAndFilters();
+                TestCollisionPolicyUsesOwnerUnitForTeamFilter();
                 TestCollisionPolicyTrackedTargetOnly();
             }
             catch (System.Exception ex)
@@ -243,6 +248,220 @@ namespace Slime.Test
             friendly.QueueFree();
         }
 
+        /// <summary>
+        /// 验证统一绑定入口会同时建立业务关系和 PARENT 关系，并且可通过统一追溯入口回到归属单位。
+        /// </summary>
+        private void TestBindParentRelationshipsCreatesOwnershipChain()
+        {
+            var owner = new MockEntity("Owner", Team.Player, EntityType.Unit);
+            var projectile = new MockEntity("Projectile", Team.Neutral, EntityType.Projectile);
+
+            AddChild(owner);
+            AddChild(projectile);
+
+            EntityManager.Register(owner);
+            EntityManager.Register(projectile);
+
+            try
+            {
+                bool bound = EntityManager.BindParentRelationships(
+                    projectile, // 子实体：投射物
+                    owner, // 父实体：归属单位
+                    autoAddParentRelation: true, // 自动补 PARENT，供统一溯源
+                    relationTypes: EntityRelationshipType.ENTITY_TO_PROJECTILE // 业务关系：拥有者 -> 投射物
+                );
+
+                bool hasBusinessRelation = EntityRelationshipManager.HasRelationship(
+                    owner.Data.Get<string>(DataKey.Id), // 父实体 Id
+                    projectile.Data.Get<string>(DataKey.Id), // 子实体 Id
+                    EntityRelationshipType.ENTITY_TO_PROJECTILE // 投射物业务关系
+                );
+                bool hasParentRelation = EntityRelationshipManager.HasRelationship(
+                    owner.Data.Get<string>(DataKey.Id), // 父实体 Id
+                    projectile.Data.Get<string>(DataKey.Id), // 子实体 Id
+                    EntityRelationshipType.PARENT // 统一父子关系
+                );
+                var ownerEntity = EntityRelationshipTraversal.FindAncestorOfType<IEntity>(projectile); // 统一沿 PARENT 追溯归属实体
+
+                AssertEqual("统一绑定入口应返回成功", true, bound);
+                AssertEqual("统一绑定入口应建立业务关系", true, hasBusinessRelation);
+                AssertEqual("统一绑定入口应自动建立 PARENT 关系", true, hasParentRelation);
+                AssertEqual("统一追溯入口应能回溯到归属实体", owner, ownerEntity);
+            }
+            finally
+            {
+                CleanupEntities(owner, projectile);
+            }
+        }
+
+        /// <summary>
+        /// 验证 PARENT 链是单父契约，同一个子实体不能再绑定第二个直接父级。
+        /// </summary>
+        private void TestBindParentRelationshipsRejectsSecondParent()
+        {
+            var ownerA = new MockEntity("OwnerA", Team.Player, EntityType.Unit);
+            var ownerB = new MockEntity("OwnerB", Team.Player, EntityType.Unit);
+            var projectile = new MockEntity("Projectile", Team.Neutral, EntityType.Projectile);
+
+            AddChild(ownerA);
+            AddChild(ownerB);
+            AddChild(projectile);
+
+            EntityManager.Register(ownerA);
+            EntityManager.Register(ownerB);
+            EntityManager.Register(projectile);
+
+            try
+            {
+                bool firstBound = EntityManager.BindParentRelationships(
+                    projectile, // 子实体：投射物
+                    ownerA, // 第一个父实体
+                    autoAddParentRelation: true, // 自动补 PARENT
+                    relationTypes: EntityRelationshipType.ENTITY_TO_PROJECTILE // 业务关系
+                );
+                bool secondBound = EntityManager.BindParentRelationships(
+                    projectile, // 同一个子实体
+                    ownerB, // 第二个父实体，理论上应被拒绝
+                    autoAddParentRelation: true, // 仍尝试补 PARENT
+                    relationTypes: EntityRelationshipType.ENTITY_TO_PROJECTILE // 同一业务关系也应拒绝二次归属
+                );
+                var directParent = EntityRelationshipTraversal.GetDirectParent(projectile); // 统一获取直接父级
+
+                AssertEqual("首次绑定应成功", true, firstBound);
+                AssertEqual("第二次绑定直接父级应被拒绝", false, secondBound);
+                AssertEqual("子实体直接父级应保持第一次绑定结果", ownerA, directParent);
+            }
+            finally
+            {
+                CleanupEntities(ownerA, ownerB, projectile);
+            }
+        }
+
+        /// <summary>
+        /// 验证归属链默认采用级联销毁策略时，父实体销毁会递归销毁直接子实体。
+        /// </summary>
+        private void TestDestroyRecursivelyDestroysOwnedChildren()
+        {
+            var owner = new MockEntity("CascadeOwner", Team.Player, EntityType.Unit);
+            var projectile = new MockEntity("CascadeProjectile", Team.Neutral, EntityType.Projectile);
+
+            AddChild(owner);
+            AddChild(projectile);
+
+            EntityManager.Register(owner);
+            EntityManager.Register(projectile);
+
+            string ownerId = owner.Data.Get<string>(DataKey.Id);
+            string projectileId = projectile.Data.Get<string>(DataKey.Id);
+
+            bool bound = EntityManager.BindParentRelationships(
+                projectile, // 子实体：投射物
+                owner, // 父实体：拥有者
+                autoAddParentRelation: true, // 自动补 PARENT
+                parentDestroyPolicy: ParentDestroyPolicy.DestroyRecursively, // 父死子死
+                relationTypes: EntityRelationshipType.ENTITY_TO_PROJECTILE // 业务关系
+            );
+
+            AssertEqual("级联销毁测试前置绑定应成功", true, bound);
+
+            EntityManager.Destroy(owner);
+
+            AssertEqual("级联销毁后父实体应注销", false, NodeLifecycleManager.IsRegistered(ownerId));
+            AssertEqual("级联销毁后子实体应一并注销", false, NodeLifecycleManager.IsRegistered(projectileId));
+        }
+
+        /// <summary>
+        /// 验证归属链采用 Detach 策略时，父实体销毁仅断开关系，不销毁子实体。
+        /// </summary>
+        private void TestDestroyDetachKeepsOwnedChildrenAlive()
+        {
+            var owner = new MockEntity("DetachOwner", Team.Player, EntityType.Unit);
+            var projectile = new MockEntity("DetachProjectile", Team.Neutral, EntityType.Projectile);
+
+            AddChild(owner);
+            AddChild(projectile);
+
+            EntityManager.Register(owner);
+            EntityManager.Register(projectile);
+
+            string ownerId = owner.Data.Get<string>(DataKey.Id);
+            string projectileId = projectile.Data.Get<string>(DataKey.Id);
+
+            bool bound = EntityManager.BindParentRelationships(
+                projectile, // 子实体：投射物
+                owner, // 父实体：拥有者
+                autoAddParentRelation: true, // 自动补 PARENT
+                parentDestroyPolicy: ParentDestroyPolicy.Detach, // 父死仅断开关系
+                relationTypes: EntityRelationshipType.ENTITY_TO_PROJECTILE // 业务关系
+            );
+
+            AssertEqual("Detach 测试前置绑定应成功", true, bound);
+
+            EntityManager.Destroy(owner);
+
+            var directParent = EntityRelationshipTraversal.GetDirectParent(projectile); // Detach 后不应再有直接父级
+            bool projectileStillRegistered = NodeLifecycleManager.IsRegistered(projectileId);
+            bool ownerStillRegistered = NodeLifecycleManager.IsRegistered(ownerId);
+
+            AssertEqual("Detach 后父实体应注销", false, ownerStillRegistered);
+            AssertEqual("Detach 后子实体应继续存活", true, projectileStillRegistered);
+            AssertEqual("Detach 后子实体不应再保留直接父级", null, directParent);
+
+            CleanupEntities(projectile);
+        }
+
+        /// <summary>
+        /// 验证投射物会沿 PARENT 关系回溯到归属单位判敌我，而不是直接拿自身 Team（通常为 Neutral）判断。
+        /// </summary>
+        private void TestCollisionPolicyUsesOwnerUnitForTeamFilter()
+        {
+            var owner = new MockEntity("Owner", Team.Player, EntityType.Unit);
+            var projectile = new MockEntity("Projectile", Team.Neutral, EntityType.Projectile);
+            var friendly = new MockEntity("Friendly", Team.Player, EntityType.Unit);
+            var enemy = new MockEntity("Enemy", Team.Enemy, EntityType.Unit);
+
+            AddChild(owner);
+            AddChild(projectile);
+            AddChild(friendly);
+            AddChild(enemy);
+
+            EntityManager.Register(owner);
+            EntityManager.Register(projectile);
+            EntityManager.Register(friendly);
+            EntityManager.Register(enemy);
+
+            EntityRelationshipManager.AddRelationship(
+                owner.Data.Get<string>(DataKey.Id), // 父实体：归属单位
+                projectile.Data.Get<string>(DataKey.Id), // 子实体：投射物
+                EntityRelationshipType.PARENT // 统一溯源关系
+            );
+
+            try
+            {
+                var policy = new MovementCollisionPolicy();
+                var @params = new MovementParams
+                {
+                    Mode = MoveMode.SineWave,
+                    CollisionParams = new MovementCollisionParams
+                    {
+                        TeamFilter = TeamFilter.Enemy, // 只接受敌方
+                        EntityTypeFilter = EntityType.Unit // 只接受单位
+                    }
+                };
+                policy.Reset(@params);
+
+                bool friendlyAccepted = policy.TryAccept(projectile, MoveMode.SineWave, @params, friendly, out _);
+                bool enemyAccepted = policy.TryAccept(projectile, MoveMode.SineWave, @params, enemy, out _);
+
+                AssertEqual("投射物应继承 owner 阵营，友军碰撞必须被过滤", false, friendlyAccepted);
+                AssertEqual("投射物应继承 owner 阵营，敌方碰撞必须通过", true, enemyAccepted);
+            }
+            finally
+            {
+                CleanupEntities(owner, projectile, friendly, enemy);
+            }
+        }
+
         private void TestCollisionPolicyTrackedTargetOnly()
         {
             var source = new MockEntity("ArcSource", Team.Player, EntityType.Projectile);
@@ -279,6 +498,20 @@ namespace Slime.Test
             source.QueueFree();
             trackedEnemy.QueueFree();
             otherEnemy.QueueFree();
+        }
+
+        /// <summary>
+        /// 统一清理注册过的测试实体，避免生命周期管理器和关系表残留脏数据。
+        /// </summary>
+        private static void CleanupEntities(params Node[] entities)
+        {
+            foreach (var entity in entities)
+            {
+                if (GodotObject.IsInstanceValid(entity))
+                {
+                    EntityManager.Destroy(entity);
+                }
+            }
         }
 
         private void AssertEqual<T>(string name, T expected, T actual)

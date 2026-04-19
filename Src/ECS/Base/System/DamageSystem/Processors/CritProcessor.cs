@@ -18,7 +18,7 @@ public class CritProcessor : IDamageProcessor
         if (info.Attacker == null) return;
 
         // 查找攻击者IUnit实体（自身或沿 PARENT 向上）
-        var attackerEntity = EntityRelationshipManager.FindAncestorOfType<IUnit>(info.Attacker);
+        var attackerEntity = EntityRelationshipTraversal.FindAncestorOfType<IUnit>(info.Attacker);
         if (attackerEntity == null)
         {
             _log.Error($"暴击处理失败：无法找到攻击者实体，Attacker={info.Attacker}");
@@ -40,4 +40,3 @@ public class CritProcessor : IDamageProcessor
         }
     }
 }
-

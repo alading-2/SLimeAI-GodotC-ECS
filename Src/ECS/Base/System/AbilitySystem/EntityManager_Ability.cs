@@ -64,9 +64,13 @@ public static partial class EntityManager
         AbilityEntity? ability;
         ability = Spawn<AbilityEntity>(new EntitySpawnConfig
         {
-            Config = config,
-            UsingObjectPool = true,
-            PoolName = ObjectPoolNames.AbilityPool
+            Config = config, // 技能配置资源
+            UsingObjectPool = true, // 技能实体统一走对象池
+            PoolName = ObjectPoolNames.AbilityPool, // 技能对象池
+            ParentEntity = owner, // 父实体/技能拥有者
+            AutoAddParentRelation = true, // 自动补 PARENT，供统一溯源
+            ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively, // 拥有者销毁时递归销毁技能实体
+            ParentRelationTypes = [EntityRelationshipType.ENTITY_TO_ABILITY] // 业务关系：拥有者 -> 技能
         });
 
         if (ability == null)
@@ -92,14 +96,6 @@ public static partial class EntityManager
 
         // 获取 ID（从 Data 读取，由 EntityManager.Spawn 设置）
         var ownerId = owner.Data.Get<string>(DataKey.Id) ?? string.Empty;
-        var abilityId = ability.Data.Get<string>(DataKey.Id) ?? string.Empty;
-
-        // 建立关系（替代 DataKey.Owner，关系统一由 EntityRelationshipManager 管理）
-        EntityRelationshipManager.AddRelationship(
-            ownerId,
-            abilityId,
-            EntityRelationshipType.ENTITY_TO_ABILITY
-        );
 
         // 核心逻辑连通：订阅 TryTrigger 事件，由 AbilitySystem 统一处理
         ability.Events.On<GameEventType.Ability.TryTriggerEventData>(

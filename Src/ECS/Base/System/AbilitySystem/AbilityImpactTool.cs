@@ -50,7 +50,7 @@ internal static class AbilityImpactTool
         // 2. 特效生成
         if (options.Effect.HasValue)
         {
-            EffectTool.Spawn(ResolveEffectOptions(options.Effect.Value, query));
+            EffectTool.Spawn(ResolveEffectOptions(caster, options.Effect.Value, query));
         }
 
         // 3. 伤害结算：无伤害参数时跳过；无 Query 时不做隐式伤害兜底
@@ -122,8 +122,13 @@ internal static class AbilityImpactTool
     /// <summary>
     /// 解析特效参数；若未显式配置特效位置，则默认回落到 Query 的命中中心。
     /// </summary>
-    private static EffectSpawnOptions ResolveEffectOptions(EffectSpawnOptions effect, TargetSelectorQuery? query)
+    private static EffectSpawnOptions ResolveEffectOptions(IEntity caster, EffectSpawnOptions effect, TargetSelectorQuery? query)
     {
+        if (effect.Host == null && effect.Owner == null)
+        {
+            effect = effect with { Owner = caster }; // 独立特效默认把施法者作为归属者
+        }
+
         if (effect.Host != null) return effect;
         if (effect.EffectPosition.HasValue) return effect;
         if (!query.HasValue) return effect;

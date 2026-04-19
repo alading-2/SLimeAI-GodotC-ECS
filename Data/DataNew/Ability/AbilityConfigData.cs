@@ -66,17 +66,18 @@ public class AbilityConfigData
         AbilityDamage = 25f
     };
 
-    /// <summary>抛物线射击</summary>
+    /// <summary>定点抛炸弹</summary>
     public static readonly AbilityConfigData ParabolaShot = new()
     {
-        Name = "抛物线射击",
+        Name = "定点抛炸弹",
         FeatureGroupId = "技能.投射物",
-        FeatureHandlerId = "技能.投射物.抛物线射击",
-        Description = "发射沿抛物线飞行的弓形弹道（验证 Parabola 模式）",
+        FeatureHandlerId = "技能.投射物.定点抛炸弹",
+        Description = "每隔一段时间向施法者周围随机落点抛出一枚炸弹，落地时造成范围伤害（固定终点 Parabola 模式）",
         AbilityIconPath = "res://icon.svg",
-        AbilityTriggerMode = AbilityTriggerMode.Manual,
+        AbilityTriggerMode = AbilityTriggerMode.Periodic,
         AbilityCooldown = 1.0f,
-        AbilityDamage = 28f
+        AbilityDamage = 28f,
+        AbilityEffectRadius = 100f
     };
 
     /// <summary>回旋镖投掷</summary>

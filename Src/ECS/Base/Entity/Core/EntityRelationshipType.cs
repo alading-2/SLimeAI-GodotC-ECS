@@ -28,6 +28,9 @@ public static class EntityRelationshipType
     /// <summary>Entity 与特效关系</summary>
     public const string ENTITY_TO_EFFECT = "relationship.entity.effect";
 
+    /// <summary>Entity 与投射物关系</summary>
+    public const string ENTITY_TO_PROJECTILE = "relationship.entity.projectile";
+
     // ==================== 技能相关关系 ====================
     /// <summary>技能与特效关系</summary>
     public const string ABILITY_TO_EFFECT = "relationship.ability.effect";

@@ -108,7 +108,7 @@ public class BoomerangStrategy : IMovementStrategy
             }
             else
             {
-                _ownerEntity = EntityRelationshipManager.FindAncestorOfType<Node2D>(node);
+                _ownerEntity = EntityRelationshipTraversal.FindAncestorOfType<Node2D>(node);
             }
         }
 

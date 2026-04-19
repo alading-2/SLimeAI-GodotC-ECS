@@ -53,7 +53,7 @@ public static partial class FeatureId
 
         public static class Projectile
         {
-            public const string ParabolaShot = "技能.投射物.抛物线射击";
+            public const string ParabolaBombardment = "技能.投射物.定点抛炸弹";
             public const string SineWaveShot = "技能.投射物.正弦波射击";
             public const string ArcShot = "技能.投射物.圆弧射击";
             public const string BezierShot = "技能.投射物.贝塞尔射击";

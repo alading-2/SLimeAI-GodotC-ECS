@@ -183,7 +183,31 @@ MovementStopCoordinator.Resolve(...)
 
 这样它只会在“自然追到锁定目标”时结算，而不会被沿路碰到的任意敌人/玩家打断。
 
-## 10. `MovementStopReason` / `MovementStopContext`
+## 10. BezierCurve 语义
+
+`BezierCurve` 现在有两套输入方式：
+
+- `BezierPoints`
+- `BezierTemplate`
+
+推荐：
+
+- 静态曲线演出或已有世界坐标控制点：继续传 `BezierPoints`
+- 追踪目标、随机多发样式、想复用统一选点方案：优先传 `BezierTemplate`
+
+追踪模式的关键变化：
+
+- 旧逻辑：只更新终点，中间控制点世界坐标锁死
+- 新逻辑：如果存在模板，则按“当前实体位置 → 当前目标位置”重建剩余曲线
+
+这样可以保证：
+
+- 已经飞出来的历史段不会被整体重写
+- 剩余段会继续保持原本的样式关系，并随剩余时长逐步收束
+- 长距离目标不会再把横向偏移按距离无限放大
+- 3~5 阶随机模板在追踪目标时不会中段抽搐或被硬拽变形
+
+## 11. `MovementStopReason` / `MovementStopContext`
 
 当前停止原因：
 
@@ -203,7 +227,7 @@ MovementStopCoordinator.Resolve(...)
 
 注意：`IsCompleted` 仍只对 `Completed / Collision` 为 `true`。若业务要精确分支，应直接判断 `Reason`。
 
-## 11. Velocity 分层合成
+## 12. Velocity 分层合成
 
 ```text
 IsMovementLocked = true  → Zero
@@ -211,7 +235,7 @@ VelocityOverride ≠ Zero  → VelocityOverride
 否则                      → Velocity + VelocityImpulse（用后清零）
 ```
 
-## 12. 测试场景
+## 13. 测试场景
 
 - `Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn`
 - `Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn`

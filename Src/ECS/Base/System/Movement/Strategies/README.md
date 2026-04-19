@@ -57,11 +57,15 @@ public interface IMovementStrategy
 **关键参数**:
 - `MaxDuration`: 移动总时长（秒，**必须 > 0**，此策略不支持 -1）
 - `BezierPoints`: 控制点数组（含起点和终点，推荐）；若未提供则以 `TargetPoint` 降级直线
+- `BezierTemplate`: 3~5 阶模板化曲线描述；追踪模式推荐优先传它
 
 **技术特点**:
 - 控制点克隆：避免污染原始数据
 - 起点修正：OnEnter 时将第0个控制点设为实体当前位置
-- 每帧直接调用 `BezierCurve.Evaluate(t)` / `EvaluateTangent(t)` 采样，无需查找表
+- 静态模式每帧直接调用 `BezierCurve.Evaluate(t)` / `EvaluateTangent(t)` 采样
+- 追踪模式使用模板按“当前点 → 当前目标点”重建剩余曲线，避免只改终点导致中段形态乱变
+- 模板解析会限制长距离横向偏移；追踪剩余段会随剩余时长逐步收束，防止越追越飘
+- 模板生成统一放在 `Src/ECS/Tools/Math/Bezier/BezierTemplateBuilder.cs`，支持 `RearWrap / SideSweep / SWeave / Converge`
 
 ---
 

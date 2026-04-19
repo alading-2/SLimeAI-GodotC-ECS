@@ -117,7 +117,23 @@ public sealed class MovementCollisionPolicy
             return false;
         }
 
-        return AbilityTool.MatchesTeamFilter(sourceEntity, targetEntity, filter);
+        IEntity teamSourceEntity = ResolveTeamFilterSourceEntity(sourceEntity); // 用归属单位而不是投射物自身判断敌我
+        return AbilityTool.MatchesTeamFilter(teamSourceEntity, targetEntity, filter);
+    }
+
+    /// <summary>
+    /// 阵营判断统一优先回溯到最近的 IUnit 祖先。
+    /// <para>投射物 / 特效等派生实体通过 PARENT 关系回溯归属单位；找不到时再回退到自身。</para>
+    /// </summary>
+    private static IEntity ResolveTeamFilterSourceEntity(IEntity sourceEntity)
+    {
+        if (sourceEntity is not Node sourceNode)
+        {
+            return sourceEntity;
+        }
+
+        var ownerUnit = EntityRelationshipTraversal.FindAncestorOfType<IUnit>(sourceNode); // 沿 PARENT 关系回溯归属单位
+        return ownerUnit ?? sourceEntity;
     }
 
     /// <summary>实体类型过滤：None 放行所有，否则按位枚举匹配目标类型。</summary>

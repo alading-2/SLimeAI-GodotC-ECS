@@ -179,6 +179,15 @@ public record struct MovementParams
     /// </summary>
     public Vector2[]? BezierPoints { get; init; } = null;
 
+    /// <summary>
+    /// 贝塞尔模板（BezierCurve 模式）。
+    /// <para>
+    /// 模板不直接保存世界坐标控制点，而是保存“相对起点-终点连线”的归一化描述。
+    /// 这样在 <c>isTrackTarget = true</c> 时，策略可以按当前剩余段重建曲线，维持整体风格不乱变。
+    /// </para>
+    /// </summary>
+    public BezierCurveTemplate? BezierTemplate { get; init; } = null;
+
     // ======== 曲线通用（抛物线 / 圆弧共用）========
 
     /// <summary>

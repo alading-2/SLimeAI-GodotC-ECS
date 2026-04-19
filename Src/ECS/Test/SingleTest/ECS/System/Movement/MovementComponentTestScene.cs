@@ -195,7 +195,7 @@ namespace Slime.Test
             AddDemo(DemoId.AttachToHost, "附着宿主", new Vector2(-520f, 260f), Colors.HotPink, new DemoSettings { Duration = -1f });
             AddDemo(DemoId.PlayerInput, "玩家控制", new Vector2(-520f, 260f), Colors.White, new DemoSettings { Speed = 260f, Amplitude = 12f });
             AddDemo(DemoId.AIControlled, "AI控制", new Vector2(240f, 250f), Colors.IndianRed, new DemoSettings { Speed = 170f });
-            AddDemo(DemoId.Parabola, "抛物线", new Vector2(20f, 20f), Colors.MediumPurple, new DemoSettings { Speed = 300f, Height = 130f, TrackTarget = true, WorldUp = true });
+            AddDemo(DemoId.Parabola, "抛物线(固定点)", new Vector2(20f, 20f), Colors.MediumPurple, new DemoSettings { Speed = 300f, Height = 130f, TrackTarget = false, ReachDistance = 20f, WorldUp = true });
             AddDemo(DemoId.CircularArc, "圆弧", new Vector2(320f, 150f), Colors.SandyBrown, new DemoSettings { Speed = 280f, Radius = 220f, ReachDistance = 20f, TrackTarget = true, Clockwise = true });
         }
 
@@ -419,13 +419,12 @@ namespace Slime.Test
                         TargetPoint = _curveTargetMarker != null ? _curveTargetMarker.GlobalPosition : Vector2.Zero,
                         isTrackTarget = settings.TrackTarget,
                         ReachDistance = settings.ReachDistance,
-                        BezierPoints = new[]
-                        {
-                            spawn,
-                            spawn + new Vector2(180f, -180f),
-                            spawn + new Vector2(380f, 120f),
-                            _curveTargetMarker != null ? _curveTargetMarker.GlobalPosition : spawn + new Vector2(520f, 0f)
-                        }
+                        BezierTemplate = BezierTemplateBuilder.CreatePattern(
+                            degree: 5, // 测试场景默认走 5 阶模板
+                            pattern: BezierPatternType.RearWrap, // 先绕后打模式
+                            variantIndex: 0, // 单发模板
+                            variantCount: 1, // 无多发分布
+                            randomSeed: 20260419) // 固定种子，便于观察
                     };
                 case DemoId.Boomerang:
                     return new MovementParams
@@ -598,7 +597,7 @@ namespace Slime.Test
             }
 
             var selected = _demos[GetSelectedId()];
-            _summaryLabel.Text = $"当前: {selected.Name}\n玩家: WASD/方向键\n敌人: 自动 AIControlled\n附着体会跟随玩家\nCharge/Bezier/Parabola/CircularArc 可切换 TrackTarget\nDistance 在 Orbit 中表示 TotalAngle";
+            _summaryLabel.Text = $"当前: {selected.Name}\n玩家: WASD/方向键\n敌人: 自动 AIControlled\n附着体会跟随玩家\nCharge/Bezier/CircularArc 可切换 TrackTarget\nParabola 推荐固定 TargetPoint\nDistance 在 Orbit 中表示 TotalAngle";
         }
 
         private void AddDemo(DemoId id, string name, Vector2 spawn, Color color, DemoSettings settings)

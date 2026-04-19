@@ -26,7 +26,7 @@ public class StatisticsProcessor : IDamageProcessor
         if (info.Attacker == null) return;
 
         // ===== 攻击链统计（遍历 IUnit 和 IWeapon）=====
-        var ancestorChain = EntityRelationshipManager.GetAncestorChain(info.Attacker);
+        var ancestorChain = EntityRelationshipTraversal.GetAncestorChain(info.Attacker);
         bool foundAnyTarget = false;
 
         foreach (var entity in ancestorChain)
@@ -86,4 +86,3 @@ public class StatisticsProcessor : IDamageProcessor
         }
     }
 }
-

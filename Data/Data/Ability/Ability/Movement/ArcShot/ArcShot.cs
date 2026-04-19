@@ -40,6 +40,7 @@ internal class ArcShotExecutor : AbilityFeatureHandler
         var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
 
         var projectile = ProjectileTool.Spawn(
+            caster, // 投射物归属者
             casterNode.GlobalPosition, // 生成位置
             projectileScene, // 投射物视觉
             "ArcShotProjectile" // 投射物名称

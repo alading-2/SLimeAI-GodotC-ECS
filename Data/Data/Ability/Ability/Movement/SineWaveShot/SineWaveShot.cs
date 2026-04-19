@@ -3,7 +3,7 @@ using Godot;
 
 /// <summary>
 /// 正弦波弹技能执行器 - 验证 SineWave 运动模式
-/// 向最近敌人方向发射正弦波前进的投射物
+/// 在施法者周围随机取一点作为初始方向，发射一枚正弦波前进的投射物
 /// </summary>
 internal class SineWaveShotExecutor : AbilityFeatureHandler
 {
@@ -17,6 +17,9 @@ internal class SineWaveShotExecutor : AbilityFeatureHandler
 
     public override string FeatureId => global::FeatureId.Ability.Projectile.SineWaveShot;
 
+    /// <summary>
+    /// 执行正弦波弹技能：先随机采样方向，再生成 1 枚正弦波投射物并挂接碰撞伤害。
+    /// </summary>
     protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
         var caster = context.Caster!;
@@ -25,72 +28,91 @@ internal class SineWaveShotExecutor : AbilityFeatureHandler
 
         var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 最终技能伤害
 
-        // 确定射击方向：优先最近敌人，否则朝右
-        var dir = GetShootDirection(caster, casterNode, ability.Data.Get<float>(DataKey.AbilityCastRange));
+        // 正弦波弹不再朝最近敌人开火，而是在施法者周围随机取一点决定出射方向。
+        Vector2 directionPoint = GetRandomDirectionPoint(casterNode); // 随机方向采样点
+        Vector2 rawDirection = directionPoint - casterNode.GlobalPosition; // 原始朝向向量
+        Vector2 dir = rawDirection.LengthSquared() >= 0.001f
+            ? rawDirection.Normalized()
+            : Vector2.Right;
+        Vector2 spawnPos = AbilityTool.ResolveSpawnPosition(
+            casterNode.GlobalPosition, // 原始生成点
+            dir, // 初始朝向
+            20f // 出生前推距离
+        );
         var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
 
         var projectile = ProjectileTool.Spawn(
-            casterNode.GlobalPosition, // 生成位置
+            caster, // 投射物归属者
+            spawnPos, // 生成位置
             projectileScene, // 投射物视觉
             "SineWaveShotProjectile" // 投射物名称
         );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
         projectile.Events.Emit(
-            GameEventType.Unit.MovementStarted,
+            GameEventType.Unit.MovementStarted, // 开始移动事件
             new GameEventType.Unit.MovementStartedEventData(
-                MoveMode.SineWave,
+                MoveMode.SineWave, // 移动模式：正弦波
                 new MovementParams
                 {
-                    Mode = MoveMode.SineWave,
-                    Angle = Mathf.RadToDeg(dir.Angle()),
-                    ActionSpeed = 350f,
-                    WaveAmplitude = 60f,
-                    WaveFrequency = 2f,
-                    MaxDistance = 900f,
-                    DestroyOnComplete = true,
+                    Mode = MoveMode.SineWave, // 移动模式
+                    Angle = Mathf.RadToDeg(dir.Angle()), // 初始朝向角度（度）
+                    ActionSpeed = 350f, // 前进速度
+                    WaveAmplitude = 60f, // 波浪振幅
+                    WaveFrequency = 2f, // 波浪频率
+                    MaxDistance = 1800f, // 最大飞行距离
+                    DestroyOnComplete = true, // 正常飞完后销毁
                     CollisionParams = new MovementCollisionParams
                     {
-                        TeamFilter = TeamFilter.Enemy, //阵营过滤
-                        EntityTypeFilter = EntityType.Unit, //实体类型过滤
-                        StopAfterCollisionCount = 1, //首个有效碰撞停止
-                        DestroyOnStop = true, //停止后销毁
-                        OnCollision = collisionCtx => OnHit(collisionCtx, caster, casterNode, damage) //命中回调
+                        TeamFilter = TeamFilter.Enemy, // 阵营过滤：只接受敌方
+                        EntityTypeFilter = EntityType.Unit, // 实体类型过滤：只接受单位
+                        StopAfterCollisionCount = -1, // 首个有效碰撞后停止
+                        // DestroyOnStop = true, // 停止时同步销毁投射物
+                        OnCollision = collisionCtx => OnHit(collisionCtx, caster, casterNode, damage) // 命中回调
                     },
-                    RotateToVelocity = true,
+                    RotateToVelocity = true, // 朝速度方向旋转视觉
                 }
             )
         );
 
-        _log.Info($"正弦波弹: 方向={dir}, 角度={Mathf.RadToDeg(dir.Angle()):F1}°");
-        return new AbilityExecutedResult { TargetsHit = 1 };
+        _log.Info($"正弦波弹: 采样点={directionPoint}, 方向={dir}, 角度={Mathf.RadToDeg(dir.Angle()):F1}°");
+        return new AbilityExecutedResult { TargetsHit = 1 }; // 单发正弦波弹成功生成
     }
 
-    private static Vector2 GetShootDirection(IEntity caster, Node2D casterNode, float castRange)
+    /// <summary>
+    /// 在施法者周围圆环内随机采样一点，用作正弦波弹的初始朝向。
+    /// </summary>
+    private static Vector2 GetRandomDirectionPoint(
+        Node2D casterNode) // 施法者节点
     {
-        float effectiveRange = castRange > 0f ? castRange : 600f; //查询半径
-        var targets = EntityTargetSelector.Query(new TargetSelectorQuery
+        var points = PositionTargetSelector.Query(new TargetSelectorQuery
         {
-            Geometry = GeometryType.Circle, //查询形状
-            Origin = casterNode.GlobalPosition, //查询中心
-            Range = effectiveRange, //查询半径
-            CenterEntity = caster, //中心实体
-            TeamFilter = TeamFilter.Enemy, //阵营过滤
-            Sorting = TargetSorting.Nearest, //排序方式
-            MaxTargets = 1 //最大目标数
+            Geometry = GeometryType.Ring, // 查询形状
+            Origin = casterNode.GlobalPosition, // 查询中心
+            InnerRange = 120f, // 随机方向最小半径
+            Range = 260f, // 随机方向最大半径
+            MaxTargets = 1 // 最大目标数
         });
-        if (targets.Count > 0 && targets[0] is Node2D targetNode)
-            return (targetNode.GlobalPosition - casterNode.GlobalPosition).Normalized();
-        return Vector2.Right;
+
+        if (points.Count > 0)
+        {
+            return points[0];
+        }
+
+        return casterNode.GlobalPosition + Vector2.Right * 160f;
     }
 
-    private static void OnHit(MovementCollisionContext collisionCtx,
-        IEntity caster,
-        Node2D casterNode,
-        float damage)
+    /// <summary>
+    /// 正弦波弹命中时立即结算一次伤害；运动系统负责停下和销毁投射物。
+    /// </summary>
+    private static void OnHit(
+        MovementCollisionContext collisionCtx, // 碰撞上下文
+        IEntity caster, // 技能施法者
+        Node2D casterNode, // 施法者节点
+        float damage) // 最终伤害值
     {
-        if (collisionCtx.TargetEntity == null) return;
-        var targetEntity = collisionCtx.TargetEntity;
+        if (collisionCtx.TargetEntity == null) return; // 没有实体目标时不结算伤害
+        var targetEntity = collisionCtx.TargetEntity; // 命中的实体目标
         if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return;
 
         AbilityImpactTool.Execute(caster, new AbilityImpactOptions
@@ -105,4 +127,5 @@ internal class SineWaveShotExecutor : AbilityFeatureHandler
             }
         });
     }
+    // 正弦波技能只负责发射和单次命中伤害，停止与回收统一交给 Movement 系统处理。
 }

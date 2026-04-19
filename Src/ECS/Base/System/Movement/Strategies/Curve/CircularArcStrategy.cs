@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 /// 数学原理：
 /// 1. 圆心解析：给定起点 A、终点 B 和半径 R。圆心 C 必然位于 AB 的中垂线上，且与 AB 的中点距离为 d = sqrt(R^2 - (AB/2)^2)。
 /// 2. 多解处理：对于给定的 A, B, R，通常存在两个可能的圆心。策略通过 <c>CircularArcClockwise</c> 参数结合向量叉积来锁定唯一的圆心。
+///    若启用 <c>BowWorldUp</c>，则会同时尝试两条候选圆弧，并自动选择“中点更靠屏幕上方”的那条弧。
 /// 3. 退化检查：若 R &lt; AB/2，则无法构成圆弧，此时策略会自动降级为直线移动。
 /// 4. 匀速性质：圆弧参数 t 与弧长严格成正比（角度线性推进），天然匀速；每帧按 speed * delta / curveLength 推进进度，直接按参数 t 采样。
 /// <code>
@@ -118,7 +119,7 @@ public class CircularArcStrategy : IMovementStrategy
         bool useCachedCurve = !@params.isTrackTarget && _cachedCurve.IsValid && _cachedCurveLength > 0.001f;
         CircularArc2D curve = useCachedCurve
             ? _cachedCurve
-            : CircularArc2D.Create(_startPoint, targetPoint, @params.CircularArcRadius, ResolveEffectiveClockwise(_startPoint, targetPoint, @params));
+            : CreateCurve(_startPoint, targetPoint, @params);
 
         if (!curve.IsValid)
         {
@@ -182,7 +183,7 @@ public class CircularArcStrategy : IMovementStrategy
         }
 
         // 尝试构建圆弧：根据起点、终点和半径锁定唯一圆心
-        _cachedCurve = CircularArc2D.Create(_startPoint, _lockedTargetPoint, @params.CircularArcRadius, ResolveEffectiveClockwise(_startPoint, _lockedTargetPoint, @params));
+        _cachedCurve = CreateCurve(_startPoint, _lockedTargetPoint, @params);
 
         // 若构建失败（如半径小于两点间距的一半），标记为无效
         if (!_cachedCurve.IsValid)
@@ -242,13 +243,18 @@ public class CircularArcStrategy : IMovementStrategy
     }
 
     /// <summary>
-    /// 根据 <c>BowWorldUp</c> 计算实际使用的顺逆时针方向。
-    /// BowWorldUp 开启时自动使弓起朝向屏幕上方：向右攻击取逆时针，向左攻击取顺时针。
+    /// 按参数语义创建圆弧。
+    /// <para>
+    /// 常规模式直接使用 <c>CircularArcClockwise</c>；
+    /// <c>BowWorldUp</c> 开启时则自动在两条候选圆弧中选择“更朝屏幕上方鼓起”的那一条，
+    /// 避免向下攻击时弧线退化成几乎直冲的视觉效果。
+    /// </para>
     /// </summary>
-    private static bool ResolveEffectiveClockwise(Vector2 start, Vector2 target, in MovementParams @params)
+    private static CircularArc2D CreateCurve(Vector2 start, Vector2 target, in MovementParams @params)
     {
-        if (!@params.BowWorldUp) return @params.CircularArcClockwise;
-        return (target - start).X < 0f;
+        return @params.BowWorldUp
+            ? CircularArc2D.CreateWorldUp(start, target, @params.CircularArcRadius, @params.CircularArcClockwise)
+            : CircularArc2D.Create(start, target, @params.CircularArcRadius, @params.CircularArcClockwise);
     }
 
     /// <summary>

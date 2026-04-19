@@ -19,6 +19,9 @@ public partial class MyMathTest : Node
         TestEllipseArc2D();
         TestParabola2D();
         TestCircularArc2D();
+        TestCircularArcWorldUp();
+        TestBezierTemplate_LongDistanceOffsetIsCapped();
+        TestBezierTemplate_TrackingWeightReducesCurveSwing();
 
         _log.Info("Math 工具测试完成");
     }
@@ -102,6 +105,66 @@ public partial class MyMathTest : Node
 
         var invalidCurve = CircularArc2D.Create(Vector2.Zero, new Vector2(100f, 0f), 40f, true);
         AssertFalse(invalidCurve.IsValid, "CircularArc2D 半径不足时应构建失败");
+    }
+
+    private void TestCircularArcWorldUp()
+    {
+        Vector2 downwardTarget = new Vector2(100f, 100f);
+        var downwardCurve = CircularArc2D.CreateWorldUp(Vector2.Zero, downwardTarget, 180f, true);
+        Vector2 downwardMid = downwardCurve.Evaluate(0.5f);
+        AssertTrue(downwardCurve.IsValid, "CircularArc2D.CreateWorldUp 向下目标应构建成功");
+        AssertTrue(downwardMid.Y < 50f, "CircularArc2D.CreateWorldUp 向下目标时中点也应朝屏幕上方弯曲");
+
+        Vector2 downwardLeftTarget = new Vector2(-100f, 100f);
+        var downwardLeftCurve = CircularArc2D.CreateWorldUp(Vector2.Zero, downwardLeftTarget, 180f, false);
+        Vector2 downwardLeftMid = downwardLeftCurve.Evaluate(0.5f);
+        AssertTrue(downwardLeftCurve.IsValid, "CircularArc2D.CreateWorldUp 向左下目标应构建成功");
+        AssertTrue(downwardLeftMid.Y < 50f, "CircularArc2D.CreateWorldUp 向左下目标时中点也应朝屏幕上方弯曲");
+    }
+
+    private void TestBezierTemplate_LongDistanceOffsetIsCapped()
+    {
+        var template = BezierTemplateBuilder.CreatePattern(
+            5,
+            BezierPatternType.RearWrap,
+            variantIndex: 2,
+            variantCount: 5,
+            randomSeed: 20260419);
+        Vector2[] points = new Vector2[template.PointCount];
+        BezierTemplateBuilder.ResolvePoints(template, Vector2.Zero, new Vector2(1200f, 0f), points);
+
+        float maxLateralOffset = 0f;
+        for (int i = 1; i < points.Length - 1; i++)
+        {
+            maxLateralOffset = Mathf.Max(maxLateralOffset, Mathf.Abs(points[i].Y));
+        }
+
+        AssertTrue(maxLateralOffset <= 320f, $"BezierTemplate 长距离侧偏应受控，actual={maxLateralOffset:F1}");
+    }
+
+    private void TestBezierTemplate_TrackingWeightReducesCurveSwing()
+    {
+        var template = BezierTemplateBuilder.CreatePattern(
+            5,
+            BezierPatternType.RearWrap,
+            variantIndex: 0,
+            variantCount: 1,
+            randomSeed: 20260419);
+        Vector2[] fullWeightPoints = new Vector2[template.PointCount];
+        Vector2[] lowWeightPoints = new Vector2[template.PointCount];
+
+        BezierTemplateBuilder.ResolvePoints(template, Vector2.Zero, new Vector2(500f, 0f), fullWeightPoints, 1f);
+        BezierTemplateBuilder.ResolvePoints(template, Vector2.Zero, new Vector2(500f, 0f), lowWeightPoints, 0.25f);
+
+        float fullWeightOffset = 0f;
+        float lowWeightOffset = 0f;
+        for (int i = 1; i < template.PointCount - 1; i++)
+        {
+            fullWeightOffset = Mathf.Max(fullWeightOffset, Mathf.Abs(fullWeightPoints[i].Y));
+            lowWeightOffset = Mathf.Max(lowWeightOffset, Mathf.Abs(lowWeightPoints[i].Y));
+        }
+
+        AssertTrue(lowWeightOffset < fullWeightOffset, $"BezierTemplate 剩余段权重降低后应减少飘移，full={fullWeightOffset:F1}, low={lowWeightOffset:F1}");
     }
 
     private void AssertNear(Vector2 actual, Vector2 expected, float tolerance, string message)

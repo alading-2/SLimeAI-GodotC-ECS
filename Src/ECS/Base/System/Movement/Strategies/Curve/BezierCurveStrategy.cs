@@ -1,55 +1,43 @@
 using Godot;
+using System;
 using System.Runtime.CompilerServices;
 
 /// <summary>
 /// 【模式】贝塞尔曲线移动。
-/// <para>沿 N 阶贝塞尔曲线前进，由 <c>ElapsedTime / MaxDuration</c> 驱动参数 t（0→1）。OnEnter 自动将第 0 个控制点替换为当前位置。</para>
 /// <para>
-/// <list type="bullet">
-/// <item><c>MaxDuration</c>（float，<b>必须 &gt; 0</b>）：从起点走到终点的总时长（秒），控制整体速度。此策略不支持 -1（无限制）。</item>
-/// <item><c>BezierPoints</c>（Vector2[]，推荐）：完整控制点数组（含起点和终点，至少 2 点）。起点会被 OnEnter 替换为当前位置，只需填写控制点和终点即可。若未提供则以 <c>TargetPoint</c> 作终点降级为直线。</item>
-/// <item><c>TargetPoint</c>（Vector2，可选）：设置后会覆盖 <c>BezierPoints</c> 的终点（最后一个控制点），可在保留曲线形状的同时动态指定落点；未提供 <c>BezierPoints</c> 时降级为直线。</item>
-/// <item><c>TargetNode</c> + <c>isTrackTarget</c>（可选）：<c>isTrackTarget = true</c> 时每帧将终点更新为 <c>TargetNode</c> 的当前位置，目标消失后终点冻结在最后位置。</item>
-/// <item><c>DestroyOnComplete</c>（bool，可选）：到达终点后是否自动销毁实体。</item>
-/// </list>
+/// 静态模式按完整控制点数组沿曲线推进；追踪模式优先使用贝塞尔模板，
+/// 以“当前实体位置 → 当前目标位置”的剩余段重建曲线，维持整体风格稳定。
 /// </para>
-/// <para>若 <c>BezierPoints</c> 为空或不足 2 点，且 <c>TargetPoint != Vector2.Zero</c>，则自动降级为当前位置 → TargetPoint 的直线移动。</para>
 /// <para>
-/// <code>
-/// 【使用示例：曲线追踪目标（isTrackTarget，终点每帧跟随 TargetNode）】
-/// entity.Events.Emit(GameEventType.Unit.MovementStarted,
-///     new GameEventType.Unit.MovementStartedEventData(MoveMode.BezierCurve, new MovementParams
-///     {
-///         Mode            = MoveMode.BezierCurve,
-///         MaxDuration     = 2f,
-///         DestroyOnComplete   = true,
-///         isTrackTarget   = true,                    // 【可选】每帧将终点更新到 TargetNode 位置
-///         TargetNode      = enemyNode,               // 【可选】追踪目标
-///         ReachDistance = 20, // 【可选】到达距离阈值，追踪一般都要设置
-///         BezierPoints    = new Vector2[]
-///         {
-///             Vector2.Zero,                          // [0] 占位，OnEnter 替换为起点
-///             new Vector2(0f,   -200f),              // [1] 控制点（曲线弧度）
-///             new Vector2(200f, -200f),              // [2] 控制点
-///             Vector2.Zero,                          // [3] 占位，每帧替换为目标位置
-///         },
-///     }));
-/// </code>
+/// 模板语义：
+/// - <c>BezierPoints</c>：兼容旧用法，传完整世界坐标控制点
+/// - <c>BezierTemplate</c>：推荐新用法，传相对模板，支持 3~5 阶与稳定追踪
 /// </para>
-/// <para>【典型用途】弧形投射物、技能抛物线、沿预设动画曲线移动的特效体、曲线追踪导弹。</para>
 /// </summary>
 public class BezierCurveStrategy : IMovementStrategy
 {
-    private static readonly Log _log = new Log("BezierCurveStrategy");
+    private static readonly Log _log = new("BezierCurveStrategy");
 
     /// <summary>
-    /// 最终控制点数组（包含起点和终点），OnEnter 时会将起点替换为实体当前位置
+    /// 静态模式下使用的完整控制点数组。
     /// </summary>
-    private Vector2[] _finalPoints = System.Array.Empty<Vector2>();
+    private Vector2[] _finalPoints = Array.Empty<Vector2>();
 
     /// <summary>
-    /// 模块初始化器：在模块加载时自动将此策略注册到移动策略注册表
+    /// 追踪模式下使用的工作缓冲区，避免在 Update 中重复分配数组。
     /// </summary>
+    private Vector2[] _trackingPoints = Array.Empty<Vector2>();
+
+    /// <summary>
+    /// 当前运动的贝塞尔模板；静态模式和追踪模式都可复用它解析控制点。
+    /// </summary>
+    private BezierCurveTemplate? _template;
+
+    /// <summary>
+    /// 追踪模式下锁定的最新目标位置；目标失效后冻结在最后一次有效值。
+    /// </summary>
+    private Vector2 _trackedTargetPosition;
+
     [ModuleInitializer]
     public static void Register()
     {
@@ -57,97 +45,214 @@ public class BezierCurveStrategy : IMovementStrategy
     }
 
     /// <summary>
-    /// 策略进入时的初始化处理
-    /// <para>主要任务：</para>
-    /// <list type="bullet">
-    /// <item>克隆并修正控制点数组：将第 0 个控制点（起点）替换为实体当前位置</item>
-    /// <item>若启用匀速模式，预计算弧长参数化查找表（LUT）</item>
-    /// </list>
+    /// 策略进入时准备控制点缓存。
     /// </summary>
-    /// <param name="entity">移动实体</param>
-    /// <param name="data">实体数据容器</param>
-    /// <param name="params">移动参数</param>
     public void OnEnter(IEntity entity, Data data, in MovementParams @params)
     {
-        if (entity is not Node2D node) return;
+        ResetState();
+        if (entity is not Node2D node)
+        {
+            return;
+        }
 
-        // MaxDuration 必须 > 0，否则无法驱动参数 t
         if (@params.MaxDuration <= 0f)
+        {
             _log.Warn($"MaxDuration={@params.MaxDuration} 无效，必须 > 0，曲线将不会移动");
+        }
 
         if (@params.isTrackTarget && @params.TargetNode == null)
-            _log.Warn("isTrackTarget=true 但 TargetNode 未设置，追踪将无效，终点保持初始值。");
+        {
+            _log.Warn("isTrackTarget=true 但 TargetNode 未设置，追踪将退化为固定终点。");
+        }
+
+        Vector2 startPos = node.GlobalPosition;
+
+        if (@params.BezierTemplate.HasValue && @params.BezierTemplate.Value.IsValid)
+        {
+            _template = @params.BezierTemplate.Value.Copy();
+            Vector2 initialEnd = ResolveInitialEndPoint(startPos, @params, startPos + Vector2.Right);
+            _trackedTargetPosition = initialEnd;
+            PrepareTemplatePoints(startPos, initialEnd);
+            return;
+        }
 
         if (@params.BezierPoints != null && @params.BezierPoints.Length >= 2)
         {
-            // ⚠️ Clone 后修改，避免污染调用方传入的共享数组
             _finalPoints = (Vector2[])@params.BezierPoints.Clone();
-            _finalPoints[0] = node.GlobalPosition; // 将起点修正为当前位置
-            // 若 TargetPoint 有效，覆盖终点（最后一个控制点）
-            if (@params.TargetPoint != Vector2.Zero)
-                _finalPoints[_finalPoints.Length - 1] = @params.TargetPoint;
-        }
-        else if (@params.TargetPoint != Vector2.Zero)
-        {
-            // 降级为直线：当前位置 → TargetPoint
-            _finalPoints = new Vector2[] { node.GlobalPosition, @params.TargetPoint };
-        }
-        else
-        {
-            _finalPoints = System.Array.Empty<Vector2>();
+            _finalPoints[0] = startPos; // 起点统一由真实当前位置覆盖
+
+            Vector2 fallbackEnd = _finalPoints[_finalPoints.Length - 1];
+            Vector2 initialEnd = ResolveInitialEndPoint(startPos, @params, fallbackEnd);
+            _trackedTargetPosition = initialEnd;
+            _finalPoints[_finalPoints.Length - 1] = initialEnd;
+
+            // 旧 BezierPoints 在 3~5 阶时自动转成模板，供追踪模式稳定重建剩余曲线。
+            if (BezierTemplateBuilder.TryCreateTemplateFromPoints(_finalPoints, startPos, initialEnd, out BezierCurveTemplate template))
+            {
+                _template = template.Copy();
+                _trackingPoints = new Vector2[_template.Value.PointCount];
+            }
+            return;
         }
 
+        if (@params.TargetPoint != Vector2.Zero)
+        {
+            _trackedTargetPosition = @params.TargetPoint;
+            _finalPoints = new[] { startPos, @params.TargetPoint };
+        }
     }
 
     /// <summary>
-    /// 每帧更新移动状态
-    /// <para>计算流程：</para>
-    /// <list type="bullet">
-    /// <item>根据已用时间计算参数 t（0~1）</item>
-    /// <item>按参数 t 直接采样曲线点与切线方向</item>
-    /// <item>计算新位置并更新速度向量</item>
-    /// <item>检测是否到达终点（t >= 1）</item>
-    /// </list>
+    /// 每帧推进当前位置。
     /// </summary>
-    /// <param name="entity">移动实体</param>
-    /// <param name="data">实体数据容器</param>
-    /// <param name="delta">帧间隔时间</param>
-    /// <param name="params">移动参数</param>
-    /// <returns>移动更新结果（继续/完成）</returns>
     public MovementUpdateResult Update(IEntity entity, Data data, float delta, in MovementParams @params)
     {
-        if (entity is not Node2D node) return MovementUpdateResult.Continue();
-        if (_finalPoints.Length < 2) return MovementUpdateResult.Continue(); // 控制点不足，跳过
-
-        float duration = @params.MaxDuration;
-        if (duration <= 0f) return MovementUpdateResult.Continue(); // MaxDuration 无效（忘记设置或为 -1），跳过
-
-        // 追踪模式：每帧将终点（最后一个控制点）更新为目标当前位置
-        if (@params.isTrackTarget && @params.TargetNode != null && GodotObject.IsInstanceValid(@params.TargetNode))
+        if (entity is not Node2D node)
         {
-            _finalPoints[_finalPoints.Length - 1] = @params.TargetNode.GlobalPosition;
-
-            // 追踪模式下的 ReachDistance 提前到达判定（无隐式默认，需调用方显式设置）
-            if (MovementHelper.HasReachedTarget(node.GlobalPosition, @params.TargetNode.GlobalPosition, @params.ReachDistance))
-                return MovementUpdateResult.Complete();
+            return MovementUpdateResult.Continue();
         }
 
-        // 计算当前参数 t（0~1），基于已用时间 + 当前帧增量的预测位置
+        float duration = @params.MaxDuration;
+        if (duration <= 0f)
+        {
+            return MovementUpdateResult.Continue();
+        }
+
+        if (@params.isTrackTarget && _template.HasValue && _template.Value.IsValid)
+        {
+            return UpdateTrackingCurve(node, data, delta, duration, @params);
+        }
+
+        if (_finalPoints.Length < 2)
+        {
+            return MovementUpdateResult.Continue();
+        }
+
+        UpdateTrackedEndPoint(node, @params);
+
         float t = Mathf.Clamp((@params.ElapsedTime + delta) / duration, 0f, 1f);
+        return EvaluateCurveStep(node, data, delta, t, _finalPoints);
+    }
 
-        // 按参数 t 直接采样曲线点和切线方向
-        Vector2 newPos = BezierCurve.Evaluate(_finalPoints, t);
-        Vector2 facingDirection = BezierCurve.EvaluateTangent(_finalPoints, t);
+    private MovementUpdateResult UpdateTrackingCurve(
+        Node2D node,
+        Data data,
+        float delta,
+        float duration,
+        in MovementParams @params)
+    {
+        UpdateTrackedEndPoint(node, @params);
 
-        // 计算位移向量并更新速度
-        Vector2 toTarget = newPos - node.GlobalPosition;
-        float displacement = toTarget.Length();
+        if (MovementHelper.HasReachedTarget(node.GlobalPosition, _trackedTargetPosition, @params.ReachDistance))
+        {
+            data.Set(DataKey.Velocity, Vector2.Zero);
+            return MovementUpdateResult.Complete();
+        }
 
-        // 避免除零，设置合理的速度向量
-        data.Set(DataKey.Velocity, displacement > 0.001f ? toTarget / Mathf.Max(delta, 0.001f) : Vector2.Zero);
+        float remainingDuration = Mathf.Max(duration - @params.ElapsedTime, delta);
+        if (_trackingPoints.Length < _template!.Value.PointCount)
+        {
+            _trackingPoints = new Vector2[_template.Value.PointCount];
+        }
 
-        // 检测是否到达终点
-        if (t >= 1f) return MovementUpdateResult.Complete();
-        return MovementUpdateResult.Continue(displacement, facingDirection);
+        float remainingRatio = Mathf.Clamp((duration - @params.ElapsedTime) / Mathf.Max(duration, 0.001f), 0f, 1f);
+        BezierTemplateBuilder.ResolvePoints(
+            _template.Value,
+            node.GlobalPosition, // 剩余曲线的当前起点
+            _trackedTargetPosition, // 剩余曲线的当前终点
+            _trackingPoints,
+            remainingRatio);
+
+        float localT = Mathf.Clamp(delta / remainingDuration, 0f, 1f);
+        return EvaluateCurveStep(node, data, delta, localT, _trackingPoints);
+    }
+
+    private MovementUpdateResult EvaluateCurveStep(
+        Node2D node,
+        Data data,
+        float delta,
+        float t,
+        ReadOnlySpan<Vector2> points)
+    {
+        Vector2 newPos = BezierCurve.Evaluate(points, t);
+        Vector2 facingDirection = BezierCurve.EvaluateTangent(points, t);
+        Vector2 displacement = newPos - node.GlobalPosition;
+        float displacementLength = displacement.Length();
+
+        data.Set(
+            DataKey.Velocity,
+            displacementLength > 0.001f
+                ? displacement / Mathf.Max(delta, 0.001f)
+                : Vector2.Zero);
+
+        if (t >= 1f)
+        {
+            return MovementUpdateResult.Complete();
+        }
+
+        return MovementUpdateResult.Continue(displacementLength, facingDirection);
+    }
+
+    private void PrepareTemplatePoints(Vector2 startPos, Vector2 endPos)
+    {
+        if (!_template.HasValue || !_template.Value.IsValid)
+        {
+            return;
+        }
+
+        _finalPoints = new Vector2[_template.Value.PointCount];
+        _trackingPoints = new Vector2[_template.Value.PointCount];
+        BezierTemplateBuilder.ResolvePoints(_template.Value, startPos, endPos, _finalPoints);
+    }
+
+    private void UpdateTrackedEndPoint(Node2D node, in MovementParams @params)
+    {
+        if (@params.isTrackTarget && @params.TargetNode != null && GodotObject.IsInstanceValid(@params.TargetNode))
+        {
+            _trackedTargetPosition = @params.TargetNode.GlobalPosition;
+        }
+        else if (_trackedTargetPosition == Vector2.Zero)
+        {
+            _trackedTargetPosition = ResolveInitialEndPoint(
+                node.GlobalPosition,
+                @params,
+                _finalPoints.Length > 0 ? _finalPoints[_finalPoints.Length - 1] : node.GlobalPosition + Vector2.Right);
+        }
+
+        if (!_template.HasValue && _finalPoints.Length >= 2)
+        {
+            _finalPoints[_finalPoints.Length - 1] = _trackedTargetPosition;
+        }
+    }
+
+    private static Vector2 ResolveInitialEndPoint(
+        Vector2 startPos,
+        in MovementParams @params,
+        Vector2 fallbackEnd)
+    {
+        if (@params.TargetNode != null && GodotObject.IsInstanceValid(@params.TargetNode))
+        {
+            return @params.TargetNode.GlobalPosition;
+        }
+
+        if (@params.TargetPoint != Vector2.Zero)
+        {
+            return @params.TargetPoint;
+        }
+
+        if (fallbackEnd != Vector2.Zero)
+        {
+            return fallbackEnd;
+        }
+
+        return startPos + Vector2.Right; // 避免退化成零长度曲线
+    }
+
+    private void ResetState()
+    {
+        _finalPoints = Array.Empty<Vector2>();
+        _trackingPoints = Array.Empty<Vector2>();
+        _template = null;
+        _trackedTargetPosition = Vector2.Zero;
     }
 }

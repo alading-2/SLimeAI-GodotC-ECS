@@ -142,7 +142,7 @@ public void Process(DamageInfo info)
 - **关键属性**:
   - `Id`: 唯一标识，用于日志追踪。
   - `Attacker`: 伤害来源节点（如子弹、陷阱 Area2D）。
-    - 注意：这是**直接来源**，统计归属需通过 `EntityRelationshipManager.FindAncestorOfType<IUnit>(Attacker)` 向上查找。
+    - 注意：这是**直接来源**，统计归属需通过 `EntityRelationshipTraversal.FindAncestorOfType<IUnit>(Attacker)` 向上查找。
   - `Victim`: 受害者实体（必须实现 IUnit）。
   - `FinalDamage`: 流转过程中的最终结算伤害值。
   - `IsEnd`: 标记伤害流程是否应提前终止（由主循环检查）。

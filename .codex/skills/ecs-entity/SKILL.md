@@ -64,6 +64,45 @@ EntityManager.Destroy(enemy);
 var health = EntityManager.GetComponent<HealthComponent>(entity);
 ```
 
+## 生成关系绑定约定
+
+```csharp
+// ✅ 在 Spawn 阶段统一绑定“父实体 -> 子实体”的归属关系
+var projectile = EntityManager.Spawn<ProjectileEntity>(new EntitySpawnConfig
+{
+    Config = projectileConfig,
+    UsingObjectPool = true,
+    PoolName = ObjectPoolNames.ProjectilePool,
+    Position = spawnPos,
+    ParentEntity = caster, // 父实体/归属者
+    AutoAddParentRelation = true, // 自动补 PARENT，供统一溯源
+    ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively, // 归属者销毁时递归销毁子实体
+    ParentRelationTypes = [EntityRelationshipType.ENTITY_TO_PROJECTILE] // 业务关系：施法者 -> 投射物
+});
+
+// ✅ 自定义生成链路（如 EffectTool）统一复用同一个绑定入口
+EntityManager.BindParentRelationships(
+    childEntity, // 子实体
+    parentEntity, // 父实体/归属者
+    autoAddParentRelation: true, // 自动补 PARENT
+    parentDestroyPolicy: ParentDestroyPolicy.DestroyRecursively, // 父销毁策略只写入 PARENT
+    EntityRelationshipType.ENTITY_TO_EFFECT // 业务关系
+);
+```
+
+- `ParentEntity` 只要填写，默认就应该同时建立 `PARENT`
+- `PARENT` 是统一归属主链，一个子实体只能有一个直接父级
+- `ParentDestroyPolicy` 也只挂在 `PARENT` 上；业务关系只做分类查询，不参与生命周期决策
+- 默认优先用 `DestroyRecursively`，只有子实体明确需要脱离父级继续存活时才用 `Detach`
+- 投射物 / 特效 / 技能这类拥有型实体，不要再手写 `ResolveEntityId + AddRelationship`
+
+## 销毁语义约定
+
+- `EntityManager.Destroy()` 会先读取当前实体的直接 `PARENT` 子实体
+- `DestroyRecursively`：先销毁子实体，再注销当前实体
+- `Detach`：仅在当前实体注销时断开关系，子实体继续存活
+- 不要再在业务层手写“父销毁时顺手 Destroy 子实体”的兜底逻辑，统一走框架
+
 ## 对象池生成时序（重要）
 
 - 对象池 Entity 出池时，不要立即恢复碰撞与处理。
@@ -129,6 +168,18 @@ private void OnDamaged(GameEventType.Unit.DamagedEventData evt)
 }
 ```
 
+## 祖先溯源约定
+
+```csharp
+// ✅ 统一沿 PARENT 关系回溯归属链
+var ownerUnit = EntityRelationshipTraversal.FindAncestorOfType<IUnit>(projectileNode);
+var ownerEntity = EntityRelationshipTraversal.FindAncestorOfType<IEntity>(effectNode);
+```
+
+- 不要手写 `GetParentEntitiesByChildAndType(...).FirstOrDefault()` 做归属溯源
+- 处理“是谁生成了这个派生实体”时，统一优先用 `EntityRelationshipTraversal`
+- `ProjectileTool.Spawn(...)` / `EffectTool.Spawn(...)` / `EntityManager.AddAbility(...)` 都应通过 `EntityManager` 的统一绑定入口补关系；业务层只负责把归属者传进去
+
 ## 禁止事项
 
 - ❌ 直接 `new EnemyEntity()` 创建实体
@@ -144,6 +195,7 @@ private void OnDamaged(GameEventType.Unit.DamagedEventData evt)
 - **API 手册** → `Src/ECS/Base/Entity/Core/EntityManager.md`
 - **核心实现** → `Src/ECS/Base/Entity/Core/EntityManager.cs`
 - **关系管理** → `Src/ECS/Base/Entity/Core/EntityRelationshipManager.cs`
+- **关系追溯** → `Src/ECS/Base/Entity/Core/EntityRelationshipTraversal.cs`
 - **架构设计** → `Docs/框架/ECS/Entity/Entity架构设计理念.md`
 - **对象池接口** → `Src/ECS/Tools/ObjectPool/IPoolable.cs`
 - **对象池初始化** → 搜索 `ObjectPoolInit.cs`

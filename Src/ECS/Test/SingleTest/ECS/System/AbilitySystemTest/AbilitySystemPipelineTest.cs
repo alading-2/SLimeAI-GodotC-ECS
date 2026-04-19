@@ -22,6 +22,7 @@ public partial class AbilitySystemPipelineTest : Node
             Test_AbilityFeatureHandler_DoesNotExposePrepareCast();
             Test_EntitySelectionAbility_AllowsHandlerManagedExecution();
             Test_AbilityToolHandler_CanExecuteThroughPipeline();
+            Test_ParabolaShot_UsesRandomPointInCircleInsteadOfEnemyPosition();
         }
         catch (Exception ex)
         {
@@ -237,6 +238,72 @@ public partial class AbilitySystemPipelineTest : Node
         EntityManager.Destroy(owner);
     }
 
+    /// <summary>
+    /// 回归测试：
+    /// ParabolaShot 应改为以施法者为圆心，在施法范围圆内随机选择落点，而不是直接取敌方单位当前位置。
+    /// </summary>
+    private void Test_ParabolaShot_UsesRandomPointInCircleInsteadOfEnemyPosition()
+    {
+        var caster = new AbilityPipelineTargetPointTestEntity
+        {
+            Name = "ParabolaCaster",
+            GlobalPosition = Vector2.Zero
+        };
+        AddChild(caster);
+
+        var enemy = new AbilityPipelineTargetPointTestEntity
+        {
+            Name = "ParabolaEnemy",
+            GlobalPosition = new Vector2(80f, 0f)
+        };
+        AddChild(enemy);
+
+        caster.Data.Set(DataKey.Id, caster.GetInstanceId().ToString());
+        caster.Data.Set(DataKey.Team, Team.Player);
+        caster.Data.Set(DataKey.EntityType, EntityType.Unit);
+
+        enemy.Data.Set(DataKey.Id, enemy.GetInstanceId().ToString());
+        enemy.Data.Set(DataKey.Team, Team.Enemy);
+        enemy.Data.Set(DataKey.EntityType, EntityType.Unit);
+
+        EntityManager.Register(caster);
+        EntityManager.Register(enemy);
+
+        try
+        {
+            var executorType = typeof(AbilitySystemPipelineTest).Assembly.GetType("ParabolaBombardmentExecutor");
+            var method = executorType?.GetMethod(
+                "GetBombardTargetPoint",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic
+            );
+            var result = method?.Invoke(null, new object[] { caster, caster, 120f });
+
+            AssertEqual(
+                "ParabolaShot 应能通过反射找到取落点逻辑",
+                true, //期望存在该方法
+                result is Vector2 //实际是否成功拿到结果
+            );
+
+            if (result is not Vector2 targetPoint) return;
+
+            AssertEqual(
+                "ParabolaShot 随机落点必须位于施法范围圆内",
+                true, //期望在圆内
+                GeometryCalculator.IsPointInCircle(targetPoint, caster.GlobalPosition, 120f) //实际判定
+            );
+            AssertEqual(
+                "ParabolaShot 不应再直接使用敌方单位当前位置作为落点",
+                true, //期望不是敌人位置
+                !targetPoint.IsEqualApprox(enemy.GlobalPosition) //实际是否仍锁定敌人位置
+            );
+        }
+        finally
+        {
+            EntityManager.Destroy(enemy);
+            EntityManager.Destroy(caster);
+        }
+    }
+
     private void AssertEqual<T>(string name, T expected, T actual)
     {
         if (Equals(expected, actual))
@@ -328,6 +395,15 @@ internal sealed class AbilityToolPipelineTestHandler : AbilityFeatureHandler
 /// Node2D 版测试施法者，用于验证技能 Handler 本地节点判断逻辑。
 /// </summary>
 internal partial class AbilityToolPipelineTestCaster : Node2D, IEntity
+{
+    public EventBus Events { get; } = new EventBus();
+    public Data Data { get; } = new();
+}
+
+/// <summary>
+/// 抛炸弹落点测试实体。
+/// </summary>
+internal partial class AbilityPipelineTargetPointTestEntity : Node2D, IEntity
 {
     public EventBus Events { get; } = new EventBus();
     public Data Data { get; } = new();

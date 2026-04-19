@@ -8,8 +8,10 @@ public enum RelationshipConstraint
 {
     /// <summary>无约束（多对多）</summary>
     None,
+
     /// <summary>一对一（子只能有一个父）</summary>
     OneToOne,
+
     /// <summary>一对多（父可以有多个子，子只能有一个父）</summary>
     OneToMany
 }
@@ -63,6 +65,7 @@ public static class EntityRelationshipManager
         public string ChildEntityId { get; set; } = string.Empty;
         public string RelationType { get; set; } = string.Empty;
         public Dictionary<string, object> Data { get; set; } = new();
+
         /// <summary>优先级（数值越小优先级越高）</summary>
         public int Priority { get; set; } = 0;
     }
@@ -71,9 +74,14 @@ public static class EntityRelationshipManager
     private static readonly Dictionary<string, RelationshipRecord> _relationships = new();
 
     // 三索引结构
-    private static readonly Dictionary<string, HashSet<string>> _parentIndex = new();  // parentEntityId -> Set<relationshipId>
-    private static readonly Dictionary<string, HashSet<string>> _childIndex = new();   // childEntityId -> Set<relationshipId>
-    private static readonly Dictionary<string, HashSet<string>> _typeIndex = new();    // relationType -> Set<relationshipId>
+    private static readonly Dictionary<string, HashSet<string>>
+        _parentIndex = new(); // parentEntityId -> Set<relationshipId>
+
+    private static readonly Dictionary<string, HashSet<string>>
+        _childIndex = new(); // childEntityId -> Set<relationshipId>
+
+    private static readonly Dictionary<string, HashSet<string>>
+        _typeIndex = new(); // relationType -> Set<relationshipId>
 
     // 查询缓存（零 GC 优化）
     private static readonly List<string> _tempChildIds = new(32);
@@ -198,7 +206,10 @@ public static class EntityRelationshipManager
     /// <summary>
     /// 设置关系数据
     /// </summary>
-    public static bool SetRelationshipData(string parentId, string childId, string relationType, Dictionary<string, object> data)
+    public static bool SetRelationshipData(string parentId,
+        string childId,
+        string relationType,
+        Dictionary<string, object> data)
     {
         string relationshipId = GenerateRelationshipId(parentId, childId, relationType);
 
@@ -466,128 +477,7 @@ public static class EntityRelationshipManager
 
         _log.Info($"已移除所有类型为 {relationType} 的关系，共 {recordsToRemove.Count} 个");
     }
-
-    // ==================== 所有权链查找 ====================
-    /// <summary>
-    /// 查找第一个符合类型的实体（包括自身或沿 PARENT 关系向上查找）
-    /// <para>便捷重载，自动获取实体 ID。</para>
-    /// <para>优先检查传入节点本身是否符合目标类型，如果是则直接返回。</para>
-    /// <para>找不到时会自动打印警告日志。</para>
-    /// </summary>
-    public static T? FindAncestorOfType<T>(Godot.Node entity, int maxDepth = 10) where T : class
-    {
-        if (entity == null)
-        {
-            _log.Error($"FindAncestorOfType 传入节点为 null，无法查找 {typeof(T).Name}");
-            return null;
-        }
-
-        // 1. 首先检查传入的节点本身是否符合目标类型
-        if (entity is T typedEntity)
-        {
-            return typedEntity;
-        }
-
-        // 2. 沿 PARENT 关系向上查找
-        return FindAncestorOfType<T>(entity.GetInstanceId().ToString(), maxDepth);
-    }
-
-    /// <summary>
-    /// 查找第一个符合类型的实体（包括自身或沿 PARENT 关系向上查找）
-    /// <para>优先检查传入节点本身是否符合目标类型，如果是则直接返回。</para>
-    /// <para>常用场景：子弹→武器→角色，查找角色以进行统计归属/吸血/暴击等。</para>
-    /// <para>找不到时会自动打印警告日志。</para>
-    /// </summary>
-    /// <typeparam name="T">目标类型（如 IUnit、IEntity）</typeparam>
-    /// <param name="entityId">起始实体 ID</param>
-    /// <param name="maxDepth">最大查找深度（防止无限循环，默认 10）</param>
-    /// <returns>找到的目标类型实体，未找到返回 null</returns>
-    private static T? FindAncestorOfType<T>(string entityId, int maxDepth = 10) where T : class
-    {
-        // 1. 首先检查传入的实体本身是否符合目标类型
-        var startEntity = EntityManager.GetEntityById(entityId);
-        if (startEntity is T startTypedEntity)
-        {
-            return startTypedEntity;
-        }
-
-        // 2. 沿 PARENT 关系向上查找
-        string currentId = entityId;
-        int depth = 0;
-
-        while (depth < maxDepth)
-        {
-            // 查找当前实体的 PARENT
-            var parentId = GetParentEntitiesByChildAndType(currentId, EntityRelationshipType.PARENT)
-                .FirstOrDefault();
-
-            if (string.IsNullOrEmpty(parentId))
-            {
-                // 没有更多父级了
-                break;
-            }
-
-            // 获取父级实体
-            var parentEntity = EntityManager.GetEntityById(parentId);
-            if (parentEntity == null)
-            {
-                _log.Warn($"父级实体 {parentId} 已不存在，终止向上查找");
-                break;
-            }
-
-            // 检查是否符合目标类型
-            if (parentEntity is T typedEntity)
-            {
-                return typedEntity;
-            }
-
-            // 继续向上
-            currentId = parentId;
-            depth++;
-        }
-
-        // 找不到时打印警告
-        _log.Warn($"未能在实体 {entityId}({startEntity?.GetType().Name ?? "null"}) 的层级链上找到类型 {typeof(T).Name}");
-        return null;
-    }
-
-    /// <summary>
-    /// 获取从 startNode 沿 PARENT 关系向上的所有实体链（包括自身，如果是 IEntity）
-    /// <para>常用场景：伤害统计时遍历攻击链（子弹→武器→角色），为每个 IStatisticsTarget 累加数据。</para>
-    /// </summary>
-    /// <param name="startNode">起始节点</param>
-    /// <param name="maxDepth">最大查找深度（防止无限循环，默认 10）</param>
-    /// <returns>从起始节点到最顶层的所有 IEntity</returns>
-    public static System.Collections.Generic.IEnumerable<IEntity> GetAncestorChain(Godot.Node startNode, int maxDepth = 10)
-    {
-        if (startNode == null) yield break;
-
-        // 1. 检查起始节点自身
-        if (startNode is IEntity startEntity)
-            yield return startEntity;
-
-        // 2. 沿 PARENT 关系向上遍历
-        string currentId = startNode.GetInstanceId().ToString();
-        int depth = 0;
-
-        while (depth < maxDepth)
-        {
-            var parentId = GetParentEntitiesByChildAndType(currentId, EntityRelationshipType.PARENT)
-                .FirstOrDefault();
-
-            if (string.IsNullOrEmpty(parentId)) break;
-
-            var parentEntity = EntityManager.GetEntityById(parentId);
-            if (parentEntity == null) break;
-
-            if (parentEntity is IEntity entity)
-                yield return entity;
-
-            currentId = parentId;
-            depth++;
-        }
-    }
-
+    
     // ==================== 工具方法 ====================
 
     /// <summary>
@@ -601,6 +491,7 @@ public static class EntityRelationshipManager
             set = new HashSet<string>();
             dict[key] = set;
         }
+
         return set;
     }
 
@@ -664,6 +555,7 @@ public static class EntityRelationshipManager
         {
             sb.AppendLine($"{kvp.Key}: {kvp.Value.Count} 个关系");
         }
+
         sb.AppendLine();
 
         // 列出所有关系

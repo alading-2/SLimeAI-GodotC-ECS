@@ -95,8 +95,32 @@ var bullet = EntityManager.Spawn<Bullet>(new EntitySpawnConfig
 - ✅ **模式自适应**：根据 `UsingObjectPool` 自动选择对象池获取或场景实例化
 - ✅ **数据注入**：将 Config 数据自动注入到 `Data` 容器
 - ✅ **视觉加载**：优先使用 `EntitySpawnConfig.VisualSceneOverride`，否则自动加载 `Config.VisualScenePath`
+- ✅ **归属绑定**：填写 `ParentEntity` 后，会在 Spawn 阶段统一补 `PARENT + 业务关系`
+- ✅ **生命周期策略**：`ParentDestroyPolicy` 会写入 `PARENT` 关系，决定父实体销毁时子实体是递归销毁还是仅断开归属
 - ✅ **组件管理**：自动注册所有 Component 并建立 Entity-Component 关系
 - ✅ **生命周期注册**：将 Entity 注册到 EntityManager 进行统一管理
+
+#### EntitySpawnConfig 归属相关字段
+
+```csharp
+var projectile = EntityManager.Spawn<ProjectileEntity>(new EntitySpawnConfig
+{
+    Config = projectileConfig,
+    UsingObjectPool = true,
+    PoolName = ObjectPoolNames.ProjectilePool,
+    ParentEntity = caster, // 父实体/归属者
+    AutoAddParentRelation = true, // 自动补 PARENT
+    ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively, // 父销毁策略
+    ParentRelationTypes = [EntityRelationshipType.ENTITY_TO_PROJECTILE] // 业务关系
+});
+```
+
+- `ParentEntity`：归属者；填写后即可统一建立归属链
+- `AutoAddParentRelation`：是否补 `PARENT` 主链；归属型子实体通常保持 `true`
+- `ParentDestroyPolicy`：只写入 `PARENT` 关系
+- `DestroyRecursively`：父实体销毁时，递归销毁该子实体
+- `Detach`：父实体销毁时，仅断开归属关系，子实体继续存活
+- `ParentRelationTypes`：额外业务关系，例如 `ENTITY_TO_PROJECTILE / ENTITY_TO_EFFECT / ENTITY_TO_ABILITY`
 
 ### 2. 创建 Component
 
@@ -538,6 +562,12 @@ void Destroy(Node entity)
 **功能**：统一销毁 Entity，自动判断处理方式：
 - **IPoolable Entity** (UsingObjectPool=true)：注销并归还对象池
 - **普通 Entity** (UsingObjectPool=false)：注销并调用 `QueueFree()`
+
+**归属链处理**：
+- 销毁前会先读取当前实体直接 `PARENT` 子实体的快照
+- `ParentDestroyPolicy.DestroyRecursively`：先销毁子实体，再销毁当前实体
+- `ParentDestroyPolicy.Detach`：只在当前实体注销时断开关系，子实体不会被销毁
+- 业务关系（如 `ENTITY_TO_PROJECTILE`）只做分类查询，不参与生命周期决策
 
 **所有 Entity 的销毁都应当调用此方法，而非直接调用 `QueueFree()`。**
 

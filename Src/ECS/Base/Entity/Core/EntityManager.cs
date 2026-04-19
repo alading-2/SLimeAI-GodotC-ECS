@@ -9,23 +9,44 @@ using System.Linq;
 /// </summary>
 public readonly record struct EntitySpawnConfig
 {
+    /// <summary>
+    /// 初始化默认值。
+    /// </summary>
+    public EntitySpawnConfig()
+    {
+        AutoAddParentRelation = true;
+        ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively;
+    }
+
     /// <summary>单位配置资源（必填，如 EnemyConfig, PlayerConfig）</summary>
     public required Resource Config { get; init; }
 
-/// <summary>是否使用对象池（默认 false）</summary>
-public bool UsingObjectPool { get; init; }
+    /// <summary>是否使用对象池（默认 false）</summary>
+    public bool UsingObjectPool { get; init; }
 
-/// <summary>对象池名称（UsingObjectPool=true 时必填，如 ObjectPoolNames.EnemyPool）</summary>
-public string? PoolName { get; init; }
+    /// <summary>对象池名称（UsingObjectPool=true 时必填，如 ObjectPoolNames.EnemyPool）</summary>
+    public string? PoolName { get; init; }
 
-/// <summary>初始位置（可选，仅对 Node2D 生效）</summary>
-public Vector2? Position { get; init; }
+    /// <summary>初始位置（可选，仅对 Node2D 生效）</summary>
+    public Vector2? Position { get; init; }
 
-/// <summary>初始旋转角度（度，可选，仅对 Node2D 生效；2D 下 0=右、90=下、180=左，正值顺时针）</summary>
-public float? Rotation { get; init; }
+    /// <summary>初始旋转角度（度，可选，仅对 Node2D 生效；2D 下 0=右、90=下、180=左，正值顺时针）</summary>
+    public float? Rotation { get; init; }
 
-/// <summary>运行时视觉场景覆盖（可选；优先级高于 Config.VisualScenePath）</summary>
-public PackedScene? VisualSceneOverride { get; init; }
+    /// <summary>运行时视觉场景覆盖（可选；优先级高于 Config.VisualScenePath）</summary>
+    public PackedScene? VisualSceneOverride { get; init; }
+
+    /// <summary>父实体/归属者（可选；填写后可在 Spawn 阶段统一补关系）</summary>
+    public IEntity? ParentEntity { get; init; }
+
+    /// <summary>是否自动补一条 PARENT 关系（默认 true，供归属链统一溯源）</summary>
+    public bool AutoAddParentRelation { get; init; }
+
+    /// <summary>额外业务关系类型（可选；如 ENTITY_TO_PROJECTILE / ENTITY_TO_ABILITY）</summary>
+    public string[]? ParentRelationTypes { get; init; }
+
+    /// <summary>父实体销毁时对子实体的处理策略（默认级联销毁）</summary>
+    public ParentDestroyPolicy ParentDestroyPolicy { get; init; }
 }
 
 /// <summary>
@@ -200,6 +221,11 @@ public static partial class EntityManager
 
             // 关键：强制同步 Transform，避免物理 server 在启用碰撞时仍使用旧物理位置
             entity2D.ForceUpdateTransform();
+        }
+
+        if (!BindSpawnRelationships(entity, config))
+        {
+            _log.Warn($"Entity 关系绑定失败: {typeof(T).Name} -> Parent={config.ParentEntity?.GetType().Name ?? "null"}");
         }
 
         // 5. 防止重复注册（对象池复用场景）
@@ -393,12 +419,35 @@ public static partial class EntityManager
     /// </summary>
     public static void Destroy(Node entity)
     {
+        Destroy(entity, new HashSet<string>());
+    }
+
+    /// <summary>
+    /// 销毁 Entity（内部递归版本）。
+    /// <para>使用 visited 防止异常关系链导致无限递归。</para>
+    /// </summary>
+    /// <param name="entity">要销毁的实体</param>
+    /// <param name="visitedEntityIds">当前销毁链已访问实体 Id 集合</param>
+    private static void Destroy(Node entity, HashSet<string> visitedEntityIds)
+    {
         if (!GodotObject.IsInstanceValid(entity))
         {
             // 如果节点已经无效（已被引擎释放），仅执行注销逻辑
             UnregisterEntity(entity);
             return;
         }
+
+        string entityId = EntityRelationshipTraversal.ResolveEntityId(entity); // 当前销毁实体 Id
+        if (!string.IsNullOrEmpty(entityId) && !visitedEntityIds.Add(entityId))
+        {
+            _log.Warn($"检测到关系销毁环路，跳过重复销毁: {entityId} ({entity.GetType().Name})");
+            return;
+        }
+
+        HandleOwnedChildrenOnDestroy(
+            entity, // 父实体
+            visitedEntityIds // 当前递归访问集合
+        );
 
         // 发送销毁事件（在注销前发送，以便监听者仍能访问实体的 Data/Id）
         if (entity is IEntity iEntity)
@@ -421,6 +470,40 @@ public static partial class EntityManager
         {
             // 非对象池 Entity：直接销毁
             entity.QueueFree();
+        }
+    }
+
+    /// <summary>
+    /// 在父实体注销前，按 PARENT 关系上的生命周期策略处理直接归属子实体。
+    /// <para>只有 PARENT 参与生命周期决策，ENTITY_TO_PROJECTILE 等业务关系只负责分类查询。</para>
+    /// </summary>
+    /// <param name="entity">父实体</param>
+    /// <param name="visitedEntityIds">当前递归访问集合</param>
+    private static void HandleOwnedChildrenOnDestroy(
+        Node entity, // 父实体
+        HashSet<string> visitedEntityIds // 当前递归访问集合
+    )
+    {
+        List<EntityRelationshipLifecycle.OwnedChildSnapshot> ownedChildren = EntityRelationshipLifecycle.GetDirectOwnedChildren(
+            entity // 父实体
+        );
+
+        foreach (EntityRelationshipLifecycle.OwnedChildSnapshot ownedChild in ownedChildren)
+        {
+            if (!GodotObject.IsInstanceValid(ownedChild.ChildNode))
+            {
+                continue;
+            }
+
+            if (ownedChild.DestroyPolicy != ParentDestroyPolicy.DestroyRecursively)
+            {
+                continue;
+            }
+
+            Destroy(
+                ownedChild.ChildNode, // 直接归属子实体
+                visitedEntityIds // 复用同一递归保护集合
+            );
         }
     }
 
