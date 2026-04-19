@@ -37,6 +37,7 @@ namespace Slime.Test
             try
             {
                 TestCollisionParamsDefaults();
+                TestCollisionParamsOnCollisionCallback();
                 TestStopRequestedDefaults();
                 TestMovementCompletedEventCarriesReason();
                 TestStopCoordinatorResolution();
@@ -62,6 +63,48 @@ namespace Slime.Test
             AssertEqual("默认 StopAfterCollisionCount", -1, collision.StopAfterCollisionCount);
             AssertEqual("默认 DestroyOnStop", false, collision.DestroyOnStop);
             AssertEqual("默认 EmitCollisionEvent", true, collision.EmitCollisionEvent);
+        }
+
+        private void TestCollisionParamsOnCollisionCallback()
+        {
+            int callbackCount = 0;
+            MovementCollisionContext receivedContext = default;
+            var source = new MockEntity("CallbackSource", Team.Player, EntityType.Projectile);
+            var enemy = new MockEntity("CallbackEnemy", Team.Enemy, EntityType.Unit);
+
+            AddChild(source);
+            AddChild(enemy);
+
+            var policy = new MovementCollisionPolicy();
+            var @params = new MovementParams
+            {
+                Mode = MoveMode.SineWave,
+                CollisionParams = new MovementCollisionParams
+                {
+                    TeamFilter = TeamFilter.Enemy, //只接受敌方
+                    EntityTypeFilter = EntityType.Unit, //只接受单位
+                    EmitCollisionEvent = false, //关闭事件，锁定本地回调路径
+                    OnCollision = ctx =>
+                    {
+                        callbackCount++;
+                        receivedContext = ctx;
+                    }
+                }
+            };
+            policy.Reset(@params);
+
+            bool accepted = policy.TryAccept(source, MoveMode.SineWave, @params, enemy, out var context);
+            if (accepted)
+            {
+                @params.CollisionParams?.OnCollision?.Invoke(context);
+            }
+
+            AssertEqual("本地碰撞回调应执行 1 次", 1, callbackCount);
+            AssertEqual("本地碰撞回调应收到目标实体", enemy, receivedContext.TargetEntity);
+            AssertEqual("本地碰撞回调应收到原始参数", @params.Mode, receivedContext.Params.Mode);
+
+            source.QueueFree();
+            enemy.QueueFree();
         }
 
         private void TestStopRequestedDefaults()

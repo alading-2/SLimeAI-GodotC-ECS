@@ -10,8 +10,8 @@
 ```csharp
 public interface IMovementStrategy
 {
-    void OnEnter(IEntity entity, Data data, MovementParams @params);
-    MovementUpdateResult Update(IEntity entity, Data data, float delta, MovementParams @params);
+    void OnEnter(IEntity entity, Data data, in MovementParams @params);
+    MovementUpdateResult Update(IEntity entity, Data data, float delta, in MovementParams @params);
 }
 ```
 

@@ -122,7 +122,9 @@ _entity.Events.On<GameEventType.Data.PropertyChangedEventData>(
 - **策略约束**：禁止直接操作 `GlobalPosition`，所有位移由调度器统一执行
 - **曲线采样原则**：所有曲线策略每帧直接调用 `Evaluate(t)` / `EvaluateTangent(t)` 采样，进度由 `speed * delta / ApproximateLength()` 驱动；无需弧长查找表
 - **移动碰撞语义**：`MovementParams.Collision` 负责声明“哪些碰撞有效、是否通知、累计多少次后停止、停止后是否销毁”；`MovementCollision` 不再等价于“运动完成”
+- **命中接线约定**：技能/投射物业务命中优先接到 `MovementCollisionParams.OnCollision`；`MovementCollision` 事件只用于调试、观察和解耦旁路系统
 - **停止语义**：调度器统一通过 `MovementStopContext` 向策略分发停止原因，当前内置 `Completed / Collision / Requested / Interrupted / ComponentUnregistered`
+- **参数传递语义**：`IMovementStrategy.OnEnter / Update` 统一使用 `in MovementParams`；只读消费大参数结构，避免每帧复制，运行时统计仍由组件内部 `_params` 持有并更新
 
 ### 朝向语义
 - `Velocity` = “本帧怎么移动”，服务于位移执行与速度分层合成

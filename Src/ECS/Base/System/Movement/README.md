@@ -41,8 +41,8 @@ entity.Events.Emit(
 
 ## 职责分工
 
-- **业务层**：构建 `MovementParams`，触发 `MovementStarted`，必要时监听 `MovementCollision` / `MovementCompleted`
-- **策略**：读 `MovementParams`，计算本帧意图写入 `DataKey.Velocity`，需要时通过 `MovementUpdateResult` 显式返回 `FacingDirection`
+- **业务层**：构建 `MovementParams`，触发 `MovementStarted`；命中逻辑优先写在 `MovementCollisionParams.OnCollision` / `MovementParams.OnStop`，只有旁路观察或调试时再监听 `MovementCollision` / `MovementCompleted`
+- **策略**：通过 `in MovementParams` 只读本次运动上下文，计算本帧意图写入 `DataKey.Velocity`，需要时通过 `MovementUpdateResult` 显式返回 `FacingDirection`
 - **组件**：持有 `_params` / `_elapsedTime` / `_traveledDistance`，切换策略，执行位移，消费碰撞候选，统一停止流程
 - **碰撞策略子模块**：`MovementCollisionPolicy` 负责过滤、去重、计数、生成 `MovementCollisionContext`
 - **停止协调子模块**：`MovementStopCoordinator` 统一决定是否发完成事件、是否销毁、切到哪个模式
@@ -134,14 +134,6 @@ entity.Events.Emit(
 ### 1. 命中即停的直线子弹
 
 ```csharp
-projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
-    GameEventType.Unit.MovementCollision,
-    evt =>
-    {
-        if (evt.TargetEntity == null) return;
-        // 伤害逻辑
-    });
-
 projectile.Events.Emit(
     GameEventType.Unit.MovementStarted,
     new GameEventType.Unit.MovementStartedEventData(
@@ -155,7 +147,12 @@ projectile.Events.Emit(
                 TeamFilter = TeamFilter.Enemy,
                 EntityTypeFilter = EntityType.Unit,
                 StopAfterCollisionCount = 1,
-                DestroyOnStop = true
+                DestroyOnStop = true,
+                OnCollision = ctx =>
+                {
+                    if (ctx.TargetEntity == null) return;
+                    // 伤害逻辑
+                }
             }
         }));
 ```
@@ -182,7 +179,7 @@ VelocityOverride ≠ Zero  → VelocityOverride（击退/硬控）
 
 1. `MovementEnums.cs` 新增 `MoveMode`
 2. `MovementParams` 新增所需 `init` 字段；若是策略内部连续变化的标量，优先复用 `ScalarDriverParams`
-3. 新建策略类，私有字段存运行时状态，`[ModuleInitializer]` 注册工厂
+3. 新建策略类，私有字段存运行时状态，`[ModuleInitializer]` 注册工厂；`OnEnter / Update` 统一使用 `in MovementParams` 只读接收大参数结构
 4. 若视觉朝向不应直接取 `Velocity`，通过 `MovementUpdateResult.Continue(distance, facingDirection)` 显式返回朝向
 5. 补全策略类头注释
 

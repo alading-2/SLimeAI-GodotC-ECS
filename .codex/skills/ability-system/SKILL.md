@@ -414,10 +414,12 @@ protected override AbilityExecutedResult ExecuteAbility(CastContext context)
 投射物命中语义约定（2026-04）：
 
 - `MovementCollision` 现在表示“有效碰撞通知”，不再等价于“运动已经结束”
+- 需要在命中当帧直接结算业务时，优先把逻辑挂到 `MovementCollisionParams.OnCollision`
 - 命中即停子弹：配置 `Collision.StopAfterCollisionCount = 1`
 - 穿透子弹：配置 `Collision.StopAfterCollisionCount = N`
 - 只通知不停止：配置 `Collision.StopAfterCollisionCount = -1`
 - `ArcShot` 这类“追踪特定目标并自然到达后命中”的技能，不应订阅 `MovementCollision` 作为命中入口，而应使用 `MovementParams.OnStop` 并判断 `stopCtx.Reason == MovementStopReason.Completed`
+- `MovementCollision` 事件保留给运行时调试、日志、旁路观察者，不应再作为投射物 Handler 的默认命中入口
 
 投射物接入运动策略时，必须保证 `MovementParams` 和策略契约一致：
 
@@ -429,6 +431,9 @@ protected override AbilityExecutedResult ExecuteAbility(CastContext context)
   - 回旋镖返程依赖该宿主节点，不能依赖祖先回溯兜底
 - `MoveMode.SineWave`
   - 需保证存在明确的推进参数与结束参数，常见组合为 `ActionSpeed + MaxDistance`
+- `IMovementStrategy`
+  - `OnEnter / Update` 统一以 `in MovementParams` 只读接收参数
+  - 不得在策略内部修改 `MovementParams`；运行时统计只允许由 `EntityMovementComponent` 持有并写回
 
 如果一个投射物技能需要“飞行后自动销毁”，除了设置 `DestroyOnComplete = true`，还必须先确认对应策略一定存在可达成的完成条件。
 
