@@ -74,7 +74,7 @@ internal class ParabolaShotExecutor : AbilityFeatureHandler
             Range = effectiveRange, //查询半径
             CenterEntity = caster, //中心实体
             TeamFilter = TeamFilter.Enemy, //阵营过滤
-            Sorting = TargetSorting.Nearest, //排序方式
+            Sorting = TargetSorting.Random, //排序方式
             MaxTargets = 1 //最大目标数
         });
         if (targets.Count > 0 && targets[0] is Node2D t)

@@ -26,7 +26,7 @@ internal class BezierShotExecutor : AbilityFeatureHandler
         var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 最终技能伤害
 
         // 查找最近敌人作为终点
-        var targetPos = GetNearestEnemyPos(caster, casterNode, ability.Data.Get<float>(DataKey.AbilityCastRange));
+        var targetPos = GetPosision(caster, casterNode, ability.Data.Get<float>(DataKey.AbilityCastRange));
         var startPos = casterNode.GlobalPosition;
         var midPoint = (startPos + targetPos) / 2f;
         var controlPoint = midPoint + new Vector2(0f, -180f);
@@ -66,7 +66,7 @@ internal class BezierShotExecutor : AbilityFeatureHandler
         return new AbilityExecutedResult { TargetsHit = 1 }; // 返回命中结果
     }
 
-    private static Vector2 GetNearestEnemyPos(IEntity caster, Node2D casterNode, float castRange)
+    private static Vector2 GetPosision(IEntity caster, Node2D casterNode, float castRange)
     {
         float effectiveRange = castRange > 0f ? castRange : 600f; //查询半径
         var targets = EntityTargetSelector.Query(new TargetSelectorQuery
