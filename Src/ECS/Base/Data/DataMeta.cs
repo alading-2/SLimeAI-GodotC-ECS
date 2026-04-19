@@ -42,6 +42,9 @@ public bool IsPercentage { get; init; } = false;
 /// <summary>是否支持修改器（可选，属性键设 true，状态键默认 false）</summary>
 public bool? SupportModifiers { get; init; }
 
+/// <summary>是否允许被 Entity 迁移流程复制到目标实体（默认允许）</summary>
+public bool CanMigrate { get; init; } = true;
+
 /// <summary>图标路径（可选）</summary>
 public string IconPath { get; init; } = "";
 

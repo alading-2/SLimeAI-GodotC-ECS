@@ -103,6 +103,41 @@ EntityManager.BindParentRelationships(
 - `Detach`：仅在当前实体注销时断开关系，子实体继续存活
 - 不要再在业务层手写“父销毁时顺手 Destroy 子实体”的兜底逻辑，统一走框架
 
+## Entity 迁移约定（2026-04）
+
+```csharp
+var migrated = EntityManager.Migrate<VisualPreviewEntity>(
+    sourceEntity, // 源实体
+    new EntityMigrationConfig
+    {
+        TargetSpawn = new EntitySpawnConfig
+        {
+            Config = config, // 目标实体配置
+            UsingObjectPool = false // 目标实体生成方式
+        },
+        Profile = new EntityMigrationProfile
+        {
+            Name = "ProjectileToPreview", // 迁移 Profile 名称
+            ExcludeDataKeys = [DataKey.Name] // 显式排除的 DataKey
+        },
+        DataOverrides = new Dictionary<string, object>
+        {
+            [DataKey.Team] = Team.Enemy // 迁移后覆写值
+        },
+        InheritDirectParent = true // 自动继承直接 PARENT
+    }
+);
+```
+
+- 迁移固定语义是：`新建目标实体 -> 迁移受控 Data -> 销毁源实体`
+- 默认继承直接 `PARENT` 归属链与其上的 `ParentDestroyPolicy`
+- 框架会自动写入 `DataKey.SourceEntityId / DataKey.OriginEntityId`
+- `DataMeta.CanMigrate` 是底层默认过滤开关；`Id / SourceEntityId / OriginEntityId` 这类键默认不参与普通复制
+- 允许迁移的值默认只包括值类型、字符串和 `Resource`
+- `Node / IEntity / IComponent / Delegate / EventBus` 这类绑定旧实例生命周期的引用一律不迁移
+- **不要**试图迁移 `Entity.Events` 订阅、组件私有状态、`VisualRoot` 或整张关系图
+- 如果某个状态需要跨迁移保留，先把它数据化，写入 `Data`
+
 ## 对象池生成时序（重要）
 
 - 对象池 Entity 出池时，不要立即恢复碰撞与处理。

@@ -29,6 +29,7 @@ EntityManager 采用 `partial class` 模块化设计，各模块职责清晰：
 |------|------|
 | [EntityManager.cs](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Src/ECS/Base/Entity/Core/EntityManager.cs) | 核心生命周期管理（Spawn, Register, Destroy）、基础查询（GetEntitiesByType, GetEntityById）、全局查询（GetAllEntities, GetEntitiesByInterface） |
 | [EntityManager_Component.cs](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Src/ECS/Base/Entity/Core/EntityManager_Component.cs) | Component 管理（RegisterComponents, AddComponent, GetComponent, RemoveComponent） |
+| [EntityManager_Migration.cs](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Src/ECS/Base/Entity/Core/EntityManager_Migration.cs) | Entity 迁移扩展（新建目标实体、迁移受控 Data、销毁源实体） |
 | [EntityManager_Ability.cs](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Src/ECS/Base/System/AbilitySystem/EntityManager_Ability.cs) | Ability 管理（AddAbility, RemoveAbility, GetAbilities） |
 
 > [!NOTE]
@@ -97,6 +98,7 @@ var bullet = EntityManager.Spawn<Bullet>(new EntitySpawnConfig
 - ✅ **视觉加载**：优先使用 `EntitySpawnConfig.VisualSceneOverride`，否则自动加载 `Config.VisualScenePath`
 - ✅ **归属绑定**：填写 `ParentEntity` 后，会在 Spawn 阶段统一补 `PARENT + 业务关系`
 - ✅ **生命周期策略**：`ParentDestroyPolicy` 会写入 `PARENT` 关系，决定父实体销毁时子实体是递归销毁还是仅断开归属
+- ✅ **实体迁移**：`EntityManager.Migrate<TTarget>()` 会生成目标实体、迁移受控 Data、记录来源并销毁源实体
 - ✅ **组件管理**：自动注册所有 Component 并建立 Entity-Component 关系
 - ✅ **生命周期注册**：将 Entity 注册到 EntityManager 进行统一管理
 
@@ -121,6 +123,47 @@ var projectile = EntityManager.Spawn<ProjectileEntity>(new EntitySpawnConfig
 - `DestroyRecursively`：父实体销毁时，递归销毁该子实体
 - `Detach`：父实体销毁时，仅断开归属关系，子实体继续存活
 - `ParentRelationTypes`：额外业务关系，例如 `ENTITY_TO_PROJECTILE / ENTITY_TO_EFFECT / ENTITY_TO_ABILITY`
+
+#### EntityMigrationConfig 迁移相关字段
+
+```csharp
+var migrated = EntityManager.Migrate<VisualPreviewEntity>(
+    sourceEntity, // 源实体
+    new EntityMigrationConfig
+    {
+        TargetSpawn = new EntitySpawnConfig
+        {
+            Config = config, // 目标实体配置
+            UsingObjectPool = false // 直接场景实例化
+        },
+        Profile = new EntityMigrationProfile
+        {
+            Name = "DefaultMigration", // Profile 名称
+            ExcludeDataKeys = [DataKey.Name] // 显式排除的 DataKey
+        },
+        DataOverrides = new Dictionary<string, object>
+        {
+            [DataKey.Team] = Team.Enemy // 迁移后覆写值
+        },
+        InheritDirectParent = true // 自动继承直接 PARENT
+    }
+);
+```
+
+- `TargetSpawn`：目标实体生成配置，复用现有 `EntitySpawnConfig`
+- `Profile`：控制哪些 `DataKey` 允许迁移
+- `DataOverrides`：在迁移复制完成后再覆写到目标实体
+- `InheritDirectParent`：若目标未显式指定 `ParentEntity`，则自动继承源实体直接 `PARENT`
+- `DataMeta.CanMigrate`：Data 迁移的底层默认开关；`Id / SourceEntityId / OriginEntityId` 这类键默认不参与普通复制
+- `SourceEntityId / OriginEntityId`：迁移成功后由框架自动写入，分别表示“最近一次来源”和“迁移链第一来源”
+
+**迁移边界**：
+
+- 迁移的是基础 `Data`
+- 不迁移 `Entity.Events` 订阅
+- 不迁移 Component 私有状态
+- 不迁移 `VisualRoot`
+- 不自动迁移整张关系图
 
 ### 2. 创建 Component
 
@@ -570,6 +613,27 @@ void Destroy(Node entity)
 - 业务关系（如 `ENTITY_TO_PROJECTILE`）只做分类查询，不参与生命周期决策
 
 **所有 Entity 的销毁都应当调用此方法，而非直接调用 `QueueFree()`。**
+
+#### Migrate<TTarget>() - 迁移为新的目标实体
+
+```csharp
+TTarget? Migrate<TTarget>(Node sourceEntity, EntityMigrationConfig config)
+    where TTarget : Node, IEntity
+```
+
+**功能**：把一个已注册源实体替换成一个新的目标实体。
+
+**固定流程**：
+- 拍源实体快照（基础 Data、直接父级、位置/旋转）
+- 生成目标实体
+- 迁移安全 Data
+- 写入 `DataKey.SourceEntityId / DataKey.OriginEntityId`
+- 销毁源实体
+
+**默认规则**：
+- 允许值类型、字符串、`Resource`
+- 拒绝 `Node / IEntity / IComponent / Delegate / EventBus`
+- 只继承直接 `PARENT` 归属链，不重写整张关系图
 
 #### AddComponent<T>() - 动态添加 Component
 

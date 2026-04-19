@@ -15,6 +15,24 @@ public static partial class GameEventType
         /// <summary>Entity 销毁事件数据</summary>
         public readonly record struct EntityDestroyedEventData(IEntity Entity);
 
+        /// <summary>Entity 迁移开始</summary>
+        public const string EntityMigrating = "global:entity:migrating";
+        /// <summary>Entity 迁移开始事件数据</summary>
+        public readonly record struct EntityMigratingEventData(
+            IEntity SourceEntity, // 源实体
+            string TargetEntityType, // 目标实体类型名
+            string ProfileName // 迁移 Profile 名称
+        );
+
+        /// <summary>Entity 迁移完成</summary>
+        public const string EntityMigrated = "global:entity:migrated";
+        /// <summary>Entity 迁移完成事件数据</summary>
+        public readonly record struct EntityMigratedEventData(
+            IEntity SourceEntity, // 源实体
+            IEntity TargetEntity, // 目标实体
+            string ProfileName // 迁移 Profile 名称
+        );
+
         /// <summary>Entity 关系添加</summary>
         public const string RelationshipAdded = "global:entity:relationship_added";
         /// <summary>Entity 关系添加事件数据</summary>

@@ -23,6 +23,7 @@ public partial class AbilitySystemPipelineTest : Node
             Test_EntitySelectionAbility_AllowsHandlerManagedExecution();
             Test_AbilityToolHandler_CanExecuteThroughPipeline();
             Test_ParabolaShot_UsesRandomPointInCircleInsteadOfEnemyPosition();
+            Test_BoomerangThrow_UsesRandomPointInRingInsteadOfEnemyPosition();
         }
         catch (Exception ex)
         {
@@ -293,6 +294,73 @@ public partial class AbilitySystemPipelineTest : Node
             );
             AssertEqual(
                 "ParabolaShot 不应再直接使用敌方单位当前位置作为落点",
+                true, //期望不是敌人位置
+                !targetPoint.IsEqualApprox(enemy.GlobalPosition) //实际是否仍锁定敌人位置
+            );
+        }
+        finally
+        {
+            EntityManager.Destroy(enemy);
+            EntityManager.Destroy(caster);
+        }
+    }
+
+    /// <summary>
+    /// 回归测试：
+    /// BoomerangThrow 应改为以施法者为圆心，在施法范围圆环内随机选择去程目标点，而不是直接取敌方单位当前位置。
+    /// </summary>
+    private void Test_BoomerangThrow_UsesRandomPointInRingInsteadOfEnemyPosition()
+    {
+        var caster = new AbilityPipelineTargetPointTestEntity
+        {
+            Name = "BoomerangCaster",
+            GlobalPosition = Vector2.Zero
+        };
+        AddChild(caster);
+
+        var enemy = new AbilityPipelineTargetPointTestEntity
+        {
+            Name = "BoomerangEnemy",
+            GlobalPosition = new Vector2(80f, 0f)
+        };
+        AddChild(enemy);
+
+        caster.Data.Set(DataKey.Id, caster.GetInstanceId().ToString());
+        caster.Data.Set(DataKey.Team, Team.Player);
+        caster.Data.Set(DataKey.EntityType, EntityType.Unit);
+
+        enemy.Data.Set(DataKey.Id, enemy.GetInstanceId().ToString());
+        enemy.Data.Set(DataKey.Team, Team.Enemy);
+        enemy.Data.Set(DataKey.EntityType, EntityType.Unit);
+
+        EntityManager.Register(caster);
+        EntityManager.Register(enemy);
+
+        try
+        {
+            var executorType = typeof(AbilitySystemPipelineTest).Assembly.GetType("BoomerangThrowExecutor");
+            var method = executorType?.GetMethod(
+                "GetThrowTarget",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic
+            );
+            var result = method?.Invoke(null, new object[] { caster, caster, 200f });
+
+            AssertEqual(
+                "BoomerangThrow 应能通过反射找到取目标点逻辑",
+                true, //期望存在该方法
+                result is Vector2 //实际是否成功拿到结果
+            );
+
+            if (result is not Vector2 targetPoint) return;
+
+            float distance = targetPoint.DistanceTo(caster.GlobalPosition); // 与施法者的距离
+            AssertEqual(
+                "BoomerangThrow 随机目标点必须位于施法范围圆环内",
+                true, //期望在圆环内
+                distance >= 90f && distance <= 200f //实际判定
+            );
+            AssertEqual(
+                "BoomerangThrow 不应再直接使用敌方单位当前位置作为去程目标点",
                 true, //期望不是敌人位置
                 !targetPoint.IsEqualApprox(enemy.GlobalPosition) //实际是否仍锁定敌人位置
             );

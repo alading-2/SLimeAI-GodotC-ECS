@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 
 namespace Slime.Test
 {
@@ -37,14 +38,19 @@ namespace Slime.Test
             try
             {
                 TestCollisionParamsDefaults();
+                TestOrientationParamsDefaults();
                 TestCollisionParamsOnCollisionCallback();
                 TestStopRequestedDefaults();
+                TestOrientationStartedDefaults();
+                TestOrientationStoppedDefaults();
                 TestMovementCompletedEventCarriesReason();
                 TestStopCoordinatorResolution();
                 TestBindParentRelationshipsCreatesOwnershipChain();
                 TestBindParentRelationshipsRejectsSecondParent();
                 TestDestroyRecursivelyDestroysOwnedChildren();
                 TestDestroyDetachKeepsOwnedChildrenAlive();
+                TestMigrateReplacesSourceAndInheritsDirectParent();
+                TestMigrateProfileFiltersDataAndDoesNotCopyEvents();
                 TestCollisionPolicyCountsAndFilters();
                 TestCollisionPolicyUsesOwnerUnitForTeamFilter();
                 TestCollisionPolicyTrackedTargetOnly();
@@ -68,6 +74,18 @@ namespace Slime.Test
             AssertEqual("默认 StopAfterCollisionCount", -1, collision.StopAfterCollisionCount);
             AssertEqual("默认 DestroyOnStop", false, collision.DestroyOnStop);
             AssertEqual("默认 EmitCollisionEvent", true, collision.EmitCollisionEvent);
+        }
+
+        private void TestOrientationParamsDefaults()
+        {
+            var orientation = new OrientationParams();
+
+            AssertEqual("默认朝向模式", OrientationMode.FollowMovement, orientation.Mode);
+            AssertEqual("默认角速度", 0f, orientation.AngularSpeed);
+            AssertEqual("默认角加速度", 0f, orientation.AngularAcceleration);
+            AssertEqual("默认总角度", -1f, orientation.TotalAngle);
+            AssertEqual("默认初始角", 0f, orientation.InitialAngle);
+            AssertEqual("默认旋转方向", true, orientation.IsClockwise);
         }
 
         private void TestCollisionParamsOnCollisionCallback()
@@ -121,6 +139,23 @@ namespace Slime.Test
             AssertEqual("默认下一模式", MoveMode.None, evt.NextMode);
             AssertEqual("默认不销毁实体", false, evt.DestroyEntity);
             AssertEqual("默认无碰撞目标", null, evt.CollisionTarget);
+        }
+
+        private void TestOrientationStartedDefaults()
+        {
+            var evt = new GameEventType.Unit.OrientationStartedEventData();
+
+            AssertEqual("默认朝向来源", OrientationSource.Standalone, evt.Source);
+            AssertEqual("默认朝向参数模式", OrientationMode.FollowMovement, evt.Params.Mode);
+            AssertEqual("默认独立朝向不自动停止", false, evt.StopWithMovement);
+        }
+
+        private void TestOrientationStoppedDefaults()
+        {
+            var evt = new GameEventType.Unit.OrientationStoppedEventData();
+
+            AssertEqual("默认停止来源", OrientationSource.Standalone, evt.Source);
+            AssertEqual("默认停止原因", MovementStopReason.Requested, evt.Reason);
         }
 
         private void TestMovementCompletedEventCarriesReason()
@@ -408,6 +443,135 @@ namespace Slime.Test
             AssertEqual("Detach 后子实体不应再保留直接父级", null, directParent);
 
             CleanupEntities(projectile);
+        }
+
+        /// <summary>
+        /// 验证迁移会生成新的目标实体、继承直接父级归属，并销毁旧实体。
+        /// </summary>
+        private void TestMigrateReplacesSourceAndInheritsDirectParent()
+        {
+            var owner = new MockEntity("MigrationOwner", Team.Player, EntityType.Unit);
+            var source = new MockEntity("MigrationSource", Team.Neutral, EntityType.Projectile);
+
+            AddChild(owner);
+            AddChild(source);
+
+            EntityManager.Register(owner);
+            EntityManager.Register(source);
+
+            source.Data.Set(DataKey.Name, "MigratedProjectile");
+            source.Data.Set(DataKey.Description, "payload");
+            source.Data.Set("CustomCount", 7);
+
+            EntityManager.BindParentRelationships(
+                source, // 子实体：待迁移源实体
+                owner, // 父实体：归属者
+                autoAddParentRelation: true, // 自动补 PARENT
+                parentDestroyPolicy: ParentDestroyPolicy.Detach, // 验证父销毁策略会被继承
+                relationTypes: EntityRelationshipType.ENTITY_TO_PROJECTILE // 业务关系
+            );
+
+            string sourceId = source.Data.Get<string>(DataKey.Id);
+
+            VisualPreviewEntity? target = null;
+            try
+            {
+                target = EntityManager.Migrate<VisualPreviewEntity>(
+                    source, // 源实体
+                    new EntityMigrationConfig
+                    {
+                        TargetSpawn = new EntitySpawnConfig
+                        {
+                            Config = new Resource(), // 目标实体测试配置
+                            UsingObjectPool = false // 直接用场景实例化
+                        }
+                    }
+                );
+
+                AssertEqual("迁移应返回目标实体", false, target == null);
+                AssertEqual("迁移后源实体应被注销", false, NodeLifecycleManager.IsRegistered(sourceId));
+                AssertEqual("迁移后目标实体应持有新的 Id", false, target!.Data.Get<string>(DataKey.Id) == sourceId);
+                AssertEqual("迁移后应复制基础字符串数据", "MigratedProjectile", target.Data.Get<string>(DataKey.Name));
+                AssertEqual("迁移后应复制自定义基础数据", 7, target.Data.Get<int>("CustomCount"));
+                AssertEqual("迁移后应记录直接来源实体 Id", sourceId, target.Data.Get<string>(DataKey.SourceEntityId));
+                AssertEqual("迁移后应沿用第一来源实体 Id 作为 Origin", sourceId, target.Data.Get<string>(DataKey.OriginEntityId));
+                AssertEqual("迁移后应继承直接父级", owner, EntityRelationshipTraversal.GetDirectParent(target));
+
+                ParentDestroyPolicy destroyPolicy = EntityRelationshipLifecycle.ReadParentDestroyPolicy(
+                    owner.Data.Get<string>(DataKey.Id), // 父实体 Id
+                    target.Data.Get<string>(DataKey.Id) // 目标实体 Id
+                );
+                AssertEqual("迁移后应继承直接父级上的销毁策略", ParentDestroyPolicy.Detach, destroyPolicy);
+            }
+            finally
+            {
+                CleanupEntities(owner);
+                if (target != null)
+                {
+                    CleanupEntities(target);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 验证迁移 Profile 会过滤 Data，且局部 EventBus 的订阅不会被复制到新实体。
+        /// </summary>
+        private void TestMigrateProfileFiltersDataAndDoesNotCopyEvents()
+        {
+            var source = new MockEntity("ProfileSource", Team.Player, EntityType.Projectile);
+            AddChild(source);
+            EntityManager.Register(source);
+
+            source.Data.Set(DataKey.Name, "ShouldBeFiltered");
+            source.Data.Set(DataKey.Description, "ShouldStay");
+            source.Data.Set("UnsafeNodeRef", new Node2D { Name = "UnsafeRef" });
+
+            int callbackCount = 0;
+            source.Events.On("migration:test:event", () => callbackCount++);
+
+            string sourceId = source.Data.Get<string>(DataKey.Id);
+
+            VisualPreviewEntity? target = null;
+            try
+            {
+                target = EntityManager.Migrate<VisualPreviewEntity>(
+                    source, // 源实体
+                    new EntityMigrationConfig
+                    {
+                        TargetSpawn = new EntitySpawnConfig
+                        {
+                            Config = new Resource(), // 目标实体测试配置
+                            UsingObjectPool = false // 直接用场景实例化
+                        },
+                        Profile = new EntityMigrationProfile
+                        {
+                            Name = "FilterName", // Profile 名称
+                            ExcludeDataKeys = [DataKey.Name] // 排除名称键
+                        },
+                        DataOverrides = new Dictionary<string, object>
+                        {
+                            [DataKey.Team] = Team.Enemy, // 覆写阵营
+                            [DataKey.Description] = "OverrideDescription" // 覆写描述
+                        }
+                    }
+                );
+
+                target!.Events.Emit("migration:test:event");
+
+                AssertEqual("Profile 排除的键不应被迁移", string.Empty, target.Data.Get<string>(DataKey.Name));
+                AssertEqual("DataOverrides 应覆盖迁移后的最终值", "OverrideDescription", target.Data.Get<string>(DataKey.Description));
+                AssertEqual("DataOverrides 应覆盖阵营", Team.Enemy, target.Data.Get<Team>(DataKey.Team));
+                AssertEqual("Node 引用类型默认不应迁移", false, target.Data.Has("UnsafeNodeRef"));
+                AssertEqual("源实体的局部事件订阅不应复制到目标实体", 0, callbackCount);
+                AssertEqual("迁移后仍应销毁源实体", false, NodeLifecycleManager.IsRegistered(sourceId));
+            }
+            finally
+            {
+                if (target != null)
+                {
+                    CleanupEntities(target);
+                }
+            }
         }
 
         /// <summary>

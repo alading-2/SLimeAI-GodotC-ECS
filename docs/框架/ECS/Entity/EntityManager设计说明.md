@@ -77,6 +77,35 @@ var enemy = EntityManager.Spawn<Enemy>(new EntitySpawnConfig
 - Component 只实现**功能模块**，不关心注册流程
 - Data 只存储**运行时数据**，不包含静态配置
 
+### 新增：迁移能力（2026-04）
+
+EntityManager 现在还承担一种受控替换能力：
+
+```csharp
+var target = EntityManager.Migrate<TTarget>(
+    sourceEntity, // 源实体
+    migrationConfig // 迁移配置
+);
+```
+
+它不是对象级复制器，而是统一编排以下流程：
+
+1. 拍源实体快照（基础 Data、直接父级、位置/旋转）
+2. 按 `EntitySpawnConfig` 生成目标实体
+3. 按 `EntityMigrationProfile` 迁移安全 Data
+4. 记录 `SourceEntityId / OriginEntityId`
+5. 销毁源实体
+
+固定边界：
+
+- 迁移 `Data`
+- 不迁移 `Entity.Events` 订阅
+- 不迁移 Component 私有状态
+- 不迁移视觉节点树
+- 不自动重写整张关系图
+
+这样设计是为了让迁移只解决“玩法替换”问题，而不是把框架拖成难以维护的万能克隆系统。
+
 ---
 
 ## 数据流转设计

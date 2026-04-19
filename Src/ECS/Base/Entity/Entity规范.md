@@ -138,7 +138,57 @@ private void OnDamaged(GameEventType.Unit.DamagedEventData evt)
 > [!IMPORTANT]
 > **EventBus 自动防止死循环**: 当事件正在执行时,同类型的事件不会再次触发,避免事件死循环
 
-### 6. 碰撞组件挂载约定
+### 6. Entity 迁移约定（2026-04）
+
+> [!IMPORTANT]
+> **迁移不是万能克隆**。本框架的迁移语义固定为：
+> `新建目标 Entity -> 迁移受控 Data -> 销毁源 Entity`
+
+**统一入口**：
+
+```csharp
+var migrated = EntityManager.Migrate<VisualPreviewEntity>(
+    sourceEntity, // 源实体
+    new EntityMigrationConfig
+    {
+        TargetSpawn = new EntitySpawnConfig
+        {
+            Config = config, // 目标实体配置
+            UsingObjectPool = false // 目标实体生成方式
+        },
+        Profile = new EntityMigrationProfile
+        {
+            Name = "ProjectileToPreview", // 迁移 Profile 名称
+            ExcludeDataKeys = [DataKey.Name] // 显式排除的 DataKey
+        },
+        DataOverrides = new Dictionary<string, object>
+        {
+            [DataKey.Team] = Team.Enemy // 迁移完成后覆写的数据
+        }
+    }
+);
+```
+
+**v1 默认迁移内容**：
+- 迁移基础 `Data`
+- 默认继承直接 `PARENT` 归属链与其上的 `ParentDestroyPolicy`
+- 自动记录 `DataKey.SourceEntityId / DataKey.OriginEntityId`
+- 迁移成功后默认 `EntityManager.Destroy(source)`
+
+**明确不迁移的内容**：
+- `Entity.Events` 的订阅表
+- Component 私有字段和闭包状态
+- 视觉节点树 / `VisualRoot`
+- 整张关系图
+- `DataKey.Id`
+
+**规则说明**：
+- `Data` 迁移默认遵循 `DataMeta.CanMigrate`
+- `Node / IEntity / IComponent / Delegate / EventBus` 这类绑定旧实例生命周期的引用，默认一律不迁移
+- 如果某段状态必须跨迁移保留，先把它数据化，写进 `Data`
+- 只是换状态、换皮或启停能力时，不要滥用迁移；优先用 `Data + Component + Visual` 处理
+
+### 7. 碰撞组件挂载约定
 
 如果 Entity 需要参与碰撞系统，请遵循以下分工：
 
@@ -146,7 +196,7 @@ private void OnDamaged(GameEventType.Unit.DamagedEventData evt)
 - `HurtboxComponent` 直接作为 `Area2D` 挂在 Entity 场景里，并在自身下配置 `CollisionShape2D`
 - `ContactDamageComponent` 只消费 `HurtboxEntered / HurtboxExited`
 
-### 7. 碰撞型对象池 Entity 时序约定（2026-04）
+### 8. 碰撞型对象池 Entity 时序约定（2026-04）
 
 当对象池 Entity 的**根节点本身参与物理世界**（`CollisionObject2D`，如 `CharacterBody2D`、`Area2D`）时，必须遵循下面的统一时序：
 
