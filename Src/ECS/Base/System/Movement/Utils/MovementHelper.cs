@@ -21,7 +21,7 @@ public static partial class MovementHelper
     /// <param name="visualRoot">角色视觉根节点，可为空</param>
     public static void UpdateOrientation(
         IEntity entity,
-        MovementParams @params,
+        in MovementParams @params,
         Vector2 direction,
         AnimatedSprite2D? visualRoot = null)
     {
@@ -45,7 +45,7 @@ public static partial class MovementHelper
     /// 该逻辑只对没有 `VisualRoot` 的普通 `Node2D` 有效，方向向量过小时会跳过旋转以避免角度抖动。
     /// </para>
     /// </summary>
-    public static void ApplyRotation(IEntity entity, MovementParams @params, Vector2 direction)
+    public static void ApplyRotation(IEntity entity, in MovementParams @params, Vector2 direction)
     {
         if (!@params.RotateToVelocity) return;
         if (entity is not Node2D node) return;
@@ -58,7 +58,7 @@ public static partial class MovementHelper
     /// 获取当前运动进度 [0, 1]，供策略做帧级插值或阶段判断使用。
     /// <para>优先按时间（MaxDuration），其次按距离（MaxDistance），两者均不限制时返回 0。</para>
     /// </summary>
-    public static float GetProgress(MovementParams @params)
+    public static float GetProgress(in MovementParams @params)
     {
         if (@params.MaxDuration >= 0f)
             return Mathf.Clamp(@params.ElapsedTime / @params.MaxDuration, 0f, 1f);
@@ -77,7 +77,7 @@ public static partial class MovementHelper
     /// <item>其余情况返回 0f（策略应做保护处理）</item>
     /// </list>
     /// </summary>
-    public static float ResolveActionSpeed(MovementParams @params)
+    public static float ResolveActionSpeed(in MovementParams @params)
     {
         if (@params.ActionSpeed > 0f) return @params.ActionSpeed;
         if (@params.MaxDistance > 0f && @params.MaxDuration > 0f)

@@ -35,10 +35,6 @@ internal class ParabolaShotExecutor : AbilityFeatureHandler
         );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
-        projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
-            GameEventType.Unit.MovementCollision,
-            (evt) => OnHit(evt, caster, casterNode, damage));
-
         projectile.Events.Emit(
             GameEventType.Unit.MovementStarted,
             new GameEventType.Unit.MovementStartedEventData(
@@ -51,12 +47,13 @@ internal class ParabolaShotExecutor : AbilityFeatureHandler
                     ParabolaApexHeight = 160f,
                     BowWorldUp = true,
                     DestroyOnComplete = true,
-                    Collision = new MovementCollisionParams
+                    CollisionParams = new MovementCollisionParams
                     {
                         TeamFilter = TeamFilter.Enemy, //阵营过滤
                         EntityTypeFilter = EntityType.Unit, //实体类型过滤
                         StopAfterCollisionCount = 1, //首个有效碰撞停止
-                        DestroyOnStop = true //停止后销毁
+                        DestroyOnStop = true, //停止后销毁
+                        OnCollision = collisionCtx => OnHit(collisionCtx, caster, casterNode, damage) //命中回调
                     },
                     RotateToVelocity = true,
                 }
@@ -85,13 +82,13 @@ internal class ParabolaShotExecutor : AbilityFeatureHandler
         return casterNode.GlobalPosition + new Vector2(500f, 0f);
     }
 
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt,
+    private static void OnHit(MovementCollisionContext collisionCtx,
         IEntity caster,
         Node2D casterNode,
         float damage)
     {
-        if (evt.TargetEntity == null) return;
-        var targetEntity = evt.TargetEntity;
+        if (collisionCtx.TargetEntity == null) return;
+        var targetEntity = collisionCtx.TargetEntity;
         if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return;
 
         AbilityImpactTool.Execute(caster, new AbilityImpactOptions

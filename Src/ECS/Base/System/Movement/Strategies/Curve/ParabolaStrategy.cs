@@ -58,7 +58,7 @@ public class ParabolaStrategy : IMovementStrategy
     /// <summary>
     /// 进入移动状态时的初始化逻辑。
     /// </summary>
-    public void OnEnter(IEntity entity, Data data, MovementParams @params)
+    public void OnEnter(IEntity entity, Data data, in MovementParams @params)
     {
         _startPoint = entity is Node2D node ? node.GlobalPosition : Vector2.Zero;
         _progress = 0f;
@@ -82,7 +82,7 @@ public class ParabolaStrategy : IMovementStrategy
     /// <item>步进与求值：根据线速度计算进度增量，采样路径点并计算位移矢量。</item>
     /// </list>
     /// </summary>
-    public MovementUpdateResult Update(IEntity entity, Data data, float delta, MovementParams @params)
+    public MovementUpdateResult Update(IEntity entity, Data data, float delta, in MovementParams @params)
     {
         if (entity is not Node2D node) return MovementUpdateResult.Continue();
 
@@ -169,7 +169,7 @@ public class ParabolaStrategy : IMovementStrategy
     /// 预计算并缓存静态抛物线路径。
     /// <para>当移动目标点在 OnEnter 时已确定且不再随帧变化时，预先构建曲线并测量其弧长，减少 Update 循环中的计算开销。</para>
     /// </summary>
-    private void CacheStaticCurve(MovementParams @params)
+    private void CacheStaticCurve(in MovementParams @params)
     {
         // 初始重置缓存状态
         _cachedCurve = default;
@@ -209,7 +209,7 @@ public class ParabolaStrategy : IMovementStrategy
     /// <param name="params">移动参数配置。</param>
     /// <param name="allowTracking">是否允许在本帧进行目标追踪逻辑。</param>
     /// <param name="targetPoint">解析出的目标坐标输出。</param>
-    private bool TryResolveTargetPoint(Node2D? node, MovementParams @params, bool allowTracking, out Vector2 targetPoint)
+    private bool TryResolveTargetPoint(Node2D? node, in MovementParams @params, bool allowTracking, out Vector2 targetPoint)
     {
         // 1. 如果开启了实时追踪，优先使用节点当前位置
         if (allowTracking && @params.isTrackTarget && @params.TargetNode != null && GodotObject.IsInstanceValid(@params.TargetNode))
@@ -247,7 +247,7 @@ public class ParabolaStrategy : IMovementStrategy
     /// 根据 <c>BowWorldUp</c> 计算实际使用的顶点高度。
     /// BowWorldUp 开启时自动修正符号使弓起朝向屏幕上方：向右攻击取负高度，向左攻击取正高度。
     /// </summary>
-    private static float ResolveEffectiveApexHeight(Vector2 start, Vector2 target, MovementParams @params)
+    private static float ResolveEffectiveApexHeight(Vector2 start, Vector2 target, in MovementParams @params)
     {
         if (!@params.BowWorldUp) return @params.ParabolaApexHeight;
         float h = Mathf.Abs(@params.ParabolaApexHeight);

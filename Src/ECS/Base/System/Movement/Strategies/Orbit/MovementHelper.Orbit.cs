@@ -8,7 +8,7 @@ public static partial class MovementHelper
     /// <summary>
     /// 角速度三选二推导：<c>OrbitAngularSpeed &gt; 0</c> 直接用；否则从 <c>OrbitTotalAngle / MaxDuration</c> 推算；两者均无效返回 0。
     /// </summary>
-    public static float ResolveAngularSpeed(MovementParams @params)
+    public static float ResolveAngularSpeed(in MovementParams @params)
     {
         if (@params.OrbitAngularSpeed > 0f) return @params.OrbitAngularSpeed;
         if (@params.OrbitTotalAngle >= 0f && @params.MaxDuration >= 0f)
@@ -20,7 +20,7 @@ public static partial class MovementHelper
     /// 解析本帧环绕圆心：<c>TargetNode</c> 有效时实时跟随，否则使用 <c>OrbitCenter</c> 固定点。
     /// 返回 <c>null</c> 表示 <c>TargetNode</c> 已设置但已失效（调用方应停止移动）。
     /// </summary>
-    public static Vector2? ResolveOrbitCenter(MovementParams @params)
+    public static Vector2? ResolveOrbitCenter(in MovementParams @params)
     {
         if (@params.TargetNode != null)
         {
@@ -65,7 +65,7 @@ public static partial class MovementHelper
     /// <param name="delta">本帧时间（秒）</param>
     /// <returns>Continue(本帧位移量)</returns>
     public static MovementUpdateResult OrbitStep(
-        Node2D node, Data data, MovementParams @params,
+        Node2D node, Data data, in MovementParams @params,
         Vector2 center, float radius, float angularSpeed, float radialSpeed,
         ref float currentAngle, float delta)
     {

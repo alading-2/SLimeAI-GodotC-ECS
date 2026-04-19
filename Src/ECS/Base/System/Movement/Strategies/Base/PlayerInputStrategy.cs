@@ -24,7 +24,7 @@ public class PlayerInputStrategy : IMovementStrategy
     /// <summary>
     /// 读取输入方向，按加速度平滑插值到目标速度。
     /// </summary>
-    public MovementUpdateResult Update(IEntity entity, Data data, float delta, MovementParams @params)
+    public MovementUpdateResult Update(IEntity entity, Data data, float delta, in MovementParams @params)
     {
         if (data.Has(DataKey.StatusCanMoveInput) && !data.Get<bool>(DataKey.StatusCanMoveInput))
         {

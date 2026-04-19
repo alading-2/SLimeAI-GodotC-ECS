@@ -87,7 +87,7 @@ public class OrbitStrategy : IMovementStrategy
     }
 
     /// <inheritdoc/>
-    public void OnEnter(IEntity entity, Data data, MovementParams @params)
+    public void OnEnter(IEntity entity, Data data, in MovementParams @params)
     {
         if (entity is not Node2D node) return;
 
@@ -115,7 +115,7 @@ public class OrbitStrategy : IMovementStrategy
     }
 
     /// <inheritdoc/>
-    public MovementUpdateResult Update(IEntity entity, Data data, float delta, MovementParams @params)
+    public MovementUpdateResult Update(IEntity entity, Data data, float delta, in MovementParams @params)
     {
         if (entity is not Node2D node) return MovementUpdateResult.Continue();
 

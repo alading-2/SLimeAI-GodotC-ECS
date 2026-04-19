@@ -67,7 +67,7 @@ public class BezierCurveStrategy : IMovementStrategy
     /// <param name="entity">移动实体</param>
     /// <param name="data">实体数据容器</param>
     /// <param name="params">移动参数</param>
-    public void OnEnter(IEntity entity, Data data, MovementParams @params)
+    public void OnEnter(IEntity entity, Data data, in MovementParams @params)
     {
         if (entity is not Node2D node) return;
 
@@ -114,7 +114,7 @@ public class BezierCurveStrategy : IMovementStrategy
     /// <param name="delta">帧间隔时间</param>
     /// <param name="params">移动参数</param>
     /// <returns>移动更新结果（继续/完成）</returns>
-    public MovementUpdateResult Update(IEntity entity, Data data, float delta, MovementParams @params)
+    public MovementUpdateResult Update(IEntity entity, Data data, float delta, in MovementParams @params)
     {
         if (entity is not Node2D node) return MovementUpdateResult.Continue();
         if (_finalPoints.Length < 2) return MovementUpdateResult.Continue(); // 控制点不足，跳过

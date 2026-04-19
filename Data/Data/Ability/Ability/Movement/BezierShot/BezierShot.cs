@@ -39,10 +39,6 @@ internal class BezierShotExecutor : AbilityFeatureHandler
         );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
-        projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
-            GameEventType.Unit.MovementCollision, // 碰撞事件
-            (evt) => OnHit(evt, caster, casterNode, damage)); // 碰撞回调
-
         projectile.Events.Emit(
             GameEventType.Unit.MovementStarted, // 开始移动事件
             new GameEventType.Unit.MovementStartedEventData(
@@ -53,12 +49,13 @@ internal class BezierShotExecutor : AbilityFeatureHandler
                     BezierPoints = new Vector2[] { startPos, controlPoint, targetPos }, // 控制点数组
                     ActionSpeed = 420f, // 移动速度
                     DestroyOnComplete = true, // 到达后销毁
-                    Collision = new MovementCollisionParams
+                    CollisionParams = new MovementCollisionParams
                     {
                         TeamFilter = TeamFilter.Enemy, //阵营过滤
                         EntityTypeFilter = EntityType.Unit, //实体类型过滤
                         StopAfterCollisionCount = 1, //首个有效碰撞停止
-                        DestroyOnStop = true //停止后销毁
+                        DestroyOnStop = true, //停止后销毁
+                        OnCollision = collisionCtx => OnHit(collisionCtx, caster, casterNode, damage) //命中回调
                     },
                     RotateToVelocity = true, // 旋转朝向速度
                 }
@@ -87,13 +84,13 @@ internal class BezierShotExecutor : AbilityFeatureHandler
         return casterNode.GlobalPosition + new Vector2(400f, 0f); // 无目标时返回前方位置
     }
 
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt,
+    private static void OnHit(MovementCollisionContext collisionCtx,
         IEntity caster,
         Node2D casterNode,
         float damage)
     {
-        if (evt.TargetEntity == null) return;
-        var targetEntity = evt.TargetEntity;
+        if (collisionCtx.TargetEntity == null) return;
+        var targetEntity = collisionCtx.TargetEntity;
         if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return;
 
         AbilityImpactTool.Execute(caster, new AbilityImpactOptions

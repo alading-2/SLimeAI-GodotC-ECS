@@ -53,10 +53,9 @@ internal class ArcShotExecutor : AbilityFeatureHandler
                 new MovementParams
                 {
                     Mode = MoveMode.CircularArc, // 运动模式
-                    TargetPoint = targetNode.GlobalPosition, // 目标点
                     TargetNode = targetNode, // 目标节点
                     isTrackTarget = true, // 是否追踪目标
-                    ActionSpeed = 360f, // 行动速度
+                    MaxDuration = 1.5f, // 运动时长,
                     CircularArcRadius = 220f, // 圆弧半径
                     CircularArcClockwise = true, // 圆弧方向
                     BowWorldUp = true, // 弓方向

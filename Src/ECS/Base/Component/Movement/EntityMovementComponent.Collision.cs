@@ -45,12 +45,12 @@ public partial class EntityMovementComponent
             return;
         }
 
-        if (!_params.Collision.HasValue)
+        if (!_params.CollisionParams.HasValue)
         {
             return;
         }
 
-        var collision = _params.Collision.Value;
+        var collision = _params.CollisionParams.Value;
 
         // 调用外部回调（如炮弹命中扣血）。
         collision.OnCollision?.Invoke(context);

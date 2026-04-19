@@ -101,7 +101,7 @@ namespace Slime.Test
                 new MovementParams
                 {
                     Mode = MoveMode.SineWave,
-                    Collision = new MovementCollisionParams
+                    CollisionParams = new MovementCollisionParams
                     {
                         StopAfterCollisionCount = 1,
                         DestroyOnStop = true
@@ -169,7 +169,7 @@ namespace Slime.Test
             var @params = new MovementParams
             {
                 Mode = MoveMode.SineWave,
-                Collision = new MovementCollisionParams
+                CollisionParams = new MovementCollisionParams
                 {
                     TeamFilter = TeamFilter.Enemy, //只接受敌方
                     EntityTypeFilter = EntityType.Unit, //只接受单位
@@ -214,7 +214,7 @@ namespace Slime.Test
             {
                 Mode = MoveMode.CircularArc,
                 TargetNode = trackedEnemy, //锁定目标
-                Collision = new MovementCollisionParams
+                CollisionParams = new MovementCollisionParams
                 {
                     TeamFilter = TeamFilter.Enemy, //只接受敌方
                     TargetMatchMode = MovementCollisionTargetMatchMode.TrackedTargetOnly, //仅锁定目标
@@ -227,7 +227,8 @@ namespace Slime.Test
             bool otherAccepted = policy.TryAccept(source, MoveMode.CircularArc, @params, otherEnemy, out _);
             AssertEqual("非锁定目标应被拒绝", false, otherAccepted);
 
-            bool trackedAccepted = policy.TryAccept(source, MoveMode.CircularArc, @params, trackedEnemy, out var trackedContext);
+            bool trackedAccepted = policy.TryAccept(source, MoveMode.CircularArc, @params, trackedEnemy,
+                out var trackedContext);
             AssertEqual("锁定目标应通过匹配", true, trackedAccepted);
             AssertEqual("锁定目标首碰即停", true, trackedContext.WillStop);
             AssertEqual("锁定目标实体解析", trackedEnemy, trackedContext.TargetEntity);

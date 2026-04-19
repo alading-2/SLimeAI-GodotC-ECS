@@ -35,11 +35,6 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
         );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
-        // 回旋镖不销毁于碰撞，继续飞行并返回
-        projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
-            GameEventType.Unit.MovementCollision,
-            (evt) => OnHit(evt, caster, casterNode, damage));
-
         projectile.Events.Emit(
             GameEventType.Unit.MovementStarted,
             new GameEventType.Unit.MovementStartedEventData(
@@ -55,12 +50,13 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
                     BoomerangIsClockwise = true,
                     BoomerangReturnSpeedMultiplier = 1.2f,
                     DestroyOnComplete = true,
-                    Collision = new MovementCollisionParams
+                    CollisionParams = new MovementCollisionParams
                     {
                         TeamFilter = TeamFilter.Enemy, //阵营过滤
                         EntityTypeFilter = EntityType.Unit, //实体类型过滤
                         StopAfterCollisionCount = -1, //只通知不停止
-                        DestroyOnStop = false //不因碰撞销毁
+                        DestroyOnStop = false, //不因碰撞销毁
+                        OnCollision = collisionCtx => OnHit(collisionCtx, caster, casterNode, damage) //命中回调
                     },
                     RotateToVelocity = true,
                 }
@@ -89,13 +85,13 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
         return casterNode.GlobalPosition + new Vector2(280f, 0f);
     }
 
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt,
+    private static void OnHit(MovementCollisionContext collisionCtx,
         IEntity caster,
         Node2D casterNode,
         float damage)
     {
-        if (evt.TargetEntity == null) return;
-        var targetEntity = evt.TargetEntity;
+        if (collisionCtx.TargetEntity == null) return;
+        var targetEntity = collisionCtx.TargetEntity;
         if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return;
 
         AbilityImpactTool.Execute(caster, new AbilityImpactOptions

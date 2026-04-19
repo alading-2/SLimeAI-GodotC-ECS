@@ -82,7 +82,7 @@ public class SineWaveStrategy : IMovementStrategy
     /// <param name="entity">移动实体</param>
     /// <param name="data">实体数据容器</param>
     /// <param name="params">移动参数</param>
-    public void OnEnter(IEntity entity, Data data, MovementParams @params)
+    public void OnEnter(IEntity entity, Data data, in MovementParams @params)
     {
         // 获取初始速度向量（用于速度 fallback）
         Vector2 initVelocity = data.Get<Vector2>(DataKey.Velocity);
@@ -118,7 +118,7 @@ public class SineWaveStrategy : IMovementStrategy
     /// <param name="delta">帧间隔时间</param>
     /// <param name="params">移动参数</param>
     /// <returns>移动更新结果（继续/完成）</returns>
-    public MovementUpdateResult Update(IEntity entity, Data data, float delta, MovementParams @params)
+    public MovementUpdateResult Update(IEntity entity, Data data, float delta, in MovementParams @params)
     {
         if (_baseSpeed < 0.001f) return MovementUpdateResult.Continue(); // 速度过低，跳过
 
@@ -168,7 +168,7 @@ public class SineWaveStrategy : IMovementStrategy
     /// <param name="delta">帧间隔时间</param>
     /// <param name="params">移动参数</param>
     /// <returns>包含 sampled 振幅、频率及运动是否结束的元组</returns>
-    private (float amplitude, float frequency, bool isCompleted) SampleWaveState(float delta, MovementParams @params)
+    private (float amplitude, float frequency, bool isCompleted) SampleWaveState(float delta, in MovementParams @params)
     {
         // 初始值采样自移动参数，若后续没有驱动器，则作为常量使用
         float amplitude = @params.WaveAmplitude;

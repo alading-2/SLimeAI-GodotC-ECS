@@ -40,7 +40,7 @@ public interface IMovementStrategy
     /// <param name="entity">当前运动实体</param>
     /// <param name="data">实体数据容器（只读跨系统属性如 Velocity、MoveSpeed）</param>
     /// <param name="params">本次运动上下文参数</param>
-    void OnEnter(IEntity entity, Data data, MovementParams @params) { }
+    void OnEnter(IEntity entity, Data data, in MovementParams @params) { }
 
     /// <summary>
     /// 每帧更新一次运动意图，将结果写入 <c>DataKey.Velocity</c>，禁止直接修改节点位置。
@@ -55,7 +55,7 @@ public interface IMovementStrategy
     /// <c>Continue(distance)</c> 继续运动，把本帧估算位移距离交给组件累计统计；
     /// <c>Complete()</c> 策略主动完成，组件进入统一完成流程。
     /// </returns>
-    MovementUpdateResult Update(IEntity entity, Data data, float delta, MovementParams @params);
+    MovementUpdateResult Update(IEntity entity, Data data, float delta, in MovementParams @params);
 
     /// <summary>
     /// 策略停止时调用一次，可选。

@@ -86,7 +86,7 @@ public class BoomerangStrategy : IMovementStrategy
         MovementStrategyRegistry.Register(MoveMode.Boomerang, () => new BoomerangStrategy());
     }
 
-    public void OnEnter(IEntity entity, Data data, MovementParams @params)
+    public void OnEnter(IEntity entity, Data data, in MovementParams @params)
     {
         // 重置所有内部状态。由于策略实例可能被池化或复用，必须确保没有上一轮的残留。
         _launchPoint = Vector2.Zero;
@@ -118,7 +118,7 @@ public class BoomerangStrategy : IMovementStrategy
         CacheOutboundCurve(@params);
     }
 
-    public MovementUpdateResult Update(IEntity entity, Data data, float delta, MovementParams @params)
+    public MovementUpdateResult Update(IEntity entity, Data data, float delta, in MovementParams @params)
     {
         if (entity is not Node2D node) return MovementUpdateResult.Continue();
 
@@ -216,7 +216,7 @@ public class BoomerangStrategy : IMovementStrategy
         Node2D node,
         Data data,
         float delta,
-        MovementParams @params,
+        in MovementParams @params,
         Vector2 phaseEndPoint,
         float speed)
     {
@@ -249,7 +249,7 @@ public class BoomerangStrategy : IMovementStrategy
     /// 当返程结束时，彻底标记移动任务完成。
     /// </para>
     /// </summary>
-    private MovementUpdateResult HandlePhaseArrival(Node2D node, Data data, MovementParams @params)
+    private MovementUpdateResult HandlePhaseArrival(Node2D node, Data data, in MovementParams @params)
     {
         data.Set(DataKey.Velocity, Vector2.Zero);
 
@@ -289,7 +289,7 @@ public class BoomerangStrategy : IMovementStrategy
     /// <summary>
     /// 计算本帧的移动速度。
     /// </summary>
-    private float ResolveCurrentSpeed(MovementParams @params, float travelLength)
+    private float ResolveCurrentSpeed(in MovementParams @params, float travelLength)
     {
         if (@params.ActionSpeed > 0f)
         {
@@ -320,7 +320,7 @@ public class BoomerangStrategy : IMovementStrategy
     /// <summary>
     /// 计算去程/返程单段飞行时长。
     /// </summary>
-    private static float ResolveBoomerangPhaseDuration(MovementParams @params)
+    private static float ResolveBoomerangPhaseDuration(in MovementParams @params)
     {
         float flyDuration = @params.MaxDuration - Mathf.Max(@params.BoomerangPauseTime, 0f);
         if (flyDuration <= MinDuration)
@@ -334,7 +334,7 @@ public class BoomerangStrategy : IMovementStrategy
     /// <summary>
     /// 根据当前弦长计算弧高。
     /// </summary>
-    private float ResolveArcHeight(float chordLength, MovementParams @params, bool returning)
+    private float ResolveArcHeight(float chordLength, in MovementParams @params, bool returning)
     {
         if (chordLength <= 0.001f)
         {
@@ -363,7 +363,7 @@ public class BoomerangStrategy : IMovementStrategy
         return clamped >= 4f ? clamped : 0f;
     }
 
-    private void CacheOutboundCurve(MovementParams @params)
+    private void CacheOutboundCurve(in MovementParams @params)
     {
         float chordLength = _phaseStartPoint.DistanceTo(_outboundTargetPoint);
         float arcHeight = ResolveArcHeight(chordLength, @params, false);

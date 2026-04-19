@@ -36,11 +36,6 @@ internal class AuraShieldExecutor : AbilityFeatureHandler
         // 通过 Data 设置相对宿主偏移（AttachToHostStrategy 读取 DataKey.EffectOffset）
         projectile.Data.Set(DataKey.EffectOffset, new Vector2(80f, 0f));
 
-        // 光环持续存在，碰撞不销毁（DestroyOnCollision=false）
-        projectile.Events.On<GameEventType.Unit.MovementCollisionEventData>(
-            GameEventType.Unit.MovementCollision,
-            (evt) => OnHit(evt, caster, casterNode, damage));
-
         projectile.Events.Emit(
             GameEventType.Unit.MovementStarted,
             new GameEventType.Unit.MovementStartedEventData(
@@ -51,12 +46,13 @@ internal class AuraShieldExecutor : AbilityFeatureHandler
                     TargetNode = casterNode,
                     MaxDuration = 5f,
                     DestroyOnComplete = true,
-                    Collision = new MovementCollisionParams
+                    CollisionParams = new MovementCollisionParams
                     {
                         TeamFilter = TeamFilter.Enemy, //阵营过滤
                         EntityTypeFilter = EntityType.Unit, //实体类型过滤
                         StopAfterCollisionCount = -1, //只通知不停止
-                        DestroyOnStop = false //不因碰撞销毁
+                        DestroyOnStop = false, //不因碰撞销毁
+                        OnCollision = collisionCtx => OnHit(collisionCtx, caster, casterNode, damage) //命中回调
                     },
                     RotateToVelocity = false,
                 }
@@ -67,13 +63,13 @@ internal class AuraShieldExecutor : AbilityFeatureHandler
         return new AbilityExecutedResult { TargetsHit = 1 };
     }
 
-    private static void OnHit(GameEventType.Unit.MovementCollisionEventData evt,
+    private static void OnHit(MovementCollisionContext collisionCtx,
         IEntity caster,
         Node2D casterNode,
         float damage)
     {
-        if (evt.TargetEntity == null) return;
-        var targetEntity = evt.TargetEntity;
+        if (collisionCtx.TargetEntity == null) return;
+        var targetEntity = collisionCtx.TargetEntity;
         if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return;
 
         AbilityImpactTool.Execute(caster, new AbilityImpactOptions

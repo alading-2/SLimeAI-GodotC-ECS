@@ -75,7 +75,7 @@ public class ChargeStrategy : IMovementStrategy
     public bool CanBeInterrupted => false;
 
     /// <inheritdoc/>
-    public void OnEnter(IEntity entity, Data data, MovementParams @params)
+    public void OnEnter(IEntity entity, Data data, in MovementParams @params)
     {
         if (entity is not Node2D node) return;
 
@@ -109,7 +109,7 @@ public class ChargeStrategy : IMovementStrategy
     }
 
     /// <inheritdoc/>
-    public MovementUpdateResult Update(IEntity entity, Data data, float delta, MovementParams @params)
+    public MovementUpdateResult Update(IEntity entity, Data data, float delta, in MovementParams @params)
     {
         if (entity is not Node2D node) return MovementUpdateResult.Continue();
 
@@ -159,7 +159,7 @@ public class ChargeStrategy : IMovementStrategy
     }
 
     /// <summary>OnEnter 时解析初始方向（优先级：TargetNode 采样位置 > TargetPoint > Angle > 右方向兜底）</summary>
-    private static Vector2 ResolveDirection(Node2D node, MovementParams @params)
+    private static Vector2 ResolveDirection(Node2D node, in MovementParams @params)
     {
         // 1. 目标实体（OnEnter 时采样位置，之后方向锁定）
         if (@params.TargetNode != null && GodotObject.IsInstanceValid(@params.TargetNode))

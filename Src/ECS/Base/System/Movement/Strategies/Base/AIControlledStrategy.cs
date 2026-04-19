@@ -31,7 +31,7 @@ public class AIControlledStrategy : IMovementStrategy
     /// <summary>
     /// 读取 AI 层给出的方向与倍率，换算为基础移动速度。
     /// </summary>
-    public MovementUpdateResult Update(IEntity entity, Data data, float delta, MovementParams @params)
+    public MovementUpdateResult Update(IEntity entity, Data data, float delta, in MovementParams @params)
     {
         if (data.Has(DataKey.StatusCanMoveInput) && !data.Get<bool>(DataKey.StatusCanMoveInput))
         {

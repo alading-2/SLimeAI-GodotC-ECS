@@ -14,6 +14,7 @@ public sealed class MovementCollisionPolicy
 
     /// <summary>当前碰撞参数配置，为 null 表示策略未启用。</summary>
     private MovementCollisionParams? _config;
+
     /// <summary>本次运动内已接受碰撞的累计次数。</summary>
     private int _acceptedCollisionCount;
 
@@ -25,7 +26,7 @@ public sealed class MovementCollisionPolicy
     /// </summary>
     public void Reset(in MovementParams @params)
     {
-        _config = @params.Collision;
+        _config = @params.CollisionParams;
         _acceptedCollisionCount = 0;
         _acceptedTargets.Clear();
     }
@@ -68,7 +69,7 @@ public sealed class MovementCollisionPolicy
         _acceptedCollisionCount++;
         // StopAfterCollisionCount >= 0 表示有碰撞次数上限；达到上限后标记 willStop 通知驱动器停止运动
         bool willStop = config.StopAfterCollisionCount >= 0
-            && _acceptedCollisionCount >= config.StopAfterCollisionCount;
+                        && _acceptedCollisionCount >= config.StopAfterCollisionCount;
 
         context = new MovementCollisionContext(
             mode,

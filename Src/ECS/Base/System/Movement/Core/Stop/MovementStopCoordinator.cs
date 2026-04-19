@@ -74,7 +74,7 @@ public static class MovementStopCoordinator
         // 碰撞停止时，按碰撞参数中的 DestroyOnStop 决定（如子弹碰墙销毁）
         if (reason == MovementStopReason.Collision)
         {
-            return @params.Collision.HasValue && @params.Collision.Value.DestroyOnStop;
+            return @params.CollisionParams.HasValue && @params.CollisionParams.Value.DestroyOnStop;
         }
 
         // 运动自然完成时，按 DestroyOnComplete 决定（如抛物线落地销毁）

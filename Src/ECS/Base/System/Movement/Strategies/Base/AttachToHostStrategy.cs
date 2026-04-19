@@ -41,7 +41,7 @@ public class AttachToHostStrategy : IMovementStrategy
     /// <summary>
     /// 每帧根据宿主最新位置重新计算跟随速度。
     /// </summary>
-    public MovementUpdateResult Update(IEntity entity, Data data, float delta, MovementParams @params)
+    public MovementUpdateResult Update(IEntity entity, Data data, float delta, in MovementParams @params)
     {
         if (entity is not Node2D selfNode) return MovementUpdateResult.Complete();
 
