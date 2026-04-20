@@ -3,11 +3,14 @@ using Godot;
 
 /// <summary>
 /// 回旋镖技能执行器 - 验证 Boomerang 运动模式
-/// 向最近敌人投掷回旋镖，飞出后自动返回，过程中碰撞造成伤害
+/// 在施法者周围圆环内随机选择一个去程目标点，投掷回旋镖后自动返回，过程中碰撞造成伤害
 /// </summary>
 internal class BoomerangThrowExecutor : AbilityFeatureHandler
 {
     private static readonly Log _log = new(nameof(BoomerangThrowExecutor));
+    private const float DefaultFallbackRange = 800f;
+    private const float InnerRingRatio = 0.45f;
+    private const float FallbackForwardDistance = 320f;
 
     [ModuleInitializer]
     public static void Initialize()
@@ -43,14 +46,14 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
                 new MovementParams
                 {
                     Mode = MoveMode.Boomerang,
-                    TargetPoint = throwTarget,
-                    TargetNode = casterNode, // 显式指定返程宿主，避免策略退回到不可靠的祖先回溯。
-                    ActionSpeed = 460f,
-                    BoomerangArcHeight = 26f,
-                    BoomerangPauseTime = 0.08f,
-                    BoomerangIsClockwise = true,
-                    BoomerangReturnSpeedMultiplier = 1.2f,
-                    DestroyOnComplete = true,
+                    TargetPoint = throwTarget, // 去程随机目标点
+                    TargetNode = casterNode, // 显式指定返程宿主，避免策略退回到不可靠的祖先回溯
+                    ActionSpeed = 460f, // 去程基础速度
+                    BoomerangArcHeight = 160f, // 更大的轨迹弧高
+                    BoomerangPauseTime = 0.05f, // 顶点轻微停顿
+                    BoomerangIsClockwise = true, // 去程默认顺时针鼓包
+                    BoomerangReturnSpeedMultiplier = 1.35f, // 回程更快，强调收回感
+                    DestroyOnComplete = true, // 完成后回收
                     CollisionParams = new MovementCollisionParams
                     {
                         TeamFilter = TeamFilter.Enemy, //阵营过滤
@@ -59,7 +62,16 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
                         DestroyOnStop = false, //不因碰撞销毁
                         OnCollision = collisionCtx => OnHit(collisionCtx, caster, casterNode, damage) //命中回调
                     },
-                    RotateToVelocity = true,
+                    RotateToVelocity = false, // root 最终旋转改由朝向组件接管
+                    Orientation = new OrientationParams
+                    {
+                        Mode = OrientationMode.FollowMovementAndSpin, // 跟随轨迹切线并叠加自转
+                        AngularSpeed = 540f, // 自转角速度
+                        AngularAcceleration = 0f, // 匀速自转
+                        TotalAngle = -1f, // 不限制总自转角
+                        InitialAngle = 0f, // 初始偏移角
+                        IsClockwise = true, // 顺时针自转
+                    },
                 }
             )
         );
@@ -70,20 +82,20 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
 
     private static Vector2 GetThrowTarget(IEntity caster, Node2D casterNode, float castRange)
     {
-        float effectiveRange = castRange > 0f ? castRange : 600f; //查询半径
-        var targets = EntityTargetSelector.Query(new TargetSelectorQuery
+        _ = caster; // 当前随机落点逻辑只依赖施法者位置，保留参数以兼容既有测试签名
+        float effectiveRange = castRange > 0f ? castRange : DefaultFallbackRange; // 外半径
+        float innerRange = effectiveRange * InnerRingRatio; // 内半径，避免目标点离自己过近
+        var targets = PositionTargetSelector.Query(new TargetSelectorQuery
         {
-            Geometry = GeometryType.Circle, //查询形状
+            Geometry = GeometryType.Ring, //圆环
             Origin = casterNode.GlobalPosition, //查询中心
-            Range = effectiveRange, //查询半径
-            CenterEntity = caster, //中心实体
-            TeamFilter = TeamFilter.Enemy, //阵营过滤
-            Sorting = TargetSorting.Nearest, //排序方式
+            InnerRange = innerRange, //内半径
+            Range = effectiveRange, //外半径
             MaxTargets = 1 //最大目标数
         });
-        if (targets.Count > 0 && targets[0] is Node2D t)
-            return t.GlobalPosition;
-        return casterNode.GlobalPosition + new Vector2(280f, 0f);
+        if (targets.Count > 0)
+            return targets[0];
+        return casterNode.GlobalPosition + Vector2.Right * FallbackForwardDistance;
     }
 
     private static void OnHit(MovementCollisionContext collisionCtx,

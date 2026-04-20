@@ -23,7 +23,9 @@ public partial class TemplateComponent : Node, IComponent
 
     // 【重要】数据存储规则：
     // ✅ 必须存 Data：运行时状态（HP、State、Velocity、计时器等）
+    // ✅ 必须存 Data：需要被其他 Component/System 读取的共享状态或对外发布结果
     // ❌ 不需要存 Data：固定配置（ReviveDuration）、临时引用（Target、Collector）
+    // ❌ 不需要存 Data：仅服务当前组件内部算法推进的运行态（如累计角度、阶段缓存、当前角速度）
 
     // 【强制】使用 DataKey 常量访问数据，禁止使用字符串字面量
     // ❌ 错误：_data.Get<float>("CurrentHp")
@@ -38,6 +40,13 @@ public partial class TemplateComponent : Node, IComponent
 
     // 固定配置示例（无需存 Data）：
     // public float ReviveDuration { get; set; } = Config.HeroReviveTime;
+
+    // 组件内部算法运行态示例（无需存 Data）：
+    // private float _currentAngularSpeed;
+    // private float _accumulatedAngle;
+
+    // 对外共享结果示例（必须存 Data）：
+    // _data.Set(DataKey.MovementFacingDirection, facingDirection);
 
     // ================= IComponent 实现 =================
 

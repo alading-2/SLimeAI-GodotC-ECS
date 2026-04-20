@@ -22,6 +22,7 @@ public partial class AbilitySystemPipelineTest : Node
             Test_AbilityFeatureHandler_DoesNotExposePrepareCast();
             Test_EntitySelectionAbility_AllowsHandlerManagedExecution();
             Test_AbilityToolHandler_CanExecuteThroughPipeline();
+            Test_Dash_UsesLastMoveDirectionWhenVelocityIsZero();
             Test_ParabolaShot_UsesRandomPointInCircleInsteadOfEnemyPosition();
             Test_BoomerangThrow_UsesRandomPointInRingInsteadOfEnemyPosition();
         }
@@ -237,6 +238,54 @@ public partial class AbilitySystemPipelineTest : Node
 
         EntityManager.Destroy(ability);
         EntityManager.Destroy(owner);
+    }
+
+    /// <summary>
+    /// 回归测试：
+    /// Dash 在当前速度为 0 时，应优先使用“最后一次主动移动方向缓存”，而不是默认回退到向右。
+    /// </summary>
+    private void Test_Dash_UsesLastMoveDirectionWhenVelocityIsZero()
+    {
+        var caster = new AbilityPipelineTargetPointTestEntity
+        {
+            Name = "DashCaster",
+            GlobalPosition = Vector2.Zero
+        };
+        AddChild(caster);
+
+        caster.Data.Set(DataKey.Id, caster.GetInstanceId().ToString());
+        caster.Data.Set(DataKey.Velocity, Vector2.Zero);
+        caster.Data.Set(DataKey.LastMoveDirection, Vector2.Left);
+
+        EntityManager.Register(caster);
+
+        try
+        {
+            var executorType = typeof(AbilitySystemPipelineTest).Assembly.GetType("DashExecutor");
+            var method = executorType?.GetMethod(
+                "ResolveDashDirection",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic
+            );
+            var result = method?.Invoke(null, new object[] { caster, caster });
+
+            AssertEqual(
+                "Dash 应能通过反射找到方向解析逻辑",
+                true,
+                result is Vector2
+            );
+
+            if (result is not Vector2 dashDirection) return;
+
+            AssertEqual(
+                "Dash 在当前速度为 0 时应优先使用最后一次主动移动方向缓存",
+                true,
+                dashDirection.IsEqualApprox(Vector2.Left)
+            );
+        }
+        finally
+        {
+            EntityManager.Destroy(caster);
+        }
     }
 
     /// <summary>

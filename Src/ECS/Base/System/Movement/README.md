@@ -32,7 +32,7 @@ entity.Events.Emit(
 | `Spiral` | SpiralStrategy | 螺旋收缩/扩张 | `OrbitCenter`, `OrbitRadius`, `OrbitTargetRadius`, `OrbitAngularSpeed` |
 | `SineWave` | SineWaveStrategy | 正弦波弹道 | `WaveAmplitude` / `WaveFrequency` + 可选 `Wave*ScalarDriver` |
 | `BezierCurve` | BezierCurveStrategy | 曲线弹道 | `BezierPoints`, `ActionSpeed` 或 `MaxDuration` |
-| `Boomerang` | BoomerangStrategy | 双半椭圆回旋弹道 | `TargetPoint`, `TargetNode`, `ActionSpeed` 或 `MaxDuration`, `Boomerang*` |
+| `Boomerang` | BoomerangStrategy | 双半椭圆回旋弹道 | `TargetPoint`, `TargetNode`, `ActionSpeed` 或 `MaxDuration`, `Boomerang*`, 可选 `Orientation` |
 | `Parabola` | ParabolaStrategy | 抛物线弹道 / 跳跃位移 | `TargetPoint` 或 `TargetNode`, `ParabolaApexHeight`, `ActionSpeed`, `ReachDistance` |
 | `CircularArc` | CircularArcStrategy | 单段圆弧弹道 / 侧切轨迹 | `TargetPoint` 或 `TargetNode`, `CircularArcRadius`, `CircularArcClockwise`, `ActionSpeed`, `ReachDistance` |
 | `AttachToHost` | AttachToHostStrategy | 附着特效 | `TargetNode`（+ `DataKey.EffectOffset`） |
@@ -43,7 +43,7 @@ entity.Events.Emit(
 
 - **业务层**：构建 `MovementParams`，触发 `MovementStarted`；命中逻辑优先写在 `MovementCollisionParams.OnCollision` / `MovementParams.OnStop`，只有旁路观察或调试时再监听 `MovementCollision` / `MovementCompleted`
 - **策略**：通过 `in MovementParams` 只读本次运动上下文，计算本帧意图写入 `DataKey.Velocity`，需要时通过 `MovementUpdateResult` 显式返回 `FacingDirection`
-- **组件**：持有 `_params` / `_elapsedTime` / `_traveledDistance`，切换策略，执行位移，消费碰撞候选，统一停止流程
+- **组件**：`EntityMovementComponent` 持有 `_params` / `_elapsedTime` / `_traveledDistance`，切换策略，执行位移，消费碰撞候选，统一停止流程；`EntityOrientationComponent` 作为唯一朝向输出层，消费 `MovementFacingDirection` 并按 sink 输出到 `RootRotation` 或 `VisualFlipX`
 - **碰撞策略子模块**：`MovementCollisionPolicy` 负责过滤、去重、计数、生成 `MovementCollisionContext`
 - **停止协调子模块**：`MovementStopCoordinator` 统一决定是否发完成事件、是否销毁、切到哪个模式
 
@@ -63,6 +63,16 @@ entity.Events.Emit(
 - `MovementStopReason`：当前内置 `Completed / Collision / Requested / Interrupted / ComponentUnregistered`
 
 `MovementCompletedEventData` 直接携带 `ElapsedTime / TraveledDistance / Reason / CollisionTarget`，无需读 DataKey。
+
+## 朝向控制分层
+
+- `Velocity` = “本帧怎么移动”，服务于位移执行与速度分层合成
+- `FacingDirection` = “本帧朝哪看”，由策略显式返回，或退回到本帧移动意图
+- `DataKey.MovementFacingDirection` = `EntityMovementComponent` 对外发布的最终朝向意图，供 `EntityOrientationComponent` 等输出层读取
+- `EntityMovementComponent` 不再直接写 `RotationDegrees/FlipH`
+- `EntityOrientationComponent.Sink = RootRotation`：最终写 root `RotationDegrees`
+- `EntityOrientationComponent.Sink = VisualFlipX`：最终写 `VisualRoot.FlipH`
+- `MovementParams.Orientation`：可把当前运动附带的自转/朝向模式一并交给 `EntityOrientationComponent`
 
 ## 移动碰撞语义（2026-04 重构）
 

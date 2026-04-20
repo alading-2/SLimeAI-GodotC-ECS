@@ -60,5 +60,13 @@ public enum DataCategory_Movement
     /// 主要用于宿主引用和附着偏移这类只对附着策略有意义的数据。
     /// </para>
     /// </summary>
-    Attach
+    Attach,
+
+    /// <summary>
+    /// 朝向控制相关数据。
+    /// <para>
+    /// 包括跨组件共享的面向向量、朝向模式、自转参数与运行时累计角度。
+    /// </para>
+    /// </summary>
+    Orientation
 }

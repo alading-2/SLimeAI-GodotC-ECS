@@ -39,6 +39,7 @@ namespace Slime.Test
             {
                 TestCollisionParamsDefaults();
                 TestOrientationParamsDefaults();
+                TestOrientationComponentDefaults();
                 TestCollisionParamsOnCollisionCallback();
                 TestStopRequestedDefaults();
                 TestOrientationStartedDefaults();
@@ -86,6 +87,13 @@ namespace Slime.Test
             AssertEqual("默认总角度", -1f, orientation.TotalAngle);
             AssertEqual("默认初始角", 0f, orientation.InitialAngle);
             AssertEqual("默认旋转方向", true, orientation.IsClockwise);
+        }
+
+        private void TestOrientationComponentDefaults()
+        {
+            var component = new EntityOrientationComponent();
+
+            AssertEqual("朝向组件默认输出目标应为 RootRotation", OrientationSink.RootRotation, component.Sink);
         }
 
         private void TestCollisionParamsOnCollisionCallback()

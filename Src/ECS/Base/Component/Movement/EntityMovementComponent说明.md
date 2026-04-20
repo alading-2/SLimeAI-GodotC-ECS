@@ -7,6 +7,7 @@
 - 业务层构建 `MovementParams` 并通过事件传入
 - 策略负责计算本帧位移意图，写入 `DataKey.Velocity`
 - 组件持有 `MovementParams`、统计字段和碰撞策略状态，执行位移、检查结束、发事件
+- 组件会把最终解析出的朝向意图写入 `DataKey.MovementFacingDirection`，供 `EntityOrientationComponent` 这类朝向输出层消费
 - 适用于 `Node2D + IEntity`、`Area2D + IEntity`、`CharacterBody2D + IEntity`
 
 ## 2. 私有状态
@@ -37,9 +38,9 @@ _Process / _PhysicsProcess
      -> CheckEndConditions()
   -> ApplyMovement()
      -> VelocityResolver.Resolve()
+     -> 写 DataKey.MovementFacingDirection
      -> CharacterBody2D: MoveAndSlide() + slide collision 采样
      -> 其他 Node2D/Area2D: GlobalPosition += velocity * delta
-     -> UpdateOrientation()
 ```
 
 帧率路径由策略 `UsePhysicsProcess` 决定，与节点类型无关。
@@ -61,6 +62,15 @@ entity.Events.Emit(
 ```
 
 `MovementParams` 是 `record struct`，输入字段均为 `init`，策略只能只读访问。
+
+### `Orientation`
+
+- `MovementParams.Orientation` 用于把本次运动附带的朝向控制参数交给 `EntityOrientationComponent`
+- `EntityMovementComponent` 不再直接写 `root RotationDegrees` 或 `VisualRoot.FlipH`
+- `EntityOrientationComponent` 是唯一最终朝向输出层，会消费 `DataKey.MovementFacingDirection`
+- `EntityOrientationComponent.Sink = RootRotation`：适用于投射物/特效等整体旋转实体
+- `EntityOrientationComponent.Sink = VisualFlipX`：适用于角色类单位，兼容现有 `VisualRoot.FlipH` 语义
+- 默认情况下朝向组件会持续跟随 `MovementFacingDirection` 输出；`RotateToVelocity = false` 现在表示“当前 movement 临时冻结朝向输出并保持现有朝向”，而不是彻底关闭朝向系统
 
 ## 5. DefaultMoveMode 与临时模式
 

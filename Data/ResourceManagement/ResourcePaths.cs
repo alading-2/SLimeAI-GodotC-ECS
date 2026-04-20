@@ -26,7 +26,6 @@ public static class ResourcePaths
     public const string Entity_EffectEntity = "EffectEntity";
     public const string Entity_EnemyEntity = "EnemyEntity";
     public const string Entity_LightningLineEffect = "LightningLineEffect";
-    public const string Entity_MovementAbilityEntity = "MovementAbilityEntity";
     public const string Entity_PlayerEntity = "PlayerEntity";
     public const string Entity_ProjectileEntity = "ProjectileEntity";
     public const string Entity_TargetingIndicatorEntity = "TargetingIndicatorEntity";
@@ -46,6 +45,7 @@ public static class ResourcePaths
     public const string Component_EffectComponent = "EffectComponent";
     public const string Component_EnemyPreset = "EnemyPreset";
     public const string Component_EntityMovementComponent = "EntityMovementComponent";
+    public const string Component_EntityOrientationComponent = "EntityOrientationComponent";
     public const string Component_HealthComponent = "HealthComponent";
     public const string Component_HurtboxComponent = "HurtboxComponent";
     public const string Component_LifecycleComponent = "LifecycleComponent";
@@ -121,7 +121,6 @@ public static class ResourcePaths
 
     // --- DataAbility ---
     public const string DataAbility_ArcShotConfig = "ArcShotConfig";
-    public const string DataAbility_AuraShieldConfig = "AuraShieldConfig";
     public const string DataAbility_BezierShotConfig = "BezierShotConfig";
     public const string DataAbility_BoomerangThrowConfig = "BoomerangThrowConfig";
     public const string DataAbility_ChainLightningConfig = "ChainLightningConfig";
@@ -148,12 +147,14 @@ public static class ResourcePaths
     public const string Test_InputTest = "InputTest";
     public const string Test_LogTest = "LogTest";
     public const string Test_MainTest = "MainTest";
+    public const string Test_MovementCollisionRuntimeTest = "MovementCollisionRuntimeTest";
     public const string Test_MovementComponentTestScene = "MovementComponentTestScene";
     public const string Test_MovementTestEntity = "MovementTestEntity";
     public const string Test_MyMathTest = "MyMathTest";
     public const string Test_ObjectPoolManagerTest = "ObjectPoolManagerTest";
     public const string Test_ObjectPoolVisualTest = "ObjectPoolVisualTest";
     public const string Test_SpawnTestScene = "SpawnTestScene";
+    public const string Test_SystemCoreRuntimeTest = "SystemCoreRuntimeTest";
     public const string Test_TargetSelectorTest = "TargetSelectorTest";
     public const string Test_TestDataKeyMapping = "TestDataKeyMapping";
     public const string Test_TestEntity = "TestEntity";
@@ -169,7 +170,6 @@ public static class ResourcePaths
                 { Entity_EffectEntity, new ResourceData(ResourceCategory.Entity, "res://Src/ECS/Base/Entity/Effect/EffectEntity.tscn") },
                 { Entity_EnemyEntity, new ResourceData(ResourceCategory.Entity, "res://Src/ECS/Base/Entity/Unit/Enemy/EnemyEntity.tscn") },
                 { Entity_LightningLineEffect, new ResourceData(ResourceCategory.Entity, "res://Src/ECS/Base/Entity/Effect/LightningLineEffect/LightningLineEffect.tscn") },
-                { Entity_MovementAbilityEntity, new ResourceData(ResourceCategory.Entity, "res://Src/ECS/Base/Entity/Ability/MovementAbilityEntity/MovementAbilityEntity.tscn") },
                 { Entity_PlayerEntity, new ResourceData(ResourceCategory.Entity, "res://Src/ECS/Base/Entity/Unit/Player/PlayerEntity.tscn") },
                 { Entity_ProjectileEntity, new ResourceData(ResourceCategory.Entity, "res://Src/ECS/Base/Entity/Projectile/ProjectileEntity.tscn") },
                 { Entity_TargetingIndicatorEntity, new ResourceData(ResourceCategory.Entity, "res://Src/ECS/Base/Entity/Unit/TargetingIndicator/TargetingIndicatorEntity.tscn") },
@@ -191,6 +191,7 @@ public static class ResourcePaths
                 { Component_EffectComponent, new ResourceData(ResourceCategory.Component, "res://Src/ECS/Base/Component/Effect/EffectComponent/EffectComponent.tscn") },
                 { Component_EnemyPreset, new ResourceData(ResourceCategory.Component, "res://Src/ECS/Base/Component/Presets/Unit/EnemyPreset.tscn") },
                 { Component_EntityMovementComponent, new ResourceData(ResourceCategory.Component, "res://Src/ECS/Base/Component/Movement/EntityMovementComponent.tscn") },
+                { Component_EntityOrientationComponent, new ResourceData(ResourceCategory.Component, "res://Src/ECS/Base/Component/Movement/EntityOrientationComponent.tscn") },
                 { Component_HealthComponent, new ResourceData(ResourceCategory.Component, "res://Src/ECS/Base/Component/Unit/Common/HealthComponent/HealthComponent.tscn") },
                 { Component_HurtboxComponent, new ResourceData(ResourceCategory.Component, "res://Src/ECS/Base/Component/Collision/HurtboxComponent/HurtboxComponent.tscn") },
                 { Component_LifecycleComponent, new ResourceData(ResourceCategory.Component, "res://Src/ECS/Base/Component/Unit/Common/LifecycleComponent/LifecycleComponent.tscn") },
@@ -288,7 +289,6 @@ public static class ResourcePaths
         { ResourceCategory.DataAbility, new Dictionary<string, ResourceData>
             {
                 { DataAbility_ArcShotConfig, new ResourceData(ResourceCategory.DataAbility, "res://Data/Data/Ability/Resource/Movement/ArcShotConfig.tres") },
-                { DataAbility_AuraShieldConfig, new ResourceData(ResourceCategory.DataAbility, "res://Data/Data/Ability/Resource/AuraShieldConfig.tres") },
                 { DataAbility_BezierShotConfig, new ResourceData(ResourceCategory.DataAbility, "res://Data/Data/Ability/Resource/Movement/BezierShotConfig.tres") },
                 { DataAbility_BoomerangThrowConfig, new ResourceData(ResourceCategory.DataAbility, "res://Data/Data/Ability/Resource/Movement/BoomerangThrowConfig.tres") },
                 { DataAbility_ChainLightningConfig, new ResourceData(ResourceCategory.DataAbility, "res://Data/Data/Ability/Ability/ChainLightning/Data/ChainLightningConfig.tres") },
@@ -319,12 +319,14 @@ public static class ResourcePaths
                 { Test_InputTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/Tools/Input/InputTest.tscn") },
                 { Test_LogTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/Tools/Log/LogTest.tscn") },
                 { Test_MainTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/GlobalTest/MainTest/MainTest.tscn") },
+                { Test_MovementCollisionRuntimeTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn") },
                 { Test_MovementComponentTestScene, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn") },
                 { Test_MovementTestEntity, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementTestEntity.tscn") },
                 { Test_MyMathTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/Tools/Math/MyMathTest.tscn") },
                 { Test_ObjectPoolManagerTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/Tools/ObjectPool/ObjectPoolManagerTest.tscn") },
                 { Test_ObjectPoolVisualTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/Tools/ObjectPool/ObjectPoolVisualTest.tscn") },
                 { Test_SpawnTestScene, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/System/Spawn/SpawnTestScene.tscn") },
+                { Test_SystemCoreRuntimeTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/System/SystemCore/SystemCoreRuntimeTest.tscn") },
                 { Test_TargetSelectorTest, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/Tools/TargetSelector/TargetSelectorTest.tscn") },
                 { Test_TestDataKeyMapping, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/Data/TestDataKeyMapping.tscn") },
                 { Test_TestEntity, new ResourceData(ResourceCategory.Test, "res://Src/ECS/Test/SingleTest/ECS/ECSTest/Entity/TestEntity.tscn") },

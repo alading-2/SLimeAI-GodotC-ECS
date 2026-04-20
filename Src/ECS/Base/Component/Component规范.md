@@ -54,12 +54,14 @@ health?.ApplyHeal(new GameEventType.Unit.HealRequestEventData(amount, HealSource
 *   ✅ **组件内部专用数据**：只在当前 Component 内部使用，不需要被其他 Component 访问
 *   ✅ **性能优化缓存**：避免重复计算或查询（如缓存 `AnimatedSprite2D` 引用）
 *   ✅ **临时状态**：运行时临时变量（如 `_currentTarget`、`_phaseTimer`）
+*   ✅ **内部算法运行态**：只服务当前组件内部状态机/公式推进的数据（如累计角度、当前角速度、阶段缓存）
 
 **必须使用 Data 存储的场景**：
 
 *   ✅ **跨组件共享**：需要被其他 Component 或 System 访问的数据
 *   ✅ **业务状态**：影响游戏逻辑的核心状态（HP、State、Velocity 等）
 *   ✅ **需要序列化**：需要保存或网络同步的数据
+*   ✅ **对外发布的状态出口**：组件内部解算完后，明确提供给其他系统消费的结果（如 `MovementFacingDirection`）
 
 **示例对比**：
 
@@ -76,12 +78,21 @@ private Node? _currentTarget;
 
 // ✅ 正确：组件内部专用列表（仅本组件使用，不需要跨组件访问）
 private List<string> _availableAttackAnims = new();
+
+// ✅ 正确：组件内部算法运行态（只服务本组件内部状态机）
+private float _currentAngularSpeed;
+private float _accumulatedAngle;
+
+// ✅ 正确：组件对外发布出口（其他组件/系统需要消费）
+_data.Set(DataKey.MovementFacingDirection, facingDirection);
 ```
 
 **设计原则**：
 
 *   如果数据**只在当前 Component 内部使用**，可以用私有字段（相当于一种保护机制）
 *   如果数据**需要被其他地方访问**，必须存 Data（实现跨组件通信）
+*   不要把“输入参数镜像值”机械地再写一份 Data；若只是当前组件自己缓存参数、推进公式、记录阶段，优先私有字段
+*   一个简单判断：如果删掉这个 `DataKey` 后，除了当前组件没有任何地方会受影响，那它大概率就不该是 `DataKey`
 
 ### 4. 数据存储规则
 
@@ -93,11 +104,14 @@ private List<string> _availableAttackAnims = new();
 - ✅ 需要在对象池复用时重置的状态
 - ✅ 需要被其他 Component/System 访问的状态
 - ✅ 需要序列化或同步的数据
+- ✅ 组件解算后需要对外发布的共享结果
 
 **不需要存储到 Data 的数据**：
 - ❌ 组件内部的固定配置：`ReviveDuration`、`Acceleration` 等
 - ❌ 临时引用：`Target`、`Collector`、`Source` 等
 - ❌ UI 或渲染相关的临时状态（不影响游戏逻辑）
+- ❌ 组件内部算法运行态：阶段索引、累计角度、当前角速度、缓存方向、临时计时器等
+- ❌ 纯内部生命周期路由信息：当前来源、是否跟随本组件停止等
 
 ### 5. DataKey 使用规范
 

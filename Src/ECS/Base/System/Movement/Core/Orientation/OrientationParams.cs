@@ -1,0 +1,33 @@
+/// <summary>
+/// 通用朝向控制参数。
+/// <para>
+/// 该结构只描述“如何旋转”，不参与位移、碰撞与停止条件。
+/// </para>
+/// </summary>
+public readonly record struct OrientationParams
+{
+    /// <summary>
+    /// 带默认值的 struct 需要显式无参构造函数。
+    /// </summary>
+    public OrientationParams()
+    {
+    }
+
+    /// <summary>朝向模式。</summary>
+    public OrientationMode Mode { get; init; } = OrientationMode.FollowMovement;
+
+    /// <summary>自转角速度（度/秒）。</summary>
+    public float AngularSpeed { get; init; } = 0f;
+
+    /// <summary>自转角加速度（度/秒²），0 = 匀速。</summary>
+    public float AngularAcceleration { get; init; } = 0f;
+
+    /// <summary>总自转角度（度），-1 = 不限制。</summary>
+    public float TotalAngle { get; init; } = -1f;
+
+    /// <summary>初始角度偏移（度）。</summary>
+    public float InitialAngle { get; init; } = 0f;
+
+    /// <summary>是否顺时针旋转。</summary>
+    public bool IsClockwise { get; init; } = true;
+}

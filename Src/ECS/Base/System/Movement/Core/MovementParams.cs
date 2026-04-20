@@ -66,6 +66,12 @@ public record struct MovementParams
     /// <summary>是否自动将实体旋转朝向速度方向（对无 VisualRoot 的节点生效）</summary>
     public bool RotateToVelocity { get; init; } = true;
 
+    /// <summary>
+    /// 可选的通用朝向控制参数。
+    /// <para>仅描述 root 最终朝向如何生成，不参与位移计算。</para>
+    /// </summary>
+    public OrientationParams? Orientation { get; init; } = null;
+
     /// <summary>移动完成后是否自动销毁实体</summary>
     public bool DestroyOnComplete { get; init; } = false;
 

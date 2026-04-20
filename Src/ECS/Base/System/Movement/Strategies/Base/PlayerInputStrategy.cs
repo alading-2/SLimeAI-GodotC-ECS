@@ -36,6 +36,11 @@ public class PlayerInputStrategy : IMovementStrategy
         float acceleration = data.Get<float>(DataKey.Acceleration); // 速度插値系数，越大响应越快
 
         Vector2 inputDir = InputManager.GetMoveInput(); // 输入系统给出的移动方向
+        if (inputDir.LengthSquared() > 0.001f)
+        {
+            data.Set(DataKey.LastMoveDirection, inputDir.Normalized()); // 记录最后一次主动移动方向，供 Dash 等技能在静止时复用
+        }
+
         Vector2 targetVelocity = inputDir.Normalized() * speed;
         Vector2 currentVelocity = data.Get<Vector2>(DataKey.Velocity); // 上一帧基础速度，用于平滑过渡
 

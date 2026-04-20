@@ -437,7 +437,17 @@ namespace Slime.Test
                         BoomerangPauseTime = settings.Pause,
                         BoomerangReturnSpeedMultiplier = settings.ReturnMultiplier,
                         BoomerangArcHeight = Mathf.Abs(settings.Height),
-                        BoomerangIsClockwise = settings.Clockwise
+                        BoomerangIsClockwise = settings.Clockwise,
+                        RotateToVelocity = false,
+                        Orientation = new OrientationParams
+                        {
+                            Mode = OrientationMode.FollowMovementAndSpin,
+                            AngularSpeed = 1080f,
+                            AngularAcceleration = 0f,
+                            TotalAngle = -1f,
+                            InitialAngle = 0f,
+                            IsClockwise = true
+                        }
                     };
                 case DemoId.AttachToHost:
                     return new MovementParams

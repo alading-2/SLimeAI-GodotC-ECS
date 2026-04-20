@@ -59,9 +59,6 @@ public partial class EntityMovementComponent : Node, IComponent
     /// <summary>CharacterBody2D 引用缓存（非 CharacterBody2D 实体时为 null）</summary>
     private CharacterBody2D? _body;
 
-    /// <summary>视觉根节点，用于角色朝向翻转（有此节点时用 FlipH，否则用 Rotation）</summary>
-    private AnimatedSprite2D? _visualRoot;
-
     // ================= IComponent 实现 =================
 
     /// <summary>
@@ -81,7 +78,7 @@ public partial class EntityMovementComponent : Node, IComponent
         _facingDirection = Vector2.Zero;
 
         _body = entity as CharacterBody2D;
-        _visualRoot = entity.GetNodeOrNull<AnimatedSprite2D>("VisualRoot");
+        _data.Set(DataKey.MovementFacingDirection, Vector2.Zero);
 
         // 订阅运动开始/切换事件（业务方通过此事件触发临时运动切换）
         _entity.Events.On<GameEventType.Unit.MovementStartedEventData>(
@@ -119,7 +116,6 @@ public partial class EntityMovementComponent : Node, IComponent
         _currentStrategy = null;
         _params = default;
         _body = null;
-        _visualRoot = null;
         _facingDirection = Vector2.Zero;
         _collisionPolicy.Reset(_params);
     }
@@ -280,6 +276,7 @@ public partial class EntityMovementComponent : Node, IComponent
         // 朝向优先取策略显式提供的方向；未提供时回退到策略意图速度（合成前）
         Vector2 intentVelocity = _data!.Get<Vector2>(DataKey.Velocity);
         Vector2 facingDirection = _facingDirection.LengthSquared() >= 0.001f ? _facingDirection : intentVelocity;
+        _data.Set(DataKey.MovementFacingDirection, facingDirection);
 
         if (_body != null)
         {
@@ -310,8 +307,6 @@ public partial class EntityMovementComponent : Node, IComponent
             }
         }
 
-        // 根据策略显式朝向或意图速度更新朝向（从 _params 读取 RotateToVelocity）
-        MovementHelper.UpdateOrientation(_entity!, _params, facingDirection, _visualRoot);
     }
 
     // ================= 辅助工具方法 =================
@@ -328,6 +323,7 @@ public partial class EntityMovementComponent : Node, IComponent
         _data.Set(DataKey.Velocity, Vector2.Zero);
         _data.Set(DataKey.VelocityOverride, Vector2.Zero);
         _data.Set(DataKey.VelocityImpulse, Vector2.Zero);
+        _data.Set(DataKey.MovementFacingDirection, Vector2.Zero);
         _facingDirection = Vector2.Zero;
 
         // 重置组件内部完成标志

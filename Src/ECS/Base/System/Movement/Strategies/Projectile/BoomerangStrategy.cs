@@ -49,15 +49,15 @@ public class BoomerangStrategy : IMovementStrategy
     private const float DefaultActionSpeed = 300f;
     /// <summary>总时长推导速度时的最小有效时长，避免除零。</summary>
     private const float MinDuration = 0.001f;
-    /// <summary>自动估算弧高时采用的比例（弧高 = 弦长 * 0.12）。</summary>
-    private const float DefaultArcHeightRatio = 0.12f;
+    /// <summary>自动估算弧高时采用的比例（弧高 = 弦长 * 0.22）。</summary>
+    private const float DefaultArcHeightRatio = 0.22f;
     /// <summary>自动弧高的下限，确保短距离也有明显的曲线感。</summary>
-    private const float MinArcHeight = 8f;
+    private const float MinArcHeight = 24f;
     /// <summary>自动弧高的上限，防止长距离下曲线跨度过大。</summary>
-    private const float MaxAutoArcHeight = 56f;
-    private const float MaxArcHeightByChordRatio = 0.18f;
-    private const float MaxConfiguredArcHeight = 72f;
-    private const float ReturnArcHeightScale = 0.7f;
+    private const float MaxAutoArcHeight = 180f;
+    private const float MaxArcHeightByChordRatio = 0.45f;
+    private const float MaxConfiguredArcHeight = 220f;
+    private const float ReturnArcHeightScale = 0.85f;
 
     /// <summary>发射时的初始全球坐标。作为返程找不到宿主时的兜底终点。</summary>
     private Vector2 _launchPoint;

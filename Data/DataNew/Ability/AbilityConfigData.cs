@@ -90,6 +90,8 @@ public class AbilityConfigData
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
+        AbilityTargetSelection = AbilityTargetSelection.None,
+        AbilityCastRange = 800f,
         AbilityDamage = 22f
     };
 

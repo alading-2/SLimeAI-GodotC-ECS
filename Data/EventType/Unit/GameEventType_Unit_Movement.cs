@@ -38,6 +38,49 @@ public static partial class GameEventType
         /// <summary>移动停止请求事件 Key。</summary>
         public const string MovementStopRequested = "unit:movement:stop_requested";
 
+        /// <summary>朝向控制启动事件 Key。</summary>
+        public const string OrientationStarted = "unit:orientation:started";
+
+        /// <summary>朝向控制启动事件数据。</summary>
+        public readonly record struct OrientationStartedEventData
+        {
+            /// <summary>
+            /// 带默认值的 struct 需要显式无参构造函数。
+            /// </summary>
+            public OrientationStartedEventData()
+            {
+            }
+
+            /// <summary>当前朝向配置来源。</summary>
+            public global::OrientationSource Source { get; init; } = global::OrientationSource.Standalone;
+
+            /// <summary>朝向控制参数。</summary>
+            public global::OrientationParams Params { get; init; } = new global::OrientationParams();
+
+            /// <summary>是否随 Movement 生命周期自动停止。</summary>
+            public bool StopWithMovement { get; init; } = false;
+        }
+
+        /// <summary>朝向控制停止事件 Key。</summary>
+        public const string OrientationStopped = "unit:orientation:stopped";
+
+        /// <summary>朝向控制停止事件数据。</summary>
+        public readonly record struct OrientationStoppedEventData
+        {
+            /// <summary>
+            /// 带默认值的 struct 需要显式无参构造函数。
+            /// </summary>
+            public OrientationStoppedEventData()
+            {
+            }
+
+            /// <summary>当前停止请求的来源。</summary>
+            public global::OrientationSource Source { get; init; } = global::OrientationSource.Standalone;
+
+            /// <summary>停止原因。</summary>
+            public global::MovementStopReason Reason { get; init; } = global::MovementStopReason.Requested;
+        }
+
         /// <summary>移动停止请求事件数据。</summary>
         public readonly record struct MovementStopRequestedEventData
         {

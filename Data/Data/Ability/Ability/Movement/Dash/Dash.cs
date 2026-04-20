@@ -52,19 +52,8 @@ internal class DashExecutor : AbilityFeatureHandler
         const int maxTargets = -1;
 
         // 2. 策略逻辑：确定冲刺方向
-        // 规则：优先取当前移动速度方向（顺滑衔接移动），若完全静止（速度接近0）则根据当前模型的左右朝向
-        var moveDir = caster.Data.Get<Vector2>(DataKey.Velocity);
-        Vector2 dashDir;
-        if (moveDir.LengthSquared() > 0.01f)
-        {
-            dashDir = moveDir.Normalized();
-        }
-        else
-        {
-            // 通过 VisualRoot 节点的 FlipH 状态判断面朝方向
-            var sprite = casterNode2D.GetNodeOrNull<AnimatedSprite2D>("VisualRoot");
-            dashDir = (sprite?.FlipH ?? false) ? Vector2.Left : Vector2.Right;
-        }
+        // 规则：优先取当前移动速度方向；若当前速度接近 0，则回退到最后一次主动移动方向缓存；再不行才读当前视觉朝向。
+        Vector2 dashDir = ResolveDashDirection(caster, casterNode2D);
 
         // 3. 通信机制：通过 EventBus 发布位移启动事件
         // 移动系统（MovementSystem）会监听此事件并接管实体的坐标更新
@@ -87,6 +76,31 @@ internal class DashExecutor : AbilityFeatureHandler
 
         _log.Info($"冲刺执行: 方向={dashDir}, 位移距离={dashDistance}, 伤害半径={damageRadius}");
         return new AbilityExecutedResult { TargetsHit = 0 };
+    }
+
+    /// <summary>
+    /// 解析冲刺方向。
+    /// <para>优先级：当前速度 > 最后一次主动移动方向缓存 > 当前视觉朝向。</para>
+    /// </summary>
+    private static Vector2 ResolveDashDirection(
+        IEntity caster,
+        Node2D casterNode2D)
+    {
+        Vector2 moveDir = caster.Data.Get<Vector2>(DataKey.Velocity);
+        if (moveDir.LengthSquared() > 0.01f)
+        {
+            return moveDir.Normalized();
+        }
+
+        Vector2 cachedMoveDir = caster.Data.Get<Vector2>(DataKey.LastMoveDirection);
+        if (cachedMoveDir.LengthSquared() > 0.01f)
+        {
+            return cachedMoveDir.Normalized();
+        }
+
+        // 最后的兜底才读取当前视觉朝向；这样至少不会在“上一帧向左移动过”时莫名回退到向右。
+        var sprite = casterNode2D.GetNodeOrNull<AnimatedSprite2D>("VisualRoot");
+        return (sprite?.FlipH ?? false) ? Vector2.Left : Vector2.Right;
     }
 
     /// <summary>
