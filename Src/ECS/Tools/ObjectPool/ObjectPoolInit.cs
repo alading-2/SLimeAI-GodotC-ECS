@@ -38,26 +38,22 @@ public struct ObjectPoolNames
 }
 
 /// <summary>
-/// 全局对象池管理器 (AutoLoad)
-/// 负责统一管理和预初始化游戏中的核心对象池（如 Player, Enemy, Bullet 等）。
-/// 采用去中心化注册机制，通过 AutoLoad 确保全局单例存在。
+/// 全局对象池初始化入口。
+/// <para>负责统一预初始化游戏中的核心对象池（如 Player、Enemy、Bullet 等）。</para>
 /// </summary>
 public partial class ObjectPoolInit
 {
     private static readonly Log _log = new Log("ObjectPoolInit");
 
     /// <summary>
-    /// 模块初始化：在程序集加载时自动向 AutoLoad 注册。
+    /// 模块初始化：在程序集加载时自动向 SystemRegistry 注册。
     /// </summary>
     [ModuleInitializer]
     public static void Initialize()
     {
-        // 对象池初始化需要早一点
-        AutoLoad.Register(new AutoLoad.AutoLoadConfig
+        SystemRegistry.Register(new SystemDescriptor(nameof(ObjectPoolInit), SystemKind.PureService, SystemLifetime.Persistent)
         {
-            Name = nameof(ObjectPoolInit),
-            InitAction = InitPools,
-            Priority = AutoLoad.Priority.Core,
+            Factory = static () => new ObjectPoolInitRuntime(),
         });
     }
 
@@ -161,7 +157,14 @@ public partial class ObjectPoolInit
             }
         );
 
-        _log.Success("ObjectPoolInit (AutoLoad) 初始化完成");
+        _log.Success("ObjectPoolInit 初始化完成");
     }
 
+    private sealed class ObjectPoolInitRuntime : ISystemRuntime
+    {
+        public void OnSystemRegistered(SystemRegistrationContext context)
+        {
+            InitPools();
+        }
+    }
 }

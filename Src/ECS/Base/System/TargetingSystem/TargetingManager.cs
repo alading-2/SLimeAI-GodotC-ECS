@@ -39,7 +39,7 @@ public static class TargetingManager
 
     /// <summary>
     /// 初始化瞄准管理器 - 订阅全局事件
-    /// 应在游戏初始化时调用（如 AutoLoad）
+    /// <para>由 SystemManager 驱动的运行态生命周期调用。</para>
     /// </summary>
     public static void EnableRuntime()
     {

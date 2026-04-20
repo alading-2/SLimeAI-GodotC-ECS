@@ -28,18 +28,15 @@ using Godot;
 public partial class TimerManager : Node
 {
     /// <summary>
-    /// 模块初始化器：利用 C# 属性在模块加载时自动将 TimerManager 注册到 AutoLoad 系统。
-    /// 这样可以确保它在游戏启动时作为单例存在。
+    /// 模块初始化器：利用 C# 属性在模块加载时自动将 TimerManager 注册到 SystemRegistry。
     /// </summary>
     [ModuleInitializer]
     internal static void Initialize()
     {
-        AutoLoad.Register(new AutoLoad.AutoLoadConfig
+        SystemRegistry.Register(new SystemDescriptor(nameof(TimerManager), SystemKind.NodeScene, SystemLifetime.Persistent)
         {
-            Name = nameof(TimerManager),
-            Scene = ResourceManagement.Load<PackedScene>(nameof(TimerManager), ResourceCategory.Tools),
-            Priority = AutoLoad.Priority.Core,
-            Dependencies = new[] { nameof(ObjectPoolInit) }
+            Dependencies = new[] { nameof(ObjectPoolInit) },
+            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(TimerManager), ResourceCategory.Tools).Instantiate()
         });
     }
 

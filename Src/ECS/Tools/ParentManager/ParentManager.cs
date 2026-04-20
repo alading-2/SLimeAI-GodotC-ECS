@@ -6,7 +6,7 @@ using System.Collections.Generic;
 /// 通用父节点管理器 (静态工具类)
 /// <para>负责管理命名父节点的注册与查询，实现自动化的层级结构创建。</para>
 /// <para>适用场景：对象池、Entity容器、UI层级等任何需要统一父节点管理的场景。</para>
-/// <para>通常由 AutoLoad 初始化，提供全局静态访问。</para>
+/// <para>通常由 SystemManager 在启动阶段初始化，提供全局静态访问。</para>
 /// </summary>
 public static class ParentManager
 {
@@ -114,7 +114,7 @@ public static class ParentManager
                 next = new Node { Name = segment };
 
                 // 核心逻辑：如果是挂载到 Root，必须使用 CallDeferred
-                // 因为 AutoLoad 初始化期间场景树可能处于“锁定”状态（正在加载子节点）
+                // 因为 Root 子节点在某些启动阶段可能处于“锁定”状态（正在加载子节点）
                 if (current == _root)
                 {
                     current.CallDeferred(Node.MethodName.AddChild, next);

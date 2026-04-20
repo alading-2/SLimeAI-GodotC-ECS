@@ -7,6 +7,8 @@ using System.Collections.Generic;
 /// </summary>
 public static class SystemRegistry
 {
+    private static readonly Log _log = new(nameof(SystemRegistry));
+
     // 使用 Ordinal 避免系统 Id 在不同区域设置下出现比较差异。
     private static readonly Dictionary<string, SystemDescriptor> _descriptors = new(StringComparer.Ordinal);
 
@@ -18,12 +20,14 @@ public static class SystemRegistry
     {
         if (descriptor == null)
         {
-            throw new ArgumentNullException(nameof(descriptor));
+            _log.Error("忽略空系统描述符注册请求");
+            return;
         }
 
         if (_descriptors.ContainsKey(descriptor.SystemId))
         {
-            throw new InvalidOperationException($"系统 '{descriptor.SystemId}' 已注册");
+            _log.Error($"系统 '{descriptor.SystemId}' 重复注册，保留首次注册的描述符");
+            return;
         }
 
         // 注册顺序会影响 Bootstrap 接管顺序。
@@ -34,7 +38,7 @@ public static class SystemRegistry
     /// 获取全部系统描述符。
     /// </summary>
     /// <returns>按注册顺序返回的描述符集合。</returns>
-    public static IReadOnlyCollection<SystemDescriptor> GetDescriptors()
+    public static IReadOnlyCollection<SystemDescriptor> GetDescriptorValues()
     {
         // 直接返回 Values 只读视图，调用方不应持久化并依赖可变顺序行为。
         return _descriptors.Values;

@@ -4,15 +4,18 @@ using System.Collections.Generic;
 
 /// <summary>
 /// 系统运行时管理器。
-/// <para>职责：实例化系统、管理启停、按项目状态重算运行资格。</para>
+/// <para>作为项目唯一 autoload 入口，负责初始化 ParentManager、实例化系统、管理启停并按项目状态重算运行资格。</para>
 /// </summary>
 public partial class SystemManager : Node
 {
     private static readonly Log _log = new(nameof(SystemManager));
+
     // systemId -> 运行时条目，统一维护系统实例和当前运行状态。
     private readonly Dictionary<string, ManagedSystemEntry> _entries = new(StringComparer.Ordinal);
     // 生命周期域 -> Host 节点。避免业务系统直接散挂在 SystemManager 根下。
     private readonly Dictionary<SystemLifetime, Node> _hosts = new();
+    private bool _isInitialized;
+    private bool _isBootstrapped;
 
     /// <summary>全局访问入口。</summary>
     public static SystemManager? Instance { get; private set; }
@@ -20,19 +23,37 @@ public partial class SystemManager : Node
     /// <summary>项目状态服务。</summary>
     public ProjectStateService ProjectState { get; } = new();
 
+    /// <summary>系统启动是否已完成。</summary>
+    public bool IsBootstrapped => _isBootstrapped;
+
+    /// <summary>启动完成信号，供测试场景或延迟依赖链等待。</summary>
+    [Signal]
+    public delegate void BootstrapCompletedEventHandler();
+
     public override void _EnterTree()
     {
         // 约定同一时刻只存在一个活动 SystemManager。
         Instance = this;
+        ParentManager.Init(GetTree().Root); // 系统树与对象池/UI/Entity 父节点统一共用 Root
+    }
+
+    public override void _Ready()
+    {
+        EnsureBootstrapped();
     }
 
     public override void _ExitTree()
     {
         ProjectState.StateChanged -= OnProjectStateChanged;
 
-        // 在移除管理器前，给所有系统一次统一反注册机会。
+        // 在移除管理器前，先关闭正在运行的系统，再给所有系统一次统一反注册机会。
         foreach (var entry in _entries.Values)
         {
+            if (entry.IsRunning)
+            {
+                entry.Runtime?.OnSystemDisabled(ProjectState.Snapshot);
+            }
+
             entry.Runtime?.OnSystemUnregistered();
         }
 
@@ -50,9 +71,15 @@ public partial class SystemManager : Node
     /// </summary>
     public void Initialize()
     {
+        if (_isInitialized)
+        {
+            return;
+        }
+
         EnsureHosts();
         ProjectState.StateChanged -= OnProjectStateChanged;
         ProjectState.StateChanged += OnProjectStateChanged;
+        _isInitialized = true;
     }
 
     /// <summary>
@@ -60,11 +87,20 @@ public partial class SystemManager : Node
     /// </summary>
     public void BootstrapRegisteredSystems()
     {
+        if (_isBootstrapped)
+        {
+            return;
+        }
+
         // 按注册表快照依次接管。依赖由 EnsureSystem 内部递归展开。
-        foreach (var descriptor in SystemRegistry.GetDescriptors())
+        foreach (var descriptor in SystemRegistry.GetDescriptorValues())
         {
             EnsureSystem(descriptor);
         }
+
+        _isBootstrapped = true;
+        EmitSignal(SignalName.BootstrapCompleted);
+        _log.Info("SystemManager 启动完成");
     }
 
     /// <summary>
@@ -88,6 +124,11 @@ public partial class SystemManager : Node
         // 先确保依赖系统可用，再创建当前系统。
         foreach (var dependency in descriptor.Dependencies)
         {
+            if (_entries.ContainsKey(dependency))
+            {
+                continue;
+            }
+
             var dependencyDescriptor = SystemRegistry.GetDescriptor(dependency);
             if (dependencyDescriptor == null)
             {
@@ -108,9 +149,10 @@ public partial class SystemManager : Node
         var nodeInstance = instance as Node;
         if (nodeInstance != null)
         {
-            // Node 类型系统统一挂到生命周期 Host 下，便于层级隔离和批量观测。
+            // Node 类型系统统一挂到生命周期 Host 下，ParentPath 相对 Host 生效。
             nodeInstance.Name = descriptor.SystemId;
-            GetHost(descriptor.Lifetime).AddChild(nodeInstance);
+            var parent = ParentManager.EnsurePath(GetHost(descriptor.Lifetime), descriptor.ParentPath);
+            parent.AddChild(nodeInstance);
         }
 
         var runtime = instance as ISystemRuntime;
@@ -124,11 +166,11 @@ public partial class SystemManager : Node
             Runtime = runtime,
             IsEnabled = descriptor.DefaultEnabled,
             IsStateAllowed = descriptor.RunCondition.Evaluate(ProjectState.Snapshot),
+            IsRunning = false
         };
 
         _entries.Add(descriptor.SystemId, entry);
-        // 新系统接管后立即按当前状态应用一次运行资格，避免“创建后短暂误运行”。
-        ApplyEntryState(entry, notifyTransition: true);
+        ApplyEntryState(entry, notifyTransition: true); // 避免创建后短暂误运行
     }
 
     /// <summary>
@@ -174,8 +216,6 @@ public partial class SystemManager : Node
     /// <summary>
     /// 获取一个已托管实例。
     /// </summary>
-    /// <typeparam name="T">目标类型。</typeparam>
-    /// <returns>找到则返回实例。</returns>
     public T? Resolve<T>() where T : class
     {
         foreach (var entry in _entries.Values)
@@ -194,7 +234,6 @@ public partial class SystemManager : Node
         foreach (var entry in _entries.Values)
         {
             // 先重算状态门禁，再通知系统，再统一应用启停。
-            // 顺序保证：系统在 OnProjectStateChanged 内读到的是“新的状态快照”。
             entry.IsStateAllowed = entry.Descriptor.RunCondition.Evaluate(args.Current);
             entry.Runtime?.OnProjectStateChanged(args);
             ApplyEntryState(entry, notifyTransition: true);
@@ -203,13 +242,10 @@ public partial class SystemManager : Node
 
     private void ApplyEntryState(ManagedSystemEntry entry, bool notifyTransition)
     {
-        // 系统是否真正运行 = 人工启用开关 && 状态条件允许。
-        var shouldRun = entry.IsEnabled && entry.IsStateAllowed;
+        var shouldRun = entry.IsEnabled && entry.IsStateAllowed; // 人工开关 && 状态条件
 
         if (entry.NodeInstance != null)
         {
-            // Node 系统通过 ProcessMode 控制处理循环。
-            // 注意：这不替代事件订阅治理，事件类系统仍应在 Runtime 回调里做订阅/退订。
             entry.NodeInstance.ProcessMode = shouldRun
                 ? ProcessModeEnum.Inherit
                 : ProcessModeEnum.Disabled;
@@ -217,25 +253,34 @@ public partial class SystemManager : Node
 
         if (entry.Runtime == null)
         {
+            entry.IsRunning = shouldRun;
+            return;
+        }
+
+        if (!notifyTransition)
+        {
+            entry.IsRunning = shouldRun;
+            return;
+        }
+
+        if (shouldRun == entry.IsRunning)
+        {
             return;
         }
 
         if (shouldRun)
         {
             entry.Runtime.OnSystemEnabled(ProjectState.Snapshot);
+            entry.IsRunning = true;
             return;
         }
 
-        if (notifyTransition)
-        {
-            // 只在需要通知转换时触发 Disable，避免重复禁用产生副作用。
-            entry.Runtime.OnSystemDisabled(ProjectState.Snapshot);
-        }
+        entry.Runtime.OnSystemDisabled(ProjectState.Snapshot);
+        entry.IsRunning = false;
     }
 
     private void EnsureHosts()
     {
-        // 预建标准生命周期域 Host，保持层级结构稳定。
         _hosts[SystemLifetime.Persistent] = EnsureHost(SystemLifetime.Persistent);
         _hosts[SystemLifetime.Gameplay] = EnsureHost(SystemLifetime.Gameplay);
         _hosts[SystemLifetime.Overlay] = EnsureHost(SystemLifetime.Overlay);
@@ -264,9 +309,14 @@ public partial class SystemManager : Node
             return node;
         }
 
-        // Host 本身不承载业务逻辑，仅作为系统容器节点。
-        node = new Node { Name = name };
+        node = new Node { Name = name }; // Host 本身不承载业务逻辑，仅作系统容器
         AddChild(node);
         return node;
+    }
+
+    private void EnsureBootstrapped()
+    {
+        Initialize();
+        BootstrapRegisteredSystems();
     }
 }

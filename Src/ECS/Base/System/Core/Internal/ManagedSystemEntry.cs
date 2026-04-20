@@ -23,4 +23,7 @@ internal sealed class ManagedSystemEntry
 
     /// <summary>系统是否满足项目状态运行条件（状态门禁层）。</summary>
     public bool IsStateAllowed { get; set; }
+
+    /// <summary>系统当前是否已进入运行态（用于避免重复 Enable / Disable 回调）。</summary>
+    public bool IsRunning { get; set; }
 }

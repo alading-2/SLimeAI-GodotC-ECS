@@ -114,18 +114,16 @@ public partial class TestSystem : CanvasLayer
     /// <summary>
     /// 模块初始化入口。
     /// <para>
-    /// 把 TestSystem 注册到 AutoLoad，确保仅在调试优先级链路中自动挂载。
+    /// 把 TestSystem 注册到统一系统注册表，确保仅在调试生命周期链路中自动挂载。
     /// </para>
     /// </summary>
     [ModuleInitializer]
     internal static void Initialize()
     {
-        AutoLoad.Register(new AutoLoad.AutoLoadConfig
+        SystemRegistry.Register(new SystemDescriptor(nameof(TestSystem), SystemKind.NodeScene, SystemLifetime.Debug)
         {
-            Name = nameof(TestSystem),
-            Scene = ResourceManagement.Load<PackedScene>(nameof(TestSystem), ResourceCategory.System),
-            Priority = AutoLoad.Priority.Debug,
-            ParentPath = "Debug"
+            Dependencies = new[] { nameof(MouseSelectionSystem) },
+            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(TestSystem), ResourceCategory.System).Instantiate()
         });
     }
 

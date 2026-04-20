@@ -14,17 +14,14 @@ public partial class DamageService : Node
     private static readonly Log _log = new("DamageService", LogLevel.Warning);
 
     /// <summary>
-    /// 自动注册到引导器 (AutoLoad)
-    /// 使用 ModuleInitializer 确保在程序集加载时自动完成注册，无需手动在编辑器中配置。
+    /// 自动注册到系统注册表。
     /// </summary>
     [ModuleInitializer]
     public static void Initialize()
     {
-        AutoLoad.Register(new AutoLoad.AutoLoadConfig
+        SystemRegistry.Register(new SystemDescriptor(nameof(DamageService), SystemKind.NodeScene, SystemLifetime.Persistent)
         {
-            Name = nameof(DamageService),
-            Scene = ResourceManagement.Load<PackedScene>(nameof(DamageService), ResourceCategory.System),
-            Priority = AutoLoad.Priority.System
+            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(DamageService), ResourceCategory.System).Instantiate()
         });
     }
 

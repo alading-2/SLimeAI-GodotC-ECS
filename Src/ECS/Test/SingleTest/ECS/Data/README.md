@@ -56,7 +56,6 @@ Src/Test/ECS/Data/
 ├── DataTestScene.tscn        # Godot 场景文件
 ├── TestCategory.cs           # 测试数据分类枚举
 ├── DataKey_Test.cs           # 测试数据键定义
-├── TestDataRegister.cs       # 测试数据注册器
 └── README.md                 # 本文档
 ```
 
@@ -107,13 +106,10 @@ Src/Test/ECS/Data/
 
 ## 注意事项
 
-1. **AutoLoad 注册**:  
-   `TestDataRegister.cs` 使用 `[ModuleInitializer]` 自动注册到 AutoLoad 系统。
+1. **数据定义位置**:  
+   测试数据不再通过独立注册器启动时注入，应直接在 `DataKey_* / DataMeta` 新体系内定义。
    
-2. **数据注册时机**:  
-   测试数据在 `TestDataRegister._Ready()` 时注册,确保在测试场景运行前已完成注册。
-   
-3. **事件监听限制**:  
+2. **事件监听限制**:  
    由于测试 Data 没有关联 Entity,事件监听功能只能测试基础的变更检测。
 
 ## 扩展测试
@@ -121,7 +117,7 @@ Src/Test/ECS/Data/
 如需添加新的测试:
 
 1. 在 `DataKey_Test.cs` 中添加新的数据键
-2. 在 `TestDataRegister.cs` 中注册对应的 `DataMeta`
+2. 在对应的 `DataKey_* / DataMeta` 定义中补充测试数据
 3. 在 `DataTestScene.cs` 中添加测试方法
 4. 在 `RunAllTests()` 中调用新的测试方法
 

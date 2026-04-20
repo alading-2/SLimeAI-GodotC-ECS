@@ -24,13 +24,9 @@ public partial class MouseSelectionSystem : Node
     [ModuleInitializer]
     internal static void Initialize()
     {
-        // 将鼠标选择系统注册为调试分组下的自动加载场景，保证运行期选择入口可直接使用。
-        AutoLoad.Register(new AutoLoad.AutoLoadConfig
+        SystemRegistry.Register(new SystemDescriptor(nameof(MouseSelectionSystem), SystemKind.NodeScene, SystemLifetime.Debug)
         {
-            Name = nameof(MouseSelectionSystem),
-            Scene = ResourceManagement.Load<PackedScene>(nameof(MouseSelectionSystem), ResourceCategory.System),
-            Priority = AutoLoad.Priority.Debug,
-            ParentPath = "Debug"
+            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(MouseSelectionSystem), ResourceCategory.System).Instantiate()
         });
     }
 

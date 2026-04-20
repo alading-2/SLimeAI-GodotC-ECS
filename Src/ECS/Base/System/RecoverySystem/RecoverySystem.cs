@@ -23,17 +23,15 @@ public partial class RecoverySystem : Node
 {
     /// <summary>
     /// 模块初始化器。
-    /// 在程序启动时自动执行，将 RecoverySystem 注册到 AutoLoad 管理器中。
-    /// 设置优先级为 System 级别，并声明对 TimerManager 的依赖。
+    /// 在程序启动时自动执行，将 RecoverySystem 注册到统一系统注册表中。
     /// </summary>
     [ModuleInitializer]
     public static void Initialize()
     {
-        AutoLoad.Register(new AutoLoad.AutoLoadConfig
+        SystemRegistry.Register(new SystemDescriptor(nameof(RecoverySystem), SystemKind.NodeScene, SystemLifetime.Persistent)
         {
-            Name = nameof(RecoverySystem),
-            Scene = ResourceManagement.Load<PackedScene>(nameof(RecoverySystem), ResourceCategory.System),
-            Priority = AutoLoad.Priority.System,
+            Dependencies = new[] { nameof(TimerManager) },
+            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(RecoverySystem), ResourceCategory.System).Instantiate()
         });
     }
 

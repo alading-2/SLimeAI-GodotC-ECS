@@ -11,13 +11,15 @@ public partial class MainTest : Node
 
     public override void _Ready()
     {
-        GlobalEventBus.TriggerGameStart();
         ExecuteTestScenario();
         _log.Info("MainTest初始化完成");
     }
 
     private async void ExecuteTestScenario()
     {
+        await WaitForSystemBootstrapAsync();
+        GlobalEventBus.TriggerGameStart();
+
         _log.Info("=== 开始测试: 主动技能输入系统 ===");
         _log.Info("操作说明:");
         _log.Info("  LB/RB - 切换技能");
@@ -74,9 +76,6 @@ public partial class MainTest : Node
             return;
         }
 
-        // 等待一帧，确保 AutoLoad/TestSystem 已进入场景树并完成 _Ready。
-        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-
         if (TestSystem.Instance == null)
         {
             _log.Warn("TestSystem 尚未准备完成，未能自动选中测试玩家");
@@ -85,6 +84,28 @@ public partial class MainTest : Node
 
         TestSystem.Instance.SetSelectedEntity(_player);
         _log.Info("已将测试玩家设为 TestSystem 当前实体");
+    }
+
+    private async Task WaitForSystemBootstrapAsync()
+    {
+        var manager = SystemManager.Instance;
+        if (manager == null)
+        {
+            _log.Warn("SystemManager 尚未创建，等待一帧后重试");
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            manager = SystemManager.Instance;
+        }
+
+        if (manager == null)
+        {
+            _log.Error("SystemManager 仍不存在，无法启动 MainTest");
+            return;
+        }
+
+        if (!manager.IsBootstrapped)
+        {
+            await ToSignal(manager, SystemManager.SignalName.BootstrapCompleted);
+        }
     }
 
     private void CreateSkillBarUI()

@@ -44,7 +44,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-AutoLoad="*res://Src/Autoload/AutoLoad.cs"
+SystemManager="*res://Src/ECS/Base/System/Core/SystemManager.cs"
 
 [dotnet]
 

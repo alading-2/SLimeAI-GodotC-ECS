@@ -24,7 +24,7 @@
 | 文件 | 职责 |
 |------|------|
 | `../MouseSelection/README.md` | 通用鼠标选择系统说明，负责汇总当前 `MouseSelectionSystem` 主文件 + `Interaction / Picking / SelectionBoxUi` 3 个 partial 的阅读入口、职责边界与事件协议 |
-| `TestSystem.cs` | 调试系统宿主，负责 AutoLoad、场景骨架绑定、读取模块清单、动态实例化当前模块与切换；单个模块初始化失败时记录错误并跳过，不中断整个宿主；支持放大 / 缩小测试面板 |
+| `TestSystem.cs` | 调试系统宿主，负责 SystemRegistry 注册、场景骨架绑定、读取模块清单、动态实例化当前模块与切换；单个模块初始化失败时记录错误并跳过，不中断整个宿主；支持放大 / 缩小测试面板 |
 | `TestSystem.MouseSelection.cs` | 鼠标选择适配，负责在“选择实体”开关开启时消费全局选择完成事件 |
 | `Core/ITestModule.cs` | 模块协议，定义宿主依赖的最小模块接口 |
 | `Core/ITestModuleContext.cs` | 模块上下文协议，统一注入宿主和选择上下文 |
@@ -67,7 +67,7 @@
 
 你重点看这几类内容：
 
-- `ModuleInitializer + AutoLoad.Register(...)`：系统为什么会自动出现
+- `ModuleInitializer + SystemRegistry.Register(...)`：系统为什么会自动出现
 - `_Ready()`：当前会扫描哪些模块，默认打开哪个模块
 - `TestSystem.tscn + CacheUiNodes()`：主面板骨架在哪里、代码如何拿到关键节点
 - `SetSelectedEntity(...)`：选中实体后，状态如何通过 `TestSystem.Events` 广播给各模块
@@ -186,7 +186,7 @@
 
 ### 3.1 运行时打开面板
 
-`TestSystem` 通过 `ModuleInitializer + AutoLoad.Register(...)` 自动挂到 Debug 层。
+`TestSystem` 通过 `ModuleInitializer + SystemRegistry.Register(...)` 自动挂到 `SystemLifetime.Debug`。
 
 正常启动游戏后：
 

@@ -13,19 +13,21 @@ public partial class SpawnSystem : Node
 {
     /// <summary>
     /// 模块初始化器：在程序集加载时自动执行。
-    /// 通过 AutoLoad 框架注册此系统，确保其在游戏启动时作为单例存在，并能被全局访问。
+    /// 通过统一系统注册表注册此系统。
     /// </summary>
     [ModuleInitializer]
     public static void Initialize()
     {
-        // return;
-        // 注册到 AutoLoad，传递 PackedScene 由 AutoLoad 负责实例化
-        AutoLoad.Register(new AutoLoad.AutoLoadConfig
+        SystemRegistry.Register(new SystemDescriptor(nameof(SpawnSystem), SystemKind.NodeScene, SystemLifetime.Gameplay)
         {
-            Name = nameof(SpawnSystem),
-            Scene = ResourceManagement.Load<PackedScene>(nameof(SpawnSystem), ResourceCategory.System),
-            Priority = AutoLoad.Priority.System,
-            Dependencies = [nameof(TimerManager)]
+            Dependencies = [nameof(TimerManager)],
+            RunCondition = new SystemRunCondition
+            {
+                AllowedAppPhases = [AppPhase.InSession],
+                AllowedSessionPhases = [SessionPhase.Playing],
+                AllowedExecutionPhases = [ExecutionPhase.Running]
+            },
+            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(SpawnSystem), ResourceCategory.System).Instantiate()
         });
     }
 

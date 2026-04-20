@@ -12,17 +12,20 @@ public partial class DamageStatisticsSystem : Node
     private static readonly Log _log = new(nameof(DamageStatisticsSystem));
 
     /// <summary>
-    /// 自动注册到引导器 (AutoLoad)
-    /// <para>利用 C# 模块初始化器特性，在程序集加载时自动将该系统注册为 Godot 单例/节点。</para>
+    /// 自动注册到统一系统注册表。
     /// </summary>
     [ModuleInitializer]
     public static void Initialize()
     {
-        AutoLoad.Register(new AutoLoad.AutoLoadConfig
+        SystemRegistry.Register(new SystemDescriptor(nameof(DamageStatisticsSystem), SystemKind.NodeScene, SystemLifetime.Gameplay)
         {
-            Name = nameof(DamageStatisticsSystem),
-            Scene = ResourceManagement.Load<PackedScene>(nameof(DamageStatisticsSystem), ResourceCategory.System),
-            Priority = AutoLoad.Priority.System
+            RunCondition = new SystemRunCondition
+            {
+                AllowedAppPhases = [AppPhase.InSession],
+                AllowedSessionPhases = [SessionPhase.Playing],
+                AllowedExecutionPhases = [ExecutionPhase.Running]
+            },
+            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(DamageStatisticsSystem), ResourceCategory.System).Instantiate()
         });
     }
 

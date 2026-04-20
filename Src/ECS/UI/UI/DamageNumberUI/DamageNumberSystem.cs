@@ -1,7 +1,7 @@
 using Godot;
 
 /// <summary>
-/// 伤害飘字系统 (AutoLoad via ModuleInitializer)
+/// 伤害飘字系统 (SystemManager Runtime Bridge)
 ///
 /// 职责：
 /// 1. 监听全局 Damaged / HealApplied / Dodged 事件

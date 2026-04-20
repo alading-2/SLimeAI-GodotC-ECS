@@ -113,7 +113,7 @@ sequenceDiagram
 
 ## 生命周期与初始化
 
-`TargetingManager` 使用 `[ModuleInitializer]` + `AutoLoad.Register` 自动注册，初始化时订阅：
+`TargetingManagerRuntime` 使用 `[ModuleInitializer] + SystemRegistry.Register(...)` 自动注册，`SystemManager` 接管后在运行态内初始化订阅：
 
 - `Targeting.StartTargeting`
 - `Targeting.TargetConfirmed`

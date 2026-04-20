@@ -73,7 +73,7 @@
 
 ## 3.1 做对了的部分
 
-- `TestSystem` 作为统一宿主，由 `AutoLoad` 接入，方向是对的
+- `TestSystem` 作为统一宿主，由 `SystemRegistry + SystemManager` 接入，方向是对的
 - `TestModuleBase` 已经抽出了基础生命周期，方向是对的
 - `FeatureDebugService` 把调试动作转发到正式运行时链路，方向是对的
 - `AbilityTestService` 把 UI 与技能目录/业务操作做了初步隔离，并按完整 `FeatureGroupId` 构建技能库 / 当前技能分组，方向也是对的
@@ -182,7 +182,7 @@
 
 通用鼠标选择系统的边界：
 
-- `MouseSelectionSystem` 是独立 AutoLoad 系统，对外只暴露全局事件协议
+- `MouseSelectionSystem` 是独立 `Debug` 生命周期系统，对外只暴露全局事件协议
 - 输入入口使用 `_UnhandledInput`，确保 GUI 控件优先处理点击；不要用碰撞层解决 UI 点击拦截
 - 选择事件支持单击和框选；`MouseSelectionSystem` 主动广播 `PreviewUpdated / Completed / Missed`，调用方不再通过请求占用普通选择入口
 - 结果统一通过实体集合表达，调用方再决定替换、追加或切换选择

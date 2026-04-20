@@ -41,7 +41,7 @@ public sealed class SystemDescriptor
     public SystemRunCondition RunCondition { get; init; } = SystemRunCondition.Always;
 
     /// <summary>挂载父路径；纯服务为空即可。</summary>
-    /// <remarks>第一版主要按 Lifetime Host 管理，ParentPath 保留为后续扩展位。</remarks>
+    /// <remarks>当前语义为“相对对应 Lifetime Host 的路径”。</remarks>
     public string ParentPath { get; init; } = string.Empty;
 
     /// <summary>依赖系统 Id 列表。</summary>

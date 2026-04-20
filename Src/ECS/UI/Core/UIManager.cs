@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 
 /// <summary>
-/// UI 管理器 (AutoLoad)
+/// UI 管理器
 /// 
 /// 职责：
 /// 1. 管理 UIBase 的生命周期（注册、注销）
@@ -23,16 +23,15 @@ public partial class UIManager : Node
     private static readonly Log _log = new Log("UIManager");
 
     /// <summary>
-    /// 模块初始化：向AutoLoad注册
+    /// 模块初始化：向统一系统注册表注册
     /// </summary>
     [ModuleInitializer]
     public static void Initialize()
     {
-        AutoLoad.Register(new AutoLoad.AutoLoadConfig
+        SystemRegistry.Register(new SystemDescriptor(nameof(UIManager), SystemKind.NodeScene, SystemLifetime.Persistent)
         {
-            Name = nameof(UIManager),
-            Scene = ResourceManagement.Load<PackedScene>(nameof(UIManager), ResourceCategory.UI),
-            Priority = AutoLoad.Priority.System
+            ParentPath = "UI",
+            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(UIManager), ResourceCategory.UI).Instantiate()
         });
     }
 
@@ -42,7 +41,7 @@ public partial class UIManager : Node
 
     public override void _EnterTree()
     {
-        _log.Success("UIManager (AutoLoad) 初始化完成");
+        _log.Success("UIManager 初始化完成");
     }
 
     public override void _ExitTree()

@@ -6,7 +6,7 @@
 
 | 文件 | 职责 |
 |------|------|
-| `MouseSelectionSystem.cs` | 系统入口、AutoLoad 注册、默认拾取参数、交互状态清理 |
+| `MouseSelectionSystem.cs` | 系统入口、SystemRegistry 注册、默认拾取参数、交互状态清理 |
 | `MouseSelectionSystem.Interaction.cs` | `_UnhandledInput`、左键按下 / 移动 / 松开状态机、单击 / 框选结果收口、完成 / 未命中事件广播、屏幕 / 世界矩形辅助 |
 | `MouseSelectionSystem.Picking.cs` | 物理点选、距离兜底、世界矩形候选收集、实体回溯、`LifecycleState` 过滤 |
 | `MouseSelectionSystem.SelectionBoxUi.cs` | 内置框选预览 UI 创建、更新与隐藏 |

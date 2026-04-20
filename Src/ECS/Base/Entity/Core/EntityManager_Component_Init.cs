@@ -14,14 +14,18 @@ public partial class EntityManager
         [ModuleInitializer]
         public static void Initialize()
         {
-            // 注册 Component 缓存预热
-            // 使用 InitAction 进行纯代码初始化，不需要加载场景或脚本资源
-            AutoLoad.Register(new AutoLoad.AutoLoadConfig
+            SystemRegistry.Register(new SystemDescriptor(nameof(EntityManager), SystemKind.PureService, SystemLifetime.Persistent)
             {
-                Name = nameof(EntityManager),
-                Priority = AutoLoad.Priority.System, // 在 Core 之后，Game 之前
-                InitAction = () => PrewarmComponentCache()
+                Factory = static () => new EntityManagerComponentWarmupRuntime(),
             });
+        }
+
+        private sealed class EntityManagerComponentWarmupRuntime : ISystemRuntime
+        {
+            public void OnSystemRegistered(SystemRegistrationContext context)
+            {
+                PrewarmComponentCache();
+            }
         }
     }
 }
