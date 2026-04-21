@@ -10,6 +10,37 @@ public sealed class SystemRunCondition
     /// <summary>无条件运行。</summary>
     public static SystemRunCondition Always { get; } = new();
 
+    /// <summary>
+    /// 局内主玩法运行条件。
+    /// <para>仅在会话进行中且执行态为 Running 时通过。</para>
+    /// </summary>
+    public static SystemRunCondition GameplayRunning()
+    {
+        return new SystemRunCondition
+        {
+            AllowedAppPhases = [AppPhase.InSession],
+            AllowedSessionPhases = [SessionPhase.Playing],
+            AllowedExecutionPhases = [ExecutionPhase.Running]
+        };
+    }
+
+    /// <summary>
+    /// 覆盖层系统运行条件。
+    /// <para>默认允许 PauseMenu / ModalUi / Cutscene 三类覆盖层。</para>
+    /// </summary>
+    /// <param name="allowedPhases">允许的覆盖层阶段；为空时使用默认覆盖层集合。</param>
+    public static SystemRunCondition OverlayActive(params OverlayPhase[] allowedPhases)
+    {
+        var overlayPhases = allowedPhases.Length == 0
+            ?[OverlayPhase.PauseMenu, OverlayPhase.ModalUi, OverlayPhase.Cutscene]
+            : allowedPhases;
+
+        return new SystemRunCondition
+        {
+            AllowedOverlayPhases = overlayPhases
+        };
+    }
+
     /// <summary>允许的应用主阶段；为空表示不限制。</summary>
     public AppPhase[] AllowedAppPhases { get; set; } = Array.Empty<AppPhase>();
 

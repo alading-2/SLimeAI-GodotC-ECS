@@ -48,6 +48,22 @@ public static class GlobalEventBus
     }
 
     /// <summary>
+    /// 触发游戏暂停事件
+    /// </summary>
+    public static void TriggerGamePause()
+    {
+        Global.Emit(GameEventType.Global.GamePause, new GameEventType.Global.GamePauseEventData());
+    }
+
+    /// <summary>
+    /// 触发游戏恢复事件
+    /// </summary>
+    public static void TriggerGameResume()
+    {
+        Global.Emit(GameEventType.Global.GameResume, new GameEventType.Global.GameResumeEventData());
+    }
+
+    /// <summary>
     /// 触发游戏结束事件
     /// </summary>
     /// <param name="isVictory">是否胜利</param>

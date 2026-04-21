@@ -106,6 +106,7 @@ public static class ResourcePaths
     public const string System_DamageStatisticsSystem = "DamageStatisticsSystem";
     public const string System_MouseSelectionSystem = "MouseSelectionSystem";
     public const string System_ObjectPoolInfoModule = "ObjectPoolInfoModule";
+    public const string System_PauseMenuSystem = "PauseMenuSystem";
     public const string System_RecoverySystem = "RecoverySystem";
     public const string System_ResourceCatalogTestModule = "ResourceCatalogTestModule";
     public const string System_ResourcePickerControl = "ResourcePickerControl";
@@ -268,6 +269,7 @@ public static class ResourcePaths
                 { System_DamageStatisticsSystem, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/DamageSystem/DamageStatisticsSystem.tscn") },
                 { System_MouseSelectionSystem, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/MouseSelection/MouseSelectionSystem.tscn") },
                 { System_ObjectPoolInfoModule, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/TestSystem/Info/ObjectPoolInfoModule.tscn") },
+                { System_PauseMenuSystem, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/PauseMenu/PauseMenuSystem.tscn") },
                 { System_RecoverySystem, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/RecoverySystem/RecoverySystem.tscn") },
                 { System_ResourceCatalogTestModule, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/TestSystem/ResourceCatalog/ResourceCatalogTestModule.tscn") },
                 { System_ResourcePickerControl, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/TestSystem/ResourceCatalog/ResourcePickerControl.tscn") },

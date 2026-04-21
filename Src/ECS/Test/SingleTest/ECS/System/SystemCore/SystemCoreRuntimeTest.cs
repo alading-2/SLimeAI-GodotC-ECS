@@ -21,12 +21,16 @@ namespace Slime.Test.SystemCore
             try
             {
                 TestProjectStateDefaults();
+                TestProjectStateFlowHelpers();
                 TestSystemRunCondition();
+                TestGameplayRunConditionPreset();
                 TestStatusCollectionKeepsInvulnerableUntilAllSourcesExpire();
                 TestSystemRegistryKeepsFirstDescriptorWhenDuplicateRegistered();
                 TestSystemManagerAppliesParentPathWithinLifetimeHost();
                 TestSystemManagerOnlyTransitionsOnStateChange();
                 TestSystemManagerBootstrapsOnlyOnce();
+                TestProjectStateBridgeRespondsToGlobalEvents();
+                TestCorePauseRelatedSystemsImplementRuntimeLifecycle();
             }
             catch (Exception ex)
             {
@@ -71,6 +75,65 @@ namespace Slime.Test.SystemCore
 
             AssertEqual("匹配中的项目状态应允许运行", true, condition.Evaluate(allowedSnapshot));
             AssertEqual("PauseMenu 覆盖层应阻止运行", false, condition.Evaluate(blockedSnapshot));
+        }
+
+        private void TestProjectStateFlowHelpers()
+        {
+            var service = new ProjectStateService();
+
+            service.BeginGameplaySession();
+            AssertEqual("BeginGameplaySession 应切到局内主流程", AppPhase.InSession, service.AppPhase);
+            AssertEqual("BeginGameplaySession 应切到 Playing", SessionPhase.Playing, service.SessionPhase);
+            AssertEqual("BeginGameplaySession 应清空覆盖层", OverlayPhase.None, service.OverlayPhase);
+            AssertEqual("BeginGameplaySession 应恢复执行", ExecutionPhase.Running, service.ExecutionPhase);
+
+            service.OpenPauseMenu();
+            AssertEqual("OpenPauseMenu 应打开暂停菜单", OverlayPhase.PauseMenu, service.OverlayPhase);
+            AssertEqual("OpenPauseMenu 应暂停执行", ExecutionPhase.Paused, service.ExecutionPhase);
+
+            service.ClosePauseMenu();
+            AssertEqual("ClosePauseMenu 应关闭暂停菜单", OverlayPhase.None, service.OverlayPhase);
+            AssertEqual("ClosePauseMenu 应恢复执行", ExecutionPhase.Running, service.ExecutionPhase);
+
+            service.SetBlocked(OverlayPhase.Cutscene);
+            AssertEqual("SetBlocked 应写入阻塞覆盖层", OverlayPhase.Cutscene, service.OverlayPhase);
+            AssertEqual("SetBlocked 应进入 Blocked", ExecutionPhase.Blocked, service.ExecutionPhase);
+
+            service.ClearBlocked();
+            AssertEqual("ClearBlocked 应清空覆盖层", OverlayPhase.None, service.OverlayPhase);
+            AssertEqual("ClearBlocked 应恢复 Running", ExecutionPhase.Running, service.ExecutionPhase);
+
+            service.EndSession();
+            AssertEqual("EndSession 应标记会话结束", SessionPhase.Ended, service.SessionPhase);
+            AssertEqual("EndSession 不应保留暂停菜单", OverlayPhase.None, service.OverlayPhase);
+            AssertEqual("EndSession 应进入 Blocked", ExecutionPhase.Blocked, service.ExecutionPhase);
+        }
+
+        private void TestGameplayRunConditionPreset()
+        {
+            var condition = SystemRunCondition.GameplayRunning();
+
+            var playingSnapshot = new ProjectStateSnapshot(
+                AppPhase.InSession,
+                SessionPhase.Playing,
+                OverlayPhase.None,
+                ExecutionPhase.Running);
+
+            var pausedSnapshot = new ProjectStateSnapshot(
+                AppPhase.InSession,
+                SessionPhase.Playing,
+                OverlayPhase.PauseMenu,
+                ExecutionPhase.Paused);
+
+            var endedSnapshot = new ProjectStateSnapshot(
+                AppPhase.InSession,
+                SessionPhase.Ended,
+                OverlayPhase.None,
+                ExecutionPhase.Blocked);
+
+            AssertEqual("GameplayRunning 在 Playing + Running 应通过", true, condition.Evaluate(playingSnapshot));
+            AssertEqual("GameplayRunning 在暂停时应阻止运行", false, condition.Evaluate(pausedSnapshot));
+            AssertEqual("GameplayRunning 在会话结束时应阻止运行", false, condition.Evaluate(endedSnapshot));
         }
 
         private void TestStatusCollectionKeepsInvulnerableUntilAllSourcesExpire()
@@ -184,6 +247,45 @@ namespace Slime.Test.SystemCore
             AssertEqual("BootstrapCompleted 只应触发一次", 1, bootstrapSignalCount);
 
             manager.QueueFree();
+        }
+
+        private void TestProjectStateBridgeRespondsToGlobalEvents()
+        {
+            var service = new ProjectStateService();
+            var descriptor = new SystemDescriptor("SystemCoreRuntimeTest.ProjectStateBridge", SystemKind.PureService, SystemLifetime.Test)
+            {
+                Factory = static () => new ProjectStateBridge()
+            };
+            var bridge = new ProjectStateBridge();
+
+            bridge.OnSystemRegistered(new SystemRegistrationContext(descriptor, service));
+            bridge.OnSystemEnabled(service.Snapshot);
+
+            GlobalEventBus.TriggerGameStart();
+            AssertEqual("ProjectStateBridge 应响应 GameStart", AppPhase.InSession, service.AppPhase);
+            AssertEqual("ProjectStateBridge 应把会话切到 Playing", SessionPhase.Playing, service.SessionPhase);
+
+            GlobalEventBus.Global.Emit(GameEventType.Global.GamePause, new GameEventType.Global.GamePauseEventData());
+            AssertEqual("ProjectStateBridge 应响应 GamePause", OverlayPhase.PauseMenu, service.OverlayPhase);
+            AssertEqual("ProjectStateBridge 应把执行态切到 Paused", ExecutionPhase.Paused, service.ExecutionPhase);
+
+            GlobalEventBus.Global.Emit(GameEventType.Global.GameResume, new GameEventType.Global.GameResumeEventData());
+            AssertEqual("ProjectStateBridge 应响应 GameResume", OverlayPhase.None, service.OverlayPhase);
+            AssertEqual("ProjectStateBridge 应恢复 Running", ExecutionPhase.Running, service.ExecutionPhase);
+
+            GlobalEventBus.TriggerGameOver(false);
+            AssertEqual("ProjectStateBridge 应响应 GameOver", SessionPhase.Ended, service.SessionPhase);
+            AssertEqual("ProjectStateBridge 应在 GameOver 后进入 Blocked", ExecutionPhase.Blocked, service.ExecutionPhase);
+
+            bridge.OnSystemDisabled(service.Snapshot);
+        }
+
+        private void TestCorePauseRelatedSystemsImplementRuntimeLifecycle()
+        {
+            AssertEqual("TimerManager 应实现 ISystemRuntime", true, new TimerManager() is ISystemRuntime);
+            AssertEqual("SpawnSystem 应实现 ISystemRuntime", true, new SpawnSystem() is ISystemRuntime);
+            AssertEqual("DamageStatisticsSystem 应实现 ISystemRuntime", true, new DamageStatisticsSystem() is ISystemRuntime);
+            AssertEqual("PauseMenuSystem 应实现 ISystemRuntime", true, new PauseMenuSystem() is ISystemRuntime);
         }
 
         private void AssertEqual<T>(string name, T expected, T actual)

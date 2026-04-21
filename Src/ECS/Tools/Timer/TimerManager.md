@@ -10,6 +10,7 @@
 - **链式 API**: 流畅的 `.OnComplete()`, `.OnLoop()`, `.WithTag()` 调用
 - **批量管理**: Tag 系统支持批量操作
 - **TimeScale 支持**: 游戏时间 / 真实时间双模式
+- **项目级暂停联动**: `ExecutionPhase = Paused / Blocked` 时，自动暂停 `useUnscaledTime = false` 的计时器
 
 ## 快速开始
 
@@ -73,6 +74,22 @@ TimerManager.Instance.Countdown(10.0f, 0.5f, immediate: true)
 TimerManager.Instance.Delay(0.5f, useUnscaledTime: true)
     .OnComplete(() => panel.Hide());
 ```
+
+### 项目级暂停语义
+
+```csharp
+// 默认：受项目暂停影响，暂停菜单打开后会自动停住
+TimerManager.Instance.Loop(1.0f)
+    .OnLoop(SpawnEnemy);
+
+// 覆盖层/UI：不受项目暂停影响，暂停菜单打开后仍会继续
+TimerManager.Instance.Delay(0.25f, useUnscaledTime: true)
+    .OnComplete(() => tooltip.Show());
+```
+
+- `useUnscaledTime = false`：适合战斗逻辑、波次推进、DoT、恢复、AI 等 gameplay 计时
+- `useUnscaledTime = true`：适合暂停菜单、过场 UI、提示动画等 overlay 计时
+- 手动 `Pause()/Resume()` 与项目级自动暂停会叠加；项目恢复时不会误恢复手动暂停的 timer
 
 ## 标签管理
 

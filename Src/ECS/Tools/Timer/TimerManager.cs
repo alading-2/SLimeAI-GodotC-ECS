@@ -25,7 +25,7 @@ using Godot;
 ///     .Countdown((elapsed, progress) => UpdateUI(progress))
 ///     .OnComplete(() => OnTimeUp());
 /// </summary>
-public partial class TimerManager : Node
+public partial class TimerManager : Node, ISystemRuntime
 {
     /// <summary>
     /// 模块初始化器：利用 C# 属性在模块加载时自动将 TimerManager 注册到 SystemRegistry。
@@ -153,6 +153,7 @@ public partial class TimerManager : Node
         var timer = _timerPool.Get();
         timer.Configure(duration, false, useUnscaledTime);
         timer.Id = Guid.NewGuid().ToString();
+        ApplyTimerProjectPause(timer);
         return timer;
     }
 
@@ -168,6 +169,7 @@ public partial class TimerManager : Node
         var timer = _timerPool.Get();
         timer.Configure(interval, true, useUnscaledTime, repeatCount: -1);
         timer.Id = Guid.NewGuid().ToString();
+        ApplyTimerProjectPause(timer);
         return timer;
     }
 
@@ -185,6 +187,7 @@ public partial class TimerManager : Node
         var timer = _timerPool.Get();
         timer.Configure(interval, true, useUnscaledTime, repeatCount: count, immediate: immediate);
         timer.Id = Guid.NewGuid().ToString();
+        ApplyTimerProjectPause(timer);
         return timer;
     }
 
@@ -203,6 +206,7 @@ public partial class TimerManager : Node
         // 倒计时本质上是一个带总量限制的循环定时器
         timer.Configure(interval, true, useUnscaledTime, repeatCount: -1, totalDuration: duration, immediate: immediate);
         timer.Id = Guid.NewGuid().ToString();
+        ApplyTimerProjectPause(timer);
         return timer;
     }
 
@@ -271,5 +275,48 @@ public partial class TimerManager : Node
     {
         var stats = _timerPool.GetStats();
         return (stats.ActiveCount, stats.Count);
+    }
+
+    /// <inheritdoc />
+    public void OnSystemEnabled(ProjectStateSnapshot snapshot)
+    {
+        ApplyProjectPauseState(snapshot);
+    }
+
+    /// <inheritdoc />
+    public void OnProjectStateChanged(ProjectStateChangedEventArgs args)
+    {
+        ApplyProjectPauseState(args.Current);
+    }
+
+    private void ApplyTimerProjectPause(GameTimer timer)
+    {
+        var snapshot = SystemManager.Instance?.ProjectState.Snapshot;
+        if (snapshot == null)
+        {
+            timer.SystemPaused = false;
+            return;
+        }
+
+        timer.SystemPaused = !timer.UseUnscaledTime && ShouldPauseScaledTimers(snapshot.Value);
+    }
+
+    private void ApplyProjectPauseState(ProjectStateSnapshot snapshot)
+    {
+        if (_timerPool == null)
+        {
+            return;
+        }
+
+        var shouldPauseScaledTimers = ShouldPauseScaledTimers(snapshot);
+        _timerPool.ForEachActive(timer =>
+        {
+            timer.SystemPaused = !timer.UseUnscaledTime && shouldPauseScaledTimers;
+        });
+    }
+
+    private static bool ShouldPauseScaledTimers(ProjectStateSnapshot snapshot)
+    {
+        return snapshot.ExecutionPhase is ExecutionPhase.Paused or ExecutionPhase.Blocked;
     }
 }

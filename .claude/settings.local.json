@@ -42,7 +42,8 @@
       "Bash(grep func try_edit_value:*)",
       "mcp__github__search_code",
       "mcp__github__search_repositories",
-      "mcp__github__get_file_contents"
+      "mcp__github__get_file_contents",
+      "Bash(find .:*)"
     ]
   }
 }

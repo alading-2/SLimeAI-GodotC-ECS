@@ -1,5 +1,6 @@
 /// <summary>
-/// 应用主阶段。
+/// 应用主阶段——四维状态坐标第一维：应用在哪个大阶段？
+/// <para>从启动到关闭的宏观生命周期，与 Session/Overlay/Execution 同时存在。</para>
 /// </summary>
 public enum AppPhase
 {

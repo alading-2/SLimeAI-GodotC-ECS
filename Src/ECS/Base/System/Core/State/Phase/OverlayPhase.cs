@@ -1,5 +1,6 @@
 /// <summary>
-/// 覆盖层阶段。
+/// 覆盖层阶段——四维状态坐标第三维：有没有 UI 覆盖层挡着？
+/// <para>覆盖层会抢占交互焦点，通常伴随 ExecutionPhase 变为 Paused/Blocked。</para>
 /// </summary>
 public enum OverlayPhase
 {
@@ -11,6 +12,4 @@ public enum OverlayPhase
     ModalUi,
     /// <summary>过场覆盖层。</summary>
     Cutscene,
-    /// <summary>调试覆盖层。</summary>
-    DebugOverlay,
 }

@@ -32,8 +32,15 @@ public class GameTimer : IPoolable
     /// </summary>
     public bool UseUnscaledTime { get; set; }
 
+    private bool _manualPaused;
+    internal bool SystemPaused { get; set; }
+
     /// <summary> 是否处于暂停状态 </summary>
-    public bool IsPaused { get; set; }
+    public bool IsPaused
+    {
+        get => _manualPaused || SystemPaused;
+        set => _manualPaused = value;
+    }
 
     /// <summary> 是否已完成（或已取消） </summary>
     public bool IsDone { get; internal set; }
@@ -174,7 +181,8 @@ public class GameTimer : IPoolable
         UseUnscaledTime = useUnscaledTime;
         Elapsed = 0;
         IsDone = false;
-        IsPaused = false;
+        _manualPaused = false;
+        SystemPaused = false;
         IsCancelled = false;
         RepeatCount = isLoop ? repeatCount : 0;
         TotalDuration = totalDuration;
@@ -226,7 +234,8 @@ public class GameTimer : IPoolable
         Elapsed = 0;
         IsLoop = false;
         UseUnscaledTime = false;
-        IsPaused = false;
+        _manualPaused = false;
+        SystemPaused = false;
         IsDone = false;
         IsCancelled = false;
         RepeatCount = 0;

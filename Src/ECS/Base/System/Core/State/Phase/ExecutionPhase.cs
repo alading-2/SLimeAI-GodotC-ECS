@@ -1,5 +1,6 @@
 /// <summary>
-/// 逻辑执行阶段。
+/// 逻辑执行阶段——四维状态坐标第四维：逻辑在跑还是停着？
+/// <para>SystemManager 据此裁决系统是否允许运行（ProcessMode / ISystemRuntime 钩子）。</para>
 /// </summary>
 public enum ExecutionPhase
 {
@@ -7,8 +8,6 @@ public enum ExecutionPhase
     Running,
     /// <summary>暂停运行。</summary>
     Paused,
-    /// <summary>单步执行（调试态）。</summary>
-    Step,
     /// <summary>执行被外部流程阻塞（过场/等待关键条件）。</summary>
     Blocked,
 }

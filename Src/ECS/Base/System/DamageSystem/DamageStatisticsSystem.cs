@@ -6,10 +6,11 @@ using System.Runtime.CompilerServices;
 /// <para>监听波次开始事件重置玩家的波次统计数据。</para>
 /// <para>监听全局 Kill 事件记录击杀数。</para>
 /// </summary>
-public partial class DamageStatisticsSystem : Node
+public partial class DamageStatisticsSystem : Node, ISystemRuntime
 {
     /// <summary>日志处理实例</summary>
     private static readonly Log _log = new(nameof(DamageStatisticsSystem));
+    private bool _eventsBound;
 
     /// <summary>
     /// 自动注册到统一系统注册表。
@@ -19,39 +20,19 @@ public partial class DamageStatisticsSystem : Node
     {
         SystemRegistry.Register(new SystemDescriptor(nameof(DamageStatisticsSystem), SystemKind.NodeScene, SystemLifetime.Gameplay)
         {
-            RunCondition = new SystemRunCondition
-            {
-                AllowedAppPhases = [AppPhase.InSession],
-                AllowedSessionPhases = [SessionPhase.Playing],
-                AllowedExecutionPhases = [ExecutionPhase.Running]
-            },
+            RunCondition = SystemRunCondition.GameplayRunning(),
             Factory = static () => ResourceManagement.Load<PackedScene>(nameof(DamageStatisticsSystem), ResourceCategory.System).Instantiate()
         });
     }
 
     public override void _EnterTree()
     {
-        // 1. 订阅波次开始事件
-        // 当新波次开始时，需要清除上一波的临时统计数据（如每波造成的伤害、击杀数等）
-        GlobalEventBus.Global.On<GameEventType.Global.WaveStartedEventData>(
-            GameEventType.Global.WaveStarted, OnWaveStarted);
-
-        // 2. 订阅全局击杀事件
-        // 伤害系统（HealthComponent）在目标死亡时会发送 Kill 事件，本系统负责持久化这些统计
-        GlobalEventBus.Global.On<GameEventType.Unit.KilledEventData>(
-            GameEventType.Unit.Killed, OnUnitKilled);
-
         _log.Debug("伤害统计系统初始化完成");
     }
 
     public override void _ExitTree()
     {
-        // 务必取消订阅，防止内存泄漏和逻辑错误（尤其是单例事件总线）
-        GlobalEventBus.Global.Off<GameEventType.Global.WaveStartedEventData>(
-            GameEventType.Global.WaveStarted, OnWaveStarted);
-
-        GlobalEventBus.Global.Off<GameEventType.Unit.KilledEventData>(
-            GameEventType.Unit.Killed, OnUnitKilled);
+        UnbindRuntimeEvents();
     }
 
     /// <summary>
@@ -127,6 +108,52 @@ public partial class DamageStatisticsSystem : Node
         {
             _log.Warn($"击杀统计失败：攻击链上未找到 IUnit 或 IWeapon，Killer={data.Killer}");
         }
+    }
+
+    /// <inheritdoc />
+    public void OnSystemEnabled(ProjectStateSnapshot snapshot)
+    {
+        BindRuntimeEvents();
+    }
+
+    /// <inheritdoc />
+    public void OnSystemDisabled(ProjectStateSnapshot snapshot)
+    {
+        UnbindRuntimeEvents();
+    }
+
+    private void BindRuntimeEvents()
+    {
+        if (_eventsBound)
+        {
+            return;
+        }
+
+        // 当新波次开始时，需要清除上一波的临时统计数据（如每波造成的伤害、击杀数等）
+        GlobalEventBus.Global.On<GameEventType.Global.WaveStartedEventData>(
+            GameEventType.Global.WaveStarted, OnWaveStarted);
+
+        // 伤害系统（HealthComponent）在目标死亡时会发送 Kill 事件，本系统负责持久化这些统计
+        GlobalEventBus.Global.On<GameEventType.Unit.KilledEventData>(
+            GameEventType.Unit.Killed, OnUnitKilled);
+
+        _eventsBound = true;
+    }
+
+    private void UnbindRuntimeEvents()
+    {
+        if (!_eventsBound)
+        {
+            return;
+        }
+
+        GlobalEventBus.Global.Off<GameEventType.Global.WaveStartedEventData>(
+            GameEventType.Global.WaveStarted, OnWaveStarted);
+
+        GlobalEventBus.Global.Off<GameEventType.Unit.KilledEventData>(
+            GameEventType.Unit.Killed, OnUnitKilled);
+
+        _eventsBound = false;
     }
 
 }

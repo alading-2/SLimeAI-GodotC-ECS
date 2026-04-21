@@ -93,4 +93,94 @@ public sealed class ProjectStateService
     {
         Apply(_snapshot with { ExecutionPhase = phase });
     }
+
+    /// <summary>
+    /// 进入前台流程。
+    /// <para>用于主菜单、配置页等非局内场景。</para>
+    /// </summary>
+    public void EnterFrontEnd()
+    {
+        Apply(new ProjectStateSnapshot(
+            AppPhase.FrontEnd,
+            SessionPhase.None,
+            OverlayPhase.None,
+            ExecutionPhase.Running));
+    }
+
+    /// <summary>
+    /// 进入局内主流程。
+    /// <para>默认直接落到 Playing，用于现有主场景直接开局链路。</para>
+    /// </summary>
+    public void BeginGameplaySession()
+    {
+        Apply(new ProjectStateSnapshot(
+            AppPhase.InSession,
+            SessionPhase.Playing,
+            OverlayPhase.None,
+            ExecutionPhase.Running));
+    }
+
+    /// <summary>
+    /// 打开暂停菜单并暂停主逻辑。
+    /// </summary>
+    public void OpenPauseMenu()
+    {
+        Apply(_snapshot with
+        {
+            OverlayPhase = OverlayPhase.PauseMenu,
+            ExecutionPhase = ExecutionPhase.Paused
+        });
+    }
+
+    /// <summary>
+    /// 关闭暂停菜单并恢复主逻辑。
+    /// </summary>
+    public void ClosePauseMenu()
+    {
+        Apply(_snapshot with
+        {
+            OverlayPhase = OverlayPhase.None,
+            ExecutionPhase = ExecutionPhase.Running
+        });
+    }
+
+    /// <summary>
+    /// 进入阻塞态。
+    /// <para>典型场景是过场或强制等待外部流程。</para>
+    /// </summary>
+    /// <param name="reason">阻塞对应的覆盖层阶段。</param>
+    public void SetBlocked(OverlayPhase reason)
+    {
+        Apply(_snapshot with
+        {
+            OverlayPhase = reason,
+            ExecutionPhase = ExecutionPhase.Blocked
+        });
+    }
+
+    /// <summary>
+    /// 清理阻塞态并恢复主逻辑。
+    /// </summary>
+    public void ClearBlocked()
+    {
+        Apply(_snapshot with
+        {
+            OverlayPhase = OverlayPhase.None,
+            ExecutionPhase = ExecutionPhase.Running
+        });
+    }
+
+    /// <summary>
+    /// 结束当前会话。
+    /// <para>保留当前主阶段，统一清空覆盖层并阻塞执行。</para>
+    /// </summary>
+    public void EndSession()
+    {
+        Apply(_snapshot with
+        {
+            SessionPhase = SessionPhase.Ended,
+            OverlayPhase = OverlayPhase.None,
+            ExecutionPhase = ExecutionPhase.Blocked
+        });
+    }
 }

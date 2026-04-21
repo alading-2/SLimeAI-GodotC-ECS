@@ -9,7 +9,7 @@ using Slime.Config.Units;
 /// 敌人生成系统 - 核心的"敌人生成与波次管理系统"。
 /// <para>采用 TimerManager 驱动，统一管理所有计时器，性能优异且易于维护。</para>
 /// </summary>
-public partial class SpawnSystem : Node
+public partial class SpawnSystem : Node, ISystemRuntime
 {
     /// <summary>
     /// 模块初始化器：在程序集加载时自动执行。
@@ -21,12 +21,7 @@ public partial class SpawnSystem : Node
         SystemRegistry.Register(new SystemDescriptor(nameof(SpawnSystem), SystemKind.NodeScene, SystemLifetime.Gameplay)
         {
             Dependencies = [nameof(TimerManager)],
-            RunCondition = new SystemRunCondition
-            {
-                AllowedAppPhases = [AppPhase.InSession],
-                AllowedSessionPhases = [SessionPhase.Playing],
-                AllowedExecutionPhases = [ExecutionPhase.Running]
-            },
+            RunCondition = SystemRunCondition.GameplayRunning(),
             Factory = static () => ResourceManagement.Load<PackedScene>(nameof(SpawnSystem), ResourceCategory.System).Instantiate()
         });
     }
@@ -37,6 +32,7 @@ public partial class SpawnSystem : Node
     /// 全局访问单例，方便其他模块通过 SpawnSystem.Instance 调用接口。
     /// </summary>
     public static SpawnSystem Instance { get; private set; }
+    private bool _eventsBound;
 
 
     // === 实时运行状态 ===
@@ -67,11 +63,6 @@ public partial class SpawnSystem : Node
     public override void _Ready()
     {
         Instance = this;
-
-        // 监听游戏事件
-        GlobalEventBus.Global.On(GameEventType.Global.GameStart, OnGameStart);
-        GlobalEventBus.Global.On<GameEventType.Global.GameOverEventData>(GameEventType.Global.GameOver, OnGameOver);
-
         _log.Info("SpawnSystem (TimerManager Architecture) 初始化完成");
     }
 
@@ -81,20 +72,13 @@ public partial class SpawnSystem : Node
     /// </summary>
     public override void _ExitTree()
     {
-        // 解绑 EventBus 事件
-        GlobalEventBus.Global.Off(GameEventType.Global.GameStart, OnGameStart);
-        GlobalEventBus.Global.Off<GameEventType.Global.GameOverEventData>(GameEventType.Global.GameOver, OnGameOver);
+        UnbindRuntimeEvents();
 
         // 清理单例引用
         if (Instance == this)
             Instance = null;
 
-        // 归还计时器到对象池
-        _waveTimer?.Cancel();
-        _checkTimer?.Cancel();
-        _waveTimer = null;
-        _checkTimer = null;
-        _activeStates.Clear();
+        StopWaveRuntime(clearEnemies: false);
 
         _log.Debug("SpawnSystem 已清理");
     }
@@ -117,11 +101,7 @@ public partial class SpawnSystem : Node
     /// <param name="evt">游戏结束数据</param>
     public void OnGameOver(GameEventType.Global.GameOverEventData evt)
     {
-        IsWaveActive = false;
-        _waveTimer?.Cancel();
-        _checkTimer?.Cancel();
-        _activeStates.Clear();
-        KillAllEnemies();
+        StopWaveRuntime(clearEnemies: true);
     }
 
     /// <summary>
@@ -186,16 +166,67 @@ public partial class SpawnSystem : Node
     private void OnWaveTimeout()
     {
         if (!IsWaveActive) return;
-        IsWaveActive = false;
-
-        _waveTimer?.Cancel();
-        _checkTimer?.Cancel();
-        _activeStates.Clear();
+        StopWaveRuntime(clearEnemies: false);
 
         _log.Info($"第 {CurrentWaveIndex}波进攻结束!");
         // 触发波次完成事件,通常用于开启商店界面或奖励选择
         GlobalEventBus.Global.Emit(GameEventType.Global.WaveCompleted,
             new GameEventType.Global.WaveCompletedEventData(CurrentWaveIndex));
+    }
+
+    /// <inheritdoc />
+    public void OnSystemEnabled(ProjectStateSnapshot snapshot)
+    {
+        BindRuntimeEvents();
+    }
+
+    /// <inheritdoc />
+    public void OnSystemDisabled(ProjectStateSnapshot snapshot)
+    {
+        UnbindRuntimeEvents();
+        if (snapshot.AppPhase != AppPhase.InSession || snapshot.SessionPhase != SessionPhase.Playing)
+        {
+            StopWaveRuntime(clearEnemies: false);
+        }
+    }
+
+    private void BindRuntimeEvents()
+    {
+        if (_eventsBound)
+        {
+            return;
+        }
+
+        GlobalEventBus.Global.On(GameEventType.Global.GameStart, OnGameStart);
+        GlobalEventBus.Global.On<GameEventType.Global.GameOverEventData>(GameEventType.Global.GameOver, OnGameOver);
+        _eventsBound = true;
+    }
+
+    private void UnbindRuntimeEvents()
+    {
+        if (!_eventsBound)
+        {
+            return;
+        }
+
+        GlobalEventBus.Global.Off(GameEventType.Global.GameStart, OnGameStart);
+        GlobalEventBus.Global.Off<GameEventType.Global.GameOverEventData>(GameEventType.Global.GameOver, OnGameOver);
+        _eventsBound = false;
+    }
+
+    private void StopWaveRuntime(bool clearEnemies)
+    {
+        IsWaveActive = false;
+        _waveTimer?.Cancel();
+        _checkTimer?.Cancel();
+        _waveTimer = null;
+        _checkTimer = null;
+        _activeStates.Clear();
+
+        if (clearEnemies)
+        {
+            KillAllEnemies();
+        }
     }
 
     // ========================================

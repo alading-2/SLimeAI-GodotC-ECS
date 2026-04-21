@@ -1,5 +1,6 @@
 /// <summary>
-/// 单次会话阶段。
+/// 单次会话阶段——四维状态坐标第二维：这一局在干嘛？
+/// <para>仅在 AppPhase=InSession 时有意义，描述单局内的准备/进行/结算/结束。</para>
 /// </summary>
 public enum SessionPhase
 {
