@@ -26,6 +26,12 @@ public void OnPoolRelease() { timer?.Cancel(); }
 
 API 文档：`Src/ECS/Tools/Timer/TimerManager.md`
 
+项目级暂停约定：
+
+- `useUnscaledTime = false`：默认受 `ProjectStateService` 的暂停 / 阻塞影响，`ExecutionPhase = Paused / Blocked` 时会被 `TimerManager` 自动暂停
+- `useUnscaledTime = true`：不受项目级暂停影响，适合暂停菜单、过场 UI、调试提示等覆盖层逻辑
+- 业务手动 `Pause()/Resume()` 与项目级自动暂停是两套状态，恢复项目时不会错误恢复原本就手动暂停的 timer
+
 ---
 
 ## ObjectPool - 对象池
@@ -60,6 +66,11 @@ public void OnPoolReset()   { /* 数据重置，通常留空 */ }
 ```
 
 API 文档：`Src/ECS/Tools/ObjectPool/ObjectPool.md`
+
+统计口径约定：
+
+- 对象池效率指标统一使用 `ReuseRate`（复用率），表示 `TotalReused / TotalAcquired`
+- `TotalCreatedOnAcquire` 只统计获取时扩容新建，不包含预热创建
 
 ### 对象池实体激活时序（重要）
 

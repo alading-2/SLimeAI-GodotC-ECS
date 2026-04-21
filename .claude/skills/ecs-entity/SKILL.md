@@ -14,6 +14,7 @@ description: 创建新 Entity、管理 Entity 生命周期（Spawn/Register/Dest
 ## VisualRoot / 碰撞约定（2026-04）
 
 - `EntityManager.Spawn` 会在组件注册前按 `VisualScenePath` 注入 `VisualRoot`
+- `EntityManager.Spawn` 支持通过 `EntitySpawnConfig.VisualSceneOverride` 显式覆盖视觉场景；未提供时再回退读取 `Config.VisualScenePath`
 - 注入不再局限于 `UnitConfig` / `IUnit`；任意配置资源只要暴露 `VisualScenePath`（如 `ProjectileConfig`）即可复用同一套视觉挂载流程
 - `SpriteFramesGenerator` / 视觉场景可提供 `VisualRoot/CollisionShape2D` 或 `VisualRoot/CollisionPolygon2D` 作为碰撞模板
 - 受击区、拾取区等业务碰撞节点直接作为 `Area2D` 挂在 Entity 场景里
@@ -62,6 +63,80 @@ EntityManager.Destroy(enemy);
 // ✅ 查询组件
 var health = EntityManager.GetComponent<HealthComponent>(entity);
 ```
+
+## 生成关系绑定约定
+
+```csharp
+// ✅ 在 Spawn 阶段统一绑定“父实体 -> 子实体”的归属关系
+var projectile = EntityManager.Spawn<ProjectileEntity>(new EntitySpawnConfig
+{
+    Config = projectileConfig,
+    UsingObjectPool = true,
+    PoolName = ObjectPoolNames.ProjectilePool,
+    Position = spawnPos,
+    ParentEntity = caster, // 父实体/归属者
+    AutoAddParentRelation = true, // 自动补 PARENT，供统一溯源
+    ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively, // 归属者销毁时递归销毁子实体
+    ParentRelationTypes = [EntityRelationshipType.ENTITY_TO_PROJECTILE] // 业务关系：施法者 -> 投射物
+});
+
+// ✅ 自定义生成链路（如 EffectTool）统一复用同一个绑定入口
+EntityManager.BindParentRelationships(
+    childEntity, // 子实体
+    parentEntity, // 父实体/归属者
+    autoAddParentRelation: true, // 自动补 PARENT
+    parentDestroyPolicy: ParentDestroyPolicy.DestroyRecursively, // 父销毁策略只写入 PARENT
+    EntityRelationshipType.ENTITY_TO_EFFECT // 业务关系
+);
+```
+
+- `ParentEntity` 只要填写，默认就应该同时建立 `PARENT`
+- `PARENT` 是统一归属主链，一个子实体只能有一个直接父级
+- `ParentDestroyPolicy` 也只挂在 `PARENT` 上；业务关系只做分类查询，不参与生命周期决策
+- 默认优先用 `DestroyRecursively`，只有子实体明确需要脱离父级继续存活时才用 `Detach`
+- 投射物 / 特效 / 技能这类拥有型实体，不要再手写 `ResolveEntityId + AddRelationship`
+
+## 销毁语义约定
+
+- `EntityManager.Destroy()` 会先读取当前实体的直接 `PARENT` 子实体
+- `DestroyRecursively`：先销毁子实体，再注销当前实体
+- `Detach`：仅在当前实体注销时断开关系，子实体继续存活
+- 不要再在业务层手写“父销毁时顺手 Destroy 子实体”的兜底逻辑，统一走框架
+
+## Entity 迁移约定（2026-04）
+
+```csharp
+var migrated = EntityManager.Migrate<VisualPreviewEntity>(
+    sourceEntity, // 源实体
+    new EntityMigrationConfig
+    {
+        TargetSpawn = new EntitySpawnConfig
+        {
+            Config = config, // 目标实体配置
+            UsingObjectPool = false // 目标实体生成方式
+        },
+        Profile = new EntityMigrationProfile
+        {
+            Name = "ProjectileToPreview", // 迁移 Profile 名称
+            ExcludeDataKeys = [DataKey.Name] // 显式排除的 DataKey
+        },
+        DataOverrides = new Dictionary<string, object>
+        {
+            [DataKey.Team] = Team.Enemy // 迁移后覆写值
+        },
+        InheritDirectParent = true // 自动继承直接 PARENT
+    }
+);
+```
+
+- 迁移固定语义是：`新建目标实体 -> 迁移受控 Data -> 销毁源实体`
+- 默认继承直接 `PARENT` 归属链与其上的 `ParentDestroyPolicy`
+- 框架会自动写入 `DataKey.SourceEntityId / DataKey.OriginEntityId`
+- `DataMeta.CanMigrate` 是底层默认过滤开关；`Id / SourceEntityId / OriginEntityId` 这类键默认不参与普通复制
+- 允许迁移的值默认只包括值类型、字符串和 `Resource`
+- `Node / IEntity / IComponent / Delegate / EventBus` 这类绑定旧实例生命周期的引用一律不迁移
+- **不要**试图迁移 `Entity.Events` 订阅、组件私有状态、`VisualRoot` 或整张关系图
+- 如果某个状态需要跨迁移保留，先把它数据化，写入 `Data`
 
 ## 对象池生成时序（重要）
 
@@ -128,6 +203,18 @@ private void OnDamaged(GameEventType.Unit.DamagedEventData evt)
 }
 ```
 
+## 祖先溯源约定
+
+```csharp
+// ✅ 统一沿 PARENT 关系回溯归属链
+var ownerUnit = EntityRelationshipTraversal.FindAncestorOfType<IUnit>(projectileNode);
+var ownerEntity = EntityRelationshipTraversal.FindAncestorOfType<IEntity>(effectNode);
+```
+
+- 不要手写 `GetParentEntitiesByChildAndType(...).FirstOrDefault()` 做归属溯源
+- 处理“是谁生成了这个派生实体”时，统一优先用 `EntityRelationshipTraversal`
+- `ProjectileTool.Spawn(...)` / `EffectTool.Spawn(...)` / `EntityManager.AddAbility(...)` 都应通过 `EntityManager` 的统一绑定入口补关系；业务层只负责把归属者传进去
+
 ## 禁止事项
 
 - ❌ 直接 `new EnemyEntity()` 创建实体
@@ -143,6 +230,7 @@ private void OnDamaged(GameEventType.Unit.DamagedEventData evt)
 - **API 手册** → `Src/ECS/Base/Entity/Core/EntityManager.md`
 - **核心实现** → `Src/ECS/Base/Entity/Core/EntityManager.cs`
 - **关系管理** → `Src/ECS/Base/Entity/Core/EntityRelationshipManager.cs`
+- **关系追溯** → `Src/ECS/Base/Entity/Core/EntityRelationshipTraversal.cs`
 - **架构设计** → `Docs/框架/ECS/Entity/Entity架构设计理念.md`
 - **对象池接口** → `Src/ECS/Tools/ObjectPool/IPoolable.cs`
 - **对象池初始化** → 搜索 `ObjectPoolInit.cs`
