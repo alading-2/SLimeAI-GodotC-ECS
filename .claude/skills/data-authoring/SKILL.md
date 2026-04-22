@@ -30,7 +30,15 @@ description: 编写或修改 Data 目录下的数据配置、Config、DataKey、
 - 波次规则
 - Spawn 全局参数
 - 系统开关
+- `Data/Config/System/*.tres` 这类系统 Profile / 系统默认装载策略
 - 阈值与限制
+
+补充约定：
+
+- `SystemProfile` 继续归 `Data/Config/System/`，不要并到 `Data/Data/`
+- `SystemProfile` 是项目启动系统清单，不是 `Data.LoadFromResource()` 注入到 Entity.Data 的业务数据
+- `SystemProfile` 只保留 `Systems` 列表，每项是 `SystemProfileEntry(SystemId / AutoAdd / Enabled)`
+- 运行时通过 `SystemProfileService.SetActiveProfile(...)` 时，若同一 `SystemId` 重复出现，只打印一条重复警告，且后写覆盖前写
 
 不要放：
 
