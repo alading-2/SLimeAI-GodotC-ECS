@@ -20,9 +20,9 @@ public partial class EntityManager
             });
         }
 
-        private sealed class EntityManagerComponentWarmupRuntime : ISystemRuntime
+        private sealed class EntityManagerComponentWarmupRuntime : ISystem
         {
-            public void OnSystemRegistered(SystemRegistrationContext context)
+            public void OnAdded(SystemRegistrationContext context)
             {
                 PrewarmComponentCache();
             }

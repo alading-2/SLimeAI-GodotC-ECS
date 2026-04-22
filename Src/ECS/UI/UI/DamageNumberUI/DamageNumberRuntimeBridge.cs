@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 /// <summary>
 /// DamageNumberSystem 的运行时桥接服务。
 /// </summary>
-public sealed class DamageNumberRuntimeBridge : ISystemRuntime
+public sealed class DamageNumberRuntimeBridge : ISystem
 {
     [ModuleInitializer]
     public static void Initialize()
@@ -15,19 +15,19 @@ public sealed class DamageNumberRuntimeBridge : ISystemRuntime
     }
 
     /// <inheritdoc />
-    public void OnSystemEnabled(ProjectStateSnapshot snapshot)
+    public void OnStarted(ProjectStateSnapshot snapshot)
     {
         DamageNumberSystem.EnableRuntime();
     }
 
     /// <inheritdoc />
-    public void OnSystemDisabled(ProjectStateSnapshot snapshot)
+    public void OnStopped(ProjectStateSnapshot snapshot)
     {
         DamageNumberSystem.DisableRuntime();
     }
 
     /// <inheritdoc />
-    public void OnSystemUnregistered()
+    public void OnRemoved()
     {
         DamageNumberSystem.DisableRuntime();
     }

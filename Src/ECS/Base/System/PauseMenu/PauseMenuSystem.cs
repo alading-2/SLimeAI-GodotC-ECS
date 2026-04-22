@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 /// 暂停菜单系统。
 /// <para>统一处理局内暂停输入、暂停菜单显隐和恢复操作。</para>
 /// </summary>
-public partial class PauseMenuSystem : CanvasLayer, ISystemRuntime
+public partial class PauseMenuSystem : CanvasLayer, ISystem
 {
     private static readonly Log _log = new(nameof(PauseMenuSystem));
 
@@ -65,19 +65,19 @@ public partial class PauseMenuSystem : CanvasLayer, ISystemRuntime
     }
 
     /// <inheritdoc />
-    public void OnSystemRegistered(SystemRegistrationContext context)
+    public void OnAdded(SystemRegistrationContext context)
     {
         _projectState = context.ProjectState;
     }
 
     /// <inheritdoc />
-    public void OnSystemEnabled(ProjectStateSnapshot snapshot)
+    public void OnStarted(ProjectStateSnapshot snapshot)
     {
         UpdateMenuState(snapshot);
     }
 
     /// <inheritdoc />
-    public void OnSystemDisabled(ProjectStateSnapshot snapshot)
+    public void OnStopped(ProjectStateSnapshot snapshot)
     {
         SetMenuVisible(false);
     }

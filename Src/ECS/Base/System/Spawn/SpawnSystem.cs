@@ -9,7 +9,7 @@ using Slime.Config.Units;
 /// 敌人生成系统 - 核心的"敌人生成与波次管理系统"。
 /// <para>采用 TimerManager 驱动，统一管理所有计时器，性能优异且易于维护。</para>
 /// </summary>
-public partial class SpawnSystem : Node, ISystemRuntime
+public partial class SpawnSystem : Node, ISystem
 {
     /// <summary>
     /// 模块初始化器：在程序集加载时自动执行。
@@ -175,13 +175,13 @@ public partial class SpawnSystem : Node, ISystemRuntime
     }
 
     /// <inheritdoc />
-    public void OnSystemEnabled(ProjectStateSnapshot snapshot)
+    public void OnStarted(ProjectStateSnapshot snapshot)
     {
         BindRuntimeEvents();
     }
 
     /// <inheritdoc />
-    public void OnSystemDisabled(ProjectStateSnapshot snapshot)
+    public void OnStopped(ProjectStateSnapshot snapshot)
     {
         UnbindRuntimeEvents();
         if (snapshot.AppPhase != AppPhase.InSession || snapshot.SessionPhase != SessionPhase.Playing)

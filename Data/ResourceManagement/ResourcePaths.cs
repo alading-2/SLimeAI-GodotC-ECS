@@ -139,6 +139,9 @@ public static class ResourcePaths
     public const string DataUnit_TargetingIndicatorConfig = "TargetingIndicatorConfig";
     public const string DataUnit_yuren = "yuren";
 
+    // --- ConfigSystem ---
+    public const string ConfigSystem_DefaultSystemProfile = "DefaultSystemProfile";
+
     // --- Test ---
     public const string Test_AbilitySystemPipelineTest = "AbilitySystemPipelineTest";
     public const string Test_ActiveSkillInputTest = "ActiveSkillInputTest";
@@ -309,6 +312,11 @@ public static class ResourcePaths
                 { DataUnit_deluyi, new ResourceData(ResourceCategory.DataUnit, "res://Data/Data/Unit/Player/Resource/deluyi.tres") },
                 { DataUnit_TargetingIndicatorConfig, new ResourceData(ResourceCategory.DataUnit, "res://Data/Data/Unit/Targeting/Resource/TargetingIndicatorConfig.tres") },
                 { DataUnit_yuren, new ResourceData(ResourceCategory.DataUnit, "res://Data/Data/Unit/Enemy/Resource/yuren.tres") },
+            }
+        },
+        { ResourceCategory.ConfigSystem, new Dictionary<string, ResourceData>
+            {
+                { ConfigSystem_DefaultSystemProfile, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/DefaultSystemProfile.tres") },
             }
         },
         { ResourceCategory.Test, new Dictionary<string, ResourceData>

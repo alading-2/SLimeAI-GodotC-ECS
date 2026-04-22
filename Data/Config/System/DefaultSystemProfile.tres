@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="SystemProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Src/ECS/Base/System/Core/Profile/SystemProfile.cs" id="1_system_profile"]
+
+[resource]
+script = ExtResource("1_system_profile")
+Name = "DefaultSystemProfile"
+Systems = []

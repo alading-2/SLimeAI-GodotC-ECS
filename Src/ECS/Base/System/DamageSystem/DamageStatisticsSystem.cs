@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 /// <para>监听波次开始事件重置玩家的波次统计数据。</para>
 /// <para>监听全局 Kill 事件记录击杀数。</para>
 /// </summary>
-public partial class DamageStatisticsSystem : Node, ISystemRuntime
+public partial class DamageStatisticsSystem : Node, ISystem
 {
     /// <summary>日志处理实例</summary>
     private static readonly Log _log = new(nameof(DamageStatisticsSystem));
@@ -111,13 +111,13 @@ public partial class DamageStatisticsSystem : Node, ISystemRuntime
     }
 
     /// <inheritdoc />
-    public void OnSystemEnabled(ProjectStateSnapshot snapshot)
+    public void OnStarted(ProjectStateSnapshot snapshot)
     {
         BindRuntimeEvents();
     }
 
     /// <inheritdoc />
-    public void OnSystemDisabled(ProjectStateSnapshot snapshot)
+    public void OnStopped(ProjectStateSnapshot snapshot)
     {
         UnbindRuntimeEvents();
     }

@@ -160,9 +160,9 @@ public partial class ObjectPoolInit
         _log.Success("ObjectPoolInit 初始化完成");
     }
 
-    private sealed class ObjectPoolInitRuntime : ISystemRuntime
+    private sealed class ObjectPoolInitRuntime : ISystem
     {
-        public void OnSystemRegistered(SystemRegistrationContext context)
+        public void OnAdded(SystemRegistrationContext context)
         {
             InitPools();
         }

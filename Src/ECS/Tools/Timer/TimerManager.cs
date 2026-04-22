@@ -25,7 +25,7 @@ using Godot;
 ///     .Countdown((elapsed, progress) => UpdateUI(progress))
 ///     .OnComplete(() => OnTimeUp());
 /// </summary>
-public partial class TimerManager : Node, ISystemRuntime
+public partial class TimerManager : Node, ISystem
 {
     /// <summary>
     /// 模块初始化器：利用 C# 属性在模块加载时自动将 TimerManager 注册到 SystemRegistry。
@@ -278,7 +278,7 @@ public partial class TimerManager : Node, ISystemRuntime
     }
 
     /// <inheritdoc />
-    public void OnSystemEnabled(ProjectStateSnapshot snapshot)
+    public void OnStarted(ProjectStateSnapshot snapshot)
     {
         ApplyProjectPauseState(snapshot);
     }

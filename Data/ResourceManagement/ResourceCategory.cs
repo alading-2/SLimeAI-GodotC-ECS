@@ -34,10 +34,11 @@ public enum ResourceCategory
     DataAbility,
     /// <summary>单位数据配置（Data/Data/Unit/）</summary>
     DataUnit,
+    /// <summary>系统配置（Data/Config/System/）</summary>
+    ConfigSystem,
     /// <summary>Test 测试资源</summary>
     Test,
 
     /// <summary>Other 其他</summary>
     Other,
 }
-

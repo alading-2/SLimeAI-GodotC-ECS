@@ -1,7 +1,7 @@
 /// <summary>
 /// 系统运行形态。
 /// <para>NodeScene / NodeScript 实例为 Node，挂到 Host 后由 ProcessMode 控制启停；</para>
-/// <para>PureService 实例为纯 C# 对象，不挂树，启停仅靠 ISystemRuntime 钩子。</para>
+/// <para>PureService 实例为纯 C# 对象，不挂树，运行态切换依赖 ISystemLifecycle.OnStarted/OnStopped。</para>
 /// </summary>
 public enum SystemKind
 {
@@ -19,7 +19,7 @@ public enum SystemKind
 
     /// <summary>
     /// 非节点纯服务系统。
-    /// <para>不挂树 → 无 ProcessMode → 启停完全依赖 ISystemRuntime 钩子手动订阅/退订。</para>
+    /// <para>不挂树 → 无 ProcessMode → 运行态完全依赖 ISystemLifecycle 钩子手动订阅/退订。</para>
     /// </summary>
     PureService,
 }

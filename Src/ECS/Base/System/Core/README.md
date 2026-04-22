@@ -1,5 +1,7 @@
 # System Core 使用说明
 
+> 2026-04 V2 更新：系统管理已从旧版“单接口 + 二元 shouldRun 裁决”升级为“`Add/Remove + Enable/Disable + Start/Stop + SystemProfile`”四层模型。本文以下示例优先以 V2 语义为准。
+
 ## 0. 开发者从哪里开始看
 
 如果你是第一次接这套 System Core，建议按下面顺序看：
@@ -12,6 +14,7 @@
    - 想看注册约束：`SystemRegistry.cs`
    - 想看元数据长什么样：`SystemDescriptor.cs`
    - 想看状态门禁：`Lifecycle/SystemRunCondition.cs`
+   - 想看 Profile 怎么填：`Profile/SystemProfile.cs` / `Profile/SystemProfileEntry.cs`
 
 推荐这样看的原因是：
 
@@ -50,7 +53,9 @@
   - `SystemRegistry.cs`
   - `SystemDescriptor.cs`
 - `Lifecycle/`：系统生命周期协议与元数据
-  - `ISystemRuntime.cs`
+  - `ISystem.cs`
+  - `ISystemLifecycle.cs`
+  - `IProjectStateAwareSystem.cs`
   - `SystemLifetime.cs`
   - `SystemKind.cs`
   - `SystemRunCondition.cs`
@@ -69,15 +74,20 @@
 
 | SystemKind | 实例类型 | 需要挂树？ | 启停方式 | 什么时候用 |
 | --- | --- | --- | --- | --- |
-| `NodeScene` | Node（来自 .tscn） | ✅ 挂到 Host | `ProcessMode` + `ISystemRuntime` 钩子 | 有场景骨架、需要子节点树 |
-| `NodeScript` | Node（纯代码 new） | ✅ 挂到 Host | `ProcessMode` + `ISystemRuntime` 钩子 | 无 .tscn 但需要 `_Process` 帧驱动 |
-| `PureService` | 纯 C# 对象 | ❌ 不挂树 | 仅 `ISystemRuntime` 钩子 | 纯逻辑服务，无帧驱动需求 |
+| `NodeScene` | Node（来自 .tscn） | ✅ 挂到 Host | `ProcessMode` + `ISystem` | 有场景骨架、需要子节点树 |
+| `NodeScript` | Node（纯代码 new） | ✅ 挂到 Host | `ProcessMode` + `ISystem` | 无 .tscn 但需要 `_Process` 帧驱动 |
+| `PureService` | 纯 C# 对象 | ❌ 不挂树 | `ISystem` | 纯逻辑服务，无帧驱动需求 |
 
-**关键区别**：`NodeScene` / `NodeScript` 挂树后，`SystemManager` 通过切 `ProcessMode`（Inherit/Disabled）控制帧调度；`PureService` 不挂树，没有 `ProcessMode` 可切，启停完全靠 `ISystemRuntime.OnSystemEnabled/OnSystemDisabled` 钩子手动订阅/退订。
+**关键区别**：`NodeScene` / `NodeScript` 挂树后，`SystemManager` 通过切 `ProcessMode` 控制帧调度；`PureService` 不挂树，没有 `ProcessMode` 可切，运行态完全靠 `ISystem.OnStarted/OnStopped` 订阅/退订。`Enable/Disable` 只响应显式 API，不再被 Phase 重算复用。
 
 ## 4. 新系统怎么接入
 
 新系统唯一接入方式：`[ModuleInitializer]` + `SystemRegistry.Register(new SystemDescriptor(...))`
+
+V2 新增两个约定：
+
+- 默认是否自动装载看 `SystemDescriptor.DefaultAutoAdd` 与 `SystemProfile`
+- 默认是否启用看 `SystemDescriptor.DefaultEnabled` 与 `SystemProfile`
 
 ### 4.1 Node 场景系统
 
@@ -183,7 +193,7 @@ public static void Initialize()
 - 调试系统和 Gameplay 系统可以共享依赖链，但生命周期域不同
 - 运行条件要声明在描述符里，而不是散落到 `_Ready()` / `_Process()`
 
-## 5. Lifetime、RunCondition 与 shouldRun
+## 5. Lifetime、Profile、RunCondition 与 shouldRun
 
 ### 5.1 SystemLifetime：系统属于哪个分组
 
@@ -195,23 +205,43 @@ public static void Initialize()
 | `Debug` | 调试系统 | `DebugHost` | `MouseSelectionSystem`、`TestSystem` |
 | `Test` | 运行时测试专用 | `TestHost` | — |
 
-Lifetime 只决定系统挂到哪个 Host 容器下，**不直接决定系统是否运行**。系统是否运行由下面的 shouldRun 公式裁决。
+Lifetime 只决定系统挂到哪个 Host 容器下，**不直接决定系统是否存在或是否运行**。系统是否被自动装载看 `SystemProfile`，是否真正运行由下面的 shouldRun 公式裁决。
 
 ### 5.2 shouldRun 公式：系统到底跑不跑
 
 ```
-shouldRun = IsEnabled（人工开关） && IsStateAllowed（Phase 条件裁决）
+shouldRun = IsAdded && DesiredEnabled（人工开关） && ProfileEnabled && IsStateAllowed（Phase 条件裁决）
 ```
 
 | 要素 | 谁控制 | 含义 |
 | --- | --- | --- |
-| `IsEnabled` | 外部调用 `EnableSystem/DisableSystem` | 人工开关：强制启用或禁用某个系统 |
+| `IsAdded` | `AddSystem/RemoveSystem`、Bootstrap、依赖链 | 系统实例是否存在并被托管 |
+| `DesiredEnabled` | 外部调用 `EnableSystem/DisableSystem` | 人工开关：显式启用或禁用某个系统 |
+| `ProfileEnabled` | `SystemProfile` | 启动前/运行时的全局策略层开关 |
 | `IsStateAllowed` | `RunCondition.Evaluate(Snapshot)` | 状态门禁：当前 Phase 是否匹配该系统的准入规则 |
-| `shouldRun` | `SystemManager.ApplyEntryState` | 两者 AND 的结果，决定系统是否真正运行 |
+| `shouldRun` | `SystemManager.ReconcileEntry` | 四者 AND 的结果，决定系统是否真正运行 |
 
-**SystemRunCondition 只回答"Phase 条件是否允许"，不等于"系统真的在跑"。** 即使 Phase 条件通过，只要 `IsEnabled=false`，系统也不会运行。
+**SystemRunCondition 只回答"Phase 条件是否允许"，不等于"系统真的在跑"。** 即使 Phase 条件通过，只要系统未 Add、Profile 禁止或人工 Disable，系统也不会运行。
 
-### 5.3 SystemRunCondition 实战推演
+### 5.3 生命周期回调怎么分工
+
+V2 推荐新系统默认直接实现：
+
+- `ISystem`
+
+能力层仍保留：
+
+- `ISystemLifecycle`
+- `IProjectStateAwareSystem`（只有真的需要单独表达状态观察能力时才实现）
+
+回调语义固定为：
+
+- `OnAdded/OnRemoved`：实例存在性
+- `OnEnabled/OnDisabled`：显式人工开关
+- `OnStarted/OnStopped`：实际运行态切换
+- `OnProjectStateChanged`：状态观察，不等价于启停
+
+### 5.4 SystemRunCondition 实战推演
 
 以 TestSystem 为例，它想表达"局内可用，暂停也不停，只挡过场"：
 
@@ -246,15 +276,38 @@ new SystemRunCondition
 
 只有 `InSession + Playing + Running` 三维同时满足时才允许运行——暂停、结算、菜单全停。
 
-### 5.4 不设 RunCondition 会怎样
+### 5.5 不设 RunCondition 会怎样
 
 `SystemDescriptor` 的默认值是 `SystemRunCondition.Always`（所有集合为空），意味着**任意 Phase 下都通过 Evaluate**。
 
 如果某个系统不需要 Phase 过滤（比如 `TimerManager` 这种跨流程基础设施），直接不设 `RunCondition` 即可。
 
-### 5.5 ProjectStateBridge：谁负责切换 ProjectState
+### 5.6 ProjectStateBridge：谁负责切换 ProjectState
 
 `SystemRunCondition` 只负责"读"状态，不负责"写"状态。项目状态的切换由 `ProjectStateBridge` 负责——它把 `GameStart / GamePause / GameResume / GameOver` 这类流程事件统一映射到 `ProjectStateService` 的 Phase 切换。
+
+### 5.7 SystemProfile 怎么填写更顺手
+
+`SystemProfile` 继续放在 `Data/Config/System/`，不并入 `Data/Data`。
+
+原因是：
+
+- 它是项目启动装配清单，不是 `Data.LoadFromResource()` 注入到 Entity.Data 的业务数据
+- 它只负责“当前项目想显式覆盖哪些系统”，而不是再额外维护 Tag 治理层
+
+当前作者体验规则：
+
+- `SystemProfile` 只有一张 `Systems` 列表
+- 每个 `SystemProfileEntry` 只写 `SystemId / AutoAdd / Enabled`
+- Profile 中命中 `SystemId` 时使用条目值
+- Profile 中没写该系统时，一律回退 `SystemDescriptor.DefaultAutoAdd / DefaultEnabled`
+- `SystemProfileService.SetActiveProfile(...)` 只对重复 `SystemId` 输出简洁警告，且后写覆盖前写
+
+相关源码：
+
+- `Profile/SystemProfile.cs`
+- `Profile/SystemProfileEntry.cs`
+- `Profile/SystemProfileService.cs`
 
 ## 6. ParentPath 语义
 

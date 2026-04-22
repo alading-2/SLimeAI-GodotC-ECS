@@ -24,6 +24,7 @@ class ResourceGenerator
         { "Data/Data", ResourceCategory.Data },         // 兜底
         { "Data/Data/Ability", ResourceCategory.DataAbility },  // 自动更优先
         { "Data/Data/Unit", ResourceCategory.DataUnit },      // 自动更优先
+        { "Data/Config/System", ResourceCategory.ConfigSystem }, // 系统配置
         { "Src/ECS/Base/System", ResourceCategory.System },
         { "Src/ECS/Tools", ResourceCategory.Tools },
         { "Src/ECS/Test", ResourceCategory.Test },

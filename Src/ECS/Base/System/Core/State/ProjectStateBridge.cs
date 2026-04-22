@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 /// 项目状态桥接系统。
 /// <para>负责把全局游戏流程事件统一映射到 ProjectStateService。</para>
 /// </summary>
-public sealed class ProjectStateBridge : ISystemRuntime
+public sealed class ProjectStateBridge : ISystem
 {
     private ProjectStateService? _projectState;
     private bool _eventsBound;
@@ -19,13 +19,13 @@ public sealed class ProjectStateBridge : ISystemRuntime
     }
 
     /// <inheritdoc />
-    public void OnSystemRegistered(SystemRegistrationContext context)
+    public void OnAdded(SystemRegistrationContext context)
     {
         _projectState = context.ProjectState;
     }
 
     /// <inheritdoc />
-    public void OnSystemEnabled(ProjectStateSnapshot snapshot)
+    public void OnStarted(ProjectStateSnapshot snapshot)
     {
         BindRuntimeEvents();
         if (_projectState != null && _projectState.AppPhase == AppPhase.Boot)
@@ -35,7 +35,7 @@ public sealed class ProjectStateBridge : ISystemRuntime
     }
 
     /// <inheritdoc />
-    public void OnSystemDisabled(ProjectStateSnapshot snapshot)
+    public void OnStopped(ProjectStateSnapshot snapshot)
     {
         UnbindRuntimeEvents();
     }

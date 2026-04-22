@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 /// <summary>
 /// TargetingManager 的生命周期桥接系统。
 /// </summary>
-public sealed partial class TargetingManagerRuntime : Node, ISystemRuntime
+public sealed partial class TargetingManagerRuntime : Node, ISystem
 {
     [ModuleInitializer]
     public static void Initialize()
@@ -16,19 +16,19 @@ public sealed partial class TargetingManagerRuntime : Node, ISystemRuntime
     }
 
     /// <inheritdoc />
-    public void OnSystemEnabled(ProjectStateSnapshot snapshot)
+    public void OnStarted(ProjectStateSnapshot snapshot)
     {
         TargetingManager.EnableRuntime();
     }
 
     /// <inheritdoc />
-    public void OnSystemDisabled(ProjectStateSnapshot snapshot)
+    public void OnStopped(ProjectStateSnapshot snapshot)
     {
         TargetingManager.DisableRuntime();
     }
 
     /// <inheritdoc />
-    public void OnSystemUnregistered()
+    public void OnRemoved()
     {
         TargetingManager.DisableRuntime();
     }

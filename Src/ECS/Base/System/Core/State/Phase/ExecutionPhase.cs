@@ -1,6 +1,6 @@
 /// <summary>
 /// 逻辑执行阶段——四维状态坐标第四维：逻辑在跑还是停着？
-/// <para>SystemManager 据此裁决系统是否允许运行（ProcessMode / ISystemRuntime 钩子）。</para>
+/// <para>SystemManager 据此裁决系统是否允许运行（ProcessMode / ISystemLifecycle.OnStarted/OnStopped）。</para>
 /// </summary>
 public enum ExecutionPhase
 {
