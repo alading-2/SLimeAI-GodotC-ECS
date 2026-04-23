@@ -172,10 +172,39 @@ public partial class ObjectPoolInit
 
         public SystemRuntimeInfo GetSystemRuntimeInfo()
         {
+            var stats = new List<SystemStat>();
+
+            // 遍历所有对象池，收集统计信息
+            var poolNames = new[]
+            {
+                ObjectPoolNames.TimerPool,
+                ObjectPoolNames.EnemyPool,
+                ObjectPoolNames.AbilityPool,
+                ObjectPoolNames.HealthBarPool,
+                ObjectPoolNames.DamageNumberUIPool,
+                ObjectPoolNames.EffectPool,
+                ObjectPoolNames.LightningLinePool,
+                ObjectPoolNames.ProjectilePool
+            };
+
+            foreach (var poolName in poolNames)
+            {
+                var poolStats = ObjectPoolManager.GetAllStats();
+                if (poolStats.TryGetValue(poolName, out var poolStat))
+                {
+                    stats.Add(new SystemStat
+                    {
+                        Name = poolName,
+                        Value = $"{poolStat.ActiveCount}/{poolStat.Count}",
+                        Category = "对象池"
+                    });
+                }
+            }
+
             return new SystemRuntimeInfo
             {
                 SystemId = nameof(ObjectPoolInit),
-                CustomStats = new List<SystemStat>()
+                CustomStats = stats
             };
         }
     }

@@ -318,7 +318,27 @@ public partial class TimerManager : Node, ISystem
         return new SystemRuntimeInfo
         {
             SystemId = nameof(TimerManager),
-            CustomStats = new List<SystemStat>()
+            CustomStats = new List<SystemStat>
+            {
+                new SystemStat
+                {
+                    Name = "活跃定时器",
+                    Value = _timerPool?.ActiveCount.ToString() ?? "0",
+                    Category = "统计"
+                },
+                new SystemStat
+                {
+                    Name = "对象池容量",
+                    Value = _timerPool?.Count.ToString() ?? "0",
+                    Category = "对象池"
+                },
+                new SystemStat
+                {
+                    Name = "Unscaled Delta",
+                    Value = $"{_unscaledDeltaTime:F4}s",
+                    Category = "时间"
+                }
+            }
         };
     }
 }

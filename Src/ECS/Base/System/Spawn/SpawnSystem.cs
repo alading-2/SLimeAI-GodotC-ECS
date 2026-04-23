@@ -354,7 +354,27 @@ public partial class SpawnSystem : Node, ISystem
         return new SystemRuntimeInfo
         {
             SystemId = nameof(SpawnSystem),
-            CustomStats = new List<SystemStat>()
+            CustomStats = new List<SystemStat>
+            {
+                new SystemStat
+                {
+                    Name = "当前波次",
+                    Value = CurrentWaveIndex >= 0 ? CurrentWaveIndex.ToString() : "未开始",
+                    Category = "状态"
+                },
+                new SystemStat
+                {
+                    Name = "波次激活",
+                    Value = IsWaveActive ? "是" : "否",
+                    Category = "状态"
+                },
+                new SystemStat
+                {
+                    Name = "活跃生成规则",
+                    Value = _activeStates.Count.ToString(),
+                    Category = "统计"
+                }
+            }
         };
     }
 }

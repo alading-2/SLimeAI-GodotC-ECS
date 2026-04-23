@@ -25,6 +25,9 @@ public class StatisticsProcessor : IDamageProcessor
     {
         if (info.Attacker == null) return;
 
+        // 记录到 DamageService 全局统计
+        DamageService.Instance?.RecordDamageEvent(info);
+
         // ===== 攻击链统计（遍历 IUnit 和 IWeapon）=====
         var ancestorChain = EntityRelationshipTraversal.GetAncestorChain(info.Attacker);
         bool foundAnyTarget = false;

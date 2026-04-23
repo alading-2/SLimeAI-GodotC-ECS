@@ -1,7 +1,7 @@
 namespace Slime.ConfigNew.Abilities;
 
 /// <summary>
-///     技能配置（纯 POCO，不继承 Resource）
+/// 技能配置（纯 POCO，不继承 Resource）
 /// </summary>
 public class AbilityConfigData
 {
@@ -170,124 +170,124 @@ public class AbilityConfigData
     // ====== 基础信息 ======
 
     /// <summary>
-    ///     技能名称
+    /// 技能名称
     /// </summary>
     public string? Name { get; set; }
 
     /// <summary>
-    ///     技能分组 ID（用于 UI / 测试面板展示）
+    /// 技能分组 ID
     /// </summary>
     public string? FeatureGroupId { get; set; }
 
     /// <summary>
-    ///     Feature 处理器 ID；多个技能模板可复用同一个处理器。
+    /// Feature执行函数ID
     /// </summary>
     public string? FeatureHandlerId { get; set; }
 
     /// <summary>
-    ///     技能描述
+    /// 技能描述
     /// </summary>
     public string? Description { get; set; }
 
     /// <summary>
-    ///     技能图标路径 (res:// 路径字符串)
+    /// 技能图标路径
     /// </summary>
     public string AbilityIconPath { get; set; } = "";
 
     /// <summary>
-    ///     当前级别
+    /// 当前级别
     /// </summary>
     public int AbilityLevel { get; set; }
 
     /// <summary>
-    ///     最大级别
+    /// 最大级别
     /// </summary>
     public int AbilityMaxLevel { get; set; }
 
     // ====== 技能类型 ======
 
     /// <summary>
-    ///     实体类型
+    /// 实体类型
     /// </summary>
     public EntityType EntityType { get; set; }
 
     /// <summary>
-    ///     技能类型
+    /// 技能类型
     /// </summary>
     public AbilityType AbilityType { get; set; }
 
     /// <summary>
-    ///     触发模式
+    /// 触发模式
     /// </summary>
     public AbilityTriggerMode AbilityTriggerMode { get; set; }
 
     // ====== 消耗与冷却 ======
 
     /// <summary>
-    ///     消耗类型
+    /// 消耗类型
     /// </summary>
     public AbilityCostType AbilityCostType { get; set; }
 
     /// <summary>
-    ///     消耗数值
+    /// 消耗数值
     /// </summary>
     public float AbilityCostAmount { get; set; }
 
     /// <summary>
-    ///     冷却时间 (秒)
+    /// 冷却时间 (秒)
     /// </summary>
     public float AbilityCooldown { get; set; }
 
     // ====== 充能系统 ======
 
     /// <summary>
-    ///     是否使用充能系统
+    /// 是否使用充能系统
     /// </summary>
     public bool IsAbilityUsesCharges { get; set; }
 
     /// <summary>
-    ///     最大充能层数
+    /// 最大充能层数
     /// </summary>
     public int AbilityMaxCharges { get; set; }
 
     /// <summary>
-    ///     充能时间 (秒)
+    /// 充能时间 (秒)
     /// </summary>
     public float AbilityChargeTime { get; set; }
 
     // ====== 目标选择 ======
 
     /// <summary>
-    ///     目标选择方式
+    /// 目标选择方式
     /// </summary>
     public AbilityTargetSelection AbilityTargetSelection { get; set; }
 
     /// <summary>
-    ///     施法距离（由具体 Handler 决定如何解释）
+    /// 施法距离（由具体 Handler 决定如何解释）
     /// </summary>
     public float AbilityCastRange { get; set; }
 
     /// <summary>
-    ///     效果半径（命中范围 / AOE 半径）
+    /// 效果半径（命中范围 / AOE 半径）
     /// </summary>
     public float AbilityEffectRadius { get; set; }
 
     // ====== 视觉与表现 ======
 
     /// <summary>
-    ///     技能表现特效场景路径 (res:// 路径字符串)
+    /// 技能表现特效场景路径 (res:// 路径字符串)
     /// </summary>
     public string EffectScenePath { get; set; } = "";
 
     /// <summary>
-    ///     技能投射物视觉场景路径 (res:// 路径字符串)
+    /// 技能投射物视觉场景路径 (res:// 路径字符串)
     /// </summary>
     public string ProjectileScenePath { get; set; } = "";
 
     // ====== 伤害效果 ======
 
     /// <summary>
-    ///     技能伤害数值
+    /// 技能伤害数值
     /// </summary>
     public float AbilityDamage { get; set; }
 }

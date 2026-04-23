@@ -7,19 +7,19 @@ using Godot;
 
 /// <summary>
 /// 全局恢复系统 (RecoverySystem)
-/// 
+///
 /// 该系统遵循 ECS (Entity-Component-System) 架构中的 System 职责，负责统一驱动所有具有恢复能力的实体。
-/// 
+///
 /// 【核心设计思想】：
 /// 1. 集中驱动：不再让每个单位都持有一个 Timer，而是由全局系统使用单一 Timer 批量轮询，大幅降低 CPU 开销。
 /// 2. 响应式注册：只有当实体的恢复属性（HP/Mana Regen）大于 0 时，才会进入处理列表；属性归零时自动移除。
 /// 3. 安全性：在遍历过程中通过 `IsInstanceValid` 检测，防止处理已销毁的 Godot 对象。
-/// 
+///
 /// 【协作组件】：
 /// - RecoveryComponent: 负责在实体生命周期内向本系统发起注册/注销请求。
 /// - HealthComponent: 本系统通过调用该组件的接口来实施真正的数值变更。
 /// </summary>
-public partial class RecoverySystem : Node
+public partial class RecoverySystem : Node, ISystem
 {
     /// <summary>
     /// 模块初始化器。
@@ -237,6 +237,9 @@ public partial class RecoverySystem : Node
                 // IsFullHp 检查在 HealthComponent.ApplyHeal 内部处理
                 entity.Events.Emit(GameEventType.Unit.HealRequest,
                     new GameEventType.Unit.HealRequestEventData(hpRegen, HealSource.Regen));
+
+                // 记录恢复量
+                RecordRecovery(hpRegen);
             }
         }
 
@@ -271,4 +274,50 @@ public partial class RecoverySystem : Node
     /// </summary>
     /// <returns>实体的数量</returns>
     public int GetRegisteredCount() => _registeredEntities.Count;
+
+    // 统计数据
+    private long _totalRecoveryAmount;
+
+    public SystemRuntimeInfo GetSystemRuntimeInfo()
+    {
+        return new SystemRuntimeInfo
+        {
+            SystemId = nameof(RecoverySystem),
+            CustomStats = new List<SystemStat>
+            {
+                new SystemStat
+                {
+                    Name = "注册实体数",
+                    Value = _registeredEntities.Count.ToString(),
+                    Category = "统计"
+                },
+                new SystemStat
+                {
+                    Name = "恢复间隔",
+                    Value = $"{RecoveryInterval}s",
+                    Category = "配置"
+                },
+                new SystemStat
+                {
+                    Name = "总恢复量",
+                    Value = _totalRecoveryAmount.ToString(),
+                    Category = "统计"
+                }
+            }
+        };
+    }
+
+    public void OnProjectStateChanged(ProjectStateChangedEventArgs args)
+    {
+        // RecoverySystem 不需要响应项目状态变化
+    }
+
+    /// <summary>
+    /// 记录恢复量（在 ProcessRecovery 中调用）。
+    /// </summary>
+    public void RecordRecovery(float amount)
+    {
+        _totalRecoveryAmount += (long)amount;
+    }
 }
+
