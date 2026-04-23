@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SystemConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Data/Config/System/System/SystemConfig.cs" id="1_1"]
+
+[resource]
+script = ExtResource("1_1")
+SystemId = "UIManager"
+Kind = 0
+Groups = 16
+Tags = 1
+DefaultAutoAdd = true
+DefaultEnabled = true
+Priority = 21
+AllowedAppPhases = 15
+AllowedSessionPhases = 15
+AllowedOverlayPhases = 0
+BlockedOverlayPhases = 0
+AllowedExecutionPhases = 7
+Dependencies = []
+Description = "UI 管理系统，负责 UI 的创建、显示和销毁"

@@ -8,6 +8,11 @@ using Godot;
 [GlobalClass]
 public partial class SystemPreset : Resource
 {
+    /// <summary>
+    /// 基础信息
+    /// </summary>
+    [ExportGroup("基础信息")]
+
     /// <summary>预设名称。</summary>
     [Export]
     public string PresetName { get; set; } = "DefaultPreset";
@@ -16,9 +21,10 @@ public partial class SystemPreset : Resource
     [Export]
     public bool IsActive { get; set; } = false;
 
-    // ============================================================
-    // 批量开启规则（优先级：EnabledSystemIds > EnabledTags > EnabledGroups）
-    // ============================================================
+    /// <summary>
+    /// 批量开启规则
+    /// </summary>
+    [ExportGroup("批量开启规则")]
 
     /// <summary>启用的系统分组（Flags 组合）。</summary>
     [Export]
@@ -32,17 +38,19 @@ public partial class SystemPreset : Resource
     [Export]
     public string[] EnabledSystemIds { get; set; } = System.Array.Empty<string>();
 
-    // ============================================================
-    // 排除规则（优先级最高，可以覆盖其他规则）
-    // ============================================================
+    /// <summary>
+    /// 排除规则
+    /// </summary>
+    [ExportGroup("排除规则")]
 
     /// <summary>显式禁用的系统 Id 列表（优先级最高）。</summary>
     [Export]
     public string[] DisabledSystemIds { get; set; } = System.Array.Empty<string>();
 
-    // ============================================================
-    // 说明
-    // ============================================================
+    /// <summary>
+    /// 说明
+    /// </summary>
+    [ExportGroup("说明")]
 
     /// <summary>预设描述（用于文档和调试）。</summary>
     [Export(PropertyHint.MultilineText)]

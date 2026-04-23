@@ -22,6 +22,11 @@ const LABELS: Dictionary = {
 	"视觉与表现": "视觉与表现",
 	"伤害效果": "伤害效果",
 	"属性修改器": "属性修改器",
+	"系统配置": "系统配置",
+	"加载配置": "加载配置",
+	"运行条件": "运行条件",
+	"依赖关系": "依赖关系",
+	"预设配置": "预设配置",
 
 	# ========== 通用 ==========
 	"resource_path": "资源路径",
@@ -127,6 +132,30 @@ const LABELS: Dictionary = {
 	"modifiertype": "修改器类型",
 	"value": "修改值",
 	"priority": "优先级",
+
+	# ===== SystemConfig =====
+	"systemid": "系统ID",
+	"kind": "系统类型",
+	"groups": "系统分组",
+	"tags": "系统标签",
+	"defaultautoadd": "默认自动加载",
+	"defaultenabled": "默认启用",
+	"priority": "加载优先级",
+	"allowedappphases": "允许的应用阶段",
+	"allowedsessionphases": "允许的会话阶段",
+	"allowedoverlayphases": "允许的覆盖层阶段",
+	"blockedoverlayphases": "阻止的覆盖层阶段",
+	"allowedexecutionphases": "允许的执行阶段",
+	"dependencies": "依赖系统列表",
+	"description": "系统描述",
+
+	# ===== SystemPreset =====
+	"presetname": "预设名称",
+	"isactive": "是否激活",
+	"enabledgroups": "启用的分组",
+	"enabledtags": "启用的标签",
+	"enabledsystemids": "启用的系统ID列表",
+	"disabledsystemids": "禁用的系统ID列表",
 }
 
 

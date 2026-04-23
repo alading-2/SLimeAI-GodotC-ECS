@@ -14,6 +14,31 @@
         "visibility": 0
       }
     },
+    "res://Data/Config/System/Preset/Resource/": {
+      "metadata/_custom_type_script": {
+        "visibility": 0.0
+      },
+      "resource_local_to_scene": {
+        "visibility": 0.0
+      },
+      "resource_name": {
+        "visibility": 0.0
+      }
+    },
+    "res://Data/Config/System/System/Resource/": {
+      "metadata/_custom_type_script": {
+        "visibility": 0.0
+      },
+      "resource_local_to_scene": {
+        "visibility": 0.0
+      },
+      "resource_name": {
+        "visibility": 0.0
+      },
+      "resource_path": {
+        "visibility": 0.0
+      }
+    },
     "res://Data/Data/Ability/": {
       "FeatureGroupId": {
         "visibility": 1.0
@@ -275,7 +300,9 @@
   "recent_paths": [
     "res://Data/Data/Unit/Enemy/",
     "res://Data/Data/Unit/Player/Resource/",
-    "res://Data/Data/Ability/"
+    "res://Data/Data/Ability/",
+    "res://Data/Config/System/System/Resource/",
+    "res://Data/Config/System/Preset/Resource/"
   ],
   "table_functions": {
     "filter": [

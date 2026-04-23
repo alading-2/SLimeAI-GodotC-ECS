@@ -8,9 +8,10 @@ using Godot;
 [GlobalClass]
 public partial class SystemConfig : Resource
 {
-    // ============================================================
-    // 基础信息
-    // ============================================================
+    /// <summary>
+    /// 基础信息
+    /// </summary>
+    [ExportGroup("基础信息")]
 
     /// <summary>系统唯一 Id（必须与 SystemId 枚举值一致）。</summary>
     [Export]
@@ -28,9 +29,10 @@ public partial class SystemConfig : Resource
     [Export]
     public SystemTag Tags { get; set; } = SystemTag.None;
 
-    // ============================================================
-    // 加载配置
-    // ============================================================
+    /// <summary>
+    /// 加载配置
+    /// </summary>
+    [ExportGroup("加载配置")]
 
     /// <summary>默认是否自动装载（Profile 未提供覆盖时回退到此字段）。</summary>
     [Export]
@@ -44,9 +46,10 @@ public partial class SystemConfig : Resource
     [Export]
     public int Priority { get; set; } = 0;
 
-    // ============================================================
-    // 运行条件（替代 SystemRunCondition）
-    // ============================================================
+    /// <summary>
+    /// 运行条件
+    /// </summary>
+    [ExportGroup("运行条件")]
 
     /// <summary>允许的应用主阶段（Flags 组合，为 None 表示不限制）。</summary>
     [Export]
@@ -68,17 +71,19 @@ public partial class SystemConfig : Resource
     [Export]
     public ExecutionPhase AllowedExecutionPhases { get; set; } = ExecutionPhase.None;
 
-    // ============================================================
-    // 依赖关系
-    // ============================================================
+    /// <summary>
+    /// 依赖关系
+    /// </summary>
+    [ExportGroup("依赖关系")]
 
     /// <summary>依赖系统 Id 列表（使用 SystemId 枚举值的字符串形式）。</summary>
     [Export]
     public string[] Dependencies { get; set; } = System.Array.Empty<string>();
 
-    // ============================================================
-    // 说明
-    // ============================================================
+    /// <summary>
+    /// 说明
+    /// </summary>
+    [ExportGroup("说明")]
 
     /// <summary>系统描述（用于文档和调试）。</summary>
     [Export(PropertyHint.MultilineText)]

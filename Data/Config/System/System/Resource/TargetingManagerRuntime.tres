@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SystemConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Data/Config/System/System/SystemConfig.cs" id="1_1"]
+
+[resource]
+script = ExtResource("1_1")
+SystemId = "TargetingManagerRuntime"
+Kind = 0
+Groups = 2
+Tags = 1
+DefaultAutoAdd = true
+DefaultEnabled = true
+Priority = 14
+AllowedAppPhases = 4
+AllowedSessionPhases = 2
+AllowedOverlayPhases = 0
+BlockedOverlayPhases = 1
+AllowedExecutionPhases = 1
+Dependencies = []
+Description = "目标选择管理系统，提供目标查询和筛选服务"

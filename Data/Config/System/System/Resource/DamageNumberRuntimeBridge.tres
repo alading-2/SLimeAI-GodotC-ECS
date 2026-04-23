@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SystemConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Data/Config/System/System/SystemConfig.cs" id="1_1"]
+
+[resource]
+script = ExtResource("1_1")
+SystemId = "DamageNumberRuntimeBridge"
+Kind = 0
+Groups = 16
+Tags = 1
+DefaultAutoAdd = true
+DefaultEnabled = true
+Priority = 22
+AllowedAppPhases = 4
+AllowedSessionPhases = 2
+AllowedOverlayPhases = 0
+BlockedOverlayPhases = 1
+AllowedExecutionPhases = 1
+Dependencies = ["DamageService", "UIManager"]
+Description = "伤害数字 UI 桥接系统，监听伤害事件并显示伤害数字"

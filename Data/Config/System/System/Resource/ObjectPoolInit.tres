@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SystemConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Data/Config/System/System/SystemConfig.cs" id="1_1"]
+
+[resource]
+script = ExtResource("1_1")
+SystemId = "ObjectPoolInit"
+Kind = 0
+Groups = 1
+Tags = 1
+DefaultAutoAdd = true
+DefaultEnabled = true
+Priority = 0
+AllowedAppPhases = 15
+AllowedSessionPhases = 15
+AllowedOverlayPhases = 0
+BlockedOverlayPhases = 0
+AllowedExecutionPhases = 7
+Dependencies = []
+Description = "对象池初始化系统，负责预热常用对象池"

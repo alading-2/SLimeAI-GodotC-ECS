@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SystemPreset" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Data/Config/System/Preset/SystemPreset.cs" id="1_1"]
+
+[resource]
+script = ExtResource("1_1")
+PresetName = "Default"
+IsActive = true
+EnabledGroups = 31
+EnabledTags = 1
+EnabledSystemIds = []
+DisabledSystemIds = []
+Description = "默认预设，加载所有核心系统（Base + Combat + Movement + AI + UI）"
