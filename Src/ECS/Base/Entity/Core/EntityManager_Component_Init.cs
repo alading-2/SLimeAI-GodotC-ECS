@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Godot;
 
@@ -14,17 +15,24 @@ public partial class EntityManager
         [ModuleInitializer]
         public static void Initialize()
         {
-            SystemRegistry.Register(new SystemDescriptor(nameof(EntityManager), SystemKind.PureService, SystemLifetime.Persistent)
-            {
-                Factory = static () => new EntityManagerComponentWarmupRuntime(),
-            });
+            SystemRegistry.Register(nameof(EntityManager),
+                static () => new EntityManagerComponentWarmupRuntime());
         }
 
         private sealed class EntityManagerComponentWarmupRuntime : ISystem
         {
-            public void OnAdded(SystemRegistrationContext context)
+            public void OnRegistered(SystemRegistrationContext context)
             {
                 PrewarmComponentCache();
+            }
+
+            public SystemRuntimeInfo GetSystemRuntimeInfo()
+            {
+                return new SystemRuntimeInfo
+                {
+                    SystemId = nameof(EntityManager),
+                    CustomStats = new List<SystemStat>()
+                };
             }
         }
     }

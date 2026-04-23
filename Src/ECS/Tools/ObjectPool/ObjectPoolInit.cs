@@ -1,9 +1,7 @@
 using Godot;
 using System;
-
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-
 
 
 /// <summary>
@@ -51,10 +49,8 @@ public partial class ObjectPoolInit
     [ModuleInitializer]
     public static void Initialize()
     {
-        SystemRegistry.Register(new SystemDescriptor(nameof(ObjectPoolInit), SystemKind.PureService, SystemLifetime.Persistent)
-        {
-            Factory = static () => new ObjectPoolInitRuntime(),
-        });
+        SystemRegistry.Register(nameof(ObjectPoolInit),
+            static () => new ObjectPoolInitRuntime());
     }
 
     private static void InitPools()
@@ -74,7 +70,8 @@ public partial class ObjectPoolInit
         // 初始化 EnemyPool (Node 对象池)
         // 注意：必须使用 ObjectPool<Enemy> 而不是 ObjectPool<Node>，否则 SpawnSystem 无法通过 GetPool<Enemy> 获取
         new ObjectPool<EnemyEntity>(
-            () => (EnemyEntity)ResourceManagement.Load<PackedScene>(typeof(EnemyEntity).Name, ResourceCategory.Entity).Instantiate(),
+            () => (EnemyEntity)ResourceManagement.Load<PackedScene>(typeof(EnemyEntity).Name, ResourceCategory.Entity)
+                .Instantiate(),
             new ObjectPoolConfig
             {
                 Name = ObjectPoolNames.EnemyPool,
@@ -87,7 +84,8 @@ public partial class ObjectPoolInit
         // 3. 初始化 AbilityPool (技能实体对象池)
         // 支持敌人技能等高频生成场景
         new ObjectPool<AbilityEntity>(
-            () => (AbilityEntity)ResourceManagement.Load<PackedScene>(typeof(AbilityEntity).Name, ResourceCategory.Entity).Instantiate(),
+            () => (AbilityEntity)ResourceManagement
+                .Load<PackedScene>(typeof(AbilityEntity).Name, ResourceCategory.Entity).Instantiate(),
             new ObjectPoolConfig
             {
                 Name = ObjectPoolNames.AbilityPool,
@@ -99,7 +97,8 @@ public partial class ObjectPoolInit
 
         // 初始化 EffectPool (特效实体对象池)
         new ObjectPool<EffectEntity>(
-            () => (EffectEntity)ResourceManagement.Load<PackedScene>(typeof(EffectEntity).Name, ResourceCategory.Entity).Instantiate(),
+            () => (EffectEntity)ResourceManagement.Load<PackedScene>(typeof(EffectEntity).Name, ResourceCategory.Entity)
+                .Instantiate(),
             new ObjectPoolConfig
             {
                 Name = ObjectPoolNames.EffectPool,
@@ -111,7 +110,8 @@ public partial class ObjectPoolInit
 
         // 初始化 HealthBarPool (头顶血条对象池)
         new ObjectPool<HealthBarUI>(
-            () => (HealthBarUI)ResourceManagement.Load<PackedScene>(typeof(HealthBarUI).Name, ResourceCategory.UI).Instantiate(),
+            () => (HealthBarUI)ResourceManagement.Load<PackedScene>(typeof(HealthBarUI).Name, ResourceCategory.UI)
+                .Instantiate(),
             new ObjectPoolConfig
             {
                 Name = ObjectPoolNames.HealthBarPool,
@@ -123,7 +123,8 @@ public partial class ObjectPoolInit
 
         // 初始化 DamageNumberUIPool (伤害数字对象池)
         new ObjectPool<DamageNumberUI>(
-            () => (DamageNumberUI)ResourceManagement.Load<PackedScene>(typeof(DamageNumberUI).Name, ResourceCategory.UI).Instantiate(),
+            () => (DamageNumberUI)ResourceManagement.Load<PackedScene>(typeof(DamageNumberUI).Name, ResourceCategory.UI)
+                .Instantiate(),
             new ObjectPoolConfig
             {
                 Name = ObjectPoolNames.DamageNumberUIPool,
@@ -135,7 +136,8 @@ public partial class ObjectPoolInit
 
         // 初始化 ProjectilePool (投射物对象池)
         new ObjectPool<ProjectileEntity>(
-            () => (ProjectileEntity)ResourceManagement.Load<PackedScene>(typeof(ProjectileEntity).Name, ResourceCategory.Entity).Instantiate(),
+            () => (ProjectileEntity)ResourceManagement
+                .Load<PackedScene>(typeof(ProjectileEntity).Name, ResourceCategory.Entity).Instantiate(),
             new ObjectPoolConfig
             {
                 Name = ObjectPoolNames.ProjectilePool,
@@ -147,7 +149,8 @@ public partial class ObjectPoolInit
 
         // 初始化 LightningLinePool (连线闪电特效池)
         new ObjectPool<LightningLineEffect>(
-            () => (LightningLineEffect)ResourceManagement.Load<PackedScene>(ResourcePaths.Entity_LightningLineEffect, ResourceCategory.Entity).Instantiate(),
+            () => (LightningLineEffect)ResourceManagement
+                .Load<PackedScene>(ResourcePaths.Entity_LightningLineEffect, ResourceCategory.Entity).Instantiate(),
             new ObjectPoolConfig
             {
                 Name = ObjectPoolNames.LightningLinePool,
@@ -162,9 +165,18 @@ public partial class ObjectPoolInit
 
     private sealed class ObjectPoolInitRuntime : ISystem
     {
-        public void OnAdded(SystemRegistrationContext context)
+        public void OnRegistered(SystemRegistrationContext context)
         {
             InitPools();
+        }
+
+        public SystemRuntimeInfo GetSystemRuntimeInfo()
+        {
+            return new SystemRuntimeInfo
+            {
+                SystemId = nameof(ObjectPoolInit),
+                CustomStats = new List<SystemStat>()
+            };
         }
     }
 }

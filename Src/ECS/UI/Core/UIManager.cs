@@ -28,11 +28,8 @@ public partial class UIManager : Node
     [ModuleInitializer]
     public static void Initialize()
     {
-        SystemRegistry.Register(new SystemDescriptor(nameof(UIManager), SystemKind.NodeScene, SystemLifetime.Persistent)
-        {
-            ParentPath = "UI",
-            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(UIManager), ResourceCategory.UI).Instantiate()
-        });
+        SystemRegistry.Register(nameof(UIManager),
+            static () => ResourceManagement.Load<PackedScene>(nameof(UIManager), ResourceCategory.UI).Instantiate());
     }
 
     // ============================================================

@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 /// <summary>
@@ -17,16 +18,9 @@ public partial class PauseMenuSystem : CanvasLayer, ISystem
     [ModuleInitializer]
     internal static void Initialize()
     {
-        SystemRegistry.Register(new SystemDescriptor(nameof(PauseMenuSystem), SystemKind.NodeScene, SystemLifetime.Overlay)
-        {
-            RunCondition = new SystemRunCondition
-            {
-                AllowedAppPhases = [AppPhase.InSession],
-                AllowedSessionPhases = [SessionPhase.Playing],
-                AllowedExecutionPhases = [ExecutionPhase.Running, ExecutionPhase.Paused]
-            },
-            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(PauseMenuSystem), ResourceCategory.System).Instantiate()
-        });
+        SystemRegistry.Register(nameof(PauseMenuSystem),
+            static () => ResourceManagement.Load<PackedScene>(nameof(PauseMenuSystem), ResourceCategory.System)
+                .Instantiate());
     }
 
     public override void _EnterTree()
@@ -65,19 +59,19 @@ public partial class PauseMenuSystem : CanvasLayer, ISystem
     }
 
     /// <inheritdoc />
-    public void OnAdded(SystemRegistrationContext context)
+    public void OnRegistered(SystemRegistrationContext context)
     {
         _projectState = context.ProjectState;
     }
 
     /// <inheritdoc />
-    public void OnStarted(ProjectStateSnapshot snapshot)
+    public void OnEnabled(ProjectStateSnapshot snapshot)
     {
         UpdateMenuState(snapshot);
     }
 
     /// <inheritdoc />
-    public void OnStopped(ProjectStateSnapshot snapshot)
+    public void OnDisabled(ProjectStateSnapshot snapshot)
     {
         SetMenuVisible(false);
     }
@@ -141,5 +135,14 @@ public partial class PauseMenuSystem : CanvasLayer, ISystem
     private ProjectStateService? ResolveProjectState()
     {
         return _projectState ?? SystemManager.Instance?.ProjectState;
+    }
+
+    public SystemRuntimeInfo GetSystemRuntimeInfo()
+    {
+        return new SystemRuntimeInfo
+        {
+            SystemId = nameof(PauseMenuSystem),
+            CustomStats = new List<SystemStat>()
+        };
     }
 }

@@ -140,7 +140,8 @@ public static class ResourcePaths
     public const string DataUnit_yuren = "yuren";
 
     // --- ConfigSystem ---
-    public const string ConfigSystem_DefaultSystemProfile = "DefaultSystemProfile";
+
+    // --- ConfigSystemPreset ---
 
     // --- Test ---
     public const string Test_AbilitySystemPipelineTest = "AbilitySystemPipelineTest";
@@ -316,7 +317,10 @@ public static class ResourcePaths
         },
         { ResourceCategory.ConfigSystem, new Dictionary<string, ResourceData>
             {
-                { ConfigSystem_DefaultSystemProfile, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/DefaultSystemProfile.tres") },
+            }
+        },
+        { ResourceCategory.ConfigSystemPreset, new Dictionary<string, ResourceData>
+            {
             }
         },
         { ResourceCategory.Test, new Dictionary<string, ResourceData>

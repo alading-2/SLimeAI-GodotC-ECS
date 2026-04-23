@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 /// <summary>
@@ -9,27 +10,34 @@ public sealed partial class TargetingManagerRuntime : Node, ISystem
     [ModuleInitializer]
     public static void Initialize()
     {
-        SystemRegistry.Register(new SystemDescriptor(nameof(TargetingManager), SystemKind.NodeScript, SystemLifetime.Persistent)
-        {
-            Factory = static () => new TargetingManagerRuntime(),
-        });
+        SystemRegistry.Register(nameof(TargetingManager),
+            static () => new TargetingManagerRuntime());
     }
 
     /// <inheritdoc />
-    public void OnStarted(ProjectStateSnapshot snapshot)
+    public void OnEnabled(ProjectStateSnapshot snapshot)
     {
         TargetingManager.EnableRuntime();
     }
 
     /// <inheritdoc />
-    public void OnStopped(ProjectStateSnapshot snapshot)
+    public void OnDisabled(ProjectStateSnapshot snapshot)
     {
         TargetingManager.DisableRuntime();
     }
 
     /// <inheritdoc />
-    public void OnRemoved()
+    public void OnUnRegistered()
     {
         TargetingManager.DisableRuntime();
+    }
+
+    public SystemRuntimeInfo GetSystemRuntimeInfo()
+    {
+        return new SystemRuntimeInfo
+        {
+            SystemId = nameof(TargetingManager),
+            CustomStats = new List<SystemStat>()
+        };
     }
 }

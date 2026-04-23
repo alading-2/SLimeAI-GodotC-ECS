@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 /// <summary>
@@ -10,6 +11,7 @@ public partial class DamageStatisticsSystem : Node, ISystem
 {
     /// <summary>日志处理实例</summary>
     private static readonly Log _log = new(nameof(DamageStatisticsSystem));
+
     private bool _eventsBound;
 
     /// <summary>
@@ -18,11 +20,9 @@ public partial class DamageStatisticsSystem : Node, ISystem
     [ModuleInitializer]
     public static void Initialize()
     {
-        SystemRegistry.Register(new SystemDescriptor(nameof(DamageStatisticsSystem), SystemKind.NodeScene, SystemLifetime.Gameplay)
-        {
-            RunCondition = SystemRunCondition.GameplayRunning(),
-            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(DamageStatisticsSystem), ResourceCategory.System).Instantiate()
-        });
+        SystemRegistry.Register(nameof(DamageStatisticsSystem),
+            static () => ResourceManagement.Load<PackedScene>(nameof(DamageStatisticsSystem), ResourceCategory.System)
+                .Instantiate());
     }
 
     public override void _EnterTree()
@@ -73,11 +73,11 @@ public partial class DamageStatisticsSystem : Node, ISystem
     /// <param name="data">实体的动态数据容器</param>
     private void ResetWaveStats(Data data)
     {
-        data.Set(DataKey.WaveDamageDealt, 0f);     // 重置波次造成伤害
-        data.Set(DataKey.WaveDamageTaken, 0f);     // 重置波次承受伤害
-        data.Set(DataKey.WaveHits, 0);             // 重置波次命中次数
-        data.Set(DataKey.WaveKills, 0);            // 重置波次击杀数
-        data.Set(DataKey.WaveCriticalHits, 0);     // 重置波次暴击次数
+        data.Set(DataKey.WaveDamageDealt, 0f); // 重置波次造成伤害
+        data.Set(DataKey.WaveDamageTaken, 0f); // 重置波次承受伤害
+        data.Set(DataKey.WaveHits, 0); // 重置波次命中次数
+        data.Set(DataKey.WaveKills, 0); // 重置波次击杀数
+        data.Set(DataKey.WaveCriticalHits, 0); // 重置波次暴击次数
     }
 
     /// <summary>
@@ -111,13 +111,13 @@ public partial class DamageStatisticsSystem : Node, ISystem
     }
 
     /// <inheritdoc />
-    public void OnStarted(ProjectStateSnapshot snapshot)
+    public void OnEnabled(ProjectStateSnapshot snapshot)
     {
         BindRuntimeEvents();
     }
 
     /// <inheritdoc />
-    public void OnStopped(ProjectStateSnapshot snapshot)
+    public void OnDisabled(ProjectStateSnapshot snapshot)
     {
         UnbindRuntimeEvents();
     }
@@ -156,4 +156,12 @@ public partial class DamageStatisticsSystem : Node, ISystem
         _eventsBound = false;
     }
 
+    public SystemRuntimeInfo GetSystemRuntimeInfo()
+    {
+        return new SystemRuntimeInfo
+        {
+            SystemId = nameof(DamageStatisticsSystem),
+            CustomStats = new List<SystemStat>()
+        };
+    }
 }

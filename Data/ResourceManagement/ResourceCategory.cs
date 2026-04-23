@@ -34,8 +34,10 @@ public enum ResourceCategory
     DataAbility,
     /// <summary>单位数据配置（Data/Data/Unit/）</summary>
     DataUnit,
-    /// <summary>系统配置（Data/Config/System/）</summary>
+    /// <summary>系统配置（Data/Config/System/System/）</summary>
     ConfigSystem,
+    /// <summary>系统预设配置（Data/Config/System/Preset/）</summary>
+    ConfigSystemPreset,
     /// <summary>Test 测试资源</summary>
     Test,
 

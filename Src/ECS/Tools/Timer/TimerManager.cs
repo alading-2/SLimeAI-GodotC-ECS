@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Godot;
-
 
 
 /// <summary>
@@ -33,11 +33,9 @@ public partial class TimerManager : Node, ISystem
     [ModuleInitializer]
     internal static void Initialize()
     {
-        SystemRegistry.Register(new SystemDescriptor(nameof(TimerManager), SystemKind.NodeScene, SystemLifetime.Persistent)
-        {
-            Dependencies = new[] { nameof(ObjectPoolInit) },
-            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(TimerManager), ResourceCategory.Tools).Instantiate()
-        });
+        SystemRegistry.Register(nameof(TimerManager),
+            static () => ResourceManagement.Load<PackedScene>(nameof(TimerManager), ResourceCategory.Tools)
+                .Instantiate());
     }
 
     /// <summary> 全局唯一单例访问点 </summary>
@@ -204,7 +202,8 @@ public partial class TimerManager : Node, ISystem
     {
         var timer = _timerPool.Get();
         // 倒计时本质上是一个带总量限制的循环定时器
-        timer.Configure(interval, true, useUnscaledTime, repeatCount: -1, totalDuration: duration, immediate: immediate);
+        timer.Configure(interval, true, useUnscaledTime, repeatCount: -1, totalDuration: duration,
+            immediate: immediate);
         timer.Id = Guid.NewGuid().ToString();
         ApplyTimerProjectPause(timer);
         return timer;
@@ -243,10 +242,7 @@ public partial class TimerManager : Node, ISystem
     /// </summary>
     public void SetAllTimerPaused(bool paused)
     {
-        _timerPool.ForEachActive(timer =>
-        {
-            timer.IsPaused = paused;
-        });
+        _timerPool.ForEachActive(timer => { timer.IsPaused = paused; });
     }
 
     /// <summary>
@@ -278,7 +274,7 @@ public partial class TimerManager : Node, ISystem
     }
 
     /// <inheritdoc />
-    public void OnStarted(ProjectStateSnapshot snapshot)
+    public void OnEnabled(ProjectStateSnapshot snapshot)
     {
         ApplyProjectPauseState(snapshot);
     }
@@ -309,14 +305,20 @@ public partial class TimerManager : Node, ISystem
         }
 
         var shouldPauseScaledTimers = ShouldPauseScaledTimers(snapshot);
-        _timerPool.ForEachActive(timer =>
-        {
-            timer.SystemPaused = !timer.UseUnscaledTime && shouldPauseScaledTimers;
-        });
+        _timerPool.ForEachActive(timer => { timer.SystemPaused = !timer.UseUnscaledTime && shouldPauseScaledTimers; });
     }
 
     private static bool ShouldPauseScaledTimers(ProjectStateSnapshot snapshot)
     {
         return snapshot.ExecutionPhase is ExecutionPhase.Paused or ExecutionPhase.Blocked;
+    }
+
+    public SystemRuntimeInfo GetSystemRuntimeInfo()
+    {
+        return new SystemRuntimeInfo
+        {
+            SystemId = nameof(TimerManager),
+            CustomStats = new List<SystemStat>()
+        };
     }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 /// <summary>
@@ -12,20 +13,18 @@ public sealed class ProjectStateBridge : ISystem
     [ModuleInitializer]
     internal static void Initialize()
     {
-        SystemRegistry.Register(new SystemDescriptor(nameof(ProjectStateBridge), SystemKind.PureService, SystemLifetime.Persistent)
-        {
-            Factory = static () => new ProjectStateBridge()
-        });
+        SystemRegistry.Register(nameof(ProjectStateBridge),
+            static () => new ProjectStateBridge());
     }
 
     /// <inheritdoc />
-    public void OnAdded(SystemRegistrationContext context)
+    public void OnRegistered(SystemRegistrationContext context)
     {
         _projectState = context.ProjectState;
     }
 
     /// <inheritdoc />
-    public void OnStarted(ProjectStateSnapshot snapshot)
+    public void OnEnabled(ProjectStateSnapshot snapshot)
     {
         BindRuntimeEvents();
         if (_projectState != null && _projectState.AppPhase == AppPhase.Boot)
@@ -35,7 +34,7 @@ public sealed class ProjectStateBridge : ISystem
     }
 
     /// <inheritdoc />
-    public void OnStopped(ProjectStateSnapshot snapshot)
+    public void OnDisabled(ProjectStateSnapshot snapshot)
     {
         UnbindRuntimeEvents();
     }
@@ -49,7 +48,8 @@ public sealed class ProjectStateBridge : ISystem
 
         GlobalEventBus.Global.On(GameEventType.Global.GameStart, OnGameStart);
         GlobalEventBus.Global.On<GameEventType.Global.GamePauseEventData>(GameEventType.Global.GamePause, OnGamePause);
-        GlobalEventBus.Global.On<GameEventType.Global.GameResumeEventData>(GameEventType.Global.GameResume, OnGameResume);
+        GlobalEventBus.Global.On<GameEventType.Global.GameResumeEventData>(GameEventType.Global.GameResume,
+            OnGameResume);
         GlobalEventBus.Global.On<GameEventType.Global.GameOverEventData>(GameEventType.Global.GameOver, OnGameOver);
         _eventsBound = true;
     }
@@ -63,7 +63,8 @@ public sealed class ProjectStateBridge : ISystem
 
         GlobalEventBus.Global.Off(GameEventType.Global.GameStart, OnGameStart);
         GlobalEventBus.Global.Off<GameEventType.Global.GamePauseEventData>(GameEventType.Global.GamePause, OnGamePause);
-        GlobalEventBus.Global.Off<GameEventType.Global.GameResumeEventData>(GameEventType.Global.GameResume, OnGameResume);
+        GlobalEventBus.Global.Off<GameEventType.Global.GameResumeEventData>(GameEventType.Global.GameResume,
+            OnGameResume);
         GlobalEventBus.Global.Off<GameEventType.Global.GameOverEventData>(GameEventType.Global.GameOver, OnGameOver);
         _eventsBound = false;
     }
@@ -86,5 +87,14 @@ public sealed class ProjectStateBridge : ISystem
     private void OnGameOver(GameEventType.Global.GameOverEventData data)
     {
         _projectState?.EndSession();
+    }
+
+    public SystemRuntimeInfo GetSystemRuntimeInfo()
+    {
+        return new SystemRuntimeInfo
+        {
+            SystemId = nameof(ProjectStateBridge),
+            CustomStats = new List<SystemStat>()
+        };
     }
 }

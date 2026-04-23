@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// 系统注册表。
-/// <para>进程级全局注册表，保存系统静态描述符。</para>
+/// <para>进程级全局注册表，保存系统静态描述符（SystemId + Factory）。</para>
+/// <para>其他元数据从 SystemConfig 读取。</para>
 /// </summary>
 public static class SystemRegistry
 {
@@ -13,9 +15,46 @@ public static class SystemRegistry
     private static readonly Dictionary<string, SystemDescriptor> _descriptors = new(StringComparer.Ordinal);
 
     /// <summary>
-    /// 注册系统描述符。
+    /// 注册系统（简化签名：只传 SystemId + Factory）。
+    /// </summary>
+    /// <param name="systemId">系统唯一 Id（必须与 SystemId 枚举值一致）。</param>
+    /// <param name="factory">系统实例工厂。</param>
+    public static void Register(string systemId, Func<object> factory)
+    {
+        if (string.IsNullOrWhiteSpace(systemId))
+        {
+            _log.Error("SystemId 不能为空");
+            return;
+        }
+
+        if (factory == null)
+        {
+            _log.Error($"系统 '{systemId}' 的 Factory 不能为空");
+            return;
+        }
+
+        // 验证 SystemId 是否在枚举中定义
+        if (!Enum.TryParse<SystemId>(systemId, out _))
+        {
+            _log.Error($"系统 '{systemId}' 未在 SystemId 枚举中定义，请先添加到枚举");
+            return;
+        }
+
+        if (_descriptors.ContainsKey(systemId))
+        {
+            _log.Error($"系统 '{systemId}' 重复注册，保留首次注册的描述符");
+            return;
+        }
+
+        var descriptor = new SystemDescriptor(systemId, factory);
+        _descriptors.Add(systemId, descriptor);
+    }
+
+    /// <summary>
+    /// 注册系统描述符（兼容旧接口）。
     /// </summary>
     /// <param name="descriptor">系统描述符。</param>
+    [Obsolete("请使用 Register(string systemId, Func<object> factory) 方法")]
     public static void Register(SystemDescriptor descriptor)
     {
         if (descriptor == null)
@@ -30,7 +69,6 @@ public static class SystemRegistry
             return;
         }
 
-        // 注册顺序会影响 Bootstrap 接管顺序。
         _descriptors.Add(descriptor.SystemId, descriptor);
     }
 
@@ -40,7 +78,6 @@ public static class SystemRegistry
     /// <returns>按注册顺序返回的描述符集合。</returns>
     public static IReadOnlyCollection<SystemDescriptor> GetDescriptorValues()
     {
-        // 直接返回 Values 只读视图，调用方不应持久化并依赖可变顺序行为。
         return _descriptors.Values;
     }
 
@@ -53,6 +90,38 @@ public static class SystemRegistry
     {
         _descriptors.TryGetValue(systemId, out var descriptor);
         return descriptor;
+    }
+
+    /// <summary>
+    /// 获取指定分组的所有系统描述符。
+    /// </summary>
+    /// <param name="group">系统分组（支持 Flags 组合）。</param>
+    public static IEnumerable<SystemDescriptor> GetDescriptorsByGroup(SystemGroup group)
+    {
+        var configs = SystemConfigService.GetConfigsByGroup(group);
+        foreach (var config in configs)
+        {
+            if (_descriptors.TryGetValue(config.SystemId, out var descriptor))
+            {
+                yield return descriptor;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 获取指定标签的所有系统描述符。
+    /// </summary>
+    /// <param name="tag">系统标签（支持 Flags 组合）。</param>
+    public static IEnumerable<SystemDescriptor> GetDescriptorsByTag(SystemTag tag)
+    {
+        var configs = SystemConfigService.GetConfigsByTag(tag);
+        foreach (var config in configs)
+        {
+            if (_descriptors.TryGetValue(config.SystemId, out var descriptor))
+            {
+                yield return descriptor;
+            }
+        }
     }
 
     /// <summary>

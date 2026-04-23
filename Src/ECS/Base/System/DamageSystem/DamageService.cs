@@ -19,10 +19,8 @@ public partial class DamageService : Node
     [ModuleInitializer]
     public static void Initialize()
     {
-        SystemRegistry.Register(new SystemDescriptor(nameof(DamageService), SystemKind.NodeScene, SystemLifetime.Persistent)
-        {
-            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(DamageService), ResourceCategory.System).Instantiate()
-        });
+        SystemRegistry.Register(nameof(DamageService),
+            static () => ResourceManagement.Load<PackedScene>(nameof(DamageService), ResourceCategory.System).Instantiate());
     }
 
     /// <summary> 获取全局单例实例 </summary>

@@ -5,4 +5,8 @@
 /// </summary>
 public interface ISystem : ISystemLifecycle, IProjectStateAwareSystem
 {
+    /// <summary>
+    /// 获取系统运行时信息（用于调试和监控）。
+    /// </summary>
+    SystemRuntimeInfo GetSystemRuntimeInfo();
 }

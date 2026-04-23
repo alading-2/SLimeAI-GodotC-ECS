@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 /// <summary>
@@ -8,27 +9,34 @@ public sealed class DamageNumberRuntimeBridge : ISystem
     [ModuleInitializer]
     public static void Initialize()
     {
-        SystemRegistry.Register(new SystemDescriptor(nameof(DamageNumberSystem), SystemKind.PureService, SystemLifetime.Persistent)
-        {
-            Factory = static () => new DamageNumberRuntimeBridge(),
-        });
+        SystemRegistry.Register(nameof(DamageNumberSystem),
+            static () => new DamageNumberRuntimeBridge());
     }
 
     /// <inheritdoc />
-    public void OnStarted(ProjectStateSnapshot snapshot)
+    public void OnEnabled(ProjectStateSnapshot snapshot)
     {
         DamageNumberSystem.EnableRuntime();
     }
 
     /// <inheritdoc />
-    public void OnStopped(ProjectStateSnapshot snapshot)
+    public void OnDisabled(ProjectStateSnapshot snapshot)
     {
         DamageNumberSystem.DisableRuntime();
     }
 
     /// <inheritdoc />
-    public void OnRemoved()
+    public void OnUnRegistered()
     {
         DamageNumberSystem.DisableRuntime();
+    }
+
+    public SystemRuntimeInfo GetSystemRuntimeInfo()
+    {
+        return new SystemRuntimeInfo
+        {
+            SystemId = nameof(DamageNumberSystem),
+            CustomStats = new List<SystemStat>()
+        };
     }
 }

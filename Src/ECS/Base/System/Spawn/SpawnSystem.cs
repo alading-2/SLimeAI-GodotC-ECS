@@ -18,12 +18,9 @@ public partial class SpawnSystem : Node, ISystem
     [ModuleInitializer]
     public static void Initialize()
     {
-        SystemRegistry.Register(new SystemDescriptor(nameof(SpawnSystem), SystemKind.NodeScene, SystemLifetime.Gameplay)
-        {
-            Dependencies = [nameof(TimerManager)],
-            RunCondition = SystemRunCondition.GameplayRunning(),
-            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(SpawnSystem), ResourceCategory.System).Instantiate()
-        });
+        SystemRegistry.Register(nameof(SpawnSystem),
+            static () => ResourceManagement.Load<PackedScene>(nameof(SpawnSystem), ResourceCategory.System)
+                .Instantiate());
     }
 
     private static readonly Log _log = new Log("SpawnSystem");
@@ -32,6 +29,7 @@ public partial class SpawnSystem : Node, ISystem
     /// 全局访问单例，方便其他模块通过 SpawnSystem.Instance 调用接口。
     /// </summary>
     public static SpawnSystem Instance { get; private set; }
+
     private bool _eventsBound;
 
 
@@ -175,13 +173,13 @@ public partial class SpawnSystem : Node, ISystem
     }
 
     /// <inheritdoc />
-    public void OnStarted(ProjectStateSnapshot snapshot)
+    public void OnEnabled(ProjectStateSnapshot snapshot)
     {
         BindRuntimeEvents();
     }
 
     /// <inheritdoc />
-    public void OnStopped(ProjectStateSnapshot snapshot)
+    public void OnDisabled(ProjectStateSnapshot snapshot)
     {
         UnbindRuntimeEvents();
         if (snapshot.AppPhase != AppPhase.InSession || snapshot.SessionPhase != SessionPhase.Playing)
@@ -349,5 +347,14 @@ public partial class SpawnSystem : Node, ISystem
         var pool = ObjectPoolManager.GetPool<EnemyEntity>(ObjectPoolNames.EnemyPool);
         pool?.ReleaseAll();
         _log.Debug("已清理所有活跃敌人。");
+    }
+
+    public SystemRuntimeInfo GetSystemRuntimeInfo()
+    {
+        return new SystemRuntimeInfo
+        {
+            SystemId = nameof(SpawnSystem),
+            CustomStats = new List<SystemStat>()
+        };
     }
 }

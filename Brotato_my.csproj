@@ -11,6 +11,7 @@
         <Compile Remove="Tools\**"/>
     </ItemGroup>
     <ItemGroup>
+        <Folder Include=".godot\"/>
         <Folder Include="参考\"/>
     </ItemGroup>
 </Project>

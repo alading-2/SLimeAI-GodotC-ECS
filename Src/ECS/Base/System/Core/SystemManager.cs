@@ -14,7 +14,7 @@ public partial class SystemManager : Node
     private readonly Dictionary<string, ManagedSystemEntry> _entries = new(StringComparer.Ordinal);
 
     // 生命周期域 -> Host 节点。避免业务系统直接散挂在 SystemManager 根下。
-    private readonly Dictionary<SystemLifetime, Node> _hosts = new();
+    private readonly Dictionary<SystemGroup, Node> _hosts = new();
     private bool _isInitialized;
     private bool _isBootstrapped; // 启动完成
 
@@ -64,15 +64,15 @@ public partial class SystemManager : Node
         ProjectState.StateChanged -= OnProjectStateChanged;
 
         // 在移除管理器前，先关闭正在运行的系统，再给所有系统一次统一反注册机会。
-        // 顺序：先 Disable（让系统清理运行态），再 Unregistered（释放资源）。
+        // 顺序：先 Disable（让系统清理运行态），再 UnRegistered（释放资源）。
         foreach (var entry in _entries.Values)
         {
             if (entry.IsRunning)
             {
-                entry.Runtime?.OnSystemDisabled(ProjectState.Snapshot);
+                entry.Lifecycle?.OnDisabled(ProjectState.Snapshot);
             }
 
-            entry.Runtime?.OnSystemUnregistered();
+            entry.Lifecycle?.OnUnRegistered();
         }
 
         _entries.Clear();
@@ -114,8 +114,11 @@ public partial class SystemManager : Node
 
     /// <summary>
     /// 启动当前已注册的全部系统描述符。
-    /// <para>遍历 SystemRegistry 中的描述符，逐个调用 EnsureSystem 创建实例并纳入管理。</para>
-    /// <para>完成后发射 BootstrapCompleted 信号，供测试场景或延迟依赖链等待。</para>
+    /// <para>流程：</para>
+    /// <para>1. 初始化 SystemConfigService 和 SystemPresetService</para>
+    /// <para>2. 根据 Preset 和 Config 计算应该加载的系统列表</para>
+    /// <para>3. 按 Priority 排序后逐个调用 EnsureSystem</para>
+    /// <para>4. 完成后发射 BootstrapCompleted 信号</para>
     /// </summary>
     public void BootstrapRegisteredSystems()
     {
@@ -124,10 +127,42 @@ public partial class SystemManager : Node
             return;
         }
 
-        // 按注册表快照依次接管。依赖由 EnsureSystem 内部递归展开。
-        foreach (var descriptor in SystemRegistry.GetDescriptorValues())
+        // 1. 初始化配置服务
+        SystemConfigService.Initialize();
+        SystemPresetService.Initialize();
+
+        // 2. 计算应该加载的系统列表
+        var enabledSystemIds = SystemPresetService.CalculateEnabledSystems();
+        _log.Info($"根据预设计算，应加载 {enabledSystemIds.Count} 个系统");
+
+        // 3. 收集对应的描述符并按 Priority 排序
+        var descriptorsToLoad = new List<(SystemDescriptor descriptor, SystemConfig config, int priority)>();
+        foreach (var systemId in enabledSystemIds)
         {
-            EnsureSystem(descriptor);
+            var descriptor = SystemRegistry.GetDescriptor(systemId);
+            if (descriptor == null)
+            {
+                _log.Warn($"系统 {systemId} 未注册，跳过加载");
+                continue;
+            }
+
+            var config = SystemConfigService.GetConfig(systemId);
+            if (config == null)
+            {
+                _log.Warn($"系统 {systemId} 缺少配置文件，跳过加载");
+                continue;
+            }
+
+            descriptorsToLoad.Add((descriptor, config, config.Priority));
+        }
+
+        // 按 Priority 排序（数值越小越优先）
+        descriptorsToLoad.Sort((a, b) => a.priority.CompareTo(b.priority));
+
+        // 4. 逐个加载系统
+        foreach (var (descriptor, config, _) in descriptorsToLoad)
+        {
+            EnsureSystem(descriptor, config);
         }
 
         _isBootstrapped = true;
@@ -138,11 +173,12 @@ public partial class SystemManager : Node
     /// <summary>
     /// 确保指定系统已经被创建并纳入管理。
     /// <para>流程：1) 检查是否已托管 → 2) 递归展开依赖 → 3) Factory 创建实例 →</para>
-    /// <para>       4) Node 类型挂到生命周期 Host 下 → 5) 调用 OnSystemRegistered →</para>
+    /// <para>       4) Node 类型挂到分组 Host 下 → 5) 调用 OnSystemRegistered →</para>
     /// <para>       6) 创建 ManagedSystemEntry → 7) ApplyEntryState 裁决初始运行状态</para>
     /// </summary>
     /// <param name="descriptor">系统描述符。</param>
-    public void EnsureSystem(SystemDescriptor descriptor)
+    /// <param name="config">系统配置。</param>
+    public void EnsureSystem(SystemDescriptor descriptor, SystemConfig config)
     {
         // 已托管则直接复用，避免重复创建。
         if (_entries.ContainsKey(descriptor.SystemId))
@@ -150,14 +186,8 @@ public partial class SystemManager : Node
             return;
         }
 
-        if (descriptor.Factory == null)
-        {
-            _log.Error($"系统 {descriptor.SystemId} 缺少 Factory，无法创建实例");
-            return;
-        }
-
         // 先确保依赖系统可用，再创建当前系统。
-        foreach (var dependency in descriptor.Dependencies)
+        foreach (var dependency in config.Dependencies)
         {
             if (_entries.ContainsKey(dependency))
             {
@@ -171,10 +201,17 @@ public partial class SystemManager : Node
                 return;
             }
 
-            EnsureSystem(dependencyDescriptor);
+            var dependencyConfig = SystemConfigService.GetConfig(dependency);
+            if (dependencyConfig == null)
+            {
+                _log.Error($"系统 {descriptor.SystemId} 缺少依赖配置: {dependency}");
+                return;
+            }
+
+            EnsureSystem(dependencyDescriptor, dependencyConfig);
         }
 
-        // 通过 Factory 创建系统实例。Factory 由 SystemDescriptor 在注册时指定。
+        // 通过 Factory 创建系统实例。
         var instance = descriptor.Factory.Invoke();
         if (instance == null)
         {
@@ -182,29 +219,32 @@ public partial class SystemManager : Node
             return;
         }
 
-        // Node 类型系统需要挂到场景树：以 SystemId 命名，挂到对应生命周期 Host 下。
+        // Node 类型系统需要挂到场景树：以 SystemId 命名，挂到对应分组 Host 下。
         var nodeInstance = instance as Node;
         if (nodeInstance != null)
         {
             nodeInstance.Name = descriptor.SystemId;
-            // ParentPath 相对 Host 生效，支持在 Host 内创建子目录结构。
-            var parent = ParentManager.EnsurePath(GetHost(descriptor.Lifetime), descriptor.ParentPath);
-            parent.AddChild(nodeInstance);
+            // 按 Groups 最低位确定挂载路径
+            var mountGroup = GetLowestBitGroup(config.Groups);
+            var host = GetHost(mountGroup);
+            host.AddChild(nodeInstance);
         }
 
         // 通知系统已被注册，传入描述符和项目状态服务引用。
-        var runtime = instance as ISystemRuntime;
-        runtime?.OnSystemRegistered(new SystemRegistrationContext(descriptor, ProjectState));
+        var lifecycle = instance as ISystemLifecycle;
+        lifecycle?.OnRegistered(new SystemRegistrationContext(descriptor, ProjectState));
 
-        // 创建运行时条目：初始启用状态取描述符默认值，状态门禁用当前快照评估。
+        // 创建运行时条目：初始启用状态取配置默认值，状态门禁用当前快照评估。
+        var runCondition = CreateRunCondition(config);
         var entry = new ManagedSystemEntry
         {
             Descriptor = descriptor,
+            Config = config,
             Instance = instance,
             NodeInstance = nodeInstance,
-            Runtime = runtime,
-            IsEnabled = descriptor.DefaultEnabled, // 人工开关：描述符默认值
-            IsStateAllowed = descriptor.RunCondition.Evaluate(ProjectState.Snapshot), // 状态门禁：Phase 条件裁决
+            Lifecycle = lifecycle,
+            IsEnabled = config.DefaultEnabled, // 人工开关：配置默认值
+            IsStateAllowed = runCondition.Evaluate(ProjectState.Snapshot), // 状态门禁：Phase 条件裁决
             IsRunning = false
         };
 
@@ -281,8 +321,15 @@ public partial class SystemManager : Node
         foreach (var entry in _entries.Values)
         {
             // 先重算状态门禁，再通知系统，再统一应用启停。
-            entry.IsStateAllowed = entry.Descriptor.RunCondition.Evaluate(args.Current);
-            entry.Runtime?.OnProjectStateChanged(args);
+            var runCondition = CreateRunCondition(entry.Config);
+            entry.IsStateAllowed = runCondition.Evaluate(args.Current);
+
+            // 只通知实现了 IProjectStateAwareSystem 的系统
+            if (entry.Instance is IProjectStateAwareSystem stateAware)
+            {
+                stateAware.OnProjectStateChanged(args);
+            }
+
             ApplyEntryState(entry, notifyTransition: true);
         }
     }
@@ -291,7 +338,7 @@ public partial class SystemManager : Node
     /// 统一裁决并应用系统运行状态。
     /// <para>shouldRun = IsEnabled（人工开关）&& IsStateAllowed（Phase 条件门禁）。</para>
     /// <para>对 Node 系统：切 ProcessMode（Inherit/Disabled）。</para>
-    /// <para>对 ISystemRuntime 系统：在状态切换时调用 OnSystemEnabled/OnSystemDisabled。</para>
+    /// <para>对 ISystemLifecycle 系统：在状态切换时调用 OnEnabled/OnDisabled。</para>
     /// <para>notifyTransition=false 时仅更新 IsRunning 标记，不触发钩子（用于初始化静默设置）。</para>
     /// </summary>
     private void ApplyEntryState(ManagedSystemEntry entry, bool notifyTransition)
@@ -306,8 +353,8 @@ public partial class SystemManager : Node
                 : ProcessModeEnum.Disabled;
         }
 
-        // 非 ISystemRuntime 系统（纯 Node）：直接更新标记即可。
-        if (entry.Runtime == null)
+        // 非 ISystemLifecycle 系统（纯 Node）：直接更新标记即可。
+        if (entry.Lifecycle == null)
         {
             entry.IsRunning = shouldRun;
             return;
@@ -328,50 +375,63 @@ public partial class SystemManager : Node
 
         if (shouldRun)
         {
-            entry.Runtime.OnSystemEnabled(ProjectState.Snapshot);
+            entry.Lifecycle.OnEnabled(ProjectState.Snapshot);
             entry.IsRunning = true;
             return;
         }
 
-        entry.Runtime.OnSystemDisabled(ProjectState.Snapshot);
+        entry.Lifecycle.OnDisabled(ProjectState.Snapshot);
         entry.IsRunning = false;
     }
 
     /// <summary>
-    /// 为所有生命周期域创建 Host 节点。
-    /// <para>Host 是 SystemManager 的直接子节点，按生命周期域分组，避免业务系统散挂在根下。</para>
+    /// 为所有分组创建 Host 节点。
+    /// <para>Host 是 SystemManager 的直接子节点，按分组分组，避免业务系统散挂在根下。</para>
     /// </summary>
     private void EnsureHosts()
     {
-        _hosts[SystemLifetime.Persistent] = EnsureHost(SystemLifetime.Persistent); // 全局常驻
-        _hosts[SystemLifetime.Gameplay] = EnsureHost(SystemLifetime.Gameplay); // 局内业务
-        _hosts[SystemLifetime.Overlay] = EnsureHost(SystemLifetime.Overlay); // 覆盖层辅助
-        _hosts[SystemLifetime.Debug] = EnsureHost(SystemLifetime.Debug); // 调试专用
-        _hosts[SystemLifetime.Test] = EnsureHost(SystemLifetime.Test); // 运行时测试
+        foreach (SystemGroup group in Enum.GetValues(typeof(SystemGroup)))
+        {
+            // 跳过 None 和非单一位的组合值
+            if (group == SystemGroup.None || !IsSingleBit((ulong)group))
+            {
+                continue;
+            }
+
+            _hosts[group] = EnsureHost(group);
+        }
     }
 
     /// <summary>
-    /// 获取指定生命周期域的 Host 节点，不存在则创建。
+    /// 判断一个 ulong 值是否只有一个位被设置。
     /// </summary>
-    private Node GetHost(SystemLifetime lifetime)
+    private static bool IsSingleBit(ulong value)
     {
-        if (_hosts.TryGetValue(lifetime, out var host))
+        return value != 0 && (value & (value - 1)) == 0;
+    }
+
+    /// <summary>
+    /// 获取指定分组的 Host 节点，不存在则创建。
+    /// </summary>
+    private Node GetHost(SystemGroup group)
+    {
+        if (_hosts.TryGetValue(group, out var host))
         {
             return host;
         }
 
-        host = EnsureHost(lifetime);
-        _hosts[lifetime] = host;
+        host = EnsureHost(group);
+        _hosts[group] = host;
         return host;
     }
 
     /// <summary>
-    /// 确保指定生命周期域的 Host 节点存在。
-    /// <para>Host 节点以 "{Lifetime}Host" 命名，不承载业务逻辑，仅作系统容器。</para>
+    /// 确保指定分组的 Host 节点存在。
+    /// <para>Host 节点以 "{Group}Host" 命名，不承载业务逻辑，仅作系统容器。</para>
     /// </summary>
-    private Node EnsureHost(SystemLifetime lifetime)
+    private Node EnsureHost(SystemGroup group)
     {
-        var name = $"{lifetime}Host";
+        var name = $"{group}Host";
         var node = GetNodeOrNull<Node>(name);
         if (node != null)
         {
@@ -381,5 +441,44 @@ public partial class SystemManager : Node
         node = new Node { Name = name }; // Host 本身不承载业务逻辑，仅作系统容器
         AddChild(node);
         return node;
+    }
+
+    /// <summary>
+    /// 获取 SystemGroup 的最低位（用于确定挂载路径）。
+    /// </summary>
+    private static SystemGroup GetLowestBitGroup(SystemGroup groups)
+    {
+        if (groups == SystemGroup.None)
+        {
+            return SystemGroup.Else;
+        }
+
+        // 按位从低到高查找第一个设置的位
+        var value = (ulong)groups;
+        for (var i = 0; i < 64; i++)
+        {
+            var bit = 1UL << i;
+            if ((value & bit) != 0)
+            {
+                return (SystemGroup)bit;
+            }
+        }
+
+        return SystemGroup.Else;
+    }
+
+    /// <summary>
+    /// 从 SystemConfig 创建 SystemRunCondition。
+    /// </summary>
+    private static SystemRunCondition CreateRunCondition(SystemConfig config)
+    {
+        return new SystemRunCondition
+        {
+            AllowedAppPhases = config.AllowedAppPhases,
+            AllowedSessionPhases = config.AllowedSessionPhases,
+            AllowedOverlayPhases = config.AllowedOverlayPhases,
+            BlockedOverlayPhases = config.BlockedOverlayPhases,
+            AllowedExecutionPhases = config.AllowedExecutionPhases
+        };
     }
 }

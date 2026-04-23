@@ -18,9 +18,9 @@ public sealed class SystemRunCondition
     {
         return new SystemRunCondition
         {
-            AllowedAppPhases = [AppPhase.InSession],
-            AllowedSessionPhases = [SessionPhase.Playing],
-            AllowedExecutionPhases = [ExecutionPhase.Running]
+            AllowedAppPhases = AppPhase.InSession,
+            AllowedSessionPhases = SessionPhase.Playing,
+            AllowedExecutionPhases = ExecutionPhase.Running
         };
     }
 
@@ -28,11 +28,11 @@ public sealed class SystemRunCondition
     /// 覆盖层系统运行条件。
     /// <para>默认允许 PauseMenu / ModalUi / Cutscene 三类覆盖层。</para>
     /// </summary>
-    /// <param name="allowedPhases">允许的覆盖层阶段；为空时使用默认覆盖层集合。</param>
-    public static SystemRunCondition OverlayActive(params OverlayPhase[] allowedPhases)
+    /// <param name="allowedPhases">允许的覆盖层阶段；为 None 时使用默认覆盖层集合。</param>
+    public static SystemRunCondition OverlayActive(OverlayPhase allowedPhases = OverlayPhase.None)
     {
-        var overlayPhases = allowedPhases.Length == 0
-            ?[OverlayPhase.PauseMenu, OverlayPhase.ModalUi, OverlayPhase.Cutscene]
+        var overlayPhases = allowedPhases == OverlayPhase.None
+            ? OverlayPhase.PauseMenu | OverlayPhase.ModalUi | OverlayPhase.Cutscene
             : allowedPhases;
 
         return new SystemRunCondition
@@ -41,51 +41,51 @@ public sealed class SystemRunCondition
         };
     }
 
-    /// <summary>允许的应用主阶段；为空表示不限制。</summary>
-    public AppPhase[] AllowedAppPhases { get; set; } = Array.Empty<AppPhase>();
+    /// <summary>允许的应用主阶段；为 None 表示不限制。</summary>
+    public AppPhase AllowedAppPhases { get; set; } = AppPhase.None;
 
-    /// <summary>允许的会话阶段；为空表示不限制。</summary>
-    public SessionPhase[] AllowedSessionPhases { get; set; } = Array.Empty<SessionPhase>();
+    /// <summary>允许的会话阶段；为 None 表示不限制。</summary>
+    public SessionPhase AllowedSessionPhases { get; set; } = SessionPhase.None;
 
-    /// <summary>允许的覆盖层阶段；为空表示不限制。</summary>
-    public OverlayPhase[] AllowedOverlayPhases { get; set; } = Array.Empty<OverlayPhase>();
+    /// <summary>允许的覆盖层阶段；为 None 表示不限制。</summary>
+    public OverlayPhase AllowedOverlayPhases { get; set; } = OverlayPhase.None;
 
-    /// <summary>禁止的覆盖层阶段；为空表示不限制。</summary>
-    public OverlayPhase[] BlockedOverlayPhases { get; set; } = Array.Empty<OverlayPhase>();
+    /// <summary>禁止的覆盖层阶段；为 None 表示不限制。</summary>
+    public OverlayPhase BlockedOverlayPhases { get; set; } = OverlayPhase.None;
 
-    /// <summary>允许的执行阶段；为空表示不限制。</summary>
-    public ExecutionPhase[] AllowedExecutionPhases { get; set; } = Array.Empty<ExecutionPhase>();
+    /// <summary>允许的执行阶段；为 None 表示不限制。</summary>
+    public ExecutionPhase AllowedExecutionPhases { get; set; } = ExecutionPhase.None;
 
     /// <summary>
     /// 判断指定快照是否满足当前运行条件。
     /// </summary>
-    /// <param name="snapshot">当前项目状态快照。</param>
+    /// <param name=”snapshot”>当前项目状态快照。</param>
     /// <returns>满足条件返回 true。</returns>
     public bool Evaluate(ProjectStateSnapshot snapshot)
     {
-        // 规则：任一“允许集合”不匹配即失败；任一“禁止集合”命中即失败。
-        // 允许集合为空表示“该维度不限制”。
-        if (!Matches(AllowedAppPhases, snapshot.AppPhase))
+        // 规则：任一”允许集合”不匹配即失败；任一”禁止集合”命中即失败。
+        // 允许集合为 None 表示”该维度不限制”。
+        if (!MatchesFlags(AllowedAppPhases, snapshot.AppPhase))
         {
             return false;
         }
 
-        if (!Matches(AllowedSessionPhases, snapshot.SessionPhase))
+        if (!MatchesFlags(AllowedSessionPhases, snapshot.SessionPhase))
         {
             return false;
         }
 
-        if (!Matches(AllowedOverlayPhases, snapshot.OverlayPhase))
+        if (!MatchesFlags(AllowedOverlayPhases, snapshot.OverlayPhase))
         {
             return false;
         }
 
-        if (Contains(BlockedOverlayPhases, snapshot.OverlayPhase))
+        if (ContainsFlags(BlockedOverlayPhases, snapshot.OverlayPhase))
         {
             return false;
         }
 
-        if (!Matches(AllowedExecutionPhases, snapshot.ExecutionPhase))
+        if (!MatchesFlags(AllowedExecutionPhases, snapshot.ExecutionPhase))
         {
             return false;
         }
@@ -93,22 +93,43 @@ public sealed class SystemRunCondition
         return true;
     }
 
-    private static bool Matches<T>(T[] allowedValues, T currentValue) where T : struct, Enum
+    /// <summary>
+    /// 判断当前值是否匹配允许的 Flags 组合。
+    /// </summary>
+    /// <param name=”allowedFlags”>允许的 Flags 组合（为 None 表示不限制）。</param>
+    /// <param name=”currentValue”>当前值。</param>
+    private static bool MatchesFlags<T>(T allowedFlags, T currentValue) where T : struct, Enum
     {
-        // allowed 为空时代表 wildcard（任意值均通过）。
-        return allowedValues.Length == 0 || Contains(allowedValues, currentValue);
-    }
+        var allowedInt = Convert.ToInt32(allowedFlags);
+        var currentInt = Convert.ToInt32(currentValue);
 
-    private static bool Contains<T>(T[] values, T currentValue) where T : struct, Enum
-    {
-        for (var i = 0; i < values.Length; i++)
+        // allowedFlags 为 0 (None) 时代表 wildcard（任意值均通过）。
+        if (allowedInt == 0)
         {
-            if (EqualityComparer<T>.Default.Equals(values[i], currentValue))
-            {
-                return true;
-            }
+            return true;
         }
 
-        return false;
+        // 按位与判断：当前值必须在允许的 Flags 范围内。
+        return (currentInt & allowedInt) != 0;
+    }
+
+    /// <summary>
+    /// 判断当前值是否包含在禁止的 Flags 组合中。
+    /// </summary>
+    /// <param name=”blockedFlags”>禁止的 Flags 组合（为 None 表示不限制）。</param>
+    /// <param name=”currentValue”>当前值。</param>
+    private static bool ContainsFlags<T>(T blockedFlags, T currentValue) where T : struct, Enum
+    {
+        var blockedInt = Convert.ToInt32(blockedFlags);
+        var currentInt = Convert.ToInt32(currentValue);
+
+        // blockedFlags 为 0 (None) 时代表不禁止任何值。
+        if (blockedInt == 0)
+        {
+            return false;
+        }
+
+        // 按位与判断：当前值是否在禁止的 Flags 范围内。
+        return (currentInt & blockedInt) != 0;
     }
 }

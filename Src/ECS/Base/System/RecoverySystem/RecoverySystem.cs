@@ -28,11 +28,8 @@ public partial class RecoverySystem : Node
     [ModuleInitializer]
     public static void Initialize()
     {
-        SystemRegistry.Register(new SystemDescriptor(nameof(RecoverySystem), SystemKind.NodeScene, SystemLifetime.Persistent)
-        {
-            Dependencies = new[] { nameof(TimerManager) },
-            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(RecoverySystem), ResourceCategory.System).Instantiate()
-        });
+        SystemRegistry.Register(nameof(RecoverySystem),
+            static () => ResourceManagement.Load<PackedScene>(nameof(RecoverySystem), ResourceCategory.System).Instantiate());
     }
 
     /// <summary>全局单例访问点</summary>

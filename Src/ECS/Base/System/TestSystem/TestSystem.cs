@@ -120,11 +120,8 @@ public partial class TestSystem : CanvasLayer
     [ModuleInitializer]
     internal static void Initialize()
     {
-        SystemRegistry.Register(new SystemDescriptor(nameof(TestSystem), SystemKind.NodeScene, SystemLifetime.Debug)
-        {
-            Dependencies = new[] { nameof(MouseSelectionSystem) },
-            Factory = static () => ResourceManagement.Load<PackedScene>(nameof(TestSystem), ResourceCategory.System).Instantiate()
-        });
+        SystemRegistry.Register(nameof(TestSystem),
+            static () => ResourceManagement.Load<PackedScene>(nameof(TestSystem), ResourceCategory.System).Instantiate());
     }
 
     /// <summary>
