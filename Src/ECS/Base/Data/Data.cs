@@ -434,13 +434,14 @@ public class Data
     private static readonly Dictionary<Type, (PropertyInfo prop, string key)[]> _resourcePropCache = new();
 
     /// <summary>
-    /// 从 Resource 加载数据到容器（反射结果静态缓存，波次刷怪时无额外反射开销）
+    /// 从配置对象加载数据到容器（Resource 与 DataNew POCO 共用）。
     /// </summary>
-    public void LoadFromResource(Resource resource)
+    /// <param name="config">配置对象，可以是 .tres Resource 或 DataNew 纯 C# 数据。</param>
+    public void LoadFromConfig(object config)
     {
-        if (resource == null) return;
+        if (config == null) return;
 
-        var type = resource.GetType();
+        var type = config.GetType();
         if (!_resourcePropCache.TryGetValue(type, out var cached))
             cached = _resourcePropCache[type] = BuildPropertyCache(type);
 
@@ -448,7 +449,7 @@ public class Data
         {
             try
             {
-                var value = prop.GetValue(resource);
+                var value = prop.GetValue(config);
                 if (value != null) Set(key, value);
             }
             catch (Exception ex)
@@ -456,6 +457,15 @@ public class Data
                 _log.Warn($"加载属性 {prop.Name} 失败: {ex.Message}");
             }
         }
+    }
+
+    /// <summary>
+    /// 从 Resource 加载数据到容器，兼容旧 .tres 数据入口。
+    /// </summary>
+    /// <param name="resource">Godot Resource 配置对象。</param>
+    public void LoadFromResource(Resource resource)
+    {
+        LoadFromConfig(resource);
     }
 
     private static (PropertyInfo, string)[] BuildPropertyCache(Type type)

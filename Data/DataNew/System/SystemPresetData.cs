@@ -1,3 +1,5 @@
+using Slime.ConfigNew;
+
 namespace Slime.ConfigNew.Systems;
 
 /// <summary>
@@ -10,6 +12,9 @@ public class SystemPresetData
     [
         Default
     ];
+
+    /// <summary>按 PresetName 获取系统预设，找不到返回 null 并记录日志。</summary>
+    public static SystemPresetData? Get(string name) => DataTable.GetByName<SystemPresetData>(name);
 
     /// <summary>默认系统预设。</summary>
     public static readonly SystemPresetData Default = new()

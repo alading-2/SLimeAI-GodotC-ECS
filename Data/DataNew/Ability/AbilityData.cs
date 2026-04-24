@@ -1,31 +1,40 @@
+using System.Collections.Generic;
+using Slime.ConfigNew;
+
 namespace Slime.ConfigNew.Abilities;
 
 /// <summary>
 /// 技能配置（纯 POCO，不继承 Resource）
 /// </summary>
-public class AbilityConfigData
+public class AbilityData
 {
+    /// <summary>全部数据。</summary>
+    public static IReadOnlyList<AbilityData> All => DataTable.GetAll<AbilityData>();
+
+    /// <summary>按 Name 获取数据，找不到返回 null 并记录日志。</summary>
+    public static AbilityData? Get(string name) => DataTable.GetByName<AbilityData>(name);
+
     // ====== 实例 ======
 
     /// <summary>猛击</summary>
-    public static readonly AbilityConfigData Slam = new()
+    public static readonly AbilityData Slam = new()
     {
         Name = "猛击",
         FeatureGroupId = "技能.主动",
-        FeatureHandlerId = "技能.主动.猛击",
+        FeatureHandlerId = FeatureId.Ability.Active.Slam,
         Description = "在角色周围随机位置猛击地面，对范围内敌人造成物理伤害",
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCostType = AbilityCostType.Mana,
         AbilityCooldown = 1.0f,
-        AbilityCastRange = 500f,
-        AbilityEffectRadius = 300f,
+        AbilityCastRange = 100.300003f,
+        AbilityEffectRadius = 300.0f,
         EffectScenePath = "res://assets/Effect/020/AnimatedSprite2D/020.tscn",
-        AbilityDamage = 30f
+        AbilityDamage = 30.0f
     };
 
     /// <summary>位置目标</summary>
-    public static readonly AbilityConfigData TargetPointSkill = new()
+    public static readonly AbilityData TargetPointSkill = new()
     {
         Name = "位置目标",
         FeatureGroupId = "技能.主动",
@@ -35,91 +44,91 @@ public class AbilityConfigData
         AbilityCostType = AbilityCostType.Mana,
         AbilityCooldown = 1.0f,
         AbilityTargetSelection = AbilityTargetSelection.Point,
-        AbilityCastRange = 400f,
-        AbilityEffectRadius = 200f,
-        AbilityDamage = 10f
+        AbilityCastRange = 400.0f,
+        AbilityEffectRadius = 200.0f,
+        AbilityDamage = 10.0f
     };
 
     /// <summary>环绕技能</summary>
-    public static readonly AbilityConfigData OrbitSkill = new()
+    public static readonly AbilityData OrbitSkill = new()
     {
         Name = "环绕技能",
         FeatureGroupId = "技能.被动",
-        FeatureHandlerId = "技能.被动.环绕技能",
+        FeatureHandlerId = FeatureId.Ability.Passive.OrbitSkill,
         Description = "生成多个投射物环绕玩家旋转，碰触敌人造成伤害（验证 Orbit 模式）",
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
         ProjectileScenePath = "res://assets/Projectile/Projectile/Polygon2D/BulletDiamond.tscn",
-        AbilityDamage = 20f
+        AbilityDamage = 20.0f
     };
 
     /// <summary>正弦波射击</summary>
-    public static readonly AbilityConfigData SineWaveShot = new()
+    public static readonly AbilityData SineWaveShot = new()
     {
         Name = "正弦波射击",
         FeatureGroupId = "技能.投射物",
-        FeatureHandlerId = "技能.投射物.正弦波射击",
+        FeatureHandlerId = FeatureId.Ability.Projectile.SineWaveShot,
         Description = "发射正弦波形弹道向敌人射击（验证 SineWave 模式）",
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
-        AbilityCastRange = 600f,
+        AbilityCastRange = 600.0f,
         ProjectileScenePath = "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn",
-        AbilityDamage = 25f
+        AbilityDamage = 25.0f
     };
 
     /// <summary>定点抛炸弹</summary>
-    public static readonly AbilityConfigData ParabolaShot = new()
+    public static readonly AbilityData ParabolaShot = new()
     {
         Name = "定点抛炸弹",
         FeatureGroupId = "技能.投射物",
-        FeatureHandlerId = "技能.投射物.定点抛炸弹",
+        FeatureHandlerId = FeatureId.Ability.Projectile.ParabolaBombardment,
         Description = "每隔一段时间向施法者周围随机落点抛出一枚炸弹，落地时造成范围伤害（固定终点 Parabola 模式）",
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Periodic,
         AbilityCooldown = 1.0f,
-        AbilityCastRange = 700f,
-        AbilityEffectRadius = 250f,
+        AbilityCastRange = 700.0f,
+        AbilityEffectRadius = 250.0f,
         EffectScenePath = "res://assets/Effect/004龙卷风/AnimatedSprite2D/004龙卷风.tscn",
         ProjectileScenePath = "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn",
-        AbilityDamage = 9f
+        AbilityDamage = 9.0f
     };
 
     /// <summary>回旋镖投掷</summary>
-    public static readonly AbilityConfigData BoomerangThrow = new()
+    public static readonly AbilityData BoomerangThrow = new()
     {
         Name = "回旋镖投掷",
         FeatureGroupId = "技能.投射物",
-        FeatureHandlerId = "技能.投射物.回旋镖投掷",
+        FeatureHandlerId = FeatureId.Ability.Projectile.BoomerangThrow,
         Description = "投掷回旋镖，飞出后自动返回，来回命中敌人（验证 Boomerang 模式）",
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
         AbilityTargetSelection = AbilityTargetSelection.None,
-        AbilityCastRange = 800f,
+        AbilityCastRange = 800.0f,
         ProjectileScenePath = "res://assets/Projectile/Projectile/Polygon2D/BulletDiamond.tscn",
-        AbilityDamage = 22f
+        AbilityDamage = 22.0f
     };
 
     /// <summary>圆弧射击</summary>
-    public static readonly AbilityConfigData ArcShot = new()
+    public static readonly AbilityData ArcShot = new()
     {
         Name = "圆弧射击",
         FeatureGroupId = "技能.投射物",
-        FeatureHandlerId = "技能.投射物.圆弧射击",
+        FeatureHandlerId = FeatureId.Ability.Projectile.ArcShot,
         Description = "发射沿圆弧轨迹飞行的投射物（验证 CircularArc 模式）",
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
         AbilityTargetSelection = AbilityTargetSelection.Entity,
-        AbilityCastRange = 700f,
+        AbilityCastRange = 700.0f,
         ProjectileScenePath = "res://assets/Projectile/Projectile/Polygon2D/BoomerangChevron.tscn",
-        AbilityDamage = 26f
+        AbilityDamage = 26.0f
     };
 
     /// <summary>贝塞尔射击</summary>
-    public static readonly AbilityConfigData BezierShot = new()
+    public static readonly AbilityData BezierShot = new()
     {
         Name = "贝塞尔射击",
         FeatureGroupId = "技能.投射物",
@@ -128,53 +137,53 @@ public class AbilityConfigData
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
-        AbilityCastRange = 600f,
+        AbilityCastRange = 600.0f,
         ProjectileScenePath = "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn",
-        AbilityDamage = 30f
+        AbilityDamage = 30.0f
     };
 
     /// <summary>冲刺</summary>
-    public static readonly AbilityConfigData Dash = new()
+    public static readonly AbilityData Dash = new()
     {
         Name = "冲刺",
         FeatureGroupId = "技能.位移",
-        FeatureHandlerId = "技能.位移.冲刺",
+        FeatureHandlerId = FeatureId.Ability.Movement.Dash,
         Description = "高速冲向目标方向，瞬间位移躲避危险",
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
-        AbilityCastRange = 300f,
-        AbilityEffectRadius = 300f,
+        AbilityCastRange = 300.0f,
+        AbilityEffectRadius = 300.0f,
         EffectScenePath = "res://assets/Effect/lrsc3/AnimatedSprite2D/lrsc3.tscn"
     };
 
     /// <summary>圆环伤害</summary>
-    public static readonly AbilityConfigData CircleDamage = new()
+    public static readonly AbilityData CircleDamage = new()
     {
         Name = "圆环伤害",
         FeatureGroupId = "技能.被动",
-        FeatureHandlerId = "技能.被动.圆环伤害",
+        FeatureHandlerId = FeatureId.Ability.Passive.CircleDamage,
         Description = "周身燃起烈焰光环，每秒对周围敌人造成魔法伤害",
         AbilityIconPath = "res://icon.svg",
         AbilityType = AbilityType.Passive,
         AbilityTriggerMode = AbilityTriggerMode.Permanent,
         AbilityCooldown = 1.0f,
-        AbilityEffectRadius = 500f,
+        AbilityEffectRadius = 500.0f,
         EffectScenePath = "res://assets/Effect/003/AnimatedSprite2D/003.tscn",
-        AbilityDamage = 10f
+        AbilityDamage = 10.0f
     };
 
     /// <summary>光环护盾</summary>
-    public static readonly AbilityConfigData AuraShield = new()
+    public static readonly AbilityData AuraShield = new()
     {
         Name = "光环护盾",
         FeatureGroupId = "技能.被动",
-        FeatureHandlerId = "技能.被动.光环护盾",
+        FeatureHandlerId = FeatureId.Ability.Passive.AuraShield,
         Description = "在玩家旁生成跟随护盾，接触敌人造成伤害（验证 AttachToHost 模式）",
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
-        AbilityDamage = 15f
+        AbilityDamage = 15.0f
     };
     // ====== 基础信息 ======
 
@@ -186,6 +195,7 @@ public class AbilityConfigData
     /// <summary>
     /// 技能分组 ID
     /// </summary>
+    [DataKey(nameof(DataKey.AbilityFeatureGroup))]
     public string? FeatureGroupId { get; set; } = (string)DataKey.AbilityFeatureGroup.DefaultValue!;
 
     /// <summary>
@@ -201,6 +211,7 @@ public class AbilityConfigData
     /// <summary>
     /// 技能图标路径
     /// </summary>
+    [DataKey(nameof(DataKey.AbilityIcon))]
     public string AbilityIconPath { get; set; } = "";
 
     /// <summary>
@@ -286,11 +297,13 @@ public class AbilityConfigData
     /// <summary>
     /// 技能表现特效场景路径 (res:// 路径字符串)
     /// </summary>
+    [DataKey(nameof(DataKey.EffectScene))]
     public string EffectScenePath { get; set; } = "";
 
     /// <summary>
     /// 技能投射物视觉场景路径 (res:// 路径字符串)
     /// </summary>
+    [DataKey(nameof(DataKey.ProjectileScene))]
     public string ProjectileScenePath { get; set; } = "";
 
     // ====== 伤害效果 ======

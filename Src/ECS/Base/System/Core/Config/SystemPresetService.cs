@@ -28,23 +28,26 @@ public static class SystemPresetService
         _presets.Clear();
         _activePreset = null;
 
-        // DataNew 是优先数据源；同名 .tres 只作为兼容回退，不覆盖纯 C# 预设。
-        foreach (var data in SystemPresetData.All)
+        if (GlobalConfig.DataSourceMode == DataSourceMode.PureCSharp)
         {
-            if (data == null)
+            foreach (var data in SystemPresetData.All)
             {
-                _log.Error("SystemPresetData.All 包含空预设项，请检查静态初始化顺序");
-                continue;
+                if (data == null)
+                {
+                    _log.Error("SystemPresetData.All 包含空预设项，请检查静态初始化顺序");
+                    continue;
+                }
+
+                TryAddPreset(data.ToResource(), warnDuplicate: true);
             }
-
-            TryAddPreset(data.ToResource(), warnDuplicate: true);
         }
-
-        // 使用 ResourceManagement 加载仍未迁移到 DataNew 的系统预设资源。
-        var presets = ResourceManagement.LoadAll<SystemPreset>(ResourceCategory.ConfigSystemPreset);
-        foreach (var preset in presets)
+        else
         {
-            TryAddPreset(preset, warnDuplicate: false);
+            var presets = ResourceManagement.LoadAll<SystemPreset>(ResourceCategory.ConfigSystemPreset);
+            foreach (var preset in presets)
+            {
+                TryAddPreset(preset, warnDuplicate: true);
+            }
         }
 
         _isInitialized = true;

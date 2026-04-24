@@ -205,9 +205,9 @@ namespace Slime.Test.SystemCore
 
         private void TestDataNewSystemCollectionsDoNotContainNull()
         {
-            foreach (var config in Slime.ConfigNew.Systems.SystemConfigData.All)
+            foreach (var config in Slime.ConfigNew.Systems.SystemData.All)
             {
-                AssertEqual("SystemConfigData.All 不应包含空配置", true, config != null);
+                AssertEqual("SystemData.All 不应包含空配置", true, config != null);
             }
 
             foreach (var preset in Slime.ConfigNew.Systems.SystemPresetData.All)

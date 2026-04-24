@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Slime.ConfigNew.Systems;
 
@@ -27,24 +26,26 @@ public static class SystemConfigService
 
         _configs.Clear();
 
-        // DataNew 是优先数据源；同名 .tres 只作为兼容回退，不覆盖纯 C# 配置。
-        foreach (var data in SystemConfigData.All)
+        if (GlobalConfig.DataSourceMode == DataSourceMode.PureCSharp)
         {
-            if (data == null)
+            foreach (var data in SystemData.All)
             {
-                _log.Error("SystemConfigData.All 包含空配置项，请检查静态初始化顺序");
-                continue;
+                if (data == null)
+                {
+                    _log.Error("SystemData.All 包含空配置项，请检查静态初始化顺序");
+                    continue;
+                }
+
+                TryAddConfig(data.ToResource(), data.SystemId, warnDuplicate: true);
             }
-
-            TryAddConfig(data.ToResource(), data.SystemId, warnDuplicate: true);
         }
-
-        // 使用 ResourceManagement 加载仍未迁移到 DataNew 的系统配置资源。
-        var configs = ResourceManagement.LoadAll<SystemConfig>(ResourceCategory.ConfigSystem);
-        foreach (var config in configs)
+        else
         {
-            var resourceName = Path.GetFileNameWithoutExtension(config.ResourcePath);
-            TryAddConfig(config, resourceName, warnDuplicate: false);
+            var configs = ResourceManagement.LoadAll<SystemConfig>(ResourceCategory.ConfigSystem);
+            foreach (var config in configs)
+            {
+                TryAddConfig(config, config.SystemId, warnDuplicate: true);
+            }
         }
 
         _isInitialized = true;

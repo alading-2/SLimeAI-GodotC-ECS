@@ -1,13 +1,15 @@
+using Slime.ConfigNew;
+
 namespace Slime.ConfigNew.Systems;
 
 /// <summary>
 /// 系统配置（纯 POCO，不继承 Resource）。
 /// <para>用于让 DataNew 支持 Data/Config/System 的纯 C# 数据源。</para>
 /// </summary>
-public class SystemConfigData
+public class SystemData
 {
     /// <summary>全部系统配置实例。</summary>
-    public static SystemConfigData[] All =>
+    public static SystemData[] All =>
     [
         ObjectPoolInit,
         TimerManager,
@@ -25,8 +27,11 @@ public class SystemConfigData
         MouseSelectionSystem
     ];
 
+    /// <summary>按 SystemId 获取系统配置，找不到返回 null 并记录日志。</summary>
+    public static SystemData? Get(string name) => DataTable.GetByName<SystemData>(name);
+
     /// <summary>对象池初始化系统。</summary>
-    public static readonly SystemConfigData ObjectPoolInit = new()
+    public static readonly SystemData ObjectPoolInit = new()
     {
         SystemId = "ObjectPoolInit",
         MountGroup = SystemGroup.Base,
@@ -37,7 +42,7 @@ public class SystemConfigData
     };
 
     /// <summary>定时器管理系统。</summary>
-    public static readonly SystemConfigData TimerManager = new()
+    public static readonly SystemData TimerManager = new()
     {
         SystemId = "TimerManager",
         MountGroup = SystemGroup.Base,
@@ -48,7 +53,7 @@ public class SystemConfigData
     };
 
     /// <summary>项目状态桥接系统。</summary>
-    public static readonly SystemConfigData ProjectStateBridge = new()
+    public static readonly SystemData ProjectStateBridge = new()
     {
         SystemId = "ProjectStateBridge",
         MountGroup = SystemGroup.Base,
@@ -59,7 +64,7 @@ public class SystemConfigData
     };
 
     /// <summary>实体管理器。</summary>
-    public static readonly SystemConfigData EntityManager = new()
+    public static readonly SystemData EntityManager = new()
     {
         SystemId = "EntityManager",
         MountGroup = SystemGroup.Base,
@@ -70,26 +75,26 @@ public class SystemConfigData
     };
 
     /// <summary>伤害处理服务。</summary>
-    public static readonly SystemConfigData DamageService = GameplayCombat(
+    public static readonly SystemData DamageService = GameplayCombat(
         "DamageService",
         priority: 10,
         description: "伤害处理服务，负责伤害计算、暴击、闪避等核心战斗逻辑");
 
     /// <summary>伤害统计系统。</summary>
-    public static readonly SystemConfigData DamageStatisticsSystem = GameplayCombat(
+    public static readonly SystemData DamageStatisticsSystem = GameplayCombat(
         "DamageStatisticsSystem",
         priority: 11,
         description: "伤害统计系统，记录和分析战斗数据",
         dependencies: ["DamageService"]);
 
     /// <summary>恢复系统。</summary>
-    public static readonly SystemConfigData RecoverySystem = GameplayCombat(
+    public static readonly SystemData RecoverySystem = GameplayCombat(
         "RecoverySystem",
         priority: 12,
         description: "恢复系统，处理生命值和护盾恢复逻辑");
 
     /// <summary>生成系统。</summary>
-    public static readonly SystemConfigData SpawnSystem = new()
+    public static readonly SystemData SpawnSystem = new()
     {
         SystemId = "SpawnSystem",
         MountGroup = SystemGroup.Gameplay,
@@ -102,13 +107,13 @@ public class SystemConfigData
     };
 
     /// <summary>目标选择管理系统。</summary>
-    public static readonly SystemConfigData TargetingManagerRuntime = GameplayCombat(
+    public static readonly SystemData TargetingManagerRuntime = GameplayCombat(
         "TargetingManagerRuntime",
         priority: 14,
         description: "目标选择管理系统，提供目标查询和筛选服务");
 
     /// <summary>暂停菜单系统。</summary>
-    public static readonly SystemConfigData PauseMenuSystem = new()
+    public static readonly SystemData PauseMenuSystem = new()
     {
         SystemId = "PauseMenuSystem",
         MountGroup = SystemGroup.UI,
@@ -120,7 +125,7 @@ public class SystemConfigData
     };
 
     /// <summary>UI 管理系统。</summary>
-    public static readonly SystemConfigData UIManager = new()
+    public static readonly SystemData UIManager = new()
     {
         SystemId = "UIManager",
         MountGroup = SystemGroup.UI,
@@ -130,7 +135,7 @@ public class SystemConfigData
     };
 
     /// <summary>伤害数字 UI 桥接系统。</summary>
-    public static readonly SystemConfigData DamageNumberRuntimeBridge = new()
+    public static readonly SystemData DamageNumberRuntimeBridge = new()
     {
         SystemId = "DamageNumberRuntimeBridge",
         MountGroup = SystemGroup.UI,
@@ -143,7 +148,7 @@ public class SystemConfigData
     };
 
     /// <summary>测试系统。</summary>
-    public static readonly SystemConfigData TestSystem = new()
+    public static readonly SystemData TestSystem = new()
     {
         SystemId = "TestSystem",
         MountGroup = SystemGroup.Test,
@@ -154,7 +159,7 @@ public class SystemConfigData
     };
 
     /// <summary>鼠标选择系统。</summary>
-    public static readonly SystemConfigData MouseSelectionSystem = new()
+    public static readonly SystemData MouseSelectionSystem = new()
     {
         SystemId = "MouseSelectionSystem",
         MountGroup = SystemGroup.Debug,
@@ -226,13 +231,13 @@ public class SystemConfigData
         };
     }
 
-    private static SystemConfigData GameplayCombat(
+    private static SystemData GameplayCombat(
         string systemId,
         int priority,
         string description,
         string[]? dependencies = null)
     {
-        return new SystemConfigData
+        return new SystemData
         {
             SystemId = systemId,
             MountGroup = SystemGroup.Combat,

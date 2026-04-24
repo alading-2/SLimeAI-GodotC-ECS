@@ -4,7 +4,7 @@ namespace Slime.ConfigNew.Units
     /// 单位配置基类（纯 POCO，不继承 Resource）
     /// 包含 Player/Enemy/TargetingIndicator 共有的属性
     /// </summary>
-    public abstract class UnitConfigData
+    public abstract class UnitData
     {
         // ====== 基础信息 ======
 

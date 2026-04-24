@@ -1,10 +1,19 @@
+using System.Collections.Generic;
+using Slime.ConfigNew;
+
 namespace Slime.ConfigNew.Abilities
 {
     /// <summary>
-    /// 链式技能配置（纯 POCO，继承 AbilityConfigData）
+    /// 链式技能配置（纯 POCO，继承 AbilityData）
     /// </summary>
-    public class ChainAbilityConfigData : AbilityConfigData
+    public class ChainAbilityData : AbilityData
     {
+    /// <summary>全部数据。</summary>
+    public static IReadOnlyList<ChainAbilityData> All => DataTable.GetAll<ChainAbilityData>();
+
+    /// <summary>按 Name 获取数据，找不到返回 null 并记录日志。</summary>
+    public static ChainAbilityData? Get(string name) => DataTable.GetByName<ChainAbilityData>(name);
+
         // ====== 链式效果 ======
 
         /// <summary>
@@ -35,7 +44,7 @@ namespace Slime.ConfigNew.Abilities
         // ====== 实例 ======
 
         /// <summary>连锁闪电</summary>
-        public static readonly ChainAbilityConfigData ChainLightning = new()
+        public static readonly ChainAbilityData ChainLightning = new()
         {
             Name = "闪电链",
             FeatureGroupId = "技能.主动",

@@ -91,7 +91,7 @@ public static void Initialize()
 }
 ```
 
-其余系统级设置统一写在 `Data/DataNew/System/SystemConfigData.cs`；同名 `.tres` 资源只作为兼容回退，不覆盖纯 C# 配置。
+其余系统级设置统一写在 `Data/DataNew/System/SystemData.cs`；同名 `.tres` 资源只作为兼容回退，不覆盖纯 C# 配置。
 
 | 字段 | 语义 |
 | --- | --- |
@@ -112,7 +112,7 @@ public static void Initialize()
 
 兼容路径：
 
-- `Data/DataNew/System/SystemConfigData.cs`：优先数据源，适合纯 C# 配置和版本审查。
+- `Data/DataNew/System/SystemData.cs`：优先数据源，适合纯 C# 配置和版本审查。
 - `Data/DataNew/System/SystemPresetData.cs`：优先预设数据源。
 - `Data/Config/System/System/Resource/*.tres`：资源回退，主要用于尚未迁移的系统配置。
 - `Data/Config/System/Preset/Resource/*.tres`：资源回退，主要用于尚未迁移的预设。

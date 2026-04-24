@@ -1,10 +1,18 @@
+using System.Collections.Generic;
+using Slime.ConfigNew;
 namespace Slime.ConfigNew.Units
 {
     /// <summary>
     /// 敌人配置（纯 POCO）
     /// </summary>
-    public class EnemyConfigData : UnitConfigData
+    public class EnemyData : UnitData
     {
+        /// <summary>全部数据。</summary>
+        public static IReadOnlyList<EnemyData> All => DataTable.GetAll<EnemyData>();
+
+        /// <summary>按 Name 获取数据，找不到返回 null 并记录日志。</summary>
+        public static EnemyData? Get(string name) => DataTable.GetByName<EnemyData>(name);
+
         // ====== 敌人专有 ======
 
         /// <summary>
@@ -74,7 +82,7 @@ namespace Slime.ConfigNew.Units
         // ====== 实例 ======
 
         /// <summary>鱼人</summary>
-        public static readonly EnemyConfigData Yuren = new()
+        public static readonly EnemyData Yuren = new()
         {
             ExpReward = 2,
             SpawnMinWave = 1,
@@ -92,7 +100,7 @@ namespace Slime.ConfigNew.Units
         };
 
         /// <summary>豺狼人</summary>
-        public static readonly EnemyConfigData Chailangren = new()
+        public static readonly EnemyData Chailangren = new()
         {
             ExpReward = 5,
             SpawnStrategy = SpawnPositionStrategy.Circle,

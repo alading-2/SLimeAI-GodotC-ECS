@@ -18,8 +18,8 @@ public readonly record struct EntitySpawnConfig
         ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively;
     }
 
-    /// <summary>单位配置资源（必填，如 EnemyConfig, PlayerConfig）</summary>
-    public required Resource Config { get; init; }
+    /// <summary>单位配置数据（必填，可为 DataNew POCO 或旧 Resource）</summary>
+    public required object Config { get; init; }
 
     /// <summary>是否使用对象池（默认 false）</summary>
     public bool UsingObjectPool { get; init; }
@@ -201,7 +201,7 @@ public static partial class EntityManager
         entity.Data.Set(DataKey.Id, id);
 
         // 2. 数据注入 (从 Resource)
-        entity.Data.LoadFromResource(config.Config);
+        entity.Data.LoadFromConfig(config.Config);
 
         // 3. 自动加载 VisualScene (如有)
         InjectVisualScene(
@@ -279,7 +279,7 @@ public static partial class EntityManager
     /// <summary>
     /// 自动加载 VisualScene
     /// </summary>
-    private static void InjectVisualScene(Node entity, Resource config, PackedScene? visualSceneOverride = null)
+    private static void InjectVisualScene(Node entity, object config, PackedScene? visualSceneOverride = null)
     {
         PackedScene? scene = visualSceneOverride;
 

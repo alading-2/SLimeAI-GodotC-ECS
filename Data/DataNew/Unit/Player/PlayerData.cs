@@ -1,10 +1,18 @@
+using System.Collections.Generic;
+using Slime.ConfigNew;
 namespace Slime.ConfigNew.Units
 {
     /// <summary>
     /// 玩家配置（纯 POCO）
     /// </summary>
-    public class PlayerConfigData : UnitConfigData
+    public class PlayerData : UnitData
     {
+        /// <summary>全部数据。</summary>
+        public static IReadOnlyList<PlayerData> All => DataTable.GetAll<PlayerData>();
+
+        /// <summary>按 Name 获取数据，找不到返回 null 并记录日志。</summary>
+        public static PlayerData? Get(string name) => DataTable.GetByName<PlayerData>(name);
+
         // ====== 玩家专有 ======
 
         /// <summary>
@@ -25,6 +33,7 @@ namespace Slime.ConfigNew.Units
         /// <summary>
         /// 基础技能伤害
         /// </summary>
+        [DataKey(nameof(DataKey.AbilityDamageBonus))]
         public float BaseSkillDamage { get; set; } = (float)DataKey.AbilityDamageBonus.DefaultValue!;
 
         /// <summary>
@@ -35,7 +44,7 @@ namespace Slime.ConfigNew.Units
         // ====== 实例 ======
 
         /// <summary>德鲁伊</summary>
-        public static readonly PlayerConfigData Deluyi = new()
+        public static readonly PlayerData Deluyi = new()
         {
             Name = "德鲁伊",
             Team = Team.Player,
