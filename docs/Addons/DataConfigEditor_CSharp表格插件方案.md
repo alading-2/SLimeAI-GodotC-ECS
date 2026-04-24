@@ -240,8 +240,9 @@ public sealed class TableRow
 - 字符串按合法 C# 字面量转义；`float` / `double` 使用 `InvariantCulture`；普通 enum 输出 `EnumType.Member`；Flags enum 输出 `EnumType.A | EnumType.B`。
 - 已有源码值若是复杂表达式，保存器跳过该属性，避免覆盖 `SomeConst.Path`、`nameof(...)`、方法调用等手写表达式。
 - `PropertyMetadata` 增加可编辑边界，集合、数组、嵌套对象等复杂字段在 UI 中只读，并通过 tooltip / 批量编辑占位提示原因。
-- 单元格编辑时先直接反射写入当前静态实例，再登记 Godot UndoRedo；避免 UI 显示变了但内存实例仍是旧值。编辑后只是“内存待保存”，必须点击插件工具栏“保存C#”才会改 `.cs` 文件，Godot 顶部/菜单保存不会触发源码写回。
-- 保存时输出结构化诊断：源码文件、初始化器数量、写入行数、写入字段数、未变化字段、默认值跳过、复杂表达式跳过和不支持类型跳过。Godot Output 中每条 `[DataConfigEditor] 保存诊断` 都能说明某个字段为什么写入或跳过。
+- 单元格编辑时先直接反射写入当前静态实例，再登记 Godot UndoRedo；随后立即调用单元格写回入口，只定位当前实例的当前属性，不再扫描整张表。
+- `CsFileWriter.WriteSingleChangeWithDiagnostics` 只替换或补写一个对象初始化器里的一个属性；`保存C#` 只用于重试失败的脏单元格，不再执行全表保存。
+- 单元格写回输出结构化诊断：源码文件、初始化器命中、写入字段、复杂表达式跳过和不支持类型跳过。Godot Output 中每条 `[DataConfigEditor] 单元格写回诊断` 都能说明该字段为什么写入或跳过。
 
 ### Phase 1：修通保存写回
 
