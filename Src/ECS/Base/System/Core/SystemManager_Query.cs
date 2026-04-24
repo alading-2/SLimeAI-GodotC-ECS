@@ -38,8 +38,7 @@ public partial class SystemManager
 
         foreach (var entry in _entries.Values)
         {
-            // 检查系统的 Groups 是否包含指定分组
-            if ((entry.Config.Groups & group) != 0)
+            if (entry.Config.MountGroup == group)
             {
                 var info = GetSystemRuntimeInfoFromEntry(entry);
                 if (info != null)
@@ -104,7 +103,9 @@ public partial class SystemManager
             IsAdded = true,
             IsEnabled = entry.IsEnabled,
             IsRunning = entry.IsRunning,
-            Groups = entry.Config.Groups,
+            IsStateAllowed = entry.IsStateAllowed,
+            BlockedReason = entry.BlockedReason,
+            MountGroup = entry.Config.MountGroup,
             Tags = entry.Config.Tags,
             CustomStats = new List<SystemStat>()
         };

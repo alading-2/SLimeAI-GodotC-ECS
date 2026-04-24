@@ -10,18 +10,18 @@ public sealed partial class TargetingManagerRuntime : Node, ISystem
     [ModuleInitializer]
     public static void Initialize()
     {
-        SystemRegistry.Register(nameof(TargetingManager),
+        SystemRegistry.Register(nameof(TargetingManagerRuntime),
             static () => new TargetingManagerRuntime());
     }
 
     /// <inheritdoc />
-    public void OnEnabled(ProjectStateSnapshot snapshot)
+    public void OnStarted(ProjectStateSnapshot snapshot)
     {
         TargetingManager.EnableRuntime();
     }
 
     /// <inheritdoc />
-    public void OnDisabled(ProjectStateSnapshot snapshot)
+    public void OnStopped(ProjectStateSnapshot snapshot)
     {
         TargetingManager.DisableRuntime();
     }
@@ -36,7 +36,7 @@ public sealed partial class TargetingManagerRuntime : Node, ISystem
     {
         return new SystemRuntimeInfo
         {
-            SystemId = nameof(TargetingManager),
+            SystemId = nameof(TargetingManagerRuntime),
             CustomStats = new List<SystemStat>()
         };
     }

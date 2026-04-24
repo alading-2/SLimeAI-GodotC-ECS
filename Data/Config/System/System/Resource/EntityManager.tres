@@ -1,13 +1,13 @@
-[gd_resource type="Resource" script_class="SystemConfig" format=3 uid="uid://cd7negbhtw4dg"]
+[gd_resource type="Resource" script_class="SystemConfig" format=3 uid="uid://d38imjjonp0ih"]
 
 [ext_resource type="Script" uid="uid://coia4r0tr5owx" path="res://Data/Config/System/System/SystemConfig.cs" id="1_1"]
 
 [resource]
 script = ExtResource("1_1")
-SystemId = "TimerManager"
+SystemId = "EntityManager"
 MountGroup = 0
 Tags = 129
-Priority = 1
+Priority = 5
 Required = true
 AutoLoad = true
 StartEnabled = true
@@ -16,4 +16,4 @@ RequiredOverlays = 0
 BlockedOverlays = 0
 AllowedSimulationStates = 0
 Dependencies = Array[String]([])
-Description = "定时器管理系统，提供全局定时器服务"
+Description = "实体管理器，负责实体的生成、注册、销毁和组件管理。"

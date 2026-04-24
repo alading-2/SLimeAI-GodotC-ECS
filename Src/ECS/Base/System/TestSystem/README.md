@@ -186,7 +186,7 @@
 
 ### 3.1 运行时打开面板
 
-`TestSystem` 通过 `ModuleInitializer + SystemRegistry.Register(...)` 自动挂到 `SystemLifetime.Debug`。
+`TestSystem` 通过 `ModuleInitializer + SystemRegistry.Register(...)` 注册，挂载位置和默认装载策略由 `Data/Config/System/System/Resource/TestSystem.tres` 决定。
 
 正常启动游戏后：
 

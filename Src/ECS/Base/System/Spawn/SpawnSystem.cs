@@ -173,16 +173,20 @@ public partial class SpawnSystem : Node, ISystem
     }
 
     /// <inheritdoc />
-    public void OnEnabled(ProjectStateSnapshot snapshot)
+    public void OnStarted(ProjectStateSnapshot snapshot)
     {
         BindRuntimeEvents();
+        if (snapshot.FlowState == GameFlowState.SessionPlaying && !IsWaveActive && CurrentWaveIndex < 0)
+        {
+            StartWave(1); // waveIndex
+        }
     }
 
     /// <inheritdoc />
-    public void OnDisabled(ProjectStateSnapshot snapshot)
+    public void OnStopped(ProjectStateSnapshot snapshot)
     {
         UnbindRuntimeEvents();
-        if (snapshot.AppPhase != AppPhase.InSession || snapshot.SessionPhase != SessionPhase.Playing)
+        if (snapshot.FlowState != GameFlowState.SessionPlaying)
         {
             StopWaveRuntime(clearEnemies: false);
         }

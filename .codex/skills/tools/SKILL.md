@@ -28,7 +28,7 @@ API 文档：`Src/ECS/Tools/Timer/TimerManager.md`
 
 项目级暂停约定：
 
-- `useUnscaledTime = false`：默认受 `ProjectStateService` 的暂停 / 阻塞影响，`ExecutionPhase = Paused / Blocked` 时会被 `TimerManager` 自动暂停
+- `useUnscaledTime = false`：默认受 `ProjectStateService` 的暂停 / 阻塞影响，`SimulationState = Suspended` 时会被 `TimerManager` 自动暂停
 - `useUnscaledTime = true`：不受项目级暂停影响，适合暂停菜单、过场 UI、调试提示等覆盖层逻辑
 - 业务手动 `Pause()/Resume()` 与项目级自动暂停是两套状态，恢复项目时不会错误恢复原本就手动暂停的 timer
 

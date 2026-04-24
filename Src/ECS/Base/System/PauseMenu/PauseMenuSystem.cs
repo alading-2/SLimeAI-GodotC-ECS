@@ -65,21 +65,21 @@ public partial class PauseMenuSystem : CanvasLayer, ISystem
     }
 
     /// <inheritdoc />
-    public void OnEnabled(ProjectStateSnapshot snapshot)
+    public void OnStarted(ProjectStateSnapshot snapshot)
     {
         UpdateMenuState(snapshot);
     }
 
     /// <inheritdoc />
-    public void OnDisabled(ProjectStateSnapshot snapshot)
+    public void OnStopped(ProjectStateSnapshot snapshot)
     {
         SetMenuVisible(false);
     }
 
     /// <inheritdoc />
-    public void OnProjectStateChanged(ProjectStateChangedEventArgs args)
+    public void OnProjectStateChanged(GameEventType.Global.ProjectStateTransitionEventData data)
     {
-        UpdateMenuState(args.Current);
+        UpdateMenuState(data.Current);
     }
 
     private void TogglePauseMenu()
@@ -90,7 +90,7 @@ public partial class PauseMenuSystem : CanvasLayer, ISystem
             return;
         }
 
-        if (projectState.OverlayPhase == OverlayPhase.PauseMenu)
+        if ((projectState.Overlays & OverlayFlags.PauseMenu) != 0)
         {
             projectState.ClosePauseMenu();
             GlobalEventBus.TriggerGameResume();
@@ -115,7 +115,7 @@ public partial class PauseMenuSystem : CanvasLayer, ISystem
 
     private void UpdateMenuState(ProjectStateSnapshot snapshot)
     {
-        SetMenuVisible(snapshot.OverlayPhase == OverlayPhase.PauseMenu);
+        SetMenuVisible((snapshot.Overlays & OverlayFlags.PauseMenu) != 0);
     }
 
     private void SetMenuVisible(bool visible)

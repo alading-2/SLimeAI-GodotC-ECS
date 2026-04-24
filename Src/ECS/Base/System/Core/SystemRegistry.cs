@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 /// <summary>
 /// 系统注册表。
@@ -17,7 +16,7 @@ public static class SystemRegistry
     /// <summary>
     /// 注册系统（简化签名：只传 SystemId + Factory）。
     /// </summary>
-    /// <param name="systemId">系统唯一 Id（必须与 SystemId 枚举值一致）。</param>
+    /// <param name="systemId">系统唯一 Id（必须与 SystemConfig.SystemId 和资源文件名一致）。</param>
     /// <param name="factory">系统实例工厂。</param>
     public static void Register(string systemId, Func<object> factory)
     {
@@ -33,13 +32,6 @@ public static class SystemRegistry
             return;
         }
 
-        // 验证 SystemId 是否在枚举中定义
-        if (!Enum.TryParse<SystemId>(systemId, out _))
-        {
-            _log.Error($"系统 '{systemId}' 未在 SystemId 枚举中定义，请先添加到枚举");
-            return;
-        }
-
         if (_descriptors.ContainsKey(systemId))
         {
             _log.Error($"系统 '{systemId}' 重复注册，保留首次注册的描述符");
@@ -48,28 +40,6 @@ public static class SystemRegistry
 
         var descriptor = new SystemDescriptor(systemId, factory);
         _descriptors.Add(systemId, descriptor);
-    }
-
-    /// <summary>
-    /// 注册系统描述符（兼容旧接口）。
-    /// </summary>
-    /// <param name="descriptor">系统描述符。</param>
-    [Obsolete("请使用 Register(string systemId, Func<object> factory) 方法")]
-    public static void Register(SystemDescriptor descriptor)
-    {
-        if (descriptor == null)
-        {
-            _log.Error("忽略空系统描述符注册请求");
-            return;
-        }
-
-        if (_descriptors.ContainsKey(descriptor.SystemId))
-        {
-            _log.Error($"系统 '{descriptor.SystemId}' 重复注册，保留首次注册的描述符");
-            return;
-        }
-
-        _descriptors.Add(descriptor.SystemId, descriptor);
     }
 
     /// <summary>
@@ -95,7 +65,7 @@ public static class SystemRegistry
     /// <summary>
     /// 获取指定分组的所有系统描述符。
     /// </summary>
-    /// <param name="group">系统分组（支持 Flags 组合）。</param>
+    /// <param name="group">系统挂载分组，单选。</param>
     public static IEnumerable<SystemDescriptor> GetDescriptorsByGroup(SystemGroup group)
     {
         var configs = SystemConfigService.GetConfigsByGroup(group);

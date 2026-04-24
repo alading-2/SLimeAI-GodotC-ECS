@@ -5,16 +5,15 @@
 [resource]
 script = ExtResource("1_1")
 SystemId = "DamageService"
-Kind = 0
-Groups = 2
-Tags = 1
-DefaultAutoAdd = true
-DefaultEnabled = true
+MountGroup = 2
+Tags = 135
+Required = false
+AutoLoad = true
+StartEnabled = true
 Priority = 10
-AllowedAppPhases = 4
-AllowedSessionPhases = 2
-AllowedOverlayPhases = 0
-BlockedOverlayPhases = 1
-AllowedExecutionPhases = 1
+AllowedFlowStates = 8
+RequiredOverlays = 0
+BlockedOverlays = 7
+AllowedSimulationStates = 1
 Dependencies = []
 Description = "伤害处理服务，负责伤害计算、暴击、闪避等核心战斗逻辑"

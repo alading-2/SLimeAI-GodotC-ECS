@@ -18,8 +18,14 @@ public class SystemRuntimeInfo
     /// <summary>系统是否运行中（IsEnabled &amp;&amp; IsStateAllowed）。</summary>
     public bool IsRunning { get; set; }
 
-    /// <summary>系统分组（挂载位置）。</summary>
-    public SystemGroup Groups { get; set; }
+    /// <summary>系统是否满足项目状态运行条件。</summary>
+    public bool IsStateAllowed { get; set; }
+
+    /// <summary>状态门禁未通过时的原因；为空表示通过。</summary>
+    public string BlockedReason { get; set; } = string.Empty;
+
+    /// <summary>系统挂载分组。</summary>
+    public SystemGroup MountGroup { get; set; }
 
     /// <summary>系统标签（逻辑分类）。</summary>
     public SystemTag Tags { get; set; }

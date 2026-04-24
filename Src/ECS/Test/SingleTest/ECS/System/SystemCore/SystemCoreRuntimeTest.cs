@@ -23,8 +23,14 @@ namespace Slime.Test.SystemCore
             {
                 TestProjectStateDefaults();
                 TestProjectStateFlowHelpers();
+                TestProjectStatePublishesGlobalEvents();
+                TestProjectStatePhasePresets();
                 TestSystemRunCondition();
                 TestGameplayRunConditionPreset();
+                TestSystemRunConditionTreatsNoneAsUnrestricted();
+                TestDataNewSystemCollectionsDoNotContainNull();
+                TestSystemConfigPresetCalculatesEnabledSystems();
+                TestCoreSystemDescriptorsRegistered();
                 TestStatusCollectionKeepsInvulnerableUntilAllSourcesExpire();
                 TestSystemRegistryKeepsFirstDescriptorWhenDuplicateRegistered();
             }
@@ -41,36 +47,36 @@ namespace Slime.Test.SystemCore
         {
             var service = new ProjectStateService();
 
-            AssertEqual("默认 AppPhase", AppPhase.Boot, service.AppPhase);
-            AssertEqual("默认 SessionPhase", SessionPhase.None, service.SessionPhase);
-            AssertEqual("默认 OverlayPhase", OverlayPhase.None, service.OverlayPhase);
-            AssertEqual("默认 ExecutionPhase", ExecutionPhase.Running, service.ExecutionPhase);
+            AssertEqual("默认流程状态", GameFlowState.Boot, service.FlowState);
+            AssertEqual("默认覆盖层", OverlayFlags.None, service.Overlays);
+            AssertEqual("默认模拟状态", SimulationState.Running, service.SimulationState);
         }
 
         private void TestSystemRunCondition()
         {
             var condition = new SystemRunCondition
             {
-                AllowedAppPhases = AppPhase.InSession,
-                AllowedSessionPhases = SessionPhase.Playing,
-                BlockedOverlayPhases = OverlayPhase.PauseMenu,
-                AllowedExecutionPhases = ExecutionPhase.Running
+                AllowedFlowStates = GameFlowState.SessionPlaying,
+                BlockedOverlays = OverlayFlags.PauseMenu,
+                AllowedSimulationStates = SimulationState.Running
             };
 
             var allowedSnapshot = new ProjectStateSnapshot(
-                AppPhase.InSession,
-                SessionPhase.Playing,
-                OverlayPhase.None,
-                ExecutionPhase.Running);
+                GameFlowState.SessionPlaying,
+                OverlayFlags.None,
+                SimulationState.Running);
 
             var blockedSnapshot = new ProjectStateSnapshot(
-                AppPhase.InSession,
-                SessionPhase.Playing,
-                OverlayPhase.PauseMenu,
-                ExecutionPhase.Running);
+                GameFlowState.SessionPlaying,
+                OverlayFlags.PauseMenu,
+                SimulationState.Running);
 
             AssertEqual("匹配中的项目状态应允许运行", true, condition.Evaluate(allowedSnapshot));
             AssertEqual("PauseMenu 覆盖层应阻止运行", false, condition.Evaluate(blockedSnapshot));
+
+            var (isBlocked, reason) = condition.GetBlockedReason(blockedSnapshot);
+            AssertEqual("GetBlockedReason 应返回阻塞标记", true, isBlocked);
+            AssertEqual("GetBlockedReason 应返回可读原因", true, !string.IsNullOrEmpty(reason));
         }
 
         private void TestProjectStateFlowHelpers()
@@ -78,58 +84,139 @@ namespace Slime.Test.SystemCore
             var service = new ProjectStateService();
 
             service.BeginGameplaySession();
-            AssertEqual("BeginGameplaySession 应切到局内主流程", AppPhase.InSession, service.AppPhase);
-            AssertEqual("BeginGameplaySession 应切到 Playing", SessionPhase.Playing, service.SessionPhase);
-            AssertEqual("BeginGameplaySession 应清空覆盖层", OverlayPhase.None, service.OverlayPhase);
-            AssertEqual("BeginGameplaySession 应恢复执行", ExecutionPhase.Running, service.ExecutionPhase);
+            AssertEqual("BeginGameplaySession 应切到局内进行", GameFlowState.SessionPlaying, service.FlowState);
+            AssertEqual("BeginGameplaySession 应清空覆盖层", OverlayFlags.None, service.Overlays);
+            AssertEqual("BeginGameplaySession 应恢复模拟", SimulationState.Running, service.SimulationState);
 
             service.OpenPauseMenu();
-            AssertEqual("OpenPauseMenu 应打开暂停菜单", OverlayPhase.PauseMenu, service.OverlayPhase);
-            AssertEqual("OpenPauseMenu 应暂停执行", ExecutionPhase.Paused, service.ExecutionPhase);
+            AssertEqual("OpenPauseMenu 应打开暂停菜单", OverlayFlags.PauseMenu, service.Overlays);
+            AssertEqual("OpenPauseMenu 应暂停模拟", SimulationState.Suspended, service.SimulationState);
 
             service.ClosePauseMenu();
-            AssertEqual("ClosePauseMenu 应关闭暂停菜单", OverlayPhase.None, service.OverlayPhase);
-            AssertEqual("ClosePauseMenu 应恢复执行", ExecutionPhase.Running, service.ExecutionPhase);
+            AssertEqual("ClosePauseMenu 应关闭暂停菜单", OverlayFlags.None, service.Overlays);
+            AssertEqual("ClosePauseMenu 应恢复模拟", SimulationState.Running, service.SimulationState);
 
-            service.SetBlocked(OverlayPhase.Cutscene);
-            AssertEqual("SetBlocked 应写入阻塞覆盖层", OverlayPhase.Cutscene, service.OverlayPhase);
-            AssertEqual("SetBlocked 应进入 Blocked", ExecutionPhase.Blocked, service.ExecutionPhase);
+            service.SetBlocked(OverlayFlags.Cutscene);
+            AssertEqual("SetBlocked 应写入阻塞覆盖层", OverlayFlags.Cutscene, service.Overlays);
+            AssertEqual("SetBlocked 应暂停模拟", SimulationState.Suspended, service.SimulationState);
 
             service.ClearBlocked();
-            AssertEqual("ClearBlocked 应清空覆盖层", OverlayPhase.None, service.OverlayPhase);
-            AssertEqual("ClearBlocked 应恢复 Running", ExecutionPhase.Running, service.ExecutionPhase);
+            AssertEqual("ClearBlocked 应清空覆盖层", OverlayFlags.None, service.Overlays);
+            AssertEqual("ClearBlocked 应恢复模拟", SimulationState.Running, service.SimulationState);
 
             service.EndSession();
-            AssertEqual("EndSession 应标记会话结束", SessionPhase.Ended, service.SessionPhase);
-            AssertEqual("EndSession 不应保留暂停菜单", OverlayPhase.None, service.OverlayPhase);
-            AssertEqual("EndSession 应进入 Blocked", ExecutionPhase.Blocked, service.ExecutionPhase);
+            AssertEqual("EndSession 应标记会话结束", GameFlowState.SessionEnded, service.FlowState);
+            AssertEqual("EndSession 不应保留暂停菜单", OverlayFlags.None, service.Overlays);
+            AssertEqual("EndSession 应暂停模拟", SimulationState.Suspended, service.SimulationState);
         }
+
+        private void TestProjectStatePublishesGlobalEvents()
+        {
+            var service = new ProjectStateService();
+            var changedCount = 0;
+            GameEventType.Global.ProjectStateTransitionEventData? lastEvent = null;
+
+            void OnProjectStateChanged(GameEventType.Global.ProjectStateTransitionEventData evt)
+            {
+                changedCount++;
+                lastEvent = evt;
+            }
+
+            GlobalEventBus.Global.On<GameEventType.Global.ProjectStateTransitionEventData>(
+                GameEventType.Global.ProjectStateChanged,
+                OnProjectStateChanged);
+
+            service.BeginGameplaySession();
+
+            GlobalEventBus.Global.Off<GameEventType.Global.ProjectStateTransitionEventData>(
+                GameEventType.Global.ProjectStateChanged,
+                OnProjectStateChanged);
+
+            AssertEqual("ProjectStateService 应通过全局事件广播状态变化", 1, changedCount);
+            AssertEqual("ProjectStateChanged 应携带事件数据", true, lastEvent.HasValue);
+            AssertEqual("ProjectStateChanged 应携带旧状态", GameFlowState.Boot, lastEvent!.Value.Previous.FlowState);
+            AssertEqual("ProjectStateChanged 应携带新状态", GameFlowState.SessionPlaying, lastEvent.Value.Current.FlowState);
+        }
+
+        private void TestProjectStatePhasePresets()
+        {
+            AssertEqual("GameFlowState.Gameplay 应只包含局内进行", GameFlowState.SessionPlaying, GameFlowState.Gameplay);
+            AssertEqual("GameFlowState.Session 应包含完整单局流程", true,
+                (GameFlowState.Session & GameFlowState.SessionPreparing) != 0
+                && (GameFlowState.Session & GameFlowState.SessionPlaying) != 0
+                && (GameFlowState.Session & GameFlowState.SessionResolving) != 0
+                && (GameFlowState.Session & GameFlowState.SessionEnded) != 0);
+            AssertEqual("OverlayFlags.Blocking 应包含常见阻塞覆盖层", OverlayFlags.PauseMenu | OverlayFlags.ModalUi | OverlayFlags.Cutscene, OverlayFlags.Blocking);
+            AssertEqual("SimulationState.Any 应包含运行和挂起", SimulationState.Running | SimulationState.Suspended, SimulationState.Any);
+        }
+
 
         private void TestGameplayRunConditionPreset()
         {
             var condition = SystemRunCondition.GameplayRunning();
 
             var playingSnapshot = new ProjectStateSnapshot(
-                AppPhase.InSession,
-                SessionPhase.Playing,
-                OverlayPhase.None,
-                ExecutionPhase.Running);
+                GameFlowState.SessionPlaying,
+                OverlayFlags.None,
+                SimulationState.Running);
 
             var pausedSnapshot = new ProjectStateSnapshot(
-                AppPhase.InSession,
-                SessionPhase.Playing,
-                OverlayPhase.PauseMenu,
-                ExecutionPhase.Paused);
+                GameFlowState.SessionPlaying,
+                OverlayFlags.PauseMenu,
+                SimulationState.Suspended);
 
             var endedSnapshot = new ProjectStateSnapshot(
-                AppPhase.InSession,
-                SessionPhase.Ended,
-                OverlayPhase.None,
-                ExecutionPhase.Blocked);
+                GameFlowState.SessionEnded,
+                OverlayFlags.None,
+                SimulationState.Suspended);
 
             AssertEqual("GameplayRunning 在 Playing + Running 应通过", true, condition.Evaluate(playingSnapshot));
             AssertEqual("GameplayRunning 在暂停时应阻止运行", false, condition.Evaluate(pausedSnapshot));
             AssertEqual("GameplayRunning 在会话结束时应阻止运行", false, condition.Evaluate(endedSnapshot));
+        }
+
+        private void TestSystemRunConditionTreatsNoneAsUnrestricted()
+        {
+            var condition = new SystemRunCondition();
+            var pausedMenuSnapshot = new ProjectStateSnapshot(
+                GameFlowState.SessionPlaying,
+                OverlayFlags.PauseMenu,
+                SimulationState.Suspended);
+
+            AssertEqual("None 运行条件应表示不限制", true, condition.Evaluate(pausedMenuSnapshot));
+        }
+
+        private void TestDataNewSystemCollectionsDoNotContainNull()
+        {
+            foreach (var config in Slime.ConfigNew.Systems.SystemConfigData.All)
+            {
+                AssertEqual("SystemConfigData.All 不应包含空配置", true, config != null);
+            }
+
+            foreach (var preset in Slime.ConfigNew.Systems.SystemPresetData.All)
+            {
+                AssertEqual("SystemPresetData.All 不应包含空预设", true, preset != null);
+            }
+        }
+
+        private void TestSystemConfigPresetCalculatesEnabledSystems()
+        {
+            SystemConfigService.Initialize();
+            SystemPresetService.Initialize();
+
+            var enabledSystems = SystemPresetService.CalculateEnabledSystems();
+            AssertEqual("系统预设应启用 ObjectPoolInit", true, enabledSystems.Contains("ObjectPoolInit"));
+            AssertEqual("系统预设应启用 TimerManager", true, enabledSystems.Contains("TimerManager"));
+            AssertEqual("系统预设应启用 EntityManager", true, enabledSystems.Contains("EntityManager"));
+            AssertEqual("系统预设应显式启用 TestSystem", true, enabledSystems.Contains("TestSystem"));
+            AssertEqual("系统预设应显式启用 MouseSelectionSystem", true, enabledSystems.Contains("MouseSelectionSystem"));
+        }
+
+        private void TestCoreSystemDescriptorsRegistered()
+        {
+            AssertEqual("ObjectPoolInit 描述符应已注册", true, SystemRegistry.GetDescriptor("ObjectPoolInit") != null);
+            AssertEqual("TimerManager 描述符应已注册", true, SystemRegistry.GetDescriptor("TimerManager") != null);
+            AssertEqual("EntityManager 描述符应已注册", true, SystemRegistry.GetDescriptor("EntityManager") != null);
         }
 
         private void TestStatusCollectionKeepsInvulnerableUntilAllSourcesExpire()
@@ -155,14 +242,11 @@ namespace Slime.Test.SystemCore
         private void TestSystemRegistryKeepsFirstDescriptorWhenDuplicateRegistered()
         {
             var systemId = $"SystemCoreRuntimeTest.{Guid.NewGuid():N}";
-            var firstDescriptor = new SystemDescriptor(systemId, static () => new object());
-            var duplicateDescriptor = new SystemDescriptor(systemId, static () => new Node());
-
-            SystemRegistry.Register(firstDescriptor);
-            SystemRegistry.Register(duplicateDescriptor);
+            SystemRegistry.Register(systemId, static () => new object());
+            SystemRegistry.Register(systemId, static () => new Node());
 
             var registered = SystemRegistry.GetDescriptor(systemId);
-            AssertEqual("重复 SystemId 应保留首个描述符实例", true, ReferenceEquals(firstDescriptor, registered));
+            AssertEqual("重复 SystemId 应保留首个注册工厂", typeof(object), registered?.Factory().GetType());
         }
 
         private void Pass(string message)

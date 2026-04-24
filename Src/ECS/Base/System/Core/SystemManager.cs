@@ -55,13 +55,16 @@ public partial class SystemManager : Node
 
     public override void _Ready()
     {
+        _log.Info("SystemManager _Ready 开始启动系统框架");
         EnsureBootstrapped();
     }
 
     public override void _ExitTree()
     {
-        // 取消订阅，避免后续状态变更触发回调。
-        ProjectState.StateChanged -= OnProjectStateChanged;
+        // 取消全局事件订阅，避免后续状态变更触发回调。
+        GlobalEventBus.Global.Off<GameEventType.Global.ProjectStateTransitionEventData>(
+            GameEventType.Global.ProjectStateChanged,
+            OnProjectStateChanged);
 
         // 在移除管理器前，先关闭正在运行的系统，再给所有系统一次统一反注册机会。
         // 顺序：先 Disable（让系统清理运行态），再 UnRegistered（释放资源）。
@@ -69,7 +72,7 @@ public partial class SystemManager : Node
         {
             if (entry.IsRunning)
             {
-                entry.Lifecycle?.OnDisabled(ProjectState.Snapshot);
+                entry.Lifecycle?.OnStopped(ProjectState.Snapshot);
             }
 
             entry.Lifecycle?.OnUnRegistered();
@@ -107,8 +110,12 @@ public partial class SystemManager : Node
         // 为每个生命周期域创建 Host 节点，作为该域系统的统一父容器。
         EnsureHosts();
         // 先减后加，防止重复订阅。
-        ProjectState.StateChanged -= OnProjectStateChanged;
-        ProjectState.StateChanged += OnProjectStateChanged;
+        GlobalEventBus.Global.Off<GameEventType.Global.ProjectStateTransitionEventData>(
+            GameEventType.Global.ProjectStateChanged,
+            OnProjectStateChanged);
+        GlobalEventBus.Global.On<GameEventType.Global.ProjectStateTransitionEventData>(
+            GameEventType.Global.ProjectStateChanged,
+            OnProjectStateChanged);
         _isInitialized = true;
     }
 
@@ -127,13 +134,22 @@ public partial class SystemManager : Node
             return;
         }
 
-        // 1. 初始化配置服务
-        SystemConfigService.Initialize();
-        SystemPresetService.Initialize();
+        try
+        {
+            // 1. 初始化配置服务
+            SystemConfigService.Initialize();
+            SystemPresetService.Initialize();
+        }
+        catch (Exception ex)
+        {
+            _log.Error($"系统配置初始化失败，SystemManager 启动中断: {ex}");
+            throw;
+        }
 
         // 2. 计算应该加载的系统列表
         var enabledSystemIds = SystemPresetService.CalculateEnabledSystems();
         _log.Info($"根据预设计算，应加载 {enabledSystemIds.Count} 个系统");
+        _log.Info($"当前已注册系统描述符数量: {SystemRegistry.GetDescriptorValues().Count}");
 
         // 3. 收集对应的描述符并按 Priority 排序
         var descriptorsToLoad = new List<(SystemDescriptor descriptor, SystemConfig config, int priority)>();
@@ -162,12 +178,55 @@ public partial class SystemManager : Node
         // 4. 逐个加载系统
         foreach (var (descriptor, config, _) in descriptorsToLoad)
         {
-            EnsureSystem(descriptor, config);
+            try
+            {
+                EnsureSystem(descriptor, config);
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"系统 {descriptor.SystemId} 加载异常，已跳过并继续加载其他系统: {ex}");
+            }
         }
 
         _isBootstrapped = true;
         EmitSignal(SignalName.BootstrapCompleted);
+
+        // 打印系统加载和运行状态
+        PrintSystemStatus();
+
         _log.Info("SystemManager 启动完成");
+    }
+
+    /// <summary>
+    /// 打印所有系统的加载和运行状态（用于调试）。
+    /// </summary>
+    private void PrintSystemStatus()
+    {
+        _log.Info("========== 系统状态报告 ==========");
+        _log.Info($"项目状态: FlowState={ProjectState.FlowState}, Overlays={ProjectState.Overlays}, SimulationState={ProjectState.SimulationState}");
+        _log.Info($"已加载系统总数: {_entries.Count}");
+
+        var runningCount = 0;
+        var enabledCount = 0;
+        var disabledCount = 0;
+
+        foreach (var entry in _entries.Values)
+        {
+            var status = entry.IsRunning ? "Running" :
+                        entry.IsEnabled ? "EnabledBlocked" :
+                        "Disabled";
+
+            _log.Info($"  [{status}] {entry.Descriptor.SystemId}");
+            _log.Info($"      MountGroup: {entry.Config.MountGroup}, Tags: {entry.Config.Tags}");
+            _log.Info($"      IsEnabled: {entry.IsEnabled}, IsStateAllowed: {entry.IsStateAllowed}, IsRunning: {entry.IsRunning}, BlockedReason: {entry.BlockedReason}");
+
+            if (entry.IsRunning) runningCount++;
+            if (entry.IsEnabled) enabledCount++;
+            else disabledCount++;
+        }
+
+        _log.Info($"统计: 运行中={runningCount}, 已启用={enabledCount}, 已禁用={disabledCount}");
+        _log.Info("==================================");
     }
 
     /// <summary>
@@ -208,11 +267,29 @@ public partial class SystemManager : Node
                 return;
             }
 
-            EnsureSystem(dependencyDescriptor, dependencyConfig);
+            try
+            {
+                EnsureSystem(dependencyDescriptor, dependencyConfig);
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"系统 {descriptor.SystemId} 加载依赖 {dependency} 时发生异常: {ex}");
+                throw;
+            }
         }
 
         // 通过 Factory 创建系统实例。
-        var instance = descriptor.Factory.Invoke();
+        object? instance;
+        try
+        {
+            instance = descriptor.Factory.Invoke();
+        }
+        catch (Exception ex)
+        {
+            _log.Error($"系统 {descriptor.SystemId} Factory 执行异常: {ex}");
+            throw;
+        }
+
         if (instance == null)
         {
             _log.Error($"系统 {descriptor.SystemId} Factory 返回 null");
@@ -224,32 +301,42 @@ public partial class SystemManager : Node
         if (nodeInstance != null)
         {
             nodeInstance.Name = descriptor.SystemId;
-            // 按 Groups 最低位确定挂载路径
-            var mountGroup = GetLowestBitGroup(config.Groups);
-            var host = GetHost(mountGroup);
+            var host = GetHost(config.MountGroup);
             host.AddChild(nodeInstance);
         }
 
         // 通知系统已被注册，传入描述符和项目状态服务引用。
         var lifecycle = instance as ISystemLifecycle;
-        lifecycle?.OnRegistered(new SystemRegistrationContext(descriptor, ProjectState));
+        try
+        {
+            lifecycle?.OnRegistered(new SystemRegistrationContext(descriptor, ProjectState));
+        }
+        catch (Exception ex)
+        {
+            _log.Error($"系统 {descriptor.SystemId} OnRegistered 执行异常: {ex}");
+            throw;
+        }
 
         // 创建运行时条目：初始启用状态取配置默认值，状态门禁用当前快照评估。
         var runCondition = CreateRunCondition(config);
+        var (isBlocked, blockedReason) = runCondition.GetBlockedReason(ProjectState.Snapshot);
         var entry = new ManagedSystemEntry
         {
             Descriptor = descriptor,
             Config = config,
+            RunCondition = runCondition,
             Instance = instance,
             NodeInstance = nodeInstance,
             Lifecycle = lifecycle,
-            IsEnabled = config.DefaultEnabled, // 人工开关：配置默认值
-            IsStateAllowed = runCondition.Evaluate(ProjectState.Snapshot), // 状态门禁：Phase 条件裁决
+            IsEnabled = config.StartEnabled, // 人工开关：配置默认值
+            IsStateAllowed = !isBlocked, // 状态门禁：运行条件裁决
+            BlockedReason = blockedReason,
             IsRunning = false
         };
 
         _entries.Add(descriptor.SystemId, entry);
         ApplyEntryState(entry, notifyTransition: true); // 根据初始状态立即裁决是否运行
+        _log.Info($"系统 {descriptor.SystemId} 已加载: Enabled={entry.IsEnabled}, StateAllowed={entry.IsStateAllowed}, Running={entry.IsRunning}, BlockedReason={entry.BlockedReason}");
     }
 
     /// <summary>
@@ -314,31 +401,39 @@ public partial class SystemManager : Node
 
     /// <summary>
     /// 项目状态变更回调。
-    /// <para>对每个系统：1) 重算 IsStateAllowed（Phase 条件裁决）→ 2) 通知系统 → 3) 统一应用启停。</para>
+    /// <para>对每个系统：1) 重算 IsStateAllowed（运行条件裁决）→ 2) 通知系统 → 3) 统一应用启停。</para>
     /// </summary>
-    private void OnProjectStateChanged(object? sender, ProjectStateChangedEventArgs args)
+    private void OnProjectStateChanged(GameEventType.Global.ProjectStateTransitionEventData data)
     {
+        _log.Info($"项目状态切换: {data.Previous.FlowState}/{data.Previous.Overlays}/{data.Previous.SimulationState} -> {data.Current.FlowState}/{data.Current.Overlays}/{data.Current.SimulationState}");
+
         foreach (var entry in _entries.Values)
         {
             // 先重算状态门禁，再通知系统，再统一应用启停。
-            var runCondition = CreateRunCondition(entry.Config);
-            entry.IsStateAllowed = runCondition.Evaluate(args.Current);
+            var (isBlocked, blockedReason) = entry.RunCondition.GetBlockedReason(data.Current);
+            entry.BlockedReason = blockedReason;
+            entry.IsStateAllowed = !isBlocked;
 
             // 只通知实现了 IProjectStateAwareSystem 的系统
             if (entry.Instance is IProjectStateAwareSystem stateAware)
             {
-                stateAware.OnProjectStateChanged(args);
+                stateAware.OnProjectStateChanged(data);
             }
 
             ApplyEntryState(entry, notifyTransition: true);
+        }
+
+        if (_isBootstrapped)
+        {
+            PrintSystemStatus();
         }
     }
 
     /// <summary>
     /// 统一裁决并应用系统运行状态。
-    /// <para>shouldRun = IsEnabled（人工开关）&& IsStateAllowed（Phase 条件门禁）。</para>
+    /// <para>shouldRun = IsEnabled（人工开关）and IsStateAllowed（运行条件门禁）。</para>
     /// <para>对 Node 系统：切 ProcessMode（Inherit/Disabled）。</para>
-    /// <para>对 ISystemLifecycle 系统：在状态切换时调用 OnEnabled/OnDisabled。</para>
+    /// <para>对 ISystemLifecycle 系统：在状态切换时调用 OnStarted/OnStopped。</para>
     /// <para>notifyTransition=false 时仅更新 IsRunning 标记，不触发钩子（用于初始化静默设置）。</para>
     /// </summary>
     private void ApplyEntryState(ManagedSystemEntry entry, bool notifyTransition)
@@ -375,12 +470,12 @@ public partial class SystemManager : Node
 
         if (shouldRun)
         {
-            entry.Lifecycle.OnEnabled(ProjectState.Snapshot);
+            entry.Lifecycle.OnStarted(ProjectState.Snapshot);
             entry.IsRunning = true;
             return;
         }
 
-        entry.Lifecycle.OnDisabled(ProjectState.Snapshot);
+        entry.Lifecycle.OnStopped(ProjectState.Snapshot);
         entry.IsRunning = false;
     }
 
@@ -392,22 +487,8 @@ public partial class SystemManager : Node
     {
         foreach (SystemGroup group in Enum.GetValues(typeof(SystemGroup)))
         {
-            // 跳过 None 和非单一位的组合值
-            if (group == SystemGroup.None || !IsSingleBit((ulong)group))
-            {
-                continue;
-            }
-
             _hosts[group] = EnsureHost(group);
         }
-    }
-
-    /// <summary>
-    /// 判断一个 ulong 值是否只有一个位被设置。
-    /// </summary>
-    private static bool IsSingleBit(ulong value)
-    {
-        return value != 0 && (value & (value - 1)) == 0;
     }
 
     /// <summary>
@@ -444,41 +525,16 @@ public partial class SystemManager : Node
     }
 
     /// <summary>
-    /// 获取 SystemGroup 的最低位（用于确定挂载路径）。
-    /// </summary>
-    private static SystemGroup GetLowestBitGroup(SystemGroup groups)
-    {
-        if (groups == SystemGroup.None)
-        {
-            return SystemGroup.Else;
-        }
-
-        // 按位从低到高查找第一个设置的位
-        var value = (ulong)groups;
-        for (var i = 0; i < 64; i++)
-        {
-            var bit = 1UL << i;
-            if ((value & bit) != 0)
-            {
-                return (SystemGroup)bit;
-            }
-        }
-
-        return SystemGroup.Else;
-    }
-
-    /// <summary>
     /// 从 SystemConfig 创建 SystemRunCondition。
     /// </summary>
     private static SystemRunCondition CreateRunCondition(SystemConfig config)
     {
         return new SystemRunCondition
         {
-            AllowedAppPhases = config.AllowedAppPhases,
-            AllowedSessionPhases = config.AllowedSessionPhases,
-            AllowedOverlayPhases = config.AllowedOverlayPhases,
-            BlockedOverlayPhases = config.BlockedOverlayPhases,
-            AllowedExecutionPhases = config.AllowedExecutionPhases
+            AllowedFlowStates = config.AllowedFlowStates,
+            RequiredOverlays = config.RequiredOverlays,
+            BlockedOverlays = config.BlockedOverlays,
+            AllowedSimulationStates = config.AllowedSimulationStates
         };
     }
 }

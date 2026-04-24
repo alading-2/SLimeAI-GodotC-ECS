@@ -1,13 +1,11 @@
-[gd_resource type="Resource" script_class="SystemPreset" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="SystemPreset" format=3 uid="uid://bk44lfx8iicsa"]
 
-[ext_resource type="Script" path="res://Data/Config/System/Preset/SystemPreset.cs" id="1_1"]
+[ext_resource type="Script" uid="uid://ce6o548850rm0" path="res://Data/Config/System/Preset/SystemPreset.cs" id="1_1"]
 
 [resource]
 script = ExtResource("1_1")
 PresetName = "Default"
 IsActive = true
-EnabledGroups = 31
-EnabledTags = 1
-EnabledSystemIds = []
-DisabledSystemIds = []
-Description = "默认预设，加载所有核心系统（Base + Combat + Movement + AI + UI）"
+EnabledTags = 175
+EnabledSystemIds = ["TestSystem", "MouseSelectionSystem"]
+Description = "默认预设，加载核心、玩法、战斗、UI、运行时系统，并显式加载调试入口系统"

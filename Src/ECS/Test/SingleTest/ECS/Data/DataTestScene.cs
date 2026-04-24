@@ -96,6 +96,9 @@ public partial class DataTestScene : Node
         // 测试默认值
         Test_DefaultValues();
 
+        // 测试 DataNew 默认值与迁移值
+        Test_ConfigNewDefaults();
+
         // 测试百分比
         Test_Percentage();
 
@@ -201,6 +204,55 @@ public partial class DataTestScene : Node
         {
             AssertEqual("元数据默认值", meta.GetDefaultValue(), "默认值");
         }
+    }
+
+    /// <summary>
+    /// 测试 DataNew 的默认值和关键迁移实例
+    /// </summary>
+    private void Test_ConfigNewDefaults()
+    {
+        PrintSection("测试 DataNew 默认值与迁移值");
+
+        var unitDefaults = new Slime.ConfigNew.Units.PlayerConfigData();
+        AssertEqual("UnitConfigData 默认名称", unitDefaults.Name, (string)DataKey.Name.DefaultValue!);
+        AssertEqual("UnitConfigData 默认实体类型", unitDefaults.EntityType, EntityType.Unit);
+        AssertEqual("UnitConfigData 默认生命值", unitDefaults.BaseHp, (float)DataKey.BaseHp.DefaultValue!);
+        AssertEqual("UnitConfigData 默认攻速", unitDefaults.BaseAttackSpeed, (float)DataKey.BaseAttackSpeed.DefaultValue!);
+
+        var targetingDefaults = new Slime.ConfigNew.Units.TargetingIndicatorConfigData();
+        AssertEqual("TargetingIndicator 默认不显示血条", targetingDefaults.IsShowHealthBar, false);
+        AssertEqual("TargetingIndicator 默认无敌", targetingDefaults.IsInvulnerable, true);
+
+        var enemyDefaults = new Slime.ConfigNew.Units.EnemyConfigData();
+        AssertEqual("EnemyConfigData 默认启用生成规则", enemyDefaults.IsEnableSpawnRule, true);
+        AssertEqual("EnemyConfigData 默认最大波次", enemyDefaults.SpawnMaxWave, -1);
+        AssertEqual("EnemyConfigData 默认检测范围", enemyDefaults.DetectionRange, (float)DataKey.DetectionRange.DefaultValue!);
+
+        var abilityDefaults = new Slime.ConfigNew.Abilities.AbilityConfigData();
+        AssertEqual("AbilityConfigData 默认实体类型", abilityDefaults.EntityType, EntityType.Ability);
+        AssertEqual("AbilityConfigData 默认技能等级", abilityDefaults.AbilityLevel, (int)DataKey.AbilityLevel.DefaultValue!);
+        AssertEqual("AbilityConfigData 默认触发模式", abilityDefaults.AbilityTriggerMode, (AbilityTriggerMode)DataKey.AbilityTriggerMode.DefaultValue!);
+
+        AssertEqual("Slam 迁移施法距离", Slime.ConfigNew.Abilities.AbilityConfigData.Slam.AbilityCastRange, 500f);
+        AssertEqual("ParabolaShot 迁移伤害", Slime.ConfigNew.Abilities.AbilityConfigData.ParabolaShot.AbilityDamage, 9f);
+        AssertEqual("ParabolaShot 迁移投射物路径", Slime.ConfigNew.Abilities.AbilityConfigData.ParabolaShot.ProjectileScenePath, "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn");
+        AssertEqual("ChainLightning 迁移名称", Slime.ConfigNew.Abilities.ChainAbilityConfigData.ChainLightning.Name, "闪电链");
+
+        var systemDefaults = new Slime.ConfigNew.Systems.SystemConfigData();
+        AssertEqual("SystemConfigData 默认挂载分组", systemDefaults.MountGroup, SystemGroup.Else);
+        AssertEqual("SystemConfigData 默认 AutoLoad", systemDefaults.AutoLoad, true);
+        AssertEqual("SystemConfigData 默认 StartEnabled", systemDefaults.StartEnabled, true);
+        AssertEqual("SystemConfigData 默认 AllowedFlowStates 不限制", systemDefaults.AllowedFlowStates, GameFlowState.None);
+        AssertEqual("SystemConfigData 默认 BlockedOverlays 不屏蔽", systemDefaults.BlockedOverlays, OverlayFlags.None);
+        AssertEqual("SystemConfigData 迁移 TimerManager Required", Slime.ConfigNew.Systems.SystemConfigData.TimerManager.Required, true);
+        AssertEqual("SystemConfigData 迁移 SpawnSystem 流程限制", Slime.ConfigNew.Systems.SystemConfigData.SpawnSystem.AllowedFlowStates, GameFlowState.SessionPlaying);
+        AssertEqual("SystemConfigData 迁移 DamageStatisticsSystem 依赖", Slime.ConfigNew.Systems.SystemConfigData.DamageStatisticsSystem.Dependencies[0], "DamageService");
+
+        var presetDefault = Slime.ConfigNew.Systems.SystemPresetData.Default;
+        AssertEqual("SystemPresetData 默认预设激活", presetDefault.IsActive, true);
+        AssertEqual("SystemPresetData 默认预设标签", presetDefault.EnabledTags, SystemTag.Core | SystemTag.Gameplay | SystemTag.Combat | SystemTag.UI | SystemTag.Roguelike | SystemTag.Runtime);
+        AssertEqual("SystemPresetData 默认显式启用 TestSystem", presetDefault.EnabledSystemIds[0], "TestSystem");
+        AssertEqual("SystemPresetData 默认显式启用 MouseSelectionSystem", presetDefault.EnabledSystemIds[1], "MouseSelectionSystem");
     }
 
     /// <summary>

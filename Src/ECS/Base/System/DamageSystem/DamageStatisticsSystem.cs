@@ -111,13 +111,13 @@ public partial class DamageStatisticsSystem : Node, ISystem
     }
 
     /// <inheritdoc />
-    public void OnEnabled(ProjectStateSnapshot snapshot)
+    public void OnStarted(ProjectStateSnapshot snapshot)
     {
         BindRuntimeEvents();
     }
 
     /// <inheritdoc />
-    public void OnDisabled(ProjectStateSnapshot snapshot)
+    public void OnStopped(ProjectStateSnapshot snapshot)
     {
         UnbindRuntimeEvents();
     }

@@ -274,15 +274,15 @@ public partial class TimerManager : Node, ISystem
     }
 
     /// <inheritdoc />
-    public void OnEnabled(ProjectStateSnapshot snapshot)
+    public void OnStarted(ProjectStateSnapshot snapshot)
     {
         ApplyProjectPauseState(snapshot);
     }
 
     /// <inheritdoc />
-    public void OnProjectStateChanged(ProjectStateChangedEventArgs args)
+    public void OnProjectStateChanged(GameEventType.Global.ProjectStateTransitionEventData data)
     {
-        ApplyProjectPauseState(args.Current);
+        ApplyProjectPauseState(data.Current);
     }
 
     private void ApplyTimerProjectPause(GameTimer timer)
@@ -310,7 +310,7 @@ public partial class TimerManager : Node, ISystem
 
     private static bool ShouldPauseScaledTimers(ProjectStateSnapshot snapshot)
     {
-        return snapshot.ExecutionPhase is ExecutionPhase.Paused or ExecutionPhase.Blocked;
+        return snapshot.SimulationState == SimulationState.Suspended;
     }
 
     public SystemRuntimeInfo GetSystemRuntimeInfo()

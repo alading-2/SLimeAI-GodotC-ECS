@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using Slime.ConfigNew.Systems;
 
 /// <summary>
 /// 系统配置服务。
-/// <para>负责加载和解析 SystemConfig 资源，提供系统配置查询接口。</para>
-/// <para>使用 ResourceManagement 统一加载资源。</para>
+/// <para>负责加载和解析系统配置，提供系统配置查询接口。</para>
+/// <para>优先使用 DataNew 纯 C# 数据，ResourceManagement 的 .tres 资源作为回退。</para>
 /// </summary>
 public static class SystemConfigService
 {
@@ -14,7 +16,7 @@ public static class SystemConfigService
     private static bool _isInitialized;
 
     /// <summary>
-    /// 初始化配置服务，加载所有 SystemConfig 资源。
+    /// 初始化配置服务，加载所有系统配置。
     /// </summary>
     public static void Initialize()
     {
@@ -25,23 +27,24 @@ public static class SystemConfigService
 
         _configs.Clear();
 
-        // 使用 ResourceManagement 加载所有系统配置
+        // DataNew 是优先数据源；同名 .tres 只作为兼容回退，不覆盖纯 C# 配置。
+        foreach (var data in SystemConfigData.All)
+        {
+            if (data == null)
+            {
+                _log.Error("SystemConfigData.All 包含空配置项，请检查静态初始化顺序");
+                continue;
+            }
+
+            TryAddConfig(data.ToResource(), data.SystemId, warnDuplicate: true);
+        }
+
+        // 使用 ResourceManagement 加载仍未迁移到 DataNew 的系统配置资源。
         var configs = ResourceManagement.LoadAll<SystemConfig>(ResourceCategory.ConfigSystem);
         foreach (var config in configs)
         {
-            if (string.IsNullOrWhiteSpace(config.SystemId))
-            {
-                _log.Warn($"配置的 SystemId 为空，跳过");
-            }
-            else if (_configs.ContainsKey(config.SystemId))
-            {
-                _log.Warn($"重复的 SystemId: {config.SystemId}");
-            }
-            else
-            {
-                _configs.Add(config.SystemId, config);
-                _log.Debug($"加载系统配置: {config.SystemId}");
-            }
+            var resourceName = Path.GetFileNameWithoutExtension(config.ResourcePath);
+            TryAddConfig(config, resourceName, warnDuplicate: false);
         }
 
         _isInitialized = true;
@@ -79,7 +82,7 @@ public static class SystemConfigService
     /// <summary>
     /// 获取指定分组的所有系统配置。
     /// </summary>
-    /// <param name="group">系统分组（支持 Flags 组合）。</param>
+    /// <param name="group">系统挂载分组，单选。</param>
     public static IEnumerable<SystemConfig> GetConfigsByGroup(SystemGroup group)
     {
         if (!_isInitialized)
@@ -87,7 +90,7 @@ public static class SystemConfigService
             Initialize();
         }
 
-        return _configs.Values.Where(c => (c.Groups & group) != 0);
+        return _configs.Values.Where(c => c.MountGroup == group);
     }
 
     /// <summary>
@@ -105,28 +108,59 @@ public static class SystemConfigService
     }
 
     /// <summary>
-    /// 获取所有 DefaultAutoAdd = true 的系统配置。
+    /// 获取所有 AutoLoad = true 的系统配置。
     /// </summary>
-    public static IEnumerable<SystemConfig> GetAutoAddConfigs()
+    public static IEnumerable<SystemConfig> GetAutoLoadConfigs()
     {
         if (!_isInitialized)
         {
             Initialize();
         }
 
-        return _configs.Values.Where(c => c.DefaultAutoAdd);
+        return _configs.Values.Where(c => c.AutoLoad);
     }
 
     /// <summary>
-    /// 获取所有 Base 分组的系统配置（强制加载）。
+    /// 获取所有 Required = true 的系统配置（强制加载）。
     /// </summary>
-    public static IEnumerable<SystemConfig> GetBaseConfigs()
+    public static IEnumerable<SystemConfig> GetRequiredConfigs()
     {
         if (!_isInitialized)
         {
             Initialize();
         }
 
-        return _configs.Values.Where(c => (c.Groups & SystemGroup.Base) != 0);
+        return _configs.Values.Where(c => c.Required);
+    }
+
+    private static void TryAddConfig(SystemConfig config, string sourceName, bool warnDuplicate)
+    {
+        if (string.IsNullOrWhiteSpace(config.SystemId))
+        {
+            _log.Warn("配置的 SystemId 为空，跳过");
+            return;
+        }
+
+        if (_configs.ContainsKey(config.SystemId))
+        {
+            if (warnDuplicate)
+            {
+                _log.Warn($"重复的 SystemId: {config.SystemId}");
+            }
+            else
+            {
+                _log.Debug($"系统配置 {config.SystemId} 已由 DataNew 提供，跳过资源回退");
+            }
+
+            return;
+        }
+
+        if (!string.Equals(config.SystemId, sourceName, StringComparison.Ordinal))
+        {
+            _log.Warn($"系统配置来源名与 SystemId 不一致: source={sourceName}, SystemId={config.SystemId}");
+        }
+
+        _configs.Add(config.SystemId, config);
+        _log.Debug($"加载系统配置: {config.SystemId}");
     }
 }

@@ -140,14 +140,14 @@ const LABELS: Dictionary = {
 	"tags": "系统标签",
 	"defaultautoadd": "默认自动加载",
 	"defaultenabled": "默认启用",
-	"priority": "加载优先级",
+	# priority 已在 FeatureModifierEntry 中定义，避免 GDScript 字典常量重复键导致插件编译失败。
 	"allowedappphases": "允许的应用阶段",
 	"allowedsessionphases": "允许的会话阶段",
 	"allowedoverlayphases": "允许的覆盖层阶段",
 	"blockedoverlayphases": "阻止的覆盖层阶段",
 	"allowedexecutionphases": "允许的执行阶段",
 	"dependencies": "依赖系统列表",
-	"description": "系统描述",
+	# description 已在 AbilityConfig 中定义，避免 GDScript 字典常量重复键导致插件编译失败。
 
 	# ===== SystemPreset =====
 	"presetname": "预设名称",

@@ -8,84 +8,60 @@ using Godot;
 [GlobalClass]
 public partial class SystemConfig : Resource
 {
-    /// <summary>
-    /// 基础信息
-    /// </summary>
+    /// <summary>系统唯一 Id（必须与注册字符串和资源文件名一致）。</summary>
     [ExportGroup("基础信息")]
-
-    /// <summary>系统唯一 Id（必须与 SystemId 枚举值一致）。</summary>
     [Export]
     public string SystemId { get; set; } = string.Empty;
 
-    /// <summary>系统运行形态。</summary>
+    /// <summary>系统挂载分组（Host 位置，单选）。</summary>
     [Export]
-    public SystemKind Kind { get; set; } = SystemKind.NodeScript;
+    public SystemGroup MountGroup { get; set; } = SystemGroup.Else;
 
-    /// <summary>系统分组（挂载位置），多选 Flags。</summary>
-    [Export]
-    public SystemGroup Groups { get; set; } = SystemGroup.Else;
-
-    /// <summary>系统标签（逻辑分类），多选 Flags。</summary>
+    /// <summary>系统标签（逻辑分类和预设筛选），多选 Flags。</summary>
     [Export]
     public SystemTag Tags { get; set; } = SystemTag.None;
 
-    /// <summary>
-    /// 加载配置
-    /// </summary>
+    /// <summary>是否为必需系统（无论预设如何都装载）。</summary>
     [ExportGroup("加载配置")]
-
-    /// <summary>默认是否自动装载（Profile 未提供覆盖时回退到此字段）。</summary>
     [Export]
-    public bool DefaultAutoAdd { get; set; } = true;
+    public bool Required { get; set; } = false;
 
-    /// <summary>默认是否启用（首次纳入管理时的人为开关默认值）。</summary>
+    /// <summary>默认是否自动装载（没有激活预设时使用）。</summary>
     [Export]
-    public bool DefaultEnabled { get; set; } = true;
+    public bool AutoLoad { get; set; } = true;
+
+    /// <summary>首次纳入管理时的人工开关默认值。</summary>
+    [Export]
+    public bool StartEnabled { get; set; } = true;
 
     /// <summary>加载优先级（数值越小越优先，用于依赖排序）。</summary>
     [Export]
     public int Priority { get; set; } = 0;
 
-    /// <summary>
-    /// 运行条件
-    /// </summary>
+    /// <summary>允许的流程状态（Flags 组合，为 None 表示不限制；可直接选择 GameFlowState 预设组合）。</summary>
     [ExportGroup("运行条件")]
-
-    /// <summary>允许的应用主阶段（Flags 组合，为 None 表示不限制）。</summary>
     [Export]
-    public AppPhase AllowedAppPhases { get; set; } = AppPhase.None;
+    public GameFlowState AllowedFlowStates { get; set; } = GameFlowState.None;
 
-    /// <summary>允许的会话阶段（Flags 组合，为 None 表示不限制）。</summary>
+    /// <summary>要求存在的覆盖层（Flags 组合，为 None 表示不要求覆盖层；可直接选择 OverlayFlags 预设组合）。</summary>
     [Export]
-    public SessionPhase AllowedSessionPhases { get; set; } = SessionPhase.None;
+    public OverlayFlags RequiredOverlays { get; set; } = OverlayFlags.None;
 
-    /// <summary>允许的覆盖层阶段（Flags 组合，为 None 表示不限制）。</summary>
+    /// <summary>禁止的覆盖层（Flags 组合，为 None 表示不屏蔽覆盖层；可直接选择 OverlayFlags 预设组合）。</summary>
     [Export]
-    public OverlayPhase AllowedOverlayPhases { get; set; } = OverlayPhase.None;
+    public OverlayFlags BlockedOverlays { get; set; } = OverlayFlags.None;
 
-    /// <summary>禁止的覆盖层阶段（Flags 组合，为 None 表示不限制）。</summary>
+    /// <summary>允许的模拟状态（Flags 组合，为 None 表示不限制；可直接选择 SimulationState 预设组合）。</summary>
     [Export]
-    public OverlayPhase BlockedOverlayPhases { get; set; } = OverlayPhase.None;
+    public SimulationState AllowedSimulationStates { get; set; } = SimulationState.None;
 
-    /// <summary>允许的执行阶段（Flags 组合，为 None 表示不限制）。</summary>
-    [Export]
-    public ExecutionPhase AllowedExecutionPhases { get; set; } = ExecutionPhase.None;
-
-    /// <summary>
-    /// 依赖关系
-    /// </summary>
+    /// <summary>依赖系统 Id 列表。</summary>
     [ExportGroup("依赖关系")]
-
-    /// <summary>依赖系统 Id 列表（使用 SystemId 枚举值的字符串形式）。</summary>
     [Export]
     public string[] Dependencies { get; set; } = System.Array.Empty<string>();
 
-    /// <summary>
-    /// 说明
-    /// </summary>
-    [ExportGroup("说明")]
-
     /// <summary>系统描述（用于文档和调试）。</summary>
+    [ExportGroup("说明")]
     [Export(PropertyHint.MultilineText)]
     public string Description { get; set; } = string.Empty;
 }

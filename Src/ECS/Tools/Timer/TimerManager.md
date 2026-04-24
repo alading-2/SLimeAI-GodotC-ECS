@@ -10,7 +10,7 @@
 - **链式 API**: 流畅的 `.OnComplete()`, `.OnLoop()`, `.WithTag()` 调用
 - **批量管理**: Tag 系统支持批量操作
 - **TimeScale 支持**: 游戏时间 / 真实时间双模式
-- **项目级暂停联动**: `ExecutionPhase = Paused / Blocked` 时，自动暂停 `useUnscaledTime = false` 的计时器
+- **项目级暂停联动**: `SimulationState = Suspended` 时，自动暂停 `useUnscaledTime = false` 的计时器
 
 ## 快速开始
 

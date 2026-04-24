@@ -9,18 +9,18 @@ public sealed class DamageNumberRuntimeBridge : ISystem
     [ModuleInitializer]
     public static void Initialize()
     {
-        SystemRegistry.Register(nameof(DamageNumberSystem),
+        SystemRegistry.Register(nameof(DamageNumberRuntimeBridge),
             static () => new DamageNumberRuntimeBridge());
     }
 
     /// <inheritdoc />
-    public void OnEnabled(ProjectStateSnapshot snapshot)
+    public void OnStarted(ProjectStateSnapshot snapshot)
     {
         DamageNumberSystem.EnableRuntime();
     }
 
     /// <inheritdoc />
-    public void OnDisabled(ProjectStateSnapshot snapshot)
+    public void OnStopped(ProjectStateSnapshot snapshot)
     {
         DamageNumberSystem.DisableRuntime();
     }
@@ -35,7 +35,7 @@ public sealed class DamageNumberRuntimeBridge : ISystem
     {
         return new SystemRuntimeInfo
         {
-            SystemId = nameof(DamageNumberSystem),
+            SystemId = nameof(DamageNumberRuntimeBridge),
             CustomStats = new List<SystemStat>()
         };
     }

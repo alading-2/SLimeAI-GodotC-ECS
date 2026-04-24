@@ -20,18 +20,18 @@ public interface ISystemLifecycle
     }
 
     /// <summary>
-    /// 显式调用 EnableSystem 后触发。
+    /// 系统进入实际运行态时触发。
     /// </summary>
     /// <param name="snapshot">当前项目状态快照。</param>
-    void OnEnabled(ProjectStateSnapshot snapshot)
+    void OnStarted(ProjectStateSnapshot snapshot)
     {
     }
 
     /// <summary>
-    /// 显式调用 DisableSystem 后触发。
+    /// 系统离开实际运行态时触发。
     /// </summary>
     /// <param name="snapshot">当前项目状态快照。</param>
-    void OnDisabled(ProjectStateSnapshot snapshot)
+    void OnStopped(ProjectStateSnapshot snapshot)
     {
     }
 }

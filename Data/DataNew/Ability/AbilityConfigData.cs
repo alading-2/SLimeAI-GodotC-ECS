@@ -123,7 +123,7 @@ public class AbilityConfigData
     {
         Name = "贝塞尔射击",
         FeatureGroupId = "技能.投射物",
-        FeatureHandlerId = "技能.投射物.贝塞尔射击",
+        FeatureHandlerId = FeatureId.Ability.Projectile.BezierShot,
         Description = "发射沿二次贝塞尔曲线飞行的弓形弹（验证 BezierCurve 模式）",
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Manual,

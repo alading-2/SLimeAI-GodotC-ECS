@@ -12,6 +12,9 @@ internal sealed class ManagedSystemEntry
     /// <summary>系统配置（从 SystemConfig 读取的元数据）。</summary>
     public required SystemConfig Config { get; init; }
 
+    /// <summary>系统运行条件（从配置构建后缓存）。</summary>
+    public required SystemRunCondition RunCondition { get; init; }
+
     /// <summary>系统实例本体（Node 或纯服务对象）。</summary>
     public required object Instance { get; init; }
 
@@ -26,6 +29,9 @@ internal sealed class ManagedSystemEntry
 
     /// <summary>系统是否满足项目状态运行条件（Phase 条件门禁）。</summary>
     public bool IsStateAllowed { get; set; }
+
+    /// <summary>状态门禁未通过时的原因；为空表示通过。</summary>
+    public string BlockedReason { get; set; } = string.Empty;
 
     /// <summary>系统当前是否处于运行态（IsEnabled &amp;&amp; IsStateAllowed）。</summary>
     public bool IsRunning { get; set; }

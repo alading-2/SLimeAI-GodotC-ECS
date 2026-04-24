@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Slime.ConfigNew.Systems;
 
 /// <summary>
 /// 系统预设服务。
-/// <para>负责加载和解析 SystemPreset 资源，提供预设查询和应用接口。</para>
-/// <para>使用 ResourceManagement 统一加载资源。</para>
+/// <para>负责加载和解析系统预设，提供预设查询和应用接口。</para>
+/// <para>优先使用 DataNew 纯 C# 数据，ResourceManagement 的 .tres 资源作为回退。</para>
 /// </summary>
 public static class SystemPresetService
 {
@@ -15,7 +16,7 @@ public static class SystemPresetService
     private static bool _isInitialized;
 
     /// <summary>
-    /// 初始化预设服务，加载所有 SystemPreset 资源。
+    /// 初始化预设服务，加载所有系统预设。
     /// </summary>
     public static void Initialize()
     {
@@ -27,23 +28,23 @@ public static class SystemPresetService
         _presets.Clear();
         _activePreset = null;
 
-        // 使用 ResourceManagement 加载所有系统预设
+        // DataNew 是优先数据源；同名 .tres 只作为兼容回退，不覆盖纯 C# 预设。
+        foreach (var data in SystemPresetData.All)
+        {
+            if (data == null)
+            {
+                _log.Error("SystemPresetData.All 包含空预设项，请检查静态初始化顺序");
+                continue;
+            }
+
+            TryAddPreset(data.ToResource(), warnDuplicate: true);
+        }
+
+        // 使用 ResourceManagement 加载仍未迁移到 DataNew 的系统预设资源。
         var presets = ResourceManagement.LoadAll<SystemPreset>(ResourceCategory.ConfigSystemPreset);
         foreach (var preset in presets)
         {
-            _presets.Add(preset);
-            _log.Debug($"加载系统预设: {preset.PresetName} (Active={preset.IsActive})");
-
-            if (preset.IsActive)
-            {
-                if (_activePreset != null)
-                {
-                    _log.Error($"检测到多个激活的预设: {_activePreset.PresetName} 和 {preset.PresetName}，只允许一个预设激活！");
-                    throw new InvalidOperationException($"只允许一个 SystemPreset 的 IsActive = true，但发现多个: {_activePreset.PresetName}, {preset.PresetName}");
-                }
-
-                _activePreset = preset;
-            }
+            TryAddPreset(preset, warnDuplicate: false);
         }
 
         _isInitialized = true;
@@ -79,11 +80,10 @@ public static class SystemPresetService
     /// <summary>
     /// 根据激活的预设计算应该加载的系统 Id 列表。
     /// <para>规则：</para>
-    /// <para>1. 收集 EnabledGroups 对应的所有系统</para>
-    /// <para>2. 收集 EnabledTags 对应的所有系统</para>
-    /// <para>3. 收集 EnabledSystemIds 列表</para>
+    /// <para>1. Required 系统强制加载</para>
+    /// <para>2. 无激活预设时加载 AutoLoad 系统</para>
+    /// <para>3. 有激活预设时加载 EnabledTags / EnabledSystemIds 命中的系统</para>
     /// <para>4. 排除 DisabledSystemIds 列表</para>
-    /// <para>5. Base 分组的系统强制加载（不受预设影响）</para>
     /// </summary>
     public static HashSet<string> CalculateEnabledSystems()
     {
@@ -94,18 +94,18 @@ public static class SystemPresetService
 
         var enabledSystems = new HashSet<string>(StringComparer.Ordinal);
 
-        // 1. Base 分组强制加载
-        var baseConfigs = SystemConfigService.GetBaseConfigs();
-        foreach (var config in baseConfigs)
+        // 1. Required 系统强制加载
+        var requiredConfigs = SystemConfigService.GetRequiredConfigs();
+        foreach (var config in requiredConfigs)
         {
             enabledSystems.Add(config.SystemId);
         }
 
-        // 2. 如果没有激活预设，使用 DefaultAutoAdd
+        // 2. 如果没有激活预设，使用 AutoLoad
         if (_activePreset == null)
         {
-            var autoAddConfigs = SystemConfigService.GetAutoAddConfigs();
-            foreach (var config in autoAddConfigs)
+            var autoLoadConfigs = SystemConfigService.GetAutoLoadConfigs();
+            foreach (var config in autoLoadConfigs)
             {
                 enabledSystems.Add(config.SystemId);
             }
@@ -116,17 +116,7 @@ public static class SystemPresetService
         // 3. 应用激活预设的规则
         var preset = _activePreset;
 
-        // 3.1 收集 EnabledGroups 对应的系统
-        if (preset.EnabledGroups != SystemGroup.None)
-        {
-            var groupConfigs = SystemConfigService.GetConfigsByGroup(preset.EnabledGroups);
-            foreach (var config in groupConfigs)
-            {
-                enabledSystems.Add(config.SystemId);
-            }
-        }
-
-        // 3.2 收集 EnabledTags 对应的系统
+        // 3.1 收集 EnabledTags 对应的系统
         if (preset.EnabledTags != SystemTag.None)
         {
             var tagConfigs = SystemConfigService.GetConfigsByTag(preset.EnabledTags);
@@ -136,7 +126,7 @@ public static class SystemPresetService
             }
         }
 
-        // 3.3 收集 EnabledSystemIds 列表
+        // 3.2 收集 EnabledSystemIds 列表
         foreach (var systemId in preset.EnabledSystemIds)
         {
             if (!string.IsNullOrWhiteSpace(systemId))
@@ -145,16 +135,16 @@ public static class SystemPresetService
             }
         }
 
-        // 3.4 排除 DisabledSystemIds 列表（优先级最高）
+        // 3.3 排除 DisabledSystemIds 列表（优先级最高）
         foreach (var systemId in preset.DisabledSystemIds)
         {
             if (!string.IsNullOrWhiteSpace(systemId))
             {
-                // Base 分组的系统不允许被禁用
+                // Required 系统不允许被禁用
                 var config = SystemConfigService.GetConfig(systemId);
-                if (config != null && (config.Groups & SystemGroup.Base) != 0)
+                if (config != null && config.Required)
                 {
-                    _log.Warn($"预设 {preset.PresetName} 尝试禁用 Base 分组系统 {systemId}，已忽略");
+                    _log.Warn($"预设 {preset.PresetName} 尝试禁用必需系统 {systemId}，已忽略");
                     continue;
                 }
 
@@ -163,5 +153,44 @@ public static class SystemPresetService
         }
 
         return enabledSystems;
+    }
+
+    private static void TryAddPreset(SystemPreset preset, bool warnDuplicate)
+    {
+        if (string.IsNullOrWhiteSpace(preset.PresetName))
+        {
+            _log.Warn("系统预设名称为空，跳过");
+            return;
+        }
+
+        if (_presets.Any(existing => string.Equals(existing.PresetName, preset.PresetName, StringComparison.Ordinal)))
+        {
+            if (warnDuplicate)
+            {
+                _log.Warn($"重复的系统预设: {preset.PresetName}");
+            }
+            else
+            {
+                _log.Debug($"系统预设 {preset.PresetName} 已由 DataNew 提供，跳过资源回退");
+            }
+
+            return;
+        }
+
+        _presets.Add(preset);
+        _log.Debug($"加载系统预设: {preset.PresetName} (Active={preset.IsActive})");
+
+        if (!preset.IsActive)
+        {
+            return;
+        }
+
+        if (_activePreset != null)
+        {
+            _log.Error($"检测到多个激活的预设: {_activePreset.PresetName} 和 {preset.PresetName}，只允许一个预设激活！");
+            throw new InvalidOperationException($"只允许一个 SystemPreset 的 IsActive = true，但发现多个: {_activePreset.PresetName}, {preset.PresetName}");
+        }
+
+        _activePreset = preset;
     }
 }

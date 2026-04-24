@@ -1,20 +1,11 @@
-[gd_resource type="Resource" script_class="SystemConfig" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="SystemConfig" format=3 uid="uid://02gquh3rtfqe"]
 
-[ext_resource type="Script" path="res://Data/Config/System/System/SystemConfig.cs" id="1_1"]
+[ext_resource type="Script" uid="uid://coia4r0tr5owx" path="res://Data/Config/System/System/SystemConfig.cs" id="1_1"]
 
 [resource]
 script = ExtResource("1_1")
 SystemId = "TestSystem"
-Kind = 0
-Groups = 1024
-Tags = 64
-DefaultAutoAdd = false
-DefaultEnabled = true
+MountGroup = 5
+Tags = 48
 Priority = 100
-AllowedAppPhases = 15
-AllowedSessionPhases = 15
-AllowedOverlayPhases = 0
-BlockedOverlayPhases = 0
-AllowedExecutionPhases = 7
-Dependencies = []
 Description = "测试系统，用于调试和监控系统运行状态"

@@ -1,5 +1,8 @@
 # 系统配置与预设重构方案
 
+> 文档类型：历史重构草案  
+> 当前状态：已按“一个 `SystemConfig` + 一个 `SystemPreset` + 三域 `ProjectState`”落地；旧 `SystemProfile / SystemKind / SystemLifetime / 四 Phase` 表述仅保留为问题背景，不作为当前实现依据。
+
 ## 背景与目标
 
 ### 当前问题

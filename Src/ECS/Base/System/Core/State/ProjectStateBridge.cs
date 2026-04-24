@@ -24,17 +24,17 @@ public sealed class ProjectStateBridge : ISystem
     }
 
     /// <inheritdoc />
-    public void OnEnabled(ProjectStateSnapshot snapshot)
+    public void OnStarted(ProjectStateSnapshot snapshot)
     {
         BindRuntimeEvents();
-        if (_projectState != null && _projectState.AppPhase == AppPhase.Boot)
+        if (_projectState != null && _projectState.FlowState == GameFlowState.Boot)
         {
             _projectState.EnterFrontEnd();
         }
     }
 
     /// <inheritdoc />
-    public void OnDisabled(ProjectStateSnapshot snapshot)
+    public void OnStopped(ProjectStateSnapshot snapshot)
     {
         UnbindRuntimeEvents();
     }

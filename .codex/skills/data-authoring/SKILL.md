@@ -30,15 +30,20 @@ description: 编写或修改 Data 目录下的数据配置、Config、DataKey、
 - 波次规则
 - Spawn 全局参数
 - 系统开关
-- `Data/Config/System/*.tres` 这类系统 Profile / 系统默认装载策略
+- `Data/Config/System/**/*.tres` 这类系统配置 / 系统预设 / 系统默认装载策略
 - 阈值与限制
 
 补充约定：
 
-- `SystemProfile` 继续归 `Data/Config/System/`，不要并到 `Data/Data/`
-- `SystemProfile` 是项目启动系统清单，不是 `Data.LoadFromResource()` 注入到 Entity.Data 的业务数据
-- `SystemProfile` 只保留 `Systems` 列表，每项是 `SystemProfileEntry(SystemId / AutoAdd / Enabled)`
-- 运行时通过 `SystemProfileService.SetActiveProfile(...)` 时，若同一 `SystemId` 重复出现，只打印一条重复警告，且后写覆盖前写
+- `SystemConfig` 继续归 `Data/Config/System/System/`，不要并到 `Data/Data/`
+- `SystemPreset` 继续归 `Data/Config/System/Preset/`，只负责按标签和显式 `SystemId` 选择启动装载集合
+- `Data/DataNew/System/SystemConfigData.cs` 是系统配置的纯 C# 优先数据源；同名 `.tres` 只作为兼容回退
+- `Data/DataNew/System/SystemPresetData.cs` 是系统预设的纯 C# 优先数据源；同名 `.tres` 只作为兼容回退
+- 默认预设若只需要少量调试入口，优先写入 `EnabledSystemIds`（当前为 `TestSystem`、`MouseSelectionSystem`），不要为了方便把 `Debug / Test` 标签整体加入默认标签集合
+- `SystemConfig` 的 `AllowedFlowStates / AllowedSimulationStates = None` 表示不限制，`BlockedOverlays = None` 表示不屏蔽，`RequiredOverlays = None` 表示不要求覆盖层
+- `AllowedFlowStates` 使用 `GameFlowState` Flags，`AllowedSimulationStates` 使用 `SimulationState` Flags；不要再新增或引用单独的 Mask enum
+- 系统运行条件优先使用 Phase 预设组合：局内主玩法用 `GameFlowState.Gameplay + OverlayFlags.Blocking + SimulationState.Running`，允许暂停/运行都响应用 `SimulationState.Any`
+- 系统配置不是 `Data.LoadFromResource()` 注入到 Entity.Data 的业务数据
 
 不要放：
 
@@ -59,6 +64,9 @@ description: 编写或修改 Data 目录下的数据配置、Config、DataKey、
 
 - `FeatureGroupId` 只表示技能展示分组，应放在 `Data/Data/Ability/AbilityConfig.cs`；测试面板按完整 `FeatureGroupId` 分组和显示；运行时执行器选择必须使用 `FeatureHandlerId`
 - 不要再为技能额外维护 `AbilityCategory` 这类重复展示字段；只要运行时实体和系统要读，就属于 `Data/Data/`
+- 若存在 `Data/DataNew/` 的纯 C# POCO 镜像配置，字段默认值也必须与旧 `Data/Data/` 保持同语义：优先直读 `DataKey.Xxx.DefaultValue`，若旧类对该字段有特化默认值（如 `UnitConfig.EntityType = EntityType.Unit`、`AbilityConfig.EntityType = EntityType.Ability`、`TargetingIndicatorConfig` 的布尔默认值），`DataNew` 也要同步保留该特化语义
+- `DataNew` 静态实例迁移时，以旧 `.tres` 的显式赋值为准；不要因为 POCO 的裸类型默认值 `0/false/空串` 把旧资源中已有值静默丢掉
+- `DataNew` 若提供 `All` 聚合，优先写成延迟求值属性（如 `public static XxxData[] All => [...]`），不要在静态实例声明之前写 `static readonly All`，否则 C# 静态初始化顺序会把后续实例收集成 `null`
 
 推荐写法：
 

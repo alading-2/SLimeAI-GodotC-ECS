@@ -1,25 +1,26 @@
 # System Core 使用说明
 
-> 2026-04 V2 更新：系统管理已从旧版“单接口 + 二元 shouldRun 裁决”升级为“`Add/Remove + Enable/Disable + Start/Stop + SystemProfile`”四层模型。本文以下示例优先以 V2 语义为准。
+> 2026-04 更新：系统管理已切到“代码只注册 `SystemId + Factory`，配置资源声明装载、挂载分组、标签和运行条件”的数据驱动模型。旧版代码侧生命周期/形态枚举、Profile 装配表和四维阶段模型已退出正式流程。
 
 ## 0. 开发者从哪里开始看
 
 如果你是第一次接这套 System Core，建议按下面顺序看：
 
 1. 先看 `Docs/框架/ECS/System/Core/系统与状态分层总览.md`
-2. 再看 `Docs/框架/ECS/System/Core/其他/系统生命周期与项目状态设计.md`
+2. 再看 `Docs/框架/ECS/System/Core/其他/系统生命周期与项目状态设计.md`（历史设计背景）
 3. 接着回来看本文，建立“怎么接入新系统”的源码级心智模型
 4. 最后按目的跳源码：
    - 想看启动链路：`SystemManager.cs`
    - 想看注册约束：`SystemRegistry.cs`
-   - 想看元数据长什么样：`SystemDescriptor.cs`
+   - 想看代码注册：`SystemDescriptor.cs`
+   - 想看系统配置：`Data/Config/System/System/SystemConfig.cs`
    - 想看状态门禁：`Lifecycle/SystemRunCondition.cs`
-   - 想看 Profile 怎么填：`Profile/SystemProfile.cs` / `Profile/SystemProfileEntry.cs`
+   - 想看启动预设：`Data/Config/System/Preset/SystemPreset.cs`
 
 推荐这样看的原因是：
 
 - 总览文档先帮你分清系统治理、项目状态、实体状态、AI 决策四层边界。
-- 正式设计文档回答“为什么现在是这个模型”。
+- 历史设计文档回答“为什么从旧模型迁移到这个模型”。
 - 本文才回答“我现在要新增一个系统，具体怎么写”。
 
 ## 1. 启动模型
@@ -30,14 +31,17 @@
 
 1. Godot 先实例化 `SystemManager`
 2. `SystemManager._EnterTree()` 初始化 `ParentManager`
-3. `SystemManager._Ready()` 创建 Host 并启动全部已注册系统
+3. `SystemManager._Ready()` 加载 `SystemConfig/SystemPreset`，创建 Host 并启动被配置选中的系统
 4. 主场景随后进入 `_Ready()`
 
 这意味着：
 
-- 不再需要 `AutoLoad`
+- 不再需要每个系统自己挂 Godot AutoLoad
 - 不再需要 deferred 挂树桥接
 - 主场景默认可以假定基础系统已经就绪
+- 启动日志必须能看到 `SystemManager _Ready 开始启动系统框架`、预设计算出的系统数、已注册描述符数和最终系统状态报告
+- `ProjectState` 每次切换后都会重新输出系统状态报告；判断系统是否真的未运行，应以状态切换后的报告为准
+- 单个系统 Factory 或 `OnRegistered` 抛异常时，`SystemManager` 会记录具体系统和堆栈并继续尝试装载其他系统
 
 如果某个测试或调试入口必须显式等待系统树完全启动，统一等待：
 
@@ -56,270 +60,139 @@
   - `ISystem.cs`
   - `ISystemLifecycle.cs`
   - `IProjectStateAwareSystem.cs`
-  - `SystemLifetime.cs`
-  - `SystemKind.cs`
   - `SystemRunCondition.cs`
   - `SystemRegistrationContext.cs`
 - `State/`：项目级运行状态
   - `ProjectStateService.cs`
   - `ProjectStateSnapshot.cs`
-  - `ProjectStateChangedEventArgs.cs`
   - `Phase/*`
+- `Data/EventType/Global/`：项目状态事件协议
+  - `GameEventType_Global_ProjectState.cs`
 - `Internal/`：管理器内部运行时结构
   - `ManagedSystemEntry.cs`
 
-## 3. SystemKind：三种系统形态怎么选
+系统配置资源放在：
 
-注册系统时第一个要决定的就是 `SystemKind`——你的系统本质上是个什么东西？
+- `Data/Config/System/System/SystemConfig.cs`
+- `Data/Config/System/System/Resource/*.tres`
+- `Data/Config/System/Preset/SystemPreset.cs`
+- `Data/Config/System/Preset/Resource/*.tres`
 
-| SystemKind | 实例类型 | 需要挂树？ | 启停方式 | 什么时候用 |
-| --- | --- | --- | --- | --- |
-| `NodeScene` | Node（来自 .tscn） | ✅ 挂到 Host | `ProcessMode` + `ISystem` | 有场景骨架、需要子节点树 |
-| `NodeScript` | Node（纯代码 new） | ✅ 挂到 Host | `ProcessMode` + `ISystem` | 无 .tscn 但需要 `_Process` 帧驱动 |
-| `PureService` | 纯 C# 对象 | ❌ 不挂树 | `ISystem` | 纯逻辑服务，无帧驱动需求 |
+## 3. SystemConfig：系统设置只在资源里写
 
-**关键区别**：`NodeScene` / `NodeScript` 挂树后，`SystemManager` 通过切 `ProcessMode` 控制帧调度；`PureService` 不挂树，没有 `ProcessMode` 可切，运行态完全靠 `ISystem.OnStarted/OnStopped` 订阅/退订。`Enable/Disable` 只响应显式 API，不再被 Phase 重算复用。
-
-## 4. 新系统怎么接入
-
-新系统唯一接入方式：`[ModuleInitializer]` + `SystemRegistry.Register(new SystemDescriptor(...))`
-
-V2 新增两个约定：
-
-- 默认是否自动装载看 `SystemDescriptor.DefaultAutoAdd` 与 `SystemProfile`
-- 默认是否启用看 `SystemDescriptor.DefaultEnabled` 与 `SystemProfile`
-
-### 4.1 Node 场景系统
+代码注册只回答两个问题：这个系统叫什么、怎么创建实例。
 
 ```csharp
 [ModuleInitializer]
 public static void Initialize()
 {
-    SystemRegistry.Register(new SystemDescriptor(nameof(MySystem), SystemKind.NodeScene, SystemLifetime.Persistent)
-    {
-        Dependencies = new[] { nameof(TimerManager) },
-        ParentPath = "Gameplay/Utility",
-        Factory = static () => ResourceManagement
-            .Load<PackedScene>(nameof(MySystem), ResourceCategory.System)
-            .Instantiate()
-    });
+    SystemRegistry.Register(nameof(MySystem), static () => ResourceManagement
+        .Load<PackedScene>(nameof(MySystem), ResourceCategory.System)
+        .Instantiate());
 }
 ```
 
-### 4.2 Node 脚本系统
+其余系统级设置统一写在 `Data/DataNew/System/SystemConfigData.cs`；同名 `.tres` 资源只作为兼容回退，不覆盖纯 C# 配置。
 
-```csharp
-[ModuleInitializer]
-public static void Initialize()
-{
-    SystemRegistry.Register(new SystemDescriptor(nameof(MyRuntimeBridge), SystemKind.NodeScript, SystemLifetime.Persistent)
-    {
-        Factory = static () => new MyRuntimeBridge()
-    });
-}
-```
+| 字段 | 语义 |
+| --- | --- |
+| `SystemId` | 系统唯一 Id，必须与注册字符串和资源文件名一致 |
+| `MountGroup` | 挂载 Host，单选：`Base / Gameplay / Combat / UI / Debug / Test / Else` |
+| `Tags` | 逻辑分类，多选：`Core / Gameplay / Combat / UI / Debug / Test / Roguelike / Runtime` |
+| `Required` | 必需系统，永远装载，Preset 不能禁用 |
+| `AutoLoad` | 无激活 Preset 时是否默认装载 |
+| `StartEnabled` | 纳入管理后的人工开关默认值 |
+| `Priority` | 装载排序，数值越小越早 |
+| `Dependencies` | 依赖系统 Id 列表 |
+| `AllowedFlowStates` | 允许的游戏流程状态，`None` 表示不限制；优先选 `Gameplay / Session / Runtime` 等预设 |
+| `RequiredOverlays` | 必须存在的覆盖层，`None` 表示不要求；可选 `InteractiveUi / Blocking` 等预设 |
+| `BlockedOverlays` | 禁止存在的覆盖层，`None` 表示不屏蔽；局内常用 `Blocking` |
+| `AllowedSimulationStates` | 允许的模拟状态，`None` 表示不限制；暂停菜单常用 `Any` |
 
-### 4.3 纯服务系统
+关键边界：不要在 `SystemDescriptor` 里恢复系统形态、生命周期、父节点路径、运行条件、默认装载或默认启用字段。这些字段已经迁移到 `SystemConfig`，否则系统级解耦会重新变成代码和配置双写。
 
-```csharp
-[ModuleInitializer]
-public static void Initialize()
-{
-    SystemRegistry.Register(new SystemDescriptor(nameof(MyService), SystemKind.PureService, SystemLifetime.Persistent)
-    {
-        Factory = static () => new MyServiceRuntime()
-    });
-}
-```
+兼容路径：
 
-### 4.4 复杂 Gameplay 系统示例
+- `Data/DataNew/System/SystemConfigData.cs`：优先数据源，适合纯 C# 配置和版本审查。
+- `Data/DataNew/System/SystemPresetData.cs`：优先预设数据源。
+- `Data/Config/System/System/Resource/*.tres`：资源回退，主要用于尚未迁移的系统配置。
+- `Data/Config/System/Preset/Resource/*.tres`：资源回退，主要用于尚未迁移的预设。
 
-下面这个例子比基础模板更接近真实业务：
+## 4. ProjectState：三域状态模型
 
-- 依赖 `TimerManager`、`TargetingManager`、`DamageService`
-- 挂到 `GameplayHost/Wave/Spawner`
-- 只在"局内进行中且未暂停"时运行
-- 创建失败时交给 `SystemManager` 记录日志并跳过，不用在注册阶段滥用 `throw`
+项目状态快照现在只保留三个真实运行域：
 
-```csharp
-[ModuleInitializer]
-public static void Initialize()
-{
-    SystemRegistry.Register(new SystemDescriptor(nameof(EliteSpawnSystem), SystemKind.NodeScene, SystemLifetime.Gameplay)
-    {
-        Dependencies = new[]
-        {
-            nameof(TimerManager),
-            nameof(TargetingManager),
-            nameof(DamageService)
-        },
-        ParentPath = "Wave/Spawner",
-        RunCondition = SystemRunCondition.GameplayRunning(),
-        Factory = static () => ResourceManagement
-            .Load<PackedScene>(nameof(EliteSpawnSystem), ResourceCategory.System)
-            .Instantiate()
-    });
-}
-```
-
-### 4.5 Debug 桥接系统示例
-
-调试系统通常不是主玩法逻辑，但它又必须接入正式系统树。这个例子说明 `Debug` 生命周期和自定义 `RunCondition` 的用法：
-
-```csharp
-[ModuleInitializer]
-public static void Initialize()
-{
-    SystemRegistry.Register(new SystemDescriptor(nameof(WaveDebugPanelRuntime), SystemKind.NodeScript, SystemLifetime.Debug)
-    {
-        Dependencies = new[]
-        {
-            nameof(TestSystem),
-            nameof(TargetingManager)
-        },
-        ParentPath = "Panels/Wave",
-        RunCondition = new SystemRunCondition
-        {
-            AllowedAppPhases = [AppPhase.InSession],
-            AllowedExecutionPhases = [ExecutionPhase.Running, ExecutionPhase.Paused]
-        },
-        Factory = static () => new WaveDebugPanelRuntime()
-    });
-}
-```
-
-关键点：
-- 调试入口也应该走 `SystemRegistry + SystemManager`
-- 调试系统和 Gameplay 系统可以共享依赖链，但生命周期域不同
-- 运行条件要声明在描述符里，而不是散落到 `_Ready()` / `_Process()`
-
-## 5. Lifetime、Profile、RunCondition 与 shouldRun
-
-### 5.1 SystemLifetime：系统属于哪个分组
-
-| Lifetime | 含义 | 挂到哪个 Host | 典型系统 |
-| --- | --- | --- | --- |
-| `Persistent` | 跨流程常驻基础设施 | `PersistentHost` | `TimerManager`、`ObjectPoolInit`、`DamageService` |
-| `Gameplay` | 局内主玩法系统 | `GameplayHost` | `SpawnSystem`、`DamageStatisticsSystem` |
-| `Overlay` | 覆盖层 / 菜单 | `OverlayHost` | `PauseMenuSystem` |
-| `Debug` | 调试系统 | `DebugHost` | `MouseSelectionSystem`、`TestSystem` |
-| `Test` | 运行时测试专用 | `TestHost` | — |
-
-Lifetime 只决定系统挂到哪个 Host 容器下，**不直接决定系统是否存在或是否运行**。系统是否被自动装载看 `SystemProfile`，是否真正运行由下面的 shouldRun 公式裁决。
-
-### 5.2 shouldRun 公式：系统到底跑不跑
-
-```
-shouldRun = IsAdded && DesiredEnabled（人工开关） && ProfileEnabled && IsStateAllowed（Phase 条件裁决）
-```
-
-| 要素 | 谁控制 | 含义 |
+| 状态域 | 回答的问题 | 值 |
 | --- | --- | --- |
-| `IsAdded` | `AddSystem/RemoveSystem`、Bootstrap、依赖链 | 系统实例是否存在并被托管 |
-| `DesiredEnabled` | 外部调用 `EnableSystem/DisableSystem` | 人工开关：显式启用或禁用某个系统 |
-| `ProfileEnabled` | `SystemProfile` | 启动前/运行时的全局策略层开关 |
-| `IsStateAllowed` | `RunCondition.Evaluate(Snapshot)` | 状态门禁：当前 Phase 是否匹配该系统的准入规则 |
-| `shouldRun` | `SystemManager.ReconcileEntry` | 四者 AND 的结果，决定系统是否真正运行 |
+| `GameFlowState` | 游戏流程走到哪里 | `None / Boot / FrontEnd / SessionPreparing / SessionPlaying / SessionResolving / SessionEnded / ShuttingDown`，并提供 `FrontEndFlow / Session / ActiveSession / Gameplay / Runtime / All` 预设 |
+| `OverlayFlags` | 当前有哪些覆盖层 | `None / PauseMenu / ModalUi / Cutscene`，并提供 `InteractiveUi / Blocking` 预设 |
+| `SimulationState` | 模拟是否推进 | `None / Running / Suspended`，并提供 `Any` 预设 |
 
-**SystemRunCondition 只回答"Phase 条件是否允许"，不等于"系统真的在跑"。** 即使 Phase 条件通过，只要系统未 Add、Profile 禁止或人工 Disable，系统也不会运行。
+旧版应用阶段、局内阶段、覆盖层阶段和执行阶段已合并为这三域：
 
-### 5.3 生命周期回调怎么分工
+- `GameFlowState` 承担应用阶段和局内阶段，配置侧可按位组合，运行时当前值仍只允许单一流程状态。
+- `OverlayFlags` 是 Flags，允许暂停菜单、模态窗口、过场这类覆盖层并存。
+- `SimulationState` 只表达模拟推进或挂起，配置侧可按位组合，不再区分抽象的 `Paused / Blocked`。
 
-V2 推荐新系统默认直接实现：
+`ProjectStateService` 不使用 C# event；状态切换统一通过 `GlobalEventBus.Global` 广播：
 
-- `ISystem`
+- `GameEventType.Global.ProjectStateChanging`
+- `GameEventType.Global.ProjectStateChanged`
+- `GameEventType.Global.ProjectStateChangedCompleted`
 
-能力层仍保留：
+## 5. RunCondition 与 shouldRun
 
-- `ISystemLifecycle`
-- `IProjectStateAwareSystem`（只有真的需要单独表达状态观察能力时才实现）
+`SystemRunCondition` 从 `SystemConfig` 生成，只负责判断当前 `ProjectStateSnapshot` 是否允许系统运行。`None` 规则固定如下：
 
-回调语义固定为：
+- `AllowedFlowStates = None`：不限制流程状态。
+- `RequiredOverlays = None`：不要求任何覆盖层。
+- `BlockedOverlays = None`：不屏蔽任何覆盖层。
+- `AllowedSimulationStates = None`：不限制模拟状态。
 
-- `OnAdded/OnRemoved`：实例存在性
-- `OnEnabled/OnDisabled`：显式人工开关
-- `OnStarted/OnStopped`：实际运行态切换
-- `OnProjectStateChanged`：状态观察，不等价于启停
-
-### 5.4 SystemRunCondition 实战推演
-
-以 TestSystem 为例，它想表达"局内可用，暂停也不停，只挡过场"：
+Gameplay 系统常用配置：
 
 ```csharp
 new SystemRunCondition
 {
-    AllowedAppPhases = [AppPhase.InSession],                              // 只在局内
-    AllowedExecutionPhases = [ExecutionPhase.Running, ExecutionPhase.Paused], // 暂停也行
-    BlockedOverlayPhases = [OverlayPhase.Cutscene],                       // 过场挡住
+    AllowedFlowStates = GameFlowState.Gameplay,
+    BlockedOverlays = OverlayFlags.Blocking,
+    AllowedSimulationStates = SimulationState.Running
 }
 ```
 
-规则：**Allowed 为空 = 不限制，非空 = 当前 Phase 必须在里面；Blocked 命中 = 禁止运行。**
+最终裁决公式：
 
-| 游戏状态 | AppPhase | ExecutionPhase | OverlayPhase | AllowedApp? | AllowedExec? | BlockedOverlay? | IsStateAllowed |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 主菜单 | FrontEnd | Running | None | ❌ | — | — | **false** |
-| 局内打牌 | InSession | Running | None | ✅ | ✅ | ✅ | **true** |
-| 局内暂停 | InSession | Paused | PauseMenu | ✅ | ✅ | ✅ PauseMenu 不在 Blocked | **true** |
-| 局内过场 | InSession | Blocked | Cutscene | ✅ | ❌ | ❌ Cutscene 在 Blocked | **false** |
-
-再比如 `SpawnSystem`，用预设工厂方法 `GameplayRunning()` 等价于：
-
-```csharp
-new SystemRunCondition
-{
-    AllowedAppPhases = [AppPhase.InSession],
-    AllowedSessionPhases = [SessionPhase.Playing],
-    AllowedExecutionPhases = [ExecutionPhase.Running]
-}
+```text
+shouldRun = IsEnabled && IsStateAllowed
 ```
 
-只有 `InSession + Playing + Running` 三维同时满足时才允许运行——暂停、结算、菜单全停。
+其中 `IsEnabled` 是系统人工开关，由 `SystemConfig.StartEnabled` 初始化，运行时可由 `EnableSystem/DisableSystem` 修改；`IsStateAllowed` 是 `SystemRunCondition` 对三域状态的判断结果。系统是否被创建则由 `Required / AutoLoad / SystemPreset / Dependencies` 在装载阶段决定，不再混进运行态公式。
 
-### 5.5 不设 RunCondition 会怎样
+## 6. SystemPreset：只做批量选择
 
-`SystemDescriptor` 的默认值是 `SystemRunCondition.Always`（所有集合为空），意味着**任意 Phase 下都通过 Evaluate**。
+`SystemPreset` 不是高级运行配置，也不承载运行条件。它只解决“本模式要装哪些系统”：
 
-如果某个系统不需要 Phase 过滤（比如 `TimerManager` 这种跨流程基础设施），直接不设 `RunCondition` 即可。
+- `Required=true` 的系统永远装载。
+- 无激活 Preset 时，装载 `AutoLoad=true` 的系统。
+- 有激活 Preset 时，装载 `EnabledTags` 命中的系统和 `EnabledSystemIds` 显式列出的系统。
+- `DisabledSystemIds` 可以排除系统，但不能排除 `Required=true` 的系统。
 
-### 5.6 ProjectStateBridge：谁负责切换 ProjectState
+当前 `Default` 预设不会把 `Debug / Test` 标签整体加入默认标签集合；它通过 `EnabledSystemIds` 显式加载 `TestSystem` 和 `MouseSelectionSystem`，避免未来新增的调试系统被意外常驻。
 
-`SystemRunCondition` 只负责"读"状态，不负责"写"状态。项目状态的切换由 `ProjectStateBridge` 负责——它把 `GameStart / GamePause / GameResume / GameOver` 这类流程事件统一映射到 `ProjectStateService` 的 Phase 切换。
+如果要配置系统运行阶段，改对应 `SystemConfig` 的三域运行条件，不要新增 `SystemRunPreset` 之类的中间层。
 
-### 5.7 SystemProfile 怎么填写更顺手
+## 6.5 生命周期回调
 
-`SystemProfile` 继续放在 `Data/Config/System/`，不并入 `Data/Data`。
+`ISystemLifecycle` 回调语义固定：
 
-原因是：
-
-- 它是项目启动装配清单，不是 `Data.LoadFromResource()` 注入到 Entity.Data 的业务数据
-- 它只负责“当前项目想显式覆盖哪些系统”，而不是再额外维护 Tag 治理层
-
-当前作者体验规则：
-
-- `SystemProfile` 只有一张 `Systems` 列表
-- 每个 `SystemProfileEntry` 只写 `SystemId / AutoAdd / Enabled`
-- Profile 中命中 `SystemId` 时使用条目值
-- Profile 中没写该系统时，一律回退 `SystemDescriptor.DefaultAutoAdd / DefaultEnabled`
-- `SystemProfileService.SetActiveProfile(...)` 只对重复 `SystemId` 输出简洁警告，且后写覆盖前写
-
-相关源码：
-
-- `Profile/SystemProfile.cs`
-- `Profile/SystemProfileEntry.cs`
-- `Profile/SystemProfileService.cs`
-
-## 6. ParentPath 语义
-
-`ParentPath` 表示：**相对 `SystemLifetime` 对应 Host 的路径**。
-
-例如：
-- `SystemLifetime.Debug + ParentPath=""` -> `DebugHost/MySystem`
-- `SystemLifetime.Debug + ParentPath="Panels/Runtime"` -> `DebugHost/Panels/Runtime/MySystem`
+- `OnRegistered/OnUnRegistered`：实例被 `SystemManager` 接管或释放。
+- `OnStarted/OnStopped`：实际运行态切换，适合订阅/退订事件、启动/停止驱动逻辑。
+- `IProjectStateAwareSystem.OnProjectStateChanged`：接收 `ProjectStateChanged` 事件数据，观察状态变化，不等价于启停。
 
 ## 7. 测试与调试注意事项
 
 - `MainTest` 这类测试入口不应再"等一帧"赌启动时序
 - 需要系统树时，显式等 `BootstrapCompleted`
+- 局内系统不能只依赖 `GameStart` 事件启动关键运行态；如果系统在 `FrontEnd` 被运行条件挡住，应该在 `OnStarted(SessionPlaying)` 中补齐进入局内后的启动逻辑
 - 老的 `TestDataRegister` 已删除，测试数据定义应直接走新的 `DataKey_* / DataMeta` 体系
 - `SystemRegistry` 遇到空描述符或重复 `SystemId` 时，当前约定是记录 `Log.Error` 并忽略本次注册，避免在模块初始化阶段滥用 `throw`
