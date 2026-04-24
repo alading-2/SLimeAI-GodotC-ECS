@@ -8,12 +8,12 @@ namespace Slime.ConfigNew.Units
         /// <summary>
         /// 是否显示血条
         /// </summary>
-        public bool IsShowHealthBar { get; set; }
+        public bool IsShowHealthBar { get; set; } = false;
 
         /// <summary>
         /// 是否无敌
         /// </summary>
-        public bool IsInvulnerable { get; set; }
+        public bool IsInvulnerable { get; set; } = true;
 
         // ====== 实例 ======
 

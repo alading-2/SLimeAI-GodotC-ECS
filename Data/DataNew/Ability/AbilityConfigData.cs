@@ -18,7 +18,7 @@ public class AbilityConfigData
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCostType = AbilityCostType.Mana,
         AbilityCooldown = 1.0f,
-        AbilityCastRange = 400f,
+        AbilityCastRange = 500f,
         AbilityEffectRadius = 300f,
         EffectScenePath = "res://assets/Effect/020/AnimatedSprite2D/020.tscn",
         AbilityDamage = 30f
@@ -50,6 +50,7 @@ public class AbilityConfigData
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
+        ProjectileScenePath = "res://assets/Projectile/Projectile/Polygon2D/BulletDiamond.tscn",
         AbilityDamage = 20f
     };
 
@@ -63,6 +64,8 @@ public class AbilityConfigData
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
+        AbilityCastRange = 600f,
+        ProjectileScenePath = "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn",
         AbilityDamage = 25f
     };
 
@@ -76,8 +79,11 @@ public class AbilityConfigData
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Periodic,
         AbilityCooldown = 1.0f,
-        AbilityDamage = 28f,
-        AbilityEffectRadius = 100f
+        AbilityCastRange = 700f,
+        AbilityEffectRadius = 250f,
+        EffectScenePath = "res://assets/Effect/004龙卷风/AnimatedSprite2D/004龙卷风.tscn",
+        ProjectileScenePath = "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn",
+        AbilityDamage = 9f
     };
 
     /// <summary>回旋镖投掷</summary>
@@ -92,6 +98,7 @@ public class AbilityConfigData
         AbilityCooldown = 1.0f,
         AbilityTargetSelection = AbilityTargetSelection.None,
         AbilityCastRange = 800f,
+        ProjectileScenePath = "res://assets/Projectile/Projectile/Polygon2D/BulletDiamond.tscn",
         AbilityDamage = 22f
     };
 
@@ -107,7 +114,7 @@ public class AbilityConfigData
         AbilityCooldown = 1.0f,
         AbilityTargetSelection = AbilityTargetSelection.Entity,
         AbilityCastRange = 700f,
-        AbilityEffectRadius = 700f,
+        ProjectileScenePath = "res://assets/Projectile/Projectile/Polygon2D/BoomerangChevron.tscn",
         AbilityDamage = 26f
     };
 
@@ -121,6 +128,8 @@ public class AbilityConfigData
         AbilityIconPath = "res://icon.svg",
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
+        AbilityCastRange = 600f,
+        ProjectileScenePath = "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn",
         AbilityDamage = 30f
     };
 
@@ -172,22 +181,22 @@ public class AbilityConfigData
     /// <summary>
     /// 技能名称
     /// </summary>
-    public string? Name { get; set; }
+    public string? Name { get; set; } = (string)DataKey.Name.DefaultValue!;
 
     /// <summary>
     /// 技能分组 ID
     /// </summary>
-    public string? FeatureGroupId { get; set; }
+    public string? FeatureGroupId { get; set; } = (string)DataKey.AbilityFeatureGroup.DefaultValue!;
 
     /// <summary>
     /// Feature执行函数ID
     /// </summary>
-    public string? FeatureHandlerId { get; set; }
+    public string? FeatureHandlerId { get; set; } = (string)DataKey.FeatureHandlerId.DefaultValue!;
 
     /// <summary>
     /// 技能描述
     /// </summary>
-    public string? Description { get; set; }
+    public string? Description { get; set; } = (string)DataKey.Description.DefaultValue!;
 
     /// <summary>
     /// 技能图标路径
@@ -197,80 +206,80 @@ public class AbilityConfigData
     /// <summary>
     /// 当前级别
     /// </summary>
-    public int AbilityLevel { get; set; }
+    public int AbilityLevel { get; set; } = (int)DataKey.AbilityLevel.DefaultValue!;
 
     /// <summary>
     /// 最大级别
     /// </summary>
-    public int AbilityMaxLevel { get; set; }
+    public int AbilityMaxLevel { get; set; } = (int)DataKey.AbilityMaxLevel.DefaultValue!;
 
     // ====== 技能类型 ======
 
     /// <summary>
     /// 实体类型
     /// </summary>
-    public EntityType EntityType { get; set; }
+    public EntityType EntityType { get; set; } = EntityType.Ability;
 
     /// <summary>
     /// 技能类型
     /// </summary>
-    public AbilityType AbilityType { get; set; }
+    public AbilityType AbilityType { get; set; } = (AbilityType)DataKey.AbilityType.DefaultValue!;
 
     /// <summary>
     /// 触发模式
     /// </summary>
-    public AbilityTriggerMode AbilityTriggerMode { get; set; }
+    public AbilityTriggerMode AbilityTriggerMode { get; set; } = (AbilityTriggerMode)DataKey.AbilityTriggerMode.DefaultValue!;
 
     // ====== 消耗与冷却 ======
 
     /// <summary>
     /// 消耗类型
     /// </summary>
-    public AbilityCostType AbilityCostType { get; set; }
+    public AbilityCostType AbilityCostType { get; set; } = (AbilityCostType)DataKey.AbilityCostType.DefaultValue!;
 
     /// <summary>
     /// 消耗数值
     /// </summary>
-    public float AbilityCostAmount { get; set; }
+    public float AbilityCostAmount { get; set; } = (float)DataKey.AbilityCostAmount.DefaultValue!;
 
     /// <summary>
     /// 冷却时间 (秒)
     /// </summary>
-    public float AbilityCooldown { get; set; }
+    public float AbilityCooldown { get; set; } = (float)DataKey.AbilityCooldown.DefaultValue!;
 
     // ====== 充能系统 ======
 
     /// <summary>
     /// 是否使用充能系统
     /// </summary>
-    public bool IsAbilityUsesCharges { get; set; }
+    public bool IsAbilityUsesCharges { get; set; } = (bool)DataKey.IsAbilityUsesCharges.DefaultValue!;
 
     /// <summary>
     /// 最大充能层数
     /// </summary>
-    public int AbilityMaxCharges { get; set; }
+    public int AbilityMaxCharges { get; set; } = (int)DataKey.AbilityMaxCharges.DefaultValue!;
 
     /// <summary>
     /// 充能时间 (秒)
     /// </summary>
-    public float AbilityChargeTime { get; set; }
+    public float AbilityChargeTime { get; set; } = (float)DataKey.AbilityChargeTime.DefaultValue!;
 
     // ====== 目标选择 ======
 
     /// <summary>
     /// 目标选择方式
     /// </summary>
-    public AbilityTargetSelection AbilityTargetSelection { get; set; }
+    public AbilityTargetSelection AbilityTargetSelection { get; set; } = (AbilityTargetSelection)DataKey.AbilityTargetSelection.DefaultValue!;
 
     /// <summary>
     /// 施法距离（由具体 Handler 决定如何解释）
     /// </summary>
-    public float AbilityCastRange { get; set; }
+    public float AbilityCastRange { get; set; } = (float)DataKey.AbilityCastRange.DefaultValue!;
 
     /// <summary>
     /// 效果半径（命中范围 / AOE 半径）
     /// </summary>
-    public float AbilityEffectRadius { get; set; }
+    public float AbilityEffectRadius { get; set; } = (float)DataKey.AbilityEffectRadius.DefaultValue!;
 
     // ====== 视觉与表现 ======
 
@@ -289,5 +298,5 @@ public class AbilityConfigData
     /// <summary>
     /// 技能伤害数值
     /// </summary>
-    public float AbilityDamage { get; set; }
+    public float AbilityDamage { get; set; } = (float)DataKey.AbilityDamage.DefaultValue!;
 }

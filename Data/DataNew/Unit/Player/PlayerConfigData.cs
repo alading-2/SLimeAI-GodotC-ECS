@@ -10,27 +10,27 @@ namespace Slime.ConfigNew.Units
         /// <summary>
         /// 基础法力值
         /// </summary>
-        public float BaseMana { get; set; }
+        public float BaseMana { get; set; } = (float)DataKey.BaseMana.DefaultValue!;
 
         /// <summary>
         /// 基础法力回复 (每秒)
         /// </summary>
-        public float BaseManaRegen { get; set; }
+        public float BaseManaRegen { get; set; } = (float)DataKey.BaseManaRegen.DefaultValue!;
 
         /// <summary>
         /// 拾取范围
         /// </summary>
-        public float PickupRange { get; set; }
+        public float PickupRange { get; set; } = (float)DataKey.PickupRange.DefaultValue!;
 
         /// <summary>
         /// 基础技能伤害
         /// </summary>
-        public float BaseSkillDamage { get; set; }
+        public float BaseSkillDamage { get; set; } = (float)DataKey.AbilityDamageBonus.DefaultValue!;
 
         /// <summary>
         /// 冷却缩减 (%)
         /// </summary>
-        public float CooldownReduction { get; set; }
+        public float CooldownReduction { get; set; } = (float)DataKey.CooldownReduction.DefaultValue!;
 
         // ====== 实例 ======
 
