@@ -1,6 +1,8 @@
+using System;
+
 /// <summary>
 /// 项目级状态服务。
-/// <para>统一维护流程、覆盖层和模拟状态，并通过全局事件总线广播切换前/中/后事件。</para>
+/// <para>统一维护流程、覆盖层和模拟状态，并通过实例级 C# event 广播切换前/中/后事件。</para>
 /// </summary>
 public sealed class ProjectStateService
 {
@@ -35,6 +37,24 @@ public sealed class ProjectStateService
     public ProjectStateSnapshot Snapshot => _snapshot;
 
     /// <summary>
+    /// 状态切换前事件。
+    /// <para>这里不用 EventBus：ProjectStateService 是 SystemManager 持有的实例状态源，实例级事件能避免临时测试服务污染全局运行时。</para>
+    /// </summary>
+    public event EventHandler<ProjectStateChangedEventArgs>? BeforeStateChanged;
+
+    /// <summary>
+    /// 状态切换事件。
+    /// <para>这里不用 EventBus：状态门禁重算只属于当前 ProjectStateService 实例，SystemManager 订阅本实例后再分发给托管系统。</para>
+    /// </summary>
+    public event EventHandler<ProjectStateChangedEventArgs>? StateChanged;
+
+    /// <summary>
+    /// 状态切换后事件。
+    /// <para>这里不用 EventBus：切换完成通知仍应跟随当前状态源实例，避免全局事件被外部误当成业务协议订阅。</para>
+    /// </summary>
+    public event EventHandler<ProjectStateChangedEventArgs>? AfterStateChanged;
+
+    /// <summary>
     /// 用新的快照替换当前项目状态。
     /// </summary>
     /// <param name="next">新的项目状态。</param>
@@ -49,12 +69,12 @@ public sealed class ProjectStateService
         }
 
         var previous = _snapshot;
-        var data = new GameEventType.Global.ProjectStateTransitionEventData(previous, next);
+        var args = new ProjectStateChangedEventArgs(previous, next);
 
-        GlobalEventBus.Global.Emit(GameEventType.Global.ProjectStateChanging, data); // 切换前：允许系统做收尾或保存现场
+        BeforeStateChanged?.Invoke(this, args); // 切换前：允许系统做收尾或保存现场
         _snapshot = next;
-        GlobalEventBus.Global.Emit(GameEventType.Global.ProjectStateChanged, data); // 切换中：主要用于系统运行资格重算
-        GlobalEventBus.Global.Emit(GameEventType.Global.ProjectStateChangedCompleted, data); // 切换后：用于补充逻辑/触发后续流程
+        StateChanged?.Invoke(this, args); // 切换中：主要用于系统运行资格重算
+        AfterStateChanged?.Invoke(this, args); // 切换后：用于补充逻辑/触发后续流程
     }
 
     /// <summary>

@@ -23,7 +23,8 @@ namespace Slime.Test.SystemCore
             {
                 TestProjectStateDefaults();
                 TestProjectStateFlowHelpers();
-                TestProjectStatePublishesGlobalEvents();
+                TestProjectStatePublishesInstanceEvents();
+                TestLocalProjectStateServiceDoesNotDriveSystemManager();
                 TestProjectStatePhasePresets();
                 TestSystemRunCondition();
                 TestGameplayRunConditionPreset();
@@ -110,32 +111,48 @@ namespace Slime.Test.SystemCore
             AssertEqual("EndSession 应暂停模拟", SimulationState.Suspended, service.SimulationState);
         }
 
-        private void TestProjectStatePublishesGlobalEvents()
+        private void TestProjectStatePublishesInstanceEvents()
         {
             var service = new ProjectStateService();
             var changedCount = 0;
-            GameEventType.Global.ProjectStateTransitionEventData? lastEvent = null;
+            ProjectStateChangedEventArgs? lastEvent = null;
 
-            void OnProjectStateChanged(GameEventType.Global.ProjectStateTransitionEventData evt)
+            void OnProjectStateChanged(object? sender, ProjectStateChangedEventArgs evt)
             {
                 changedCount++;
                 lastEvent = evt;
             }
 
-            GlobalEventBus.Global.On<GameEventType.Global.ProjectStateTransitionEventData>(
-                GameEventType.Global.ProjectStateChanged,
-                OnProjectStateChanged);
+            service.StateChanged += OnProjectStateChanged;
 
             service.BeginGameplaySession();
 
-            GlobalEventBus.Global.Off<GameEventType.Global.ProjectStateTransitionEventData>(
-                GameEventType.Global.ProjectStateChanged,
-                OnProjectStateChanged);
+            service.StateChanged -= OnProjectStateChanged;
 
-            AssertEqual("ProjectStateService 应通过全局事件广播状态变化", 1, changedCount);
-            AssertEqual("ProjectStateChanged 应携带事件数据", true, lastEvent.HasValue);
-            AssertEqual("ProjectStateChanged 应携带旧状态", GameFlowState.Boot, lastEvent!.Value.Previous.FlowState);
-            AssertEqual("ProjectStateChanged 应携带新状态", GameFlowState.SessionPlaying, lastEvent.Value.Current.FlowState);
+            AssertEqual("ProjectStateService 应通过实例事件广播状态变化", 1, changedCount);
+            AssertEqual("StateChanged 应携带事件数据", true, lastEvent != null);
+            AssertEqual("StateChanged 应携带旧状态", GameFlowState.Boot, lastEvent!.Previous.FlowState);
+            AssertEqual("StateChanged 应携带新状态", GameFlowState.SessionPlaying, lastEvent.Current.FlowState);
+        }
+
+        private void TestLocalProjectStateServiceDoesNotDriveSystemManager()
+        {
+            var manager = SystemManager.Instance;
+            if (manager == null)
+            {
+                Fail("SystemManager.Instance 应存在");
+                return;
+            }
+
+            manager.ProjectState.EnterFrontEnd();
+            var before = manager.GetSystemRuntimeInfo("DamageService");
+            var localService = new ProjectStateService();
+
+            localService.BeginGameplaySession();
+            var after = manager.GetSystemRuntimeInfo("DamageService");
+
+            AssertEqual("局部 ProjectStateService 不应改变 SystemManager 项目状态", GameFlowState.FrontEnd, manager.ProjectState.FlowState);
+            AssertEqual("局部 ProjectStateService 不应驱动 SystemManager 系统运行态", before?.IsRunning, after?.IsRunning);
         }
 
         private void TestProjectStatePhasePresets()

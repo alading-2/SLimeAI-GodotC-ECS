@@ -7,8 +7,8 @@ public interface IProjectStateAwareSystem
     /// <summary>
     /// 项目状态发生切换时触发。
     /// </summary>
-    /// <param name="data">状态切换事件数据。</param>
-    void OnProjectStateChanged(GameEventType.Global.ProjectStateTransitionEventData data)
+    /// <param name="args">状态切换事件参数。</param>
+    void OnProjectStateChanged(ProjectStateChangedEventArgs args)
     {
     }
 }

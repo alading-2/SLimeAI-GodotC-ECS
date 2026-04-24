@@ -280,9 +280,9 @@ public partial class TimerManager : Node, ISystem
     }
 
     /// <inheritdoc />
-    public void OnProjectStateChanged(GameEventType.Global.ProjectStateTransitionEventData data)
+    public void OnProjectStateChanged(ProjectStateChangedEventArgs args)
     {
-        ApplyProjectPauseState(data.Current);
+        ApplyProjectPauseState(args.Current);
     }
 
     private void ApplyTimerProjectPause(GameTimer timer)

@@ -52,7 +52,7 @@ public partial class DamageService : ISystem
         };
     }
 
-    public void OnProjectStateChanged(GameEventType.Global.ProjectStateTransitionEventData data)
+    public void OnProjectStateChanged(ProjectStateChangedEventArgs args)
     {
         // DamageService 不需要响应项目状态变化
     }

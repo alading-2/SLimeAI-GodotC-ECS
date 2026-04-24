@@ -61,10 +61,8 @@ public partial class SystemManager : Node
 
     public override void _ExitTree()
     {
-        // 取消全局事件订阅，避免后续状态变更触发回调。
-        GlobalEventBus.Global.Off<GameEventType.Global.ProjectStateTransitionEventData>(
-            GameEventType.Global.ProjectStateChanged,
-            OnProjectStateChanged);
+        // 取消 ProjectState 实例事件订阅，避免后续状态变更触发回调。
+        ProjectState.StateChanged -= OnProjectStateChanged;
 
         // 在移除管理器前，先关闭正在运行的系统，再给所有系统一次统一反注册机会。
         // 顺序：先 Disable（让系统清理运行态），再 UnRegistered（释放资源）。
@@ -110,12 +108,8 @@ public partial class SystemManager : Node
         // 为每个生命周期域创建 Host 节点，作为该域系统的统一父容器。
         EnsureHosts();
         // 先减后加，防止重复订阅。
-        GlobalEventBus.Global.Off<GameEventType.Global.ProjectStateTransitionEventData>(
-            GameEventType.Global.ProjectStateChanged,
-            OnProjectStateChanged);
-        GlobalEventBus.Global.On<GameEventType.Global.ProjectStateTransitionEventData>(
-            GameEventType.Global.ProjectStateChanged,
-            OnProjectStateChanged);
+        ProjectState.StateChanged -= OnProjectStateChanged;
+        ProjectState.StateChanged += OnProjectStateChanged;
         _isInitialized = true;
     }
 
@@ -403,21 +397,21 @@ public partial class SystemManager : Node
     /// 项目状态变更回调。
     /// <para>对每个系统：1) 重算 IsStateAllowed（运行条件裁决）→ 2) 通知系统 → 3) 统一应用启停。</para>
     /// </summary>
-    private void OnProjectStateChanged(GameEventType.Global.ProjectStateTransitionEventData data)
+    private void OnProjectStateChanged(object? sender, ProjectStateChangedEventArgs args)
     {
-        _log.Info($"项目状态切换: {data.Previous.FlowState}/{data.Previous.Overlays}/{data.Previous.SimulationState} -> {data.Current.FlowState}/{data.Current.Overlays}/{data.Current.SimulationState}");
+        _log.Info($"项目状态切换: {args.Previous.FlowState}/{args.Previous.Overlays}/{args.Previous.SimulationState} -> {args.Current.FlowState}/{args.Current.Overlays}/{args.Current.SimulationState}");
 
         foreach (var entry in _entries.Values)
         {
             // 先重算状态门禁，再通知系统，再统一应用启停。
-            var (isBlocked, blockedReason) = entry.RunCondition.GetBlockedReason(data.Current);
+            var (isBlocked, blockedReason) = entry.RunCondition.GetBlockedReason(args.Current);
             entry.BlockedReason = blockedReason;
             entry.IsStateAllowed = !isBlocked;
 
             // 只通知实现了 IProjectStateAwareSystem 的系统
             if (entry.Instance is IProjectStateAwareSystem stateAware)
             {
-                stateAware.OnProjectStateChanged(data);
+                stateAware.OnProjectStateChanged(args);
             }
 
             ApplyEntryState(entry, notifyTransition: true);

@@ -77,9 +77,9 @@ public partial class PauseMenuSystem : CanvasLayer, ISystem
     }
 
     /// <inheritdoc />
-    public void OnProjectStateChanged(GameEventType.Global.ProjectStateTransitionEventData data)
+    public void OnProjectStateChanged(ProjectStateChangedEventArgs args)
     {
-        UpdateMenuState(data.Current);
+        UpdateMenuState(args.Current);
     }
 
     private void TogglePauseMenu()

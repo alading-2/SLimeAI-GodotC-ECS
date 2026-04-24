@@ -65,9 +65,8 @@
 - `State/`：项目级运行状态
   - `ProjectStateService.cs`
   - `ProjectStateSnapshot.cs`
+  - `ProjectStateChangedEventArgs.cs`
   - `Phase/*`
-- `Data/EventType/Global/`：项目状态事件协议
-  - `GameEventType_Global_ProjectState.cs`
 - `Internal/`：管理器内部运行时结构
   - `ManagedSystemEntry.cs`
 
@@ -134,11 +133,13 @@ public static void Initialize()
 - `OverlayFlags` 是 Flags，允许暂停菜单、模态窗口、过场这类覆盖层并存。
 - `SimulationState` 只表达模拟推进或挂起，配置侧可按位组合，不再区分抽象的 `Paused / Blocked`。
 
-`ProjectStateService` 不使用 C# event；状态切换统一通过 `GlobalEventBus.Global` 广播：
+`ProjectStateService` 使用实例级 C# event 广播状态切换：
 
-- `GameEventType.Global.ProjectStateChanging`
-- `GameEventType.Global.ProjectStateChanged`
-- `GameEventType.Global.ProjectStateChangedCompleted`
+- `BeforeStateChanged`
+- `StateChanged`
+- `AfterStateChanged`
+
+这里不要改成 `GlobalEventBus`。项目状态是 `SystemManager.ProjectState` 这一份实例状态源，实例事件可以保证只有持有该状态源的 `SystemManager` 响应切换；临时测试服务或局部工具服务调用 `BeginGameplaySession()` 时，不应污染全局运行时系统门禁。需要让系统观察项目状态时，实现 `IProjectStateAwareSystem`，由 `SystemManager` 在收到 `StateChanged` 后统一分发。
 
 ## 5. RunCondition 与 shouldRun
 
@@ -187,7 +188,7 @@ shouldRun = IsEnabled && IsStateAllowed
 
 - `OnRegistered/OnUnRegistered`：实例被 `SystemManager` 接管或释放。
 - `OnStarted/OnStopped`：实际运行态切换，适合订阅/退订事件、启动/停止驱动逻辑。
-- `IProjectStateAwareSystem.OnProjectStateChanged`：接收 `ProjectStateChanged` 事件数据，观察状态变化，不等价于启停。
+- `IProjectStateAwareSystem.OnProjectStateChanged`：接收 `ProjectStateChangedEventArgs`，观察状态变化，不等价于启停；业务系统不直接订阅 `ProjectStateService.StateChanged`。
 
 ## 7. 测试与调试注意事项
 

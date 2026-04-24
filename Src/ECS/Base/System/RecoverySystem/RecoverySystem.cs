@@ -307,7 +307,7 @@ public partial class RecoverySystem : Node, ISystem
         };
     }
 
-    public void OnProjectStateChanged(GameEventType.Global.ProjectStateTransitionEventData data)
+    public void OnProjectStateChanged(ProjectStateChangedEventArgs args)
     {
         // RecoverySystem 不需要响应项目状态变化
     }
