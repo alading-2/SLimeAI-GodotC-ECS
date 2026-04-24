@@ -46,6 +46,14 @@ namespace Slime.Addons.DataConfigEditor
         private List<ConfigReflectionCache.InstanceInfo> _instances = new();
         private Dictionary<string, PropertyCommentInfo> _comments = new();
         private bool _modified;
+        private readonly Dictionary<string, DirtyCellInfo> _dirtyCells = new(StringComparer.Ordinal);
+
+        private sealed class DirtyCellInfo
+        {
+            public ConfigReflectionCache.InstanceInfo Instance { get; init; } = null!;
+            public PropertyMetadata Property { get; init; } = null!;
+            public string ValueText { get; init; } = "";
+        }
 
         // === 布局模式 ===
         private bool _layoutRowsAreInstances = true; // true=行=实例(属性横着), false=行=属性
@@ -151,7 +159,13 @@ namespace Slime.Addons.DataConfigEditor
             _refreshBtn.Pressed += OnRefresh;
             _toolbar.AddChild(_refreshBtn);
 
-            _saveBtn = new Button { Text = "保存", Flat = true, Disabled = true };
+            _saveBtn = new Button
+            {
+                Text = "保存C#",
+                Flat = true,
+                Disabled = true,
+                TooltipText = "保存到当前 DataNew C# 源码文件；Godot 顶部/菜单保存不会触发这个按钮",
+            };
             _saveBtn.Pressed += OnSave;
             _toolbar.AddChild(_saveBtn);
 
@@ -529,7 +543,15 @@ namespace Slime.Addons.DataConfigEditor
 
             Control cell;
 
-            if (prop.IsEnum && prop.EnumType != null)
+            if (!prop.IsEditable)
+            {
+                cell = MakeBodyTextCell(
+                    rawValue?.ToString() ?? "(空)",
+                    CELL_MIN_WIDTH,
+                    $"只读: {prop.ReadOnlyReason}\n{GetPropertyTooltip(prop)}",
+                    GetCellTextColor(prop));
+            }
+            else if (prop.IsEnum && prop.EnumType != null)
             {
                 var enumMembers = EnumCommentCache.GetMembers(prop.EnumType);
                 if (prop.IsFlags)
@@ -945,40 +967,76 @@ namespace Slime.Addons.DataConfigEditor
 
         public void SetCellValue(int instanceIdx, int propIdx, string valueText)
         {
-            if (instanceIdx < 0 || instanceIdx >= _instances.Count) return;
-            if (propIdx < 0 || propIdx >= _filteredProperties.Count) return;
+            TrySetCellValue(instanceIdx, propIdx, valueText, false);
+        }
+
+        private bool TrySetCellValue(int instanceIdx, int propIdx, string valueText, bool printDiagnostics)
+        {
+            if (instanceIdx < 0 || instanceIdx >= _instances.Count) return false;
+            if (propIdx < 0 || propIdx >= _filteredProperties.Count) return false;
 
             var prop = _filteredProperties[propIdx];
+            if (!prop.IsEditable)
+            {
+                if (printDiagnostics)
+                    GD.Print($"[DataConfigEditor] 编辑被拒绝: {prop.Name} 只读，原因={prop.ReadOnlyReason}");
+                return false;
+            }
+
             var instance = _instances[instanceIdx];
             try
             {
+                object? beforeRaw = prop.PropertyInfo.GetValue(instance.Instance);
+                string beforeValue = prop.FormatValue(beforeRaw);
                 string normalizedValue = prop.IsPathString ? PathLineEdit.NormalizePath(valueText) : valueText;
                 object? converted = ConvertValue(normalizedValue, prop.PropertyType);
                 prop.PropertyInfo.SetValue(instance.Instance, converted);
+                object? afterRaw = prop.PropertyInfo.GetValue(instance.Instance);
+                string afterValue = prop.FormatValue(afterRaw);
+
+                if (printDiagnostics)
+                {
+                    GD.Print($"[DataConfigEditor] 编辑写入内存: {instance.Name}.{prop.Name}, "
+                        + $"type={prop.PropertyType.Name}, input={DescribeEditorValue(valueText)}, "
+                        + $"normalized={DescribeEditorValue(normalizedValue)}, before={DescribeEditorValue(beforeValue)}, "
+                        + $"after={DescribeEditorValue(afterValue)}");
+                }
+
+                return true;
             }
             catch (Exception e)
             {
-                GD.PrintErr($"[DataConfigEditor] SetCellValue 失败: {e.Message}");
+                GD.PrintErr($"[DataConfigEditor] SetCellValue 失败: {instance.Name}.{prop.Name}, input={DescribeEditorValue(valueText)}, error={e}");
+                return false;
             }
         }
 
         private void OnCellEdited(PropertyMetadata prop, ConfigReflectionCache.InstanceInfo instance, string newValue)
         {
+            if (!prop.IsEditable)
+            {
+                _detailLabel.Text = $"[只读] {prop.Name}: {prop.ReadOnlyReason}";
+                return;
+            }
+
             int instanceIdx = _instances.IndexOf(instance);
             int propIdx = _filteredProperties.IndexOf(prop);
 
             object? oldRawValue = prop.PropertyInfo.GetValue(instance.Instance);
             string oldValue = prop.FormatValue(oldRawValue);
 
+            if (!TrySetCellValue(instanceIdx, propIdx, newValue, true))
+                return;
+
             var undoMgr = EditorInterface.Singleton.GetEditorUndoRedo();
             undoMgr.CreateAction($"修改 {instance.Name}.{prop.Name}");
             undoMgr.AddDoMethod(this, MethodNameSetCellValue, instanceIdx, propIdx, newValue);
             undoMgr.AddUndoMethod(this, MethodNameSetCellValue, instanceIdx, propIdx, oldValue);
-            undoMgr.CommitAction();
+            // 当前编辑已由 C# 直接写入内存对象；UndoRedo 只登记撤销/重做步骤，避免依赖 Godot 字符串反射来让数据生效。
+            undoMgr.CommitAction(false);
 
-            _modified = true;
-            _saveBtn.Disabled = false;
             _detailLabel.Text = $"[编辑] {instance.Name}.{prop.Name} = {newValue}";
+            SaveSingleCellToSource(instance, prop, prop.IsPathString ? PathLineEdit.NormalizePath(newValue) : newValue, true);
         }
 
         // ============================================================
@@ -1108,6 +1166,7 @@ namespace Slime.Addons.DataConfigEditor
 
         private static Color GetCellTextColor(PropertyMetadata prop)
         {
+            if (!prop.IsEditable) return new Color(0.55f, 0.58f, 0.62f);
             if (prop.IsNumeric) return new Color(0.60f, 0.90f, 0.70f);
             if (prop.IsBool) return new Color(0.90f, 0.75f, 0.50f);
             if (prop.IsString) return new Color(0.70f, 0.80f, 0.95f);
@@ -1173,9 +1232,13 @@ namespace Slime.Addons.DataConfigEditor
             foreach (var prop in _allProperties)
             {
                 int index = _bulkPropertySelector.ItemCount;
-                _bulkPropertySelector.AddItem($"{prop.DisplayName} ({prop.Name})", index);
+                string label = prop.IsEditable
+                    ? $"{prop.DisplayName} ({prop.Name})"
+                    : $"[只读] {prop.DisplayName} ({prop.Name})";
+                _bulkPropertySelector.AddItem(label, index);
                 _bulkPropertySelector.SetItemMetadata(index, prop.Name);
                 _bulkPropertySelector.SetItemTooltip(index, GetPropertyTooltip(prop));
+                _bulkPropertySelector.SetItemDisabled(index, !prop.IsEditable);
             }
 
             _bulkPropertySelector.Disabled = false;
@@ -1197,11 +1260,13 @@ namespace Slime.Addons.DataConfigEditor
                 return;
             }
 
-            _bulkValueInput.Editable = prop.IsString || prop.IsBool || prop.IsNumeric || prop.IsEnum;
+            _bulkValueInput.Editable = prop.IsEditable;
             _bulkApplyBtn.Disabled = !_bulkValueInput.Editable;
             _bulkValueInput.Text = "";
 
-            if (prop.IsEnum && prop.EnumType != null)
+            if (!prop.IsEditable)
+                _bulkValueInput.PlaceholderText = prop.ReadOnlyReason;
+            else if (prop.IsEnum && prop.EnumType != null)
                 _bulkValueInput.PlaceholderText = $"输入枚举名: {string.Join(", ", Enum.GetNames(prop.EnumType))}";
             else if (prop.IsBool)
                 _bulkValueInput.PlaceholderText = "true / false";
@@ -1216,6 +1281,7 @@ namespace Slime.Addons.DataConfigEditor
             var prop = GetSelectedBulkProperty();
             if (prop == null) { _detailLabel.Text = "[错误] 未选择批量属性"; return; }
             if (_instances.Count == 0) { _detailLabel.Text = "[错误] 当前没有可编辑实例"; return; }
+            if (!prop.IsEditable) { _detailLabel.Text = $"[只读] {prop.Name}: {prop.ReadOnlyReason}"; return; }
 
             string rawText = _bulkValueInput.Text.Trim();
             try
@@ -1227,12 +1293,15 @@ namespace Slime.Addons.DataConfigEditor
                     ? _selection.GetSelectedRows().Select(r => _instances[r]).ToList()
                     : _instances;
 
+                int savedCount = 0;
                 foreach (var inst in targetInstances)
+                {
                     prop.PropertyInfo.SetValue(inst.Instance, converted);
+                    if (SaveSingleCellToSource(inst, prop, normalizedText, false))
+                        savedCount++;
+                }
 
-                _modified = true;
-                _saveBtn.Disabled = false;
-                _detailLabel.Text = $"[批量] 已将 {prop.Name} 应用到 {targetInstances.Count} 个实例";
+                _detailLabel.Text = $"[批量] 已将 {prop.Name} 应用到 {targetInstances.Count} 个实例，写入 {savedCount} 个源码单元格";
                 RebuildGrid();
             }
             catch (Exception e)
@@ -1291,11 +1360,99 @@ namespace Slime.Addons.DataConfigEditor
 
         private void OnSave()
         {
-            if (_currentSourceFile == null) { _statusLabel.Text = "未找到源文件，无法保存"; return; }
-            int saved = CsFileWriter.WriteAllChanges(_currentSourceFile, _instances, _allProperties, _comments);
-            _modified = false;
-            _saveBtn.Disabled = true;
-            _statusLabel.Text = $"已保存 {saved} 个字段 → {Path.GetFileName(_currentSourceFile)}";
+            if (_dirtyCells.Count == 0)
+            {
+                _statusLabel.Text = "当前没有待写入的 C# 单元格；编辑后会实时写入源码";
+                return;
+            }
+
+            int savedCount = 0;
+            foreach (var dirty in _dirtyCells.Values.ToList())
+            {
+                if (SaveSingleCellToSource(dirty.Instance, dirty.Property, dirty.ValueText, true))
+                    savedCount++;
+            }
+
+            _statusLabel.Text = _dirtyCells.Count == 0
+                ? $"已重试写入 {savedCount} 个 C# 单元格"
+                : $"仍有 {_dirtyCells.Count} 个 C# 单元格未写入，请看 Output 的 [DataConfigEditor] 单元格写回诊断";
+        }
+
+        private bool SaveSingleCellToSource(
+            ConfigReflectionCache.InstanceInfo instance,
+            PropertyMetadata prop,
+            string valueText,
+            bool printDiagnostics)
+        {
+            string key = $"{instance.Name}.{prop.Name}";
+            if (_currentSourceFile == null)
+            {
+                MarkDirtyCell(key, instance, prop, valueText);
+                _statusLabel.Text = $"未找到源文件，无法实时写入 C#：{key}";
+                GD.PrintErr($"[DataConfigEditor] 单元格写回失败: {key}, 当前类型={_currentType?.FullName ?? "(null)"} 未找到源码文件");
+                return false;
+            }
+
+            var result = CsFileWriter.WriteSingleChangeWithDiagnostics(
+                _currentSourceFile,
+                instance,
+                prop,
+                valueText,
+                verbose: printDiagnostics);
+
+            if (printDiagnostics)
+                PrintSaveDiagnostics("单元格写回", result);
+
+            bool failed = !result.FileExists
+                || result.InitializersMissing > 0
+                || result.PropertiesUnsupported > 0
+                || result.PropertiesComplexSkipped > 0;
+            if (failed)
+            {
+                MarkDirtyCell(key, instance, prop, valueText);
+                _statusLabel.Text = $"实时写入 C# 失败：{key}；请看 Output 诊断";
+                return false;
+            }
+
+            _dirtyCells.Remove(key);
+            _modified = _dirtyCells.Count > 0;
+            _saveBtn.Disabled = !_modified;
+            string action = result.PropertiesWritten > 0 ? "已实时写入" : "源码已是目标值";
+            _statusLabel.Text = $"{action} C#：{key} → {Path.GetFileName(_currentSourceFile)}";
+            return true;
+        }
+
+        private void MarkDirtyCell(
+            string key,
+            ConfigReflectionCache.InstanceInfo instance,
+            PropertyMetadata prop,
+            string valueText)
+        {
+            _dirtyCells[key] = new DirtyCellInfo
+            {
+                Instance = instance,
+                Property = prop,
+                ValueText = valueText,
+            };
+            _modified = true;
+            _saveBtn.Disabled = false;
+        }
+
+        private static void PrintSaveDiagnostics(string title, CsFileWriter.WriteAllChangesResult result)
+        {
+            GD.Print($"[DataConfigEditor] {title}诊断汇总: {result.ToSummary()}");
+            foreach (string message in result.Messages)
+                GD.Print($"[DataConfigEditor] {title}诊断: {message}");
+        }
+
+        private static string DescribeEditorValue(string value)
+        {
+            const int maxLength = 160;
+            string escaped = value
+                .Replace("\\", "\\\\", StringComparison.Ordinal)
+                .Replace("\r", "\\r", StringComparison.Ordinal)
+                .Replace("\n", "\\n", StringComparison.Ordinal);
+            return escaped.Length <= maxLength ? $"`{escaped}`" : $"`{escaped[..maxLength]}...`";
         }
 
         // ============================================================
@@ -1327,6 +1484,7 @@ namespace Slime.Addons.DataConfigEditor
             string summary = GetPropertySummary(prop);
             string group = GetPropertyGroup(prop);
             var lines = new List<string> { $"字段: {prop.Name}" };
+            if (!prop.IsEditable) lines.Add($"只读: {prop.ReadOnlyReason}");
             if (!string.IsNullOrWhiteSpace(prop.DataKeyName)) lines.Add($"DataKey: {prop.DataKeyName}");
             if (!string.IsNullOrWhiteSpace(group)) lines.Add($"分组: {group}");
             if (!string.IsNullOrWhiteSpace(summary)) lines.Add($"注释: {summary}");

@@ -395,6 +395,20 @@ namespace Slime.Addons.DataConfigEditor
             && (Name.EndsWith("Path", StringComparison.Ordinal)
                 || DataKeyName.EndsWith("Path", StringComparison.Ordinal)
                 || DataKeyName is "EffectScene" or "ProjectileScene");
+        public bool IsEditable => IsString || IsBool || IsNumeric || IsEnum;
+        public string ReadOnlyReason
+        {
+            get
+            {
+                if (IsEditable) return "";
+                if (!PropertyInfo.CanWrite) return "属性不可写";
+                if (PropertyType.IsArray) return "数组暂不支持表格直接编辑";
+                if (PropertyType != typeof(string)
+                    && typeof(System.Collections.IEnumerable).IsAssignableFrom(PropertyType))
+                    return "集合或字典暂不支持表格直接编辑";
+                return "复杂类型暂不支持表格直接编辑";
+            }
+        }
         public string DisplayName => !string.IsNullOrWhiteSpace(DataMeta?.DisplayName) ? DataMeta.DisplayName : Name;
         public string CategoryName => DataMeta?.Category?.ToString() ?? "";
         public string DataDescription => DataMeta?.Description ?? "";
