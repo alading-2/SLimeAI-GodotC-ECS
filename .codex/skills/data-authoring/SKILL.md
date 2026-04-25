@@ -43,6 +43,7 @@ description: 编写或修改 Data 目录下的数据配置、Config、DataKey、
 - `SystemData` 的 `AllowedFlowStates / AllowedSimulationStates = None` 表示不限制，`BlockedOverlays = None` 表示不屏蔽，`RequiredOverlays = None` 表示不要求覆盖层
 - `AllowedFlowStates` 使用 `GameFlowState` Flags，`AllowedSimulationStates` 使用 `SimulationState` Flags；不要再新增或引用单独的 Mask enum
 - 系统运行条件优先使用 Phase 预设组合：局内主玩法用 `GameFlowState.Gameplay + OverlayFlags.Blocking + SimulationState.Running`，允许暂停/运行都响应用 `SimulationState.Any`
+- 系统外部命令和系统自身 `_Process` / 生命周期共享同一套 `SystemData` 运行条件；如果同一系统内不同命令需要不同暂停/阶段语义，应拆成不同系统，而不是给命令单独加运行策略
 - 系统配置不是 `Data.LoadFromConfig()` 注入到 Entity.Data 的业务数据
 
 不要放：

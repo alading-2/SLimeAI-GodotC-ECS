@@ -44,9 +44,10 @@ internal static class DamageTool
         DamageApplyOptions options,
         HashSet<ulong>? hitRegistry = null)
     {
-        if (DamageService.Instance == null)
+        var manager = SystemManager.Instance;
+        if (manager == null)
         {
-            _log.Warn("DamageService 不存在，跳过伤害结算");
+            _log.Warn("SystemManager 不存在，跳过伤害结算");
             return 0;
         }
 
@@ -63,14 +64,23 @@ internal static class DamageTool
             if (target is not IUnit victim) continue; // 非战斗单位跳过
             if (!CanHit(target, hitRegistry)) continue; // 重复命中检查
 
-            DamageService.Instance.Process(new DamageInfo
+            var result = manager.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(
+                new DamageProcessRequest(new DamageInfo
+                {
+                    Attacker = options.Attacker,
+                    Victim = victim,
+                    Damage = options.Damage,
+                    Type = options.Type,
+                    Tags = tags
+                }) // 伤害处理命令
+            );
+
+            if (!result.Success)
             {
-                Attacker = options.Attacker,
-                Victim = victim,
-                Damage = options.Damage,
-                Type = options.Type,
-                Tags = tags
-            });
+                _log.Warn($"DamageService 当前不可执行，跳过伤害结算: {result.Message}");
+                continue;
+            }
+
             count++;
         }
 

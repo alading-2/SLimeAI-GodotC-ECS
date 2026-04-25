@@ -22,7 +22,7 @@
 - **事件消费**：监听 `HurtboxEntered / HurtboxExited`
 - **敌对判定**：只对非中立且敌对阵营生效
 - **伤害节流**：为每个接触目标维护独立循环计时器
-- **伤害结算**：通过 `DamageService.Instance.Process()` 发起标准伤害请求
+- **伤害结算**：通过 `SystemManager.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(...)` 发起标准伤害请求
 
 ## 3. 与碰撞系统的协作关系
 

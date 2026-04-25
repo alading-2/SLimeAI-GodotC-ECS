@@ -58,8 +58,8 @@
   - `SystemDescriptor.cs`
 - `Lifecycle/`：系统生命周期协议与元数据
   - `ISystem.cs`
-  - `ISystemLifecycle.cs`
-  - `IProjectStateAwareSystem.cs`
+  - `ISystemCommandHandler.cs`
+  - `SystemExecuteResult.cs`
   - `SystemRunCondition.cs`
   - `SystemRegistrationContext.cs`
 - `State/`：项目级运行状态
@@ -130,7 +130,7 @@ public static void Initialize()
 - `StateChanged`
 - `AfterStateChanged`
 
-这里不要改成 `GlobalEventBus`。项目状态是 `SystemManager.ProjectState` 这一份实例状态源，实例事件可以保证只有持有该状态源的 `SystemManager` 响应切换；临时测试服务或局部工具服务调用 `BeginGameplaySession()` 时，不应污染全局运行时系统门禁。需要让系统观察项目状态时，实现 `IProjectStateAwareSystem`，由 `SystemManager` 在收到 `StateChanged` 后统一分发。
+这里不要改成 `GlobalEventBus`。项目状态是 `SystemManager.ProjectState` 这一份实例状态源，实例事件可以保证只有持有该状态源的 `SystemManager` 响应切换；临时测试服务或局部工具服务调用 `BeginGameplaySession()` 时，不应污染全局运行时系统门禁。需要让系统观察项目状态时，直接实现 `ISystem.OnProjectStateChanged`，由 `SystemManager` 在收到 `StateChanged` 后统一分发。
 
 ## 5. RunCondition 与 shouldRun
 
@@ -160,6 +160,8 @@ shouldRun = IsEnabled && IsStateAllowed
 
 其中 `IsEnabled` 是系统人工开关，由 `SystemData.StartEnabled` 初始化，运行时可由 `EnableSystem/DisableSystem` 修改；`IsStateAllowed` 是 `SystemRunCondition` 对三域状态的判断结果。系统是否被创建则由 `Required / AutoLoad / SystemPresetData / Dependencies` 在装载阶段决定，不再混进运行态公式。
 
+外部命令也使用同一套运行态裁决。业务代码不要直接调用系统单例执行业务，应通过 `SystemManager.Execute<TSystem, TRequest, TResult>(request)` 进入系统。命令是否能在暂停、前台、局内等状态下执行，只看该系统在 `SystemData` 中的三域运行条件；同一个系统内所有命令共享这套条件。如果某个命令需要不同运行条件，应拆出新的系统，而不是给命令单独增加策略。
+
 ## 6. SystemPresetData：只做批量选择
 
 `SystemPresetData` 不是高级运行配置，也不承载运行条件。它只解决“本模式要装哪些系统”：
@@ -175,11 +177,12 @@ shouldRun = IsEnabled && IsStateAllowed
 
 ## 6.5 生命周期回调
 
-`ISystemLifecycle` 回调语义固定：
+`ISystem` 回调语义固定：
 
 - `OnRegistered/OnUnRegistered`：实例被 `SystemManager` 接管或释放。
 - `OnStarted/OnStopped`：实际运行态切换，适合订阅/退订事件、启动/停止驱动逻辑。
-- `IProjectStateAwareSystem.OnProjectStateChanged`：接收 `ProjectStateChangedEventArgs`，观察状态变化，不等价于启停；业务系统不直接订阅 `ProjectStateService.StateChanged`。
+- `OnProjectStateChanged`：接收 `ProjectStateChangedEventArgs`，观察状态变化，不等价于启停；业务系统不直接订阅 `ProjectStateService.StateChanged`。
+- `GetSystemRuntimeInfo`：只补充系统自定义统计；加载、启用、运行态等基础信息由 `SystemManager` 统一填充。
 
 ## 7. 测试与调试注意事项
 

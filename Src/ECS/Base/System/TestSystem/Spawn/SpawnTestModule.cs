@@ -143,10 +143,10 @@ public partial class SpawnTestModule : TestModuleBase
             return;
         }
 
-        var spawnSystem = SpawnSystem.Instance;
-        if (spawnSystem == null)
+        var manager = SystemManager.Instance;
+        if (manager == null)
         {
-            ShowStatus("SpawnSystem 未初始化");
+            ShowStatus("SystemManager 未初始化");
             return;
         }
 
@@ -154,12 +154,16 @@ public partial class SpawnTestModule : TestModuleBase
         var strategy = GetSelectedStrategy();
 
         _log.Info($"[敌人生成测试] 生成敌人: name={entry.DisplayName} key={entry.ResourceKey} count={count} strategy={strategy}");
-        spawnSystem.SpawnBatch(
-            count, // 生成数量
-            config, // 敌人配置
-            strategy // 生成策略
+        var result = manager.Execute<SpawnSystem, SpawnBatchRequest, SpawnBatchResult>(
+            new SpawnBatchRequest(
+                count, // 生成数量
+                config, // 敌人配置
+                strategy // 生成策略
+            )
         );
-        ShowStatus($"已生成 {count} 个 {entry.DisplayName}，策略 {strategy}");
+        ShowStatus(result.Success
+            ? $"已生成 {count} 个 {entry.DisplayName}，策略 {strategy}"
+            : $"SpawnSystem 当前不可执行: {result.Message}");
         UpdatePoolStats();
     }
 
@@ -175,15 +179,17 @@ public partial class SpawnTestModule : TestModuleBase
 
     private void ClearEnemies()
     {
-        var spawnSystem = SpawnSystem.Instance;
-        if (spawnSystem == null)
+        var manager = SystemManager.Instance;
+        if (manager == null)
         {
-            ShowStatus("SpawnSystem 未初始化");
+            ShowStatus("SystemManager 未初始化");
             return;
         }
 
-        spawnSystem.KillAllEnemies();
-        ShowStatus("已清空敌人池中的活跃敌人");
+        var result = manager.Execute<SpawnSystem, KillAllEnemiesRequest, KillAllEnemiesResult>(
+            new KillAllEnemiesRequest()
+        );
+        ShowStatus(result.Success ? "已清空敌人池中的活跃敌人" : $"SpawnSystem 当前不可执行: {result.Message}");
         UpdatePoolStats();
     }
 

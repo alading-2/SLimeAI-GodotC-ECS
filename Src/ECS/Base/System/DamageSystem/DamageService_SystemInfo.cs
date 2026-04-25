@@ -3,7 +3,7 @@ using System.Collections.Generic;
 /// <summary>
 /// DamageService 系统信息扩展。
 /// </summary>
-public partial class DamageService : ISystem
+public partial class DamageService : ISystem, ISystemCommandHandler<DamageProcessRequest, DamageProcessResult>
 {
     // 统计数据
     private long _totalDamageDealt;
@@ -55,6 +55,12 @@ public partial class DamageService : ISystem
     public void OnProjectStateChanged(ProjectStateChangedEventArgs args)
     {
         // DamageService 不需要响应项目状态变化
+    }
+
+    /// <inheritdoc />
+    public DamageProcessResult Execute(DamageProcessRequest request)
+    {
+        return ProcessInternal(request.Info);
     }
 
     /// <summary>

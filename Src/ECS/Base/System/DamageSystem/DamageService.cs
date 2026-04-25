@@ -104,13 +104,22 @@ public partial class DamageService : Node
     /// 处理伤害请求的主入口
     /// </summary>
     /// <param name="info">包含攻击者、受害者及初始伤害信息的上下文对象</param>
-    public void Process(DamageInfo info)
+    private void Process(DamageInfo info)
+    {
+        ProcessInternal(info);
+    }
+
+    /// <summary>
+    /// 执行伤害处理管线。
+    /// </summary>
+    /// <param name="info">伤害上下文。</param>
+    private DamageProcessResult ProcessInternal(DamageInfo? info)
     {
         // 基础合法性检查
         if (info == null || info.Victim == null)
         {
             _log.Warn("伤害系统：无效的伤害信息或受害者。");
-            return;
+            return new DamageProcessResult(false, "无效的伤害信息或受害者");
         }
 
         // 执行伤害处理管道
@@ -129,5 +138,7 @@ public partial class DamageService : Node
             // 如果需要追踪伤害计算过程，可以取消注释
             _log.Info($"伤害系统日志 {info.Id}: {string.Join(" -> ", info.Logs)}");
         }
+
+        return new DamageProcessResult(true, string.Empty);
     }
 }

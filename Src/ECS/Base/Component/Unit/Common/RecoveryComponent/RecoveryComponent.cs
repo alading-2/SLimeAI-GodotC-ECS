@@ -67,7 +67,21 @@ public partial class RecoveryComponent : Node, IComponent
         if (!ShouldRegister())
             return;
 
-        RecoverySystem.Instance?.Register(_entity);
+        var result = SystemManager.Instance?.Execute<RecoverySystem, RecoveryRegisterRequest, RecoveryRegistrationResult>(
+            new RecoveryRegisterRequest(_entity) // 恢复实体注册请求
+        );
+        if (result == null)
+        {
+            _log.Warn("SystemManager 不存在，RecoverySystem 注册跳过");
+            return;
+        }
+
+        if (!result.Value.Success)
+        {
+            _log.Warn($"RecoverySystem 当前不可执行，注册跳过: {result.Value.Message}");
+            return;
+        }
+
         _data.Set(DataKey.IsRecoverySystemRegistered, true);
         _log.Debug($"已注册到 RecoverySystem: {(_entity as Node)?.Name}");
     }
@@ -80,7 +94,21 @@ public partial class RecoveryComponent : Node, IComponent
         if (_entity == null || _data == null || !_data.Get<bool>(DataKey.IsRecoverySystemRegistered))
             return;
 
-        RecoverySystem.Instance?.Unregister(_entity);
+        var result = SystemManager.Instance?.Execute<RecoverySystem, RecoveryUnregisterRequest, RecoveryRegistrationResult>(
+            new RecoveryUnregisterRequest(_entity) // 恢复实体注销请求
+        );
+        if (result == null)
+        {
+            _log.Warn("SystemManager 不存在，RecoverySystem 注销跳过");
+            return;
+        }
+
+        if (!result.Value.Success)
+        {
+            _log.Warn($"RecoverySystem 当前不可执行，注销跳过: {result.Value.Message}");
+            return;
+        }
+
         _data.Set(DataKey.IsRecoverySystemRegistered, false);
         _log.Debug($"已从 RecoverySystem 注销: {(_entity as Node)?.Name}");
     }

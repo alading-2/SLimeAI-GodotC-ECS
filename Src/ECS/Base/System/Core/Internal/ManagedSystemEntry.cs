@@ -22,8 +22,8 @@ internal sealed class ManagedSystemEntry
     /// <summary>如果实例是 Node，则保存对应节点引用；纯服务场景为 null。</summary>
     public Node? NodeInstance { get; init; }
 
-    /// <summary>ISystemLifecycle 接口（生命周期协议）。</summary>
-    public ISystemLifecycle? Lifecycle { get; init; }
+    /// <summary>ISystem 接口（统一系统协议）。</summary>
+    public ISystem? System { get; init; }
 
     /// <summary>系统当前是否被显式启用（人工开关）。</summary>
     public bool IsEnabled { get; set; }

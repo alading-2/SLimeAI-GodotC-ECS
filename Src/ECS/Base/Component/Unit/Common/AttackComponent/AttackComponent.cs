@@ -473,7 +473,9 @@ public partial class AttackComponent : Node, IComponent
                 Tags = DamageTags.Attack
             };
 
-            DamageService.Instance?.Process(damageInfo);
+            SystemManager.Instance?.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(
+                new DamageProcessRequest(damageInfo) // 普攻伤害请求
+            );
             return true;
         }
 

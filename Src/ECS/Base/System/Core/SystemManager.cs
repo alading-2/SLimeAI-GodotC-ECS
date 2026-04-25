@@ -51,7 +51,7 @@ public partial class SystemManager : Node
     //   EnableSystem/DisableSystem → 修改 IsEnabled → ApplyEntryState
     //   OnProjectStateChanged    → 重算 IsStateAllowed → 通知系统 → ApplyEntryState
     //   ApplyEntryState          → 统一裁决 shouldRun = IsEnabled && IsStateAllowed
-    //                              → 切 ProcessMode / 调用 OnSystemEnabled/OnSystemDisabled
+    //                              → 切 ProcessMode / 调用 OnStarted/OnStopped
     // ─────────────────────────────────────────────────────────────
 
     public override void _Ready()
@@ -71,10 +71,10 @@ public partial class SystemManager : Node
         {
             if (entry.IsRunning)
             {
-                entry.Lifecycle?.OnStopped(ProjectState.Snapshot);
+                entry.System?.OnStopped(ProjectState.Snapshot);
             }
 
-            entry.Lifecycle?.OnUnRegistered();
+            entry.System?.OnUnRegistered();
         }
 
         _entries.Clear();
@@ -301,10 +301,10 @@ public partial class SystemManager : Node
         }
 
         // 通知系统已被注册，传入描述符和项目状态服务引用。
-        var lifecycle = instance as ISystemLifecycle;
+        var system = instance as ISystem;
         try
         {
-            lifecycle?.OnRegistered(new SystemRegistrationContext(descriptor, ProjectState));
+            system?.OnRegistered(new SystemRegistrationContext(descriptor, ProjectState));
         }
         catch (Exception ex)
         {
@@ -322,7 +322,7 @@ public partial class SystemManager : Node
             RunCondition = runCondition,
             Instance = instance,
             NodeInstance = nodeInstance,
-            Lifecycle = lifecycle,
+            System = system,
             IsEnabled = config.StartEnabled, // 人工开关：配置默认值
             IsStateAllowed = !isBlocked, // 状态门禁：运行条件裁决
             BlockedReason = blockedReason,
@@ -395,6 +395,71 @@ public partial class SystemManager : Node
     }
 
     /// <summary>
+    /// 判断指定系统当前能否执行外部命令。
+    /// </summary>
+    /// <param name="systemId">系统 Id。</param>
+    /// <param name="message">无法执行时的中文原因。</param>
+    public bool CanExecute(string systemId, out string message)
+    {
+        if (!_entries.TryGetValue(systemId, out var entry))
+        {
+            message = $"系统 {systemId} 未加载";
+            return false;
+        }
+
+        if (!entry.IsEnabled)
+        {
+            message = $"系统 {systemId} 已禁用";
+            return false;
+        }
+
+        if (!entry.IsStateAllowed)
+        {
+            message = string.IsNullOrEmpty(entry.BlockedReason)
+                ? $"系统 {systemId} 当前项目状态不允许运行"
+                : entry.BlockedReason;
+            return false;
+        }
+
+        if (!entry.IsRunning)
+        {
+            message = $"系统 {systemId} 尚未进入运行态";
+            return false;
+        }
+
+        message = string.Empty;
+        return true;
+    }
+
+    /// <summary>
+    /// 通过 SystemCore 门禁执行系统命令。
+    /// </summary>
+    /// <typeparam name="TSystem">目标系统类型。</typeparam>
+    /// <typeparam name="TRequest">命令请求类型。</typeparam>
+    /// <typeparam name="TResult">命令结果类型。</typeparam>
+    /// <param name="request">命令请求。</param>
+    public SystemExecuteResult<TResult> Execute<TSystem, TRequest, TResult>(TRequest request)
+        where TSystem : class, ISystemCommandHandler<TRequest, TResult>
+    {
+        foreach (var entry in _entries.Values)
+        {
+            if (entry.Instance is not TSystem system)
+            {
+                continue;
+            }
+
+            if (!CanExecute(entry.Descriptor.SystemId, out var message))
+            {
+                return SystemExecuteResult<TResult>.Blocked(message);
+            }
+
+            return SystemExecuteResult<TResult>.Ok(system.Execute(request));
+        }
+
+        return SystemExecuteResult<TResult>.Blocked($"系统 {typeof(TSystem).Name} 未加载");
+    }
+
+    /// <summary>
     /// 项目状态变更回调。
     /// <para>对每个系统：1) 重算 IsStateAllowed（运行条件裁决）→ 2) 通知系统 → 3) 统一应用启停。</para>
     /// </summary>
@@ -409,11 +474,7 @@ public partial class SystemManager : Node
             entry.BlockedReason = blockedReason;
             entry.IsStateAllowed = !isBlocked;
 
-            // 只通知实现了 IProjectStateAwareSystem 的系统
-            if (entry.Instance is IProjectStateAwareSystem stateAware)
-            {
-                stateAware.OnProjectStateChanged(args);
-            }
+            entry.System?.OnProjectStateChanged(args);
 
             ApplyEntryState(entry, notifyTransition: true);
         }
@@ -428,7 +489,7 @@ public partial class SystemManager : Node
     /// 统一裁决并应用系统运行状态。
     /// <para>shouldRun = IsEnabled（人工开关）and IsStateAllowed（运行条件门禁）。</para>
     /// <para>对 Node 系统：切 ProcessMode（Inherit/Disabled）。</para>
-    /// <para>对 ISystemLifecycle 系统：在状态切换时调用 OnStarted/OnStopped。</para>
+    /// <para>对 ISystem 系统：在状态切换时调用 OnStarted/OnStopped。</para>
     /// <para>notifyTransition=false 时仅更新 IsRunning 标记，不触发钩子（用于初始化静默设置）。</para>
     /// </summary>
     private void ApplyEntryState(ManagedSystemEntry entry, bool notifyTransition)
@@ -443,8 +504,8 @@ public partial class SystemManager : Node
                 : ProcessModeEnum.Disabled;
         }
 
-        // 非 ISystemLifecycle 系统（纯 Node）：直接更新标记即可。
-        if (entry.Lifecycle == null)
+        // 非 ISystem 系统（纯 Node）：直接更新标记即可。
+        if (entry.System == null)
         {
             entry.IsRunning = shouldRun;
             return;
@@ -465,12 +526,12 @@ public partial class SystemManager : Node
 
         if (shouldRun)
         {
-            entry.Lifecycle.OnStarted(ProjectState.Snapshot);
+            entry.System.OnStarted(ProjectState.Snapshot);
             entry.IsRunning = true;
             return;
         }
 
-        entry.Lifecycle.OnStopped(ProjectState.Snapshot);
+        entry.System.OnStopped(ProjectState.Snapshot);
         entry.IsRunning = false;
     }
 

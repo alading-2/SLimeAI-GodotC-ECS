@@ -141,13 +141,20 @@ namespace Slime.Test
             if (_testEnemy == null) return;
             _log.Info($"请求生成 {count} 个敌人，策略: {_currentStrategy}");
 
-            // 为了测试不同的生成策略，直接传入当前选中的策略
-            SpawnSystem.Instance.SpawnBatch(count, _testEnemy, _currentStrategy);
+            SystemManager.Instance?.Execute<SpawnSystem, SpawnBatchRequest, SpawnBatchResult>(
+                new SpawnBatchRequest(
+                    count, // 生成数量
+                    _testEnemy, // 敌人配置
+                    _currentStrategy // 当前选中的生成策略
+                )
+            );
         }
 
         private void ClearEnemies()
         {
-            SpawnSystem.Instance.KillAllEnemies();
+            SystemManager.Instance?.Execute<SpawnSystem, KillAllEnemiesRequest, KillAllEnemiesResult>(
+                new KillAllEnemiesRequest()
+            );
         }
 
         public override void _Process(double delta)

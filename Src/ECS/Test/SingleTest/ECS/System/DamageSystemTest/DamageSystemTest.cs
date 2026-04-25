@@ -51,7 +51,7 @@ namespace Slime.Test.DamageSystemTest
                 Damage = 100,
                 Type = DamageType.Physical
             };
-            DamageService.Instance.Process(infoDead);
+            ProcessDamage(infoDead);
 
             if (infoDead.IsEnd && infoDead.FinalDamage == 0)
             {
@@ -73,7 +73,7 @@ namespace Slime.Test.DamageSystemTest
                 Damage = 100,
                 Type = DamageType.Physical
             };
-            DamageService.Instance.Process(infoInvulnerable);
+            ProcessDamage(infoInvulnerable);
 
             if (infoInvulnerable.IsEnd && infoInvulnerable.FinalDamage == 0)
             {
@@ -105,7 +105,7 @@ namespace Slime.Test.DamageSystemTest
                 Type = DamageType.Physical,
                 Tags = DamageTags.Attack
             };
-            DamageService.Instance.Process(attackInfo);
+            ProcessDamage(attackInfo);
 
             if (attackInfo.IsEnd && attackInfo.FinalDamage == 0)
             {
@@ -126,7 +126,7 @@ namespace Slime.Test.DamageSystemTest
                 Type = DamageType.Magical,
                 Tags = DamageTags.Ability
             };
-            DamageService.Instance.Process(abilityInfo);
+            ProcessDamage(abilityInfo);
 
             if (abilityInfo.FinalDamage > 0)
             {
@@ -160,7 +160,7 @@ namespace Slime.Test.DamageSystemTest
                 Damage = 10,
                 Type = DamageType.Physical
             };
-            DamageService.Instance.Process(infoPhysical);
+            ProcessDamage(infoPhysical);
 
             if (infoPhysical.IsDodged && infoPhysical.FinalDamage == 0)
             {
@@ -179,7 +179,7 @@ namespace Slime.Test.DamageSystemTest
                 Damage = 10,
                 Type = DamageType.True
             };
-            DamageService.Instance.Process(infoTrue);
+            ProcessDamage(infoTrue);
 
             if (!infoTrue.IsDodged && infoTrue.FinalDamage > 0)
             {
@@ -212,7 +212,7 @@ namespace Slime.Test.DamageSystemTest
                 Damage = 100,
                 Type = DamageType.Physical
             };
-            DamageService.Instance.Process(infoCrit);
+            ProcessDamage(infoCrit);
 
             if (infoCrit.IsCritical && Godot.Mathf.IsEqualApprox(infoCrit.FinalDamage, 200f))
             {
@@ -242,7 +242,7 @@ namespace Slime.Test.DamageSystemTest
                 Damage = 100,
                 Type = DamageType.Physical
             };
-            DamageService.Instance.Process(infoArmor);
+            ProcessDamage(infoArmor);
 
             // 50护甲应该有减伤效果，最终伤害应小于100
             if (infoArmor.FinalDamage > 0 && infoArmor.FinalDamage < 100)
@@ -273,7 +273,7 @@ namespace Slime.Test.DamageSystemTest
                 Damage = 100,
                 Type = DamageType.Physical
             };
-            DamageService.Instance.Process(infoAmplified);
+            ProcessDamage(infoAmplified);
 
             // 1.5倍器，应该是 150伤害
             if (Godot.Mathf.IsEqualApprox(infoAmplified.FinalDamage, 150f))
@@ -314,7 +314,7 @@ namespace Slime.Test.DamageSystemTest
                 Damage = 100,
                 Type = DamageType.Physical
             };
-            DamageService.Instance.Process(infoLifesteal);
+            ProcessDamage(infoLifesteal);
 
             if (healRequestReceived)
             {
@@ -349,7 +349,7 @@ namespace Slime.Test.DamageSystemTest
                 Damage = 50,
                 Type = DamageType.Physical
             };
-            DamageService.Instance.Process(infoStats);
+            ProcessDamage(infoStats);
 
             float totalDamage = attacker.Data.Get<float>(DataKey.TotalDamageDealt);
             float waveDamage = attacker.Data.Get<float>(DataKey.WaveDamageDealt);
@@ -389,7 +389,7 @@ namespace Slime.Test.DamageSystemTest
                 IsSimulation = true
             };
 
-            DamageService.Instance.Process(infoSim);
+            ProcessDamage(infoSim);
 
             // 检查伤害是否计算
             if (infoSim.FinalDamage == 50)
@@ -433,6 +433,13 @@ namespace Slime.Test.DamageSystemTest
             unit.Data.Set(DataKey.FinalHp, 100f);
 
             return unit;
+        }
+
+        private static void ProcessDamage(DamageInfo info)
+        {
+            SystemManager.Instance?.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(
+                new DamageProcessRequest(info) // 测试伤害请求
+            );
         }
 
         // 简单的 IUnit 实现用于测试

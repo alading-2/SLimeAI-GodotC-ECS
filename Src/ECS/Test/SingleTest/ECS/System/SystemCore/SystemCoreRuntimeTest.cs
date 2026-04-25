@@ -34,6 +34,7 @@ namespace Slime.Test.SystemCore
                 TestCoreSystemDescriptorsRegistered();
                 TestRequiredSystemCannotBeDisabledOrRemoved();
                 TestMissingSystemManagementReportsFailure();
+                TestSystemCommandExecutionRespectsRunningState();
                 TestStatusCollectionKeepsInvulnerableUntilAllSourcesExpire();
                 TestSystemRegistryKeepsFirstDescriptorWhenDuplicateRegistered();
             }
@@ -288,6 +289,32 @@ namespace Slime.Test.SystemCore
             AssertEqual("缺失系统启用失败应返回中文原因", true, enableMessage.Contains("未加载", StringComparison.Ordinal));
             AssertEqual("缺失系统不允许移除", false, removeResult);
             AssertEqual("缺失系统移除失败应返回中文原因", true, removeMessage.Contains("未加载", StringComparison.Ordinal));
+        }
+
+        private void TestSystemCommandExecutionRespectsRunningState()
+        {
+            var manager = SystemManager.Instance;
+            if (manager == null)
+            {
+                Fail("SystemManager.Instance 应存在");
+                return;
+            }
+
+            manager.ProjectState.EnterFrontEnd();
+            var blockedResult = manager.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(
+                new DamageProcessRequest(null) // 伤害请求；本测试只验证门禁，不进入伤害处理
+            );
+
+            AssertEqual("外部系统命令应被非运行态阻断", false, blockedResult.Success);
+            AssertEqual("阻断结果应带可读原因", true, !string.IsNullOrEmpty(blockedResult.Message));
+
+            manager.ProjectState.BeginGameplaySession();
+            var executedResult = manager.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(
+                new DamageProcessRequest(null) // 伤害请求；运行态下应到达 DamageService 内部合法性检查
+            );
+
+            AssertEqual("运行态系统命令应允许进入系统处理器", true, executedResult.Success);
+            AssertEqual("DamageService 应报告空伤害请求未处理", false, executedResult.Value.Processed);
         }
 
         private void TestStatusCollectionKeepsInvulnerableUntilAllSourcesExpire()

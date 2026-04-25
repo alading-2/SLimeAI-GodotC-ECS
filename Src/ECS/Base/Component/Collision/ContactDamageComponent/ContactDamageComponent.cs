@@ -242,7 +242,9 @@ public partial class ContactDamageComponent : Node, IComponent
             Tags = DamageTags.Attack
         };
 
-        DamageService.Instance?.Process(damageInfo);
+        SystemManager.Instance?.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(
+            new DamageProcessRequest(damageInfo) // 接触伤害请求
+        );
     }
 
     /// <summary>

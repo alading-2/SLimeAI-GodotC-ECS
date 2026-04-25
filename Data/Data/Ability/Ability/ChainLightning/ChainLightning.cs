@@ -151,7 +151,9 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
             float dodgeChance = unitVictim.Data.Get<float>(DataKey.DodgeChance);
             _log.Debug(
                 $"[伤害发送前] 期望结算伤害: {currentDamage}, 目标当前Hp: {unitVictim.Data.Get<float>(DataKey.CurrentHp)}, IsDead: {isDead}, IsInvulnerable: {unitVictim.Data.Get<bool>(DataKey.IsInvulnerable)}, LifecycleState: {unitVictim.Data.Get<LifecycleState>(DataKey.LifecycleState)}, DodgeChance: {dodgeChance}");
-            DamageService.Instance.Process(damageInfo);
+            SystemManager.Instance?.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(
+                new DamageProcessRequest(damageInfo) // 单次弹跳伤害请求
+            );
             _log.Debug(
                 $"[伤害发送后] 实际最终伤害: {damageInfo.FinalDamage}, 目标当前Hp: {unitVictim.Data.Get<float>(DataKey.CurrentHp)} (如果无伤害，可能是被闪避或因为目标已标记为Dead)");
 

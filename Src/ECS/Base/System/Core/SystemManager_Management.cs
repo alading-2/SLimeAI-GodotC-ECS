@@ -91,10 +91,10 @@ public partial class SystemManager
         {
             if (entry.IsRunning)
             {
-                entry.Lifecycle?.OnStopped(ProjectState.Snapshot);
+                entry.System?.OnStopped(ProjectState.Snapshot);
             }
 
-            entry.Lifecycle?.OnUnRegistered();
+            entry.System?.OnUnRegistered();
             _entries.Remove(systemId);
 
             if (entry.NodeInstance != null && GodotObject.IsInstanceValid(entry.NodeInstance))

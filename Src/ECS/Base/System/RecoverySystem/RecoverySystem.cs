@@ -19,7 +19,9 @@ using Godot;
 /// - RecoveryComponent: 负责在实体生命周期内向本系统发起注册/注销请求。
 /// - HealthComponent: 本系统通过调用该组件的接口来实施真正的数值变更。
 /// </summary>
-public partial class RecoverySystem : Node, ISystem
+public partial class RecoverySystem : Node, ISystem,
+    ISystemCommandHandler<RecoveryRegisterRequest, RecoveryRegistrationResult>,
+    ISystemCommandHandler<RecoveryUnregisterRequest, RecoveryRegistrationResult>
 {
     /// <summary>
     /// 模块初始化器。
@@ -137,6 +139,20 @@ public partial class RecoverySystem : Node, ISystem
     public bool IsRegistered(IEntity entity)
     {
         return _registeredEntities.Contains(entity);
+    }
+
+    /// <inheritdoc />
+    public RecoveryRegistrationResult Execute(RecoveryRegisterRequest request)
+    {
+        Register(request.Entity);
+        return new RecoveryRegistrationResult(true);
+    }
+
+    /// <inheritdoc />
+    public RecoveryRegistrationResult Execute(RecoveryUnregisterRequest request)
+    {
+        Unregister(request.Entity);
+        return new RecoveryRegistrationResult(true);
     }
 
     // ================= 计时器核心管理 =================
