@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using slime.data.Systems;
 
 /// <summary>
 /// 系统运行时管理器。
@@ -146,7 +147,7 @@ public partial class SystemManager : Node
         _log.Info($"当前已注册系统描述符数量: {SystemRegistry.GetDescriptorValues().Count}");
 
         // 3. 收集对应的描述符并按 Priority 排序
-        var descriptorsToLoad = new List<(SystemDescriptor descriptor, SystemConfig config, int priority)>();
+        var descriptorsToLoad = new List<(SystemDescriptor descriptor, SystemData config, int priority)>();
         foreach (var systemId in enabledSystemIds)
         {
             var descriptor = SystemRegistry.GetDescriptor(systemId);
@@ -231,7 +232,7 @@ public partial class SystemManager : Node
     /// </summary>
     /// <param name="descriptor">系统描述符。</param>
     /// <param name="config">系统配置。</param>
-    public void EnsureSystem(SystemDescriptor descriptor, SystemConfig config)
+    public void EnsureSystem(SystemDescriptor descriptor, SystemData config)
     {
         // 已托管则直接复用，避免重复创建。
         if (_entries.ContainsKey(descriptor.SystemId))
@@ -519,9 +520,9 @@ public partial class SystemManager : Node
     }
 
     /// <summary>
-    /// 从 SystemConfig 创建 SystemRunCondition。
+    /// 从 DataNew SystemData 创建 SystemRunCondition。
     /// </summary>
-    private static SystemRunCondition CreateRunCondition(SystemConfig config)
+    private static SystemRunCondition CreateRunCondition(SystemData config)
     {
         return new SystemRunCondition
         {

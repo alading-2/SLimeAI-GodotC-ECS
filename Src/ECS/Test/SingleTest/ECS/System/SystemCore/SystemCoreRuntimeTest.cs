@@ -32,6 +32,8 @@ namespace Slime.Test.SystemCore
                 TestDataNewSystemCollectionsDoNotContainNull();
                 TestSystemConfigPresetCalculatesEnabledSystems();
                 TestCoreSystemDescriptorsRegistered();
+                TestRequiredSystemCannotBeDisabledOrRemoved();
+                TestMissingSystemManagementReportsFailure();
                 TestStatusCollectionKeepsInvulnerableUntilAllSourcesExpire();
                 TestSystemRegistryKeepsFirstDescriptorWhenDuplicateRegistered();
             }
@@ -205,12 +207,12 @@ namespace Slime.Test.SystemCore
 
         private void TestDataNewSystemCollectionsDoNotContainNull()
         {
-            foreach (var config in Slime.ConfigNew.Systems.SystemData.All)
+            foreach (var config in slime.data.Systems.SystemData.All)
             {
                 AssertEqual("SystemData.All 不应包含空配置", true, config != null);
             }
 
-            foreach (var preset in Slime.ConfigNew.Systems.SystemPresetData.All)
+            foreach (var preset in slime.data.Systems.SystemPresetData.All)
             {
                 AssertEqual("SystemPresetData.All 不应包含空预设", true, preset != null);
             }
@@ -234,6 +236,58 @@ namespace Slime.Test.SystemCore
             AssertEqual("ObjectPoolInit 描述符应已注册", true, SystemRegistry.GetDescriptor("ObjectPoolInit") != null);
             AssertEqual("TimerManager 描述符应已注册", true, SystemRegistry.GetDescriptor("TimerManager") != null);
             AssertEqual("EntityManager 描述符应已注册", true, SystemRegistry.GetDescriptor("EntityManager") != null);
+        }
+
+        private void TestRequiredSystemCannotBeDisabledOrRemoved()
+        {
+            var manager = SystemManager.Instance;
+            if (manager == null)
+            {
+                Fail("SystemManager.Instance 应存在");
+                return;
+            }
+
+            var disableResult = manager.TrySetSystemEnabled(
+                "ObjectPoolInit", // 必需系统 Id
+                false, // 目标启用状态
+                out var disableMessage);
+            var removeResult = manager.TryRemoveSystem(
+                "ObjectPoolInit", // 必需系统 Id
+                out var removeMessage);
+
+            AssertEqual("必需系统不允许禁用", false, disableResult);
+            AssertEqual("必需系统禁用失败应返回中文原因", true, disableMessage.Contains("必需系统", StringComparison.Ordinal));
+            AssertEqual("必需系统不允许移除", false, removeResult);
+            AssertEqual("必需系统移除失败应返回中文原因", true, removeMessage.Contains("必需系统", StringComparison.Ordinal));
+        }
+
+        private void TestMissingSystemManagementReportsFailure()
+        {
+            var manager = SystemManager.Instance;
+            if (manager == null)
+            {
+                Fail("SystemManager.Instance 应存在");
+                return;
+            }
+
+            const string missingSystemId = "SystemCoreRuntimeTest.MissingSystem";
+            var addResult = manager.TryAddSystem(
+                missingSystemId, // 不存在的系统 Id
+                out var addMessage);
+            var enableResult = manager.TrySetSystemEnabled(
+                missingSystemId, // 不存在的系统 Id
+                true, // 目标启用状态
+                out var enableMessage);
+            var removeResult = manager.TryRemoveSystem(
+                missingSystemId, // 不存在的系统 Id
+                out var removeMessage);
+
+            AssertEqual("缺失系统不允许添加", false, addResult);
+            AssertEqual("缺失系统添加失败应返回中文原因", true, addMessage.Contains("未注册", StringComparison.Ordinal));
+            AssertEqual("缺失系统不允许启用", false, enableResult);
+            AssertEqual("缺失系统启用失败应返回中文原因", true, enableMessage.Contains("未加载", StringComparison.Ordinal));
+            AssertEqual("缺失系统不允许移除", false, removeResult);
+            AssertEqual("缺失系统移除失败应返回中文原因", true, removeMessage.Contains("未加载", StringComparison.Ordinal));
         }
 
         private void TestStatusCollectionKeepsInvulnerableUntilAllSourcesExpire()

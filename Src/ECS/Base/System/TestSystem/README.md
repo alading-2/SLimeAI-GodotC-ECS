@@ -2,7 +2,7 @@
 
 ## 1. 目录定位
 
-`Src/ECS/Base/System/TestSystem/` 用来承载项目的运行时测试系统源码，属性测试模块位于 `Attribute/` 子目录，技能测试模块位于 `Ability/` 子目录，对象池信息模块位于 `Info/` 子目录，资源目录模块位于 `ResourceCatalog/` 子目录，敌人生成测试模块位于 `Spawn/` 子目录。视觉预览已迁出 TestSystem，独立入口位于 `Src/ECS/Test/GlobalTest/VisualPreview/`。
+`Src/ECS/Base/System/TestSystem/` 用来承载项目的运行时测试系统源码，属性测试模块位于 `Attribute/` 子目录，技能测试模块位于 `Ability/` 子目录，系统监控模块位于 `System/` 子目录，对象池信息模块位于 `Info/` 子目录，资源目录模块位于 `ResourceCatalog/` 子目录，敌人生成测试模块位于 `Spawn/` 子目录。视觉预览已迁出 TestSystem，独立入口位于 `Src/ECS/Test/GlobalTest/VisualPreview/`。
 
 这套系统面向开发调试阶段，目标是：
 
@@ -13,7 +13,7 @@
 
 如果你要理解概念与设计边界，请先看：
 
-- `Docs/框架/ECS/System/TestSystem.md`
+- `Docs/框架/ECS/System/TestSystem/TestSystem.md`
 
 如果你要按规范扩展此目录，请看：
 
@@ -51,10 +51,13 @@
 | `ResourceCatalog/ResourcePickerControl.tscn` | 资源选择控件场景骨架 |
 | `ResourceCatalog/ResourceCatalogTestModule.cs` | 资源目录测试模块，通过分类下拉框展示 `ResourceCatalog.GetGroups()` 返回的分类，选择分类后自动显示该分类资源 |
 | `ResourceCatalog/ResourceCatalogTestModule.tscn` | 资源目录测试模块固定布局骨架，提供分类选择、分类资源列表和详情展示 |
+| `System/SystemInfoService.cs` | 系统监控服务，合并 DataNew 系统配置、`SystemRegistry` 与 `SystemManager` 运行态，封装 Add / Remove / Enable / Disable 调试操作 |
+| `System/SystemInfoTestModule.cs` | 系统监控模块，负责系统列表筛选、运行状态详情展示和按钮操作转发 |
+| `System/SystemInfoTestModule.tscn` | 系统监控模块固定布局骨架，提供分组 / 标签 / 状态 / 搜索筛选、系统列表、详情和操作按钮 |
 | `Info/ObjectPoolInfoService.cs` | 对象池信息服务，负责把 `ObjectPoolManager` 统计与容量元数据合并成测试面板快照 |
 | `Info/ObjectPoolInfoModule.cs` | 对象池信息模块，负责用中文展示对象池名称列表、当前池概览和紧凑详情 |
 | `Info/ObjectPoolInfoModule.tscn` | 对象池信息模块固定布局骨架，提供左侧名称列表和右侧概览 / 详情区 |
-| `Spawn/SpawnTestModule.cs` | 敌人生成测试模块，选择 `EnemyConfig` 后通过正式 `SpawnSystem.SpawnBatch(...)` 生成敌人 |
+| `Spawn/SpawnTestModule.cs` | 敌人生成测试模块，选择 `EnemyData` 后通过正式 `SpawnSystem.SpawnBatch(...)` 生成敌人 |
 | `Spawn/SpawnTestModule.tscn` | 敌人生成测试模块固定布局骨架 |
 
 ## 2.1 第一次看这个系统，推荐按这个顺序读
@@ -166,7 +169,7 @@
 
 当你把上面几个文件看过一遍后，再去看：
 
-- `Docs/框架/ECS/System/TestSystem.md`
+- `Docs/框架/ECS/System/TestSystem/TestSystem.md`
 
 这时你会更容易把“代码实现”和“设计边界”对上。
 
@@ -192,7 +195,7 @@
 
 1. 点击左上角“测试”按钮
 2. 打开或隐藏测试面板
-3. 通过左侧模块树切换“属性测试”、“技能测试”、“资源目录”、“对象池”与“敌人生成”模块；模块树可用顶部按钮隐藏
+3. 通过左侧模块树切换“属性测试”、“技能测试”、“系统监控”、“资源目录”、“对象池”与“敌人生成”模块；模块树可用顶部按钮隐藏
 4. 通过顶部“缩小 / 放大”按钮调整测试面板尺寸
 
 ### 3.2 选择实体
@@ -267,18 +270,17 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 
 左侧技能库来自：
 
-- `ResourcePaths.Resources[ResourceCategory.DataAbility]`
-- `AbilityConfig`
+- `AbilityData.All`
 
 分组优先看：
 
-- `AbilityConfig.FeatureGroupId`
+- `AbilityData.FeatureGroupId`
 
 显示规则：
 
 - 面板分类标题和 Tooltip 显示完整 `FeatureGroupId`
 - 不再把 `技能.被动` 裁剪成 `被动`
-- 旧资源缺少 `FeatureGroupId` 时才使用资源路径和 `AbilityType` 兜底
+- 缺少 `FeatureGroupId` 时使用 `AbilityType` 兜底
 
 ### 交互方式
 
@@ -299,7 +301,7 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 
 ### 当前支持
 
-- 从 `ResourceCatalog.GetEntries("Unit.Enemy")` 选择敌人 `.tres`
+- 从 `ResourceCatalog.GetEntries("Unit.Enemy")` 选择 DataNew 敌人条目
 - 选择 `SpawnPositionStrategy`
 - 设置生成数量
 - 调用 `SpawnSystem.SpawnBatch(...)`
@@ -311,8 +313,7 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 敌人列表来自：
 
 - `ResourceCatalog.GetEntries("Unit.Enemy")`
-- `ResourcePaths.Resources[ResourceCategory.DataUnit]`
-- `ResourceManagement.Load<EnemyConfig>(...)`
+- `EnemyData.All`
 
 模块按目录前缀 `Unit.Enemy` 过滤，不展示玩家、目标指示器、技能或特效资源，避免把非敌人配置传入 `SpawnSystem`。
 
@@ -342,7 +343,28 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 - 不加载或实例化资源内容，只验证目录索引和分类结果
 - 如果新增、移动、重命名资源后这里看不到，优先检查是否运行过 `Tools/ResourceGenerator`
 
-## 8. 对象池信息怎么用
+## 8. 系统监控怎么用
+
+系统监控模块用于查看当前 System Core 的配置与运行态，并对非必需系统执行受保护的调试操作。
+
+### 当前支持
+
+- 按分组、标签、状态和搜索文本筛选系统
+- 左侧列表区分“未加载 / 已加载 / 已禁用 / 状态阻塞 / 运行中”
+- 右侧展示 `SystemId / MountGroup / Tags / Required / AutoLoad / StartEnabled / Priority / Dependencies / Description`
+- 展示 `SystemRuntimeInfo` 中的运行态、阻塞原因和自定义统计
+- 对已注册但未加载系统执行添加
+- 对已加载且非必需系统执行启用 / 禁用
+- 对未被其他已加载系统依赖的非必需系统执行移除
+
+### 边界
+
+- 不扫描 `res://`，只消费 `SystemConfigService`、`SystemRegistry` 和 `SystemManager`
+- `Required == true` 的系统禁止禁用和移除
+- 被其他已加载系统依赖的系统禁止移除
+- UI 只调用 `SystemInfoService`，不把 SystemManager 操作散落到控件回调中
+
+## 9. 对象池信息怎么用
 
 对象池信息模块用于查看当前已注册对象池的**运行时统计**和**容量配置**。
 
@@ -361,7 +383,7 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 - 只读观测，不执行 `CleanupAll / DestroyAll`
 - 容量信息来自对象池注册时记录的元数据，不从源码反查
 
-## 9. 视觉预览怎么用
+## 10. 视觉预览怎么用
 
 视觉预览已迁出 TestSystem，不再作为运行时测试面板模块存在。请单独运行 `res://Src/ECS/Test/GlobalTest/VisualPreview/VisualPreviewScene.tscn`。
 
@@ -383,7 +405,7 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 - 第一版不支持拖拽摆位和运行时调节网格参数
 - 不走对象池，属于低频调试实例化
 
-## 10. 新增测试模块的推荐步骤
+## 11. 新增测试模块的推荐步骤
 
 ### 第一步：创建模块类
 
@@ -439,7 +461,7 @@ public partial class MyTestModule : TestModuleBase
 
 推荐先写一层 Service / Adapter，再由 UI 转发调用。
 
-## 11. 开发约束
+## 12. 开发约束
 
 维护此目录时请遵守以下边界：
 
@@ -480,7 +502,7 @@ TestSystem UI 控件统一使用以下日志级别：
 
 **不要使用 `LogLevel.Debug`**。运行时测试系统的日志面向开发者调试，Debug 级别在测试面板中属于冗余输出。
 
-## 12. 你通常会改哪些地方
+## 13. 你通常会改哪些地方
 
 ### 新增调试模块
 
@@ -488,7 +510,7 @@ TestSystem UI 控件统一使用以下日志级别：
 
 - 新模块源码文件
 - `Core/TestModuleSceneRegistry.cs` 中登记新模块场景与路径
-- `Docs/框架/ECS/System/TestSystem.md`
+- `Docs/框架/ECS/System/TestSystem/TestSystem.md`
 - `.codex/skills/test-system/SKILL.md`
 - `Docs/框架/项目索引.md`
 
@@ -540,7 +562,7 @@ TestSystem UI 控件统一使用以下日志级别：
 - 不要让运行时测试面板全盘扫描目录作为主数据源
 - 具体模块只消费自己允许的目录前缀，例如敌人生成只消费 `Unit.Enemy`
 
-## 13. 快速自检清单
+## 14. 快速自检清单
 
 提交前建议检查：
 

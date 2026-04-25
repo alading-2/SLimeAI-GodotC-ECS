@@ -1,4 +1,4 @@
-namespace Slime.ConfigNew.Units
+namespace slime.data.Units
 {
     /// <summary>
     /// 单位配置基类（纯 POCO，不继承 Resource）

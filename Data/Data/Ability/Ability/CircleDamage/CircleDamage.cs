@@ -29,7 +29,7 @@ internal class CircleDamageExecutor : AbilityFeatureHandler
 
         // 从技能配置中读取参数
         var range = ability.Data.Get<float>(DataKey.AbilityEffectRadius); // 伤害半径
-        var effectScene = ability.Data.Get<PackedScene>(DataKey.EffectScene); // 特效场景
+        var effectScenePath = ability.Data.Get<string>(DataKey.EffectScene); // 特效场景路径
         var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 技能最终伤害
 
         // 执行命中（目标查询 + 特效 + 伤害，三步合一；位置来源统一收口到 Query / Effect 参数中）
@@ -45,9 +45,9 @@ internal class CircleDamageExecutor : AbilityFeatureHandler
                 TeamFilter = TeamFilter.Enemy, // 阵营过滤
                 MaxTargets = -1 // 不限命中数量
             },
-            Effect = effectScene != null
+            Effect = !string.IsNullOrWhiteSpace(effectScenePath)
                 ? new EffectSpawnOptions(
-                    effectScene,
+                    effectScenePath,
                     Name: "烈焰光环特效",
                     Scale: new Vector2(2.0f, 2.0f))
                 : null,

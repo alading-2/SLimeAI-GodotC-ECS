@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Slime.Config.Units
+namespace slime.config.Units
 {
     [GlobalClass]
     public partial class EnemyConfig : UnitConfig

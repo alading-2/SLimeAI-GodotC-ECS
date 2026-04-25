@@ -52,6 +52,30 @@ public static class ResourceManagement
         return null;
     }
 
+    /// <summary>
+    /// 按 Godot 资源路径加载资源。
+    /// <para>DataNew 纯 C# 数据使用 res:// 路径保存场景/贴图引用时，通过此入口统一加载。</para>
+    /// </summary>
+    /// <typeparam name="T">资源类型。</typeparam>
+    /// <param name="path">Godot 资源路径，例如 res://assets/Effect/xxx.tscn。</param>
+    /// <returns>加载的资源，失败返回 null。</returns>
+    public static T? LoadPath<T>(string path) where T : class
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            _log.Error("资源路径为空");
+            return null;
+        }
+
+        var resource = Godot.GD.Load<T>(path);
+        if (resource == null)
+        {
+            _log.Error($"资源路径加载失败: {path}");
+        }
+
+        return resource;
+    }
+
 
 
     /// <summary>

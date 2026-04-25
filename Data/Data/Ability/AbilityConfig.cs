@@ -1,7 +1,7 @@
 using Godot;
 
 
-namespace Slime.Config.Abilities
+namespace slime.config.Abilities
 {
     [GlobalClass]
     public partial class AbilityConfig : Resource

@@ -37,12 +37,12 @@ internal class ArcShotExecutor : AbilityFeatureHandler
 
         var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 最终技能伤害
 
-        var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
+        var projectileScenePath = ability.Data.Get<string>(DataKey.ProjectileScene); // 投射物场景路径
 
         var projectile = ProjectileTool.Spawn(
             caster, // 投射物归属者
             casterNode.GlobalPosition, // 生成位置
-            projectileScene, // 投射物视觉
+            projectileScenePath, // 投射物视觉路径
             "ArcShotProjectile" // 投射物名称
         );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };

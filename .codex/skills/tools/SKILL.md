@@ -143,15 +143,19 @@ API 文档：`Src/ECS/Tools/TargetSelector/README.md`
 var scene = ResourceManagement.Load<PackedScene>("EnemyEntity", ResourceCategory.Entity);
 var compScene = ResourceManagement.Load<PackedScene>("HealthComponent", ResourceCategory.Component);
 
-// 加载配置
-var config = ResourceManagement.Load<Resource>("德鲁伊", ResourceCategory.PlayerConfig);
-var enemyConfig = ResourceManagement.Load<Resource>("史莱姆", ResourceCategory.EnemyConfig);
-
 // 加载系统场景
 var sysScene = ResourceManagement.Load<PackedScene>("DamageService", ResourceCategory.System);
+
+// 运行时数据配置不走 ResourceManagement，统一从 DataNew 读取
+var enemy = EnemyData.Get("鱼人") ?? EnemyData.Yuren;
+
+// Data 中的场景引用只保存 res:// 字符串；最终实例化点再加载 PackedScene
+var scene = CommonTool.LoadPackedScene(enemy.VisualScenePath, "敌人视觉");
 ```
 
-ResourceCategory 分类：`Entity` / `Component` / `PlayerConfig` / `EnemyConfig` / `System` / ...
+ResourceCategory 分类：`Entity` / `Component` / `System` / `UI` / `Tools` / ...
+
+旧 `.tres` 数据目录保留归档，但运行时数据导入不再通过 `ResourceManagement.Load<Resource>` 读取 `PlayerConfig` / `EnemyConfig` / `AbilityConfig`。
 
 例外（允许直接路径）：
 
@@ -175,5 +179,6 @@ API 文档：`Data/ResourceManagement/ResourceManagement.md`
 - **TargetSelector** → `Src/ECS/Tools/TargetSelector/TargetSelector.cs` | 文档 → `Src/ECS/Tools/TargetSelector/README.md`
 - **TargetSelectorQuery** → `Src/ECS/Tools/TargetSelector/TargetSelectorQuery.cs`
 - **WaveMath** → `Src/ECS/Tools/Math/WaveMath.cs` | 场景：标准正弦波采样、偏移差分、频率转角频率
+- **CommonTool** → `Src/ECS/Tools/CommonTool.cs`
 - **ResourceManagement** → `Data/ResourceManagement/ResourceManagement.cs` | 文档 → `Data/ResourceManagement/ResourceManagement.md`
 - **ResourcePaths（自动生成）** → `Data/ResourceManagement/ResourcePaths.cs`

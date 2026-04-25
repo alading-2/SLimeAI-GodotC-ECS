@@ -434,9 +434,9 @@ public class Data
     private static readonly Dictionary<Type, (PropertyInfo prop, string key)[]> _resourcePropCache = new();
 
     /// <summary>
-    /// 从配置对象加载数据到容器（Resource 与 DataNew POCO 共用）。
+    /// 从 DataNew 纯 C# 配置对象加载数据到容器。
     /// </summary>
-    /// <param name="config">配置对象，可以是 .tres Resource 或 DataNew 纯 C# 数据。</param>
+    /// <param name="config">DataNew 纯 C# 配置对象。</param>
     public void LoadFromConfig(object config)
     {
         if (config == null) return;
@@ -450,6 +450,7 @@ public class Data
             try
             {
                 var value = prop.GetValue(config);
+                // 场景/贴图等资源引用只保存 res:// 字符串路径，具体系统在使用点显式加载。
                 if (value != null) Set(key, value);
             }
             catch (Exception ex)
@@ -457,15 +458,6 @@ public class Data
                 _log.Warn($"加载属性 {prop.Name} 失败: {ex.Message}");
             }
         }
-    }
-
-    /// <summary>
-    /// 从 Resource 加载数据到容器，兼容旧 .tres 数据入口。
-    /// </summary>
-    /// <param name="resource">Godot Resource 配置对象。</param>
-    public void LoadFromResource(Resource resource)
-    {
-        LoadFromConfig(resource);
     }
 
     private static (PropertyInfo, string)[] BuildPropertyCache(Type type)
@@ -675,6 +667,11 @@ public class Data
     /// </summary>
     private object ConvertValueBoxed(object value, Type targetType, object defaultValue)
     {
+        if (value == null)
+        {
+            return defaultValue;
+        }
+
         if (targetType.IsInstanceOfType(value))
         {
             return value;
@@ -682,6 +679,33 @@ public class Data
 
         try
         {
+            var valueType = value.GetType();
+
+            // DataNew 直接写入枚举值，旧数据/部分旧调用仍可能按 int 读取；这里统一兼容 enum <-> int/string。
+            if (targetType.IsEnum)
+            {
+                if (value is string enumText)
+                {
+                    return Enum.Parse(targetType, enumText, ignoreCase: false);
+                }
+
+                var numericValue = valueType.IsEnum
+                    ? Convert.ToInt64(value)
+                    : Convert.ToInt64(value);
+                return Enum.ToObject(targetType, numericValue);
+            }
+
+            if (valueType.IsEnum)
+            {
+                if (targetType == typeof(string))
+                {
+                    return value.ToString() ?? defaultValue;
+                }
+
+                var numericValue = Convert.ToInt64(value);
+                return Convert.ChangeType(numericValue, targetType);
+            }
+
             return Convert.ChangeType(value, targetType);
         }
         catch

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using Slime.ConfigNew;
-namespace Slime.ConfigNew.Units
+using slime.data;
+namespace slime.data.Units
 {
     /// <summary>
     /// 敌人配置（纯 POCO）

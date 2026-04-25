@@ -39,12 +39,12 @@ internal class SineWaveShotExecutor : AbilityFeatureHandler
             dir, // 初始朝向
             20f // 出生前推距离
         );
-        var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
+        var projectileScenePath = ability.Data.Get<string>(DataKey.ProjectileScene); // 投射物场景路径
 
         var projectile = ProjectileTool.Spawn(
             caster, // 投射物归属者
             spawnPos, // 生成位置
-            projectileScene, // 投射物视觉
+            projectileScenePath, // 投射物视觉路径
             "SineWaveShotProjectile" // 投射物名称
         );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };

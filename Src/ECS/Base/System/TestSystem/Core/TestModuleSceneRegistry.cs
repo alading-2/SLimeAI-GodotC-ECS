@@ -17,6 +17,8 @@ internal static class TestModuleSceneRegistry
             ResourcePaths.System_AbilityTestModule),
         new(new TestModuleDefinition("spawn-enemy", $"{TestModuleGroupId.Common}.敌人生成"),
             ResourcePaths.System_SpawnTestModule),
+        new(new TestModuleDefinition("system-info", $"{TestModuleGroupId.System}.系统监控"),
+            ResourcePaths.System_SystemInfoTestModule),
         new(new TestModuleDefinition("object-pool-info", $"{TestModuleGroupId.Info}.对象池"),
             ResourcePaths.System_ObjectPoolInfoModule),
         new(new TestModuleDefinition("resource-catalog-test", $"{TestModuleGroupId.Resource}.资源目录"),

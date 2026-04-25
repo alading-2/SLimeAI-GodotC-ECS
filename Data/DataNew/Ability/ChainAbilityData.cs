@@ -1,18 +1,18 @@
 using System.Collections.Generic;
-using Slime.ConfigNew;
+using slime.data;
 
-namespace Slime.ConfigNew.Abilities
+namespace slime.data.Abilities
 {
     /// <summary>
     /// 链式技能配置（纯 POCO，继承 AbilityData）
     /// </summary>
     public class ChainAbilityData : AbilityData
     {
-    /// <summary>全部数据。</summary>
-    public static IReadOnlyList<ChainAbilityData> All => DataTable.GetAll<ChainAbilityData>();
+        /// <summary>全部链式技能数据。</summary>
+        public static new IReadOnlyList<ChainAbilityData> All => DataTable.GetAll<ChainAbilityData>();
 
-    /// <summary>按 Name 获取数据，找不到返回 null 并记录日志。</summary>
-    public static ChainAbilityData? Get(string name) => DataTable.GetByName<ChainAbilityData>(name);
+        /// <summary>按 Name 获取链式技能数据，找不到返回 null 并记录日志。</summary>
+        public static new ChainAbilityData? Get(string name) => DataTable.GetByName<ChainAbilityData>(name);
 
         // ====== 链式效果 ======
 
@@ -51,6 +51,7 @@ namespace Slime.ConfigNew.Abilities
             FeatureHandlerId = "技能.主动.连锁闪电",
             Description = "释放链式闪电，在多个敌人间弹跳造成魔法伤害，每次弹跳伤害衰减",
             AbilityIconPath = "res://icon.svg",
+            AbilityType = AbilityType.Active,
             AbilityTriggerMode = AbilityTriggerMode.Manual,
             AbilityCostType = AbilityCostType.Mana,
             AbilityCooldown = 1.0f,

@@ -31,7 +31,7 @@ internal class OrbitSkillExecutor : AbilityFeatureHandler
         var orbitCount = 3;
         var orbitRadius = 100f;
         var orbitDuration = 6f;
-        var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
+        var projectileScenePath = ability.Data.Get<string>(DataKey.ProjectileScene); // 投射物场景路径
 
         for (int i = 0; i < orbitCount; i++)
         {
@@ -39,7 +39,7 @@ internal class OrbitSkillExecutor : AbilityFeatureHandler
             var projectile = ProjectileTool.Spawn(
                 caster, // 投射物归属者
                 casterNode.GlobalPosition, // 生成位置
-                projectileScene, // 投射物视觉
+                projectileScenePath, // 投射物视觉路径
                 "OrbitSkillProjectile" // 投射物名称
             );
             if (projectile == null) continue;

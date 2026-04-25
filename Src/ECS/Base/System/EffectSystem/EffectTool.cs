@@ -4,7 +4,7 @@ using System.Linq;
 /// <summary>
 /// 特效生成参数（统一独立特效和附着特效）
 /// </summary>
-/// <param name="VisualScene">特效视觉场景</param>
+/// <param name="VisualScenePath">特效视觉场景路径</param>
 /// <param name="Name">特效名称（用于调试）</param>
 /// <param name="MaxLifeTime">特效持续时间，-1 表示由动画结束控制</param>
 /// <param name="Host">宿主 Entity 节点（非 null 时为附着模式，跟随宿主位置）</param>
@@ -16,7 +16,7 @@ using System.Linq;
 /// <param name="IsLooping">是否循环播放</param>
 /// <param name="EffectPosition">特效位置；独立特效建议显式填写，附着特效可不填</param>
 public readonly record struct EffectSpawnOptions(
-    PackedScene VisualScene,
+    string VisualScenePath,
     string Name = "Effect",
     float MaxLifeTime = -1f,
     Node? Host = null,
@@ -43,10 +43,10 @@ public readonly record struct EffectSpawnOptions(
 /// 使用示例：
 /// <code>
 /// // 独立特效（在指定位置播放，播完自动销毁）
-/// EffectTool.Spawn(new EffectSpawnOptions(hitEffectScene, EffectPosition: position, Owner: caster));
+/// EffectTool.Spawn(new EffectSpawnOptions(hitEffectScenePath, EffectPosition: position, Owner: caster));
 ///
 /// // 附着特效（跟随宿主，宿主销毁时自动销毁）
-/// EffectTool.Spawn(new EffectSpawnOptions(buffEffectScene, Host: hostEntity));
+/// EffectTool.Spawn(new EffectSpawnOptions(buffEffectScenePath, Host: hostEntity));
 ///
 /// // 销毁宿主身上所有特效
 /// EffectTool.DestroyByHost(hostEntity);
@@ -98,8 +98,12 @@ public static partial class EffectTool
         // 写入 Data
         FillEffectData(entity, options, isAttached);
 
-        // 加载视觉场景到 VisualRoot
-        InjectVisualScene(entity, options.VisualScene);
+        // 加载视觉场景到 VisualRoot；EffectTool 是特效场景的最终实例化点。
+        if (!InjectVisualScene(entity, options.VisualScenePath))
+        {
+            EntityManager.Destroy(entity);
+            return null;
+        }
 
         // 应用初始变换
         ApplyInitialTransform(entity, position, options, isAttached);
@@ -265,8 +269,18 @@ public static partial class EffectTool
     /// <summary>
     /// 加载视觉场景到 VisualRoot 子节点
     /// </summary>
-    private static void InjectVisualScene(EffectEntity entity, PackedScene visualScene)
+    private static bool InjectVisualScene(
+        EffectEntity entity, // 特效实体
+        string visualScenePath) // 特效视觉场景路径
     {
+        var visualScene = CommonTool.LoadPackedScene(
+            visualScenePath, // res:// 场景路径
+            "特效视觉"); // 日志用途名称
+        if (visualScene == null)
+        {
+            return false;
+        }
+
         // 清理旧的 VisualRoot
         var existingVisual = entity.GetNodeOrNull("VisualRoot");
         if (existingVisual != null)
@@ -279,5 +293,6 @@ public static partial class EffectTool
         var visual = visualScene.Instantiate();
         visual.Name = "VisualRoot";
         entity.AddChild(visual);
+        return true;
     }
 }

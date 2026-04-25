@@ -1,6 +1,6 @@
 ---
 name: ecs-data
-description: 在 Entity 或 Component 中读写 Data 数据容器、定义新 DataKey、监听数据变化事件时使用。适用于：存储运行时状态（HP/速度/状态机），跨组件共享数据，从 Resource 批量加载初始数据。触发关键词：Data容器、DataMeta、DataKey、读写状态、PropertyChanged、数据驱动。
+description: 在 Entity 或 Component 中读写 Data 数据容器、定义新 DataKey、监听数据变化事件时使用。适用于：存储运行时状态（HP/速度/状态机），跨组件共享数据，从 DataNew/Resource 批量加载初始数据。触发关键词：Data容器、DataMeta、DataKey、读写状态、PropertyChanged、数据驱动。
 ---
 
 # ECS Data 数据容器规范
@@ -21,6 +21,7 @@ description: 在 Entity 或 Component 中读写 Data 数据容器、定义新 Da
 var hp = _data.Get<float>(DataKey.CurrentHp);
 var state = _data.Get<int>(DataKey.UnitState);
 var name = _data.Get<string>(DataKey.Name);
+var triggerMode = _data.Get<AbilityTriggerMode>(DataKey.AbilityTriggerMode);
 
 // ✅ 写入
 _data.Set(DataKey.CurrentHp, hp - damage);
@@ -33,6 +34,8 @@ _data.Add(DataKey.CurrentHp, -damage);  // 负数即为减少
 // ✅ 带默认值读取（Key 不存在时返回 DataMeta.DefaultValue 或类型默认值）
 var maxHp = _data.Get<float>(DataKey.MaxHp);
 ```
+
+枚举键优先按枚举类型直接读写。`Data` 容器兼容旧代码里的 enum/int 转换，但新代码不要再写 `(AbilityTriggerMode)_data.Get<int>(DataKey.AbilityTriggerMode)`。
 
 ## 按 Category 批量重置为默认值
 
@@ -137,13 +140,26 @@ public const string TargetNode = "TargetNode";
 | `Dependencies` | 计算数据依赖 | ❌ |
 | `Compute` | 计算函数 | ❌ |
 
-## 从 Resource 批量加载初始数据
+## 从 DataNew 批量加载初始数据
 
 ```csharp
-// Entity 初始化时，DataInitComponent 自动从 Config Resource 加载数据
+// Entity 初始化时，EntityManager.Spawn 会从 EntitySpawnConfig.Config 加载数据
+// 当前推荐传入 DataNew POCO，例如 EnemyData / PlayerData / AbilityData
+var enemy = EnemyData.Get("鱼人") ?? EnemyData.Yuren;
+EntityManager.Spawn<EnemyEntity>(new EntitySpawnConfig
+{
+    Config = enemy, // DataNew POCO，通过 Data.LoadFromConfig 注入 Entity.Data
+    UsingObjectPool = true, // 使用对象池
+    PoolName = ObjectPoolNames.EnemyPool // 敌人对象池
+});
+
 // Config 中定义的字段会自动映射到对应 DataKey
 // 推荐显式写 [DataKey(nameof(DataKey.Xxx))]，不要只依赖字段名回退
 ```
+
+`Data.LoadFromConfig(object config)` 是统一入口；运行时配置对象应来自 `Data/DataNew` 的纯 C# 数据类。
+
+场景引用在 `Data` 中统一保存 `res://` 字符串路径；`VisualScenePath`、`EffectScene`、`ProjectileScene` 不提前转换成 `PackedScene`，由实体视觉注入、特效生成或投射物生成时再加载。
 
 ## 私有字段缓存规则
 

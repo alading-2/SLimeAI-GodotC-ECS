@@ -1,7 +1,7 @@
 # DataNew 纯 C# 数据表使用说明
 
-`Data/DataNew/` 是当前推荐的数据配置方式：一张表对应一个 C# 数据类，一个静态实例对应一行数据。
-旧的 `Data/Data + Data/Config + .tres` 仅作为整体兼容模式保留。
+`Data/DataNew/` 是当前唯一运行时数据配置方式：一张表对应一个 C# 数据类，一个静态实例对应一行数据。
+旧的 `Data/Data + Data/Config + .tres` 仅保留归档，运行时不再导入。
 
 ## 1. 数据表怎么写
 
@@ -84,6 +84,8 @@ var enemy = EntityManager.Spawn<EnemyEntity>(new EntitySpawnConfig
 4. 属性名或 `[DataKey(nameof(DataKey.Xxx))]` 映射到运行时 `DataKey`。
 5. 写入 `Entity.Data`，组件通过 `DataKey` 读取。
 
+场景引用只写入 `res://` 字符串路径，`Data` 不保存 `PackedScene`。例如 `DataKey.VisualScenePath` / `DataKey.EffectScene` / `DataKey.ProjectileScene` 都保持字符串，具体系统在注入视觉、生成特效或生成投射物时再加载。
+
 ## 4. 什么时候需要 `[DataKey]`
 
 如果属性名和目标 `DataKey` 不一致，需要显式标注。
@@ -98,15 +100,35 @@ public float BaseSkillDamage { get; set; }
 
 如果属性名本身就是目标 DataKey 名称，例如 `BaseHp`、`MoveSpeed`、`SpawnInterval`，可以不写 `[DataKey]`。
 
-## 5. 数据源切换
+## 5. 技能数据怎么写
 
-全局开关在 `GlobalConfig`：
+DataNew 技能必须把运行时会读取的枚举字段写完整，不能依赖裸类型默认值。
 
 ```csharp
-GlobalConfig.DataSourceMode = DataSourceMode.PureCSharp;
+public static readonly AbilityData Dash = new()
+{
+    Name = "冲刺",
+    FeatureGroupId = "技能.位移",
+    FeatureHandlerId = FeatureId.Ability.Movement.Dash,
+    AbilityType = AbilityType.Active, // 手动技能必须是 Active，技能栏只显示非 Passive + Manual
+    AbilityTriggerMode = AbilityTriggerMode.Manual,
+    AbilityTargetSelection = AbilityTargetSelection.None,
+};
 ```
 
-- `PureCSharp`：推荐模式，使用 `Data/DataNew`。
-- `GodotResource`：兼容模式，使用旧 `.tres`。
+关键规则：
 
-不要在同一次数据加载里混用两种模式；需要切换时整体切换。
+- `FeatureGroupId` 只控制 UI / 测试面板分组。
+- `FeatureHandlerId` 是运行时执行器主键，必须能在 `FeatureHandlerRegistry` 找到。
+- 手动技能要显式写 `AbilityType = AbilityType.Active` 和 `AbilityTriggerMode = AbilityTriggerMode.Manual`。
+- 被动常驻技能通常写 `AbilityType = AbilityType.Passive` 和 `AbilityTriggerMode = AbilityTriggerMode.Permanent`。
+- `EffectScenePath` / `ProjectileScenePath` 必须写 `res://` 字符串路径，不能写 `PackedScene`；技能执行器继续传路径，`EffectTool` / `ProjectileTool` 在最终视觉注入点加载。
+
+## 6. 运行时数据源
+
+运行时数据导入统一使用 `Data/DataNew` 纯 C# 表。
+
+- 业务侧按 `Name` 调用 `XxxData.Get(name)` 获取配置。
+- Entity 生成时把 DataNew 对象传入 `EntitySpawnConfig.Config`。
+- `Data.LoadFromConfig(object config)` 会把配置字段注入 `Entity.Data`。
+- 旧 `Data/Data + .tres` 目录保留归档，但不再作为运行时数据导入来源。

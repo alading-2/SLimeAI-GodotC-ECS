@@ -32,7 +32,7 @@ public partial class TriggerComponent : Node, IComponent
 
     // ================= 属性访问 =================
 
-    private AbilityTriggerMode TriggerMode => (AbilityTriggerMode)_data.Get<int>(DataKey.AbilityTriggerMode);
+    private AbilityTriggerMode TriggerMode => _data.Get<AbilityTriggerMode>(DataKey.AbilityTriggerMode);
     private string AbilityName => _data.Get<string>(DataKey.Name);
 
     // ================= IComponent 实现 =================
@@ -281,7 +281,7 @@ public partial class TriggerComponent : Node, IComponent
     {
         if (_data == null || _entity is not AbilityEntity ability) return false;
 
-        var mode = (AbilityTriggerMode)_data.Get<int>(DataKey.AbilityTriggerMode);
+        var mode = _data.Get<AbilityTriggerMode>(DataKey.AbilityTriggerMode);
 
         // 验证是否支持手动触发模式
         if (!mode.HasFlag(AbilityTriggerMode.Manual))

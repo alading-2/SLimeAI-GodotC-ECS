@@ -112,6 +112,7 @@ public static class ResourcePaths
     public const string System_ResourcePickerControl = "ResourcePickerControl";
     public const string System_SpawnSystem = "SpawnSystem";
     public const string System_SpawnTestModule = "SpawnTestModule";
+    public const string System_SystemInfoTestModule = "SystemInfoTestModule";
     public const string System_TestSystem = "TestSystem";
 
     // --- Tools ---
@@ -294,6 +295,7 @@ public static class ResourcePaths
                 { System_ResourcePickerControl, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/TestSystem/ResourceCatalog/ResourcePickerControl.tscn") },
                 { System_SpawnSystem, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/Spawn/SpawnSystem.tscn") },
                 { System_SpawnTestModule, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/TestSystem/Spawn/SpawnTestModule.tscn") },
+                { System_SystemInfoTestModule, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/TestSystem/System/SystemInfoTestModule.tscn") },
                 { System_TestSystem, new ResourceData(ResourceCategory.System, "res://Src/ECS/Base/System/TestSystem/TestSystem.tscn") },
             }
         },

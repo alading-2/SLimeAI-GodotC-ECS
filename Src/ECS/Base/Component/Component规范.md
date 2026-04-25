@@ -205,7 +205,7 @@ Spawn 流程:
   │
   ├─ RegisterComponents() ─► OnComponentRegistered (每个 Component)
   │
-  └─ Data.LoadFromResource() ─► 注入数据
+  └─ Data.LoadFromConfig() ─► 注入 DataNew 数据
 
 Destroy 流程:
   ┌─ UnregisterEntity()

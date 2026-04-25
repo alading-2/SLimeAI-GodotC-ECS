@@ -387,16 +387,15 @@ Data.AddModifier(DataKey.Damage, new DataModifier(
 // 计算顺序：(基础值 + 10) × 1.5
 ```
 
-### 资源自动映射
+### DataNew 配置自动映射
 
 ```csharp
-// 从 Resource 自动映射数据
-// 内部调用 LoadFromResource
-Data.ApplyResource("PlayerData");
-
-// 或者直接传入 Resource 对象
-Data.LoadFromResource(resource);
+// 从 DataNew POCO 自动映射数据
+var enemy = EnemyData.Get("鱼人") ?? EnemyData.Yuren;
+Data.LoadFromConfig(enemy);
 ```
+
+`Data.LoadFromConfig` 只负责把配置字段写入 `Data`。场景类字段保存为 `res://` 字符串路径，例如 `VisualScenePath`、`EffectScene`、`ProjectileScene`；不要在 Data 容器里提前保存 `PackedScene`。
 
 ### 装备系统集成示例
 
@@ -689,7 +688,7 @@ public override void _Process(double delta)
   - 自动使用 `DataRegistry` 中定义的默认值
   - 更新所有 Damage System Processor 代码以遵循新的最佳实践
 
-- **v2.2** (2025-01-03) - `DataModifier` 新增 `Source` 属性，支持按来源追踪 - 新增 `RemoveModifiersBySource`，优化装备/Buff 移除逻辑 - 新增 `ApplyDataAsModifiers`，支持将 Data 转换为修改器 - 新增 `LoadFromResource`，统一 Resource 注入逻辑（原 `EntityManager.InjectResourceData`）
+- **v2.2** (2025-01-03) - `DataModifier` 新增 `Source` 属性，支持按来源追踪 - 新增 `RemoveModifiersBySource`，优化装备/Buff 移除逻辑 - 新增 `ApplyDataAsModifiers`，支持将 Data 转换为修改器
 
   - **v2.1** (2025-01-03)
 

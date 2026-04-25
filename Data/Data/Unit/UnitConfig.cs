@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Slime.Config.Units
+namespace slime.config.Units
 {
     /// <summary>
     /// 单位配置基类
@@ -35,7 +35,7 @@ namespace Slime.Config.Units
 
         /// <summary>
         /// 视觉场景路径 (PackedScene)
-        /// Data.LoadFromResource 会自动读取此属性
+        /// 旧 Resource 导入流程曾读取此属性；运行时主数据源已迁移到 DataNew。
         /// </summary>
         [ExportGroup("视觉")]
         [DataKey(nameof(DataKey.VisualScenePath))]

@@ -283,15 +283,19 @@ public static partial class EntityManager
     {
         PackedScene? scene = visualSceneOverride;
 
-        // 显式覆盖优先，其次才回退到配置资源上的 VisualScenePath。
+        // 显式覆盖优先，其次回退到配置对象上的 VisualScenePath 字符串路径。
         if (scene == null)
         {
             var prop = config.GetType().GetProperty(DataKey.VisualScenePath);
             if (prop != null)
             {
                 var value = prop.GetValue(config);
-                if (value is PackedScene ps) scene = ps;
-                else if (value is string path && !string.IsNullOrEmpty(path)) scene = GD.Load<PackedScene>(path);
+                if (value is string path && !string.IsNullOrEmpty(path))
+                {
+                    scene = CommonTool.LoadPackedScene(
+                        path, // res:// 场景路径
+                        $"{entity.Name} 视觉"); // 日志用途名称
+                }
             }
         }
 

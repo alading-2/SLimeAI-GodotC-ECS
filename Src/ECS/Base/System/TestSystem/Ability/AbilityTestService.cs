@@ -1,5 +1,4 @@
-using Godot;
-using Slime.Config.Abilities;
+using slime.data.Abilities;
 using System;
 using System.Collections.Generic;
 using ECS.Base.System.TestSystem.Core;
@@ -19,8 +18,8 @@ internal sealed class AbilityTestService
     /// <summary>Feature 调试服务，用于复用正式链路执行授予、移除与启停。</summary>
     private readonly FeatureDebugService _featureDebugService = new();
 
-    /// <summary>缓存全部技能配置（ResourceKey → AbilityConfig）。</summary>
-    private readonly Dictionary<string, AbilityConfig> _configByKey = new(StringComparer.Ordinal);
+    /// <summary>缓存全部技能配置（名称 → DataNew 配置对象）。</summary>
+    private readonly Dictionary<string, AbilityData> _configByKey = new(StringComparer.Ordinal);
 
     /// <summary>缓存技能库顺序，供左侧分类树稳定展示。</summary>
     private readonly List<AbilityConfigEntry> _catalogEntries = new();
@@ -208,38 +207,7 @@ internal sealed class AbilityTestService
         _catalogEntries.Clear();
         _featureGroupOrder.Clear();
 
-        if (!ResourcePaths.Resources.TryGetValue(ResourceCategory.DataAbility, out var entries))
-        {
-            return;
-        }
-
-        foreach (var (resourceKey, _) in entries)
-        {
-            var config = ResourceManagement.Load<AbilityConfig>(resourceKey, ResourceCategory.DataAbility);
-            if (config == null)
-            {
-                continue;
-            }
-
-            var displayName = string.IsNullOrWhiteSpace(config.Name) ? resourceKey : config.Name!;
-            var featureGroupId = ResolveFeatureGroupId(config, resourceKey);
-            var description = string.IsNullOrWhiteSpace(config.Description)
-                ? "暂无描述"
-                : config.Description!;
-
-            _configByKey[resourceKey] = config;
-            _catalogEntries.Add(new AbilityConfigEntry(
-                resourceKey,
-                displayName,
-                displayName,
-                featureGroupId,
-                description,
-                config.AbilityType,
-                config.AbilityTriggerMode
-            ));
-
-            RegisterFeatureGroupOrder(featureGroupId);
-        }
+        LoadPureCSharpAbilityConfigs();
 
         _catalogEntries.Sort((left, right) =>
         {
@@ -254,6 +222,47 @@ internal sealed class AbilityTestService
     }
 
     /// <summary>
+    /// 从 DataNew 纯 C# 表加载技能配置。
+    /// </summary>
+    private void LoadPureCSharpAbilityConfigs()
+    {
+        foreach (var config in AbilityData.All)
+        {
+            var abilityName = string.IsNullOrWhiteSpace(config.Name) ? config.GetType().Name : config.Name!;
+            AddDataNewAbilityConfigEntry(abilityName, config);
+        }
+    }
+
+    /// <summary>
+    /// 写入 DataNew 技能配置缓存和展示条目。
+    /// </summary>
+    /// <param name="resourceKey">测试面板内部使用的配置键，DataNew 模式下直接使用技能 Name。</param>
+    /// <param name="config">DataNew 技能配置。</param>
+    private void AddDataNewAbilityConfigEntry(string resourceKey, AbilityData config)
+    {
+        var displayName = string.IsNullOrWhiteSpace(config.Name) ? resourceKey : config.Name!;
+        var featureGroupId = ResolveFeatureGroupId(config, resourceKey);
+        var description = config.Description;
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            description = "暂无描述";
+        }
+
+        _configByKey[resourceKey] = config;
+        _catalogEntries.Add(new AbilityConfigEntry(
+            resourceKey,
+            displayName,
+            displayName,
+            featureGroupId,
+            description,
+            config.AbilityType,
+            config.AbilityTriggerMode
+        ));
+
+        RegisterFeatureGroupOrder(featureGroupId);
+    }
+
+    /// <summary>
     /// 构建当前技能实例的视图模型。
     /// </summary>
     private AbilityOwnedItemView CreateOwnedItemView(AbilityEntity ability)
@@ -263,8 +272,8 @@ internal sealed class AbilityTestService
         var description = ability.Data.Get<string>(DataKey.Description.Key);
         var abilityId = ability.Data.Get<string>(DataKey.Id.Key);
         var isEnabled = ability.Data.Get<bool>(DataKey.FeatureEnabled.Key);
-        var abilityType = (AbilityType)ability.Data.Get<int>(DataKey.AbilityType.Key);
-        var triggerMode = (AbilityTriggerMode)ability.Data.Get<int>(DataKey.AbilityTriggerMode.Key);
+        var abilityType = ability.Data.Get<AbilityType>(DataKey.AbilityType.Key);
+        var triggerMode = ability.Data.Get<AbilityTriggerMode>(DataKey.AbilityTriggerMode.Key);
 
         RegisterFeatureGroupOrder(featureGroupId);
 
@@ -304,20 +313,14 @@ internal sealed class AbilityTestService
     /// <summary>
     /// 解析技能展示分组 ID。
     /// <para>
-    /// 统一使用 FeatureGroupId；若旧资源尚未补齐，则按资源路径、技能类型 / 触发模式兜底。
+    /// 统一使用 FeatureGroupId；缺失时按技能类型 / 触发模式兜底。
     /// </para>
     /// </summary>
-    private static string ResolveFeatureGroupId(AbilityConfig config, string resourceKey)
+    private static string ResolveFeatureGroupId(AbilityData config, string resourceKey)
     {
         if (!string.IsNullOrWhiteSpace(config.FeatureGroupId))
         {
             return NormalizeFeatureGroupId(config.FeatureGroupId);
-        }
-
-        var resourceCategory = ResolveResourceCategory(resourceKey);
-        if (!string.IsNullOrWhiteSpace(resourceCategory))
-        {
-            return NormalizeFeatureGroupId(resourceCategory);
         }
 
         if ((config.AbilityTriggerMode & AbilityTriggerMode.Manual) != 0)
@@ -345,7 +348,7 @@ internal sealed class AbilityTestService
             return NormalizeFeatureGroupId(featureGroup);
         }
 
-        var abilityType = (AbilityType)ability.Data.Get<int>(DataKey.AbilityType.Key);
+        var abilityType = ability.Data.Get<AbilityType>(DataKey.AbilityType.Key);
         return abilityType switch
         {
             AbilityType.Active => NormalizeFeatureGroupId(FeatureId.Ability.Groups.Active),
@@ -373,34 +376,6 @@ internal sealed class AbilityTestService
         }
 
         return string.Join('.', parts);
-    }
-
-    /// <summary>
-    /// 从技能资源路径解析目录分类，作为缺失显式分类时的兜底显示。
-    /// </summary>
-    private static string? ResolveResourceCategory(string resourceKey)
-    {
-        if (string.IsNullOrWhiteSpace(resourceKey))
-        {
-            return null;
-        }
-
-        var normalized = resourceKey.Replace('\\', '/');
-        var segments = normalized.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        if (segments.Length <= 1)
-        {
-            return null;
-        }
-
-        var parentFolder = segments[^2].Trim();
-        if (string.IsNullOrWhiteSpace(parentFolder)
-            || string.Equals(parentFolder, "Resource", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(parentFolder, "Ability", StringComparison.OrdinalIgnoreCase))
-        {
-            return null;
-        }
-
-        return parentFolder;
     }
 
     /// <summary>

@@ -1,5 +1,5 @@
 using Godot;
-using Slime.Config.Test;
+using slime.config.Test;
 using System;
 using System.Collections.Generic;
 
@@ -207,19 +207,10 @@ internal sealed class VisualPreviewWorldController
     /// <param name="position">生成位置。</param>
     private static VisualPreviewEntity? SpawnPreviewEntity(VisualPreviewEntry entry, Vector2 position)
     {
-        var visualScene = ResourceManagement.Load<PackedScene>(
-            entry.ResourceKey, // ResourcePaths 资源键
-            entry.Category // 资源分类
-        );
-        if (visualScene == null)
-        {
-            return null;
-        }
-
         var config = new VisualPreviewEntityConfig
         {
             Name = entry.SceneName,
-            VisualScenePath = visualScene,
+            VisualScenePath = entry.ResourcePath,
             PreviewDefaultAnimation = entry.DefaultAnimation
         };
 

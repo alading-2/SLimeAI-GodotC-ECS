@@ -1,6 +1,6 @@
-using Slime.ConfigNew;
+using slime.data;
 
-namespace Slime.ConfigNew.Systems;
+namespace slime.data.Systems;
 
 /// <summary>
 /// 系统配置（纯 POCO，不继承 Resource）。
@@ -207,29 +207,6 @@ public class SystemData
 
     /// <summary>系统描述（用于文档和调试）。</summary>
     public string Description { get; set; } = "";
-
-    /// <summary>
-    /// 转为运行时仍使用的 SystemConfig Resource 对象。
-    /// </summary>
-    public SystemConfig ToResource()
-    {
-        return new SystemConfig
-        {
-            SystemId = SystemId,
-            MountGroup = MountGroup,
-            Tags = Tags,
-            Required = Required,
-            AutoLoad = AutoLoad,
-            StartEnabled = StartEnabled,
-            Priority = Priority,
-            AllowedFlowStates = AllowedFlowStates,
-            RequiredOverlays = RequiredOverlays,
-            BlockedOverlays = BlockedOverlays,
-            AllowedSimulationStates = AllowedSimulationStates,
-            Dependencies = Dependencies,
-            Description = Description
-        };
-    }
 
     private static SystemData GameplayCombat(
         string systemId,

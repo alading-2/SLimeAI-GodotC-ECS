@@ -81,7 +81,7 @@ public static class AbilitySystem
         // 这里不应该再启动 CooldownComponent 的冷却计时，否则会导致 TriggerComponent 下次循环时
         // 技能还在冷却中 (Race Condition) 或 刚结束冷却但 CanUse 检查失败。
         // 因此：周期性技能跳过冷却启动。
-        var triggerMode = (AbilityTriggerMode)ability.Data.Get<int>(DataKey.AbilityTriggerMode);
+        var triggerMode = ability.Data.Get<AbilityTriggerMode>(DataKey.AbilityTriggerMode);
         if (!triggerMode.HasFlag(AbilityTriggerMode.Periodic))
         {
             ability.Events.Emit(

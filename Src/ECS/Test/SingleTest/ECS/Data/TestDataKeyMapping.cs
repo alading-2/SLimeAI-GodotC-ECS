@@ -4,23 +4,23 @@ using System;
 namespace Slime.Test.Mapping
 {
     /// <summary>
-    /// 用于测试 DataKey 映射机制的虚拟资源类
+    /// 用于测试 DataKey 映射机制的虚拟 DataNew 数据类
     /// </summary>
-    public partial class TestMappingResource : Resource
+    public sealed class TestMappingData
     {
         /// <summary>基础生命值</summary>
         // 测试正常场景：属性名和 DataKey 一致，但带了标签
         [global::DataKey(nameof(DataKey.BaseHp))]
-        [Export] public float BaseHp { get; set; }
+        public float BaseHp { get; set; }
 
         /// <summary>自定义攻击力名称</summary>
         // 测试映射场景：属性名和 DataKey 不一致，通过标签强制映射
         [global::DataKey(nameof(DataKey.BaseAttack))]
-        [Export] public float MyCustomAttackName { get; set; }
+        public float MyCustomAttackName { get; set; }
 
         /// <summary>移动速度</summary>
         // 测试兼容场景：不带标签，应当回退到按名映射
-        [Export] public float MoveSpeed { get; set; }
+        public float MoveSpeed { get; set; }
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ namespace Slime.Test.Mapping
             GD.Print("\n--- 开始验证 DataKey 映射机制 ---");
 
             // 1. 准备测试数据
-            var resource = new TestMappingResource
+            var config = new TestMappingData
             {
                 BaseHp = 100f,
                 MyCustomAttackName = 50f,
@@ -44,8 +44,8 @@ namespace Slime.Test.Mapping
             var data = new global::Data();
 
             // 2. 执行加载
-            GD.Print("执行 Data.LoadFromResource...");
-            data.LoadFromResource(resource);
+            GD.Print("执行 Data.LoadFromConfig...");
+            data.LoadFromConfig(config);
 
             // 3. 验证结果
             bool success = true;

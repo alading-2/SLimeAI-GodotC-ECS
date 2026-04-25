@@ -19,16 +19,25 @@
 - **典型内容**：波次配置、Spawn 全局规则、全局开关、系统阈值。
 - **特点**：更偏“系统配置”，不是 Entity 运行时状态，不直接等同于 `Data` 容器内容。
 
-### 2. `Data/`
+### 2. `DataNew/`
 
-**数据配置路径**。
+**运行时数据配置路径**。
 
-- **用途**：存放会被 `Data.LoadFromResource()` 读取的 Resource/Config 类。
+- **用途**：存放当前运行时唯一导入的纯 C# 表数据。
+- **典型内容**：`AbilityData`、`EnemyData`、`PlayerData`、`TargetingIndicatorData`、`SystemData`、`SystemPresetData`。
+- **核心职责**：按 `Name` 提供 `XxxData.Get(name)` 查询，并通过 `Data.LoadFromConfig()` 注入到 `Data` 容器。
+- **详细说明**：见 [`Data/DataNew/README.md`](DataNew/README.md)
+
+### 3. `Data/`
+
+**旧数据配置路径**。
+
+- **用途**：保留旧 Resource/Config 类和 `.tres` 资源，当前运行时不再导入。
 - **典型内容**：`UnitConfig`、`PlayerConfig`、`EnemyConfig`、技能配置、目标指示器配置等。
-- **核心职责**：定义“某类配置暴露哪些字段”，并通过 `[DataKey(nameof(DataKey.Xxx))]` 映射到 `Data` 容器。
+- **核心职责**：历史配置归档和对照迁移，不作为新增运行时数据入口。
 - **详细说明**：见 [`Data/Data/README.md`](Data/README.md)
 
-### 3. `DataKey/`
+### 4. `DataKey/`
 
 **DataKey 定义路径**。
 
@@ -37,7 +46,7 @@
 - **核心职责**：定义键名、类型、默认值、分类、约束、是否支持修改器、是否为计算键等元数据。
 - **详细说明**：见 [`Data/DataKey/README.md`](DataKey/README.md)
 
-### 4. `EventType/`
+### 5. `EventType/`
 
 **事件协议路径**。
 
@@ -45,7 +54,7 @@
 - **核心职责**：作为模块间通信契约，统一事件名与事件载荷。
 - **典型内容**：`GameEventType_Data.cs`、Ability/Unit/Base 等分域事件定义。
 
-### 5. `ResourceManagement/`
+### 6. `ResourceManagement/`
 
 **资源注册与加载路径**。
 
@@ -68,8 +77,8 @@
 ### 新增一个可配置数据字段
 
 1. 先在 `Data/DataKey/` 对应域中定义 `DataKey`。
-2. 再在 `Data/Data/` 对应配置类中添加 `[DataKey(nameof(DataKey.Xxx))]` 属性。
-3. 运行时由 `Data.LoadFromResource()` 注入到 Entity 的 `Data` 容器。
+2. 再在 `Data/DataNew/` 对应数据类中添加字段，必要时添加 `[DataKey(nameof(DataKey.Xxx))]`。
+3. 运行时由 `Data.LoadFromConfig()` 注入到 Entity 的 `Data` 容器。
 
 ### 新增一个系统级规则
 
@@ -87,4 +96,4 @@
 - **不要**在 `Data/Data/` 里重复定义 `DataKey`。
 - **不要**新增 `const string` DataKey（特殊引用键除外）。
 - **优先使用** `[DataKey(nameof(DataKey.Xxx))]`，避免字符串字面量。
-- **系统配置**放 `Config/`，**可注入 Data 的配置**放 `Data/`，**键定义**放 `DataKey/`，**事件契约**放 `EventType/`。
+- **系统配置**放 `DataNew/System/`，**可注入 Data 的配置**放 `DataNew/`，**键定义**放 `DataKey/`，**事件契约**放 `EventType/`。

@@ -3,9 +3,8 @@
 // 放在 AbilitySystem 目录下，逻辑上属于 Ability 模块
 
 using System.Collections.Generic;
-using System.Linq;
-using Godot;
-using Slime.Config.Abilities;
+using slime.config.Features;
+using slime.data.Abilities;
 
 /// <summary>
 /// EntityManager 的 Ability 扩展
@@ -20,12 +19,54 @@ public static partial class EntityManager
     // ==================== Ability 管理 ====================
 
     /// <summary>
-    /// 为单位添加技能
+    /// 为单位添加 DataNew 纯 C# 技能。
     /// </summary>
-    /// <param name="owner">技能拥有者</param>
-    /// <param name="config">技能配置资源</param>
-    /// <returns>创建的技能实体，失败返回 null</returns>
-    public static AbilityEntity? AddAbility(IEntity owner, Resource config)
+    /// <param name="owner">技能拥有者。</param>
+    /// <param name="config">DataNew 技能配置。</param>
+    /// <returns>创建的技能实体，失败返回 null。</returns>
+    public static AbilityEntity? AddAbility(IEntity owner, AbilityData config)
+    {
+        return AddAbilityCore(
+            owner, // 技能拥有者
+            config, // DataNew 技能配置
+            config.Name ?? "", // 技能名称
+            config.FeatureHandlerId ?? "", // FeatureHandlerId
+            validateAbilityHandler: true // 技能必须绑定处理器
+        );
+    }
+
+    /// <summary>
+    /// 为单位添加运行时构造的通用 Feature。
+    /// </summary>
+    /// <param name="owner">技能拥有者。</param>
+    /// <param name="config">运行时 Feature 定义。</param>
+    /// <returns>创建的技能实体，失败返回 null。</returns>
+    public static AbilityEntity? AddAbility(IEntity owner, FeatureDefinition config)
+    {
+        return AddAbilityCore(
+            owner, // 技能拥有者
+            config, // 运行时 Feature 定义
+            config.Name ?? "", // Feature 名称
+            config.FeatureHandlerId ?? "", // FeatureHandlerId
+            validateAbilityHandler: false // 通用 Feature 可由测试系统临时构造
+        );
+    }
+
+    /// <summary>
+    /// 技能添加统一实现，外部优先使用 DataNew 重载。
+    /// </summary>
+    /// <param name="owner">技能拥有者。</param>
+    /// <param name="config">配置对象。</param>
+    /// <param name="abilityName">技能名称。</param>
+    /// <param name="handlerIdFromConfig">配置中声明的 FeatureHandlerId。</param>
+    /// <param name="validateAbilityHandler">是否校验技能处理器。</param>
+    /// <returns>创建的技能实体，失败返回 null。</returns>
+    private static AbilityEntity? AddAbilityCore(
+        IEntity owner,
+        object config,
+        string abilityName,
+        string handlerIdFromConfig,
+        bool validateAbilityHandler)
     {
         if (owner == null)
         {
@@ -33,17 +74,9 @@ public static partial class EntityManager
             return null;
         }
 
-        // 尝试通过反射获取 Name
-        string abilityName = "";
-        var prop = config.GetType().GetProperty(DataKey.Name);
-        if (prop != null)
-        {
-            abilityName = prop.GetValue(config) as string ?? "";
-        }
-
         if (string.IsNullOrEmpty(abilityName))
         {
-            _abilityLog.Error("无法添加技能：Resource 缺少 Name 属性");
+            _abilityLog.Error("无法添加技能：配置缺少 Name 属性");
             return null;
         }
 
@@ -55,7 +88,7 @@ public static partial class EntityManager
             return existingAbility;
         }
 
-        if (config is AbilityConfig abilityConfig && !ValidateAbilityHandlerConfig(abilityConfig, abilityName))
+        if (validateAbilityHandler && !ValidateAbilityHandlerConfig(handlerIdFromConfig, abilityName))
         {
             return null;
         }
@@ -64,7 +97,7 @@ public static partial class EntityManager
         AbilityEntity? ability;
         ability = Spawn<AbilityEntity>(new EntitySpawnConfig
         {
-            Config = config, // 技能配置资源
+            Config = config, // 技能配置数据
             UsingObjectPool = true, // 技能实体统一走对象池
             PoolName = ObjectPoolNames.AbilityPool, // 技能对象池
             ParentEntity = owner, // 父实体/技能拥有者
@@ -80,14 +113,14 @@ public static partial class EntityManager
         }
 
         var handlerId = ability.Data.Get<string>(DataKey.FeatureHandlerId);
-        if (config is AbilityConfig && string.IsNullOrWhiteSpace(handlerId))
+        if (validateAbilityHandler && string.IsNullOrWhiteSpace(handlerId))
         {
-            _abilityLog.Error($"无法添加技能 '{abilityName}'：AbilityConfig.FeatureHandlerId 为空");
+            _abilityLog.Error($"无法添加技能 '{abilityName}'：FeatureHandlerId 为空");
             Destroy(ability);
             return null;
         }
 
-        if (config is AbilityConfig && !FeatureHandlerRegistry.HasHandler(handlerId))
+        if (validateAbilityHandler && !FeatureHandlerRegistry.HasHandler(handlerId))
         {
             _abilityLog.Error($"无法添加技能 '{abilityName}'：未注册 FeatureHandlerId='{handlerId}'");
             Destroy(ability);
@@ -117,17 +150,16 @@ public static partial class EntityManager
     }
 
     /// <summary>
-    /// 校验 AbilityConfig 是否显式绑定了可用的 FeatureHandler。
+    /// 校验技能配置是否显式绑定了可用的 FeatureHandler。
     /// </summary>
-    /// <param name="config">技能配置资源。</param>
+    /// <param name="handlerId">FeatureHandlerId。</param>
     /// <param name="abilityName">技能名称，用于日志定位。</param>
     /// <returns>配置有效返回 true，否则返回 false。</returns>
-    private static bool ValidateAbilityHandlerConfig(AbilityConfig config, string abilityName)
+    private static bool ValidateAbilityHandlerConfig(string handlerId, string abilityName)
     {
-        var handlerId = config.FeatureHandlerId;
         if (string.IsNullOrWhiteSpace(handlerId))
         {
-            _abilityLog.Error($"无法添加技能 '{abilityName}'：AbilityConfig.FeatureHandlerId 为空");
+            _abilityLog.Error($"无法添加技能 '{abilityName}'：FeatureHandlerId 为空");
             return false;
         }
 
@@ -235,8 +267,8 @@ public static partial class EntityManager
         var result = new List<AbilityEntity>();
         foreach (var a in abilities)
         {
-            var mode = (AbilityTriggerMode)a.Data.Get<int>(DataKey.AbilityTriggerMode);
-            var type = (AbilityType)a.Data.Get<int>(DataKey.AbilityType);
+            var mode = a.Data.Get<AbilityTriggerMode>(DataKey.AbilityTriggerMode);
+            var type = a.Data.Get<AbilityType>(DataKey.AbilityType);
             if (type != AbilityType.Passive && mode.HasFlag(AbilityTriggerMode.Manual))
             {
                 result.Add(a);

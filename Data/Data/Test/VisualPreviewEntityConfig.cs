@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Slime.Config.Test
+namespace slime.config.Test
 {
     /// <summary>
     /// 视觉预览实体运行时配置。
@@ -21,6 +21,6 @@ namespace Slime.Config.Test
         [Export] public string PreviewDefaultAnimation { get; set; } = string.Empty;
 
         [DataKey(nameof(DataKey.VisualScenePath))]
-        [Export] public PackedScene? VisualScenePath { get; set; }
+        [Export] public string VisualScenePath { get; set; } = string.Empty;
     }
 }

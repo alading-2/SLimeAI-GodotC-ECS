@@ -2,7 +2,7 @@ using System;
 
 /// <summary>
 /// 系统描述符。
-/// <para>简化为只包含 SystemId + Factory，其他元数据从 SystemConfig 读取。</para>
+/// <para>简化为只包含 SystemId + Factory，其他元数据从 DataNew SystemData 读取。</para>
 /// </summary>
 public sealed class SystemDescriptor
 {

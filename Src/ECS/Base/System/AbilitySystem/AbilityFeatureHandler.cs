@@ -6,7 +6,7 @@ internal abstract class AbilityFeatureHandler : IFeatureHandler
 {
     private static readonly Log _log = new(nameof(AbilityFeatureHandler));
 
-    /// <summary>完整唯一 FeatureHandlerId，对应 AbilityConfig.FeatureHandlerId。</summary>
+    /// <summary>完整唯一 FeatureHandlerId，对应 AbilityData.FeatureHandlerId。</summary>
     public abstract string FeatureId { get; }
 
     /// <summary>

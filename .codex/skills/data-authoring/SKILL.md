@@ -11,6 +11,7 @@ description: 编写或修改 Data 目录下的数据配置、Config、DataKey、
 
 - `Data/Config/`
 - `Data/Data/`
+- `Data/DataNew/`
 - `Data/DataKey/`
 - `Data/EventType/`
 
@@ -18,7 +19,7 @@ description: 编写或修改 Data 目录下的数据配置、Config、DataKey、
 
 ## 与 `ecs-data` 的分工
 
-- **`data-authoring`**：负责 `Data/` 目录下的配置结构、DataKey 定义、事件协议、字段映射
+- **`data-authoring`**：负责 `Data/` 目录下的配置结构、DataNew 表数据、DataKey 定义、事件协议、字段映射
 - **`ecs-data`**：负责 `Src/ECS/Base/Data/` 运行时容器、`DataMeta`、`DataRegistry`、读写规则
 
 ## 目录职责
@@ -35,24 +36,59 @@ description: 编写或修改 Data 目录下的数据配置、Config、DataKey、
 
 补充约定：
 
-- `SystemConfig` 继续归 `Data/Config/System/System/`，不要并到 `Data/Data/`
-- `SystemPreset` 继续归 `Data/Config/System/Preset/`，只负责按标签和显式 `SystemId` 选择启动装载集合
-- `Data/DataNew/System/SystemConfigData.cs` 是系统配置的纯 C# 优先数据源；同名 `.tres` 只作为兼容回退
-- `Data/DataNew/System/SystemPresetData.cs` 是系统预设的纯 C# 优先数据源；同名 `.tres` 只作为兼容回退
+- `Data/DataNew/System/SystemData.cs` 是系统配置的唯一运行时数据源
+- `Data/DataNew/System/SystemPresetData.cs` 是系统预设的唯一运行时数据源
+- `Data/Config/System/System/` 与 `Data/Config/System/Preset/` 的旧 `.tres` 资源可保留归档，但运行时不导入
 - 默认预设若只需要少量调试入口，优先写入 `EnabledSystemIds`（当前为 `TestSystem`、`MouseSelectionSystem`），不要为了方便把 `Debug / Test` 标签整体加入默认标签集合
-- `SystemConfig` 的 `AllowedFlowStates / AllowedSimulationStates = None` 表示不限制，`BlockedOverlays = None` 表示不屏蔽，`RequiredOverlays = None` 表示不要求覆盖层
+- `SystemData` 的 `AllowedFlowStates / AllowedSimulationStates = None` 表示不限制，`BlockedOverlays = None` 表示不屏蔽，`RequiredOverlays = None` 表示不要求覆盖层
 - `AllowedFlowStates` 使用 `GameFlowState` Flags，`AllowedSimulationStates` 使用 `SimulationState` Flags；不要再新增或引用单独的 Mask enum
 - 系统运行条件优先使用 Phase 预设组合：局内主玩法用 `GameFlowState.Gameplay + OverlayFlags.Blocking + SimulationState.Running`，允许暂停/运行都响应用 `SimulationState.Any`
-- 系统配置不是 `Data.LoadFromResource()` 注入到 Entity.Data 的业务数据
+- 系统配置不是 `Data.LoadFromConfig()` 注入到 Entity.Data 的业务数据
 
 不要放：
 
 - 某个 Entity 的初始属性输入
 - 需要注入 Entity.Data 的字段
 
+### `Data/DataNew/`
+
+当前推荐数据源。放纯 C# 表数据：
+
+- `AbilityData` / `ChainAbilityData`
+- `UnitData` / `PlayerData` / `EnemyData` / `TargetingIndicatorData`
+- `SystemData` / `SystemPresetData`
+
+规则：
+
+- 一张表对应一个 `XxxData` 类；一行数据对应一个 `public static readonly XxxData` 静态实例
+- 默认用 `Name` 作为查询键，业务侧写 `EnemyData.Get("鱼人") ?? EnemyData.Yuren`
+- `DataTable` 是静态工具类，不让数据类继承
+- `GetByName` 找不到只写 `Log.Error` 并返回 `null`，调用方用 `??` 明确兜底
+- 不做 `ResourcePaths` 式索引；同一张表的数据就在同一个 C# 文件里
+- 场景/贴图引用必须保存 `res://` 路径字符串，如 `VisualScenePath` / `EffectScenePath` / `ProjectileScenePath`；注入到 `Data` 后仍保持字符串，使用点再加载资源
+- DataNew 技能必须显式填写 `AbilityType` / `AbilityTriggerMode` / `AbilityTargetSelection` 等运行时枚举；手动技能写 `AbilityType.Active + AbilityTriggerMode.Manual`，否则技能栏会按 Passive 过滤掉
+
+推荐写法：
+
+```csharp
+public class EnemyData : UnitData
+{
+    public static IReadOnlyList<EnemyData> All => DataTable.GetAll<EnemyData>();
+    public static EnemyData? Get(string name) => DataTable.GetByName<EnemyData>(name);
+
+    public static readonly EnemyData Yuren = new()
+    {
+        Name = "鱼人",
+        Team = Team.Enemy,
+        VisualScenePath = "res://assets/Unit/Enemy/yuren/AnimatedSprite2D/yuren.tscn",
+        BaseHp = 150f
+    };
+}
+```
+
 ### `Data/Data/`
 
-放会被 `Data.LoadFromResource()` 读取的配置类：
+旧 `.tres` 结构。保留历史配置类和资源文件，但运行时数据导入不再读取这里：
 
 - `UnitConfig`
 - `EnemyConfig`
@@ -62,10 +98,8 @@ description: 编写或修改 Data 目录下的数据配置、Config、DataKey、
 
 补充约定：
 
-- `FeatureGroupId` 只表示技能展示分组，应放在 `Data/Data/Ability/AbilityConfig.cs`；测试面板按完整 `FeatureGroupId` 分组和显示；运行时执行器选择必须使用 `FeatureHandlerId`
-- 不要再为技能额外维护 `AbilityCategory` 这类重复展示字段；只要运行时实体和系统要读，就属于 `Data/Data/`
-- 若存在 `Data/DataNew/` 的纯 C# POCO 镜像配置，字段默认值也必须与旧 `Data/Data/` 保持同语义：优先直读 `DataKey.Xxx.DefaultValue`，若旧类对该字段有特化默认值（如 `UnitConfig.EntityType = EntityType.Unit`、`AbilityConfig.EntityType = EntityType.Ability`、`TargetingIndicatorConfig` 的布尔默认值），`DataNew` 也要同步保留该特化语义
-- `DataNew` 静态实例迁移时，以旧 `.tres` 的显式赋值为准；不要因为 POCO 的裸类型默认值 `0/false/空串` 把旧资源中已有值静默丢掉
+- 新运行时字段只加到 `Data/DataNew/` 和 `DataKey`，不要继续扩展旧 `.tres` 配置作为主流程
+- `FeatureGroupId` 只表示技能展示分组，应放在 `AbilityData`；测试面板按完整 `FeatureGroupId` 分组和显示；运行时执行器选择必须使用 `FeatureHandlerId`
 - `DataNew` 若提供 `All` 聚合，优先写成延迟求值属性（如 `public static XxxData[] All => [...]`），不要在静态实例声明之前写 `static readonly All`，否则 C# 静态初始化顺序会把后续实例收集成 `null`
 
 推荐写法：
@@ -108,16 +142,16 @@ public static readonly DataMeta BaseHp = DataRegistry.Register(
 - `ResourceManagement.cs` 是统一加载入口
 - `ResourceCatalog.cs` 是运行时/测试面板/编辑器选择器使用的资源目录服务
 
-`ResourceCatalog` 只基于 `ResourcePaths.Resources` 整理单位配置、技能配置、特效场景和单位 Asset 场景条目，分类从资源路径推导，`Resource` 目录会被跳过；不要把运行时全盘扫描 `res://` 当成主数据源。
+`ResourceCatalog` 的数据条目来自 `DataNew` 静态表，场景、特效和单位 Asset 条目来自 `ResourcePaths.Resources`；不要把运行时全盘扫描 `res://` 当成主数据源。
 
 ## 决策规则
 
-### 什么时候字段要进 `Data/Data/`
+### 什么时候字段要进 `Data/DataNew/`
 
 满足任一项通常就该进入：
 
 - 要成为 Entity 的初始 Data
-- 要被 `Data.LoadFromResource()` 自动注入
+- 要被 `Data.LoadFromConfig()` 自动注入
 - 要映射到 `DataKey`
 - 要被多个运行时组件/系统读取
 
@@ -135,7 +169,7 @@ public static readonly DataMeta BaseHp = DataRegistry.Register(
 1. 先判断它属于 `Config` 还是 `Data`
 2. 若属于运行时 Data，先在 `Data/DataKey/` 定义 `DataKey`
 3. 补齐 `DataMeta`（类型、默认值、分类、约束）
-4. 在 `Data/Data/` 配置类中添加 `[DataKey(nameof(DataKey.Xxx))]`
+4. 在 `Data/DataNew/` 配置类中添加 `[DataKey(nameof(DataKey.Xxx))]`
 5. 默认值优先直接读取 `DataKey.Xxx.DefaultValue`
 6. 如涉及通信，再补 `Data/EventType/` 契约
 

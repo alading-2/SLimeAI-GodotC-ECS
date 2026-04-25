@@ -1,4 +1,5 @@
 using Godot;
+using slime.data.Systems;
 
 /// <summary>
 /// SystemManager 的运行时条目。
@@ -9,8 +10,8 @@ internal sealed class ManagedSystemEntry
     /// <summary>静态描述符（SystemId + Factory）。</summary>
     public required SystemDescriptor Descriptor { get; init; }
 
-    /// <summary>系统配置（从 SystemConfig 读取的元数据）。</summary>
-    public required SystemConfig Config { get; init; }
+    /// <summary>系统配置（从 DataNew SystemData 读取的元数据）。</summary>
+    public required SystemData Config { get; init; }
 
     /// <summary>系统运行条件（从配置构建后缓存）。</summary>
     public required SystemRunCondition RunCondition { get; init; }

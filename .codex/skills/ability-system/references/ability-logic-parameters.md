@@ -236,8 +236,8 @@ var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions
         Sorting = TargetSorting.Nearest,
         MaxTargets = -1
     },
-    Effect = effectScene != null
-        ? new EffectSpawnOptions(effectScene, Name: "技能特效")
+    Effect = !string.IsNullOrWhiteSpace(effectScenePath)
+        ? new EffectSpawnOptions(effectScenePath, Name: "技能特效")
         : null,
     Damage = new DamageApplyOptions
     {
@@ -270,9 +270,9 @@ var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions
         TeamFilter = AbilityTargetTeamFilter.Enemy,
         MaxTargets = -1
     },
-    Effect = effectScene != null
+    Effect = !string.IsNullOrWhiteSpace(effectScenePath)
         ? new EffectSpawnOptions(
-            effectScene,
+            effectScenePath,
             Name: "光环特效",
             Scale: new Vector2(2f, 2f))
         : null,

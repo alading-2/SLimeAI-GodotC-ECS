@@ -1,6 +1,6 @@
 # System Core 使用说明
 
-> 2026-04 更新：系统管理已切到“代码只注册 `SystemId + Factory`，配置资源声明装载、挂载分组、标签和运行条件”的数据驱动模型。旧版代码侧生命周期/形态枚举、Profile 装配表和四维阶段模型已退出正式流程。
+> 2026-04 更新：系统管理已切到“代码只注册 `SystemId + Factory`，DataNew 声明装载、挂载分组、标签和运行条件”的数据驱动模型。旧版代码侧生命周期/形态枚举、Profile 装配表和四维阶段模型已退出正式流程。
 
 ## 0. 开发者从哪里开始看
 
@@ -13,9 +13,9 @@
    - 想看启动链路：`SystemManager.cs`
    - 想看注册约束：`SystemRegistry.cs`
    - 想看代码注册：`SystemDescriptor.cs`
-   - 想看系统配置：`Data/Config/System/System/SystemConfig.cs`
+   - 想看系统配置：`Data/DataNew/System/SystemData.cs`
    - 想看状态门禁：`Lifecycle/SystemRunCondition.cs`
-   - 想看启动预设：`Data/Config/System/Preset/SystemPreset.cs`
+   - 想看启动预设：`Data/DataNew/System/SystemPresetData.cs`
 
 推荐这样看的原因是：
 
@@ -31,7 +31,7 @@
 
 1. Godot 先实例化 `SystemManager`
 2. `SystemManager._EnterTree()` 初始化 `ParentManager`
-3. `SystemManager._Ready()` 加载 `SystemConfig/SystemPreset`，创建 Host 并启动被配置选中的系统
+3. `SystemManager._Ready()` 加载 `SystemData/SystemPresetData`，创建 Host 并启动被配置选中的系统
 4. 主场景随后进入 `_Ready()`
 
 这意味着：
@@ -70,14 +70,12 @@
 - `Internal/`：管理器内部运行时结构
   - `ManagedSystemEntry.cs`
 
-系统配置资源放在：
+系统配置数据放在：
 
-- `Data/Config/System/System/SystemConfig.cs`
-- `Data/Config/System/System/Resource/*.tres`
-- `Data/Config/System/Preset/SystemPreset.cs`
-- `Data/Config/System/Preset/Resource/*.tres`
+- `Data/DataNew/System/SystemData.cs`
+- `Data/DataNew/System/SystemPresetData.cs`
 
-## 3. SystemConfig：系统设置只在资源里写
+## 3. SystemData：系统设置只在 DataNew 里写
 
 代码注册只回答两个问题：这个系统叫什么、怎么创建实例。
 
@@ -91,7 +89,7 @@ public static void Initialize()
 }
 ```
 
-其余系统级设置统一写在 `Data/DataNew/System/SystemData.cs`；同名 `.tres` 资源只作为兼容回退，不覆盖纯 C# 配置。
+其余系统级设置统一写在 `Data/DataNew/System/SystemData.cs`；旧 `.tres` 系统配置保留但运行时不导入。
 
 | 字段 | 语义 |
 | --- | --- |
@@ -108,14 +106,7 @@ public static void Initialize()
 | `BlockedOverlays` | 禁止存在的覆盖层，`None` 表示不屏蔽；局内常用 `Blocking` |
 | `AllowedSimulationStates` | 允许的模拟状态，`None` 表示不限制；暂停菜单常用 `Any` |
 
-关键边界：不要在 `SystemDescriptor` 里恢复系统形态、生命周期、父节点路径、运行条件、默认装载或默认启用字段。这些字段已经迁移到 `SystemConfig`，否则系统级解耦会重新变成代码和配置双写。
-
-兼容路径：
-
-- `Data/DataNew/System/SystemData.cs`：优先数据源，适合纯 C# 配置和版本审查。
-- `Data/DataNew/System/SystemPresetData.cs`：优先预设数据源。
-- `Data/Config/System/System/Resource/*.tres`：资源回退，主要用于尚未迁移的系统配置。
-- `Data/Config/System/Preset/Resource/*.tres`：资源回退，主要用于尚未迁移的预设。
+关键边界：不要在 `SystemDescriptor` 里恢复系统形态、生命周期、父节点路径、运行条件、默认装载或默认启用字段。这些字段已经迁移到 `SystemData`，否则系统级解耦会重新变成代码和配置双写。
 
 ## 4. ProjectState：三域状态模型
 
@@ -143,7 +134,7 @@ public static void Initialize()
 
 ## 5. RunCondition 与 shouldRun
 
-`SystemRunCondition` 从 `SystemConfig` 生成，只负责判断当前 `ProjectStateSnapshot` 是否允许系统运行。`None` 规则固定如下：
+`SystemRunCondition` 从 `SystemData` 生成，只负责判断当前 `ProjectStateSnapshot` 是否允许系统运行。`None` 规则固定如下：
 
 - `AllowedFlowStates = None`：不限制流程状态。
 - `RequiredOverlays = None`：不要求任何覆盖层。
@@ -167,11 +158,11 @@ new SystemRunCondition
 shouldRun = IsEnabled && IsStateAllowed
 ```
 
-其中 `IsEnabled` 是系统人工开关，由 `SystemConfig.StartEnabled` 初始化，运行时可由 `EnableSystem/DisableSystem` 修改；`IsStateAllowed` 是 `SystemRunCondition` 对三域状态的判断结果。系统是否被创建则由 `Required / AutoLoad / SystemPreset / Dependencies` 在装载阶段决定，不再混进运行态公式。
+其中 `IsEnabled` 是系统人工开关，由 `SystemData.StartEnabled` 初始化，运行时可由 `EnableSystem/DisableSystem` 修改；`IsStateAllowed` 是 `SystemRunCondition` 对三域状态的判断结果。系统是否被创建则由 `Required / AutoLoad / SystemPresetData / Dependencies` 在装载阶段决定，不再混进运行态公式。
 
-## 6. SystemPreset：只做批量选择
+## 6. SystemPresetData：只做批量选择
 
-`SystemPreset` 不是高级运行配置，也不承载运行条件。它只解决“本模式要装哪些系统”：
+`SystemPresetData` 不是高级运行配置，也不承载运行条件。它只解决“本模式要装哪些系统”：
 
 - `Required=true` 的系统永远装载。
 - 无激活 Preset 时，装载 `AutoLoad=true` 的系统。
@@ -180,7 +171,7 @@ shouldRun = IsEnabled && IsStateAllowed
 
 当前 `Default` 预设不会把 `Debug / Test` 标签整体加入默认标签集合；它通过 `EnabledSystemIds` 显式加载 `TestSystem` 和 `MouseSelectionSystem`，避免未来新增的调试系统被意外常驻。
 
-如果要配置系统运行阶段，改对应 `SystemConfig` 的三域运行条件，不要新增 `SystemRunPreset` 之类的中间层。
+如果要配置系统运行阶段，改对应 `SystemData` 的三域运行条件，不要新增 `SystemRunPreset` 之类的中间层。
 
 ## 6.5 生命周期回调
 

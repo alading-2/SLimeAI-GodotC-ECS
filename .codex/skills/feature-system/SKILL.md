@@ -185,7 +185,7 @@ internal class MyFeatureHandler : IFeatureHandler
 }
 ```
 
-约定：运行时只根据完整 `FeatureHandlerId` 查找处理器。技能展示分组属于 `AbilityConfig.FeatureGroupId`，不要放在 `IFeatureHandler` 上。
+约定：运行时只根据完整 `FeatureHandlerId` 查找处理器。技能展示分组属于 `AbilityData.FeatureGroupId`，不要放在 `IFeatureHandler` 上。
 
 ---
 
@@ -262,11 +262,11 @@ internal class DashExecutor : AbilityFeatureHandler
 - 状态模板
 - 非主动施法子域的能力
 
-### `Data/Data/Ability`
+### `Data/DataNew/Ability`
 
 负责 Ability 子域配置与具体技能逻辑：
 
-- `AbilityConfig`
+- `AbilityData`
 - 主动施法参数
 - 目标选择参数
 - 冷却/充能/消耗参数

@@ -8,7 +8,7 @@ using System.Collections.Generic;
 /// </summary>
 /// <param name="ResourceKey">技能配置资源键（用于添加技能）。</param>
 /// <param name="DisplayName">技能显示名称。</param>
-/// <param name="FeatureGroupId">技能分组 ID，直接来自 AbilityConfig.FeatureGroupId。</param>
+/// <param name="FeatureGroupId">技能分组 ID，直接来自 AbilityData.FeatureGroupId。</param>
 /// <param name="Description">技能描述文本（用于提示信息）。</param>
 /// <param name="AbilityType">技能类型（主动/被动/武器等）。</param>
 /// <param name="TriggerMode">触发模式（主动/自动等）。</param>

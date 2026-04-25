@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Slime.ConfigNew.Systems;
+using slime.data.Systems;
 
 /// <summary>
 /// 系统预设服务。
 /// <para>负责加载和解析系统预设，提供预设查询和应用接口。</para>
-/// <para>优先使用 DataNew 纯 C# 数据，ResourceManagement 的 .tres 资源作为回退。</para>
+/// <para>只从 DataNew 纯 C# 预设表读取配置。</para>
 /// </summary>
 public static class SystemPresetService
 {
     private static readonly Log _log = new(nameof(SystemPresetService));
-    private static readonly List<SystemPreset> _presets = new();
-    private static SystemPreset? _activePreset;
+    private static readonly List<SystemPresetData> _presets = new();
+    private static SystemPresetData? _activePreset;
     private static bool _isInitialized;
 
     /// <summary>
@@ -28,26 +28,15 @@ public static class SystemPresetService
         _presets.Clear();
         _activePreset = null;
 
-        if (GlobalConfig.DataSourceMode == DataSourceMode.PureCSharp)
+        foreach (var data in SystemPresetData.All)
         {
-            foreach (var data in SystemPresetData.All)
+            if (data == null)
             {
-                if (data == null)
-                {
-                    _log.Error("SystemPresetData.All 包含空预设项，请检查静态初始化顺序");
-                    continue;
-                }
+                _log.Error("SystemPresetData.All 包含空预设项，请检查静态初始化顺序");
+                continue;
+            }
 
-                TryAddPreset(data.ToResource(), warnDuplicate: true);
-            }
-        }
-        else
-        {
-            var presets = ResourceManagement.LoadAll<SystemPreset>(ResourceCategory.ConfigSystemPreset);
-            foreach (var preset in presets)
-            {
-                TryAddPreset(preset, warnDuplicate: true);
-            }
+            TryAddPreset(data, warnDuplicate: true);
         }
 
         _isInitialized = true;
@@ -57,7 +46,7 @@ public static class SystemPresetService
     /// <summary>
     /// 获取当前激活的预设。
     /// </summary>
-    public static SystemPreset? GetActivePreset()
+    public static SystemPresetData? GetActivePreset()
     {
         if (!_isInitialized)
         {
@@ -70,7 +59,7 @@ public static class SystemPresetService
     /// <summary>
     /// 获取所有预设。
     /// </summary>
-    public static IEnumerable<SystemPreset> GetAllPresets()
+    public static IEnumerable<SystemPresetData> GetAllPresets()
     {
         if (!_isInitialized)
         {
@@ -158,7 +147,7 @@ public static class SystemPresetService
         return enabledSystems;
     }
 
-    private static void TryAddPreset(SystemPreset preset, bool warnDuplicate)
+    private static void TryAddPreset(SystemPresetData preset, bool warnDuplicate)
     {
         if (string.IsNullOrWhiteSpace(preset.PresetName))
         {
@@ -174,7 +163,7 @@ public static class SystemPresetService
             }
             else
             {
-                _log.Debug($"系统预设 {preset.PresetName} 已由 DataNew 提供，跳过资源回退");
+                _log.Debug($"系统预设 {preset.PresetName} 已由 DataNew 提供，跳过重复项");
             }
 
             return;
@@ -191,7 +180,7 @@ public static class SystemPresetService
         if (_activePreset != null)
         {
             _log.Error($"检测到多个激活的预设: {_activePreset.PresetName} 和 {preset.PresetName}，只允许一个预设激活！");
-            throw new InvalidOperationException($"只允许一个 SystemPreset 的 IsActive = true，但发现多个: {_activePreset.PresetName}, {preset.PresetName}");
+            throw new InvalidOperationException($"只允许一个 SystemPresetData 的 IsActive = true，但发现多个: {_activePreset.PresetName}, {preset.PresetName}");
         }
 
         _activePreset = preset;

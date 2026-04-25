@@ -156,7 +156,7 @@ public partial class ActiveSkillInputComponent : Node, IComponent
                 ResponseContext = new EventContext(),
             };
 
-            var targetSelection = (AbilityTargetSelection)ability.Data.Get<int>(DataKey.AbilityTargetSelection);
+            var targetSelection = ability.Data.Get<AbilityTargetSelection>(DataKey.AbilityTargetSelection);
             if (targetSelection == AbilityTargetSelection.Point)
             {
                 TryBeginPointTargeting(

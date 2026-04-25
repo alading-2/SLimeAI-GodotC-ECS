@@ -1,5 +1,5 @@
 using Godot;
-using Slime.Config.Abilities;
+using slime.config.Abilities;
 
 /// <summary>
 /// 链式技能配置 - 模板技能基类

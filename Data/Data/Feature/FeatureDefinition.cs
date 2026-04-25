@@ -1,7 +1,7 @@
 using Godot;
 using Godot.Collections;
 
-namespace Slime.Config.Features
+namespace slime.config.Features
 {
     /// <summary>
     /// Feature 配置资源基类 - 数据驱动的 Feature 定义模板

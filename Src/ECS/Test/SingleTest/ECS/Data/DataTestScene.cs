@@ -213,42 +213,47 @@ public partial class DataTestScene : Node
     {
         PrintSection("测试 DataNew 默认值与迁移值");
 
-        var unitDefaults = new Slime.ConfigNew.Units.PlayerData();
+        var unitDefaults = new slime.data.Units.PlayerData();
         AssertEqual("UnitData 默认名称", unitDefaults.Name, (string)DataKey.Name.DefaultValue!);
         AssertEqual("UnitData 默认实体类型", unitDefaults.EntityType, EntityType.Unit);
         AssertEqual("UnitData 默认生命值", unitDefaults.BaseHp, (float)DataKey.BaseHp.DefaultValue!);
         AssertEqual("UnitData 默认攻速", unitDefaults.BaseAttackSpeed, (float)DataKey.BaseAttackSpeed.DefaultValue!);
 
-        var targetingDefaults = new Slime.ConfigNew.Units.TargetingIndicatorData();
+        var targetingDefaults = new slime.data.Units.TargetingIndicatorData();
         AssertEqual("TargetingIndicator 默认不显示血条", targetingDefaults.IsShowHealthBar, false);
         AssertEqual("TargetingIndicator 默认无敌", targetingDefaults.IsInvulnerable, true);
 
-        var enemyDefaults = new Slime.ConfigNew.Units.EnemyData();
+        var enemyDefaults = new slime.data.Units.EnemyData();
         AssertEqual("EnemyData 默认启用生成规则", enemyDefaults.IsEnableSpawnRule, true);
         AssertEqual("EnemyData 默认最大波次", enemyDefaults.SpawnMaxWave, -1);
         AssertEqual("EnemyData 默认检测范围", enemyDefaults.DetectionRange, (float)DataKey.DetectionRange.DefaultValue!);
 
-        var abilityDefaults = new Slime.ConfigNew.Abilities.AbilityData();
+        var abilityDefaults = new slime.data.Abilities.AbilityData();
         AssertEqual("AbilityData 默认实体类型", abilityDefaults.EntityType, EntityType.Ability);
         AssertEqual("AbilityData 默认技能等级", abilityDefaults.AbilityLevel, (int)DataKey.AbilityLevel.DefaultValue!);
         AssertEqual("AbilityData 默认触发模式", abilityDefaults.AbilityTriggerMode, (AbilityTriggerMode)DataKey.AbilityTriggerMode.DefaultValue!);
 
-        AssertEqual("Slam 迁移施法距离", Slime.ConfigNew.Abilities.AbilityData.Slam.AbilityCastRange, 500f);
-        AssertEqual("ParabolaShot 迁移伤害", Slime.ConfigNew.Abilities.AbilityData.ParabolaShot.AbilityDamage, 9f);
-        AssertEqual("ParabolaShot 迁移投射物路径", Slime.ConfigNew.Abilities.AbilityData.ParabolaShot.ProjectileScenePath, "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn");
-        AssertEqual("ChainLightning 迁移名称", Slime.ConfigNew.Abilities.ChainAbilityData.ChainLightning.Name, "闪电链");
+        AssertEqual("Slam 迁移施法距离", slime.data.Abilities.AbilityData.Slam.AbilityCastRange, 500f);
+        AssertEqual("ParabolaShot 迁移伤害", slime.data.Abilities.AbilityData.ParabolaShot.AbilityDamage, 9f);
+        AssertEqual("ParabolaShot 迁移投射物路径", slime.data.Abilities.AbilityData.ParabolaShot.ProjectileScenePath, "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn");
+        var abilityData = new Data();
+        abilityData.LoadFromConfig(slime.data.Abilities.AbilityData.ParabolaShot);
+        var rawProjectileScene = abilityData.GetAll()[DataKey.ProjectileScene];
+        AssertTrue("Data 注入后投射物场景保持字符串路径", rawProjectileScene is string);
+        AssertEqual("Data 读取投射物场景路径", abilityData.Get<string>(DataKey.ProjectileScene), "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn");
+        AssertEqual("ChainLightning 迁移名称", slime.data.Abilities.ChainAbilityData.ChainLightning.Name, "闪电链");
 
-        var systemDefaults = new Slime.ConfigNew.Systems.SystemData();
+        var systemDefaults = new slime.data.Systems.SystemData();
         AssertEqual("SystemData 默认挂载分组", systemDefaults.MountGroup, SystemGroup.Else);
         AssertEqual("SystemData 默认 AutoLoad", systemDefaults.AutoLoad, true);
         AssertEqual("SystemData 默认 StartEnabled", systemDefaults.StartEnabled, true);
         AssertEqual("SystemData 默认 AllowedFlowStates 不限制", systemDefaults.AllowedFlowStates, GameFlowState.None);
         AssertEqual("SystemData 默认 BlockedOverlays 不屏蔽", systemDefaults.BlockedOverlays, OverlayFlags.None);
-        AssertEqual("SystemData 迁移 TimerManager Required", Slime.ConfigNew.Systems.SystemData.TimerManager.Required, true);
-        AssertEqual("SystemData 迁移 SpawnSystem 流程限制", Slime.ConfigNew.Systems.SystemData.SpawnSystem.AllowedFlowStates, GameFlowState.SessionPlaying);
-        AssertEqual("SystemData 迁移 DamageStatisticsSystem 依赖", Slime.ConfigNew.Systems.SystemData.DamageStatisticsSystem.Dependencies[0], "DamageService");
+        AssertEqual("SystemData 迁移 TimerManager Required", slime.data.Systems.SystemData.TimerManager.Required, true);
+        AssertEqual("SystemData 迁移 SpawnSystem 流程限制", slime.data.Systems.SystemData.SpawnSystem.AllowedFlowStates, GameFlowState.SessionPlaying);
+        AssertEqual("SystemData 迁移 DamageStatisticsSystem 依赖", slime.data.Systems.SystemData.DamageStatisticsSystem.Dependencies[0], "DamageService");
 
-        var presetDefault = Slime.ConfigNew.Systems.SystemPresetData.Default;
+        var presetDefault = slime.data.Systems.SystemPresetData.Default;
         AssertEqual("SystemPresetData 默认预设激活", presetDefault.IsActive, true);
         AssertEqual("SystemPresetData 默认预设标签", presetDefault.EnabledTags, SystemTag.Core | SystemTag.Gameplay | SystemTag.Combat | SystemTag.UI | SystemTag.Roguelike | SystemTag.Runtime);
         AssertEqual("SystemPresetData 默认显式启用 TestSystem", presetDefault.EnabledSystemIds[0], "TestSystem");

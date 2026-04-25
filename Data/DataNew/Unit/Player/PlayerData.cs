@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using Slime.ConfigNew;
-namespace Slime.ConfigNew.Units
+using slime.data;
+namespace slime.data.Units
 {
     /// <summary>
     /// 玩家配置（纯 POCO）

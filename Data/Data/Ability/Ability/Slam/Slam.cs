@@ -47,7 +47,7 @@ internal class SlamExecutor : AbilityFeatureHandler
         var randomPoint = PositionTargetSelector.Query(pointQuery)[0];
 
         // 3. 获取特效场景
-        var effectScene = ability.Data.Get<PackedScene>(DataKey.EffectScene);
+        var effectScenePath = ability.Data.Get<string>(DataKey.EffectScene); // 特效场景路径
 
         // 4. 执行命中（目标查询 + 特效生成 + 伤害结算，三步合一）
         var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions
@@ -62,9 +62,9 @@ internal class SlamExecutor : AbilityFeatureHandler
                 Sorting = TargetSorting.HighestThreat, // 优先威胁最高的目标
                 MaxTargets = maxTargets // 最大命中数
             },
-            Effect = effectScene != null
+            Effect = !string.IsNullOrWhiteSpace(effectScenePath)
                 ? new EffectSpawnOptions(
-                    effectScene,
+                    effectScenePath,
                     Name: "裂地猛击特效",
                     Scale: Vector2.One * 0.6f)
                 : null,

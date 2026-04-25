@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Slime.Config.Units
+namespace slime.config.Units
 {
     /// <summary>
     /// 瞄准指示器配置 - 继承自 UnitConfig

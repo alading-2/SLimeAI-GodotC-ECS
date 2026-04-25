@@ -37,7 +37,7 @@ internal class ParabolaBombardmentExecutor : AbilityFeatureHandler
             ability.Data.Get<float>(DataKey.AbilityCastRange) // 技能施法距离
         );
         float effectRadius = ability.Data.Get<float>(DataKey.AbilityEffectRadius); // 爆炸半径
-        var effectScene = ability.Data.Get<PackedScene>(DataKey.EffectScene); // 爆炸特效
+        var effectScenePath = ability.Data.Get<string>(DataKey.EffectScene); // 爆炸特效路径
         Vector2 rawDirection = targetPoint - casterNode.GlobalPosition; // 起点指向落点的向量
         Vector2 travelDirection = rawDirection.LengthSquared() >= 0.001f
             ? rawDirection.Normalized()
@@ -55,12 +55,12 @@ internal class ParabolaBombardmentExecutor : AbilityFeatureHandler
         float arcRadius = Mathf.Max(
             travelDistance * 0.72f, // 常规弧线半径
             travelDistance * 0.5f + 32f); // 保证半径始终大于半弦长
-        var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
+        var projectileScenePath = ability.Data.Get<string>(DataKey.ProjectileScene); // 投射物场景路径
 
         var projectile = ProjectileTool.Spawn(
             caster, // 投射物归属者
             spawnPos, // 生成位置
-            projectileScene, // 投射物视觉
+            projectileScenePath, // 投射物视觉路径
             "ParabolaShotProjectile" // 投射物名称
         );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
@@ -86,7 +86,7 @@ internal class ParabolaBombardmentExecutor : AbilityFeatureHandler
                         casterNode, // 施法者节点
                         targetPoint, // 固定落点
                         effectRadius, // 爆炸半径
-                        effectScene, // 爆炸特效
+                        effectScenePath, // 爆炸特效路径
                         damage // 最终伤害值
                     ),
                     RotateToVelocity = true, // 朝速度方向旋转视觉
@@ -123,7 +123,7 @@ internal class ParabolaBombardmentExecutor : AbilityFeatureHandler
         Node2D casterNode, // 施法者节点
         Vector2 targetPoint, // 固定落点
         float effectRadius, // 爆炸半径
-        PackedScene? effectScene, // 爆炸特效
+        string effectScenePath, // 爆炸特效路径
         float damage) // 最终伤害值
     {
         if (stopContext.Reason != MovementStopReason.Completed) return; // 只有自然完成才结算伤害
@@ -139,9 +139,9 @@ internal class ParabolaBombardmentExecutor : AbilityFeatureHandler
                 TeamFilter = TeamFilter.Enemy, // 阵营过滤
                 MaxTargets = -1 // 不限命中数量
             },
-            Effect = effectScene != null
+            Effect = !string.IsNullOrWhiteSpace(effectScenePath)
                 ? new EffectSpawnOptions(
-                    effectScene, // 特效场景
+                    effectScenePath, // 特效场景路径
                     Name: "定点抛炸弹爆炸特效", // 特效名称
                     Owner: caster, // 特效归属者
                     EffectPosition: targetPoint) // 特效位置
@@ -155,5 +155,6 @@ internal class ParabolaBombardmentExecutor : AbilityFeatureHandler
             }
         });
     }
+
     // 定点抛炸弹技能只负责取落点、发射和落地结算；投射物回收统一交给 Movement 系统处理。
 }

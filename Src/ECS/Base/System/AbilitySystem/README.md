@@ -67,7 +67,7 @@ Src/ECS/Base/System/AbilitySystem/
 - 发送 `Ability.Executed`
 - 同步技能立即调用 `FeatureSystem.OnFeatureEnded(..., FeatureEndReason.Completed)`
 
-其中 `AbilityConfig.FeatureHandlerId` 必须填写完整唯一 `FeatureId`，例如 `技能.位移.冲刺`；`FeatureGroupId` 只作为展示分组，不参与运行时 Handler 查找。
+其中 `AbilityData.FeatureHandlerId` 必须填写完整唯一 `FeatureId`，例如 `技能.位移.冲刺`；`FeatureGroupId` 只作为展示分组，不参与运行时 Handler 查找。
 
 ---
 

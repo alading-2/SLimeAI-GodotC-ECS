@@ -1,6 +1,6 @@
-using Slime.ConfigNew;
+using slime.data;
 
-namespace Slime.ConfigNew.Systems;
+namespace slime.data.Systems;
 
 /// <summary>
 /// 系统预设（纯 POCO，不继承 Resource）。
@@ -50,19 +50,4 @@ public class SystemPresetData
     /// <summary>预设描述（用于文档和调试）。</summary>
     public string Description { get; set; } = "";
 
-    /// <summary>
-    /// 转为运行时仍使用的 SystemPreset Resource 对象。
-    /// </summary>
-    public SystemPreset ToResource()
-    {
-        return new SystemPreset
-        {
-            PresetName = PresetName,
-            IsActive = IsActive,
-            EnabledTags = EnabledTags,
-            EnabledSystemIds = EnabledSystemIds,
-            DisabledSystemIds = DisabledSystemIds,
-            Description = Description
-        };
-    }
 }

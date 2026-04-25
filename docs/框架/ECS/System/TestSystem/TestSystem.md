@@ -34,6 +34,8 @@
 - `Src/ECS/Base/System/TestSystem/Ability/AbilityTestViewModels.cs`
 - `Src/ECS/Base/System/TestSystem/ResourceCatalog/ResourcePickerControl.cs`
 - `Src/ECS/Base/System/TestSystem/ResourceCatalog/ResourceCatalogTestModule.cs`
+- `Src/ECS/Base/System/TestSystem/System/SystemInfoService.cs`
+- `Src/ECS/Base/System/TestSystem/System/SystemInfoTestModule.cs`
 - `Src/ECS/Base/System/TestSystem/Info/ObjectPoolInfoModule.cs`
 - `Src/ECS/Base/System/TestSystem/Info/ObjectPoolInfoService.cs`
 - `Src/ECS/Base/System/TestSystem/Spawn/SpawnTestModule.cs`
@@ -79,6 +81,8 @@
 - `AbilityTestService` 把 UI 与技能目录/业务操作做了初步隔离，并按完整 `FeatureGroupId` 构建技能库 / 当前技能分组，方向也是对的
 - `ResourceCatalog` 将单位、技能、特效和单位 Asset 的选择目录收口到 `ResourcePaths.Resources`，并按路径自动推导分类，敌人生成测试等模块可以复用正式资源索引而不运行时扫目录
 - `ResourceCatalogTestModule` 通过分类下拉框展示 `ResourceCatalog.GetGroups()` 的分类和资源总数，选择分类后自动显示该分类资源明细，可用于运行时确认当前索引是否覆盖所有分类与资源
+- `SystemInfoTestModule` 通过 `SystemInfoService` 合并 `SystemConfigService / SystemRegistry / SystemManager`，支持按分组、标签、状态和搜索文本筛选系统，并展示运行态、阻塞原因、依赖和自定义统计
+- 系统监控的 Add / Remove / Enable / Disable 操作统一转发到 `SystemManager.TryAddSystem / TryRemoveSystem / TrySetSystemEnabled`；`Required` 系统禁止禁用和移除，被已加载系统依赖的系统禁止移除
 - `SpawnTestModule` 通过 `ResourcePickerControl` 按 `Unit.Enemy` 目录前缀只选择敌人配置，再转发到正式 `SpawnSystem.SpawnBatch(...)`
 - `ObjectPoolInfoModule` 把 `ObjectPoolManager` 运行时统计和对象池容量元数据合并到同一只读面板，并改为中文字段展示；模块激活时每秒自动刷新，同时保留当前对象池选择，适合持续观察对象池容量与复用情况
 - 视觉预览已迁出 `TestSystem`，独立场景位于 `Src/ECS/Test/GlobalTest/VisualPreview/`；它按 `ResourcePaths.Resources` 中全部 `Asset*` 分类生成 `VisualPreviewEntity`，直接扫描并控制 `VisualRoot` 下的 `AnimatedSprite2D` 进行动作预览，并直接消费 `MouseSelectionSystem` 的选中结果
@@ -154,6 +158,8 @@
 - `Data/ResourceManagement/ResourceCatalog.cs` 负责从 `ResourcePaths.Resources` 构建单位配置、技能配置、特效目录和单位 Asset 目录，分类来自资源路径，路径中的 `Resource` 目录会被跳过
 - `ResourceCatalog/ResourcePickerControl.cs` 负责 TestSystem 内的分组、搜索与选择 UI
 - `ResourceCatalog/ResourceCatalogTestModule.cs` 负责在 TestSystem 中展示完整资源分类，并在分类选择变化时自动刷新对应资源列表，用于验证资源索引覆盖情况
+- `System/SystemInfoService.cs` 负责整理系统配置、注册状态、运行态和受保护的系统管理操作，UI 模块只消费快照和操作结果
+- `System/SystemInfoTestModule.cs` 负责系统监控模块的筛选、列表、详情和按钮状态；模块不直接绕过服务层操作 `SystemManager`
 - 视觉预览不再作为 TestSystem 模块存在；独立入口为 `Src/ECS/Test/GlobalTest/VisualPreview/VisualPreviewScene.tscn`
 
 运行时测试面板不要全盘扫描 `res://` 作为主数据源；新增 `.tres` / `.tscn` 后应运行 `Tools/ResourceGenerator` 更新 `ResourcePaths.cs`。
@@ -321,6 +327,10 @@ Src/ECS/Base/System/TestSystem/
 ├── Modules/
 │   ├── Attribute/
 │   ├── Ability/
+│   ├── System/
+│   ├── Info/
+│   ├── ResourceCatalog/
+│   ├── Spawn/
 │   ├── Buff/
 │   ├── AI/
 │   └── Damage/
@@ -389,7 +399,18 @@ Src/ECS/Base/System/TestSystem/
 - 共享条目控件可以保留场景化
 - 节点查找和 warning 回退逻辑要进一步收敛
 
-## 8.3 宿主 TestSystem
+## 8.3 SystemInfoTestModule
+
+系统监控模块已经按“服务整理快照 + UI 展示操作”的边界接入。
+
+后续维护重点：
+
+- `SystemInfoService` 继续作为唯一数据整理和操作转发入口
+- `SystemInfoTestModule` 只负责筛选、展示和按钮启停
+- `Required` 系统的禁用 / 移除保护必须和 `SystemManager` 保持一致
+- 新增系统配置字段时，同步评估是否需要展示在详情区
+
+## 8.4 宿主 TestSystem
 
 宿主需要从“当前能跑”升级成“长期稳定宿主”：
 

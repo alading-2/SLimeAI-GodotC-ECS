@@ -141,10 +141,10 @@ public partial class ActiveSkillSlotUI : UIBase
         }
         else if (iconValue is string iconPath && !string.IsNullOrEmpty(iconPath))
         {
-            iconTexture = GD.Load<Texture2D>(iconPath);
+            iconTexture = ResourceManagement.LoadPath<Texture2D>(iconPath);
         }
 
-        _skillIcon.Texture = iconTexture ?? GD.Load<Texture2D>(DEFAULT_SKILL_ICON);
+        _skillIcon.Texture = iconTexture ?? ResourceManagement.LoadPath<Texture2D>(DEFAULT_SKILL_ICON);
 
         // 更新技能名称
         _skillNameLabel.Text = abilityName;
@@ -316,10 +316,10 @@ public partial class ActiveSkillSlotUI : UIBase
         }
         else if (iconValue is string iconPath && !string.IsNullOrEmpty(iconPath))
         {
-            iconTexture = GD.Load<Texture2D>(iconPath);
+            iconTexture = ResourceManagement.LoadPath<Texture2D>(iconPath);
         }
 
-        _skillIcon.Texture = iconTexture ?? GD.Load<Texture2D>("res://icon.svg");
+        _skillIcon.Texture = iconTexture ?? ResourceManagement.LoadPath<Texture2D>("res://icon.svg");
 
         // 更新技能名称
         _skillNameLabel.Text = abilityName;

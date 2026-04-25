@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Slime.ConfigNew.Features
+namespace slime.data.Features
 {
     /// <summary>
     /// Feature 属性修改器条目（纯 POCO）

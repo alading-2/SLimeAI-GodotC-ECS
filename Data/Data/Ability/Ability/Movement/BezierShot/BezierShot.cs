@@ -49,7 +49,7 @@ internal class BezierShotExecutor : AbilityFeatureHandler
 
         var (targetEntity, targetNode) = targetInfo.Value;
         Vector2 targetPos = targetNode.GlobalPosition;
-        var projectileScene = ability.Data.Get<PackedScene>(DataKey.ProjectileScene);
+        var projectileScenePath = ability.Data.Get<string>(DataKey.ProjectileScene); // 投射物场景路径
         int spawnedCount = 0;
 
         int randomSeed = Mathf.RoundToInt(startPos.X * 7f + startPos.Y * 11f + targetPos.X * 13f + targetPos.Y * 17f); // 基于当前战场位置生成稳定随机种子
@@ -84,7 +84,7 @@ internal class BezierShotExecutor : AbilityFeatureHandler
             var projectile = ProjectileTool.Spawn(
                 caster, // 投射物归属者
                 spawnPos, // 生成位置
-                projectileScene, // 投射物视觉
+                projectileScenePath, // 投射物视觉路径
                 $"BezierShotProjectile_{i}" // 投射物名称
             );
             if (projectile == null) continue;

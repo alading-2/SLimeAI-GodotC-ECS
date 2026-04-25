@@ -1,6 +1,6 @@
 using Godot;
-using Slime.Config.Abilities;
-using Slime.Config.Units;
+using slime.data.Abilities;
+using slime.data.Units;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,13 +36,12 @@ public readonly record struct ResourceCatalogGroup(
 /// <summary>
 /// 通用资源目录服务。
 /// <para>
-/// 以 ResourcePaths 生成索引为唯一事实来源，按资源路径自动推导选择器分类。
+/// DataNew 表数据直接构建目录条目；场景、特效等资产仍从 ResourcePaths 生成索引构建。
 /// </para>
 /// </summary>
 public static class ResourceCatalog
 {
-    // 目录推导只处理这两类根：Data/Data 下的配置资源，以及 Effect 视觉资源。
-    private const string DataRoot = "Data/Data";
+    // 目录推导只处理资产资源；运行时数据目录由 DataNew 静态表直接提供。
     private const string EffectRoot = "assets/Effect";
     private const string AssetUnitEnemyRoot = "assets/Unit/Enemy";
     private const string AssetUnitPlayerRoot = "assets/Unit/Player";
@@ -157,7 +156,9 @@ public static class ResourceCatalog
     {
         var entries = new List<ResourceCatalogEntry>();
 
-        // 直接从 ResourcePaths.Resources 构建目录，不额外扫描 res://。
+        AddDataNewEntries(entries);
+
+        // 资产资源仍直接从 ResourcePaths.Resources 构建目录，不额外扫描 res://。
         foreach (var (_, resources) in ResourcePaths.Resources)
         {
             foreach (var (resourceKey, data) in resources)
@@ -189,11 +190,6 @@ public static class ResourceCatalog
     /// <param name="entry">转换后的目录条目。</param>
     private static bool TryCreateEntry(string resourceKey, ResourceData data, out ResourceCatalogEntry entry)
     {
-        if (TryCreateDataEntry(resourceKey, data, out entry))
-        {
-            return true;
-        }
-
         if (TryCreateEffectEntry(resourceKey, data, out entry))
         {
             return true;
@@ -209,31 +205,81 @@ public static class ResourceCatalog
     }
 
     /// <summary>
-    /// 尝试从 Data/Data 下的配置资源构建目录条目。
+    /// 从 DataNew 纯 C# 表构建目录条目。
     /// </summary>
-    /// <param name="resourceKey">ResourcePaths 中的资源键。</param>
-    /// <param name="data">资源元数据。</param>
-    /// <param name="entry">转换后的目录条目。</param>
-    private static bool TryCreateDataEntry(string resourceKey, ResourceData data, out ResourceCatalogEntry entry)
+    /// <param name="entries">待写入的目录条目列表。</param>
+    private static void AddDataNewEntries(List<ResourceCatalogEntry> entries)
     {
-        // Data/Data 下的资源按目录路径自动分类，文件名不参与分类。
-        var catalogPath = ResolveCatalogPath(data.Path, DataRoot);
-        if (string.IsNullOrWhiteSpace(catalogPath))
+        foreach (var data in EnemyData.All)
         {
-            entry = default;
-            return false;
+            if (string.IsNullOrWhiteSpace(data.Name))
+            {
+                continue;
+            }
+
+            entries.Add(new ResourceCatalogEntry(
+                data.Name, // DataNew 名称键
+                ResourceCategory.DataUnit, // 保持选择器分类兼容
+                "Data/DataNew/Unit/Enemy/EnemyData.cs", // 源数据文件
+                data.Name, // UI 显示名
+                "Unit.Enemy", // 目录分类路径
+                typeof(EnemyData) // 推荐数据类型
+            ));
         }
 
-        var displayName = ResolveDataDisplayName(resourceKey, data);
-        entry = new ResourceCatalogEntry(
-            resourceKey, // ResourcePaths 资源键
-            data.Category, // ResourceManagement 分类
-            data.Path, // res:// 路径
-            displayName, // UI 显示名
-            catalogPath, // 路径推导分类
-            ResolveDataResourceType(data.Category) // 推荐加载类型
-        );
-        return true;
+        foreach (var data in PlayerData.All)
+        {
+            if (string.IsNullOrWhiteSpace(data.Name))
+            {
+                continue;
+            }
+
+            entries.Add(new ResourceCatalogEntry(
+                data.Name, // DataNew 名称键
+                ResourceCategory.DataUnit, // 保持选择器分类兼容
+                "Data/DataNew/Unit/Player/PlayerData.cs", // 源数据文件
+                data.Name, // UI 显示名
+                "Unit.Player", // 目录分类路径
+                typeof(PlayerData) // 推荐数据类型
+            ));
+        }
+
+        foreach (var data in TargetingIndicatorData.All)
+        {
+            if (string.IsNullOrWhiteSpace(data.Name))
+            {
+                continue;
+            }
+
+            entries.Add(new ResourceCatalogEntry(
+                data.Name, // DataNew 名称键
+                ResourceCategory.DataUnit, // 保持选择器分类兼容
+                "Data/DataNew/Unit/Targeting/TargetingIndicatorData.cs", // 源数据文件
+                data.Name, // UI 显示名
+                "Unit.Targeting", // 目录分类路径
+                typeof(TargetingIndicatorData) // 推荐数据类型
+            ));
+        }
+
+        foreach (var data in AbilityData.All)
+        {
+            if (string.IsNullOrWhiteSpace(data.Name))
+            {
+                continue;
+            }
+
+            var group = string.IsNullOrWhiteSpace(data.FeatureGroupId)
+                ? "Ability"
+                : $"Ability.{NormalizeCatalogPath(data.FeatureGroupId) ?? "未分类"}";
+            entries.Add(new ResourceCatalogEntry(
+                data.Name, // DataNew 名称键
+                ResourceCategory.DataAbility, // 保持选择器分类兼容
+                "Data/DataNew/Ability/AbilityData.cs", // 源数据文件
+                data.Name, // UI 显示名
+                group, // 目录分类路径
+                typeof(AbilityData) // 推荐数据类型
+            ));
+        }
     }
 
     /// <summary>
@@ -304,54 +350,6 @@ public static class ResourceCatalog
             typeof(PackedScene) // 单位 Asset 使用 PackedScene 加载
         );
         return true;
-    }
-
-    /// <summary>
-    /// 解析配置资源在选择器里显示的名称。
-    /// </summary>
-    /// <param name="resourceKey">ResourcePaths 中的资源键。</param>
-    /// <param name="data">资源元数据。</param>
-    private static string ResolveDataDisplayName(string resourceKey, ResourceData data)
-    {
-        if (data.Category == ResourceCategory.DataUnit)
-        {
-            var unit = ResourceManagement.Load<UnitConfig>(
-                resourceKey, // 单位配置资源键
-                data.Category // ResourcePaths 中的单位数据分类
-            );
-            if (!string.IsNullOrWhiteSpace(unit?.Name))
-            {
-                return unit!.Name!;
-            }
-        }
-
-        if (data.Category == ResourceCategory.DataAbility)
-        {
-            var ability = ResourceManagement.Load<AbilityConfig>(
-                resourceKey, // 技能配置资源键
-                data.Category // ResourcePaths 中的技能数据分类
-            );
-            if (!string.IsNullOrWhiteSpace(ability?.Name))
-            {
-                return ability!.Name!;
-            }
-        }
-
-        return resourceKey;
-    }
-
-    /// <summary>
-    /// 根据资源分类返回推荐加载类型。
-    /// </summary>
-    /// <param name="category">ResourcePaths 里的资源分类。</param>
-    private static Type ResolveDataResourceType(ResourceCategory category)
-    {
-        return category switch
-        {
-            ResourceCategory.DataUnit => typeof(UnitConfig),
-            ResourceCategory.DataAbility => typeof(AbilityConfig),
-            _ => typeof(Resource)
-        };
     }
 
     /// <summary>

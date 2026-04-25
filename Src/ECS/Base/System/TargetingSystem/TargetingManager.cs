@@ -1,6 +1,5 @@
 using Godot;
-using Slime.Config.Units;
-using Slime.ConfigNew.Units;
+using slime.data.Units;
 /// <summary>
 /// 瞄准状态管理器 - 管理由输入层发起的异步点选会话
 /// 
@@ -220,10 +219,8 @@ public static class TargetingManager
     /// </summary>
     private static TargetingIndicatorEntity? SpawnIndicator(Vector2 position)
     {
-        // 根据全局数据源加载瞄准指示器配置。
-        object? config = GlobalConfig.DataSourceMode == DataSourceMode.PureCSharp
-            ? TargetingIndicatorData.Get("TargetingIndicator")
-            : ResourceManagement.Load<TargetingIndicatorConfig>(ResourcePaths.DataUnit_TargetingIndicatorConfig, ResourceCategory.DataUnit);
+        // 瞄准指示器配置统一来自 DataNew。
+        var config = TargetingIndicatorData.Get("TargetingIndicator");
 
         if (config == null)
         {

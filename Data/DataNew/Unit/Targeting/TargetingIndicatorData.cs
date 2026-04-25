@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using Slime.ConfigNew;
-namespace Slime.ConfigNew.Units
+using slime.data;
+namespace slime.data.Units
 {
     /// <summary>
     /// 瞄准指示器配置（纯 POCO）

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Slime.ConfigNew;
+namespace slime.data;
 
 /// <summary>
 /// DataNew 纯 C# 表数据读取工具。

@@ -1,12 +1,12 @@
 using Godot;
-using Slime.Config.Units;
+using slime.data.Units;
 using System;
 using ECS.Base.System.TestSystem.Core;
 
 /// <summary>
 /// 敌人生成测试模块。
 /// <para>
-/// 通过 ResourceCatalog 选择敌人目录下的 EnemyConfig，并复用正式 SpawnSystem 执行批量生成。
+/// 默认通过 DataNew 敌人名称获取 EnemyData，并复用正式 SpawnSystem 执行批量生成。
 /// </para>
 /// </summary>
 public partial class SpawnTestModule : TestModuleBase
@@ -135,13 +135,10 @@ public partial class SpawnTestModule : TestModuleBase
             return;
         }
 
-        var config = ResourceManagement.Load<EnemyConfig>(
-            entry.ResourceKey, // 敌人配置资源键
-            entry.Category // DataUnit 分类
-        );
+        var config = ResolveEnemyConfig(entry);
         if (config == null)
         {
-            _log.Error($"[敌人生成测试] 加载敌人配置失败: key={entry.ResourceKey} path={entry.Path}");
+            _log.Error($"[敌人生成测试] 加载敌人配置失败: key={entry.ResourceKey} name={entry.DisplayName} path={entry.Path}");
             ShowStatus($"加载失败: {entry.ResourceKey}");
             return;
         }
@@ -164,6 +161,16 @@ public partial class SpawnTestModule : TestModuleBase
         );
         ShowStatus($"已生成 {count} 个 {entry.DisplayName}，策略 {strategy}");
         UpdatePoolStats();
+    }
+
+    /// <summary>
+    /// 解析敌人配置：按 DataNew 敌人 Name 获取。
+    /// </summary>
+    /// <param name="entry">资源选择器条目。</param>
+    /// <returns>敌人配置数据。</returns>
+    private static EnemyData? ResolveEnemyConfig(ResourceCatalogEntry entry)
+    {
+        return EnemyData.Get(entry.DisplayName) ?? EnemyData.Get(entry.ResourceKey);
     }
 
     private void ClearEnemies()

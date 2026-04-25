@@ -1,5 +1,7 @@
 using Godot;
 using System.Threading.Tasks;
+using slime.data.Abilities;
+using slime.data.Units;
 
 
 
@@ -27,7 +29,7 @@ public partial class MainTest : Node
 
         // 1. 生成玩家
         _log.Info("步骤 1: 生成玩家");
-        var playerConfig = ResourceManagement.Load<Slime.Config.Units.PlayerConfig>(ResourcePaths.DataUnit_deluyi, ResourceCategory.DataUnit);
+        var playerConfig = PlayerData.Get("德鲁伊") ?? PlayerData.Deluyi;
         _player = EntityManager.Spawn<PlayerEntity>(new EntitySpawnConfig
         {
             Config = playerConfig,
@@ -40,7 +42,7 @@ public partial class MainTest : Node
 
         // 1.5. 生成一个敌人用于测试单位目标选择
         _log.Info("步骤 1.5: 生成测试敌人");
-        var enemyConfig = ResourceManagement.Load<Resource>(ResourcePaths.DataUnit_chailangren, ResourceCategory.DataUnit);
+        var enemyConfig = EnemyData.Get("豺狼人") ?? EnemyData.Chailangren;
         var enemy = EntityManager.Spawn<EnemyEntity>(new EntitySpawnConfig
         {
             Config = enemyConfig,
@@ -134,62 +136,10 @@ public partial class MainTest : Node
     {
         if (_player == null) return;
 
-        // 加载正式技能配置，对应 Data/Data/Ability/Ability/ 中的执行器
-
-        // // 技能1: 裂地猛击 (Slam) - 范围近战AOE
-        // var slamConfig = ResourceManagement.Load<Slime.Config.Abilities.AbilityConfig>(
-        //     ResourcePaths.DataAbility_SlamConfig, ResourceCategory.DataAbility);
-        // if (slamConfig != null) EntityManager.AddAbility(_player, slamConfig);
-
-        // // 技能2: 链式闪电 (ChainLightning) - 链式弹跳魔法
-        // var chainConfig = ResourceManagement.Load<Slime.Config.Abilities.AbilityConfig>(
-        //     ResourcePaths.DataAbility_ChainLightningConfig, ResourceCategory.DataAbility);
-        // if (chainConfig != null) EntityManager.AddAbility(_player, chainConfig);
-
-        // // 技能3: 烈焰光环 (CircleDamage) - 周期范围伤害
-        // var auraConfig = ResourceManagement.Load<Slime.Config.Abilities.AbilityConfig>(
-        //     ResourcePaths.DataAbility_CircleDamageConfig, ResourceCategory.DataAbility);
-        // if (auraConfig != null) EntityManager.AddAbility(_player, auraConfig);
-
-        // 技能4: 冲刺 (Dash) - Charge 模式位移
-        var dashConfig = ResourceManagement.Load<Slime.Config.Abilities.AbilityConfig>(
-            ResourcePaths.DataAbility_DashConfig, ResourceCategory.DataAbility);
-        if (dashConfig != null) EntityManager.AddAbility(_player, dashConfig);
-
-        // // 技能5: 环绕护盾 (OrbitSkill) - Orbit 模式
-        // var orbitConfig = ResourceManagement.Load<Slime.Config.Abilities.AbilityConfig>(
-        //     ResourcePaths.DataAbility_OrbitSkillConfig, ResourceCategory.DataAbility);
-        // if (orbitConfig != null) EntityManager.AddAbility(_player, orbitConfig);
-
-        // // 技能6: 正弦波弹 (SineWaveShot) - SineWave 模式
-        // var sineConfig = ResourceManagement.Load<Slime.Config.Abilities.AbilityConfig>(
-        //     ResourcePaths.DataAbility_SineWaveShotConfig, ResourceCategory.DataAbility);
-        // if (sineConfig != null) EntityManager.AddAbility(_player, sineConfig);
-
-        // // 技能7: 贝塞尔弹 (BezierShot) - BezierCurve 模式
-        // var bezierConfig = ResourceManagement.Load<Slime.Config.Abilities.AbilityConfig>(
-        //     ResourcePaths.DataAbility_BezierShotConfig, ResourceCategory.DataAbility);
-        // if (bezierConfig != null) EntityManager.AddAbility(_player, bezierConfig);
-
-        // // 技能8: 回旋镖 (BoomerangThrow) - Boomerang 模式
-        // var boomerangConfig = ResourceManagement.Load<Slime.Config.Abilities.AbilityConfig>(
-        //     ResourcePaths.DataAbility_BoomerangThrowConfig, ResourceCategory.DataAbility);
-        // if (boomerangConfig != null) EntityManager.AddAbility(_player, boomerangConfig);
-
-        // // 技能9: 光环护盾 (AuraShield) - AttachToHost 模式
-        // var auraConfig = ResourceManagement.Load<Slime.Config.Abilities.AbilityConfig>(
-        //     ResourcePaths.DataAbility_AuraShieldConfig, ResourceCategory.DataAbility);
-        // if (auraConfig != null) EntityManager.AddAbility(_player, auraConfig);
-
-        // // 技能10: 抛物线弹 (ParabolaShot) - Parabola 模式
-        // var parabolaConfig = ResourceManagement.Load<Slime.Config.Abilities.AbilityConfig>(
-        //     ResourcePaths.DataAbility_ParabolaShotConfig, ResourceCategory.DataAbility);
-        // if (parabolaConfig != null) EntityManager.AddAbility(_player, parabolaConfig);
-
-        // // 技能11: 圆弧弹 (ArcShot) - CircularArc 模式
-        // var arcConfig = ResourceManagement.Load<Slime.Config.Abilities.AbilityConfig>(
-        //     ResourcePaths.DataAbility_ArcShotConfig, ResourceCategory.DataAbility);
-        // if (arcConfig != null) EntityManager.AddAbility(_player, arcConfig);
+        // 加载正式技能配置：默认使用 DataNew 纯 C# 表，旧 .tres 不再作为主流程。
+        // 技能：冲刺 (Dash) - Charge 模式位移。
+        var dashConfig = AbilityData.Get("冲刺") ?? AbilityData.Dash;
+        EntityManager.AddAbility(_player, dashConfig);
 
         _log.Info("已添加正式技能（含7种移动系新技能），等待UI自动更新");
     }

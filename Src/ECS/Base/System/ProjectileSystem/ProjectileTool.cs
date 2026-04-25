@@ -2,9 +2,12 @@ using Godot;
 
 internal static partial class ProjectileTool
 {
-    private sealed partial class RuntimeProjectileConfig : Resource
+    private sealed class RuntimeProjectileConfig
     {
         public string? Name { get; set; }
+
+        [DataKey(nameof(DataKey.VisualScenePath))]
+        public string VisualScenePath { get; set; } = "";
     }
 
     /// <summary>
@@ -13,13 +16,14 @@ internal static partial class ProjectileTool
     public static ProjectileEntity? Spawn(
         IEntity owner, // 投射物归属者
         Vector2 position, // 投射物初始位置
-        PackedScene? visualScene, // 投射物视觉场景
+        string visualScenePath, // 投射物视觉场景路径
         string name = "Projectile"
     )
     {
         var config = new RuntimeProjectileConfig
         {
-            Name = name
+            Name = name,
+            VisualScenePath = visualScenePath
         };
 
         var projectile = EntityManager.Spawn<ProjectileEntity>(new EntitySpawnConfig
@@ -28,7 +32,6 @@ internal static partial class ProjectileTool
             UsingObjectPool = true, // 投射物统一走对象池
             PoolName = ObjectPoolNames.ProjectilePool, // 投射物对象池名
             Position = position, // 初始位置
-            VisualSceneOverride = visualScene, // 运行时视觉覆盖
             ParentEntity = owner, // 父实体/归属者
             AutoAddParentRelation = true, // 自动补 PARENT，供归属链统一溯源
             ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively, // 归属者销毁时递归销毁投射物

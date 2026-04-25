@@ -12,7 +12,7 @@ public readonly record struct ChainBounceContext(
     float DamageDecay,
     TeamFilter TeamFilter,
     TargetSorting Sorting,
-    PackedScene? LineScene
+    string LineScenePath
 );
 
 /// <summary>
@@ -72,7 +72,7 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
             DamageDecay = ability.Data.Get<float>(DataKey.AbilityChainDamageDecay) / 100f, // 技能链式伤害衰减
             TeamFilter = TeamFilter.Enemy, // 技能链式目标阵营
             Sorting = TargetSorting.Nearest, // 技能链式目标排序
-            LineScene = ability.Data.Get<PackedScene>(DataKey.AbilityChainLineEffect) // 技能链式特效
+            LineScenePath = ability.Data.Get<string>(DataKey.AbilityChainLineEffect) // 技能链式特效路径
         };
 
         _log.Debug(
@@ -156,13 +156,19 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
                 $"[伤害发送后] 实际最终伤害: {damageInfo.FinalDamage}, 目标当前Hp: {unitVictim.Data.Get<float>(DataKey.CurrentHp)} (如果无伤害，可能是被闪避或因为目标已标记为Dead)");
 
             // 绘制特效
-            if (context.LineScene != null)
+            if (!string.IsNullOrWhiteSpace(context.LineScenePath))
             {
-                var effectNode = context.LineScene.Instantiate<Node2D>();
-                targetNode.GetTree().CurrentScene.AddChild(effectNode);
-                if (effectNode is ILineEffect iLine)
+                var lineScene = CommonTool.LoadPackedScene(
+                    context.LineScenePath, // 链式闪电连线场景路径
+                    "链式闪电连线特效"); // 日志用途名称
+                if (lineScene != null)
                 {
-                    iLine.PlayChain(fromPos, toPos);
+                    var effectNode = lineScene.Instantiate<Node2D>();
+                    targetNode.GetTree().CurrentScene.AddChild(effectNode);
+                    if (effectNode is ILineEffect iLine)
+                    {
+                        iLine.PlayChain(fromPos, toPos);
+                    }
                 }
             }
             else

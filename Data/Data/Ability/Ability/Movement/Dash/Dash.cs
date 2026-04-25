@@ -47,7 +47,7 @@ internal class DashExecutor : AbilityFeatureHandler
         // 落地伤害半径：决定冲刺停止时的圆形检测范围
         var damageRadius = ability.Data.Get<float>(DataKey.AbilityEffectRadius);
         // 落地特效场景：冲刺完成后的视觉表现
-        var effectScene = ability.Data.Get<PackedScene>(DataKey.EffectScene);
+        var effectScenePath = ability.Data.Get<string>(DataKey.EffectScene); // 落地特效场景路径
         // 最大伤害目标数：当前固定为不限制，由技能逻辑自行决定
         const int maxTargets = -1;
 
@@ -69,7 +69,7 @@ internal class DashExecutor : AbilityFeatureHandler
                     RotateToVelocity = false, // 冲刺期间保持原有朝向
                     // 回调函数：当移动系统完成位移或因碰撞停止时，触发 OnDashStop
                     OnStop =
-                        stopCtx => OnDashStop(stopCtx, caster, casterNode2D, effectScene, damageRadius, maxTargets),
+                        stopCtx => OnDashStop(stopCtx, caster, casterNode2D, effectScenePath, damageRadius, maxTargets),
                 }
             )
         );
@@ -109,14 +109,14 @@ internal class DashExecutor : AbilityFeatureHandler
     /// <param name="ctx">位移停止上下文，包含是否正常完成或被中断的信息</param>
     /// <param name="caster">施法实体</param>
     /// <param name="casterNode2D">施法者的 Godot 节点引用</param>
-    /// <param name="effectScene">待生成的落点特效</param>
+    /// <param name="effectScenePath">待生成的落点特效路径</param>
     /// <param name="damageRadius">伤害检测半径</param>
     /// <param name="maxTargets">最大命中数</param>
     private void OnDashStop(
         MovementStopContext ctx,
         IEntity caster,
         Node2D casterNode2D,
-        PackedScene? effectScene,
+        string effectScenePath,
         float damageRadius,
         int maxTargets)
     {
@@ -140,8 +140,10 @@ internal class DashExecutor : AbilityFeatureHandler
                 Sorting = TargetSorting.Nearest, // 优先最近目标
                 MaxTargets = maxTargets // 限制命中数量
             },
-            Effect = effectScene != null
-                ? new EffectSpawnOptions(effectScene, Name: "冲刺落地特效")
+            Effect = !string.IsNullOrWhiteSpace(effectScenePath)
+                ? new EffectSpawnOptions(
+                    effectScenePath, // 特效场景路径
+                    Name: "冲刺落地特效")
                 : null,
             Damage = new DamageApplyOptions
             {

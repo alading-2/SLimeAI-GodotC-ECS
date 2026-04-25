@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Slime.ConfigNew;
+using slime.data;
 
-namespace Slime.ConfigNew.Abilities;
+namespace slime.data.Abilities;
 
 /// <summary>
 /// 技能配置（纯 POCO，不继承 Resource）
@@ -24,6 +24,7 @@ public class AbilityData
         FeatureHandlerId = FeatureId.Ability.Active.Slam,
         Description = "在角色周围随机位置猛击地面，对范围内敌人造成物理伤害",
         AbilityIconPath = "res://icon.svg",
+        AbilityType = AbilityType.Active,
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCostType = AbilityCostType.Mana,
         AbilityCooldown = 1.0f,
@@ -40,6 +41,7 @@ public class AbilityData
         FeatureGroupId = "技能.主动",
         Description = "选择一个位置进行范围攻击",
         AbilityIconPath = "res://icon.svg",
+        AbilityType = AbilityType.Active,
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCostType = AbilityCostType.Mana,
         AbilityCooldown = 1.0f,
@@ -71,6 +73,7 @@ public class AbilityData
         FeatureHandlerId = FeatureId.Ability.Projectile.SineWaveShot,
         Description = "发射正弦波形弹道向敌人射击（验证 SineWave 模式）",
         AbilityIconPath = "res://icon.svg",
+        AbilityType = AbilityType.Active,
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
         AbilityCastRange = 600.0f,
@@ -86,6 +89,7 @@ public class AbilityData
         FeatureHandlerId = FeatureId.Ability.Projectile.ParabolaBombardment,
         Description = "每隔一段时间向施法者周围随机落点抛出一枚炸弹，落地时造成范围伤害（固定终点 Parabola 模式）",
         AbilityIconPath = "res://icon.svg",
+        AbilityType = AbilityType.Active,
         AbilityTriggerMode = AbilityTriggerMode.Periodic,
         AbilityCooldown = 1.0f,
         AbilityCastRange = 700.0f,
@@ -103,6 +107,7 @@ public class AbilityData
         FeatureHandlerId = FeatureId.Ability.Projectile.BoomerangThrow,
         Description = "投掷回旋镖，飞出后自动返回，来回命中敌人（验证 Boomerang 模式）",
         AbilityIconPath = "res://icon.svg",
+        AbilityType = AbilityType.Active,
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
         AbilityTargetSelection = AbilityTargetSelection.None,
@@ -119,6 +124,7 @@ public class AbilityData
         FeatureHandlerId = FeatureId.Ability.Projectile.ArcShot,
         Description = "发射沿圆弧轨迹飞行的投射物（验证 CircularArc 模式）",
         AbilityIconPath = "res://icon.svg",
+        AbilityType = AbilityType.Active,
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
         AbilityTargetSelection = AbilityTargetSelection.Entity,
@@ -135,6 +141,7 @@ public class AbilityData
         FeatureHandlerId = FeatureId.Ability.Projectile.BezierShot,
         Description = "发射沿二次贝塞尔曲线飞行的弓形弹（验证 BezierCurve 模式）",
         AbilityIconPath = "res://icon.svg",
+        AbilityType = AbilityType.Active,
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
         AbilityCastRange = 600.0f,
@@ -150,6 +157,7 @@ public class AbilityData
         FeatureHandlerId = FeatureId.Ability.Movement.Dash,
         Description = "高速冲向目标方向，瞬间位移躲避危险",
         AbilityIconPath = "res://icon.svg",
+        AbilityType = AbilityType.Active,
         AbilityTriggerMode = AbilityTriggerMode.Manual,
         AbilityCooldown = 1.0f,
         AbilityCastRange = 300.0f,
