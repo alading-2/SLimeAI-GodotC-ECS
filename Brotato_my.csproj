@@ -1,4 +1,4 @@
-<Project Sdk="Godot.NET.Sdk/4.6.0">
+<Project Sdk="Godot.NET.Sdk/4.6.2">
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
@@ -7,11 +7,11 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
     <ItemGroup>
-        <Compile Remove="备份\**"/>
-        <Compile Remove="Tools\**"/>
+        <Compile Remove="备份\**" />
+        <Compile Remove="Tools\**" />
     </ItemGroup>
     <ItemGroup>
-        <Folder Include=".godot\"/>
-        <Folder Include="参考\"/>
+        <Folder Include=".godot\" />
+        <Folder Include="参考\" />
     </ItemGroup>
 </Project>
