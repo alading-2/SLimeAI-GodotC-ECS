@@ -5,6 +5,12 @@ description: 在 Entity 或 Component 中读写 Data 数据容器、定义新 Da
 
 # ECS Data 数据容器规范
 
+## 先读
+
+- `DocsAI/Modules/Data.md`
+- 数据目录配置还要读 `Data/README.md`、`Data/DataNew/README.md`、`Data/DataKey/README.md`
+- 测试矩阵：`DocsAI/Tests/测试矩阵.md`
+
 ## 核心原则
 - **Data 是唯一数据源**：所有运行时业务状态必须存 Data，禁止 Component 私有业务字段
 - **类型安全**：DataKey 为 `static readonly DataMeta`，隐式转换为 string，编译期检查

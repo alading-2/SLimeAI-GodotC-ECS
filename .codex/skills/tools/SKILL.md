@@ -5,6 +5,12 @@ description: 使用 TimerManager 计时器、ObjectPool 对象池、TargetSelect
 
 # 工具类使用规范
 
+## 先读
+
+- `DocsAI/Modules/Tools.md`
+- 涉及对象池、TimerManager、ResourceManagement 核心实现时读 `DocsAI/Workflows/ECS核心修改门禁.md`
+- 测试矩阵：`DocsAI/Tests/测试矩阵.md`
+
 ## TimerManager - 计时器
 
 禁止 `new Timer()` 和 `GetTree().CreateTimer()`，统一用 `TimerManager`。

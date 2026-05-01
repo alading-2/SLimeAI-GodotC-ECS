@@ -5,6 +5,12 @@ description: 创建新 Entity、管理 Entity 生命周期（Spawn/Register/Dest
 
 # ECS Entity 规范
 
+## 先读
+
+- `DocsAI/Modules/Entity.md`
+- 涉及 EntityManager、关系、迁移、对象池激活时读 `DocsAI/Workflows/ECS核心修改门禁.md`
+- 测试矩阵：`DocsAI/Tests/测试矩阵.md`
+
 ## 核心原则
 
 - **Scene 即 Entity**：`.tscn` 场景文件就是 Entity，实现 `IEntity` 接口

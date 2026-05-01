@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { access, readdir } from "node:fs/promises";
+import { access, mkdir, readdir, writeFile } from "node:fs/promises";
 import { constants } from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
@@ -10,23 +10,24 @@ const DEFAULT_SCAN_ROOT = "Src/ECS/Test";
 const DEFAULT_GODOT =
   "/home/slime/Code/Godot/GodotEngine/4.x/Godot_v4.6.2-stable_mono_linux_x86_64/Godot_v4.6.2-stable_mono_linux.x86_64";
 const DEFAULT_TIMEOUT_MS = 60000;
+const DEFAULT_MAX_LOG_LINES = 80;
 const FAILURE_PATTERNS = [
-  "C# Script Error",
-  "Cannot instantiate C# script",
-  "Unhandled exception",
-  "Exception",
-  "[FAIL]",
-  "FAIL:",
-  "[失败]",
-  "Failed to load",
-  "scene not found",
+  { pattern: "C# Script Error", reason: "CSharpScriptError" },
+  { pattern: "Cannot instantiate C# script", reason: "CannotInstantiateCSharpScript" },
+  { pattern: "Unhandled exception", reason: "UnhandledException" },
+  { pattern: "Exception", reason: "Exception" },
+  { pattern: "[FAIL]", reason: "TestFailMarker" },
+  { pattern: "FAIL:", reason: "TestFailMarker" },
+  { pattern: "[失败]", reason: "TestFailMarker" },
+  { pattern: "Failed to load", reason: "FailedToLoad" },
+  { pattern: "scene not found", reason: "SceneNotFound" },
 ];
 
 function printUsage() {
   console.error(`Usage:
-  node scripts/godot-scene-runner.mjs list [--all]
-  node scripts/godot-scene-runner.mjs run <scene-path> [--build] [--godot <path>] [--timeout <ms>]
-  node scripts/godot-scene-runner.mjs run-all [--build] [--continue-on-fail] [--godot <path>] [--timeout <ms>] [--all]
+  node scripts/godot-scene-runner.mjs list [--all] [--filter <text>] [--output <path>]
+  node scripts/godot-scene-runner.mjs run <scene-path> [--build] [--godot <path>] [--timeout <ms>] [--max-log-lines <n>] [--full-logs] [--output <path>]
+  node scripts/godot-scene-runner.mjs run-all [--build] [--continue-on-fail] [--godot <path>] [--timeout <ms>] [--all] [--filter <text>] [--max-log-lines <n>] [--full-logs] [--output <path>]
 
 Scene paths may be res:// paths or project-relative local paths.`);
 }
@@ -41,6 +42,10 @@ function parseArgs(argv) {
     includeAll: false,
     godot: null,
     timeoutMs: DEFAULT_TIMEOUT_MS,
+    filter: null,
+    maxLogLines: DEFAULT_MAX_LOG_LINES,
+    fullLogs: false,
+    output: null,
   };
 
   for (let i = 0; i < rest.length; i += 1) {
@@ -76,6 +81,39 @@ function parseArgs(argv) {
         throw new Error("--timeout must be a positive integer in milliseconds.");
       }
       options.timeoutMs = parsed;
+      i += 1;
+      continue;
+    }
+
+    if (value === "--filter") {
+      if (!rest[i + 1] || rest[i + 1].startsWith("--")) {
+        throw new Error("--filter requires text.");
+      }
+      options.filter = rest[i + 1];
+      i += 1;
+      continue;
+    }
+
+    if (value === "--max-log-lines") {
+      const parsed = Number.parseInt(rest[i + 1], 10);
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        throw new Error("--max-log-lines must be a positive integer.");
+      }
+      options.maxLogLines = parsed;
+      i += 1;
+      continue;
+    }
+
+    if (value === "--full-logs") {
+      options.fullLogs = true;
+      continue;
+    }
+
+    if (value === "--output") {
+      if (!rest[i + 1] || rest[i + 1].startsWith("--")) {
+        throw new Error("--output requires a file path.");
+      }
+      options.output = rest[i + 1];
       i += 1;
       continue;
     }
@@ -159,6 +197,15 @@ async function collectScenes(root = DEFAULT_SCAN_ROOT, includeAll = false) {
 
   await walk(root);
   return scenes.sort((a, b) => a.localeCompare(b));
+}
+
+function filterScenes(scenes, filter) {
+  if (!filter) {
+    return scenes;
+  }
+
+  const normalizedFilter = filter.toLowerCase();
+  return scenes.filter((scene) => scene.toLowerCase().includes(normalizedFilter));
 }
 
 async function resolveScene(scenePath) {
@@ -280,15 +327,84 @@ function runProcess(command, args, options = {}) {
   });
 }
 
+function splitLines(value) {
+  if (!value) {
+    return [];
+  }
+
+  return value.split(/\r?\n/).filter((line) => line.length > 0);
+}
+
 function findFirstError(stdout, stderr) {
   const combined = `${stdout}\n${stderr}`;
   const lines = combined.split(/\r?\n/);
 
-  for (const pattern of FAILURE_PATTERNS) {
-    const line = lines.find((candidate) => candidate.includes(pattern));
-    if (line) {
-      return line;
+  for (const { pattern, reason } of FAILURE_PATTERNS) {
+    const lineIndex = lines.findIndex((candidate) => candidate.includes(pattern));
+    if (lineIndex >= 0) {
+      return {
+        line: lines[lineIndex],
+        lineIndex,
+        pattern,
+        reason,
+      };
     }
+  }
+
+  return null;
+}
+
+function getErrorContext(stdout, stderr, firstError, contextRadius = 4) {
+  if (!firstError) {
+    return [];
+  }
+
+  const lines = `${stdout}\n${stderr}`.split(/\r?\n/);
+  const start = Math.max(0, firstError.lineIndex - contextRadius);
+  const end = Math.min(lines.length, firstError.lineIndex + contextRadius + 1);
+
+  return lines.slice(start, end).filter((line) => line.length > 0);
+}
+
+function summarizeLogs(stdout, stderr, maxLogLines) {
+  const stdoutLines = splitLines(stdout);
+  const stderrLines = splitLines(stderr);
+  const combinedLines = [...stdoutLines, ...stderrLines];
+  const importantLines = combinedLines.filter((line) =>
+    FAILURE_PATTERNS.some(({ pattern }) => line.includes(pattern))
+    || line.includes("ERROR:")
+    || line.includes("WARNING:")
+    || line.includes("[PASS]")
+    || line.includes("[OK]")
+    || line.includes("[成功]"),
+  );
+
+  return {
+    stdoutTail: stdoutLines.slice(-maxLogLines),
+    stderrTail: stderrLines.slice(-maxLogLines),
+    importantLines: importantLines.slice(-maxLogLines),
+  };
+}
+
+function formatRawLog(value, maxLogLines, fullLogs) {
+  if (fullLogs) {
+    return value;
+  }
+
+  return splitLines(value).slice(-maxLogLines).join("\n");
+}
+
+function getFailureReason(result, firstError) {
+  if (result.timedOut) {
+    return "TimedOut";
+  }
+
+  if (result.exitCode !== 0) {
+    return `ExitCodeNonZero:${result.exitCode}`;
+  }
+
+  if (firstError) {
+    return firstError.reason;
   }
 
   return null;
@@ -314,35 +430,69 @@ async function runScene(scene, options) {
     ["--headless", "--path", ".", "--scene", resolvedScene, "--no-header"],
     { timeoutMs: options.timeoutMs },
   );
+  const firstError = findFirstError(result.stdout, result.stderr);
+  const failureReason = getFailureReason(result, firstError);
 
   return {
     scene: resolvedScene,
     exitCode: result.exitCode,
     timedOut: result.timedOut,
-    stdout: result.stdout,
-    stderr: result.stderr,
-    firstError: findFirstError(result.stdout, result.stderr),
+    failed: failureReason !== null,
+    failureReason,
+    stdout: formatRawLog(result.stdout, options.maxLogLines, options.fullLogs),
+    stderr: formatRawLog(result.stderr, options.maxLogLines, options.fullLogs),
+    stdoutLineCount: splitLines(result.stdout).length,
+    stderrLineCount: splitLines(result.stderr).length,
+    rawLogsTruncated: !options.fullLogs,
+    firstError: firstError?.line ?? null,
+    errorContext: getErrorContext(result.stdout, result.stderr, firstError),
+    logSummary: summarizeLogs(result.stdout, result.stderr, options.maxLogLines),
   };
+}
+
+async function writeJsonOutput(outputPath, payload) {
+  if (!outputPath) {
+    return;
+  }
+
+  const absolutePath = path.resolve(PROJECT_ROOT, outputPath);
+  if (!absolutePath.startsWith(`${PROJECT_ROOT}${path.sep}`) && absolutePath !== PROJECT_ROOT) {
+    throw new Error(`Output path must be inside project: ${outputPath}`);
+  }
+
+  await mkdir(path.dirname(absolutePath), { recursive: true });
+  await writeFile(absolutePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+}
+
+async function printAndMaybeWrite(payload, outputPath) {
+  await writeJsonOutput(outputPath, payload);
+  console.log(JSON.stringify(payload, null, 2));
 }
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
 
   if (options.command === "list") {
-    const scenes = await collectScenes(DEFAULT_SCAN_ROOT, options.includeAll);
-    console.log(JSON.stringify({ scenes }, null, 2));
+    const scenes = filterScenes(
+      await collectScenes(DEFAULT_SCAN_ROOT, options.includeAll),
+      options.filter,
+    );
+    await printAndMaybeWrite({ scenes }, options.output);
     return;
   }
 
   if (options.command === "run") {
     const result = await runScene(options.scene, options);
-    console.log(JSON.stringify(result, null, 2));
-    process.exitCode = result.exitCode === 0 && !result.timedOut ? 0 : 1;
+    await printAndMaybeWrite(result, options.output);
+    process.exitCode = result.failed ? 1 : 0;
     return;
   }
 
   if (options.command === "run-all") {
-    const scenes = await collectScenes(DEFAULT_SCAN_ROOT, options.includeAll);
+    const scenes = filterScenes(
+      await collectScenes(DEFAULT_SCAN_ROOT, options.includeAll),
+      options.filter,
+    );
     const results = [];
     const runOptions = { ...options, build: false };
 
@@ -354,13 +504,13 @@ async function main() {
       const result = await runScene(scene, runOptions);
       results.push(result);
 
-      if (!options.continueOnFail && (result.exitCode !== 0 || result.timedOut)) {
+      if (!options.continueOnFail && result.failed) {
         break;
       }
     }
 
-    const failed = results.some((result) => result.exitCode !== 0 || result.timedOut);
-    console.log(JSON.stringify({ results }, null, 2));
+    const failed = results.some((result) => result.failed);
+    await printAndMaybeWrite({ failed, results }, options.output);
     process.exitCode = failed ? 1 : 0;
     return;
   }
