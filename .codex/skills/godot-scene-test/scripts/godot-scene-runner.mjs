@@ -371,11 +371,12 @@ async function resolveGodot(explicitGodot) {
 
 function runProcess(command, args, options = {}) {
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const env = options.env ? { ...process.env, ...options.env } : process.env;
 
   return new Promise((resolve) => {
     const child = spawn(command, args, {
       cwd: PROJECT_ROOT,
-      env: process.env,
+      env,
       shell: false,
     });
 
@@ -604,6 +605,99 @@ async function prepareLogRun(logDir, retentionDays) {
   };
 }
 
+async function collectFilesRecursive(root) {
+  if (!(await pathExists(root))) {
+    return [];
+  }
+
+  const files = [];
+
+  async function walk(dir) {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(fullPath);
+        continue;
+      }
+
+      if (entry.isFile()) {
+        files.push(toProjectRelative(fullPath));
+      }
+    }
+  }
+
+  await walk(root);
+  return files.sort((a, b) => a.localeCompare(b));
+}
+
+async function prepareSceneLogContext(logRun, scene, attempt) {
+  if (!logRun) {
+    return null;
+  }
+
+  const index = String(logRun.nextIndex).padStart(3, "0");
+  logRun.nextIndex += 1;
+
+  const attemptSuffix = `_attempt${attempt}`;
+  const sceneDir = path.join(logRun.runDir, `${index}_${sanitizeFileName(scene)}${attemptSuffix}`);
+  const screenshotDir = path.join(sceneDir, "screenshots");
+  const artifactDir = path.join(sceneDir, "artifacts");
+
+  await mkdir(screenshotDir, { recursive: true });
+  await mkdir(artifactDir, { recursive: true });
+
+  const stdoutPath = path.join(sceneDir, "stdout.log");
+  const stderrPath = path.join(sceneDir, "stderr.log");
+  const combinedPath = path.join(sceneDir, "combined.log");
+  const resultPath = path.join(sceneDir, "result.json");
+
+  const artifactDirs = {
+    screenshots: toProjectRelative(screenshotDir),
+    artifacts: toProjectRelative(artifactDir),
+  };
+
+  return {
+    sceneDir,
+    screenshotDir,
+    artifactDir,
+    logFiles: {
+      stdout: toProjectRelative(stdoutPath),
+      stderr: toProjectRelative(stderrPath),
+      combined: toProjectRelative(combinedPath),
+      result: toProjectRelative(resultPath),
+    },
+    paths: {
+      stdoutPath,
+      stderrPath,
+      combinedPath,
+      resultPath,
+    },
+    artifactDirs,
+    env: {
+      GODOT_SCENE_TEST_RUN_DIR: normalizeSlashes(logRun.runDir),
+      GODOT_SCENE_TEST_RUN_DIR_REL: toProjectRelative(logRun.runDir),
+      GODOT_SCENE_TEST_SCENE_DIR: normalizeSlashes(sceneDir),
+      GODOT_SCENE_TEST_SCENE_DIR_REL: toProjectRelative(sceneDir),
+      GODOT_SCENE_TEST_SCREENSHOT_DIR: normalizeSlashes(screenshotDir),
+      GODOT_SCENE_TEST_SCREENSHOT_DIR_REL: artifactDirs.screenshots,
+      GODOT_SCENE_TEST_ARTIFACT_DIR: normalizeSlashes(artifactDir),
+      GODOT_SCENE_TEST_ARTIFACT_DIR_REL: artifactDirs.artifacts,
+    },
+  };
+}
+
+async function collectSceneArtifacts(sceneLogContext) {
+  if (!sceneLogContext) {
+    return null;
+  }
+
+  return {
+    screenshots: await collectFilesRecursive(sceneLogContext.screenshotDir),
+    files: await collectFilesRecursive(sceneLogContext.artifactDir),
+  };
+}
+
 function attachRunMetadata(logRun, options, scenes) {
   if (!logRun) {
     return;
@@ -626,22 +720,10 @@ function attachRunMetadata(logRun, options, scenes) {
   };
 }
 
-async function writeSceneLogFiles(logRun, scene, processResult, sceneResult, attempt) {
-  if (!logRun) {
+async function writeSceneLogFiles(logRun, scene, processResult, sceneResult, attempt, sceneLogContext) {
+  if (!logRun || !sceneLogContext) {
     return null;
   }
-
-  const index = String(logRun.nextIndex).padStart(3, "0");
-  logRun.nextIndex += 1;
-
-  const attemptSuffix = `_attempt${attempt}`;
-  const sceneDir = path.join(logRun.runDir, `${index}_${sanitizeFileName(scene)}${attemptSuffix}`);
-  await mkdir(sceneDir, { recursive: true });
-
-  const stdoutPath = path.join(sceneDir, "stdout.log");
-  const stderrPath = path.join(sceneDir, "stderr.log");
-  const combinedPath = path.join(sceneDir, "combined.log");
-  const resultPath = path.join(sceneDir, "result.json");
 
   const cleanStdout = stripAnsi(processResult.stdout);
   const cleanStderr = stripAnsi(processResult.stderr);
@@ -660,17 +742,20 @@ async function writeSceneLogFiles(logRun, scene, processResult, sceneResult, att
     cleanStderr,
   ].join("\n");
 
-  const logFiles = {
-    stdout: toProjectRelative(stdoutPath),
-    stderr: toProjectRelative(stderrPath),
-    combined: toProjectRelative(combinedPath),
-    result: toProjectRelative(resultPath),
-  };
+  const logFiles = sceneLogContext.logFiles;
+  const artifactDirs = sceneLogContext.artifactDirs;
+  const artifacts = await collectSceneArtifacts(sceneLogContext);
+  const { stdoutPath, stderrPath, combinedPath, resultPath } = sceneLogContext.paths;
 
   await writeFile(stdoutPath, cleanStdout, "utf8");
   await writeFile(stderrPath, cleanStderr, "utf8");
   await writeFile(combinedPath, combined, "utf8");
-  await writeFile(resultPath, `${JSON.stringify({ ...sceneResult, logFiles }, null, 2)}\n`, "utf8");
+  await writeFile(resultPath, `${JSON.stringify({
+    ...sceneResult,
+    logFiles,
+    artifactDirs,
+    artifacts,
+  }, null, 2)}\n`, "utf8");
 
   logRun.entries.push({
     scene,
@@ -684,9 +769,15 @@ async function writeSceneLogFiles(logRun, scene, processResult, sceneResult, att
     stdoutLineCount: sceneResult.stdoutLineCount,
     stderrLineCount: sceneResult.stderrLineCount,
     logFiles,
+    artifactDirs,
+    artifacts,
   });
 
-  return logFiles;
+  return {
+    logFiles,
+    artifactDirs,
+    artifacts,
+  };
 }
 
 async function writeLogIndex(logRun, payload) {
@@ -715,6 +806,7 @@ async function writeLogIndex(logRun, payload) {
 async function runScene(scene, options, attempt = 1) {
   const resolvedScene = await resolveScene(scene);
   const godot = await resolveGodot(options.godot);
+  const sceneLogContext = await prepareSceneLogContext(options.logRun, resolvedScene, attempt);
 
   if (options.build) {
     await buildProject(options.timeoutMs);
@@ -723,7 +815,7 @@ async function runScene(scene, options, attempt = 1) {
   const result = await runProcess(
     godot,
     ["--headless", "--path", ".", "--scene", resolvedScene, "--no-header"],
-    { timeoutMs: options.timeoutMs },
+    { timeoutMs: options.timeoutMs, env: sceneLogContext?.env },
   );
   const firstError = findFirstError(result.stdout, result.stderr);
   const failureReason = getFailureReason(result, firstError);
@@ -747,9 +839,18 @@ async function runScene(scene, options, attempt = 1) {
     logSummary: summarizeLogs(result.stdout, result.stderr, options.maxLogLines, options.errorsOnly),
   };
 
-  const logFiles = await writeSceneLogFiles(options.logRun, resolvedScene, result, sceneResult, attempt);
-  if (logFiles) {
-    sceneResult.logFiles = logFiles;
+  const logPayload = await writeSceneLogFiles(
+    options.logRun,
+    resolvedScene,
+    result,
+    sceneResult,
+    attempt,
+    sceneLogContext,
+  );
+  if (logPayload) {
+    sceneResult.logFiles = logPayload.logFiles;
+    sceneResult.artifactDirs = logPayload.artifactDirs;
+    sceneResult.artifacts = logPayload.artifacts;
   }
 
   return sceneResult;
@@ -771,6 +872,8 @@ async function runSceneWithAttempts(scene, options) {
       timedOut: latestResult.timedOut,
       firstError: latestResult.firstError,
       logFiles: latestResult.logFiles,
+      artifactDirs: latestResult.artifactDirs,
+      artifacts: latestResult.artifacts,
     };
     attemptSummaries.push(summary);
 

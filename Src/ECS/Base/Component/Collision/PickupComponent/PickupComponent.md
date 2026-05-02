@@ -1,6 +1,6 @@
 # PickupComponent (拾取组件)
 
-> 当前代码状态：`PickupComponent.cs` 整体处于注释归档状态，不是可直接挂载使用的运行时组件。以下内容仅保留历史设计语义；新增拾取功能前必须先恢复/重写组件实现，并按当前 `Entity.Events`、`DataKey static readonly DataMeta`、`EntityManager.Destroy / ObjectPool` 规则校准。
+> 当前代码状态：`PickupComponent.cs` 是禁用物理监控的占位实现，只用于保证旧场景引用可实例化。以下内容仅保留历史设计语义；新增拾取功能前必须恢复/重写组件逻辑，并按当前 `Entity.Events`、`DataKey static readonly DataMeta`、`EntityManager.Destroy / ObjectPool` 规则校准。
 
 历史目标：实现物品（如经验值、道具、货币）的拾取检测、磁吸效果以及与采集者的交互逻辑。
 
@@ -38,9 +38,9 @@
 
 ## 使用说明
 
-当前不要按本文直接接入场景。若要重新启用：
+当前不要按本文直接接入玩法。若要重新启用：
 
-1. 先恢复 `PickupComponent.cs` 的实际实现。
+1. 先把 `PickupComponent.cs` 从占位实现恢复为实际拾取逻辑。
 2. 事件订阅放入 `OnComponentRegistered` / `OnComponentUnregistered`，避免在 `_Ready` 中绑定核心逻辑。
 3. 磁吸共享状态进入 `Entity.Data`，临时采集者引用可保留为组件私有字段。
 4. 拾取完成后通过 `EntityManager.Destroy` 或对象池归还路径处理，不要直接 `QueueFree`。

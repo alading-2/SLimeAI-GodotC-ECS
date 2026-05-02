@@ -25,7 +25,7 @@ runner 按以下优先级给出 `failureReason`：
 3. 看 `firstError`。
 4. 看 `errorContext`。
 5. 看 `logSummary.importantLines`。
-6. 需要更多上下文时优先用 `--log-dir Docs/测试/场景测试日志/runs` 保存完整日志后 `rg` 检索；只在确实需要把完整日志放进 JSON 时使用 `--full-logs`。
+6. 需要更多上下文时优先用 `--log-dir .ai-temp/scene-tests/runs` 保存完整日志后 `rg` 检索；只在确实需要把完整日志放进 JSON 时使用 `--full-logs`。
 
 ## 定位规则
 
@@ -41,12 +41,12 @@ runner 按以下优先级给出 `failureReason`：
 
 1. 复现失败：
    ```bash
-   node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run <scene> --build --attempts 2 --errors-only --log-dir Docs/测试/场景测试日志/runs
+   node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run <scene> --build --attempts 2 --errors-only --log-dir .ai-temp/scene-tests/runs
    ```
 2. 根据 `failureReason` 和 `errorContext` 定位源码。
 3. 长日志用 `rg` 检索：
    ```bash
-   rg -n -m 80 -C 3 "ERROR:|\\[ERROR\\]|\\[FAIL\\]|Exception|Cannot instantiate" Docs/测试/场景测试日志/runs/<日期>/<时间>
+   rg -n -m 80 -C 3 "ERROR:|\\[ERROR\\]|\\[FAIL\\]|Exception|Cannot instantiate" .ai-temp/scene-tests/runs/<日期>/<时间>
    ```
 4. 小步修复。
 5. 重新运行同一个场景。
@@ -59,5 +59,5 @@ runner 按以下优先级给出 `failureReason`：
 8. 最终回复记录失败原因、修复点和复验命令；如果保留日志，说明 `logIndex`。
 9. 分析完成且无需保留证据时，删除本轮日志目录：
    ```bash
-   rm -r -- Docs/测试/场景测试日志/runs/<日期>/<时间>
+   rm -r -- .ai-temp/scene-tests/runs/<日期>/<时间>
    ```

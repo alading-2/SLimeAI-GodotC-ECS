@@ -11,7 +11,7 @@ description: 运行 Godot C# 项目测试场景并获取打印信息。用于 AI
 - 不写 Godot 资源文件，不重保存 `.tscn/.tres/.uid`。
 - 路径缺失、Godot 不存在、场景不存在时，停止并说明原因。
 - 修改代码前后运行 `git status --short`。
-- 本轮任务使用 `--log-dir` 生成的日志，分析结束后删除对应 `Docs/测试/场景测试日志/runs/<日期>/<时间>` 目录；只在需要复查或给用户留证据时保留路径。
+- 本轮任务使用 `--log-dir` 生成的日志，分析结束后删除对应 `.ai-temp/scene-tests/runs/<日期>/<时间>` 目录；只在需要复查或给用户留证据时保留路径。
 
 ## 必读
 
@@ -24,12 +24,23 @@ description: 运行 Godot C# 项目测试场景并获取打印信息。用于 AI
 ```bash
 node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs list
 node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs list --filter Movement
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/GlobalTest/MainTest/MainTest.tscn --build --attempts 2 --errors-only --log-dir Docs/测试/场景测试日志/runs
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run-many res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn --build --continue-on-fail --attempts 2 --errors-only --log-dir Docs/测试/场景测试日志/runs
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run-all --filter Movement --build --continue-on-fail --attempts 2 --errors-only --log-dir Docs/测试/场景测试日志/runs
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/GlobalTest/MainTest/MainTest.tscn --build --attempts 2 --errors-only --log-dir .ai-temp/scene-tests/runs
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run-many res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn --build --continue-on-fail --attempts 2 --errors-only --log-dir .ai-temp/scene-tests/runs
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run-all --filter Movement --build --continue-on-fail --attempts 2 --errors-only --log-dir .ai-temp/scene-tests/runs
 ```
 
-默认 `stdout` / `stderr` 只保留尾部摘要，避免长日志刷屏。需要完整打印信息时优先加 `--log-dir Docs/测试/场景测试日志/runs`，然后用 `rg` 检索落盘日志；只有确实需要 JSON 内含完整日志时才加 `--full-logs`。
+默认 `stdout` / `stderr` 只保留尾部摘要，避免长日志刷屏。需要完整打印信息时优先加 `--log-dir .ai-temp/scene-tests/runs`，然后用 `rg` 检索落盘日志；只有确实需要 JSON 内含完整日志时才加 `--full-logs`。
+
+使用 `--log-dir` 时，runner 会为每个场景 attempt 创建 `screenshots/` 和 `artifacts/` 子目录，并注入环境变量：
+
+```text
+GODOT_SCENE_TEST_SCREENSHOT_DIR
+GODOT_SCENE_TEST_ARTIFACT_DIR
+GODOT_SCENE_TEST_SCENE_DIR
+GODOT_SCENE_TEST_RUN_DIR
+```
+
+场景内主动保存的 PNG 截图写入 `GODOT_SCENE_TEST_SCREENSHOT_DIR`；这类截图属于测试打印产物，会出现在 `artifactDirs` / `artifacts.screenshots`，和 stdout/stderr 同目录管理。
 
 `run` / `run-many` / `run-all` 都支持 `--attempts <1-3>`：失败才重试，成功即停止。`run-many` / `run-all` 都是同步顺序执行：一个 Godot headless 进程退出后才启动下一个。Godot 不会打开编辑器窗口，也不会同时多开。
 
@@ -63,6 +74,8 @@ rawLogsTruncated
 exitCode
 timedOut
 logFiles
+artifactDirs
+artifacts
 logIndex
 summary
 skippedScenes
@@ -73,13 +86,13 @@ skippedScenes
 长日志检索：
 
 ```bash
-rg -n -m 80 -C 3 "ERROR:|\\[ERROR\\]|\\[FAIL\\]|Exception|Cannot instantiate" Docs/测试/场景测试日志/runs/<日期>/<时间>
+rg -n -m 80 -C 3 "ERROR:|\\[ERROR\\]|\\[FAIL\\]|Exception|Cannot instantiate" .ai-temp/scene-tests/runs/<日期>/<时间>
 ```
 
 本轮日志分析完成后清理：
 
 ```bash
-rm -r -- Docs/测试/场景测试日志/runs/<日期>/<时间>
+rm -r -- .ai-temp/scene-tests/runs/<日期>/<时间>
 ```
 
 ## Godot 路径

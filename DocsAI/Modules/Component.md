@@ -59,7 +59,7 @@ Movement、AI 和 Collision 已拆成独立契约。本文件只保留 Component
 - `HurtboxComponent` 本身就是 `Area2D` 受击区组件。
 - 接触伤害消费 `HurtboxEntered / HurtboxExited`。
 - 运动碰撞由 `EntityMovementComponent`、`MovementCollisionPolicy` 和停止协调器处理。
-- `PickupComponent.cs` 当前整文件注释归档，不是可直接挂载的运行时组件；新增拾取功能前先恢复/重写实现并补测试。
+- `PickupComponent.cs` 当前是禁用物理监控的占位组件，仅用于保证旧场景引用可实例化；新增拾取功能前先恢复/重写实现并补测试。
 
 完整碰撞规则见 `DocsAI/Modules/Collision.md`。
 

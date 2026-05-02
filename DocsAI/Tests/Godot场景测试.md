@@ -35,9 +35,9 @@ node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs <command>
 ```bash
 node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs list
 node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs list --filter Movement
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/GlobalTest/MainTest/MainTest.tscn --build --attempts 2 --errors-only --log-dir Docs/测试/场景测试日志/runs
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run-many res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn --build --continue-on-fail --attempts 2 --errors-only --log-dir Docs/测试/场景测试日志/runs
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run-all --filter Movement --build --continue-on-fail --attempts 2 --errors-only --log-dir Docs/测试/场景测试日志/runs
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/GlobalTest/MainTest/MainTest.tscn --build --attempts 2 --errors-only --log-dir .ai-temp/scene-tests/runs
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run-many res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn --build --continue-on-fail --attempts 2 --errors-only --log-dir .ai-temp/scene-tests/runs
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run-all --filter Movement --build --continue-on-fail --attempts 2 --errors-only --log-dir .ai-temp/scene-tests/runs
 ```
 
 ## 执行语义
@@ -66,6 +66,8 @@ node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run-all --fil
 - `exitCode`：Godot 进程退出码。
 - `timedOut`：是否超时。
 - `logFiles`：使用 `--log-dir` 时出现，指向该场景完整日志文件。
+- `artifactDirs`：使用 `--log-dir` 时出现，指向该场景的 `screenshots/` 和 `artifacts/` 目录。
+- `artifacts`：使用 `--log-dir` 时出现，列出该场景主动保存的截图和辅助产物。
 - `logIndex`：使用 `--log-dir` 时出现，指向本次运行的 `index.json`。
 - `summary` / `skippedScenes`：批量运行时出现，说明执行、跳过、通过、失败和超时数量。
 
@@ -74,22 +76,24 @@ node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run-all --fil
 长日志不要直接塞进上下文。优先：
 
 ```bash
-rg -n -m 80 -C 3 "ERROR:|\\[ERROR\\]|\\[FAIL\\]|Exception|Cannot instantiate" Docs/测试/场景测试日志/runs/<日期>/<时间>
+rg -n -m 80 -C 3 "ERROR:|\\[ERROR\\]|\\[FAIL\\]|Exception|Cannot instantiate" .ai-temp/scene-tests/runs/<日期>/<时间>
 ```
 
-日志目录说明见 `Docs/测试/Godot场景测试Runner使用说明.md` 和 `Docs/测试/场景测试日志/README.md`。
+日志目录说明见 `Docs/测试/Godot场景测试Runner使用说明.md`。
+
+使用 `--log-dir` 时，runner 会给场景注入 `GODOT_SCENE_TEST_SCREENSHOT_DIR` / `GODOT_SCENE_TEST_ARTIFACT_DIR` 等环境变量。场景内主动保存的 PNG 截图写入 `GODOT_SCENE_TEST_SCREENSHOT_DIR`；截图路径会进入 `artifacts.screenshots`，按测试打印产物处理。
 
 日志是临时运行产物。一次任务结束前，如果已经完成分析和复验，删除本轮生成的具体运行目录：
 
 ```bash
-rm -r -- Docs/测试/场景测试日志/runs/<日期>/<时间>
+rm -r -- .ai-temp/scene-tests/runs/<日期>/<时间>
 ```
 
 只删除本轮 `logIndex` 指向的目录；不要清空整个 `runs/`。
 
 ## 视觉截图边界
 
-- CLI headless 测试拿日志，不拿游戏窗口截图。
+- CLI headless 测试优先拿日志；如果场景主动保存截图，应写入 `GODOT_SCENE_TEST_SCREENSHOT_DIR`。
 - UI 布局、游戏实际画面、编辑器报错窗口需要人工打开有界面场景后截图。
 - Linux 桌面截图使用 `flameshot gui -d 3000`，执行后 3 秒内切到目标窗口并框选。
 - 截图结论和日志结论分开记录。
