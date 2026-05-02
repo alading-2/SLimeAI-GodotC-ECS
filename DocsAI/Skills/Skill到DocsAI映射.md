@@ -12,6 +12,9 @@
 | `ecs-event` | `DocsAI/Modules/Event.md` | Entity.Events、GlobalEventBus、事件定义和订阅清理。 |
 | `ability-system` | `DocsAI/Modules/AbilitySystem.md`、`DocsAI/Modules/FeatureSystem.md`、`.codex/skills/ability-system/references/ability-logic-parameters.md` | 技能流水线、Feature 接入、目标选择、参数语义。 |
 | `damage-system` | `DocsAI/Modules/DamageSystem.md` | 伤害入口、管道处理器、DamageTool 和禁止事项。 |
+| `movement-system` | `DocsAI/Modules/Movement.md`、`DocsAI/Modules/Collision.md` | 运动策略、运动参数、朝向、停止流程和运动碰撞。 |
+| `ai-system` | `DocsAI/Modules/AI.md`、`DocsAI/Modules/Movement.md`、`DocsAI/Modules/Tools.md` | 行为树、AIComponent、AI DataKey、移动意图和索敌。 |
+| `collision-system` | `DocsAI/Modules/Collision.md`、`DocsAI/Modules/Movement.md`、`DocsAI/Modules/DamageSystem.md` | 碰撞层、Hurtbox、接触伤害、运动碰撞和对象池碰撞隔离。 |
 | `test-system` | `DocsAI/Modules/TestSystem.md` | TestSystem 宿主、模块、服务层和禁止事项。 |
 | `ui-bind` | `DocsAI/Modules/UI.md` | UIBase Bind 模式和响应式 UI 规则。 |
 | `tools` | `DocsAI/Modules/Tools.md` | TimerManager、ObjectPool、TargetSelector、ResourceManagement。 |

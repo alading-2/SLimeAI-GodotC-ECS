@@ -22,6 +22,8 @@
    - 清理源码旁文档的明显过期链接，补充新入口，不删除历史说明。
 5. `05_Final_Verification_And_Handoff.md`
    - 跑一致性检查，更新本计划状态文件，并让 `DocsAI/ProjectState.md` 指向本计划。
+6. `11_Movement_AI_Collision_Docs_Code_Alignment.md`
+   - 深层对齐 Movement / AI / Collision 三个模块族，补齐 DocsAI 契约和短 Skill。
 
 ## 状态文件
 
@@ -34,6 +36,7 @@
 - `DocsAI/Modules/FeatureSystem.md` 与 `DocsAI/Modules/DataAuthoring.md` 存在。
 - `DocsAI/INDEX.md`、`DocsAI/ProjectState.md`、`DocsAI/Skills/Skill到DocsAI映射.md` 指向本轮计划和新增模块。
 - `.codex/skills/*/SKILL.md` 仍保留原 Skill 名称，但长 Skill 已明显压缩。
+- Movement / AI / Collision 具备独立 DocsAI 契约和短 Skill。
 - 明显旧绝对路径、`file:///`、`复刻土豆兄弟`、`.windsurf` 入口不再出现在当前 AI 入口和本轮清理范围。
 - 构建命令能执行并记录结果。
 

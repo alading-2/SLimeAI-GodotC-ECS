@@ -34,6 +34,12 @@
   - `Src/ECS/UI/README.md` 的旧 `LoadScene<T>()`、旧 `Src/UI/Core` 路径、旧 AutoLoad 单例说明。
   - `DocsAI/Modules/UI.md` 的 UI 加载和 UIManager 注册契约。
   - `Src/ECS/Base/Event/README_EventBus.md` 的旧事件定义路径和事件名格式说明。
+- 第 11 批修正：
+  - 新增 `DocsAI/Modules/Movement.md`、`DocsAI/Modules/AI.md`、`DocsAI/Modules/Collision.md`。
+  - 新增 `.codex/skills/movement-system/SKILL.md`、`.codex/skills/ai-system/SKILL.md`、`.codex/skills/collision-system/SKILL.md`。
+  - 压缩 `Src/ECS/Base/System/Movement/**/*.md` 中 Movement 入口文档和 `Src/ECS/AI/README.md`。
+  - 更新 `DocsAI/INDEX.md`、`DocsAI/Skills/Skill到DocsAI映射.md`、`DocsAI/Modules/Component.md`、`DocsAI/Modules/DamageSystem.md`。
+  - 更新 `Docs/框架/项目索引.md` 的 Movement / AI / Collision DocsAI 入口和 Movement Stop 路径。
 
 ## 验证结果
 
@@ -42,23 +48,30 @@
 - `find DocsAI -maxdepth 3 -type f | sort`：已包含 `DocsAI/Modules/DataAuthoring.md` 和 `DocsAI/Modules/FeatureSystem.md`。
 - `rg -n "/mnt/e|file:///|复刻土豆兄弟|\\.windsurf" DocsAI .codex/skills Docs/框架/项目索引.md Src -g "*.md"`：无命中。
 - `rg -n "DocsAI/Modules|DocsAI/Tests|DocsAI/Workflows" .codex/skills DocsAI`：有预期入口和映射命中。
-- `dotnet build`：通过，0 Warning，0 Error。
+- `dotnet build`：本批次重新实测通过，0 Error；未出现 warning 输出。
 - 第二批验证：
   - `rg -n "Ability[_]Movement|Src/Test/ECS/Data|Data/Config/System/System/Resource/TestSystem[.]tres|[.][.]/[.][.]/[.][.]/ECS/Data" .codex Src DocsAI Docs -g "*.md"`：无命中。
   - `rg -n "/mnt/e|file:///|复刻土豆兄弟|\\.windsurf" DocsAI .codex/skills Docs/框架/项目索引.md Src -g "*.md"`：无命中。
-  - `dotnet build`：通过，0 Warning，0 Error。
+  - `dotnet build`：历史记录为通过。
 - 第三批验证：
   - `rg -n "AbilityExecutor|IAbilityExecutor|Src/Test|GetTree\\(\\)\\.CreateTimer|public const string ManaRegen|public const string MaxMana|public const string EffectiveMana|通常来自 \\.tres|Data/Config/System/System/Resource/TestSystem\\.tres" Src/ECS -g "*.md"`：仅剩 3 处禁止性说明（`不要通过旧 AbilityExecutor` / `不要新增 IAbilityExecutor` / `不要恢复 AbilityExecutorRegistry`）。
   - `rg -n "/mnt/e|file:///|复刻土豆兄弟|\\.windsurf" DocsAI .codex/skills Docs/框架/项目索引.md Src -g "*.md"`：无命中。
   - `find .codex/skills -maxdepth 2 -name SKILL.md -print | sort | xargs wc -l`：总计 742 行。
   - `find DocsAI -maxdepth 3 -type f | sort`：已包含 `DocsAI/Modules/DataAuthoring.md` 和 `DocsAI/Modules/FeatureSystem.md`。
   - `rg -n "DocsAI/Modules|DocsAI/Tests|DocsAI/Workflows" .codex/skills DocsAI`：有预期入口和映射命中。
-  - `dotnet build`：通过，0 Warning，0 Error。
+  - `dotnet build`：历史记录为通过。
 - 第四批验证：
   - `rg -n "AbilityTargetTeamFilter|LoadScene|\\bPoolNames\\b|AutoLoad|_EnterTree\\(\\).*ObjectPoolInit|_Ready\\(\\).*ObjectPoolInit|仅支持 Godot Node|不支持静态归还|GetTree\\(\\)\\.CreateTimer|new Timer\\(" Src/ECS/Tools -g "*.md"`：无命中。
-  - `dotnet build`：通过，0 Warning，0 Error。
-- 第五批验证待执行：
+  - `dotnet build`：历史记录为通过。
+- 第五批验证：
   - `rg -n "LoadScene|Src/UI/Core|AutoLoad 单例|Unit\\.Created|Spawn Config \\(\\.tres\\)|外部系统（如 AI 的 CD 控制|所有频率控制 100%|WindowUp|被回收/QueueFree|PickupComponent\\` 添加|AbilityTargetTeamFilter|GetTree\\(\\)\\.CreateTimer|new Timer\\(|GD\\.Load|ResourceLoader\\.Load|GetNodesInGroup|Data\\.On\\(|public const string" Src/ECS/Base/Component Src/ECS/AI Src/ECS/UI -g "*.md"`：无命中。
   - `rg -n "LoadScene|Src/UI/Core|Src/ECS/Base/Event/Type|小写下划线|AutoLoad 单例|Unit\\.Created|Spawn Config \\(\\.tres\\)|外部系统（如 AI 的 CD 控制|所有频率控制 100%|WindowUp|被回收/QueueFree|PickupComponent\\` 添加|AbilityTargetTeamFilter|GetTree\\(\\)\\.CreateTimer|new Timer\\(|GD\\.Load|ResourceLoader\\.Load|GetNodesInGroup|Data\\.On\\(|public const string" Src -g "*.md"`：仅剩禁止性 `GetNodesInGroup`、事件名 `public const string` 和特殊引用键示例。
   - `rg -n "/mnt/e|file:///|复刻土豆兄弟|\\.windsurf" DocsAI .codex/skills Docs/框架/项目索引.md Src -g "*.md"`：无命中。
-  - `dotnet build`：通过，0 Warning，0 Error。
+  - `dotnet build`：历史记录为通过。
+- 第 11 批验证：
+  - `git status --short`：仅显示本批次文档 / Skill 改动与新增文件。
+  - `find .codex/skills -maxdepth 2 -name SKILL.md -print | sort | xargs wc -l`：总计 906 行，新增 3 个短 Skill。
+  - `find DocsAI -maxdepth 3 -type f | sort`：已包含 `DocsAI/Modules/Movement.md`、`DocsAI/Modules/AI.md`、`DocsAI/Modules/Collision.md`。
+  - `rg -n "/mnt/e|file:///|复刻土豆兄弟|\\.windsurf" DocsAI .codex/skills Docs/框架/项目索引.md Src -g "*.md"`：无命中。
+  - `rg -n "DocsAI/Modules/Movement|DocsAI/Modules/AI|DocsAI/Modules/Collision|movement-system|ai-system|collision-system" DocsAI .codex/skills Docs/框架/项目索引.md`：有预期入口和映射命中。
+  - `dotnet build`：通过，0 Error；未出现 warning 输出。

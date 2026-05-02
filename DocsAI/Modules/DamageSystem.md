@@ -1,6 +1,6 @@
 # DamageSystem 模块契约
 
-本文是 AI 修改伤害入口、伤害处理器、接触伤害和批量 / DoT 伤害时必须阅读的执行契约。原始说明见 `Src/ECS/Base/System/DamageSystem/README.md`。
+本文是 AI 修改伤害入口、伤害处理器、接触伤害和批量 / DoT 伤害时必须阅读的执行契约。碰撞分层见 `DocsAI/Modules/Collision.md`，原始说明见 `Src/ECS/Base/System/DamageSystem/README.md`。
 
 ## 职责边界
 
@@ -27,6 +27,7 @@ DamageSystem 不负责：
 - `Src/ECS/Base/System/DamageSystem/DamageTool.cs`
 - `Src/ECS/Base/System/DamageSystem/Processors/`
 - `Src/ECS/Base/Component/Collision/ContactDamageComponent/ContactDamageComponent.cs`
+- 碰撞分层：`DocsAI/Modules/Collision.md`
 
 ## 数据 / 事件 / 生命周期
 
@@ -36,6 +37,7 @@ DamageSystem 不负责：
 - `BaseDamageProcessor` 只在 `Attacker` 自身死亡且带 `Attack` 标签时阻断，不追拥有者父链。
 - 处理器不需要检查 `IsEnd`，主循环会统一在每个处理器后检查。
 - 多目标和 DoT 优先使用 `DamageTool.ApplyToList` / `DamageTool.ScheduleDoT`。
+- 接触伤害只负责把 Hurtbox 接触转成 DamageSystem 请求；Hurtbox、layer/mask、运动碰撞语义见 `DocsAI/Modules/Collision.md`。
 
 ## 禁止事项
 

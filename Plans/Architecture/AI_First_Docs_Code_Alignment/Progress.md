@@ -6,7 +6,7 @@
 
 ## 当前阶段
 
-阶段性交接。AI 可执行入口和明显过期内容主体校准已完成；剩余工作是深层文档迁移和模块族长文档治理。
+第 11 批已完成：Movement / AI / Collision 深层模块族对齐、验证和状态收尾已落地。
 
 ## 已完成
 
@@ -21,11 +21,12 @@
 - 第四批按代码修正 Tools 族 ObjectPool、TargetSelector、TimerManager 源码旁文档。
 - 第五批按代码修正 Component / Attack / Collision / UI 源码旁文档和 DocsAI 契约。
 - 新增 `10_Handoff_For_New_Conversation.md`，记录新对话接续入口、已完成、未完成和推荐下一步。
+- 第 11 批新增 Movement / AI / Collision 三个 DocsAI 契约和对应短 Skill。
+- 第 11 批压缩 Movement / AI 源码旁长 README，并更新 Component / DamageSystem 摘要和项目索引。
 
 ## 未完成
 
 - `Src/**/*.md` 的长文档迁移仍需后续分模块处理。
-- Movement 长设计文档、AI 行为树细节、Collision 设计总览等仍需后续深层迁移评估。
 - `Docs/` 中对应人类设计文档还未系统归档 / 拆分 / 迁移。
 - 旧 `MainTest` 失败不是本轮范围，需独立 Debug。
 - 需要用真实 AI 功能任务继续验证每个 Skill 是否足够可执行。

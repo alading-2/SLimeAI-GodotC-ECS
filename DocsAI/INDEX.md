@@ -30,6 +30,9 @@
 - TestSystem：`.codex/skills/test-system/SKILL.md`
 - UI 绑定：`.codex/skills/ui-bind/SKILL.md`
 - 工具系统：`.codex/skills/tools/SKILL.md`
+- Movement 系统：`.codex/skills/movement-system/SKILL.md`
+- AI 系统：`.codex/skills/ai-system/SKILL.md`
+- Collision 系统：`.codex/skills/collision-system/SKILL.md`
 
 ## 人类文档入口
 
@@ -47,6 +50,9 @@
 - `DocsAI/Modules/FeatureSystem.md`
 - `DocsAI/Modules/AbilitySystem.md`
 - `DocsAI/Modules/DamageSystem.md`
+- `DocsAI/Modules/Movement.md`
+- `DocsAI/Modules/AI.md`
+- `DocsAI/Modules/Collision.md`
 - `DocsAI/Modules/DataAuthoring.md`
 - `DocsAI/Modules/TestSystem.md`
 - `DocsAI/Modules/UI.md`

@@ -6,11 +6,11 @@
 
 当前可交接状态：
 
-- `.codex/skills/*` 已压缩为短入口，当前总计 742 行。
+- `.codex/skills/*` 已压缩为短入口；第 11 批新增 3 个短 Skill 后当前总计 906 行。
 - `DocsAI/Modules/FeatureSystem.md` 与 `DocsAI/Modules/DataAuthoring.md` 已新增。
 - `DocsAI/INDEX.md`、`DocsAI/ProjectState.md`、Skill 映射已指向新计划和新增模块。
 - `Src/**/*.md` 已按模块族清理多批会直接误导 AI 写错代码的旧路径、旧 API、旧数据源和旧生命周期说明。
-- `dotnet build` 最近通过，0 Warning，0 Error。
+- `dotnet build` 在第 11 批重新实测通过，0 Error；未出现 warning 输出。
 - 旧机器路径扫描最近无命中：`/mnt/e`、`file:///`、`复刻土豆兄弟`、`.windsurf`。
 
 ## 已完成到哪里
@@ -29,11 +29,12 @@
 - 07 第三批：CostComponent、Data README、Component 规范、EntityManager、测试 README。
 - 08 第四批：Tools 族 ObjectPool、TargetSelector、TimerManager。
 - 09 第五批：Component / Attack / Collision / UI / EventBus。
+- 11 第六批：Movement / AI / Collision 深层模块族对齐。
 
 ## 明确未完成
 
 - `Src/**/*.md` 还没有做完整迁移，只清理了已确认会误导 AI 的内容。
-- Movement 长设计文档、AI 行为树细节、Collision 设计总览还需要后续深层审计。
+- Movement / AI / Collision 已在第 11 批完成 DocsAI 契约、短 Skill 和源码旁入口收敛；`Docs/` 长设计文档仍可后续继续归档整理。
 - `Docs/` 中对应人类设计文档还没有系统归档 / 拆分 / 迁移。
 - 没有修运行时代码。
 - 历史 `MainTest` 失败不是本轮范围，需要独立 Debug。
