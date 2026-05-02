@@ -151,7 +151,7 @@ public static readonly DataMeta MyKey = DataRegistry.Register(
         MaxValue = 100
     });
 ```
-2. Node2D 引用等非注册类型仍使用 `const string`：`public const string TargetNode = "TargetNode";`
+2. 极少数运行时引用键允许保留 `const string`；普通业务字段不要新增 `const string`
 3. DataMeta 通过隐式转换支持 `Data.Get/Set(DataKey.MyKey)`，无需 `.Key` 调用
 
 ---
@@ -203,9 +203,9 @@ public partial class MyComponent : Node, IComponent
 Spawn 流程:
   ┌─ ObjectPool.Get() ─► OnPoolAcquire (Entity)
   │
-  ├─ RegisterComponents() ─► OnComponentRegistered (每个 Component)
+  ├─ Data.LoadFromConfig() ─► 注入 DataNew 数据
   │
-  └─ Data.LoadFromConfig() ─► 注入 DataNew 数据
+  └─ RegisterComponents() ─► OnComponentRegistered (每个 Component)
 
 Destroy 流程:
   ┌─ UnregisterEntity()
@@ -233,7 +233,7 @@ Destroy 流程:
 
 | 数据类型 | 来源 | 示例 | 在 OnComponentRegistered 中 | 正确处理方式 |
 |:---|:---|:---|:---:|:---|
-| **配置数据** | Spawn Config (.tres) | MaxHp, Speed | ✅ **可用** | 直接读取 `_data.Get()` |
+| **配置数据** | `EntitySpawnConfig.Config`（通常来自 `Data/DataNew` POCO 或测试字典） | MaxHp, Speed | ✅ **可用** | 直接读取 `_data.Get()` |
 | **初始数据** | Spawn 后代码设置 | SkillLevel, Target | ❌ **不可用** | 监听 `PropertyChanged` 事件 |
 
 **错误写法**:

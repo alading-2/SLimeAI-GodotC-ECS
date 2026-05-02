@@ -1,8 +1,8 @@
-# 当前计划
+# 当前计划（历史归档）
 
 ## 当前目标
 
-完成 AI-First Godot C# ECS 程序开发体系迁移，把原始总说明落地为：
+旧 AI-First Godot C# ECS 程序开发体系迁移已完成并归档。它把原始总说明落地为：
 
 - `Docs/` 给人看。
 - `DocsAI/` 给 AI 执行。
@@ -11,7 +11,9 @@
 
 ## 当前阶段
 
-计划 07 收尾：ECS 核心回归与人工审查门禁。
+历史计划已完成。后续文档与 Skill 按代码对齐工作转入：
+
+- `Plans/Architecture/AI_First_Docs_Code_Alignment/README.md`
 
 ## 已完成
 
@@ -23,20 +25,15 @@
 - 06 功能试点方向修正：优先复验已有 `LifecycleComponent + DataKey.MaxLifeTime`，不重复新增 `LifetimeComponent`。
 - 07 ECS 核心修改门禁初版。
 
-## 未完成
+## 移交到后续计划
 
-- `Src/**/*.md` 仍有旧绝对路径和历史链接，后续按模块逐步迁移。
-- 部分 Skill 仍偏长，可继续压缩到短入口。
+- `Src/**/*.md` 仍需按模块逐步判断留在源码旁、迁到 `Docs/` 或迁到 `DocsAI/`。
+- Skill 仍需按真实 AI 开发任务继续验证可执行性。
 - `MainTest` 当前存在历史 C# script instantiate 失败和大量 `!is_inside_tree()`，需要单独修复，不属于本次文档迁移。
 
 ## 下一步
 
-优先跑一次真实小功能闭环：
-
-1. 使用现有 `LifecycleComponent` 设计 MaxLifeTime 复验任务。
-2. 补一个最小测试场景或复用现有 ECSTest 场景验证到期销毁。
-3. 运行 `dotnet build` 和对应 Godot 场景测试。
-4. 把结果写入 `Done.md`。
+从 `DocsAI/ProjectState.md` 和 `Plans/Architecture/AI_First_Docs_Code_Alignment/Progress.md` 继续。
 
 ## 验证方式
 

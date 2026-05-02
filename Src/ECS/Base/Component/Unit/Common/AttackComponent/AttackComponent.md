@@ -12,14 +12,14 @@ stateDiagram-v2
 
     [*] --> Idle : 组件注册
 
-    Idle --> WindUp : Attack.Requested\n且 WindUpTime > 0
-    Idle --> Idle : Attack.Requested\n且 WindUpTime = 0【即时模式】
+    Idle --> WindUp : Attack.Requested\n统一进入前摇流程
 
     WindUp --> Recovery : WindUp Timer 到期\n且 RecoveryTime > 0
     WindUp --> Idle    : WindUp Timer 到期\n且 RecoveryTime = 0
     WindUp --> Idle    : 校验失败 → Cancelled
 
-    Recovery --> Idle  : Recovery Timer 到期 → Finished
+    Recovery --> Recovery : Finished 后仍未到 AttackInterval\n追加剩余冷却
+    Recovery --> Idle  : Recovery / 追加冷却 Timer 到期 → Finished
     Recovery --> Idle  : 校验失败 → Cancelled
 ```
 
@@ -29,7 +29,7 @@ stateDiagram-v2
 |---|---|:---:|:---:|
 | `Idle` | 空闲 | ✅ | ❌ |
 | `WindUp` | 前摇（蓄力，未出手） | ❌ | ✅ 含距离检查 |
-| `Recovery` | 后摇（已出手，硬直中） | ❌ | ✅ 仅自身/目标存活 |
+| `Recovery` | 后摇或追加冷却（已出手，未回到可攻击） | ❌ | ✅ 仅自身/目标存活 |
 
 ---
 
@@ -58,7 +58,7 @@ _validationTimer = TimerManager.Loop(0.2f).OnLoop(ValidateAttackContext)
 
 1. **自身死亡** → `SelfDead`
 2. **自身被眩晕** → `SelfDisabled`
-3. **目标对象无效**（被回收/QueueFree）→ `TargetInvalid`
+3. **目标对象无效**（被销毁或回收）→ `TargetInvalid`
 4. **目标死亡** → `TargetDead`
 5. **目标超出攻击范围 × 1.5**（仅在 WindUp 阶段检查）→ `TargetOutOfRange`
 
@@ -81,8 +81,9 @@ _validationTimer = TimerManager.Loop(0.2f).OnLoop(ValidateAttackContext)
 
 很多人会把“攻击间隔(AttackInterval)”和“前后摇(WindUp/Recovery)”混淆。**在系统设计中，它们是各司其职的两个独立概念，各干各的事：**
 
-- **攻击间隔 (AttackInterval)**：由**外部系统（如 AI 的 CD 控制、玩家输入频率）**决定。它管的是“每隔多久，我才尝试发号施令要求打一次”。
-- **前后摇 (WindUp + Recovery)**：由**本组件（AttackComponent内部）**自己决定。它管的是“这一个动作的武术套路，要占用我多长的时间不能干别的”。
+- **攻击间隔 (AttackInterval)**：由本组件用于约束“从本次攻击开始到下一次可攻击”的总周期。`FinishAttack` 会计算 `AttackInterval - WindUp - Recovery`，若仍有剩余时间，就复用 `Recovery` 状态追加冷却。
+- **前后摇 (WindUp + Recovery)**：由本组件决定“出手前等待多久、出手后动作占用多久”。
+- **外部 AI / 输入**：可以频繁发 `Attack.Requested`，但只有 `AttackState == Idle` 时请求才会被接受。
 
 ### 时间轴示意
 
@@ -99,18 +100,18 @@ CD阶段：   |<------------------ 攻击间隔 (AttackInterval) ---------------
 因为组件规定，**只有在 `Idle`（空闲）状态下，才接受新的攻击要求**。所以当它们不一致时，会出现以下结果：
 
 1. **前后摇时长 < 攻击间隔（最正常的运作情况）**
-   - **表现**：一套连招打完收手了，回到了 Idle，但下一个命令还没下来（在等 CD 转好），此时单位可以走位、发呆。
-   - **结果**：**实际攻击频率完全等于设定的“攻击间隔”**。
+   - **表现**：伤害与动作结束后，组件继续保持 `Recovery` 作为追加冷却，直到达到 `AttackInterval`。
+   - **结果**：**实际攻击频率等于设定的“攻击间隔”**，外部不需要再单独维护同一把普攻 CD。
 
-2. **前后摇时长 >= 攻击间隔（攻速溢出 / 猛男慢挥大剑）**
-   - **表现**：CD 已经先转好了（AI 尝试发送攻击请求），但**上一次攻击的后摇动作还没播完**（组件还是 Recovery 状态）。
-   - **结果**：因为本组件不是 Idle，所以这个**早到的攻击请求会被直接丢弃，不予理会**。
-   - **结论**：**实际攻击频率会被强制拉长到“前摇 + 后摇”的时间**。这就要求配表策划必须保证：`期望攻击间隔 >= 前摇 + 后摇`，否则超出的攻速属性将毫无收益（因为你手速再快，动作没做完就是打不出下一发）。
+2. **前后摇时长 >= 攻击间隔（动作时长超过周期）**
+   - **表现**：没有追加冷却，动作结束后直接回到 `Idle`。
+   - **结果**：早到的攻击请求会因非 `Idle` 被丢弃。
+   - **结论**：**实际攻击频率被拉长到“前摇 + 后摇”的时间**。
 
 ### 特殊的“即时模式”（WindUp=0, Recovery=0）
 
-- **表现**：一收到命令，立刻触发伤害判定命中，并瞬间回到 Idle 状态。
-- **结论**：动作 0 毫秒完成，所有频率控制 100% 甩锅给“攻击间隔”。适用于 Brotato、吸血鬼幸存者这类弹幕游戏，无视僵直，纯数值互秒。
+- **表现**：一收到命令，`WindUpTime=0` 的 Timer 会很快触发伤害判定；若 `AttackInterval > 0`，随后进入追加冷却。
+- **结论**：动作本身近似 0 毫秒，但频率仍由本组件的 `AttackInterval` 锁住。
 
 ---
 
@@ -126,7 +127,7 @@ CD阶段：   |<------------------ 攻击间隔 (AttackInterval) ---------------
     ├─ 校验失败 → 静默丢弃，无事件
     └─ 校验通过 →
         emit: Attack.Started
-        ├─ WindowUp=0 → ExecuteDamage() → emit: Attack.Finished
+        ├─ WindUp=0 → Timer 触发 ExecuteDamage()
         └─ WindUpTime>0 → [EnterWindUp]
                │
                ├─ 0.2s × n → ValidateAttackContext()
@@ -138,7 +139,8 @@ CD阶段：   |<------------------ 攻击间隔 (AttackInterval) ---------------
                       └─ 成功 → ExecuteDamage() → EnterRecovery()
                                     │
                                     └─ RecoveryTime到期
-                                          → emit: Attack.Finished
+                                          → 若 AttackInterval 仍有剩余，继续 Recovery 追加冷却
+                                          → 到期后 emit: Attack.Finished
 ```
 
 ### 5.2 外部中断
@@ -159,7 +161,7 @@ CD阶段：   |<------------------ 攻击间隔 (AttackInterval) ---------------
 
 ### 6.1 Timer 异步 + Entity 销毁
 
-Timer 回调是异步的。回调触发时，Entity 可能已经被 `QueueFree`（或归还对象池），字段变成野指针。
+Timer 回调是异步的。回调触发时，Entity 可能已经被 `EntityManager.Destroy` 销毁或归还对象池，字段变成野指针。
 
 **解决方案**：
 1. `OnComponentUnregistered` 里先 `CleanupTimers()`，切断 Timer 对闭包的引用
@@ -240,10 +242,9 @@ _entity.Events.On<GameEventType.Attack.CancelledEventData>(
 
 | 文件 | 职责 |
 |---|---|
-| [AttackComponent.cs](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Src/ECS/Base/Component/Unit/Common/AttackComponent/AttackComponent.cs) | 状态机核心实现 |
-| [GameEventType_Attack.cs](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Data/EventType/Unit/Attack/GameEventType_Attack.cs) | 攻击生命周期事件定义 |
-| [GameEventType_Unit.cs](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Data/EventType/Unit/GameEventType_Unit.cs) | StopAnimationRequested 事件 |
-| [DataKey_Attribute.cs](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Data/DataKey/Attribute/DataKey_Attribute.cs) | AttackWindUpTime / AttackRecoveryTime |
-| [DataKey_Unit.cs](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Data/DataKey/Unit/DataKey_Unit.cs) | AttackState（状态枚举存储键） |
-| [EnemyBehaviorTreeBuilder.cs](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Src/ECS/AI/Nodes/EnemyBehaviorTreeBuilder.cs) | AI 节点如何发起/等待攻击 |
-| [UnitAnimationComponent.cs](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Src/ECS/Base/Component/Unit/Common/UnitAnimationComponent/UnitAnimationComponent.cs) | 监听 StopAnimation 中断动画 |
+| [AttackComponent.cs](AttackComponent.cs) | 状态机核心实现 |
+| [GameEventType_Unit.cs](../../../../../../../../Data/EventType/Unit/GameEventType_Unit.cs) | 攻击与 StopAnimationRequested 事件 |
+| [DataKey_Attribute.cs](../../../../../../../../Data/DataKey/Attribute/DataKey_Attribute.cs) | AttackWindUpTime / AttackRecoveryTime |
+| [DataKey_Unit.cs](../../../../../../../../Data/DataKey/Unit/DataKey_Unit.cs) | AttackState（状态枚举存储键） |
+| [EnemyBehaviorTreeBuilder.cs](../../../../../../AI/Nodes/EnemyBehaviorTreeBuilder.cs) | AI 节点如何发起/等待攻击 |
+| [UnitAnimationComponent.cs](../UnitAnimationComponent/UnitAnimationComponent.cs) | 监听 StopAnimation 中断动画 |

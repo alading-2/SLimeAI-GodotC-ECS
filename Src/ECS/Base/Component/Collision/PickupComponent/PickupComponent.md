@@ -1,10 +1,12 @@
 # PickupComponent (拾取组件)
 
-实现物品（如经验值、道具、货币）的拾取检测、磁吸效果以及与采集者的交互逻辑。
+> 当前代码状态：`PickupComponent.cs` 整体处于注释归档状态，不是可直接挂载使用的运行时组件。以下内容仅保留历史设计语义；新增拾取功能前必须先恢复/重写组件实现，并按当前 `Entity.Events`、`DataKey static readonly DataMeta`、`EntityManager.Destroy / ObjectPool` 规则校准。
+
+历史目标：实现物品（如经验值、道具、货币）的拾取检测、磁吸效果以及与采集者的交互逻辑。
 
 ## 核心功能
 
-- **范围检测**: 继承自 `Area2D`，用于检测玩家或其他实体的进入。
+- **范围检测**: 历史设计继承自 `Area2D`，用于检测玩家或其他实体的进入。
 - **磁吸效果**: 支持物品向采集者平滑移动的功能，速度由 `MagnetSpeed` 控制。
 - **拾取回调**: 当物品与采集者发生实际接触时，触发 `PickedUp` 事件。
 - **状态管理**: 记录当前的采集者 (`Collector`) 和磁吸状态。
@@ -36,7 +38,10 @@
 
 ## 使用说明
 
-1. 将 `PickupComponent` 添加到掉落物（如 `ExperienceGem`）的场景中。
-2. 配置 `CollisionLayer`（如掉落物层）和 `CollisionMask`（如玩家探测层）。
-3. 当玩家进入外围探测圈时，调用 `EnableMagnet(player)`。
-4. 当玩家与物品核心区域碰撞（触发 `BodyEntered` 或内部逻辑）时，调用 `PickedUp` 事件并销毁/回收物品。
+当前不要按本文直接接入场景。若要重新启用：
+
+1. 先恢复 `PickupComponent.cs` 的实际实现。
+2. 事件订阅放入 `OnComponentRegistered` / `OnComponentUnregistered`，避免在 `_Ready` 中绑定核心逻辑。
+3. 磁吸共享状态进入 `Entity.Data`，临时采集者引用可保留为组件私有字段。
+4. 拾取完成后通过 `EntityManager.Destroy` 或对象池归还路径处理，不要直接 `QueueFree`。
+5. 同步更新 `DocsAI/Modules/Component.md`、`DocsAI/Modules/Tools.md` 和相关测试。

@@ -1,72 +1,64 @@
 # DocsAI ProjectState
 
-本文记录 AI-First 迁移的当前状态。保持短，只写能帮助下一个 AI 会话继续工作的内容。
+本文记录 AI-First 文档体系当前状态。保持短，只写能帮助下一个 AI 会话继续工作的内容。
 
 ## 当前目标
 
-把 `AI-First Godot C# ECS 程序开发总说明` 落地为可执行的工程体系：
+按当前代码重新校准：
 
-- Docs / DocsAI 分层
-- Godot CLI 测试和日志闭环
-- Skill 短入口重构
-- 核心模块 AI 契约
-- 长任务上下文恢复
-- 功能开发试点
-- ECS 核心回归门禁
+- `DocsAI/Modules/` 模块契约。
+- `.codex/skills/*` 短入口。
+- `Docs/` 人类文档入口和项目索引。
+- `Src/**/*.md` 源码旁文档中的明显过期链接。
 
 ## 当前阶段
 
-计划 07：ECS 核心回归与人工审查门禁收尾。
+执行 `Plans/Architecture/AI_First_Docs_Code_Alignment/`。
+
+这是旧 `Plans/Architecture/AI_First_Program_Migration/` 完成后的二轮收敛计划。旧计划作为历史记录保留，不再追加新阶段。
 
 ## 已完成
 
-- 已将总说明拆成阶段计划：
-  - `Plans/Architecture/AI_First_Program_Migration/README.md`
-  - `Plans/Architecture/AI_First_Program_Migration/01_DocsAI_Document_System_Migration.md`
-  - `Plans/Architecture/AI_First_Program_Migration/02_Godot_CLI_Test_Debug_Loop.md`
-  - `Plans/Architecture/AI_First_Program_Migration/03_Skill_System_Refactor.md`
-  - `Plans/Architecture/AI_First_Program_Migration/04_Framework_Module_Contract_Docs.md`
-  - `Plans/Architecture/AI_First_Program_Migration/05_Long_Task_Context_And_Project_Plans.md`
-  - `Plans/Architecture/AI_First_Program_Migration/06_AI_First_Feature_Development_Pilot.md`
-  - `Plans/Architecture/AI_First_Program_Migration/07_Core_Regression_And_Review_Gate.md`
-- 已新增 `Docs/README.md`。
-- 已新增 `DocsAI/README.md`、`DocsAI/INDEX.md`、`DocsAI/ProjectState.md`。
-- 已新增 `DocsAI/Workflows/AI开发闭环.md`、`DocsAI/Workflows/文档迁移协议.md`。
-- 已增强 `.codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs`，输出 `failed / failureReason / errorContext / logSummary`。
-- 已新增 `DocsAI/Tests/Godot场景测试.md`、`DocsAI/Tests/测试矩阵.md`、`DocsAI/Tests/日志判定与Debug.md`。
-- 已将 `.codex/skills/godot-scene-test/SKILL.md` 缩短为入口文档。
-- 已新增 `DocsAI/Skills/Skill设计规则.md` 和 `DocsAI/Skills/Skill到DocsAI映射.md`。
-- 已重构 `project-index`、`ecs-component`、`test-system` 为短入口。
-- 已新增 `DocsAI/Modules/Component.md` 和 `DocsAI/Modules/TestSystem.md` 初版契约。
-- 已清理 `ability-system` 里的旧机器绝对路径。
-- 已补齐 `DocsAI/Modules/Entity.md`、`Data.md`、`Event.md`、`SystemCore.md`、`AbilitySystem.md`、`DamageSystem.md`、`UI.md`、`Tools.md`。
-- 已新增 `DocsAI/Workflows/长任务上下文协议.md` 和 `DocsAI/Workflows/ECS核心修改门禁.md`。
-- 已把项目级计划状态文件统一放在根目录 `Plans/`。
-- 已将 06 试点方向修正为复验现有 `LifecycleComponent + DataKey.MaxLifeTime`，不再重复新增 `LifetimeComponent`。
+- 旧 AI-First 迁移计划已建立 Docs / DocsAI / Skill / 测试 / 门禁基础。
+- 本轮已新建：
+  - `Plans/Architecture/AI_First_Docs_Code_Alignment/README.md`
+  - `Plans/Architecture/AI_First_Docs_Code_Alignment/01_Code_And_Docs_Audit.md`
+  - `Plans/Architecture/AI_First_Docs_Code_Alignment/02_DocsAI_Module_Contracts_Update.md`
+  - `Plans/Architecture/AI_First_Docs_Code_Alignment/03_Skill_Short_Entry_Refactor.md`
+  - `Plans/Architecture/AI_First_Docs_Code_Alignment/04_Src_Docs_Consolidation.md`
+  - `Plans/Architecture/AI_First_Docs_Code_Alignment/05_Final_Verification_And_Handoff.md`
+- 本轮已补齐 `DocsAI/Modules/FeatureSystem.md` 与 `DocsAI/Modules/DataAuthoring.md`。
+- 第二批已修正 Ability 参考示例、Data 测试 README、TestSystem README 和旧迁移计划状态分叉。
+- 第三批已修正 CostComponent、Data README、Component 规范、EntityManager 文档和两个测试 README。
+- 第四批已修正 Tools 族 ObjectPool、TargetSelector、TimerManager 源码旁文档。
+- 第五批已修正 Component / Attack / Collision / UI 源码旁文档和 DocsAI 契约。
 
-## 未完成
+## 已完成（本轮）
 
-- 部分 `.codex/skills/*` 仍可继续压缩，但已补齐 DocsAI 映射入口。
-- `Src/**/*.md` 尚未迁移或改成短跳转。
-- 历史绝对路径和旧链接尚未全量清理。
+- 压缩长 Skill 为短入口。
+- 清理旧机器绝对路径、旧 Windsurf Skill 入口和过期计划指向。
+- 更新本轮计划状态文件和验证结果。
 
-## 下一步
+## 未完成 / 风险
 
-按 `Plans/Architecture/AI_First_Program_Migration/Progress.md` 推进后续真实功能任务。若要继续验证 AI 闭环，优先执行现有 `LifecycleComponent + MaxLifeTime` 复验任务，而不是新增重复组件。
+- `Src/**/*.md` 历史长文档尚未系统迁移，目前只按模块族清理已确认会误导 AI 的内容。
+- 旧 `MainTest` 失败不属于本轮文档收敛，需独立 Debug。
+- 已有用户工作区改动集中在 Godot 场景测试 Skill、测试文档、Docs README 和项目索引，继续修改时必须合并而不是覆盖。
 
-当前 `MainTest` 仍失败：`failureReason=TimedOut`，关键错误是 `PickupComponent.cs` 无法实例化，并伴随大量 `!is_inside_tree()`。这是后续独立 Debug 任务。
+## 推荐入口
 
-## 阻塞问题
-
-暂无。
+- AI 索引：`DocsAI/INDEX.md`
+- 当前计划：`Plans/Architecture/AI_First_Docs_Code_Alignment/README.md`
+- Skill 映射：`DocsAI/Skills/Skill到DocsAI映射.md`
+- 测试矩阵：`DocsAI/Tests/测试矩阵.md`
 
 ## 验证方式
 
-当前阶段涉及 DocsAI / Skill / 测试工具验证，推荐命令：
-
 ```bash
+git status --short
 find .codex/skills -maxdepth 2 -name SKILL.md -print | sort | xargs wc -l
-rg -n "/mnt/e|file:///|复刻土豆兄弟" .codex/skills
-rg -n "DocsAI/|Skill到DocsAI映射|Skill设计规则" .codex/skills DocsAI
-rg -n "职责边界|禁止事项|推荐测试|人工审查重点" DocsAI/Modules
+find DocsAI -maxdepth 3 -type f | sort
+rg -n "/mnt/[e]|file://[/]|复刻土豆兄[弟]|[.]windsurf" DocsAI .codex/skills Docs/框架/项目索引.md Src -g "*.md"
+rg -n "DocsAI/Modules|DocsAI/Tests|DocsAI/Workflows" .codex/skills DocsAI
+dotnet build
 ```

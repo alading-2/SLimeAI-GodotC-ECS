@@ -2,7 +2,7 @@
 
 **文档类型**: 使用指南  
 **目标受众**: 开发人员  
-**最后更新**: 2026-01-21
+**最后更新**: 2026-05-02
 
 ---
 
@@ -22,14 +22,14 @@
 
 ### 通过 DataKey 配置
 
-在技能配置中设置以下数据键:
+在 `Data/DataNew/Ability/*AbilityData.cs` 或临时测试字典中设置以下数据键。运行时由 `EntityManager.AddAbility` / `EntityManager.Spawn` 注入 `AbilityEntity.Data`，旧 `.tres` AbilityConfig 不再作为新增运行时主入口。
 
 ```csharp
 var abilityConfig = new Dictionary<string, object>
 {
-    [DataKey.Name] = "Fireball",
-    [DataKey.AbilityCostType] = AbilityCostType.Mana,  // 消耗类型
-    [DataKey.AbilityCostAmount] = 50f                  // 消耗数量
+    [DataKey.Name] = "Fireball", // 技能名
+    [DataKey.AbilityCostType] = AbilityCostType.Mana, // 消耗类型
+    [DataKey.AbilityCostAmount] = 50f // 消耗数量
 };
 ```
 
@@ -98,11 +98,11 @@ sequenceDiagram
 // 配置火球术 - 消耗 50 魔法
 var fireballConfig = new Dictionary<string, object>
 {
-    [DataKey.Name] = "Fireball",
-    [DataKey.AbilityType] = AbilityType.Active,
-    [DataKey.AbilityCostType] = AbilityCostType.Mana,
-    [DataKey.AbilityCostAmount] = 50f,
-    [DataKey.AbilityCooldown] = 3f
+    [DataKey.Name] = "Fireball", // 技能名
+    [DataKey.AbilityType] = AbilityType.Active, // 主动技能
+    [DataKey.AbilityCostType] = AbilityCostType.Mana, // 消耗魔法
+    [DataKey.AbilityCostAmount] = 50f, // 消耗数量
+    [DataKey.AbilityCooldown] = 3f // 冷却秒数
 };
 
 EntityManager.AddAbility(player, fireballConfig);
@@ -119,10 +119,10 @@ EntityManager.AddAbility(player, fireballConfig);
 // 配置血祭 - 消耗 30% 当前生命值
 var bloodRageConfig = new Dictionary<string, object>
 {
-    [DataKey.Name] = "BloodRage",
-    [DataKey.AbilityType] = AbilityType.Active,
-    [DataKey.AbilityCostType] = AbilityCostType.Health,
-    [DataKey.AbilityCostAmount] = 30f,  // 固定值,可在 Executor 中改为百分比
+    [DataKey.Name] = "BloodRage", // 技能名
+    [DataKey.AbilityType] = AbilityType.Active, // 主动技能
+    [DataKey.AbilityCostType] = AbilityCostType.Health, // 消耗生命
+    [DataKey.AbilityCostAmount] = 30f // 固定值
 };
 ```
 
@@ -137,12 +137,12 @@ var bloodRageConfig = new Dictionary<string, object>
 // 配置冲刺 - 仅冷却,无资源消耗
 var dashConfig = new Dictionary<string, object>
 {
-    [DataKey.Name] = "Dash",
-    [DataKey.AbilityType] = AbilityType.Active,
-    [DataKey.AbilityCostType] = AbilityCostType.None,  // 无消耗
-    [DataKey.AbilityCooldown] = 8f,
-    [DataKey.IsAbilityUsesCharges] = true,
-    [DataKey.AbilityMaxCharges] = 2
+    [DataKey.Name] = "Dash", // 技能名
+    [DataKey.AbilityType] = AbilityType.Active, // 主动技能
+    [DataKey.AbilityCostType] = AbilityCostType.None, // 无消耗
+    [DataKey.AbilityCooldown] = 8f, // 冷却秒数
+    [DataKey.IsAbilityUsesCharges] = true, // 使用充能
+    [DataKey.AbilityMaxCharges] = 2 // 最大充能
 };
 ```
 
@@ -200,44 +200,42 @@ var currentMana = caster.Data.Get<float>(DataKey.CurrentMana);
 
 ### Q1: 如何实现百分比消耗 (如消耗 30% 最大魔法)?
 
-**A**: 当前 `CostComponent` 仅支持固定值消耗。百分比消耗可通过以下方式实现:
+**A**: 当前 `CostComponent` 仅支持固定值消耗。百分比消耗不要通过旧 `AbilityExecutor` 临时改写；按当前架构应在 DataKey / CostComponent 内显式建模，或在具体 `AbilityFeatureHandler.ExecuteAbility` 中处理技能效果，资源扣除仍由 CostComponent 流程负责。
 
-**方案 1**: 在 `AbilityExecutor` 中动态修改 `AbilityCostAmount`:
+扩展 `DataKey_Ability.cs` 时新增 `static readonly DataMeta`，不要新增普通业务 `const string`：
 
 ```csharp
-public class BloodRageExecutor : IAbilityExecutor
-{
-    public void Execute(CastContext context)
+public static readonly DataMeta AbilityCostPercentMode = DataRegistry.Register(
+    new DataMeta
     {
-        var ability = context.Ability;
-        var caster = context.Caster;
-        
-        // 动态计算消耗量 (30% 最大生命值)
-        var maxHp = caster.Data.Get<float>(DataKey.FinalHp);
-        var costAmount = maxHp * 0.3f;
-        
-        // 临时修改消耗值
-        ability.Data.Set(DataKey.AbilityCostAmount, costAmount);
-        
-        // 技能逻辑...
-    }
-}
-```
-
-**方案 2**: 扩展 `DataKey_Ability.cs`,添加 `AbilityCostPercentMode`:
-
-```csharp
-public const string AbilityCostPercentMode = "AbilityCostPercentMode"; // bool
+        Key = nameof(AbilityCostPercentMode), // DataKey 名称
+        DisplayName = "百分比消耗", // 编辑器显示名
+        Category = DataCategory_Ability.Cost, // 分类
+        Type = typeof(bool), // 值类型
+        DefaultValue = false // 默认关闭
+    });
 ```
 
 在 `CostComponent` 中判断模式并计算。
 
 ### Q2: 如何实现消耗减免 (如装备 "魔法消耗 -20%")?
 
-**A**: 类似 `CooldownReduction`,添加新的 `DataKey`:
+**A**: 类似 `CooldownReduction`，添加新的 `DataMeta`：
 
 ```csharp
-public const string CostReduction = "CostReduction"; // 0~100百分比
+public static readonly DataMeta CostReduction = DataRegistry.Register(
+    new DataMeta
+    {
+        Key = nameof(CostReduction), // DataKey 名称
+        DisplayName = "消耗减免", // 编辑器显示名
+        Category = DataCategory_Attribute.Skill, // 属性分类
+        Type = typeof(float), // 百分比
+        DefaultValue = 0f, // 默认无减免
+        MinValue = 0f, // 最小值
+        MaxValue = 100f, // 最大值
+        IsPercentage = true, // 0-100 百分比
+        SupportModifiers = true // 支持 Modifier
+    });
 ```
 
 在 `CostComponent.OnConsumeCost` 中应用:
@@ -268,13 +266,15 @@ ability.Events.On<GameEventType.Ability.CheckCanUseEventData>(
 
 ## 相关文档
 
-- [技能系统架构设计理念](../../../../Docs/框架/ECS/Ability/技能系统架构设计理念.md)
-- [AbilitySystem README](../../System/AbilitySystem/README.md)
-- [ChargeComponent README](../ChargeComponent/README.md)
-- [CooldownComponent README](../CooldownComponent/README.md)
+- `DocsAI/Modules/AbilitySystem.md`
+- `DocsAI/Modules/Data.md`
+- `DocsAI/Modules/DataAuthoring.md`
+- `Src/ECS/Base/System/AbilitySystem/README.md`
+- `Src/ECS/Base/Component/Ability/ChargeComponent/README.md`
+- `Src/ECS/Base/Component/Ability/CooldownComponent/README.md`
 
 ---
 
 **维护者**: 项目团队  
-**文档版本**: v1.0  
-**更新日期**: 2026-01-21
+**文档版本**: v1.1  
+**更新日期**: 2026-05-02

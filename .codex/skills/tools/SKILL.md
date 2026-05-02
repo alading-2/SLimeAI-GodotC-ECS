@@ -1,190 +1,53 @@
-﻿---
+---
 name: tools
 description: 使用 TimerManager 计时器、ObjectPool 对象池、TargetSelector 目标查询、ResourceManagement 资源加载时使用。适用于：需要延迟/循环定时器，高频生成销毁对象，范围内查找敌人，加载场景或配置资源。触发关键词：TimerManager、定时器、延迟执行、对象池、ObjectPool、TargetSelector、范围查找、ResourceManagement、加载资源。
 ---
 
-# 工具类使用规范
+# Tools 入口
 
-## 先读
+## 什么时候用
+
+- 使用或修改 `TimerManager`。
+- 使用或修改 `ObjectPool` / `ObjectPoolManager`。
+- 范围查找、阵营过滤、目标排序。
+- 加载资源、维护 `ResourceManagement` / `ResourcePaths` / `ResourceCatalog`。
+- 修改通用 Math / Logger / NodeLifecycle 工具。
+
+## 转向其它 Skill
+
+- Entity 对象池生成和销毁 -> `@ecs-entity`
+- 技能目标和效果 -> `@ability-system`
+- UI 高频对象 -> `@ui-bind`
+- 数据配置和资源路径协议 -> `@data-authoring`
+
+## 必读
 
 - `DocsAI/Modules/Tools.md`
 - 涉及对象池、TimerManager、ResourceManagement 核心实现时读 `DocsAI/Workflows/ECS核心修改门禁.md`
-- 测试矩阵：`DocsAI/Tests/测试矩阵.md`
+- 测试选择读 `DocsAI/Tests/测试矩阵.md`
 
-## TimerManager - 计时器
+## 最短流程
 
-禁止 `new Timer()` 和 `GetTree().CreateTimer()`，统一用 `TimerManager`。
+1. 先查是否已有现成 Tool。
+2. 定时统一用 `TimerManager`，并设计取消点。
+3. 高频对象统一走对象池；Entity 生成仍由 `EntityManager.Spawn` 编排。
+4. 目标查询用 `EntityTargetSelector.Query`。
+5. 资源加载用 `ResourceManagement` 或项目允许的最终加载工具。
+6. 运行对应工具场景或相关模块场景。
+7. 更新 `DocsAI/Modules/Tools.md` 或资源说明。
 
-```csharp
-// 延迟执行
-TimerManager.Instance.Delay(2.0f).OnComplete(() => DoSomething());
+## 禁止事项
 
-// 循环执行
-var timer = TimerManager.Instance.Loop(1.0f).OnLoop(() => DamageOverTime());
+- 不要 `new Timer()` / `GetTree().CreateTimer()`。
+- 不要高频 `new` + `QueueFree()`。
+- 不要 `GetTree().GetNodesInGroup()` 手写范围查找。
+- 不要业务代码直接 `GD.Load<T>("res://...")`。
+- 不要把具体玩法逻辑塞进通用 Tools。
 
-// 带参数
-TimerManager.Instance.Delay(0.5f).OnComplete(() => Explode(damage));
+## 推荐验证
 
-// 清理（重要！在 _ExitTree 或 OnPoolRelease 中取消）
-public override void _ExitTree() { timer?.Cancel(); }
-public void OnPoolRelease() { timer?.Cancel(); }
+```bash
+dotnet build
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/Tools/ObjectPool/ObjectPoolManagerTest.tscn --build
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/Tools/TargetSelector/TargetSelectorTest.tscn --build
 ```
-
-API 文档：`Src/ECS/Tools/Timer/TimerManager.md`
-
-项目级暂停约定：
-
-- `useUnscaledTime = false`：默认受 `ProjectStateService` 的暂停 / 阻塞影响，`SimulationState = Suspended` 时会被 `TimerManager` 自动暂停
-- `useUnscaledTime = true`：不受项目级暂停影响，适合暂停菜单、过场 UI、调试提示等覆盖层逻辑
-- 业务手动 `Pause()/Resume()` 与项目级自动暂停是两套状态，恢复项目时不会错误恢复原本就手动暂停的 timer
-
----
-
-## ObjectPool - 对象池
-
-禁止手动 `new` + `QueueFree()`，高频对象必须走对象池。
-
-强制场景：子弹、伤害数字、特效、敌人。
-
-```csharp
-// 通过 EntityManager 使用对象池生成
-var bullet = EntityManager.Spawn<BulletEntity>(new EntitySpawnConfig
-{
-    Config = bulletData,
-    UsingObjectPool = true,
-    PoolName = ObjectPoolNames.BulletPool,
-    Position = spawnPosition,
-    Rotation = angle
-});
-
-// 销毁（自动归还对象池）
-EntityManager.Destroy(bullet);
-
-// 对象池初始化：ObjectPoolInit.cs（已配置，无需修改）
-```
-
-实现 `IPoolable` 接口：
-
-```csharp
-public void OnPoolAcquire() { /* 取出时初始化 */ }
-public void OnPoolRelease() { /* 归还时清理 */ }
-public void OnPoolReset()   { /* 数据重置，通常留空 */ }
-```
-
-API 文档：`Src/ECS/Tools/ObjectPool/ObjectPool.md`
-
-统计口径约定：
-
-- 对象池效率指标统一使用 `ReuseRate`（复用率），表示 `TotalReused / TotalAcquired`
-- `TotalCreatedOnAcquire` 只统计获取时扩容新建，不包含预热创建
-
-### 对象池实体激活时序（重要）
-
-对象池中的 **IEntity** 必须使用“两阶段激活”：
-
-1. `ObjectPool.Get(false)` 出池后先保持禁用，不要立刻恢复处理与碰撞。
-2. `EntityManager.Spawn()` 完成数据注入、位置/旋转设置、`ForceUpdateTransform()` 与组件注册。
-3. 最后由 `EntityManager.Spawn()` 显式调用对象池激活逻辑，统一恢复处理、可见和根碰撞体。
-
-这样可避免复用对象在旧位置短暂参与物理，触发伪 `body_entered`。
-
----
-
-## TargetSelector - 目标选择
-
-禁止 `GetTree().GetNodesInGroup()` 和手写距离计算。
-
-```csharp
-// 查找范围内最近的 5 个敌人
-var targets = EntityTargetSelector.Query(new TargetSelectorQuery
-{
-    Geometry = GeometryType.Circle,
-    Origin = caster.GlobalPosition,
-    Range = 200f,
-    CenterEntity = caster,
-    TeamFilter = AbilityTargetTeamFilter.Enemy,
-    Sorting = TargetSorting.Nearest,
-    MaxTargets = 5
-});
-
-// 扇形范围
-var targets = EntityTargetSelector.Query(new TargetSelectorQuery
-{
-    Geometry = GeometryType.Cone,
-    Origin = caster.GlobalPosition,
-    Range = 150f,
-    Angle = 60f,           // 扇形角度（度）
-    Forward = facing,      // 朝向向量
-    TeamFilter = AbilityTargetTeamFilter.Enemy,
-    MaxTargets = 10
-});
-
-// 矩形范围
-var targets = EntityTargetSelector.Query(new TargetSelectorQuery
-{
-    Geometry = GeometryType.Box,
-    Origin = caster.GlobalPosition,
-    Length = 200f,         // 长度
-    Width = 80f,           // 宽度
-    Forward = facing,      // 朝向向量
-    TeamFilter = AbilityTargetTeamFilter.Enemy
-});
-```
-
-TeamFilter 选项：`Enemy` / `Ally` / `All` / `Self`
-Sorting 选项：`Nearest` / `Farthest` / `LowestHp` / `HighestHp` / `Random`
-
-目标排序枚举定义：`Src/ECS/Tools/TargetSelector/TargetSorting.cs`
-
-API 文档：`Src/ECS/Tools/TargetSelector/README.md`
-
----
-
-## ResourceManagement - 资源加载
-
-禁止 `GD.Load<T>("res://...")` 和硬编码字符串路径。
-
-```csharp
-// 加载场景（Entity/Component）
-var scene = ResourceManagement.Load<PackedScene>("EnemyEntity", ResourceCategory.Entity);
-var compScene = ResourceManagement.Load<PackedScene>("HealthComponent", ResourceCategory.Component);
-
-// 加载系统场景
-var sysScene = ResourceManagement.Load<PackedScene>("DamageService", ResourceCategory.System);
-
-// 运行时数据配置不走 ResourceManagement，统一从 DataNew 读取
-var enemy = EnemyData.Get("鱼人") ?? EnemyData.Yuren;
-
-// Data 中的场景引用只保存 res:// 字符串；最终实例化点再加载 PackedScene
-var scene = CommonTool.LoadPackedScene(enemy.VisualScenePath, "敌人视觉");
-```
-
-ResourceCategory 分类：`Entity` / `Component` / `System` / `UI` / `Tools` / ...
-
-旧 `.tres` 数据目录保留归档，但运行时数据导入不再通过 `ResourceManagement.Load<Resource>` 读取 `PlayerConfig` / `EnemyConfig` / `AbilityConfig`。
-
-例外（允许直接路径）：
-
-- `.tscn` 内部资源引用（Godot 自动管理）
-- `[Export]` 导出属性指向的资源
-- `ResourceGenerator` 等底层工具
-
-新增资源后运行 ResourceGenerator 自动更新 `ResourcePaths.cs`。
-
-API 文档：`Data/ResourceManagement/ResourceManagement.md`
-
----
-
-## 关键文件路径
-
-- **TimerManager** → `Src/ECS/Tools/Timer/TimerManager.cs` | 文档 → `Src/ECS/Tools/Timer/TimerManager.md`
-- **GameTimer** → `Src/ECS/Tools/Timer/GameTimer.cs`
-- **ObjectPool** → `Src/ECS/Tools/ObjectPool/ObjectPool.cs` | 文档 → `Src/ECS/Tools/ObjectPool/ObjectPool.md`
-- **IPoolable 接口** → `Src/ECS/Tools/ObjectPool/IPoolable.cs`
-- **ObjectPoolManager** → `Src/ECS/Tools/ObjectPool/ObjectPoolManager.cs`
-- **TargetSelector** → `Src/ECS/Tools/TargetSelector/TargetSelector.cs` | 文档 → `Src/ECS/Tools/TargetSelector/README.md`
-- **TargetSelectorQuery** → `Src/ECS/Tools/TargetSelector/TargetSelectorQuery.cs`
-- **WaveMath** → `Src/ECS/Tools/Math/WaveMath.cs` | 场景：标准正弦波采样、偏移差分、频率转角频率
-- **CommonTool** → `Src/ECS/Tools/CommonTool.cs`
-- **ResourceManagement** → `Data/ResourceManagement/ResourceManagement.cs` | 文档 → `Data/ResourceManagement/ResourceManagement.md`
-- **ResourcePaths（自动生成）** → `Data/ResourceManagement/ResourcePaths.cs`

@@ -204,7 +204,7 @@
 
 ## 🇨🇳 配置中文标签
 
-中文列头标签由 `@/e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/addons/resources_table/column_labels_zh.gd` 文件控制。
+中文列头标签由 `addons/resources_table/column_labels_zh.gd` 文件控制。
 
 ### 添加新字段的中文标签
 

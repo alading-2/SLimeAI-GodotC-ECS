@@ -8,15 +8,15 @@
 | `godot-scene-test` | `DocsAI/Tests/Godot场景测试.md`、`DocsAI/Tests/测试矩阵.md`、`DocsAI/Tests/日志判定与Debug.md` | CLI 场景测试和日志判定。 |
 | `ecs-entity` | `DocsAI/Modules/Entity.md`、`DocsAI/Workflows/ECS核心修改门禁.md` | Entity 生命周期、关系、对象池和核心修改门禁。 |
 | `ecs-component` | `DocsAI/Modules/Component.md` | Component 开发契约和运动组件要点。 |
-| `ecs-data` | `DocsAI/Modules/Data.md` | Data 容器、DataKey、DataNew 注入和数据变化事件。 |
+| `ecs-data` | `DocsAI/Modules/Data.md` | 运行时 Data 容器、DataMeta、DataRegistry、读写和数据变化事件。 |
 | `ecs-event` | `DocsAI/Modules/Event.md` | Entity.Events、GlobalEventBus、事件定义和订阅清理。 |
-| `ability-system` | `DocsAI/Modules/AbilitySystem.md`、`.codex/skills/ability-system/references/ability-logic-parameters.md` | 技能流水线、目标选择、参数语义。 |
+| `ability-system` | `DocsAI/Modules/AbilitySystem.md`、`DocsAI/Modules/FeatureSystem.md`、`.codex/skills/ability-system/references/ability-logic-parameters.md` | 技能流水线、Feature 接入、目标选择、参数语义。 |
 | `damage-system` | `DocsAI/Modules/DamageSystem.md` | 伤害入口、管道处理器、DamageTool 和禁止事项。 |
 | `test-system` | `DocsAI/Modules/TestSystem.md` | TestSystem 宿主、模块、服务层和禁止事项。 |
 | `ui-bind` | `DocsAI/Modules/UI.md` | UIBase Bind 模式和响应式 UI 规则。 |
 | `tools` | `DocsAI/Modules/Tools.md` | TimerManager、ObjectPool、TargetSelector、ResourceManagement。 |
-| `data-authoring` | `DocsAI/Modules/Data.md`、`Data/README.md`、`Data/DataNew/README.md`、`Data/DataKey/README.md` | 数据目录配置、DataNew、DataKey 和 EventType。 |
-| `feature-system` | `DocsAI/Modules/AbilitySystem.md`、`Docs/框架/ECS/System/FeatureSystem/FeatureSystem.md` | Feature 生命周期与 Ability 接入。 |
+| `data-authoring` | `DocsAI/Modules/DataAuthoring.md`、`Data/README.md`、`Data/DataNew/README.md`、`Data/DataKey/README.md` | 数据目录配置、DataNew、DataKey、EventType 和资源映射。 |
+| `feature-system` | `DocsAI/Modules/FeatureSystem.md`、`DocsAI/Modules/AbilitySystem.md` | Feature 生命周期、Modifier、Handler 与 Ability 接入。 |
 
 ## 维护规则
 

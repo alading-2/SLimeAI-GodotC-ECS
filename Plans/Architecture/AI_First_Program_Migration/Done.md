@@ -10,6 +10,10 @@
 - 06：根据原始代码修正试点方向，确认已有 `LifecycleComponent` 承担 MaxLifeTime 生命周期，不新增重复 `LifetimeComponent`。
 - 07：新增 ECS 核心修改门禁和回归矩阵。
 
+## 后续计划
+
+- 文档与 Skill 按当前代码继续收敛：`Plans/Architecture/AI_First_Docs_Code_Alignment/README.md`
+
 ## 已知验证结果
 
 - `node --check .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs` 通过。

@@ -11,7 +11,7 @@
 
 ## 如何运行测试
 
-1. 打开 `Src/Test/ECS/ECSTest/ECSTestScene.tscn` 场景。
+1. 打开 `Src/ECS/Test/SingleTest/ECS/ECSTest/ECSTestScene.tscn` 场景。
 2. 运行场景 (F6)。
 3. 点击界面上的 "Run Tests" 按钮（如果有）或观察输出日志。
 4. 控制台将输出 `[PASS]` 或 `[FAIL]` 信息。

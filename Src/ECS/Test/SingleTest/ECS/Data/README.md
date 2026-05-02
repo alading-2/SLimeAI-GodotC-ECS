@@ -51,11 +51,13 @@
 ## 文件结构
 
 ```
-Src/Test/ECS/Data/
+Src/ECS/Test/SingleTest/ECS/Data/
 ├── DataTestScene.cs          # 测试场景脚本
 ├── DataTestScene.tscn        # Godot 场景文件
 ├── TestCategory.cs           # 测试数据分类枚举
 ├── DataKey_Test.cs           # 测试数据键定义
+├── TestDataKeyMapping.cs     # DataKey 映射测试
+├── TestDataKeyMapping.tscn   # DataKey 映射测试场景
 └── README.md                 # 本文档
 ```
 
@@ -63,7 +65,7 @@ Src/Test/ECS/Data/
 
 ### 方法 1: 通过 Godot 编辑器
 1. 打开 Godot 编辑器
-2. 在文件系统中找到 `Src/Test/ECS/Data/DataTestScene.tscn`
+2. 在文件系统中找到 `Src/ECS/Test/SingleTest/ECS/Data/DataTestScene.tscn`
 3. 双击打开场景
 4. 点击运行当前场景 (F6)
 
@@ -123,7 +125,7 @@ Src/Test/ECS/Data/
 
 ## 相关文档
 
-- [Data 系统文档](../../../ECS/Data/README.md)
-- [DataMeta 元数据](../../../ECS/Data/DataMeta.cs)
-- [DataRegistry 注册表](../../../ECS/Data/DataRegistry.cs)
-- [Data 容器](../../../ECS/Data/Data.cs)
+- [运行时 Data 系统文档](../../../../Base/Data/README.md)
+- [DataMeta 元数据](../../../../Base/Data/DataMeta.cs)
+- [DataRegistry 注册表](../../../../Base/Data/DataRegistry.cs)
+- [Data 容器](../../../../Base/Data/Data.cs)

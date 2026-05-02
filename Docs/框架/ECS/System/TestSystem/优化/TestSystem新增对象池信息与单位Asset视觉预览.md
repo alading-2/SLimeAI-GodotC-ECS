@@ -97,9 +97,9 @@
 
 ## Docs And Skill Sync
 
-- 更新 /mnt/e/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Docs/框架/项目索引.md
-- 更新 /mnt/e/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Docs/框架/ECS/System/TestSystem.md
-- 更新 /mnt/e/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Src/ECS/Base/System/TestSystem/README.md
+- 更新 /mnt/e/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Game/Docs/框架/项目索引.md
+- 更新 /mnt/e/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Game/Docs/框架/ECS/System/TestSystem.md
+- 更新 /mnt/e/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Game/Src/ECS/Base/System/TestSystem/README.md
 - 若修改测试系统接入规范或资源目录职责，同步更新相关 Skill 文档，至少覆盖 test-system
 
 ## Assumptions

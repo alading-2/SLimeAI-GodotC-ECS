@@ -5,8 +5,8 @@
 Entity 是 ECS 架构中的核心容器，代表一个游戏实体（玩家、敌人、子弹等）。在本项目的"伪 ECS"架构中，Entity 是 Godot Node，同时实现 `IEntity` 接口。
 
 **核心文件参考**：
-- [IEntity.cs](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Src/ECS/Base/Entity/IEntity.cs) - 接口定义
-- [TemplateEntity.cs](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Src/ECS/Base/Entity/TemplateEntity.cs) - 标准模板
+- [IEntity.cs](Core/IEntity.cs) - 接口定义
+- [TemplateEntity.cs](TemplateEntity.cs) - 标准模板
 
 ---
 
@@ -213,7 +213,7 @@ var migrated = EntityManager.Migrate<VisualPreviewEntity>(
 
 ## 标准模板
 
-参考 [TemplateEntity.cs](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Src/ECS/Base/Entity/TemplateEntity.cs) 创建新 Entity。
+参考 [TemplateEntity.cs](TemplateEntity.cs) 创建新 Entity。
 
 ```csharp
 public partial class MyEntity : CharacterBody2D, IEntity, IPoolable

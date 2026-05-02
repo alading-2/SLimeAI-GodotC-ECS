@@ -12,12 +12,15 @@
    - 计划分类目录和进入各 plan 的入口。
 4. [AI-First 迁移计划索引](../Plans/Architecture/AI_First_Program_Migration/README.md)
    - 将 AI-First 迁移拆成多个可独立执行的阶段任务。
+5. [AI-First 文档与 Skill 对齐计划](../Plans/Architecture/AI_First_Docs_Code_Alignment/README.md)
+   - 旧迁移完成后的二轮文档收敛，按当前代码校准 DocsAI、Skill 和源码旁文档。
 
 ## 核心模块
 
 - ECS 架构：`Docs/框架/ECS/`
 - UI 架构：`Docs/框架/UI/`
 - 工具系统：`Docs/框架/工具/`
+- 测试与日志：`Docs/测试/`，手动命令见 [手动测试指引](./测试/手动测试指引.md)
 - 数据文档：`Docs/框架/文档/Data数据/`
 - 优化与迁移计划：`Docs/框架/优化/`
 - 历史思考和问题记录：`Docs/思考/`、`Docs/其他/记录/`

@@ -110,7 +110,7 @@ TimerManager.Instance.SetAllTimerPausedByTag("Buff", true);
 ```csharp
 public partial class Enemy : CharacterBody2D
 {
-    private GameTimer _regenTimer;
+    private GameTimer? _regenTimer;
 
     public override void _Ready()
     {

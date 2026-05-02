@@ -189,7 +189,7 @@
 
 ### 3.1 运行时打开面板
 
-`TestSystem` 通过 `ModuleInitializer + SystemRegistry.Register(...)` 注册，挂载位置和默认装载策略由 `Data/Config/System/System/Resource/TestSystem.tres` 决定。
+`TestSystem` 通过 `ModuleInitializer + SystemRegistry.Register(...)` 注册；系统元数据来自 `Data/DataNew/System/SystemData.cs`，默认装载策略由 `Data/DataNew/System/SystemPresetData.cs` 显式启用 `TestSystem` 与 `MouseSelectionSystem`。
 
 正常启动游戏后：
 

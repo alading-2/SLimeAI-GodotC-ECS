@@ -1,6 +1,6 @@
 # Data 模块契约
 
-本文是 AI 修改运行时 Data 容器、DataKey、DataNew 注入和数据事件时必须阅读的执行契约。原始说明见 `Src/ECS/Base/Data/README.md`、`Data/README.md`、`Data/DataKey/README.md` 和 `Data/DataNew/README.md`。
+本文是 AI 修改运行时 Data 容器、DataMeta、DataRegistry 和数据事件时必须阅读的执行契约。数据目录配置、DataNew 表、DataKey 定义和 EventType 协议见 `DocsAI/Modules/DataAuthoring.md`。
 
 ## 职责边界
 
@@ -12,7 +12,7 @@ Data 负责：
 - 通过 `DataMeta` 提供类型、默认值、分类、约束和计算规则。
 - 承载修改器和计算属性。
 - 在值变化时通过 `Entity.Events` 发布 `PropertyChanged`。
-- 从 DataNew POCO 或 Config 注入初始值。
+- 从 DataNew POCO 注入初始值。
 
 Data 不负责：
 
@@ -25,9 +25,7 @@ Data 不负责：
 - `Src/ECS/Base/Data/Data.cs`
 - `Src/ECS/Base/Data/DataMeta.cs`
 - `Src/ECS/Base/Data/DataRegistry.cs`
-- `Data/DataKey/`
-- `Data/DataNew/`
-- `Data/README.md`
+- 数据目录契约：`DocsAI/Modules/DataAuthoring.md`
 
 ## 数据 / 事件 / 生命周期
 
@@ -50,11 +48,11 @@ Data 不负责：
 
 ## 修改流程
 
-1. 判断是运行时状态、配置表字段、事件类型还是资源映射。
-2. 修改 `Data/DataKey/` 时同步注册 `DataMeta` 分类、默认值和类型。
-3. 修改 DataNew 时检查 `Data.LoadFromConfig` 映射是否能覆盖。
+1. 判断是运行时容器行为、DataMeta 规则、配置字段、事件类型还是资源映射。
+2. 容器行为改 `Src/ECS/Base/Data/`，数据目录改动先读 `DocsAI/Modules/DataAuthoring.md`。
+3. 修改 DataMeta / DataRegistry 时检查默认值、类型转换、计算依赖和修改器语义。
 4. 若新增字段会被 UI / Component 监听，补充事件响应或测试。
-5. 更新 `DocsAI/Modules/Data.md`、`Data` 目录 README 或相关 Skill。
+5. 更新 `DocsAI/Modules/Data.md`、`DocsAI/Modules/DataAuthoring.md` 或相关 Skill。
 
 ## 推荐测试
 

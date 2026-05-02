@@ -30,7 +30,7 @@
 ## 🚀 如何运行
 
 1.  在 Godot 编辑器中打开项目。
-2.  导航到文件系统：`res://Src/Test/SingleTest/Tools/ObjectPool/`。
+2.  导航到文件系统：`res://Src/ECS/Test/SingleTest/Tools/ObjectPool/`。
 3.  右键点击 `ObjectPoolManagerTest.tscn` 并选择 **运行场景 (Run Scene)** (或按 F6)。
 
 ## 🎮 操作指南

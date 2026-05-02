@@ -38,6 +38,6 @@ Skill 是 AI 的任务触发入口，不是项目百科。
 
 ```bash
 find .codex/skills -maxdepth 2 -name SKILL.md -print | sort | xargs wc -l
-rg -n "/mnt/e|file:///|复刻土豆兄弟" .codex/skills
+rg -n "/mnt/[e]|file://[/]|复刻土豆兄[弟]" .codex/skills
 rg -n "DocsAI/|Skill到DocsAI映射|Skill设计规则" .codex/skills DocsAI
 ```

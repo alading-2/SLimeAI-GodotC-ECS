@@ -951,9 +951,9 @@ EntityManager 实现了以下目标：
 
 ## 相关文档
 
-- **架构理念**：[`Docs/框架/ECS/Entity/Entity架构设计理念.md`](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Docs/框架/ECS/Entity/Entity架构设计理念.md)
-- **API 使用**：[`Src/ECS/Base/Entity/Core/README.md`](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Src/ECS/Base/Entity/Core/README.md)
-- **项目规则**：[`.agent/rules/projectrules.md`](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/.agent/rules/projectrules.md)
+- **架构理念**：[`Docs/框架/ECS/Entity/Entity架构设计理念.md`](/home/slime/Code/Godot/Games/MyGames/brotato-my/Game/Docs/框架/ECS/Entity/Entity架构设计理念.md)
+- **API 使用**：[`Src/ECS/Base/Entity/Core/README.md`](/home/slime/Code/Godot/Games/MyGames/brotato-my/Game/Src/ECS/Base/Entity/Core/README.md)
+- **项目规则**：[`.agent/rules/projectrules.md`](/home/slime/Code/Godot/Games/MyGames/brotato-my/Game/.agent/rules/projectrules.md)
 
 ---
 

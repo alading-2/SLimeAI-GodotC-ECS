@@ -145,7 +145,7 @@ ability.Data.Set(DataKey.AbilityApplyImmediateDamage, true);  // DoT 开始时�
 ```csharp
 internal class ArcShot : AbilityFeatureHandler
 {
-    public override string FeatureId => FeatureId.Ability_Movement_ArcShot;
+    public override string FeatureId => global::FeatureId.Ability.Projectile.ArcShot;
 
     protected override AbilityExecutedResult ExecuteAbility(CastContext context)
     {
@@ -166,7 +166,7 @@ internal class ArcShot : AbilityFeatureHandler
                 Origin = casterNode.GlobalPosition,
                 Range = castRange,
                 CenterEntity = caster,
-                TeamFilter = AbilityTargetTeamFilter.Enemy,
+                TeamFilter = TeamFilter.Enemy,
                 Sorting = TargetSorting.Nearest,
                 MaxTargets = 1
             })
@@ -187,7 +187,7 @@ internal class ArcShot : AbilityFeatureHandler
 
 ```csharp
 // 输入层：
-if ((AbilityTargetSelection)ability.Data.Get<int>(DataKey.AbilityTargetSelection) == AbilityTargetSelection.Point)
+if (ability.Data.Get<AbilityTargetSelection>(DataKey.AbilityTargetSelection) == AbilityTargetSelection.Point)
 {
     if (AbilitySystem.CanUseAbility(ability))
     {
@@ -282,9 +282,9 @@ var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions
         Type = DamageType.Magical,
         Tags = DamageTags.Ability | DamageTags.Area,
         Attacker = casterNode,
-        TickInterval = ability.Data.Get<float>(nameof(DataKey.AbilityDamageInterval)),
-        TotalDuration = ability.Data.Get<float>(nameof(DataKey.AbilityDamageDuration)),
-        AllowRepeatHitSameTarget = ability.Data.Get<bool>(nameof(DataKey.AbilityRepeatHitSameTarget)),
+        TickInterval = ability.Data.Get<float>(DataKey.AbilityDamageInterval),
+        TotalDuration = ability.Data.Get<float>(DataKey.AbilityDamageDuration),
+        AllowRepeatHitSameTarget = ability.Data.Get<bool>(DataKey.AbilityRepeatHitSameTarget),
         ApplyImmediateTick = ability.Data.Get<bool>(DataKey.AbilityApplyImmediateDamage)
     }
 });

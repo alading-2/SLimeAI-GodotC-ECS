@@ -79,7 +79,9 @@ public partial class MyCustomUI : UIBase
 ```csharp
 // ObjectPoolInit.cs
 new ObjectPool<MyCustomUI>(
-    () => (MyCustomUI)ResourceManagement.LoadScene<MyCustomUI>().Instantiate(),
+    () => (MyCustomUI)ResourceManagement
+        .Load<PackedScene>(typeof(MyCustomUI).Name, ResourceCategory.UI)
+        .Instantiate(),
     new ObjectPoolConfig { 
         Name = ObjectPoolNames.MyCustomUIPool, 
         ParentPath = "UI/MyContainer" // UI 挂载的父节点路径
@@ -98,7 +100,7 @@ ui.Bind(targetEntity);
 
 **方式 B：自动管理** (适用于 HUD，如 `UIManager`)
 
-参考 `Src/UI/Core/UIManager.cs`，监听全局 `Unit.Created` 事件，自动为新单位分配 UI。
+参考 `Src/ECS/UI/Core/UIManager.cs` 和 `HealthBarUI.Initialize()`，通过 `GlobalEventBus.Global` 监听 `EntitySpawned / EntityDestroyed`，自动为新单位分配 UI。
 
 ## 3. 核心类说明
 
@@ -109,8 +111,8 @@ ui.Bind(targetEntity);
 - 实现了 `IPoolable`，支持对象池自动回收生命周期。
 
 ### `UIManager`
-- 位于 `Src/UI/Core/UIManager.cs`。
-- 一个 AutoLoad 单例。
+- 位于 `Src/ECS/UI/Core/UIManager.cs`。
+- 通过 `[ModuleInitializer]` 注册到 `SystemRegistry`，由系统生命周期实例化。
 - 负责监听单位生成/销毁，自动管理头顶血条 (`HealthBarUI`)。
 
 ## 4. 常见问题

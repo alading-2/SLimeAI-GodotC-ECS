@@ -38,6 +38,8 @@ UI 不负责：
 - UI 初始绑定后应立即刷新一次显示。
 - 伤害数字这类瞬态 UI 可以不做持久 Bind，但必须说明原因。
 - 高频 UI 优先走对象池。
+- UI 场景加载使用 `ResourceManagement.Load<PackedScene>(typeof(T).Name, ResourceCategory.UI)` 或对象池，不使用旧 `LoadScene<T>()`。
+- `UIManager` 通过 `SystemRegistry` 注册，不按旧 AutoLoad 单例文档理解。
 
 ## 禁止事项
 

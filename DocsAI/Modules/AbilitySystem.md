@@ -1,6 +1,6 @@
 # AbilitySystem 模块契约
 
-本文是 AI 修改技能系统、技能 Handler、主动输入、目标选择和 Feature 接入前必须阅读的执行契约。原始说明见 `Src/ECS/Base/System/AbilitySystem/README.md` 和 `.codex/skills/ability-system/references/ability-logic-parameters.md`。
+本文是 AI 修改技能系统、技能 Handler、主动输入、目标选择和 Feature 接入前必须阅读的执行契约。Feature 生命周期细节见 `DocsAI/Modules/FeatureSystem.md`，原始说明见 `Src/ECS/Base/System/AbilitySystem/README.md` 和 `.codex/skills/ability-system/references/ability-logic-parameters.md`。
 
 ## 职责边界
 
@@ -11,7 +11,7 @@ AbilitySystem 负责：
 - 接收正式 `TryTrigger`。
 - 做启用、激活、冷却、充能、资源检查。
 - 消耗充能、启动冷却、消耗成本。
-- 调用 `FeatureSystem.OnFeatureActivated`。
+- 构建 `FeatureContext` 并调用 `FeatureSystem.OnFeatureActivated` / `OnFeatureEnded`。
 
 具体技能 Handler 负责：
 
@@ -40,6 +40,7 @@ TargetingManager 负责：
 - 手动技能必须显式写 `AbilityType.Active + AbilityTriggerMode.Manual`。
 - 技能运行时配置从 `AbilityData` 注入，不从旧 `.tres` AbilityConfig 导入。
 - `FeatureHandlerId` 必须是完整唯一 Handler Id；`FeatureGroupId` 只做展示分组。
+- `FeatureContext.ActivationData` 承载 `CastContext`；`ExecuteResult` 承载 `AbilityExecutedResult`。
 - 点选取消不扣资源、不启动冷却、不执行技能。
 - 正式 `TryTrigger` 会再次做 `CanUseAbility`，防止点选期间状态变化。
 - `DamageApplyOptions.TickInterval / TotalDuration` 是单次技能执行内部 DoT 轴，不等于 `TriggerComponent.Periodic`。

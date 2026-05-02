@@ -21,7 +21,8 @@ Data 容器是一个增强版的动态数据管理系统，提供类型安全、
 本 README 只负责 **`Src/ECS/Base/Data/` 运行时容器**。
 
 - `Data/README.md`：`Data/` 顶层目录分工
-- `Data/Data/README.md`：Config / Resource 到 Data 的映射规范
+- `Data/DataNew/README.md`：运行时主数据表分工
+- `Data/Data/README.md`：旧 Config / Resource 归档，不作为新增运行时主入口
 - `Data/DataKey/README.md`：DataKey / DataMeta 定义规范
 
 如果你在改 `Data/Config`、`Data/Data`、`Data/DataKey`、`Data/EventType`，优先看这些 `Data/` 目录文档，而不是只看本文件。
@@ -97,7 +98,7 @@ public static partial class DataKey
                 return MyMath.AttributeBonusCalculation(baseAttack, bonus);
             }});
 
-    // Node2D 引用等非注册类型仍使用 const string
+    // 极少数运行时引用键允许保留 const string；普通业务字段不要新增 const string
     public const string TargetNode = "TargetNode";
 }
 ```
@@ -210,9 +211,9 @@ Data.AddModifier(DataKey.Damage, new DataModifier(
 ));
 
 // 5 秒后移除 Buff
-GetTree().CreateTimer(5.0).Timeout += () => {
+TimerManager.Instance.Delay(5.0f).OnComplete(() => {
     Data.RemoveModifier(DataKey.AttackSpeed, buffId);
-};
+});
 
 // 检查是否拥有 Buff
 bool hasBuff = Data.HasModifier(DataKey.AttackSpeed, buffId);
@@ -418,44 +419,35 @@ playerData.RemoveModifiersBySource(itemEntity);
 // 重置数据容器（用于对象池）
 Data.Reset();
 
-// 注意：不会清除事件监听器，需要手动管理
+// 注意：Data 只清理数据；Entity.Events 由 EntityManager.Destroy 统一清理
 ```
 
 ## 📝 扩展指南
 
 ### 添加新数据
 
-#### 1. 在 DataKey 中定义常量
+#### 1. 在 DataKey 中定义 DataMeta
 
 ```csharp
-public static class DataKey
+public static partial class DataKey
 {
-    // 添加新数据键
-    public const string ManaRegen = "ManaRegen";
+    public static readonly DataMeta ManaRegen = DataRegistry.Register(
+        new DataMeta
+        {
+            Key = nameof(ManaRegen),
+            DisplayName = "魔法恢复",
+            Description = "每秒恢复的魔法值",
+            Category = DataCategory_Attribute.Basic,
+            Type = typeof(float),
+            DefaultValue = 0f,
+            MinValue = 0,
+            MaxValue = 1000,
+            SupportModifiers = true
+        });
 }
 ```
 
-#### 2. 在 DataRegistry 中注册元数据
-
-```csharp
-private static void RegisterBasicData()
-{
-    Register(new DataMeta
-    {
-        Key = DataKey.ManaRegen,
-        DisplayName = "魔法恢复",
-        Description = "每秒恢复的魔法值",
-        Category = DataCategory.Resource,
-        Type = typeof(float),
-        DefaultValue = 0f,
-        MinValue = 0,
-        MaxValue = 1000,
-        SupportModifiers = true  // 是否支持修改器
-    });
-}
-```
-
-#### 3. 使用新数据
+#### 2. 使用新数据
 
 ```csharp
 Data.Set(DataKey.ManaRegen, 5f);
@@ -464,33 +456,43 @@ float manaRegen = Data.Get<float>(DataKey.ManaRegen);
 
 ### 添加计算数据
 
-#### 1. 在 DataKey 中定义常量
+#### 1. 在 DataKey 中定义计算 DataMeta
 
 ```csharp
-public const string MaxMana = "MaxMana";
-public const string EffectiveMana = "EffectiveMana";
-```
-
-#### 2. 在 DataRegistry 中注册计算规则
-
-```csharp
-private static void RegisterComputedData()
+public static partial class DataKey
 {
-    RegisterComputed(new ComputedData
-    {
-        Key = DataKey.EffectiveMana,
-        Dependencies = new[] { DataKey.MaxMana, DataKey.ManaRegen },
-        Compute = (data) =>
+    public static readonly DataMeta MaxMana = DataRegistry.Register(
+        new DataMeta
         {
-            float maxMana = data.Get<float>(DataKey.MaxMana);
-            float manaRegen = data.Get<float>(DataKey.ManaRegen);
-            return maxMana + manaRegen * 10f; // 示例公式
-        }
-    });
+            Key = nameof(MaxMana),
+            DisplayName = "最大魔法",
+            Category = DataCategory_Attribute.Basic,
+            Type = typeof(float),
+            DefaultValue = 0f,
+            MinValue = 0,
+            SupportModifiers = true
+        });
+
+    public static readonly DataMeta EffectiveMana = DataRegistry.Register(
+        new DataMeta
+        {
+            Key = nameof(EffectiveMana),
+            DisplayName = "有效魔法",
+            Category = DataCategory_Attribute.Computed,
+            Type = typeof(float),
+            DefaultValue = 0f,
+            Dependencies = [nameof(MaxMana), nameof(ManaRegen)],
+            Compute = (data) =>
+            {
+                float maxMana = data.Get<float>(DataKey.MaxMana);
+                float manaRegen = data.Get<float>(DataKey.ManaRegen);
+                return maxMana + manaRegen * 10f;
+            }
+        });
 }
 ```
 
-#### 3. 使用计算数据
+#### 2. 使用计算数据
 
 ```csharp
 // 自动计算，无需手动维护

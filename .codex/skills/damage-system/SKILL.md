@@ -3,176 +3,48 @@ name: damage-system
 description: 处理伤害计算、造成伤害、扩展伤害处理器时使用。适用于：子弹/技能命中造成伤害，实现暴击/闪避/护甲等伤害修正，扩展新的伤害处理阶段。触发关键词：伤害、DamageService、DamageInfo、IDamageProcessor、暴击、闪避、护甲减伤、吸血、造成伤害。
 ---
 
-# DamageSystem 伤害计算系统规范
+# DamageSystem 入口
 
-## 先读
+## 什么时候用
+
+- 造成伤害、批量伤害或 DoT。
+- 修改 `DamageInfo`、`DamageService`、`IDamageProcessor`。
+- 扩展暴击、闪避、护甲、护盾、吸血等伤害阶段。
+- 修改接触伤害或技能命中伤害。
+
+## 转向其它 Skill
+
+- 技能触发、目标、冷却、充能 -> `@ability-system`
+- 通用 Feature 生命周期 -> `@feature-system`
+- DataKey / 配置字段 -> `@data-authoring`
+- 系统门禁和运行状态 -> `DocsAI/Modules/SystemCore.md`
+
+## 必读
 
 - `DocsAI/Modules/DamageSystem.md`
-- 涉及 SystemCore 门禁时读 `DocsAI/Modules/SystemCore.md`
-- 测试矩阵：`DocsAI/Tests/测试矩阵.md`
+- 涉及 Ability 命中读 `DocsAI/Modules/AbilitySystem.md`
+- 涉及系统启停或命令门禁读 `DocsAI/Modules/SystemCore.md`
+- 测试选择读 `DocsAI/Tests/测试矩阵.md`
 
-## 核心原则
+## 最短流程
 
-- **禁止直接修改 HP**：所有伤害必须通过 `SystemManager.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(...)`
-- **禁止手写暴击/闪避**：管道内置处理，自动按优先级执行
-- **职责链模式**：每个 Processor 只处理一个计算阶段
-- **语义分层**：`DamageType` 表示物理/魔法/真实等数值语义，`DamageTags` 表示 Attack/Ability/Area 等来源与表现语义
-- **运行态门禁**：`DamageService` 的外部命令必须由 `SystemManager.Execute` 进入；系统被禁用或状态门禁阻塞时，SystemCore 会阻断伤害结算
-- **死亡来源规则**：伤害系统仅在 **`Attacker` 自身已死亡** 且标签包含 `Attack` 时拦截，不追拥有者/父链；`Ability` 标签伤害不在此规则内统一拦截
-- **接触伤害恢复规则**：`ContactDamageComponent` 在单位死亡时只暂停持续伤害计时器，不丢弃当前接触集合；单位复活并收到 `Revived` 后，需要为仍在接触的敌对目标恢复持续伤害，避免依赖底层重新派发一次 `HurtboxEntered`
-
-## 造成伤害（标准用法）
-
-```csharp
-// ✅ 构造 DamageInfo 并通过 SystemManager 提交给 DamageService
-SystemManager.Instance.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(
-    new DamageProcessRequest(new DamageInfo
-    {
-        Attacker = bulletEntity,      // 直接来源（子弹/技能实体）
-        Victim = enemyEntity,
-        Damage = 50f,
-        Type = DamageType.Physical,
-        Tags = DamageTags.Attack | DamageTags.Ranged
-    })
-);
-
-// 技能造成伤害（在执行器中）
-SystemManager.Instance.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(
-    new DamageProcessRequest(new DamageInfo
-{
-        Attacker = context.Caster as Node,
-        Victim = target,
-        Damage = context.Caster.Data.Get<float>(DataKey.AbilityDamage) * 1.5f,
-        Type = DamageType.Magical,
-        Tags = DamageTags.Ability | DamageTags.Area
-    })
-);
-```
-
-## 内置处理管道（按优先级顺序）
-
-| 优先级 | 处理器                            | 职责                                                                       |
-| ------ | --------------------------------- | -------------------------------------------------------------------------- |
-| 100    | BaseDamageProcessor               | 基础检查（目标死亡/无敌/基础数值/`Attacker` 自身已死亡的 Attack 标签伤害） |
-| 200    | DodgeProcessor                    | 闪避判定                                                                   |
-| 300    | CritProcessor                     | 暴击判定与计算                                                             |
-| 400    | ShieldProcessor                   | 护盾抵扣                                                                   |
-| 500    | DefenseProcessor                  | 护甲减伤                                                                   |
-| 600    | DamageTakenAmplificationProcessor | 受伤倍率（易伤效果）                                                       |
-| 700    | FlatReductionProcessor            | 固定值减伤                                                                 |
-| 800    | LifestealProcessor                | 吸血回血                                                                   |
-| 900    | HealthExecutionProcessor          | 生命值结算                                                                 |
-| 1000   | StatisticsProcessor               | 数据统计                                                                   |
-
-## 扩展自定义处理器
-
-```csharp
-// 1. 实现 IDamageProcessor
-public class MyDamageProcessor : IDamageProcessor
-{
-    public int Priority { get; set; }
-
-    public void Process(DamageInfo info)
-    {
-        if (info.IsDodged) return;  // 已闪避则跳过
-        if (info.Amount <= 0) return;
-
-        // 自定义计算逻辑
-        // 例：燃烧状态额外增伤 20%
-        var victim = info.Victim;
-        if (victim?.Data.Get<bool>(DataKey.IsBurning) == true)
-        {
-            info.Amount *= 1.2f;
-            info.AddLog("燃烧增伤 x1.2");
-        }
-    }
-}
-
-// 2. 在 DamageService 初始化时注册（DamageServiceRegister 方法中）
-RegisterProcessor(new MyDamageProcessor(), 650);  // 在护甲后、固定减伤前
-```
-
-## DamageInfo 关键字段
-
-```csharp
-public class DamageInfo
-{
-    public Node Attacker;           // 直接来源
-    public IUnit Victim;            // 受害者
-    public float Damage;            // 基础伤害
-    public DamageType Type;         // Physical / Magical / True
-    public DamageTags Tags;         // Attack / Ability / Area / ...
-
-    // 管道中间状态（处理器读写）
-    public float FinalDamage;       // 当前最终伤害
-    public bool IsDodged;           // 是否已闪避
-    public bool IsCritical;         // 是否暴击
-    public bool IsEnd;              // 是否提前终止管道
-    public List<string> Logs;       // 调试日志
-}
-```
-
-## DamageTool（批量伤害 / DoT）
-
-多目标或持续伤害场景优先使用 `DamageTool`，不要手写 foreach / TimerManager：
-
-```csharp
-// 单次批量伤害
-DamageTool.ApplyToList(targets, new DamageApplyOptions
-{
-    Damage = 50f,
-    Type = DamageType.Physical,
-    Tags = DamageTags.Ability | DamageTags.Area,
-    Attacker = casterNode
-});
-
-// DoT：每 1s 对新一批目标结算，持续 5s
-DamageTool.ScheduleDoT(
-    () => EntityTargetSelector.Query(new TargetSelectorQuery { ... }),
-    new DamageApplyOptions
-    {
-        Damage = 20f,
-        Type = DamageType.Magical,
-        Tags = DamageTags.Ability | DamageTags.Area,
-        Attacker = casterNode,
-        TickInterval = 1.0f,
-        TotalDuration = 5.0f,
-        AllowRepeatHitSameTarget = false, // 每目标只命中一次
-        ApplyImmediateTick = true         // 创建时先同步结算一次
-    },
-    guardian: casterNode,               // 施法者失效时自动取消计时器
-    immediate: false,                   // 是否创建后立即首跳
-    hitRegistry: DamageTool.CreateHitRegistry()
-);
-```
-
-字段规则：
-
-- `TickInterval <= 0` 或 `TotalDuration <= 0`：退化为单次伤害
-- `AllowRepeatHitSameTarget = false`：配合 `hitRegistry` 实现整个 DoT 周期内每目标只命中一次
-- `ApplyImmediateTick = true`：适合通过 `AbilityImpactTool` 这种“先同步打一跳，再挂 DoT” 的命中模型
-- `TickInterval / TotalDuration` 是“单次技能执行内部”的 DoT 轴，不等于 `TriggerComponent.Periodic` 的“技能再次执行”轴
-- `guardian`：守护节点失效时提前终止 DoT，防止僵尸 tick
-- `immediate = true`：通过 Timer 首帧立即执行一次 tick；`AbilityImpactTool` 默认仍用同步首跳保证返回命中数
-- **绝大多数技能**通过 `AbilityImpactTool.Execute(caster, options)` 间接调用 `DamageTool`，不需要直接使用
-
-关键文件：`Src/ECS/Base/System/DamageSystem/DamageTool.cs`
+1. 判断是业务造成伤害、DoT、处理器、DamageInfo 还是接触伤害。
+2. 外部伤害入口统一走 `SystemManager.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(...)`。
+3. 多目标和持续伤害优先用 `DamageTool`。
+4. 新处理器实现 `IDamageProcessor`，选择明确优先级。
+5. 补充或运行 DamageSystem / Ability / 碰撞相关测试。
+6. 更新 `DocsAI/Modules/DamageSystem.md` 或相关文档。
 
 ## 禁止事项
 
-- ❌ `victim.Data.Set(DataKey.CurrentHp, hp - damage)` 直接改 HP
-- ❌ 手写 `Random.NextDouble() < critRate` 暴击判定
-- ❌ 手写闪避判定
-- ❌ 在管道外修改 `DamageInfo.Amount`
-- ❌ 手写 foreach + DamageService.Process 多目标循环 → 用 `DamageTool.ApplyToList`
-- ❌ 手写 TimerManager 持续伤害调度 → 用 `DamageTool.ScheduleDoT`
+- 不要直接改 `CurrentHp` 扣血。
+- 不要手写暴击、闪避、护甲减伤。
+- 不要业务代码直接调用 `DamageService.Process` 绕过 SystemCore。
+- 不要手写 foreach / TimerManager 复制 `DamageTool` 能力。
 
-## 关键文件路径
+## 推荐验证
 
-- **核心服务** → `Src/ECS/Base/System/DamageSystem/DamageService.cs`
-- **伤害信息** → `Src/ECS/Base/System/DamageSystem/DamageInfo.cs`
-- **处理器接口** → `Src/ECS/Base/System/DamageSystem/IDamageProcessor.cs`
-- **接触伤害组件** → `Src/ECS/Base/Component/Collision/ContactDamageComponent/ContactDamageComponent.cs`
-- **扩展指南** → `Src/ECS/Base/System/DamageSystem/README.md`
-- **内置处理器目录** → `Src/ECS/Base/System/DamageSystem/Processors/`
-- **设计理念** → `Docs/框架/ECS/System/伤害系统设计理念.md`
+```bash
+dotnet build
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/System/DamageSystemTest/DamageSystemTest.tscn --build
+```

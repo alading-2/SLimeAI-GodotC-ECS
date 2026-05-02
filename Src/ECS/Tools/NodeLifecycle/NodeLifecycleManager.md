@@ -168,5 +168,5 @@ graph TB
 
 ## 相关文档
 
-- [EntityManager 文档](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Src/ECS/Base/Entity/Core/EntityManager.md)
-- [EntityRelationshipManager 文档](file:///e:/Godot/Games/MyGames/复刻土豆兄弟/brotato-my/Src/ECS/Base/Entity/Core/EntityRelationshipManager.cs)
+- [EntityManager 文档](../../Base/Entity/Core/EntityManager.md)
+- [EntityRelationshipManager 文档](../../Base/Entity/Core/EntityRelationshipManager.cs)
