@@ -32,6 +32,7 @@
 - 第三批已修正 CostComponent、Data README、Component 规范、EntityManager 文档和两个测试 README。
 - 第四批已修正 Tools 族 ObjectPool、TargetSelector、TimerManager 源码旁文档。
 - 第五批已修正 Component / Attack / Collision / UI 源码旁文档和 DocsAI 契约。
+- 新对话交接见 `Plans/Architecture/AI_First_Docs_Code_Alignment/10_Handoff_For_New_Conversation.md`。
 
 ## 已完成（本轮）
 
@@ -42,6 +43,7 @@
 ## 未完成 / 风险
 
 - `Src/**/*.md` 历史长文档尚未系统迁移，目前只按模块族清理已确认会误导 AI 的内容。
+- 下一步优先深审 Movement、AI、Collision 长文档和 `Docs/` 中对应人类设计文档。
 - 旧 `MainTest` 失败不属于本轮文档收敛，需独立 Debug。
 - 已有用户工作区改动集中在 Godot 场景测试 Skill、测试文档、Docs README 和项目索引，继续修改时必须合并而不是覆盖。
 

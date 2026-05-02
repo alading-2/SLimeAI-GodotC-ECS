@@ -6,7 +6,7 @@
 
 ## 当前阶段
 
-继续执行源码旁文档分模块校准。第三批优先处理 Ability / Data / Entity / 测试 README 中会误导 AI 写错代码的条目。
+阶段性交接。AI 可执行入口和明显过期内容主体校准已完成；剩余工作是深层文档迁移和模块族长文档治理。
 
 ## 已完成
 
@@ -20,11 +20,13 @@
 - 第三批按代码修正 CostComponent、Data README、Component 规范、EntityManager 文档和两个测试 README。
 - 第四批按代码修正 Tools 族 ObjectPool、TargetSelector、TimerManager 源码旁文档。
 - 第五批按代码修正 Component / Attack / Collision / UI 源码旁文档和 DocsAI 契约。
+- 新增 `10_Handoff_For_New_Conversation.md`，记录新对话接续入口、已完成、未完成和推荐下一步。
 
 ## 未完成
 
 - `Src/**/*.md` 的长文档迁移仍需后续分模块处理。
-- Movement 长设计文档、AI 行为树细节、Collision 设计总览等仍可继续做深层迁移评估。
+- Movement 长设计文档、AI 行为树细节、Collision 设计总览等仍需后续深层迁移评估。
+- `Docs/` 中对应人类设计文档还未系统归档 / 拆分 / 迁移。
 - 旧 `MainTest` 失败不是本轮范围，需独立 Debug。
 - 需要用真实 AI 功能任务继续验证每个 Skill 是否足够可执行。
 
