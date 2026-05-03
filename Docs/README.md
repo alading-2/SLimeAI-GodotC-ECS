@@ -14,6 +14,8 @@
    - 将 AI-First 迁移拆成多个可独立执行的阶段任务。
 5. [AI-First 文档与 Skill 对齐计划](../Plans/Architecture/AI_First_Docs_Code_Alignment/README.md)
    - 旧迁移完成后的二轮文档收敛，按当前代码校准 DocsAI、Skill 和源码旁文档。
+6. [AI-First 测试基础设施与文档深层对齐](../Plans/Architecture/AI_First_Test_Infra_Deep_Docs/README.md)
+   - 当前执行中：GodotSkill 测试基础设施 + Movement/AI/Collision 文档深层审计。
 
 ## 核心模块
 
@@ -30,7 +32,7 @@
 - `Docs/`：人类阅读入口，讲 Why、What、架构设计、使用指南和决策背景。
 - `DocsAI/`：AI 执行入口，讲任务流程、模块契约、测试矩阵、调试协议和上下文恢复。
 - `Src/**/*.md`：源码附近说明，后续逐步收敛为短 README 或迁移到 `Docs/` / `DocsAI/`。
-- `.codex/skills/`：Codex 当前可用 Skill，后续只保留触发条件、流程入口、命令和 DocsAI 链接。
+- `.claude/skills/` / `.codex/skills/`：AI 工具可用的项目 Skill，只保留触发条件、流程入口、命令和 DocsAI 链接。
 
 ## 维护规则
 
