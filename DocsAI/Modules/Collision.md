@@ -82,6 +82,6 @@ Collision 负责把 Godot 物理接触转换为项目事件和碰撞语义。它
 
 ```bash
 dotnet build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn --build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/System/DamageSystemTest/DamageSystemTest.tscn --build
+./.claude/skills/GodotSkill/scripts/run-test.sh --build res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn
+./.claude/skills/GodotSkill/scripts/run-test.sh --build res://Src/ECS/Test/SingleTest/ECS/System/DamageSystemTest/DamageSystemTest.tscn
 ```
