@@ -5,7 +5,7 @@
 | Skill | DocsAI 入口 | 说明 |
 | --- | --- | --- |
 | `project-index` | `DocsAI/INDEX.md`、`Docs/框架/项目索引.md` | 查文档、源码、模板和项目导航。 |
-| `godot-scene-test` | `DocsAI/Tests/Godot场景测试.md`、`DocsAI/Tests/测试矩阵.md`、`DocsAI/Tests/日志判定与Debug.md` | CLI 场景测试和日志判定。 |
+| `GodotSkill` / `godot-scene-test` | `DocsAI/Tests/Godot场景测试.md`、`DocsAI/Tests/测试矩阵.md`、`DocsAI/Tests/日志判定与Debug.md` | CLI 场景测试和日志判定。 |
 | `ecs-entity` | `DocsAI/Modules/Entity.md`、`DocsAI/Workflows/ECS核心修改门禁.md` | Entity 生命周期、关系、对象池和核心修改门禁。 |
 | `ecs-component` | `DocsAI/Modules/Component.md` | Component 开发契约和运动组件要点。 |
 | `ecs-data` | `DocsAI/Modules/Data.md` | 运行时 Data 容器、DataMeta、DataRegistry、读写和数据变化事件。 |
