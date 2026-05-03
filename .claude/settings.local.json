@@ -47,7 +47,8 @@
       "Bash(chmod +x *)",
       "Bash(cp /home/slime/Code/Godot/Games/MyGames/brotato-my/.claude/skills/GodotSkill/scripts/run-test.sh /home/slime/Code/Godot/Games/MyGames/brotato-my/.codex/skills/GodotSkill/scripts/run-test.sh)",
       "Bash(cp /home/slime/Code/Godot/Games/MyGames/brotato-my/.claude/skills/GodotSkill/scripts/analyze-logs.sh /home/slime/Code/Godot/Games/MyGames/brotato-my/.codex/skills/GodotSkill/scripts/analyze-logs.sh)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }
