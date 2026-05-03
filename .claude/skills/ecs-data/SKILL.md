@@ -23,7 +23,6 @@ description: 在 Entity 或 Component 中读写 Data 数据容器、定义新 Da
 
 - `DocsAI/Modules/Data.md`
 - 数据目录配置读 `DocsAI/Modules/DataAuthoring.md`
-- `Src/ECS/Base/Data/README.md`
 - 测试选择读 `DocsAI/Tests/测试矩阵.md`
 
 ## 最短流程

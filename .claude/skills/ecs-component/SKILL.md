@@ -27,7 +27,6 @@ description: 创建新 Component、实现 IComponent 接口、在组件中读写
 - 涉及 Entity 生命周期或组件注册核心时读 `DocsAI/Workflows/ECS核心修改门禁.md`
 - `Src/ECS/Base/Component/TemplateComponent.cs`
 - `Src/ECS/Base/Component/IComponent.cs`
-- `Src/ECS/Base/Component/Component规范.md`
 
 ## 最短流程
 
