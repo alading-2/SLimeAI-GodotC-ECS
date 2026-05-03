@@ -50,5 +50,5 @@ description: 创建新 Component、实现 IComponent 接口、在组件中读写
 
 ```bash
 dotnet build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs list --filter Movement
+node .claude/skills/GodotSkill/scripts/godot-scene-runner.mjs list --filter Movement
 ```

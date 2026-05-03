@@ -48,6 +48,6 @@ description: 使用 TimerManager 计时器、ObjectPool 对象池、TargetSelect
 
 ```bash
 dotnet build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/Tools/ObjectPool/ObjectPoolManagerTest.tscn --build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/Tools/TargetSelector/TargetSelectorTest.tscn --build
+node .claude/skills/GodotSkill/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/Tools/ObjectPool/ObjectPoolManagerTest.tscn --build
+node .claude/skills/GodotSkill/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/Tools/TargetSelector/TargetSelectorTest.tscn --build
 ```
