@@ -1,6 +1,6 @@
 # AbilitySystem 模块契约
 
-本文是 AI 修改技能系统、技能 Handler、主动输入、目标选择和 Feature 接入前必须阅读的执行契约。Feature 生命周期细节见 `DocsAI/Modules/FeatureSystem.md`，原始说明见 `Src/ECS/Base/System/AbilitySystem/README.md` 和 `.codex/skills/ability-system/references/ability-logic-parameters.md`。
+本文是 AI 修改技能系统、技能 Handler、主动输入、目标选择和 Feature 接入前必须阅读的执行契约。Feature 生命周期细节见 `DocsAI/Modules/FeatureSystem.md`。
 
 ## 职责边界
 

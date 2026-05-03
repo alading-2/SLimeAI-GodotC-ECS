@@ -1,6 +1,6 @@
 # FeatureSystem 模块契约
 
-本文是 AI 修改通用能力生命周期、Feature Handler、Modifier 和 Ability 接入时必须阅读的执行契约。人类背景见 `Src/ECS/Base/System/FeatureSystem/README.md` 和 `Docs/框架/ECS/System/FeatureSystem/FeatureSystem.md`。
+本文是 AI 修改通用能力生命周期、Feature Handler、Modifier 和 Ability 接入时必须阅读的执行契约。人类背景见 `Docs/框架/ECS/System/FeatureSystem/FeatureSystem.md`。
 
 ## 职责边界
 

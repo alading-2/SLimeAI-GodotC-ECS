@@ -22,7 +22,7 @@
 ## 后续使用方式
 
 - 如果你要了解 **当前 Data 系统怎么用**，看 [`DataSystem_Design.md`](./DataSystem_Design.md)
-- 如果你要了解 **运行时代码怎么写**，看 `Src/ECS/Base/Data/README.md`
+- 如果你要了解 **运行时代码怎么写**，看 `DocsAI/Modules/Data.md`
 - 如果你要了解 **Data 目录下的配置、DataKey、EventType 怎么组织**，看：
   - `Data/README.md`
   - `Data/Data/README.md`

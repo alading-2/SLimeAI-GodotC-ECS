@@ -1,6 +1,6 @@
 # TestSystem 模块契约
 
-本文是 AI 修改运行时测试系统时的执行契约。详细人类说明见 `Docs/框架/ECS/System/TestSystem/TestSystem.md` 和 `Src/ECS/Base/System/TestSystem/README.md`。
+本文是 AI 修改运行时测试系统时的执行契约。详细人类说明见 `Docs/框架/ECS/System/TestSystem/TestSystem.md`。
 
 ## 系统定位
 

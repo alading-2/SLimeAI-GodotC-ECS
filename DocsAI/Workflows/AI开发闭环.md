@@ -59,7 +59,7 @@ node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run-all --con
 - `DocsAI/INDEX.md` 是否需要更新。
 - 对应 `DocsAI/Modules/*` 是否需要更新。
 - 对应 `.codex/skills/*/SKILL.md` 是否需要更新。
-- 旧 `Src/**/*.md` 是否仍和代码一致。
+- 代码和 DocsAI 契约是否一致（`Src/**/*.md` 已移除）。
 
 ## 最终输出
 

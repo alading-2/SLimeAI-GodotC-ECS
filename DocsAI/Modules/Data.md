@@ -49,7 +49,7 @@ Data 不负责：
 ## 修改流程
 
 1. 判断是运行时容器行为、DataMeta 规则、配置字段、事件类型还是资源映射。
-2. 容器行为改 `Src/ECS/Base/Data/`，数据目录改动先读 `DocsAI/Modules/DataAuthoring.md`。
+2. 容器行为改 `Src/ECS/Base/Data/` 下的源码，数据目录改动先读 `DocsAI/Modules/DataAuthoring.md`。
 3. 修改 DataMeta / DataRegistry 时检查默认值、类型转换、计算依赖和修改器语义。
 4. 若新增字段会被 UI / Component 监听，补充事件响应或测试。
 5. 更新 `DocsAI/Modules/Data.md`、`DocsAI/Modules/DataAuthoring.md` 或相关 Skill。

@@ -139,12 +139,12 @@ public static readonly DataMeta BaseHp = DataRegistry.Register(
 - ❌ 不要新增主流 `const string` DataKey
 - ❌ 不要使用 `Data.On()` 监听数据变化
 - ❌ 不要把系统全局配置误放进 `Data/Data/`
-- ✅ 运行时规则看 `Src/ECS/Base/Data/README.md`
+- ✅ 运行时规则看 `DocsAI/Modules/Data.md`
 - ✅ 数据目录写法看 `Data/README.md`、`Data/Data/README.md`、`Data/DataKey/README.md`
 
 ## 9. 相关文档
 
-- `Src/ECS/Base/Data/README.md`：运行时 Data 容器使用指南
+- `DocsAI/Modules/Data.md`：运行时 Data 容器使用指南
 - `Data/README.md`：`Data/` 顶层目录职责
 - `Data/Data/README.md`：Config / Resource 映射规范
 - `Data/DataKey/README.md`：DataKey / DataMeta 定义规范

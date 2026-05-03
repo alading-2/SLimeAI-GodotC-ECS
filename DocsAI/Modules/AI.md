@@ -23,7 +23,6 @@ AI 不负责：
 - 行为积木：`Src/ECS/AI/Nodes/EnemyBehaviorBlocks.cs`
 - 行为树工厂：`Src/ECS/AI/Nodes/EnemyBehaviorTreeBuilder.cs`
 - AI DataKey：`Data/DataKey/AI/DataKey_AI.cs`
-- 源码入口：`Src/ECS/AI/README.md`
 
 ## 数据 / 事件 / 生命周期
 

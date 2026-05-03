@@ -1,6 +1,6 @@
 # SystemCore 模块契约
 
-本文是 AI 修改系统注册、启停、运行态门禁、ProjectState 和系统命令前必须阅读的执行契约。原始说明见 `Src/ECS/Base/System/Core/README.md`。
+本文是 AI 修改系统注册、启停、运行态门禁、ProjectState 和系统命令前必须阅读的执行契约。
 
 ## 职责边界
 

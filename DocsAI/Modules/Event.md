@@ -1,6 +1,6 @@
 # Event 模块契约
 
-本文是 AI 使用或修改 EventBus、GameEventType、Entity.Events 和 GlobalEventBus 前必须阅读的执行契约。原始说明见 `Src/ECS/Base/Event/README_EventBus.md`。
+本文是 AI 使用或修改 EventBus、GameEventType、Entity.Events 和 GlobalEventBus 前必须阅读的执行契约。
 
 ## 职责边界
 
@@ -25,7 +25,6 @@ Event 不负责：
 - `Src/ECS/Base/Event/GlobalEventBus.cs`
 - `Src/ECS/Base/Event/EventContext.cs`
 - `Data/EventType/`
-- `Src/ECS/Base/Event/README_EventBus.md`
 
 ## 数据 / 事件 / 生命周期
 

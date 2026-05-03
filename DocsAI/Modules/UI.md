@@ -1,6 +1,6 @@
 # UI 模块契约
 
-本文是 AI 修改 UIBase、HUD、技能栏、血条、伤害数字和 Entity 绑定 UI 时必须阅读的执行契约。原始说明见 `Src/ECS/UI/README.md`。
+本文是 AI 修改 UIBase、HUD、技能栏、血条、伤害数字和 Entity 绑定 UI 时必须阅读的执行契约。
 
 ## 职责边界
 
@@ -28,7 +28,6 @@ UI 不负责：
 - `Src/ECS/UI/UI/DamageNumberUI/DamageNumberUI.cs`
 - `Src/ECS/UI/UI/SkillUI/ActiveSkillBarUI.cs`
 - `Src/ECS/UI/UI/SkillUI/ActiveSkillSlotUI.cs`
-- `Src/ECS/UI/README.md`
 
 ## 数据 / 事件 / 生命周期
 

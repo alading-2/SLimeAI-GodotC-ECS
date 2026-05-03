@@ -7,15 +7,15 @@
 按当前代码重新校准：
 
 - `DocsAI/Modules/` 模块契约。
-- `.codex/skills/*` 短入口。
+- `.claude/skills/*` / `.codex/skills/*` 短入口。
 - `Docs/` 人类文档入口和项目索引。
-- `Src/**/*.md` 源码旁文档中的明显过期链接。
+- `Src/**/*.md` 已全部移除，源码入口统一由项目索引指向 .cs 文件。
 
 ## 当前阶段
 
-执行 `Plans/Architecture/AI_First_Docs_Code_Alignment/`。
-
-这是旧 `Plans/Architecture/AI_First_Program_Migration/` 完成后的二轮收敛计划。旧计划作为历史记录保留，不再追加新阶段。
+`AI_First_Docs_Code_Alignment`（二轮收敛）已完成。后续执行：
+- `Plans/Architecture/AI_First_Test_Infra_Deep_Docs/`（5 阶段完成）：GodotSkill 测试基础设施 + Movement/AI/Collision 文档深层审计
+- `Plans/Architecture/AI_First_Src_Docs_Deep_Audit/`（完成）：剩余 Src .md 全量删除，唯一真相源为 DocsAI + Docs/ + 项目索引
 
 ## 已完成
 

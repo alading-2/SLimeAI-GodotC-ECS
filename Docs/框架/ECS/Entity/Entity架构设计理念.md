@@ -652,7 +652,7 @@ Enemy.tscn
 
 ## 相关文档
 
-- **API 使用指南**：[`Src/ECS/Base/Entity/Core/README.md`](/home/slime/Code/Godot/Games/MyGames/brotato-my/Game/Src/ECS/Base/Entity/Core/README.md)
+- **API 使用指南**：见 `DocsAI/Modules/Entity.md`
 - **EntityManager 详细设计**：[`Docs/框架/ECS/Entity/EntityManager设计说明.md`](/home/slime/Code/Godot/Games/MyGames/brotato-my/Game/Docs/框架/ECS/Entity/EntityManager设计说明.md)
 - **项目规则**：[`.agent/rules/projectrules.md`](/home/slime/Code/Godot/Games/MyGames/brotato-my/Game/.agent/rules/projectrules.md)
 

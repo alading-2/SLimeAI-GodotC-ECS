@@ -1,6 +1,6 @@
 # DamageSystem 模块契约
 
-本文是 AI 修改伤害入口、伤害处理器、接触伤害和批量 / DoT 伤害时必须阅读的执行契约。碰撞分层见 `DocsAI/Modules/Collision.md`，原始说明见 `Src/ECS/Base/System/DamageSystem/README.md`。
+本文是 AI 修改伤害入口、伤害处理器、接触伤害和批量 / DoT 伤害时必须阅读的执行契约。碰撞分层见 `DocsAI/Modules/Collision.md`。
 
 ## 职责边界
 

@@ -1,6 +1,6 @@
 # Entity 模块契约
 
-本文是 AI 修改 Entity 生命周期、对象池、关系和迁移逻辑前必须阅读的执行契约。原始说明见 `Src/ECS/Base/Entity/Entity规范.md`、`Src/ECS/Base/Entity/Core/EntityManager.md` 和 `Docs/框架/项目索引.md`。
+本文是 AI 修改 Entity 生命周期、对象池、关系和迁移逻辑前必须阅读的执行契约。设计背景见 `Docs/框架/项目索引.md`。
 
 ## 职责边界
 
