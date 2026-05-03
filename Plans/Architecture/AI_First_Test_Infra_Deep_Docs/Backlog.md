@@ -6,11 +6,7 @@
 - 检查 DocsAI/Tests/ 中的路径引用是否需要更新
 - 提交 `.claude` 侧改动
 
-## 阶段 2 预备
-
-- 列出 `Src/ECS/Base/System/Movement/**/*.md` 完整文件清单
-- 评估每个文件的行数和内容类型（设计说明 vs API 入口）
-- 决定迁移策略：哪些进 Docs/，哪些下沉到 DocsAI/Modules/
+## 阶段 2 ✅ 已完成 (commit 0b27043)
 
 ## 阶段 3 预备
 
