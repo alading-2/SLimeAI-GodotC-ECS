@@ -1,10 +1,10 @@
 # Movement 源码入口
 
-本目录存放移动策略系统源码。AI 执行规则见 `DocsAI/Modules/Movement.md`，长设计背景见 `Docs/框架/ECS/System/Movement/移动系统设计说明.md`。
+本目录存放移动策略系统源码。AI 执行契约见 `DocsAI/Modules/Movement.md`，设计背景见 `Docs/框架/ECS/System/Movement/移动系统设计说明.md`。
 
 ## 目录职责
 
-- `Core/`：策略接口、参数、注册表、停止协调、运动碰撞协议。
+- `Core/`：策略接口、参数、注册表、停止协调、运动碰撞、朝向协议。
 - `Strategies/`：各 `MoveMode` 的具体策略实现。
 - `ScalarDriver/`：运动策略内连续标量参数的通用驱动器。
 - `Utils/`：速度合成、移动辅助函数。
@@ -24,32 +24,27 @@
 
 `None / Charge / Orbit / SineWave / BezierCurve / Boomerang / AttachToHost / PlayerInput / AIControlled / Parabola / CircularArc`
 
-旧文档中的 `FixedDirection / TargetPoint / TargetEntity / OrbitPoint / OrbitEntity / Spiral` 已不是当前代码模式。
+旧模式 `FixedDirection / TargetPoint / TargetEntity / OrbitPoint / OrbitEntity / Spiral` 已废弃。
 
-## AI 修改前必读
+## 修改前必读
 
-- `DocsAI/Modules/Movement.md`
-- 涉及碰撞读 `DocsAI/Modules/Collision.md`
-- 涉及 AI 意图读 `DocsAI/Modules/AI.md`
-- 涉及技能命中读 `DocsAI/Modules/AbilitySystem.md`
+- `DocsAI/Modules/Movement.md` — AI 执行契约
+- `DocsAI/Modules/Collision.md` — 涉及碰撞时
+- `DocsAI/Modules/AI.md` — 涉及 AI 意图时
 
-## 最短修改流程
+## 新增策略流程概要
 
-1. 先确认现有策略是否可复用。
-2. 新策略实现 `IMovementStrategy`。
-3. 新模式更新 `Data/DataKey/Component/Movement/MovementEnums.cs`。
-4. 用 `[ModuleInitializer]` 注册到 `MovementStrategyRegistry`。
-5. 输入参数放 `MovementParams`，策略运行态放策略私有字段。
-6. 策略只写 `DataKey.Velocity`，不直接改 `GlobalPosition`。
-7. 更新 `DocsAI/Modules/Movement.md` 和 `Docs/框架/项目索引.md`。
+1. 确认现有策略不可复用
+2. 实现 `IMovementStrategy`，用 `[ModuleInitializer]` 注册
+3. 新模式更新 `MovementEnums.cs`，新参数放 `MovementParams`
+4. 策略只写 `DataKey.Velocity`，返回 `MovementUpdateResult`
+5. 更新 `DocsAI/Modules/Movement.md` 和项目索引
+6. 运行 Movement 测试场景
 
-## 测试场景
-
-- `res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn`
-- `res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn`
+## 测试
 
 ```bash
 dotnet build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn --build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn --build
+./.claude/skills/GodotSkill/scripts/run-test.sh --build res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn
+./.claude/skills/GodotSkill/scripts/run-test.sh res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn --build
 ```

@@ -87,6 +87,23 @@ Movement 不负责：
 7. 如果需要连续标量演化，优先复用 `ScalarDriver`。
 8. 补充或运行 Movement 场景测试。
 
+## ScalarDriver 规则
+
+`ScalarDriver` 是 Movement 内部的通用标量驱动器（`Src/ECS/Base/System/Movement/ScalarDriver/`），用于让单个数值随时间推进。源码见 `ScalarMotion.cs`。
+
+- 适用场景：`OrbitRadius` 随时间的扩张/收缩/反弹，`WaveAmplitude` 动态变大或衰减，`WaveFrequency` 按边界模式往返或冻结。
+- ScalarDriver 只推进标量值、速度、边界响应和完成状态；不直接移动实体，不写 `Data`。
+- 具体策略决定该标量如何参与轨迹公式。
+- 当前接入：`OrbitStrategy.OrbitRadiusScalarDriver`、`SineWaveStrategy.WaveAmplitudeScalarDriver`、`SineWaveStrategy.WaveFrequencyScalarDriver`。
+
+使用步骤：
+1. `MovementParams` 中保留基础值字段，可选增加 `ScalarDriverParams?` 字段。
+2. 策略 `OnEnter` 创建 `ScalarDriverState`。
+3. 策略 `Update` 调用 `ScalarDriver.Step()`。
+4. 日志上下文传入 `MoveMode` 和参数名。
+
+新增策略若只需驱动一个连续标量，优先复用 `ScalarDriver`，不要在策略里重复实现边界响应。
+
 ## 禁止事项
 
 - 禁止策略直接改 `GlobalPosition`。
@@ -100,7 +117,9 @@ Movement 不负责：
 
 ```bash
 dotnet build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs list --filter Movement
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn --build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn --build
+# .claude
+./.claude/skills/GodotSkill/scripts/run-test.sh --build res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn
+./.claude/skills/GodotSkill/scripts/run-test.sh --build res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn
+# 或
+node .claude/skills/GodotSkill/scripts/godot-scene-runner.mjs list --filter Movement
 ```
