@@ -220,7 +220,8 @@ public static partial class EntityManager
             if (config.Rotation.HasValue) entity2D.GlobalRotationDegrees = config.Rotation.Value;
 
             // 关键：强制同步 Transform，避免物理 server 在启用碰撞时仍使用旧物理位置
-            entity2D.ForceUpdateTransform();
+            if (entity2D.IsInsideTree())
+                entity2D.ForceUpdateTransform();
         }
 
         if (!BindSpawnRelationships(entity, config))

@@ -263,7 +263,8 @@ public static partial class EffectTool
         entity.GlobalPosition = finalPosition;
         entity.GlobalRotationDegrees = options.Rotation;
         entity.Scale = options.Scale ?? Vector2.One;
-        entity.ForceUpdateTransform();
+        if (entity.IsInsideTree())
+            entity.ForceUpdateTransform();
     }
 
     /// <summary>

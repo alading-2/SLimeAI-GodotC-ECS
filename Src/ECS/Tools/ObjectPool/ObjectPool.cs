@@ -272,11 +272,13 @@ public class ObjectPool<T> where T : class
         if (NeedsTreeDetach(node) && node is Node2D parkedNode2D)
         {
             parkedNode2D.GlobalPosition = PoolParkingPosition;
-            parkedNode2D.ForceUpdateTransform();
+            if (parkedNode2D.IsInsideTree())
+                parkedNode2D.ForceUpdateTransform();
         }
         else if (node is Node2D node2D)
         {
-            node2D.ForceUpdateTransform();
+            if (node2D.IsInsideTree())
+                node2D.ForceUpdateTransform();
         }
 
         SetCollisionTreeActive(node, false);
@@ -296,7 +298,7 @@ public class ObjectPool<T> where T : class
     {
         node.ProcessMode = Node.ProcessModeEnum.Inherit;
         if (node is CanvasItem item) item.Visible = true;
-        if (node is Node2D node2D) node2D.ForceUpdateTransform();
+        if (node is Node2D node2D && node2D.IsInsideTree()) node2D.ForceUpdateTransform();
         SetCollisionTreeActive(node, true);
     }
 
