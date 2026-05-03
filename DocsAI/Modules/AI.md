@@ -75,6 +75,5 @@ AI 不负责：
 
 ```bash
 dotnet build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs list --filter AI
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn --build
+./.claude/skills/GodotSkill/scripts/run-test.sh res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn --build
 ```
