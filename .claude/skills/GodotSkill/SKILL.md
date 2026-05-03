@@ -22,12 +22,42 @@ description: 运行 Godot C# 项目测试场景并获取打印信息。用于 AI
 ## 常用命令
 
 ```bash
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs list
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs list --filter Movement
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/GlobalTest/MainTest/MainTest.tscn --build --attempts 2 --errors-only --log-dir .ai-temp/scene-tests/runs
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run-many res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn --build --continue-on-fail --attempts 2 --errors-only --log-dir .ai-temp/scene-tests/runs
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run-all --filter Movement --build --continue-on-fail --attempts 2 --errors-only --log-dir .ai-temp/scene-tests/runs
+node .claude/skills/GodotSkill/scripts/godot-scene-runner.mjs list
+node .claude/skills/GodotSkill/scripts/godot-scene-runner.mjs list --filter Movement
+node .claude/skills/GodotSkill/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/GlobalTest/MainTest/MainTest.tscn --build --attempts 2 --errors-only --log-dir .ai-temp/scene-tests/runs
+node .claude/skills/GodotSkill/scripts/godot-scene-runner.mjs run-many res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn --build --continue-on-fail --attempts 2 --errors-only --log-dir .ai-temp/scene-tests/runs
+node .claude/skills/GodotSkill/scripts/godot-scene-runner.mjs run-all --filter Movement --build --continue-on-fail --attempts 2 --errors-only --log-dir .ai-temp/scene-tests/runs
 ```
+
+## Shell 快速命令
+
+单场景快速验证，不需要记忆 Node.js 参数：
+
+```bash
+# 构建 + 运行单个场景（失败自动重试 1 次）
+./.claude/skills/GodotSkill/scripts/run-test.sh --build res://Src/ECS/Test/GlobalTest/MainTest/MainTest.tscn
+
+# 不重试，只看结果
+./.claude/skills/GodotSkill/scripts/run-test.sh --no-retry res://Src/ECS/Test/SingleTest/...
+
+# 查看完整日志（不截断）
+./.claude/skills/GodotSkill/scripts/run-test.sh --full-logs res://...
+```
+
+分析最新测试日志：
+
+```bash
+# 查看最新一次运行结果摘要
+./.claude/skills/GodotSkill/scripts/analyze-logs.sh
+
+# 查看指定日期的运行
+./.claude/skills/GodotSkill/scripts/analyze-logs.sh --date 2026-05-02
+```
+
+**脚本 vs Node.js 选择：**
+- Shell 脚本 (`run-test.sh`) — 单场景快速验证，AI 改完代码立刻跑
+- Shell 脚本 (`analyze-logs.sh`) — 快速查看测试摘要，不用手写 rg 命令
+- Node.js (`godot-scene-runner.mjs`) — 批量运行、需要 JSON 输出、自定义日志目录、复杂过滤
 
 默认 `stdout` / `stderr` 只保留尾部摘要，避免长日志刷屏。需要完整打印信息时优先加 `--log-dir .ai-temp/scene-tests/runs`，然后用 `rg` 检索落盘日志；只有确实需要 JSON 内含完整日志时才加 `--full-logs`。
 
@@ -106,6 +136,28 @@ GODOT_PATH
 /home/slime/Code/Godot/GodotEngine/4.x/Godot_v4.6.2-stable_mono_linux_x86_64/Godot_v4.6.2-stable_mono_linux.x86_64
 godot
 ```
+
+## AI 自主 Debug 循环
+
+修改代码后，AI 自主完成以下闭环，不需要人类操作 Godot：
+
+```
+1. dotnet build                          # 构建
+2. run-test.sh --build <scene>           # 运行测试（失败自动重试）
+3. analyze-logs.sh                       # 分析日志
+4. 如果失败：
+   a. 读 firstError / failureReason
+   b. 定位错误文件和行号
+   c. 小步修改代码
+   d. git status --short                 # 确认改动范围
+   e. 回到步骤 1
+5. 如果通过：
+   - 确认 passed=true, failed=false
+   - 清理日志: rm -r -- .ai-temp/scene-tests/runs/<日期>/<时间>
+   - 报告结果
+```
+
+重试上限 3 轮。3 轮仍失败则停止，输出详细错误信息，请求人类介入。
 
 ## 手动 fallback
 
