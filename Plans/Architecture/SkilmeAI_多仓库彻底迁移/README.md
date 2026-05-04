@@ -2,7 +2,7 @@
 
 > 日期：2026-05-04
 > 状态：执行中
-> 目标：把当前 `brotato-my` 从长期主项目降级为迁移输入仓库，建立 `SkilmeAI` 顶层工作区、独立 AI 框架仓库、独立 Godot 引擎仓库和独立游戏仓库。
+> 目标：把当前 `brotato-my` 从长期主项目降级为迁移输入仓库，建立 `SkilmeAI` 顶层工作区、独立 AI 框架仓库、Godot 引擎源码目录和独立游戏仓库。
 
 ## 1. 核心决策
 
@@ -12,7 +12,7 @@
 
 - 顶层工作区命名为 `SkilmeAI`。
 - 第一阶段只做 Godot，不做跨引擎抽象；Unity / 自研引擎只预留目录和文档边界。
-- `SkilmeAI` AI 框架、Godot 引擎源码、每个游戏都使用独立 git 仓库。
+- `SkilmeAI` AI 框架、Godot 引擎源码、每个游戏都使用独立版本边界；当前引擎源码权威路径是 `/home/slime/Code/SkilmeAI/Engine/godot-4.6.2-stable`。
 - 游戏运行时通过 `SkilmeAI.GameOS` NuGet / DLL / 本地包引用框架，不复制框架源码。
 - 游戏 AI 工作流通过本地 `.codex/skills` 和 `DocsAI/ExternalFrameworkMap.md` 查找框架版本、框架源码路径和契约文档。
 - 框架深层 Skill 保留在 `SkilmeAI` 框架仓库；游戏仓库只放游戏开发入口和框架引用入口。
@@ -32,7 +32,7 @@
     Plans/
     Tools/
 
-  GodotEngine/                      # repo: Godot 源码、fork、trace 补丁
+  Engine/                           # Godot 源码、fork、trace 补丁
     godot-4.6.2-stable/
     godot-ai-trace-fork/
 
@@ -184,7 +184,7 @@ rg -n "SkilmeAI|多仓库|ExternalFrameworkMap|NuGet" Plans DocsAI Docs
 
 - `/home/slime/Code/SkilmeAI/` 顶层工作区。
 - `SkilmeAI` 主仓库骨架。
-- `GodotEngine` 仓库位置确认。
+- `Engine` 目录和 Godot 源码位置确认。
 - `Games/BrotatoLike` 新游戏仓库骨架。
 - 每个仓库的 `AGENTS.md / DocsAI/INDEX.md / ProjectState`。
 
@@ -201,7 +201,7 @@ git -C /home/slime/Code/SkilmeAI/Games/BrotatoLike status --short
 输出：
 
 - `SkilmeAI.GameOS` Godot C# 项目。
-- Runtime 最小内核迁移：Entity / Event / Data / Resource / Pool / Timer。
+- Runtime 最小内核迁移：Entity / Event / Data / Relationship / Schedule / Resource / Pool / Timer。
 - `SkilmeAI.GameOS.Contracts.md` 和 `ApiIndex.md`。
 - 本地 NuGet 或项目引用样例。
 

@@ -59,10 +59,11 @@
 - 在 `/home/slime/Code/SkilmeAI/Games/BrotatoLike` 创建最小 Godot C# 项目。
 - `BrotatoLike` 已通过本地项目引用接入 `SkilmeAI.GameOS`，游戏仓库 build 通过。
 - Runtime Data 最小内核已迁入 `SkilmeAI.GameOS`，并同步 Contracts / ApiIndex。
-- Runtime Event / Entity / Resource / Pool / Timer 最小内核已迁入 `SkilmeAI.GameOS`。
+- Runtime Event / Entity / Relationship / Schedule / Resource / Pool / Timer 最小内核已迁入 `SkilmeAI.GameOS`。
 - `Data` 变更通知已通过 `EventDataChangeSink` 接入 `RuntimeEntity.Events`。
-- 新增 `Tests/SkilmeAI.GameOS.Tests` 和 `Tools/run-tests.sh`，Runtime 行为测试覆盖 Event/Data/Entity/Pool/Timer/Resource。
-- `Games/BrotatoLike` 已建立 `Scenes/Main.tscn`、`Src/Game/Main.cs` 和 `GameBootstrap.RunFrameworkSmokeProbe()`，用于最小框架接入验证。
+- 新增 `Tests/SkilmeAI.GameOS.Tests` 和 `Tools/run-tests.sh`，Runtime 行为测试覆盖 Event/Data/Entity/Relationship/Schedule/Pool/Timer/Resource。
+- `Games/BrotatoLike` 已建立 `Scenes/Main.tscn`、`Src/Game/Main.cs` 和 `GameBootstrap.RunFrameworkSmokeProbe()`，用于最小框架接入验证，并新增 `Plans/README.md` 作为游戏仓库整体迁移计划。
+- Godot 引擎源码权威入口已更新为 `/home/slime/Code/SkilmeAI/Engine/godot-4.6.2-stable`。
 
 ## 未完成 / 风险
 
@@ -73,7 +74,7 @@
 - DataOS 目前只是目标协议，尚未实现 SQLite schema、生成器和验证命令。
 - Godot 底层 trace 目前是方案，尚未修改引擎 fork 和 GodotSkill。
 - SkilmeAI 新工作区和多仓库骨架已创建，Runtime 最小内核已迁移；当前仓库继续作为迁移计划和旧资产输入。
-- Godot Node Entity / Component 生命周期、Relationship、Schedule、Capability、DataOS 尚未迁移到新仓库。
+- Godot Node Entity / Component 生命周期、Capability、DataOS 尚未迁移到新仓库。
 
 ## 推荐入口
 

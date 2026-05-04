@@ -7,7 +7,7 @@
 ```text
 /home/slime/Code/SkilmeAI/
   SkilmeAI/        # 框架主仓库
-  GodotEngine/     # Godot 引擎源码位置说明和未来 trace fork
+  Engine/          # Godot 引擎源码和未来 trace fork
   Games/
     BrotatoLike/   # 第一个正式游戏仓库
   Workspace/       # 工作区说明、版本锁和 clone 脚本
@@ -41,17 +41,16 @@
 
 游戏仓库默认不直接修改框架源码。确认是框架 bug 时，切到框架仓库修复并发布版本，再升级游戏引用。
 
-## GodotEngine 边界
+## Engine 边界
 
-Godot 引擎仓库用于：
+Godot 引擎目录用于：
 
-- 保存 Godot 源码位置。
+- 保存 Godot 源码。
 - 承载未来 PhysicsServer2D trace fork。
 - 输出底层 trace 补丁和引擎调试报告。
 
 当前已确认本地 Godot 源码在：
 
 ```text
-/home/slime/Code/Godot/GodotEngine/godot-4.6.2-stable
+/home/slime/Code/SkilmeAI/Engine/godot-4.6.2-stable
 ```
-

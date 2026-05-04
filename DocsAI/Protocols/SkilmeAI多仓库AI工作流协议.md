@@ -6,7 +6,7 @@
 
 - 做框架时打开 `SkilmeAI` 框架仓库。
 - 做游戏时打开对应 `Games/<GameName>` 游戏仓库。
-- 做 Godot 引擎 trace 或底层修复时打开 `GodotEngine` 仓库。
+- 做 Godot 引擎 trace 或底层修复时打开 `Engine` 目录。
 - 默认不在一个 AI 会话里扫描整个 `/home/slime/Code/SkilmeAI`。
 - 游戏仓库默认只改游戏内容；框架 bug 需要切换到框架仓库修复并发布新版本。
 
@@ -20,7 +20,7 @@
   cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
 
 Godot 引擎调试：
-  cd /home/slime/Code/SkilmeAI/GodotEngine/godot-ai-trace-fork
+  cd /home/slime/Code/SkilmeAI/Engine/godot-4.6.2-stable
 ```
 
 不要为了方便在顶层工作区直接让 AI 全局搜索所有游戏。
@@ -42,7 +42,7 @@ framework_source_path: ../../SkilmeAI
 framework_package: SkilmeAI.GameOS
 dataos_schema_version: 0.1.0
 godot_version: 4.6.2
-engine_source_path: ../../GodotEngine
+engine_source_path: ../../Engine/godot-4.6.2-stable
 package_mode: project-reference
 ```
 
@@ -111,7 +111,7 @@ godot-scene-test    # 本游戏场景测试
 Godot 引擎任务：
 
 ```text
-1. 切换到 GodotEngine 仓库。
+1. 切换到 Engine 目录。
 2. 只做 trace、底层问题确认或明确引擎补丁。
 3. 不把游戏框架代码放入引擎源码。
 4. 输出引擎补丁版本和 GameOS 依赖说明。
@@ -161,4 +161,3 @@ DataOS schema 变化
 - 游戏当前依赖的 GameOS 版本。
 - 运行了哪些验证命令。
 - 是否需要后续发布或升级 package。
-
