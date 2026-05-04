@@ -4,6 +4,8 @@
 
 ## 当前计划
 
+- `Godot_AI_Game_OS_Migration/`
+  - Godot AI Game OS 迁移执行计划：承接 `框架整体迁移/迁移.md`，记录阶段状态、资产盘点、新工作区骨架和从当前仓库恢复执行的入口
 - `SkilmeAI_多仓库彻底迁移/`
   - SkilmeAI 多仓库彻底迁移计划：当前 `brotato-my` 降级为迁移输入仓库，新建 `SkilmeAI` 顶层工作区，拆分 AI 框架主仓库、Godot 引擎仓库和独立游戏仓库；通过项目引用 / 本地 NuGet / DLL 分阶段管理 GameOS 依赖
 - `框架整体迁移/`

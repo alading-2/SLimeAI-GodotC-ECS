@@ -1,7 +1,7 @@
 # SkilmeAI 多仓库彻底迁移计划
 
 > 日期：2026-05-04
-> 状态：待执行
+> 状态：执行中
 > 目标：把当前 `brotato-my` 从长期主项目降级为迁移输入仓库，建立 `SkilmeAI` 顶层工作区、独立 AI 框架仓库、独立 Godot 引擎仓库和独立游戏仓库。
 
 ## 1. 核心决策
@@ -168,6 +168,9 @@ Skill 分三层：
 - 多仓库 AI 工作流协议。
 - 当前仓库资产分流清单。
 - 新工作区目录和仓库边界说明。
+- 执行状态：见 `Progress.md`。
+- 资产分流：见 `AssetRouting.md`。
+- 工作区边界：见 `WorkspaceLayout.md`。
 
 验收：
 
@@ -287,4 +290,3 @@ rg -n "brotato-my|Src/ECS/Base|Data/DataNew" /home/slime/Code/SkilmeAI/SkilmeAI 
 ```
 
 新增框架能力、游戏长期功能和 DataOS 实现应迁入新仓库后再继续。
-

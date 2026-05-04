@@ -21,7 +21,9 @@
 
 - 计划目录：`Plans/README.md`
 - SkilmeAI 多仓库彻底迁移：`Plans/Architecture/SkilmeAI_多仓库彻底迁移/README.md`
+- SkilmeAI 多仓库执行状态：`Plans/Architecture/SkilmeAI_多仓库彻底迁移/Progress.md`
 - Godot AI Game OS 迁移计划：`Plans/Architecture/框架整体迁移/迁移.md`
+- Godot AI Game OS 执行计划：`Plans/Architecture/Godot_AI_Game_OS_Migration/README.md`
 - AI-First 迁移计划（历史）：`Plans/Architecture/AI_First_Program_Migration/README.md`
 - AI-First 文档与 Skill 对齐（完成）：`Plans/Architecture/AI_First_Docs_Code_Alignment/README.md`
 - 测试基础设施与文档深层对齐（完成）：`Plans/Architecture/AI_First_Test_Infra_Deep_Docs/README.md`

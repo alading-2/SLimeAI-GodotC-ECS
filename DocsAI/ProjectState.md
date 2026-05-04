@@ -20,6 +20,7 @@
 - `Plans/Architecture/AI_First_Src_Docs_Deep_Audit/`（完成）：剩余 Src .md 全量删除，唯一真相源为 DocsAI + Docs/ + 项目索引
 - `Plans/Architecture/框架整体迁移/迁移.md`：当前新的彻底重构总计划，目标是不兼容迁移到 Godot AI Game OS。
 - `Plans/Architecture/SkilmeAI_多仓库彻底迁移/README.md`：当前更高层的多仓库迁移计划，规定工作区、仓库边界、NuGet/DLL 阶段、游戏 Skill 和旧仓库归档策略。
+- `Plans/Architecture/Godot_AI_Game_OS_Migration/README.md`：当前正在执行的 Godot AI Game OS 迁移控制面计划，负责阶段状态、资产盘点和从当前仓库恢复执行。
 
 ## 已完成
 
@@ -51,6 +52,17 @@
 - 新增 Godot 物理与对象池碰撞经验文档，沉淀 PhysicsServer2D 时序和底层 trace 方向。
 - 新增 `Plans/Architecture/SkilmeAI_多仓库彻底迁移/README.md`，固化 SkilmeAI 顶层工作区、多仓库、项目引用 / 本地 NuGet / DLL 三阶段和里程碑。
 - 新增 `DocsAI/Protocols/SkilmeAI多仓库AI工作流协议.md`，规定 AI CLI 在框架仓库、游戏仓库和 Godot 引擎仓库之间如何读取上下文与处理跨仓库修改。
+- 启动 Godot AI Game OS 迁移控制面：新增 `Plans/Architecture/Godot_AI_Game_OS_Migration/`。
+- 创建 `/home/slime/Code/SkilmeAI/` 工作区骨架、`SkilmeAI` 框架仓库骨架和 `Games/BrotatoLike` 游戏仓库骨架。
+- 在 `/home/slime/Code/SkilmeAI/SkilmeAI` 创建 `SkilmeAI.GameOS` 最小可构建包。
+- `Tools/run-build.sh` 通过，`Tools/run-pack.sh` 已生成本地 NuGet 包。
+- 在 `/home/slime/Code/SkilmeAI/Games/BrotatoLike` 创建最小 Godot C# 项目。
+- `BrotatoLike` 已通过本地项目引用接入 `SkilmeAI.GameOS`，游戏仓库 build 通过。
+- Runtime Data 最小内核已迁入 `SkilmeAI.GameOS`，并同步 Contracts / ApiIndex。
+- Runtime Event / Entity / Resource / Pool / Timer 最小内核已迁入 `SkilmeAI.GameOS`。
+- `Data` 变更通知已通过 `EventDataChangeSink` 接入 `RuntimeEntity.Events`。
+- 新增 `Tests/SkilmeAI.GameOS.Tests` 和 `Tools/run-tests.sh`，Runtime 行为测试覆盖 Event/Data/Entity/Pool/Timer/Resource。
+- `Games/BrotatoLike` 已建立 `Scenes/Main.tscn`、`Src/Game/Main.cs` 和 `GameBootstrap.RunFrameworkSmokeProbe()`，用于最小框架接入验证。
 
 ## 未完成 / 风险
 
@@ -60,14 +72,16 @@
 - 已有用户工作区改动集中在 Godot 场景测试 Skill、测试文档、Docs README 和项目索引，继续修改时必须合并而不是覆盖。
 - DataOS 目前只是目标协议，尚未实现 SQLite schema、生成器和验证命令。
 - Godot 底层 trace 目前是方案，尚未修改引擎 fork 和 GodotSkill。
-- SkilmeAI 新工作区和多仓库尚未创建；当前仓库只记录迁移计划和旧资产输入，不能继续作为长期架构建设位置。
+- SkilmeAI 新工作区和多仓库骨架已创建，Runtime 最小内核已迁移；当前仓库继续作为迁移计划和旧资产输入。
+- Godot Node Entity / Component 生命周期、Relationship、Schedule、Capability、DataOS 尚未迁移到新仓库。
 
 ## 推荐入口
 
 - AI 索引：`DocsAI/INDEX.md`
-- 当前计划：`Plans/Architecture/AI_First_Docs_Code_Alignment/README.md`
+- 当前计划：`Plans/Architecture/Godot_AI_Game_OS_Migration/README.md`
 - 彻底迁移计划：`Plans/Architecture/框架整体迁移/迁移.md`
 - SkilmeAI 多仓库迁移：`Plans/Architecture/SkilmeAI_多仓库彻底迁移/README.md`
+- Godot AI Game OS 执行计划：`Plans/Architecture/Godot_AI_Game_OS_Migration/README.md`
 - 多仓库 AI 工作流：`DocsAI/Protocols/SkilmeAI多仓库AI工作流协议.md`
 - Skill 映射：`DocsAI/Skills/Skill到DocsAI映射.md`
 - 测试矩阵：`DocsAI/Tests/测试矩阵.md`

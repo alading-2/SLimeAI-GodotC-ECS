@@ -2,6 +2,14 @@
 
 > 详细架构文档: [项目索引](Docs/框架/项目索引.md)
 > 详细操作规范已迁移到 Skills（`@skill名称` 或描述任务时自动触发）
+> 当前迁移入口: [Godot_AI_Game_OS_Migration](Plans/Architecture/Godot_AI_Game_OS_Migration/README.md)
+
+## 当前仓库定位
+
+- 当前 `brotato-my` 仓库从 2026-05-04 起作为 `SkilmeAI` 多仓库迁移输入仓库。
+- 长期框架建设目标仓库：`/home/slime/Code/SkilmeAI/SkilmeAI`。
+- 第一个游戏目标仓库：`/home/slime/Code/SkilmeAI/Games/BrotatoLike`。
+- 当前仓库不再新增长期架构能力；新增 Runtime、Capability、DataOS 能力应迁入新仓库后继续。
 
 ## 0.游戏开发
 - 以资深游戏开发者结合现代游戏设计框架深度思考
