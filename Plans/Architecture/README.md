@@ -4,6 +4,10 @@
 
 ## 当前计划
 
+- `SkilmeAI_多仓库彻底迁移/`
+  - SkilmeAI 多仓库彻底迁移计划：当前 `brotato-my` 降级为迁移输入仓库，新建 `SkilmeAI` 顶层工作区，拆分 AI 框架主仓库、Godot 引擎仓库和独立游戏仓库；通过项目引用 / 本地 NuGet / DLL 分阶段管理 GameOS 依赖
+- `框架整体迁移/`
+  - Godot AI Game OS 框架彻底迁移方案：不保留旧兼容，以 AI 长任务开发、Capability、DataOS、Validation、Observation、外部源码研究、经验库、Skill 和 MCP 接口为目标重构项目结构
 - `AI_First_Program_Migration/`
   - AI-First Godot C# ECS 程序开发体系迁移（全部 7 阶段已完成 ✅）
   - 目录内包含总说明、阶段任务、进度、待办、完成记录

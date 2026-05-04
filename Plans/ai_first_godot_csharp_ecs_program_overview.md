@@ -756,3 +756,71 @@ AI 能输出风险点
 
 当这个体系跑通后，后续再扩展策划、数据、资源和完整游戏生成，才会真正高效。
 
+---
+
+## 18. 2026-05 深层校准：从 AI-First ECS 到 Godot AI Game OS
+
+当前判断需要继续上提一层：本项目不应只停留在 “AI 辅助开发 Godot C# ECS”，而应迁移成 **Godot AI Game OS**。
+
+核心变化：
+
+- ECS 只是 Runtime 内核，不是项目最高目录语义。
+- AI 高频工作对象应是 `Capability / DataOS / Validation / Observation / Protocol / Skill`。
+- 项目结构可以彻底重构，不保留旧兼容层。
+- 外部成熟框架和 Godot 底层源码要成为项目自我迭代机制的一部分。
+
+## 19. 数据层新判断
+
+`.tres` 和纯 C# DataNew 都不是最终 AI-first 数据形态。
+
+目标应改为：
+
+```text
+SQLite Authoring DB -> validate -> generate snapshot -> runtime load
+```
+
+理由：
+
+- AI 更擅长查询和批量修改结构化表，而不是维护大段 C# 初始化器或 `.tres` 资源文本。
+- 数据不应存运行时对象，应存标量、enum 文本、资源路径、稳定 id 和关系。
+- C# 类型安全应来自生成器输出，而不是让 AI 手写所有配置类。
+- 运行时仍应读取生成快照，避免在游戏热路径上直接依赖任意 SQL 查询。
+
+对应协议：`DocsAI/Protocols/AI原生数据层协议.md`。
+
+## 20. 外部源码研究机制
+
+框架完善不能只查文档。本轮已确认需要固定化源码研究流程：
+
+- Bevy：学习 World、Schedule、Relationship、Observer、Message、Bundle 的源码组织。
+- Flecs：学习 pair relationship、query、observer、REST/stats 对关系和查询的统一消费。
+- Arch：学习 C# ECS 的 archetype/chunk、CommandBuffer、Query、事件和测试组织。
+- Godot 4.6.2 本地源码：用于分析 PhysicsServer2D、CollisionObject2D、AreaPair、query flush 时序。
+
+对应协议和 Skill：
+
+- `DocsAI/Protocols/外部资料与源码研究协议.md`
+- `.codex/skills/research-reference-framework/SKILL.md`
+
+## 21. Observation 与经验库
+
+Godot 对象池碰撞问题说明：业务层日志不够时，AI 需要看到引擎后端状态。
+
+后续 Observation 目标：
+
+- Entity dump。
+- Component dump。
+- Data snapshot。
+- Event trace。
+- Relationship graph dump。
+- ObjectPool stats。
+- PhysicsServer2D trace：RID、ObjectID、shape、space、pair、query flush。
+
+踩坑经验不再散落到聊天记录，统一进入：
+
+- `DocsAI/Experience/踩坑与经验索引.md`
+- `DocsAI/Experience/Godot物理与对象池碰撞经验.md`
+
+当 AI 多轮修不好时，不只继续猜代码，必须执行：
+
+- `DocsAI/Protocols/AI表现复盘协议.md`

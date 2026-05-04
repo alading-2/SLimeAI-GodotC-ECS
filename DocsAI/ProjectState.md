@@ -10,12 +10,16 @@
 - `.claude/skills/*` / `.codex/skills/*` 短入口。
 - `Docs/` 人类文档入口和项目索引。
 - `Src/**/*.md` 已全部移除，源码入口统一由项目索引指向 .cs 文件。
+- 新增 Godot AI Game OS 彻底迁移方向：DataOS、外部源码研究机制、Observation、经验库和 AI 表现复盘。
+- 新增 SkilmeAI 多仓库彻底迁移方向：当前 `brotato-my` 降级为迁移输入仓库；长期建设迁入 `SkilmeAI` AI 框架主仓库、独立 Godot 引擎仓库和独立游戏仓库。
 
 ## 当前阶段
 
 `AI_First_Docs_Code_Alignment`（二轮收敛）已完成。后续执行：
 - `Plans/Architecture/AI_First_Test_Infra_Deep_Docs/`（5 阶段完成）：GodotSkill 测试基础设施 + Movement/AI/Collision 文档深层审计
 - `Plans/Architecture/AI_First_Src_Docs_Deep_Audit/`（完成）：剩余 Src .md 全量删除，唯一真相源为 DocsAI + Docs/ + 项目索引
+- `Plans/Architecture/框架整体迁移/迁移.md`：当前新的彻底重构总计划，目标是不兼容迁移到 Godot AI Game OS。
+- `Plans/Architecture/SkilmeAI_多仓库彻底迁移/README.md`：当前更高层的多仓库迁移计划，规定工作区、仓库边界、NuGet/DLL 阶段、游戏 Skill 和旧仓库归档策略。
 
 ## 已完成
 
@@ -41,6 +45,12 @@
 - 压缩长 Skill 为短入口。
 - 清理旧机器绝对路径、旧 Windsurf Skill 入口和过期计划指向。
 - 更新本轮计划状态文件和验证结果。
+- 新增 `DocsAI/Protocols/AI原生数据层协议.md`，明确 SQLite DataOS + 生成快照为目标。
+- 新增 `DocsAI/Protocols/外部资料与源码研究协议.md` 和 `.codex/skills/research-reference-framework/SKILL.md`。
+- 新增 `DocsAI/Protocols/AI表现复盘协议.md` 与 `DocsAI/Experience/` 经验库入口。
+- 新增 Godot 物理与对象池碰撞经验文档，沉淀 PhysicsServer2D 时序和底层 trace 方向。
+- 新增 `Plans/Architecture/SkilmeAI_多仓库彻底迁移/README.md`，固化 SkilmeAI 顶层工作区、多仓库、项目引用 / 本地 NuGet / DLL 三阶段和里程碑。
+- 新增 `DocsAI/Protocols/SkilmeAI多仓库AI工作流协议.md`，规定 AI CLI 在框架仓库、游戏仓库和 Godot 引擎仓库之间如何读取上下文与处理跨仓库修改。
 
 ## 未完成 / 风险
 
@@ -48,11 +58,17 @@
 - Movement、AI、Collision 已完成第一轮深层模块族对齐；后续重点转向其它剩余模块和 `Docs/` 长设计归档。
 - 旧 `MainTest` 失败不属于本轮文档收敛，需独立 Debug。
 - 已有用户工作区改动集中在 Godot 场景测试 Skill、测试文档、Docs README 和项目索引，继续修改时必须合并而不是覆盖。
+- DataOS 目前只是目标协议，尚未实现 SQLite schema、生成器和验证命令。
+- Godot 底层 trace 目前是方案，尚未修改引擎 fork 和 GodotSkill。
+- SkilmeAI 新工作区和多仓库尚未创建；当前仓库只记录迁移计划和旧资产输入，不能继续作为长期架构建设位置。
 
 ## 推荐入口
 
 - AI 索引：`DocsAI/INDEX.md`
 - 当前计划：`Plans/Architecture/AI_First_Docs_Code_Alignment/README.md`
+- 彻底迁移计划：`Plans/Architecture/框架整体迁移/迁移.md`
+- SkilmeAI 多仓库迁移：`Plans/Architecture/SkilmeAI_多仓库彻底迁移/README.md`
+- 多仓库 AI 工作流：`DocsAI/Protocols/SkilmeAI多仓库AI工作流协议.md`
 - Skill 映射：`DocsAI/Skills/Skill到DocsAI映射.md`
 - 测试矩阵：`DocsAI/Tests/测试矩阵.md`
 

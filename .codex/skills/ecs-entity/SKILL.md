@@ -23,8 +23,6 @@ description: 创建新 Entity、管理 Entity 生命周期（Spawn/Register/Dest
 
 - `DocsAI/Modules/Entity.md`
 - 涉及 EntityManager、关系、迁移、对象池激活时读 `DocsAI/Workflows/ECS核心修改门禁.md`
-- `Src/ECS/Base/Entity/Entity规范.md`
-- `Src/ECS/Base/Entity/Core/EntityManager.md`
 - 测试选择读 `DocsAI/Tests/测试矩阵.md`
 
 ## 最短流程
@@ -49,6 +47,6 @@ description: 创建新 Entity、管理 Entity 生命周期（Spawn/Register/Dest
 
 ```bash
 dotnet build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/ECSTest/ECSTestScene.tscn --build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/Tools/ObjectPool/ObjectPoolManagerTest.tscn --build
+node .claude/skills/GodotSkill/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/ECSTest/ECSTestScene.tscn --build
+node .claude/skills/GodotSkill/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/Tools/ObjectPool/ObjectPoolManagerTest.tscn --build
 ```

@@ -20,6 +20,7 @@
 | `tools` | `DocsAI/Modules/Tools.md` | TimerManager、ObjectPool、TargetSelector、ResourceManagement。 |
 | `data-authoring` | `DocsAI/Modules/DataAuthoring.md`、`Data/README.md`、`Data/DataNew/README.md`、`Data/DataKey/README.md` | 数据目录配置、DataNew、DataKey、EventType 和资源映射。 |
 | `feature-system` | `DocsAI/Modules/FeatureSystem.md`、`DocsAI/Modules/AbilitySystem.md` | Feature 生命周期、Modifier、Handler 与 Ability 接入。 |
+| `research-reference-framework` | `DocsAI/Protocols/外部资料与源码研究协议.md`、`DocsAI/Protocols/AI表现复盘协议.md`、`DocsAI/Experience/踩坑与经验索引.md` | 搜索并 clone 成熟框架、游戏项目或 Godot 底层源码，沉淀 ResearchBrief 和可落地决策。 |
 
 ## 维护规则
 

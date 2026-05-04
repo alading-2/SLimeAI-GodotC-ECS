@@ -9,6 +9,8 @@
 - **`Data/`**：负责数据目录结构、配置、键定义与事件协议。
   - 例如：有哪些配置字段、有哪些 `DataKey`、有哪些事件类型、某个配置默认值是多少。
 
+> 迁移方向：`Data/DataNew` 是当前运行时主数据源，但不是最终 AI-first 数据形态。新架构目标见 `DocsAI/Protocols/AI原生数据层协议.md`：以 SQLite DataOS 作为 authoring 真相源，通过校验和生成器输出运行时快照。
+
 ## 当前目录职责
 
 ### 1. `Config/`

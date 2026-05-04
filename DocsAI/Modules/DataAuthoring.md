@@ -1,6 +1,6 @@
 # DataAuthoring 模块契约
 
-本文是 AI 修改 `Data/` 目录下数据配置、DataNew 表、DataKey、EventType 和资源映射时必须阅读的执行契约。运行时 Data 容器规则见 `DocsAI/Modules/Data.md`。
+本文是 AI 修改 `Data/` 目录下数据配置、DataNew 表、DataKey、EventType 和资源映射时必须阅读的执行契约。运行时 Data 容器规则见 `DocsAI/Modules/Data.md`。迁移后的 DataOS 目标见 `DocsAI/Protocols/AI原生数据层协议.md`。
 
 ## 职责边界
 
@@ -9,6 +9,7 @@ DataAuthoring 负责“数据协议和配置写在哪里、怎么映射”，不
 DataAuthoring 负责：
 
 - `Data/DataNew/` 纯 C# 运行时表数据。
+- 迁移后的 `GameOS/Authoring/DataOS/` SQLite schema、seed、生成器和快照。
 - `Data/DataKey/` 的 `DataMeta` 键定义、分类、默认值和计算规则。
 - `Data/EventType/` 的事件名与事件载荷。
 - `Data/Config/` 的系统级配置结构。
@@ -24,6 +25,7 @@ DataAuthoring 不负责：
 
 - `Data/README.md`
 - `Data/DataNew/README.md`
+- `DocsAI/Protocols/AI原生数据层协议.md`
 - `Data/DataKey/README.md`
 - `Data/Data/README.md`
 - `Data/Config/`
@@ -35,6 +37,7 @@ DataAuthoring 不负责：
 ## 数据目录分工
 
 - `Data/DataNew/`：当前运行时主数据源，纯 C# POCO，一张表一个 `XxxData`，一行一个 `public static readonly XxxData`。
+- `GameOS/Authoring/DataOS/`：迁移后的 AI-first 数据真相源，SQLite + schema + generator + runtime snapshot。
 - `Data/DataKey/`：运行时 Data 容器可用键，主流写法是 `static readonly DataMeta` + `DataRegistry.Register`。
 - `Data/EventType/`：Entity 局部事件和全局事件协议，事件数据优先 `readonly record struct`。
 - `Data/Config/`：系统级配置，不直接等于 Entity.Data 字段。
@@ -44,8 +47,10 @@ DataAuthoring 不负责：
 ## 必须遵守
 
 - 运行时配置优先写 `Data/DataNew/`。
+- 新迁移任务不把 `DataNew` 当最终目标；目标是 DataOS 数据库真相源和生成快照。
 - `Name` 是 DataNew 默认查询键，同表内必须唯一。
 - DataNew 场景、贴图、特效、投射物引用保存 `res://` 字符串路径。
+- DataOS 数据只存标量、enum 文本、资源路径、稳定 id 和关系表，不存 Godot/C# 运行时对象。
 - 属性名和目标 DataKey 不一致时使用 `[DataKey(nameof(DataKey.Xxx))]`。
 - 新普通 DataKey 使用 `static readonly DataMeta`，特殊运行时引用键才评估 `const string`。
 - 数值“不限制”统一使用 `-1`。
@@ -59,6 +64,8 @@ DataAuthoring 不负责：
 - 禁止在 DataKey 中新增同名旧常量和 `DataMeta` 并存。
 - 禁止用裸字符串替代 `[DataKey(nameof(DataKey.Xxx))]`。
 - 禁止把 `PackedScene`、Node 或运行时对象引用作为 DataNew 主配置值。
+- 禁止在 DataOS 里把稳定结构塞进未约束 JSON 字符串。
+- 禁止运行时热路径绕过生成快照直接查询数据库。
 - 禁止把资源路径索引当作 Data 容器状态。
 
 ## 修改流程

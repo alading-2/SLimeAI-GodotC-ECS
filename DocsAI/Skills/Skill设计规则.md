@@ -20,6 +20,8 @@ Skill 是 AI 的任务触发入口，不是项目百科。
 - 模块契约、详细语义、踩坑记录 -> `DocsAI/Modules/`
 - Godot 场景测试、日志判定、测试矩阵 -> `DocsAI/Tests/`
 - 长任务恢复协议 -> `DocsAI/Workflows/`
+- 外部源码研究、AI 自评复盘、DataOS 等跨模块流程 -> `DocsAI/Protocols/`
+- 踩坑和经验沉淀 -> `DocsAI/Experience/`
 - 项目级执行计划 -> `Plans/<分类>/<计划名>/`
 - 计划模板示例 -> 直接放在对应计划目录内，或按分类提供示例目录
 - 稳定脚本 -> `skill/scripts/`

@@ -3,6 +3,8 @@
 `Data/DataNew/` 是当前唯一运行时数据配置方式：一张表对应一个 C# 数据类，一个静态实例对应一行数据。
 旧的 `Data/Data + Data/Config + .tres` 仅保留归档，运行时不再导入。
 
+> 迁移方向：DataNew 是当前阶段的运行时入口，但最终目标不是继续扩大手写 C# 表，而是迁移到 `SQLite Authoring DB -> validate -> generate snapshot -> runtime load`。详见 `DocsAI/Protocols/AI原生数据层协议.md`。
+
 ## 1. 数据表怎么写
 
 以敌人表为例：`EnemyData` 就是敌人表，`Yuren` / `Chailangren` 是表里的两行数据。
