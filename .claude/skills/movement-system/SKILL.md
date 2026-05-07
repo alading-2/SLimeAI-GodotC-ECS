@@ -27,6 +27,7 @@ description: 修改或新增 Movement 运动系统时使用。适用于：Entity
 - 涉及碰撞读 `DocsAI/Modules/Collision.md`
 - 涉及组件生命周期读 `DocsAI/Modules/Component.md`
 - 测试选择读 `DocsAI/Tests/测试矩阵.md`
+- SkilmeAI 迁移目标已存在旧 `MoveMode` 纯 C# 策略、运动碰撞第一批、Godot Physics broadphase 查询和 Godot Orientation 输出：`/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/Capabilities/Movement`
 
 ## 最短流程
 
@@ -36,7 +37,7 @@ description: 修改或新增 Movement 运动系统时使用。适用于：Entity
 4. 参数写入 `MovementParams`，运行态留在策略私有字段。
 5. 每帧只写 `DataKey.Velocity`，不要直接改位置。
 6. 需要视觉朝向时返回 facing direction 或配置 `OrientationParams`。
-7. 运行 Movement 场景测试并更新索引 / DocsAI。
+7. 迁移目标运行 `Tools/run-tests.sh` 和 BrotatoLike `Tools/run-godot-smoke.sh`，并更新索引 / DocsAI。
 
 ## 禁止事项
 
@@ -45,6 +46,8 @@ description: 修改或新增 Movement 运动系统时使用。适用于：Entity
 - 不要把无限制数值从 `-1` 改成 `0`。
 - 不要对外暴露弧度参数。
 - 不要引用已不存在的旧 MoveMode。
+- 迁移目标已覆盖 `None / Charge / Orbit / SineWave / BezierCurve / Boomerang / AttachToHost / PlayerInput / AIControlled / Parabola / CircularArc`，并已有运行时圆形扫描版 MovementCollision、可注入目标查询、Godot Physics broadphase 和 Godot Orientation 第一批；后续重点是真实输入 / AI / 宿主桥接。
+- `MovementDataKeys` 已补 SineWave / Orbit / Boomerang / Bezier / Parabola / CircularArc 的 handler authoring 参数，BrotatoLike DataOS M27 第三段已写入 seed 并通过 smoke 断言；`BrotatoLikeAbilityHandlers` 已从 DataOS 显式组装 `MovementParams` 并启动 SineWave / Boomerang / BezierCurve / CircularArc / Orbit / Dash Charge Movement。后续若做其它技能执行，继续在 handler 中显式组装 `MovementParams`，不要让 `MovementSystem` 隐式读取 authoring Data。
 
 ## 推荐验证
 
@@ -52,4 +55,11 @@ description: 修改或新增 Movement 运动系统时使用。适用于：Entity
 dotnet build
 node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementComponentTestScene.tscn --build
 node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn --build
+```
+
+## 迁移验证
+
+```bash
+cd /home/slime/Code/SkilmeAI/SkilmeAI && Tools/run-tests.sh
+cd /home/slime/Code/SkilmeAI/Games/BrotatoLike && Tools/run-godot-smoke.sh
 ```

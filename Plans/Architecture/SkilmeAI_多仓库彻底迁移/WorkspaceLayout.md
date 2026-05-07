@@ -54,3 +54,11 @@ Godot 引擎目录用于：
 ```text
 /home/slime/Code/SkilmeAI/Engine/godot-4.6.2-stable
 ```
+
+构建入口：
+
+```text
+/home/slime/Code/SkilmeAI/Engine/Tools/build-linux-editor-mono.sh
+```
+
+当前机器缺少 `SCons`，所以还没有生成 Godot CLI。后续安装依赖后优先运行该脚本，再把产物路径写回游戏测试 runner。

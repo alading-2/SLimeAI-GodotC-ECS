@@ -26,14 +26,15 @@ description: 修改碰撞系统时使用。适用于：CollisionLayers、Collisi
 - 涉及运动碰撞读 `DocsAI/Modules/Movement.md`
 - 涉及伤害读 `DocsAI/Modules/DamageSystem.md`
 - 涉及对象池读 `DocsAI/Modules/Entity.md` 和 `DocsAI/Modules/Tools.md`
+- SkilmeAI 迁移目标已存在 Collision 第一批、Movement 运动碰撞第一批、同帧多命中派发、Godot Physics broadphase 查询、ContactDamage 第一批、Damage 处理器管线、HealService 和 DamageTool 第一批：`/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/Capabilities/Collision`、`/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/Capabilities/Movement/MovementCollision*`、`/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/Capabilities/Movement/IMovementCollisionTargetQuery.cs`、`/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/Capabilities/Damage`、`/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/GodotBridge/GodotCollision*`、`/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/GodotBridge/GodotContactDamageComponent.cs` 和 `/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/GodotBridge/GodotPhysicsMovementCollisionTargetQuery.cs`
 
 ## 最短流程
 
 1. 判断问题属于视觉体、Hurtbox、接触伤害、运动碰撞还是对象池隔离。
 2. 层常量统一改 `CollisionLayers.cs`，不要写魔法数字。
 3. Godot Signal 只在桥接组件内转为 `Entity.Events`。
-4. 接触伤害走 `ContactDamageComponent -> DamageService`。
-5. 运动碰撞走 `MovementCollisionPolicy`。
+4. 接触伤害走 `ContactDamageComponent -> DamageService`；迁移目标当前对应 `GodotContactDamageComponent -> DamageService.Instance.Process`，并进入 Damage 默认处理器管线。
+5. 运动碰撞走 `MovementCollisionPolicy`，Godot 场景 broadphase 走 `GodotPhysicsMovementCollisionTargetQuery` 注入。
 6. 更新 DocsAI、项目索引和测试说明。
 7. 运行构建和相关碰撞 / 伤害 / Movement 测试。
 
@@ -51,4 +52,11 @@ description: 修改碰撞系统时使用。适用于：CollisionLayers、Collisi
 dotnet build
 node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.tscn --build
 node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/System/DamageSystemTest/DamageSystemTest.tscn --build
+```
+
+## 迁移验证
+
+```bash
+cd /home/slime/Code/SkilmeAI/SkilmeAI && Tools/run-tests.sh
+cd /home/slime/Code/SkilmeAI/Games/BrotatoLike && Tools/run-godot-smoke.sh
 ```

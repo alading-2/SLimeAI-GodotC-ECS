@@ -13,6 +13,7 @@
 - 顶层工作区命名为 `SkilmeAI`。
 - 第一阶段只做 Godot，不做跨引擎抽象；Unity / 自研引擎只预留目录和文档边界。
 - `SkilmeAI` AI 框架、Godot 引擎源码、每个游戏都使用独立版本边界；当前引擎源码权威路径是 `/home/slime/Code/SkilmeAI/Engine/godot-4.6.2-stable`。
+- Godot 引擎构建入口是 `/home/slime/Code/SkilmeAI/Engine/Tools/build-linux-editor-mono.sh`；当前机器缺少 `SCons`，尚未打出 CLI 可执行文件。
 - 游戏运行时通过 `SkilmeAI.GameOS` NuGet / DLL / 本地包引用框架，不复制框架源码。
 - 游戏 AI 工作流通过本地 `.codex/skills` 和 `DocsAI/ExternalFrameworkMap.md` 查找框架版本、框架源码路径和契约文档。
 - 框架深层 Skill 保留在 `SkilmeAI` 框架仓库；游戏仓库只放游戏开发入口和框架引用入口。
@@ -218,7 +219,7 @@ dotnet pack
 
 - `BrotatoLike` Godot 项目可打开、可构建。
 - 游戏项目引用 `SkilmeAI.GameOS`。
-- 迁移游戏内容：场景、资产、游戏特定 Data、游戏特定代码。
+- 最小启动场景、Runtime smoke probe、GodotBridge 探针。
 - `DocsAI/ExternalFrameworkMap.md`。
 - 游戏入口 Skill。
 
@@ -229,7 +230,30 @@ dotnet build
 godot --headless --build-solutions --path .
 ```
 
-### M5：Capabilities 迁移
+### M5：GodotBridge 迁移
+
+输出：
+
+- Node Entity 生命周期桥。
+- Component 自动注册 / 注销桥。
+- Entity-Component 关系写入 `RelationshipType.EntityToComponent`。
+- Godot `_Process` 驱动 `TimerManager.Instance.Tick`。
+- BrotatoLike 编译接入 GodotBridge 探针。
+
+验收：
+
+```bash
+cd /home/slime/Code/SkilmeAI/SkilmeAI && Tools/run-build.sh && Tools/run-tests.sh
+cd /home/slime/Code/SkilmeAI/Games/BrotatoLike && Tools/run-build.sh
+```
+
+后续扩展：
+
+- Node 对象池泊车 / 脱树。
+- 碰撞隔离和 PhysicsServer2D trace 关联。
+- Godot headless 场景断言。
+
+### M6：Capabilities 迁移
 
 输出：
 
@@ -246,7 +270,7 @@ Tools/run-capability-test.sh Damage
 dotnet build
 ```
 
-### M6：DataOS 接管数据
+### M7：DataOS 接管数据
 
 输出：
 

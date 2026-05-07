@@ -117,6 +117,14 @@ Godot 引擎任务：
 4. 输出引擎补丁版本和 GameOS 依赖说明。
 ```
 
+当前 Godot 4.6.2 源码构建入口：
+
+```text
+/home/slime/Code/SkilmeAI/Engine/Tools/build-linux-editor-mono.sh
+```
+
+若本机缺少 `SCons`，先记录阻塞，不要擅自安装依赖；待依赖可用后再构建 CLI 并更新 `GODOT_BIN`。
+
 ## 7. 包引用规则
 
 游戏运行时依赖框架 package，不复制框架源码。
