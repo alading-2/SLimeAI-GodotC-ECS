@@ -9,7 +9,7 @@ obj/
 .specstory/
 参考/
 Docs/其他/笔记/CSharp/
-*.uid
+**/*.uid
 Docs/superpowers/
 Docs/其他/记录/
 .ai-temp/
