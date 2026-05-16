@@ -1,19 +1,19 @@
-# SkilmeAI 工作区边界说明
+# SlimeAI 工作区边界说明
 
 > 日期：2026-05-04
 
 ## 工作区
 
 ```text
-/home/slime/Code/SkilmeAI/
-  SkilmeAI/        # 框架主仓库
+/home/slime/Code/SlimeAI/
+  SlimeAI/        # 框架主仓库
   Engine/          # Godot 引擎源码和未来 trace fork
   Games/
     BrotatoLike/   # 第一个正式游戏仓库
   Workspace/       # 工作区说明、版本锁和 clone 脚本
 ```
 
-`/home/slime/Code/SkilmeAI/` 本身不要求是 git 仓库。内部 `SkilmeAI` 和 `Games/BrotatoLike` 是独立版本边界。
+`/home/slime/Code/SlimeAI/` 本身不要求是 git 仓库。内部 `SlimeAI` 和 `Games/BrotatoLike` 是独立版本边界。
 
 ## 框架仓库边界
 
@@ -37,7 +37,7 @@
 - Godot 项目文件、场景、资产和游戏特定代码。
 - 游戏本地 `DocsAI/ExternalFrameworkMap.md`。
 - 游戏入口型 Skill。
-- 锁定使用的 `SkilmeAI.GameOS` 版本或本地项目引用。
+- 锁定使用的 `SlimeAI.GameOS` 版本或本地项目引用。
 
 游戏仓库默认不直接修改框架源码。确认是框架 bug 时，切到框架仓库修复并发布版本，再升级游戏引用。
 
@@ -52,13 +52,13 @@ Godot 引擎目录用于：
 当前已确认本地 Godot 源码在：
 
 ```text
-/home/slime/Code/SkilmeAI/Engine/godot-4.6.2-stable
+/home/slime/Code/SlimeAI/Engine/godot-4.6.2-stable
 ```
 
 构建入口：
 
 ```text
-/home/slime/Code/SkilmeAI/Engine/Tools/build-linux-editor-mono.sh
+/home/slime/Code/SlimeAI/Engine/Tools/build-linux-editor-mono.sh
 ```
 
 当前机器缺少 `SCons`，所以还没有生成 Godot CLI。后续安装依赖后优先运行该脚本，再把产物路径写回游戏测试 runner。

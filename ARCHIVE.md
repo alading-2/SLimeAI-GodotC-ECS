@@ -2,13 +2,13 @@
 
 > 日期：2026-05-06
 > 状态：已归档，不再作为长期主项目
-> 新工作区：`/home/slime/Code/SkilmeAI/`
+> 新工作区：`/home/slime/Code/SlimeAI/`
 
 ---
 
 ## 仓库定位
 
-本仓库已从长期主项目降级为**迁移输入仓库**。所有新开发、架构演进和 Capability 扩展都在 `/home/slime/Code/SkilmeAI/` 工作区进行。
+本仓库已从长期主项目降级为**迁移输入仓库**。所有新开发、架构演进和 Capability 扩展都在 `/home/slime/Code/SlimeAI/` 工作区进行。
 
 ---
 
@@ -18,26 +18,26 @@
 
 | 旧路径 | 新位置 | 状态 |
 |--------|--------|------|
-| `Src/ECS/Base/Entity/Core` | `SkilmeAI/GameOS/Runtime/Entity` | 已迁移 |
-| `Src/ECS/Base/Component/IComponent.cs` | `SkilmeAI/GameOS/Runtime/Component` | 已迁移 |
-| `Src/ECS/Base/Data` | `SkilmeAI/GameOS/Runtime/Data` | 已迁移 |
-| `Src/ECS/Base/Event` | `SkilmeAI/GameOS/Runtime/Event` | 已迁移 |
-| `Src/ECS/Base/Entity/Relationship` | `SkilmeAI/GameOS/Runtime/Relationship` | 已迁移 |
-| `Src/ECS/Tools/ObjectPool` | `SkilmeAI/GameOS/Runtime/Pool` | 已迁移 |
-| `Src/ECS/Tools/TimerManager` | `SkilmeAI/GameOS/Runtime/Timer` | 已迁移 |
-| `Src/ECS/Base/System/Movement` | `SkilmeAI/GameOS/Capabilities/Movement` | 已迁移 |
-| `Src/ECS/Base/Component/Collision` | `SkilmeAI/GameOS/Capabilities/Collision` | 已迁移 |
-| `Src/ECS/Base/System/DamageSystem` | `SkilmeAI/GameOS/Capabilities/Damage` | 已迁移 |
-| `Src/ECS/Base/System/FeatureSystem` | `SkilmeAI/GameOS/Capabilities/Feature` | 已迁移 |
-| `Src/ECS/Base/System/AbilitySystem` | `SkilmeAI/GameOS/Capabilities/Ability` | 已迁移 |
-| `Src/ECS/Base/System/AISystem` | `SkilmeAI/GameOS/Capabilities/AI` | 已迁移 |
-| `Src/ECS/Base/Entity/Projectile` | `SkilmeAI/GameOS/Capabilities/Projectile` | 已迁移 |
-| `Src/ECS/Base/System/AttackSystem` | `SkilmeAI/GameOS/Capabilities/Attack` | 已迁移 |
-| `Src/ECS/Base/System/EffectSystem` | `SkilmeAI/GameOS/Capabilities/Effect` | 已迁移 |
-| `Src/ECS/Base/Component/Unit` | `SkilmeAI/GameOS/Capabilities/Unit` | 已迁移 |
+| `Src/ECS/Base/Entity/Core` | `SlimeAI/GameOS/Runtime/Entity` | 已迁移 |
+| `Src/ECS/Base/Component/IComponent.cs` | `SlimeAI/GameOS/Runtime/Component` | 已迁移 |
+| `Src/ECS/Base/Data` | `SlimeAI/GameOS/Runtime/Data` | 已迁移 |
+| `Src/ECS/Base/Event` | `SlimeAI/GameOS/Runtime/Event` | 已迁移 |
+| `Src/ECS/Base/Entity/Relationship` | `SlimeAI/GameOS/Runtime/Relationship` | 已迁移 |
+| `Src/ECS/Tools/ObjectPool` | `SlimeAI/GameOS/Runtime/Pool` | 已迁移 |
+| `Src/ECS/Tools/TimerManager` | `SlimeAI/GameOS/Runtime/Timer` | 已迁移 |
+| `Src/ECS/Base/System/Movement` | `SlimeAI/GameOS/Capabilities/Movement` | 已迁移 |
+| `Src/ECS/Base/Component/Collision` | `SlimeAI/GameOS/Capabilities/Collision` | 已迁移 |
+| `Src/ECS/Base/System/DamageSystem` | `SlimeAI/GameOS/Capabilities/Damage` | 已迁移 |
+| `Src/ECS/Base/System/FeatureSystem` | `SlimeAI/GameOS/Capabilities/Feature` | 已迁移 |
+| `Src/ECS/Base/System/AbilitySystem` | `SlimeAI/GameOS/Capabilities/Ability` | 已迁移 |
+| `Src/ECS/Base/System/AISystem` | `SlimeAI/GameOS/Capabilities/AI` | 已迁移 |
+| `Src/ECS/Base/Entity/Projectile` | `SlimeAI/GameOS/Capabilities/Projectile` | 已迁移 |
+| `Src/ECS/Base/System/AttackSystem` | `SlimeAI/GameOS/Capabilities/Attack` | 已迁移 |
+| `Src/ECS/Base/System/EffectSystem` | `SlimeAI/GameOS/Capabilities/Effect` | 已迁移 |
+| `Src/ECS/Base/Component/Unit` | `SlimeAI/GameOS/Capabilities/Unit` | 已迁移 |
 | `Src/ECS/UI` | `Games/BrotatoLike/Src/Game/` + 新 UI 体系 | 已迁移 |
-| `Src/ECS/Test` | `SkilmeAI/GameOS/Validation` + `Games/BrotatoLike/Tools/` | 已迁移 |
-| `Src/ECS/Tools` | `SkilmeAI/GameOS/Runtime` + `GodotBridge` | 已迁移 |
+| `Src/ECS/Test` | `SlimeAI/GameOS/Validation` + `Games/BrotatoLike/Tools/` | 已迁移 |
+| `Src/ECS/Tools` | `SlimeAI/GameOS/Runtime` + `GodotBridge` | 已迁移 |
 
 **验证**：新仓库 `Tools/run-build.sh` + `Tools/run-godot-smoke.sh` PASS。
 
@@ -46,9 +46,9 @@
 | 旧路径 | 新位置 | 状态 |
 |--------|--------|------|
 | `Data/DataNew/*.cs` | `Games/BrotatoLike/DataOS/Authoring/BrotatoLike.seed.sql` | 已迁移 |
-| `Data/DataKey/*.cs` | `SkilmeAI/GameOS/Capabilities/*/DataKeys.cs` | 已迁移 |
-| `Data/EventType/*.cs` | `SkilmeAI/GameOS/Runtime/Event` + Capability 分域 | 已迁移 |
-| `Data/ResourceManagement/*.cs` | `SkilmeAI/GameOS/Runtime/Resource` + DataOS | 已迁移 |
+| `Data/DataKey/*.cs` | `SlimeAI/GameOS/Capabilities/*/DataKeys.cs` | 已迁移 |
+| `Data/EventType/*.cs` | `SlimeAI/GameOS/Runtime/Event` + Capability 分域 | 已迁移 |
+| `Data/ResourceManagement/*.cs` | `SlimeAI/GameOS/Runtime/Resource` + DataOS | 已迁移 |
 | `Data/Config/*.cs` | `Games/BrotatoLike/DataOS/Authoring/` system.config | 已迁移 |
 | `Data/Data/*.tres` | DataOS seed 中对应的 data_field / data_record | 已迁移 |
 
@@ -64,11 +64,11 @@
 
 | 旧路径 | 新位置 | 状态 |
 |--------|--------|------|
-| `DocsAI/Protocols` | `SkilmeAI/DocsAI/Protocols` | 已迁移 |
-| `DocsAI/Modules` | Capability `Contract.md` + `SkilmeAI/DocsAI` | 已迁移 |
-| `.claude/skills` | `SkilmeAI/.codex/skills` + `Agent/SkillsSource` | 已重写为入口型 |
-| `.codex/skills` | `SkilmeAI/.codex/skills` + `Games/BrotatoLike/.codex/skills` | 已重写为入口型 |
-| `Plans/Architecture/` | `SkilmeAI/Plans/` + `SkilmeAI/DocsAI/MigrationFromBrotatoMy.md` | 已迁移总结 |
+| `DocsAI/Protocols` | `SlimeAI/DocsAI/Protocols` | 已迁移 |
+| `DocsAI/Modules` | Capability `Contract.md` + `SlimeAI/DocsAI` | 已迁移 |
+| `.claude/skills` | `SlimeAI/.codex/skills` + `Agent/SkillsSource` | 已重写为入口型 |
+| `.codex/skills` | `SlimeAI/.codex/skills` + `Games/BrotatoLike/.codex/skills` | 已重写为入口型 |
+| `Plans/Architecture/` | `SlimeAI/Plans/` + `SlimeAI/DocsAI/MigrationFromBrotatoMy.md` | 已迁移总结 |
 
 ---
 
@@ -100,8 +100,8 @@ git show HEAD:Data/...
 ## 新仓库入口
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI      # 框架仓库
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike  # 游戏仓库
+cd /home/slime/Code/SlimeAI/SlimeAI      # 框架仓库
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike  # 游戏仓库
 ```
 
-迁移总结文档：`/home/slime/Code/SkilmeAI/SkilmeAI/DocsAI/MigrationFromBrotatoMy.md`
+迁移总结文档：`/home/slime/Code/SlimeAI/SlimeAI/DocsAI/MigrationFromBrotatoMy.md`

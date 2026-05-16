@@ -3,7 +3,7 @@
 > 日期：2026-05-04
 > 状态：执行中
 > 上游总方案：`Plans/Architecture/框架整体迁移/迁移.md`
-> 多仓库计划：`Plans/Architecture/SkilmeAI_多仓库彻底迁移/README.md`
+> 多仓库计划：`Plans/Architecture/SlimeAI_多仓库彻底迁移/README.md`
 
 ## 目标
 
@@ -23,8 +23,8 @@
 实际 Runtime、Capability、DataOS、游戏项目和 Skill 迁移发生在新工作区：
 
 ```text
-/home/slime/Code/SkilmeAI/SkilmeAI
-/home/slime/Code/SkilmeAI/Games/BrotatoLike
+/home/slime/Code/SlimeAI/SlimeAI
+/home/slime/Code/SlimeAI/Games/BrotatoLike
 ```
 
 不要在本目录内寻找 Runtime 源码改动；本目录只记录阶段、风险和恢复入口。
@@ -43,8 +43,8 @@
 | --- | --- | --- |
 | Phase 00：冻结旧世界 | 已完成 | 本计划、`Progress.md`、`Backlog.md`、`Done.md` |
 | Phase 01：资产盘点 | 已完成 | `00_Inventory.md` |
-| Phase 02：目标骨架 | 已完成 | `/home/slime/Code/SkilmeAI/` 工作区骨架 |
-| Phase 03：迁移 Runtime 内核 | 已完成最小闭环 | `SkilmeAI/GameOS/Runtime` |
+| Phase 02：目标骨架 | 已完成 | `/home/slime/Code/SlimeAI/` 工作区骨架 |
+| Phase 03：迁移 Runtime 内核 | 已完成最小闭环 | `SlimeAI/GameOS/Runtime` |
 | Phase 04：迁移第一批 Capability | 已完成第一批 | Movement / Collision / Damage / Feature / Ability |
 | Phase 05：迁移第二批 Capability | 部分完成 | AIBehavior / Projectile / Attack / Effect 已有闭环；Spawn 已在 BrotatoLike 接入；UIHud 未完成 |
 | Phase 06：迁移 Authoring/DataOS | 已完成第一批并持续扩大 | SQLite schema、生成快照、数据校验、BrotatoLike seed / snapshot |
@@ -59,8 +59,8 @@
 ```bash
 git status --short
 find Plans/Architecture/Godot_AI_Game_OS_Migration -maxdepth 1 -type f | sort
-find /home/slime/Code/SkilmeAI -maxdepth 3 -type d | sort
-git -C /home/slime/Code/SkilmeAI/SkilmeAI status --short
-git -C /home/slime/Code/SkilmeAI/Games/BrotatoLike status --short
-rg -n "Godot_AI_Game_OS_Migration|SkilmeAI|迁移输入仓库" AGENTS.md DocsAI Docs Plans
+find /home/slime/Code/SlimeAI -maxdepth 3 -type d | sort
+git -C /home/slime/Code/SlimeAI/SlimeAI status --short
+git -C /home/slime/Code/SlimeAI/Games/BrotatoLike status --short
+rg -n "Godot_AI_Game_OS_Migration|SlimeAI|迁移输入仓库" AGENTS.md DocsAI Docs Plans
 ```

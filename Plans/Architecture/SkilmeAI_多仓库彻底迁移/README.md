@@ -1,8 +1,8 @@
-# SkilmeAI 多仓库彻底迁移计划
+# SlimeAI 多仓库彻底迁移计划
 
 > 日期：2026-05-04
 > 状态：执行中
-> 目标：把当前 `brotato-my` 从长期主项目降级为迁移输入仓库，建立 `SkilmeAI` 顶层工作区、独立 AI 框架仓库、Godot 引擎源码目录和独立游戏仓库。
+> 目标：把当前 `brotato-my` 从长期主项目降级为迁移输入仓库，建立 `SlimeAI` 顶层工作区、独立 AI 框架仓库、Godot 引擎源码目录和独立游戏仓库。
 
 ## 1. 核心决策
 
@@ -10,20 +10,20 @@
 
 已确定决策：
 
-- 顶层工作区命名为 `SkilmeAI`。
+- 顶层工作区命名为 `SlimeAI`。
 - 第一阶段只做 Godot，不做跨引擎抽象；Unity / 自研引擎只预留目录和文档边界。
-- `SkilmeAI` AI 框架、Godot 引擎源码、每个游戏都使用独立版本边界；当前引擎源码权威路径是 `/home/slime/Code/SkilmeAI/Engine/godot-4.6.2-stable`。
-- Godot 引擎构建入口是 `/home/slime/Code/SkilmeAI/Engine/Tools/build-linux-editor-mono.sh`；当前机器缺少 `SCons`，尚未打出 CLI 可执行文件。
-- 游戏运行时通过 `SkilmeAI.GameOS` NuGet / DLL / 本地包引用框架，不复制框架源码。
+- `SlimeAI` AI 框架、Godot 引擎源码、每个游戏都使用独立版本边界；当前引擎源码权威路径是 `/home/slime/Code/SlimeAI/Engine/godot-4.6.2-stable`。
+- Godot 引擎构建入口是 `/home/slime/Code/SlimeAI/Engine/Tools/build-linux-editor-mono.sh`；当前机器缺少 `SCons`，尚未打出 CLI 可执行文件。
+- 游戏运行时通过 `SlimeAI.GameOS` NuGet / DLL / 本地包引用框架，不复制框架源码。
 - 游戏 AI 工作流通过本地 `.codex/skills` 和 `DocsAI/ExternalFrameworkMap.md` 查找框架版本、框架源码路径和契约文档。
-- 框架深层 Skill 保留在 `SkilmeAI` 框架仓库；游戏仓库只放游戏开发入口和框架引用入口。
+- 框架深层 Skill 保留在 `SlimeAI` 框架仓库；游戏仓库只放游戏开发入口和框架引用入口。
 - 框架升级通过显式版本发布和游戏项目显式升级完成，不自动影响所有游戏。
 
 ## 2. 目标工作区
 
 ```text
-/home/slime/Code/SkilmeAI/
-  SkilmeAI/                         # repo: AI 框架主仓库
+/home/slime/Code/SlimeAI/
+  SlimeAI/                         # repo: AI 框架主仓库
     GameOS/
     DataOS/
     Agent/
@@ -45,12 +45,12 @@
   Workspace/                        # 可选 repo: 工作区说明、clone 脚本、版本锁
 ```
 
-`/home/slime/Code/SkilmeAI/` 本身可以只是本地工作区，不必作为 git 仓库。真正的版本边界由内部仓库承担。
+`/home/slime/Code/SlimeAI/` 本身可以只是本地工作区，不必作为 git 仓库。真正的版本边界由内部仓库承担。
 
-## 3. SkilmeAI 主仓库职责
+## 3. SlimeAI 主仓库职责
 
 ```text
-SkilmeAI/
+SlimeAI/
   GameOS/
     Runtime/                       # Entity / Event / Data / Relationship / Schedule / Pool / Timer / Resource
     Capabilities/                  # Movement / Collision / Damage / Ability / Feature / AI / Projectile / UIHud
@@ -119,10 +119,10 @@ Games/BrotatoLike/
 
 ```text
 阶段 1：源码项目引用
-  游戏 csproj 引用本地 SkilmeAI.GameOS.csproj，方便迁移期 Debug 和 AI 读源码。
+  游戏 csproj 引用本地 SlimeAI.GameOS.csproj，方便迁移期 Debug 和 AI 读源码。
 
 阶段 2：本地 NuGet 包
-  SkilmeAI 发布本地 package，游戏锁定明确版本，升级时跑迁移和回归。
+  SlimeAI 发布本地 package，游戏锁定明确版本，升级时跑迁移和回归。
 
 阶段 3：稳定 Runtime DLL / NuGet
   Runtime 稳定后以包形式消费；Capabilities 可按稳定度拆成核心包、源码扩展包或游戏本地扩展。
@@ -131,12 +131,12 @@ Games/BrotatoLike/
 DLL / NuGet 只解决编译依赖，不解决 AI 理解问题。每个发布包必须同时生成：
 
 ```text
-SkilmeAI.GameOS.dll
-SkilmeAI.GameOS.xml
-SkilmeAI.GameOS.Contracts.md
-SkilmeAI.GameOS.ApiIndex.md
-SkilmeAI.GameOS.DebugGuide.md
-SkilmeAI.GameOS.Migration.md
+SlimeAI.GameOS.dll
+SlimeAI.GameOS.xml
+SlimeAI.GameOS.Contracts.md
+SlimeAI.GameOS.ApiIndex.md
+SlimeAI.GameOS.DebugGuide.md
+SlimeAI.GameOS.Migration.md
 ```
 
 ## 6. Skill 策略
@@ -145,19 +145,19 @@ Skill 分三层：
 
 ```text
 1. Skill Source
-   SkilmeAI/Agent/SkillsSource/
+   SlimeAI/Agent/SkillsSource/
    通用 Skill 源头，不一定直接被 Codex / Claude 自动加载。
 
 2. Framework Active Skills
-   SkilmeAI/.codex/skills/
-   打开 SkilmeAI 框架仓库时使用。
+   SlimeAI/.codex/skills/
+   打开 SlimeAI 框架仓库时使用。
 
 3. Game Active Skills
    Games/<GameName>/.codex/skills/
    打开具体游戏仓库时使用。
 ```
 
-游戏仓库只激活入口型 Skill。默认不允许游戏任务直接修改框架源码；如果定位到框架 bug，应切换到 `SkilmeAI` 仓库修复、发布新版本，再升级游戏。
+游戏仓库只激活入口型 Skill。默认不允许游戏任务直接修改框架源码；如果定位到框架 bug，应切换到 `SlimeAI` 仓库修复、发布新版本，再升级游戏。
 
 ## 7. 里程碑
 
@@ -176,15 +176,15 @@ Skill 分三层：
 验收：
 
 ```bash
-rg -n "SkilmeAI|多仓库|ExternalFrameworkMap|NuGet" Plans DocsAI Docs
+rg -n "SlimeAI|多仓库|ExternalFrameworkMap|NuGet" Plans DocsAI Docs
 ```
 
 ### M2：新工作区骨架
 
 输出：
 
-- `/home/slime/Code/SkilmeAI/` 顶层工作区。
-- `SkilmeAI` 主仓库骨架。
+- `/home/slime/Code/SlimeAI/` 顶层工作区。
+- `SlimeAI` 主仓库骨架。
 - `Engine` 目录和 Godot 源码位置确认。
 - `Games/BrotatoLike` 新游戏仓库骨架。
 - 每个仓库的 `AGENTS.md / DocsAI/INDEX.md / ProjectState`。
@@ -192,18 +192,18 @@ rg -n "SkilmeAI|多仓库|ExternalFrameworkMap|NuGet" Plans DocsAI Docs
 验收：
 
 ```bash
-find /home/slime/Code/SkilmeAI -maxdepth 3 -type d | sort
-git -C /home/slime/Code/SkilmeAI/SkilmeAI status --short
-git -C /home/slime/Code/SkilmeAI/Games/BrotatoLike status --short
+find /home/slime/Code/SlimeAI -maxdepth 3 -type d | sort
+git -C /home/slime/Code/SlimeAI/SlimeAI status --short
+git -C /home/slime/Code/SlimeAI/Games/BrotatoLike status --short
 ```
 
 ### M3：GameOS 最小可构建包
 
 输出：
 
-- `SkilmeAI.GameOS` Godot C# 项目。
+- `SlimeAI.GameOS` Godot C# 项目。
 - Runtime 最小内核迁移：Entity / Event / Data / Relationship / Schedule / Resource / Pool / Timer。
-- `SkilmeAI.GameOS.Contracts.md` 和 `ApiIndex.md`。
+- `SlimeAI.GameOS.Contracts.md` 和 `ApiIndex.md`。
 - 本地 NuGet 或项目引用样例。
 
 验收：
@@ -218,7 +218,7 @@ dotnet pack
 输出：
 
 - `BrotatoLike` Godot 项目可打开、可构建。
-- 游戏项目引用 `SkilmeAI.GameOS`。
+- 游戏项目引用 `SlimeAI.GameOS`。
 - 最小启动场景、Runtime smoke probe、GodotBridge 探针。
 - `DocsAI/ExternalFrameworkMap.md`。
 - 游戏入口 Skill。
@@ -243,8 +243,8 @@ godot --headless --build-solutions --path .
 验收：
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI && Tools/run-build.sh && Tools/run-tests.sh
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike && Tools/run-build.sh
+cd /home/slime/Code/SlimeAI/SlimeAI && Tools/run-build.sh && Tools/run-tests.sh
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike && Tools/run-build.sh
 ```
 
 后续扩展：
@@ -257,7 +257,7 @@ cd /home/slime/Code/SkilmeAI/Games/BrotatoLike && Tools/run-build.sh
 
 输出：
 
-- Movement / Collision / Damage / Ability / Feature / AI 按 Capability 包迁入 `SkilmeAI.GameOS`。
+- Movement / Collision / Damage / Ability / Feature / AI 按 Capability 包迁入 `SlimeAI.GameOS`。
 - 每个 Capability 包含 manifest、Contract、Data schema、测试和 Debug 文档。
 - BrotatoLike 只保留游戏特定技能、数值、资源和规则。
 
@@ -298,7 +298,7 @@ dotnet build
 验收：
 
 ```bash
-rg -n "brotato-my|Src/ECS/Base|Data/DataNew" /home/slime/Code/SkilmeAI/SkilmeAI /home/slime/Code/SkilmeAI/Games/BrotatoLike
+rg -n "brotato-my|Src/ECS/Base|Data/DataNew" /home/slime/Code/SlimeAI/SlimeAI /home/slime/Code/SlimeAI/Games/BrotatoLike
 ```
 
 ## 8. 当前仓库定位

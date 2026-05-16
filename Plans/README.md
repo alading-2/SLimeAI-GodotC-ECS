@@ -18,6 +18,6 @@
 ## 推荐入口
 
 1. `Architecture/README.md`
-2. `Architecture/SkilmeAI_多仓库彻底迁移/README.md`
+2. `Architecture/SlimeAI_多仓库彻底迁移/README.md`
 3. `Architecture/Godot_AI_Game_OS_Migration/README.md`
 4. `DocsAI/INDEX.md`

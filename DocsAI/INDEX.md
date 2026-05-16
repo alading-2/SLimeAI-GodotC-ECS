@@ -10,7 +10,7 @@
 - ECS 核心门禁：`DocsAI/Workflows/ECS核心修改门禁.md`
 - 外部资料与源码研究：`DocsAI/Protocols/外部资料与源码研究协议.md`
 - AI 原生数据层：`DocsAI/Protocols/AI原生数据层协议.md`
-- SkilmeAI 多仓库 AI 工作流：`DocsAI/Protocols/SkilmeAI多仓库AI工作流协议.md`
+- SlimeAI 多仓库 AI 工作流：`DocsAI/Protocols/SlimeAI多仓库AI工作流协议.md`
 - AI 表现复盘：`DocsAI/Protocols/AI表现复盘协议.md`
 - 踩坑与经验：`DocsAI/Experience/踩坑与经验索引.md`
 - 当前项目状态：`DocsAI/ProjectState.md`
@@ -20,8 +20,8 @@
 ## 计划入口
 
 - 计划目录：`Plans/README.md`
-- SkilmeAI 多仓库彻底迁移：`Plans/Architecture/SkilmeAI_多仓库彻底迁移/README.md`
-- SkilmeAI 多仓库执行状态：`Plans/Architecture/SkilmeAI_多仓库彻底迁移/Progress.md`
+- SlimeAI 多仓库彻底迁移：`Plans/Architecture/SlimeAI_多仓库彻底迁移/README.md`
+- SlimeAI 多仓库执行状态：`Plans/Architecture/SlimeAI_多仓库彻底迁移/Progress.md`
 - Godot AI Game OS 迁移计划：`Plans/Architecture/框架整体迁移/迁移.md`
 - Godot AI Game OS 执行计划：`Plans/Architecture/Godot_AI_Game_OS_Migration/README.md`
 - AI-First 迁移计划（历史）：`Plans/Architecture/AI_First_Program_Migration/README.md`
@@ -68,7 +68,7 @@
 ## 协议与经验
 
 - `DocsAI/Protocols/外部资料与源码研究协议.md`
-- `DocsAI/Protocols/SkilmeAI多仓库AI工作流协议.md`
+- `DocsAI/Protocols/SlimeAI多仓库AI工作流协议.md`
 - `DocsAI/Protocols/AI原生数据层协议.md`
 - `DocsAI/Protocols/AI表现复盘协议.md`
 - `DocsAI/Experience/踩坑与经验索引.md`

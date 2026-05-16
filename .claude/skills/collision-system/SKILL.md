@@ -26,7 +26,7 @@ description: 修改碰撞系统时使用。适用于：CollisionLayers、Collisi
 - 涉及运动碰撞读 `DocsAI/Modules/Movement.md`
 - 涉及伤害读 `DocsAI/Modules/DamageSystem.md`
 - 涉及对象池读 `DocsAI/Modules/Entity.md` 和 `DocsAI/Modules/Tools.md`
-- SkilmeAI 迁移目标已存在 Collision 第一批、Movement 运动碰撞第一批、同帧多命中派发、Godot Physics broadphase 查询、ContactDamage 第一批、Damage 处理器管线、HealService 和 DamageTool 第一批：`/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/Capabilities/Collision`、`/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/Capabilities/Movement/MovementCollision*`、`/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/Capabilities/Movement/IMovementCollisionTargetQuery.cs`、`/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/Capabilities/Damage`、`/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/GodotBridge/GodotCollision*`、`/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/GodotBridge/GodotContactDamageComponent.cs` 和 `/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/GodotBridge/GodotPhysicsMovementCollisionTargetQuery.cs`
+- SlimeAI 迁移目标已存在 Collision 第一批、Movement 运动碰撞第一批、同帧多命中派发、Godot Physics broadphase 查询、ContactDamage 第一批、Damage 处理器管线、HealService 和 DamageTool 第一批：`/home/slime/Code/SlimeAI/SlimeAI/GameOS/Capabilities/Collision`、`/home/slime/Code/SlimeAI/SlimeAI/GameOS/Capabilities/Movement/MovementCollision*`、`/home/slime/Code/SlimeAI/SlimeAI/GameOS/Capabilities/Movement/IMovementCollisionTargetQuery.cs`、`/home/slime/Code/SlimeAI/SlimeAI/GameOS/Capabilities/Damage`、`/home/slime/Code/SlimeAI/SlimeAI/GameOS/GodotBridge/GodotCollision*`、`/home/slime/Code/SlimeAI/SlimeAI/GameOS/GodotBridge/GodotContactDamageComponent.cs` 和 `/home/slime/Code/SlimeAI/SlimeAI/GameOS/GodotBridge/GodotPhysicsMovementCollisionTargetQuery.cs`
 
 ## 最短流程
 
@@ -57,6 +57,6 @@ node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src
 ## 迁移验证
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI && Tools/run-tests.sh
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike && Tools/run-godot-smoke.sh
+cd /home/slime/Code/SlimeAI/SlimeAI && Tools/run-tests.sh
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike && Tools/run-godot-smoke.sh
 ```

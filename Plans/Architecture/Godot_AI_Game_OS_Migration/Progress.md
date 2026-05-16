@@ -6,23 +6,23 @@
 
 Phase 03 的 GameOS Runtime 最小内核已完成到 Relationship / Schedule，Phase 04 的 BrotatoLike 最小接入已完成，Phase 05 GodotBridge 第一版已完成编译接入，M5-M17 的 Movement / Collision / Damage / Ability / Projectile / Effect / Feature / AI / Attack / DataOS 最小闭环已完成，M18 DataOS 扩大迁移与正式生成入口切片已完成，M19 DataOS 旧 AbilityData 通用字段补齐切片已完成，M20 BrotatoLike 统一 Godot 场景测试 runner 和 Observation / Debug / Trace 日志入口已完成，M21 DataOS 敌人生成规则 catalog 已完成，M22 游戏侧 SpawnSystem Tick 实例化入口已完成，M23 RuntimeSchedule 门禁驱动 Spawn Tick 已完成，M24 BrotatoLikeGameRuntime 主运行时入口已完成，M25 Main 场景正式挂载运行时已完成，M26 旧 Main 正式启动逻辑第一段已完成，M27 Ability handler-specific DataOS 参数第三段、`sine_wave_shot` 真实 handler 执行闭环、Boomerang / BezierCurve / CircularArc / ArcShot / Orbit Movement handler 执行接线、Dash 位移 handler 执行接线、ChainLightning 延迟弹跳伤害 handler 执行接线、Slam / CircleDamage 范围伤害 handler 执行接线，以及 TargetPoint / AuraShield 真实 handler 执行接线已完成，M28 Capability 标准模板体系建立已完成，M28.1 GodotPlayerInputComponent + Movement Acceleration 平滑移动 + BrotatoLike 玩家生成已完成。
 
-当前仓库定位已经从长期主项目切换为迁移输入仓库。长期架构建设目标位置是 `/home/slime/Code/SkilmeAI/SkilmeAI`，第一个游戏目标位置是 `/home/slime/Code/SkilmeAI/Games/BrotatoLike`。
+当前仓库定位已经从长期主项目切换为迁移输入仓库。长期架构建设目标位置是 `/home/slime/Code/SlimeAI/SlimeAI`，第一个游戏目标位置是 `/home/slime/Code/SlimeAI/Games/BrotatoLike`。
 
 ## 已完成
 
 - 建立 `Plans/Architecture/Godot_AI_Game_OS_Migration/` 计划入口。
 - 建立资产盘点文件 `00_Inventory.md`。
-- 建立新工作区骨架 `/home/slime/Code/SkilmeAI/`。
-- 建立框架主仓库骨架 `SkilmeAI/`。
+- 建立新工作区骨架 `/home/slime/Code/SlimeAI/`。
+- 建立框架主仓库骨架 `SlimeAI/`。
 - 建立游戏仓库骨架 `Games/BrotatoLike/`。
-- 建立 Godot 引擎位置说明 `/home/slime/Code/SkilmeAI/Engine/README.md`。
-- 在框架仓库创建 `GameOS/SkilmeAI.GameOS.csproj`。
-- 创建 `SkilmeAI.slnx` 并加入 GameOS 项目。
+- 建立 Godot 引擎位置说明 `/home/slime/Code/SlimeAI/Engine/README.md`。
+- 在框架仓库创建 `GameOS/SlimeAI.GameOS.csproj`。
+- 创建 `SlimeAI.slnx` 并加入 GameOS 项目。
 - 创建 `Tools/run-build.sh` 和 `Tools/run-pack.sh`。
 - `Tools/run-build.sh` 已通过。
 - `Tools/run-pack.sh` 已生成本地 NuGet 包。
 - 在 `Games/BrotatoLike` 创建最小 Godot C# 项目。
-- `BrotatoLike` 已通过 `ProjectReference` 引用 `SkilmeAI.GameOS`。
+- `BrotatoLike` 已通过 `ProjectReference` 引用 `SlimeAI.GameOS`。
 - `Games/BrotatoLike/Tools/run-build.sh` 已通过。
 - 迁入 Runtime Data 最小内核，并从旧 `IEntity/GameEventType/Log/Godot Resource` 直接依赖中解耦。
 - 迁入 Runtime Event 最小内核：`EventBus / EventContext / GlobalEventBus / GameEventType / EventDataChangeSink`。
@@ -33,7 +33,7 @@ Phase 03 的 GameOS Runtime 最小内核已完成到 Relationship / Schedule，P
 - 迁入 Runtime Resource 最小内核：`ResourceCatalog / ResourceManagement`。
 - 迁入 Runtime Pool 最小内核：`ObjectPool<T> / ObjectPoolManager / IPoolable / PoolStats`。
 - 迁入 Runtime Timer 最小内核：`TimerManager / GameTimer`，由外部 `Tick` 驱动。
-- 建立 `Tests/SkilmeAI.GameOS.Tests` 和 `Tools/run-tests.sh`，覆盖 Event/Data/Entity/Relationship/Schedule/Pool/Timer/Resource 最小行为。
+- 建立 `Tests/SlimeAI.GameOS.Tests` 和 `Tools/run-tests.sh`，覆盖 Event/Data/Entity/Relationship/Schedule/Pool/Timer/Resource 最小行为。
 - 在 `Games/BrotatoLike` 建立 `Scenes/Main.tscn`、`Src/Game/Main.cs` 和 `GameBootstrap.RunFrameworkSmokeProbe()`。
 - 在 `Games/BrotatoLike/Plans/README.md` 建立新游戏仓库整体迁移计划。
 - 迁入 GodotBridge 第一版：`GodotEntity / IGodotComponent / GameOSGodotBridge / GodotNodeRegistry / GameOSTimerDriver`。
@@ -45,7 +45,7 @@ Phase 03 的 GameOS Runtime 最小内核已完成到 Relationship / Schedule，P
 - 迁入 Movement Capability 纯 C# 垂直切片：`Vector2Value / MovementDataKeys / MoveMode / MovementParams / IMovementStrategy / MovementStrategyRegistry / ChargeMovementStrategy / OrbitMovementStrategy / SineWaveMovementStrategy / BezierCurveMovementStrategy / BoomerangMovementStrategy / AttachToHostMovementStrategy / PlayerInputMovementStrategy / AIControlledMovementStrategy / ParabolaMovementStrategy / CircularArcMovementStrategy / MovementSystem / MovementStopReason / MovementStopContext`。
 - 迁入 Godot 2D 位移桥第一段：`GodotEntity2D / GodotMovementDriver`，由 `MovementSystem.Tick` 推进 Runtime Position，并同步到 `Node2D.Position`。
 - 迁入 Collision Capability 第一批：`CollisionLayers / CollisionDataKeys / CollisionFilterPolicy / CollisionContact / CollisionSystem / GameEventType.Collision / GodotAreaEntity2D / GodotCollisionBridge / GodotCollisionComponent / GodotHurtboxComponent`，覆盖 layer/mask、同队过滤、Entered / Exited 运行时事件和 Godot `Area2D` / Hurtbox bridge。
-- `Tests/SkilmeAI.GameOS.Tests` 已追加 Movement 测试，覆盖 Charge 按距离推进、到目标点停止、停止事件、`IsMoving` / `Velocity` 复位、Orbit 90 度环绕、SineWave 单周期采样、Bezier 中点/终点、Boomerang 返回完成、AttachToHost 跟随、PlayerInput / AIControlled Data 输入、Parabola 中点顶高和终点、CircularArc 半圈中点和终点。
+- `Tests/SlimeAI.GameOS.Tests` 已追加 Movement 测试，覆盖 Charge 按距离推进、到目标点停止、停止事件、`IsMoving` / `Velocity` 复位、Orbit 90 度环绕、SineWave 单周期采样、Bezier 中点/终点、Boomerang 返回完成、AttachToHost 跟随、PlayerInput / AIControlled Data 输入、Parabola 中点顶高和终点、CircularArc 半圈中点和终点。
 - `Games/BrotatoLike` 的框架 smoke 已追加 Movement `MovementSystem + MoveMode.Charge` 到点停止断言；GodotBridge smoke 已覆盖 Charge / Orbit / SineWave / BezierCurve / Boomerang / AttachToHost / PlayerInput / AIControlled / Parabola / CircularArc 同步到真实 `Node2D.Position`。
 - `Games/BrotatoLike` 的框架 smoke 已追加 Collision `CollisionSystem + CollisionLayers + GameEventType.Collision` 进入事件断言；GodotBridge smoke 已追加 `GodotAreaEntity2D / GodotCollisionComponent / GodotHurtboxComponent` 手动进入/离开事件断言。
 - 迁入 AI 攻击请求事件最小 Runtime：`GameEventType.Attack / AttackCancelReason / AIDataKeys.IsAttackRequested / AIDataKeys.AttackRange / IsTargetInRangeCondition / RequestAttackAction`，覆盖范围检测、停步面向目标、请求 payload 和每 Tick 请求标记清理。
@@ -104,7 +104,7 @@ Phase 03 的 GameOS Runtime 最小内核已完成到 Relationship / Schedule，P
 2. 从 `MigrationInput/` 适配 BrotatoLike 游戏特定 Data、真实 UI / 输入和正式场景内容。
 3. 继续整理 Main 的测试入口与正式入口边界，避免 smoke 探针污染普通运行路径。
 4. 把后续 UI / SpawnSystem / 真实主场景 smoke 接入 `Tools/run-godot-scene.sh`，并把 trace 写到 `.ai-temp/scene-tests/runs/<date>/<time>/artifacts`。
-5. Godot 引擎底层修改统一进入 `/home/slime/Code/SkilmeAI/Engine/godot-4.6.2-stable`。
+5. Godot 引擎底层修改统一进入 `/home/slime/Code/SlimeAI/Engine/godot-4.6.2-stable`。
 
 ## 当前阻塞
 
@@ -113,11 +113,11 @@ Phase 03 的 GameOS Runtime 最小内核已完成到 Relationship / Schedule，P
 ## 最新验证
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-build.sh
 Tools/run-tests.sh
 Tools/run-pack.sh
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-build.sh
 Tools/run-godot-smoke.sh
 Tools/run-godot-scene.sh run res://Scenes/Main.tscn --timeout 3 --log-dir .ai-temp/scene-tests/runs
@@ -129,5 +129,5 @@ Tools/analyze-godot-scene-logs.sh
 
 - build：0 warning / 0 error。
 - tests：Event/Data/DataOS snapshot/Entity/Relationship/Schedule/Pool/Timer/Resource/Collision/Movement 全部 PASS，Movement 覆盖 Charge / Orbit / SineWave / BezierCurve / Boomerang / AttachToHost / PlayerInput / AIControlled / Parabola / CircularArc，Collision 覆盖 layer/mask、同队过滤和 Entered / Exited 事件。
-- pack：生成 `Packages/LocalNuGet/SkilmeAI.GameOS.0.1.0-alpha.0.nupkg`。
+- pack：生成 `Packages/LocalNuGet/SlimeAI.GameOS.0.1.0-alpha.0.nupkg`。
 - BrotatoLike build：0 warning / 0 error；`Tools/run-build.sh` 会先生成 DataOS runtime snapshot；普通 `Scenes/Main.tscn` headless 短时运行通过并输出 `BrotatoLike main scene initialized`；`Tools/run-godot-smoke.sh` 和 `Tools/run-godot-scene.sh run-main-smoke` 输出 `BrotatoLike GameOS smoke PASS`，覆盖 Runtime / DataOS bootstrap / Ability handler-specific DataOS 参数第三段 / SineWave / Boomerang / BezierCurve / CircularArc / ArcShot / Orbit / Dash / ChainLightning / Slam / TargetPoint / CircleDamage / AuraShield 真实 handler 执行闭环 / **PlayerInput + Acceleration 平滑移动 / GodotPlayerInputComponent** / `BrotatoLikeGameRuntime` / Main 正式启动事件 / RuntimeSchedule 门禁驱动的 SpawnSystem Tick 实例化 / Collision / Movement / Attack / Godot AI bridge / Ability / Projectile / Effect / GodotBridge / NodePool；`Tools/analyze-godot-scene-logs.sh --run-dir .ai-temp/scene-tests/runs/2026-05-06/13-15-57` 输出 PASS marker found 且 Error markers none。

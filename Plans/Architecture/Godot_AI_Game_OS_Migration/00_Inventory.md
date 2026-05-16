@@ -5,9 +5,9 @@
 
 ## 分流原则
 
-- 通用 Runtime 机制迁入 `SkilmeAI/GameOS/Runtime`。
-- 高频玩法能力迁入 `SkilmeAI/GameOS/Capabilities`。
-- 数据 authoring、DataKey、EventType、ResourceCatalog 迁入 `SkilmeAI/GameOS/Authoring` 或后续 `DataOS`。
+- 通用 Runtime 机制迁入 `SlimeAI/GameOS/Runtime`。
+- 高频玩法能力迁入 `SlimeAI/GameOS/Capabilities`。
+- 数据 authoring、DataKey、EventType、ResourceCatalog 迁入 `SlimeAI/GameOS/Authoring` 或后续 `DataOS`。
 - 游戏资产、场景、游戏特定脚本迁入 `Games/BrotatoLike`。
 - DocsAI 跨模块协议迁入新仓库 DocsAI；模块长知识下沉到 Capability Contract。
 - 当前仓库不再新增长期架构能力。
@@ -16,13 +16,13 @@
 
 | 旧路径 | 目标 | 备注 |
 | --- | --- | --- |
-| `Src/ECS/Base/Entity/Core` | `SkilmeAI/GameOS/Runtime/Entity` | 生命周期、注册、销毁、关系绑定和迁移入口。 |
-| `Src/ECS/Base/Component/IComponent.cs` | `SkilmeAI/GameOS/Runtime/Component` | 只迁基础组件契约。 |
-| `Src/ECS/Base/Data` | `SkilmeAI/GameOS/Runtime/Data` | 运行时状态容器，不包含 authoring 表。 |
-| `Src/ECS/Base/Event` | `SkilmeAI/GameOS/Runtime/Event` | EventBus 与基础事件协议。 |
-| `Src/ECS/Tools/ObjectPool` | `SkilmeAI/GameOS/Runtime/Pool` | 对象池作为 Runtime 机制。 |
-| `Src/ECS/Tools/TimerManager` | `SkilmeAI/GameOS/Runtime/Timer` | 统一计时器入口。 |
-| `Data/ResourceManagement` | `SkilmeAI/GameOS/Runtime/Resource` + `SkilmeAI/GameOS/Authoring/ResourceCatalog` | 运行时加载和资源目录生成拆开。 |
+| `Src/ECS/Base/Entity/Core` | `SlimeAI/GameOS/Runtime/Entity` | 生命周期、注册、销毁、关系绑定和迁移入口。 |
+| `Src/ECS/Base/Component/IComponent.cs` | `SlimeAI/GameOS/Runtime/Component` | 只迁基础组件契约。 |
+| `Src/ECS/Base/Data` | `SlimeAI/GameOS/Runtime/Data` | 运行时状态容器，不包含 authoring 表。 |
+| `Src/ECS/Base/Event` | `SlimeAI/GameOS/Runtime/Event` | EventBus 与基础事件协议。 |
+| `Src/ECS/Tools/ObjectPool` | `SlimeAI/GameOS/Runtime/Pool` | 对象池作为 Runtime 机制。 |
+| `Src/ECS/Tools/TimerManager` | `SlimeAI/GameOS/Runtime/Timer` | 统一计时器入口。 |
+| `Data/ResourceManagement` | `SlimeAI/GameOS/Runtime/Resource` + `SlimeAI/GameOS/Authoring/ResourceCatalog` | 运行时加载和资源目录生成拆开。 |
 
 ## Capability 输入
 
@@ -43,11 +43,11 @@
 
 | 旧路径 | 目标 | 备注 |
 | --- | --- | --- |
-| `Data/DataNew` | `SkilmeAI/DataOS` + generated snapshot | 作为迁移输入，不作为最终主数据源。 |
-| `Data/DataKey` | `SkilmeAI/GameOS/Authoring/DataKeys` | 按 Capability 分域。 |
-| `Data/EventType` | `SkilmeAI/GameOS/Authoring/EventTypes` | 按 Capability 分域。 |
+| `Data/DataNew` | `SlimeAI/DataOS` + generated snapshot | 作为迁移输入，不作为最终主数据源。 |
+| `Data/DataKey` | `SlimeAI/GameOS/Authoring/DataKeys` | 按 Capability 分域。 |
+| `Data/EventType` | `SlimeAI/GameOS/Authoring/EventTypes` | 按 Capability 分域。 |
 | `Data/Config`、`Data/Data` | `Archive` 或 DataOS seed 输入 | 旧 Resource/.tres 运行时入口不迁为新主入口。 |
-| `addons/DataConfigEditor` | `SkilmeAI/DataOS` 或 `BrotatoLike` 工具输入 | 后续由 DataForge / Editor UI 接管。 |
+| `addons/DataConfigEditor` | `SlimeAI/DataOS` 或 `BrotatoLike` 工具输入 | 后续由 DataForge / Editor UI 接管。 |
 
 ## 游戏输入
 
@@ -56,7 +56,7 @@
 | `assets/` | `Games/BrotatoLike/Assets` | 游戏资产先迁入游戏仓库，后续清理命名。 |
 | `Src/Main` | `Games/BrotatoLike/Src/Game` | 游戏入口逻辑。 |
 | `project.godot`、`Brotato_my.csproj` | `Games/BrotatoLike` | 新游戏项目重新生成名称和引用。 |
-| `Src/ECS/Test/SingleTest` | `SkilmeAI/GameOS/Validation` 或 `Games/BrotatoLike/Scenes/Tests` | 框架测试与游戏测试拆分。 |
+| `Src/ECS/Test/SingleTest` | `SlimeAI/GameOS/Validation` 或 `Games/BrotatoLike/Scenes/Tests` | 框架测试与游戏测试拆分。 |
 
 ## 文档和 Skill 输入
 

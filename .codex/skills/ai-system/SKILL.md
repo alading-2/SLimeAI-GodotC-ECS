@@ -30,7 +30,7 @@ description: 修改 AI 系统时使用。适用于：AIComponent、行为树 Beh
 
 ## 最短流程
 
-- SkilmeAI 迁移目标已存在 AI Runtime 最小行为树：`/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/Capabilities/AI`。
+- SlimeAI 迁移目标已存在 AI Runtime 最小行为树：`/home/slime/Code/SlimeAI/SlimeAI/GameOS/Capabilities/AI`。
 - 当前覆盖 `AIDataKeys / AIContext / AIService / BehaviorNode / SequenceNode / SelectorNode / FindNearestTargetAction / MoveToTargetAction / IsTargetInRangeCondition / RequestAttackAction / PrepareAbilityAutoTargetContextsAction / TickAbilityAutoTriggersAction / PatrolAction / EnemyBehaviorBlocks / EnemyBehaviorTreeBuilder / GodotAIComponent / GodotAIBehaviorTreeKind / GameEventType.Attack`；攻击请求可由 `AttackService` 消费并通过 DamageService 结算，技能自动施法可先用 `PrepareAbilityAutoTargetContextsAction` 显式准备 `AbilityCastContext` 再交给 `TickAbilityAutoTriggersAction`，Godot 层已有 `GodotAttackComponent` bridge 第一段负责服务注册和节点目标映射，已有旧 `AttackComponent` 类名兼容包装，并已有 `GameEventType.Unit / GodotUnitAnimationComponent` 承接 Attack 动画请求。
 
 1. 判断是条件、动作、积木块、预制树还是 DataKey。
