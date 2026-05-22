@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Src/ECS/Test/SingleTest/ECS/Event/EventRuntimeTest.cs" id="1_event"]
+
+[node name="EventRuntimeTest" type="Node"]
+script = ExtResource("1_event")
