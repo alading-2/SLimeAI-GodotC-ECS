@@ -8,7 +8,7 @@ description: 编写或修改 Data 目录下的数据配置、Config、DataKey、
 ## 什么时候用
 
 - 修改 `Data/Config/`、`Data/DataNew/`、`Data/DataKey/`、`Data/EventType/`、`Data/ResourceManagement/`。
-- 迁移旧数据到 `/home/slime/Code/SkilmeAI/Games/BrotatoLike/DataOS/Authoring/`。
+- 迁移旧数据到 `/home/slime/Code/SlimeAI/Games/BrotatoLike/DataOS/Authoring/`。
 - 新增可配置字段、DataKey、事件协议或资源路径映射。
 - 判断字段应放 DataNew、DataKey、Config 还是 ResourceManagement。
 
@@ -21,8 +21,8 @@ description: 编写或修改 Data 目录下的数据配置、Config、DataKey、
 
 ## 必读
 
-- 新框架 DataOS：`/home/slime/Code/SkilmeAI/SkilmeAI/DataOS/README.md`
-- BrotatoLike DataOS seed：`/home/slime/Code/SkilmeAI/Games/BrotatoLike/DataOS/Authoring/BrotatoLike.seed.sql`
+- 新框架 DataOS：`/home/slime/Code/SlimeAI/SlimeAI/DataOS/README.md`
+- BrotatoLike DataOS seed：`/home/slime/Code/SlimeAI/Games/BrotatoLike/DataOS/Authoring/BrotatoLike.seed.sql`
 - `DocsAI/Modules/DataAuthoring.md`
 - `Data/README.md`
 - `Data/DataNew/README.md`
@@ -33,7 +33,7 @@ description: 编写或修改 Data 目录下的数据配置、Config、DataKey、
 
 1. 判断字段属于 Entity.Data、系统配置、事件协议还是资源路径。
 2. 新仓库优先写 DataOS authoring seed / migration，生成 Runtime snapshot；旧仓库 DataNew 只作为迁移输入。
-3. 运行时字段先在 `SkilmeAI.GameOS` 定义 `DataMeta`，snapshot 字段键使用 Runtime DataKey 字符串。
+3. 运行时字段先在 `SlimeAI.GameOS` 定义 `DataMeta`，snapshot 字段键使用 Runtime DataKey 字符串。
 4. 系统配置 / 预设 / Spawn config 优先使用 `ScheduleDataKeys`；Unit / Ability / Feature 字段优先使用对应 Capability DataKey。
 5. 事件协议放新框架 `GameOS/Runtime/Event/` 或旧仓库 `Data/EventType/` 对应分域，按迁移目标选择。
 6. 资源路径进入 DataOS `resource_entry` 或 `ResourceCatalog` 生成入口，不放运行时对象引用。
@@ -58,7 +58,7 @@ description: 编写或修改 Data 目录下的数据配置、Config、DataKey、
 ## 推荐验证
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI && Tools/run-tests.sh
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike && Tools/run-build.sh
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike && Tools/run-godot-smoke.sh
+cd /home/slime/Code/SlimeAI/SlimeAI && Tools/run-tests.sh
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike && Tools/run-build.sh
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike && Tools/run-godot-smoke.sh
 ```

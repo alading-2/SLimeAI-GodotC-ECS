@@ -27,7 +27,7 @@ description: 修改或新增 Movement 运动系统时使用。适用于：Entity
 - 涉及碰撞读 `DocsAI/Modules/Collision.md`
 - 涉及组件生命周期读 `DocsAI/Modules/Component.md`
 - 测试选择读 `DocsAI/Tests/测试矩阵.md`
-- SkilmeAI 迁移目标已存在旧 `MoveMode` 纯 C# 策略、运动碰撞第一批、Godot Physics broadphase 查询和 Godot Orientation 输出：`/home/slime/Code/SkilmeAI/SkilmeAI/GameOS/Capabilities/Movement`
+- SlimeAI 迁移目标已存在旧 `MoveMode` 纯 C# 策略、运动碰撞第一批、Godot Physics broadphase 查询和 Godot Orientation 输出：`/home/slime/Code/SlimeAI/SlimeAI/GameOS/Capabilities/Movement`
 
 ## 最短流程
 
@@ -60,6 +60,6 @@ node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src
 ## 迁移验证
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI && Tools/run-tests.sh
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike && Tools/run-godot-smoke.sh
+cd /home/slime/Code/SlimeAI/SlimeAI && Tools/run-tests.sh
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike && Tools/run-godot-smoke.sh
 ```
