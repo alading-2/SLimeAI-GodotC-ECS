@@ -2,14 +2,16 @@
 
 > 详细架构文档: [项目索引](Docs/框架/项目索引.md)
 > 详细操作规范已迁移到 Skills（`@skill名称` 或描述任务时自动触发）
-> 当前迁移入口: [Godot_AI_Game_OS_Migration](Plans/Architecture/Godot_AI_Game_OS_Migration/README.md)
+> 当前纠偏入口: `/home/slime/Code/SlimeAI/Workspace/DocsAI/SlimeAINewReorientation/00-README.md`
+> 当前 OpenSpec change: `/home/slime/Code/SlimeAI/openspec/changes/reorient-slimeainew-ecs-framework/`
 
 ## 当前仓库定位
 
-- 当前 `brotato-my` 仓库从 2026-05-04 起作为 `SkilmeAI` 多仓库迁移输入仓库。
-- 长期框架建设目标仓库：`/home/slime/Code/SkilmeAI/SkilmeAI`。
-- 第一个游戏目标仓库：`/home/slime/Code/SkilmeAI/Games/BrotatoLike`。
-- 当前仓库不再新增长期架构能力；新增 Runtime、Capability、DataOS 能力应迁入新仓库后继续。
+- 当前仓库是旧 Godot C# ECS 框架主线，包含 `Src/ECS/`、旧数据、旧游戏工程、DocsAI 和本地 skill 入口。
+- 旧“作为 `SkilmeAI` / Godot AI Game OS 迁移输入仓库”的说法保留为历史方向，不再作为默认任务入口。
+- `SlimeAI/` 新 GameOS 现在是冻结参考实现；可以借鉴 typed DataKey、typed event、Observation、scene artifact gate、DataOS 分层和 SystemAgent gates，但不把新增 Runtime、Capability、DataOS 工作默认迁出到 `SlimeAI/GameOS`。
+- 大型 ECS 改造前先读工作区纠偏文档和 OpenSpec change，再从 `DocsAI/INDEX.md` 进入本仓模块契约与验证文档。
+- 本 change 只改路由和文档；`Src/ECS` 核心代码不在本次修改范围。
 
 ## 0.游戏开发
 - 以资深游戏开发者结合现代游戏设计框架深度思考
@@ -21,6 +23,8 @@
 - 新增加或修改的代码要增加适当注释，如果是传递参数需要在后面加//注释
 - 新增功能后必须更新 [Docs/框架/项目索引.md](../../Docs/框架/项目索引.md)
 - 修改框架相关实现/接口/流程后，必须同步更新对应 Skill 文档，禁止 Skill 与代码脱节
+- 触碰 `Src/ECS/`、`DocsAI/Modules/`、`DocsAI/Tests/` 或本仓 skill 前，先从本仓运行 `git status --short`，确认 nested git 边界。
+- 不把 `SlimeAI/GameOS` 作为默认代码落点；只有用户明确要求或新的 OpenSpec change 授权时才修改新 GameOS。
 
 ## 2. C# 代码硬约束
 - **概率值**: 统一 0-100（计算时 /100）

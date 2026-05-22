@@ -11,11 +11,13 @@
 3. `DocsAI/INDEX.md`
    - 按任务类型查找文档。
 4. `DocsAI/ProjectState.md`
-   - 当前 AI-First 迁移阶段、已完成项、下一步。
+   - 当前旧 ECS 主线纠偏状态、历史迁移材料分类、下一步。
 
 如果任务触发了 Skill，还要读对应 `.codex/skills/*/SKILL.md`。Skill 负责流程入口，详细知识以 DocsAI 为准。
 
 ## 当前定位
+
+项目当前定位是旧 Godot C# ECS 框架主线。此前 Godot AI Game OS / SkilmeAI 多仓库迁移材料保留为 history / migration-pointer，不再作为默认实现入口。工作区级纠偏入口是 `/home/slime/Code/SlimeAI/Workspace/DocsAI/SlimeAINewReorientation/00-README.md`，当前 OpenSpec change 是 `/home/slime/Code/SlimeAI/openspec/changes/reorient-slimeainew-ecs-framework/`。
 
 项目目标是建立一个 AI-First Godot C# ECS 游戏程序开发框架，让 AI 能够在明确约束下完成：
 
@@ -28,7 +30,7 @@
 - 同步更新文档
 - 输出风险点和人工审查重点
 
-当前阶段只关注程序开发闭环，不处理美术资源生成、策划数据生成、音效音乐生成和宣传运营内容。
+当前阶段先关注目录、事实源、模块契约、验证和任务闭环；旧 `Src/ECS` 核心代码优化必须在后续明确 OpenSpec change 中小步执行。
 
 ## 文档类型
 
@@ -40,6 +42,17 @@
 - `Archive/`：过期 AI 文档和迁移中暂存内容。
 
 项目级执行计划统一放在仓库根目录 `Plans/`。`DocsAI` 不再新建独立 `Plans/`，避免计划入口分叉。
+
+## 历史材料分类
+
+| 路径 | 分类 | 当前动作 |
+| --- | --- | --- |
+| `DocsAI/Modules/`、`DocsAI/Tests/`、`DocsAI/Workflows/ECS核心修改门禁.md` | current | 旧 ECS 修改仍需读取 |
+| `DocsAI/Protocols/AI原生数据层协议.md`、`DocsAI/Protocols/AI表现复盘协议.md` | reference | 可借鉴机制，不能替代当前 ECS 路由 |
+| `DocsAI/Protocols/SkilmeAI多仓库AI工作流协议.md` | history / migration-pointer | 仅解释旧多仓库方向，不作为当前默认入口 |
+| `Plans/Architecture/Godot_AI_Game_OS_Migration/`、`Plans/Architecture/SkilmeAI_多仓库彻底迁移/`、`Plans/Architecture/框架整体迁移/` | history / migration-pointer | 保留为历史计划和旧方向复盘 |
+| `.history/` | archive | 不删除，不作为当前 AI 入口 |
+| `.codex/skills/` | local legacy skill source or copy, unresolved | 当前不改；后续决定是否迁入工作区 `.ai-config` |
 
 ## 核心原则
 

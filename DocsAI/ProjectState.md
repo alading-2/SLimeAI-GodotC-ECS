@@ -4,23 +4,37 @@
 
 ## 当前目标
 
-按当前代码重新校准：
+当前默认目标已从“迁移到 Godot AI Game OS / SkilmeAI 多仓库”纠偏为“回到旧 Godot C# ECS 框架主线，先治理事实源、入口和验证，再小步优化 `Src/ECS`”。
+
+当前优先校准：
 
 - `DocsAI/Modules/` 模块契约。
 - `.claude/skills/*` / `.codex/skills/*` 短入口。
 - `Docs/` 人类文档入口和项目索引。
 - `Src/**/*.md` 已全部移除，源码入口统一由项目索引指向 .cs 文件。
-- 新增 Godot AI Game OS 彻底迁移方向：DataOS、外部源码研究机制、Observation、经验库和 AI 表现复盘。
-- 新增 SkilmeAI 多仓库彻底迁移方向：当前 `brotato-my` 降级为迁移输入仓库；长期建设迁入 `SkilmeAI` AI 框架主仓库、独立 Godot 引擎仓库和独立游戏仓库。
+- 历史 Godot AI Game OS 彻底迁移方向保留为 history / migration-pointer，可作为机制参考，不作为当前默认路线。
+- 历史 SkilmeAI 多仓库彻底迁移方向保留为 history / migration-pointer；当前仓库不再默认降级为迁移输入。
+
+## 当前纠偏入口
+
+- 工作区入口：`/home/slime/Code/SlimeAI/Workspace/DocsAI/SlimeAINewReorientation/00-README.md`
+- OpenSpec change：`/home/slime/Code/SlimeAI/openspec/changes/reorient-slimeainew-ecs-framework/`
+- 本仓入口：`AGENTS.md`、`DocsAI/INDEX.md`
+- 本 change 不修改 `Src/ECS` 核心代码。旧 ECS 核心审计和实现优化必须放到后续 `audit-slimeainew-ecs-core` 或其它明确 OpenSpec change。
 
 ## 当前阶段
 
-`AI_First_Docs_Code_Alignment`（二轮收敛）已完成。后续执行：
+`AI_First_Docs_Code_Alignment`（二轮收敛）已完成。历史计划仍可作为审计材料。后续当前切片：
+- 恢复 `SlimeAINew` DocsAI 路由和历史材料分类。
+- 初始化或设计 `Games/BrotatoLike/` ECS-return 新游戏目录。
+- 审计 `SlimeAINew/Src/ECS` 核心模块，先验证再改代码。
+
+历史已完成 / 历史迁移指针：
 - `Plans/Architecture/AI_First_Test_Infra_Deep_Docs/`（5 阶段完成）：GodotSkill 测试基础设施 + Movement/AI/Collision 文档深层审计
 - `Plans/Architecture/AI_First_Src_Docs_Deep_Audit/`（完成）：剩余 Src .md 全量删除，唯一真相源为 DocsAI + Docs/ + 项目索引
-- `Plans/Architecture/框架整体迁移/迁移.md`：当前新的彻底重构总计划，目标是不兼容迁移到 Godot AI Game OS。
-- `Plans/Architecture/SkilmeAI_多仓库彻底迁移/README.md`：当前更高层的多仓库迁移计划，规定工作区、仓库边界、NuGet/DLL 阶段、游戏 Skill 和旧仓库归档策略。
-- `Plans/Architecture/Godot_AI_Game_OS_Migration/README.md`：当前正在执行的 Godot AI Game OS 迁移控制面计划，负责阶段状态、资产盘点和从当前仓库恢复执行。
+- `Plans/Architecture/框架整体迁移/迁移.md`：history / migration-pointer，旧不兼容迁移到 Godot AI Game OS 的总计划。
+- `Plans/Architecture/SkilmeAI_多仓库彻底迁移/README.md`：history / migration-pointer，旧多仓库迁移计划。
+- `Plans/Architecture/Godot_AI_Game_OS_Migration/README.md`：history / migration-pointer，旧 Godot AI Game OS 迁移控制面计划。
 
 ## 已完成
 
@@ -92,11 +106,12 @@
 ## 推荐入口
 
 - AI 索引：`DocsAI/INDEX.md`
-- 当前计划：`Plans/Architecture/Godot_AI_Game_OS_Migration/README.md`
-- 彻底迁移计划：`Plans/Architecture/框架整体迁移/迁移.md`
-- SkilmeAI 多仓库迁移：`Plans/Architecture/SkilmeAI_多仓库彻底迁移/README.md`
-- Godot AI Game OS 执行计划：`Plans/Architecture/Godot_AI_Game_OS_Migration/README.md`
-- 多仓库 AI 工作流：`DocsAI/Protocols/SkilmeAI多仓库AI工作流协议.md`
+- 当前纠偏计划：`/home/slime/Code/SlimeAI/Workspace/DocsAI/SlimeAINewReorientation/00-README.md`
+- 当前 OpenSpec：`/home/slime/Code/SlimeAI/openspec/changes/reorient-slimeainew-ecs-framework/`
+- 彻底迁移计划（history / migration-pointer）：`Plans/Architecture/框架整体迁移/迁移.md`
+- SkilmeAI 多仓库迁移（history / migration-pointer）：`Plans/Architecture/SkilmeAI_多仓库彻底迁移/README.md`
+- Godot AI Game OS 执行计划（history / migration-pointer）：`Plans/Architecture/Godot_AI_Game_OS_Migration/README.md`
+- 多仓库 AI 工作流（history / migration-pointer）：`DocsAI/Protocols/SkilmeAI多仓库AI工作流协议.md`
 - Skill 映射：`DocsAI/Skills/Skill到DocsAI映射.md`
 - 测试矩阵：`DocsAI/Tests/测试矩阵.md`
 

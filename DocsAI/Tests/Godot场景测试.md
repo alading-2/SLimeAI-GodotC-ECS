@@ -2,6 +2,8 @@
 
 本文说明 AI 如何通过 CLI 运行 Godot C# 测试场景并读取日志。
 
+> ECS-return 注意：当前文档记录的是候选 runner 和历史测试方式。回归旧 ECS 后，任何 scene PASS 声明都必须有 `index.json`、per-scene `result.json` 和 scene artifact；如果 runner 当前不输出这些结构，必须把“补 artifact oracle”作为验证基础设施任务，不得只用 stdout PASS。
+
 ## 入口脚本
 
 ```bash
@@ -70,6 +72,18 @@ node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run-all --fil
 - `artifacts`：使用 `--log-dir` 时出现，列出该场景主动保存的截图和辅助产物。
 - `logIndex`：使用 `--log-dir` 时出现，指向本次运行的 `index.json`。
 - `summary` / `skippedScenes`：批量运行时出现，说明执行、跳过、通过、失败和超时数量。
+
+## Artifact oracle 要求
+
+未来接入 scene gate 时，场景通过声明必须同时满足：
+
+- run `index.json` 中对应 scene 为 `status=passed` 且 `exitCode=0`。
+- per-scene `result.json` 中 `status=passed`、`exitCode=0`，且没有阻塞 `firstError`。
+- scene artifact 中 `status=pass`、`failureReasons=[]`。
+- scene artifact 的 `expectedInputs`、`expectedObservations`、`passCriteria`、`failCriteria`、`artifactPath` 非空。
+- `checks[]` 覆盖本轮声明的关键行为。
+
+如果现有旧 runner 没有这些字段，验证结论只能写为 pending / blocker，不能写 PASS。
 
 ## 日志落盘与 grep
 
