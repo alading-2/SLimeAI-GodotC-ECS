@@ -1,6 +1,6 @@
 # DataAuthoring 模块契约
 
-本文是 AI 修改 `Data/` 目录下数据配置、DataNew 运行时外壳、DataKey、EventType 和资源映射时必须阅读的执行契约。运行时 Data 容器规则见 `DocsAI/Modules/Data.md`。迁移后的 DataOS 目标见 `DocsAI/Protocols/AI原生数据层协议.md`。
+本文是 AI 修改 `Data/` 目录下数据配置、DataNew 运行时外壳、typed DataKey、EventType 和资源映射时必须阅读的执行契约。运行时 Data 容器规则见 `DocsAI/Modules/Data.md`。迁移后的 DataOS 目标见 `DocsAI/Protocols/AI原生数据层协议.md`。
 
 ## 职责边界
 
@@ -10,7 +10,7 @@ DataAuthoring 负责：
 
 - `Data/DataNew/` snapshot-backed DTO 外壳和兼容查询 API。
 - `SlimeAINew/DataOS/` SQLite schema、seed、生成器和快照。
-- `Data/DataKey/` 的 `DataMeta` 键定义、分类、默认值和计算规则。
+- `Data/DataKey/` 的 typed `DataKey<T>` 键定义、分类、默认值和计算规则。
 - `Data/EventType/` 的事件名与事件载荷。
 - `Data/Config/` 的系统级配置结构。
 - `Data/ResourceManagement/` 的资源路径和资源目录。
@@ -38,7 +38,7 @@ DataAuthoring 不负责：
 
 - `Data/DataNew/`：运行时 DTO 外壳，不再是 authoring 主数据源。
 - `SlimeAINew/DataOS/`：AI-first 数据真相源，SQLite + schema + generator + runtime snapshot。
-- `Data/DataKey/`：运行时 Data 容器可用键，主流写法是 `static readonly DataMeta` + `DataRegistry.Register`。
+- `Data/DataKey/`：运行时 Data 容器可用键，主流写法是 `static readonly DataKey<T>`；`DataMeta` 仅保留兼容 metadata / editor 展示。
 - `Data/EventType/`：Entity 局部事件和全局事件协议，事件数据优先 `readonly record struct`。
 - `Data/Config/`：系统级配置，不直接等于 Entity.Data 字段。
 - `Data/Data/`：旧 Resource / `.tres` 配置归档和对照迁移，不作为新增运行时主入口。
@@ -52,7 +52,7 @@ DataAuthoring 不负责：
 - DataNew 场景、贴图、特效、投射物引用保存 `res://` 字符串路径。
 - DataOS 数据只存标量、enum 文本、资源路径、稳定 id 和关系表，不存 Godot/C# 运行时对象。
 - 属性名和目标 DataKey 不一致时使用 `[DataKey(nameof(DataKey.Xxx))]`。
-- 新普通 DataKey 使用 `static readonly DataMeta`，特殊运行时引用键才评估 `const string`。
+- 新普通 DataKey 使用 `static readonly DataKey<T>`，特殊运行时引用键才评估 `const string`。
 - 数值“不限制”统一使用 `-1`。
 - 概率统一使用 `0-100`，计算时再 `/100`。
 - 系统配置运行时入口是 `Data/DataNew/System/SystemData.cs` 与 `SystemPresetData.cs`，但它们的数据来源是 DataOS snapshot。
@@ -71,7 +71,7 @@ DataAuthoring 不负责：
 ## 修改流程
 
 1. 判断字段属于运行时 Entity.Data、系统级配置、事件协议还是资源路径。
-2. 运行时 Entity.Data 字段先在 `Data/DataKey/` 定义 `DataMeta`。
+2. 运行时 Entity.Data 字段先在 `Data/DataKey/` 定义 `DataKey<T>`。
 3. 需要配置输入时先在 `DataOS/` 补齐 schema 和 seed，再同步 `Data/DataNew/` 对应运行时外壳属性，必要时加 `[DataKey]`。
 4. 系统级规则优先放 `DataOS/`，再生成 `Data/DataNew/System/` 运行时外壳，不要强行定义 DataKey。
 5. 事件协议放 `Data/EventType/` 对应分域，并检查监听生命周期。

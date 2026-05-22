@@ -137,9 +137,9 @@ public static partial class EffectTool
             EntityManager.RegisterComponents(entity);
         }
 
-        // GlobalEventBus.Global.Emit(
+        // WorldEvents.World.Publish(
         //     GameEventType.Global.EntitySpawned,
-        //     new GameEventType.Global.EntitySpawnedEventData(entity));
+        //     new GlobalEvents.EntitySpawned(entity));
 
         // 日志
         if (isAttached)

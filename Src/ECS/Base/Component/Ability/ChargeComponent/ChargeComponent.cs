@@ -24,6 +24,8 @@ public partial class ChargeComponent : Node, IComponent
     /// <summary>充能恢复计时器（由 TimerManager 管理）</summary>
     private GameTimer? _chargeTimer;
 
+    private readonly EventSubscriptionCollector _eventSubscriptions = new();
+
     // ================= 属性访问 =================
 
     private AbilityType AbilityType => _data.Get<AbilityType>(DataKey.AbilityType);
@@ -70,6 +72,7 @@ public partial class ChargeComponent : Node, IComponent
     /// </summary>
     public void OnComponentUnregistered()
     {
+        _eventSubscriptions.Clear();
         StopChargeRecovery();
         _data = null;
         _entity = null;
@@ -81,51 +84,11 @@ public partial class ChargeComponent : Node, IComponent
     private void SubscribeEvents()
     {
         if (_entity == null) return;
-        // 监听请求检查可用性事件
-        _entity.Events.On<GameEventType.Ability.CheckCanUseEventData>(
-            GameEventType.Ability.CheckCanUse,
-            OnCheckCanUse
-        );
-        // 监听使用技能消耗充能事件
-        _entity.Events.On<GameEventType.Ability.ConsumeChargeEventData>(
-            GameEventType.Ability.ConsumeCharge,
-            OnRequestConsumeCharge
-        );
-        // 监听增加充能事件
-        _entity.Events.On<GameEventType.Ability.AddChargeEventData>(
-            GameEventType.Ability.AddCharge,
-            OnRequestAddCharge
-        );
-    }
-
-    /// <summary>响应可用性检查请求</summary>
-    private void OnCheckCanUse(GameEventType.Ability.CheckCanUseEventData eventData)
-    {
-        // 仅主动技能需要检查充能
-        if (AbilityType != AbilityType.Active) return;
-
-        if (!HasCharge())
-        {
-            eventData.Context.SetFailed("充能不足");
-        }
-    }
-
-    /// <summary>响应消耗充能请求</summary>
-    private void OnRequestConsumeCharge(GameEventType.Ability.ConsumeChargeEventData eventData)
-    {
-        // 仅主动技能需要消耗充能
-        if (AbilityType != AbilityType.Active) return;
-
-        // 调用消耗方法并在 Context 中报告结果
-        bool success = ConsumeCharge();
-        if (!success)
-        {
-            eventData.Context.SetFailed("充能不足");
-        }
+        _eventSubscriptions.Subscribe<AbilityEvents.AddCharge>(_entity.Events, OnRequestAddCharge);
     }
 
     /// <summary>响应增加充能请求</summary>
-    private void OnRequestAddCharge(GameEventType.Ability.AddChargeEventData eventData)
+    private void OnRequestAddCharge(AbilityEvents.AddCharge eventData)
     {
         InternalAddCharges(eventData.Amount);
     }
@@ -199,10 +162,7 @@ public partial class ChargeComponent : Node, IComponent
         }
 
         // ✅ 发送统一的充能恢复事件
-        _entity?.Events.Emit(
-            GameEventType.Ability.ChargeRestored,
-            new GameEventType.Ability.ChargeRestoredEventData(newCharges, MaxCharges)
-        );
+        _entity?.Events.Publish(new AbilityEvents.ChargeRestored(newCharges, MaxCharges));
 
         return actualAdd;
     }
@@ -219,6 +179,16 @@ public partial class ChargeComponent : Node, IComponent
     {
         if (_data == null) return false;
         return CurrentCharges > 0;
+    }
+
+    public bool CanUse(out string? failReason)
+    {
+        failReason = null;
+        if (AbilityType != AbilityType.Active) return true;
+        if (HasCharge()) return true;
+
+        failReason = "充能不足";
+        return false;
     }
 
     /// <summary>

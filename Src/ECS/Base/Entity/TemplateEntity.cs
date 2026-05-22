@@ -25,7 +25,9 @@ public partial class TemplateEntity : Node, IEntity, IPoolable
     public Data Data { get; private set; }
 
     /// <summary>实体局部事件总线</summary>
-    public EventBus Events { get; } = new EventBus();
+    public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
+
+    private readonly EventSubscriptionCollector _eventSubscriptions = new();
 
     // EntityId 由 IEntity 默认实现（从 DataKey.Id 读取）
 
@@ -66,12 +68,10 @@ public partial class TemplateEntity : Node, IEntity, IPoolable
     /// </summary>
     public void OnPoolAcquire()
     {
-        // 示例:订阅全局 Kill 事件（通过 Victim 筛选是否是自己）
-        GlobalEventBus.Global.On<GameEventType.Unit.KilledEventData>(
-            GameEventType.Unit.Killed, OnKilled);
+        // 示例:订阅广播 Kill 事件（通过 Victim 筛选是否是自己）
+        _eventSubscriptions.Subscribe<UnitEvents.Killed>(WorldEvents.World, OnKilled);
         // 示例:订阅局部事件（仅在实体内部组件间通信）
-        Events.On<GameEventType.Unit.DamagedEventData>(
-            GameEventType.Unit.Damaged, OnDamaged);
+        _eventSubscriptions.Subscribe<UnitEvents.Damaged>(Events, OnDamaged);
     }
 
     /// <summary>
@@ -81,9 +81,7 @@ public partial class TemplateEntity : Node, IEntity, IPoolable
     /// </summary>
     public void OnPoolRelease()
     {
-        // 取消全局事件订阅
-        GlobalEventBus.Global.Off<GameEventType.Unit.KilledEventData>(
-            GameEventType.Unit.Killed, OnKilled);
+        _eventSubscriptions.Clear();
     }
 
     /// <summary>
@@ -99,7 +97,7 @@ public partial class TemplateEntity : Node, IEntity, IPoolable
 
     #region ================= 事件处理 =================
 
-    private void OnKilled(GameEventType.Unit.KilledEventData evt)
+    private void OnKilled(UnitEvents.Killed evt)
     {
         // 全局事件筛选：只处理自己被击杀的事件
         if (evt.Victim as Node != this) return;
@@ -107,7 +105,7 @@ public partial class TemplateEntity : Node, IEntity, IPoolable
         // 处理死亡逻辑...
     }
 
-    private void OnDamaged(GameEventType.Unit.DamagedEventData evt)
+    private void OnDamaged(UnitEvents.Damaged evt)
     {
         _log.Info($"{Name} 受到 {evt.Amount} 点伤害");
         // 处理受伤逻辑

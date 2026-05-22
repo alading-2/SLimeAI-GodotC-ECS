@@ -43,6 +43,10 @@ public partial class AbilityTestModule : TestModuleBase
 
     /// <summary>当前已经为其订阅技能事件的实体，避免重复订阅同一个目标。</summary>
     private IEntity? _subscribedEntity;
+    private IDisposable? _abilityAddedSubscription;
+    private IDisposable? _abilityRemovedSubscription;
+    private IDisposable? _featureEnabledSubscription;
+    private IDisposable? _featureDisabledSubscription;
 
     /// <summary>左侧技能库是否需要重建。</summary>
     private bool _rebuildAvailableRequested = true;
@@ -190,7 +194,7 @@ public partial class AbilityTestModule : TestModuleBase
             return;
         }
 
-        var entityName = selectedEntity.Data.Get<string>(DataKey.Name.Key);
+        var entityName = selectedEntity.Data.Get(DataKey.Name);
         var groups = _service.GetOwnedGroups(selectedEntity);
         var totalCount = 0;
 
@@ -362,14 +366,10 @@ public partial class AbilityTestModule : TestModuleBase
         }
 
         _subscribedEntity = selectedEntity;
-        _subscribedEntity.Events.On<GameEventType.Ability.AddedEventData>(
-            GameEventType.Ability.Added, OnAbilityChanged);
-        _subscribedEntity.Events.On<GameEventType.Ability.RemovedEventData>(
-            GameEventType.Ability.Removed, OnAbilityRemovedEvt);
-        _subscribedEntity.Events.On<GameEventType.Feature.EnabledEventData>(
-            GameEventType.Feature.Enabled, OnFeatureEnabled);
-        _subscribedEntity.Events.On<GameEventType.Feature.DisabledEventData>(
-            GameEventType.Feature.Disabled, OnFeatureDisabled);
+        _abilityAddedSubscription = _subscribedEntity.Events.Subscribe<AbilityEvents.Added>(OnAbilityChanged);
+        _abilityRemovedSubscription = _subscribedEntity.Events.Subscribe<AbilityEvents.Removed>(OnAbilityRemovedEvt);
+        _featureEnabledSubscription = _subscribedEntity.Events.Subscribe<FeatureEvents.Enabled>(OnFeatureEnabled);
+        _featureDisabledSubscription = _subscribedEntity.Events.Subscribe<FeatureEvents.Disabled>(OnFeatureDisabled);
     }
 
     /// <summary>
@@ -382,21 +382,21 @@ public partial class AbilityTestModule : TestModuleBase
             return;
         }
 
-        _subscribedEntity.Events.Off<GameEventType.Ability.AddedEventData>(
-            GameEventType.Ability.Added, OnAbilityChanged);
-        _subscribedEntity.Events.Off<GameEventType.Ability.RemovedEventData>(
-            GameEventType.Ability.Removed, OnAbilityRemovedEvt);
-        _subscribedEntity.Events.Off<GameEventType.Feature.EnabledEventData>(
-            GameEventType.Feature.Enabled, OnFeatureEnabled);
-        _subscribedEntity.Events.Off<GameEventType.Feature.DisabledEventData>(
-            GameEventType.Feature.Disabled, OnFeatureDisabled);
+        _abilityAddedSubscription?.Dispose();
+        _abilityRemovedSubscription?.Dispose();
+        _featureEnabledSubscription?.Dispose();
+        _featureDisabledSubscription?.Dispose();
+        _abilityAddedSubscription = null;
+        _abilityRemovedSubscription = null;
+        _featureEnabledSubscription = null;
+        _featureDisabledSubscription = null;
         _subscribedEntity = null;
     }
 
     /// <summary>
     /// 技能新增后的统一刷新回调。
     /// </summary>
-    private void OnAbilityChanged(GameEventType.Ability.AddedEventData _)
+    private void OnAbilityChanged(AbilityEvents.Added _)
     {
         if (CanRefresh)
         {
@@ -407,7 +407,7 @@ public partial class AbilityTestModule : TestModuleBase
     /// <summary>
     /// 技能移除后的统一刷新回调。
     /// </summary>
-    private void OnAbilityRemovedEvt(GameEventType.Ability.RemovedEventData _)
+    private void OnAbilityRemovedEvt(AbilityEvents.Removed _)
     {
         if (CanRefresh)
         {
@@ -418,7 +418,7 @@ public partial class AbilityTestModule : TestModuleBase
     /// <summary>
     /// 技能启停状态变化后的刷新回调。
     /// </summary>
-    private void OnFeatureEnabled(GameEventType.Feature.EnabledEventData evt)
+    private void OnFeatureEnabled(FeatureEvents.Enabled evt)
     {
         RequestOwnedItemPatch(evt.Feature);
     }
@@ -426,7 +426,7 @@ public partial class AbilityTestModule : TestModuleBase
     /// <summary>
     /// 技能禁用后的刷新回调。
     /// </summary>
-    private void OnFeatureDisabled(GameEventType.Feature.DisabledEventData evt)
+    private void OnFeatureDisabled(FeatureEvents.Disabled evt)
     {
         RequestOwnedItemPatch(evt.Feature);
     }
@@ -441,7 +441,7 @@ public partial class AbilityTestModule : TestModuleBase
             return;
         }
 
-        var abilityId = feature.Data.Get<string>(DataKey.Id.Key);
+        var abilityId = feature.Data.Get(DataKey.Id);
         if (string.IsNullOrWhiteSpace(abilityId))
         {
             RequestStructureRefresh(rebuildAvailable: false, rebuildCurrent: true);

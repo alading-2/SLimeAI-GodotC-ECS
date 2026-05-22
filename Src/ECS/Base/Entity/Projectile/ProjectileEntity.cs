@@ -24,7 +24,7 @@ public partial class ProjectileEntity : Area2D, IEntity, IPoolable
     public Data Data { get; private set; }
 
     /// <summary>实体局部事件总线</summary>
-    public EventBus Events { get; } = new EventBus();
+    public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
 
     // ================= 构造函数 =================
 

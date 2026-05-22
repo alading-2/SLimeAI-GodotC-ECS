@@ -153,9 +153,7 @@ public static class EntityRelationshipManager
         GetOrCreateSet(_typeIndex, relationType).Add(relationshipId);
 
         // 广播关系添加事件
-        GlobalEventBus.Global.Emit(
-            GameEventType.Global.RelationshipAdded,
-            new GameEventType.Global.RelationshipAddedEventData(
+        WorldEvents.World.Publish(new GlobalEvents.RelationshipAdded(
                 parentId, // 父实体Id
                 childId, // 子实体Id
                 relationType // 关系类型
@@ -190,9 +188,7 @@ public static class EntityRelationshipManager
         CleanupEmptySet(_typeIndex, relationType);
 
         // 广播关系移除事件
-        GlobalEventBus.Global.Emit(
-            GameEventType.Global.RelationshipRemoved,
-            new GameEventType.Global.RelationshipRemovedEventData(
+        WorldEvents.World.Publish(new GlobalEvents.RelationshipRemoved(
                 parentId, // 父实体Id
                 childId, // 子实体Id
                 relationType // 关系类型

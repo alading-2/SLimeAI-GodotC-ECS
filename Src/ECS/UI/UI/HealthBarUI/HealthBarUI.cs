@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.Runtime.CompilerServices;
 
 /// <summary>
@@ -15,8 +16,11 @@ public partial class HealthBarUI : UIBase, IPoolable
 {
     // 静态日志（用于系统级事件监听）
     private static readonly Log _log = new("HealthBarUI", LogLevel.Debug);
+    private static IDisposable? _entitySpawnedSubscription;
+    private static IDisposable? _entityDestroyedSubscription;
 
     private ProgressBar _healthBar = null!;
+    private IDisposable? _healthChangedSubscription;
 
     // 平滑插值参数
     private float _displayedHpPercent;
@@ -27,17 +31,8 @@ public partial class HealthBarUI : UIBase, IPoolable
     {
         _log.Info("[ModuleInitializer] HealthBarUI.Initialize() 开始执行");
 
-        // 订阅全局实体生成事件
-        GlobalEventBus.Global.On<GameEventType.Global.EntitySpawnedEventData>(
-            GameEventType.Global.EntitySpawned,
-            OnUnitCreated
-        );
-
-        // 订阅全局单位销毁事件
-        GlobalEventBus.Global.On<GameEventType.Global.EntityDestroyedEventData>(
-            GameEventType.Global.EntityDestroyed,
-            OnUnitDestroyed
-        );
+        _entitySpawnedSubscription ??= WorldEvents.World.Subscribe<GlobalEvents.EntitySpawned>(OnUnitCreated);
+        _entityDestroyedSubscription ??= WorldEvents.World.Subscribe<GlobalEvents.EntityDestroyed>(OnUnitDestroyed);
 
         _log.Info("[ModuleInitializer] HealthBarUI 全局事件监听已初始化完成");
     }
@@ -96,7 +91,7 @@ public partial class HealthBarUI : UIBase, IPoolable
     /// <summary>
     /// 单位创建事件处理：自动为新单位绑定血条
     /// </summary>
-    private static void OnUnitCreated(GameEventType.Global.EntitySpawnedEventData evt)
+    private static void OnUnitCreated(GlobalEvents.EntitySpawned evt)
     {
         var entity = evt.Entity;
         var entityTypeName = entity.GetType().Name;
@@ -141,7 +136,7 @@ public partial class HealthBarUI : UIBase, IPoolable
     /// <summary>
     /// 单位销毁事件处理：自动解绑并回收血条
     /// </summary>
-    private static void OnUnitDestroyed(GameEventType.Global.EntityDestroyedEventData evt)
+    private static void OnUnitDestroyed(GlobalEvents.EntityDestroyed evt)
     {
         // 解绑所有 UI（包括血条）
         UIManager.UnbindAllUI(evt.Entity);
@@ -153,11 +148,7 @@ public partial class HealthBarUI : UIBase, IPoolable
 
     protected override void OnBind()
     {
-        // 订阅HP变化事件
-        _entity!.Events.On<GameEventType.Data.HealthChangedEventData>(
-            GameEventType.Data.HealthChanged,
-            OnHealthChanged
-        );
+        _healthChangedSubscription = _entity!.Events.Subscribe<DataEvents.HealthChanged>(OnHealthChanged);
 
         // 如果节点还未就绪（_healthBar 为空），ApplyInitialState 将在 _Ready 中被调用
         // 如果节点已就绪（对象池复用），则手动调用
@@ -169,7 +160,8 @@ public partial class HealthBarUI : UIBase, IPoolable
 
     protected override void OnUnbind()
     {
-        // EventBus会自动清理订阅，这里可选
+        _healthChangedSubscription?.Dispose();
+        _healthChangedSubscription = null;
         // 隐藏UI
         Visible = false;
     }
@@ -205,7 +197,7 @@ public partial class HealthBarUI : UIBase, IPoolable
     // 事件处理
     // ============================================================
 
-    private void OnHealthChanged(GameEventType.Data.HealthChangedEventData evt)
+    private void OnHealthChanged(DataEvents.HealthChanged evt)
     {
         UpdateHealthBar();
     }

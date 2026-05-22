@@ -1,4 +1,5 @@
 using Godot;
+using slime.data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -200,8 +201,19 @@ public static partial class EntityManager
         string id = entity.GetInstanceId().ToString();
         entity.Data.Set(DataKey.Id, id);
 
-        // 2. 数据注入 (从 Resource)
-        entity.Data.LoadFromConfig(config.Config);
+        // 2. 数据注入：DataOS DTO 走 typed snapshot apply，非 DataOS 临时 config 保留反射 fallback。
+        if (RuntimeDataSnapshot.TryApplyConfigToData(config.Config, entity.Data, out var applyReport))
+        {
+            if (!applyReport.Success)
+            {
+                var message = string.Join("; ", applyReport.Errors.Select(error => $"{error.Code}:{error.Key ?? "-"}"));
+                throw new InvalidOperationException($"DataOS typed snapshot apply failed for {typeof(T).Name}: {message}");
+            }
+        }
+        else
+        {
+            entity.Data.LoadFromConfig(config.Config);
+        }
 
         // 3. 自动加载 VisualScene (如有)
         InjectVisualScene(
@@ -250,8 +262,7 @@ public static partial class EntityManager
             }
         }
 
-        GlobalEventBus.Global.Emit(GameEventType.Global.EntitySpawned,
-            new GameEventType.Global.EntitySpawnedEventData(entity));
+        WorldEvents.World.Publish(new GlobalEvents.EntitySpawned(entity));
 
         return entity;
     }
@@ -287,14 +298,22 @@ public static partial class EntityManager
         // 显式覆盖优先，其次回退到配置对象上的 VisualScenePath 字符串路径。
         if (scene == null)
         {
+            string path = entity is IEntity iEntity ? iEntity.Data.Get(DataKey.VisualScenePath) : string.Empty;
+            if (!string.IsNullOrEmpty(path))
+            {
+                scene = CommonTool.LoadPackedScene(
+                    path, // res:// 场景路径
+                    $"{entity.Name} 视觉"); // 日志用途名称
+            }
+
             var prop = config.GetType().GetProperty(DataKey.VisualScenePath);
             if (prop != null)
             {
                 var value = prop.GetValue(config);
-                if (value is string path && !string.IsNullOrEmpty(path))
+                if (scene == null && value is string fallbackPath && !string.IsNullOrEmpty(fallbackPath))
                 {
                     scene = CommonTool.LoadPackedScene(
-                        path, // res:// 场景路径
+                        fallbackPath, // res:// 场景路径
                         $"{entity.Name} 视觉"); // 日志用途名称
                 }
             }
@@ -367,7 +386,10 @@ public static partial class EntityManager
         if (entity is IEntity iEntity)
         {
             // 清空事件
-            iEntity.Events.Clear();
+            if (iEntity.Events is EntityEventBus entityEvents)
+            {
+                entityEvents.Clear();
+            }
             // 清空数据
             iEntity.Data.Clear();
         }
@@ -458,8 +480,7 @@ public static partial class EntityManager
         if (entity is IEntity iEntity)
         {
             // 通用 Entity 销毁事件（所有 IEntity）
-            GlobalEventBus.Global.Emit(GameEventType.Global.EntityDestroyed,
-                new GameEventType.Global.EntityDestroyedEventData(iEntity));
+            WorldEvents.World.Publish(new GlobalEvents.EntityDestroyed(iEntity));
         }
 
         // 1. 注销（内部已清理 Component、关系、Data、Events）

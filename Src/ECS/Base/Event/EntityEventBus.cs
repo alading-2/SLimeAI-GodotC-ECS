@@ -68,6 +68,16 @@ public sealed class EntityEventBus : IEventBus
         _observation.ExportTo(BusName, NormalizePath(path));
     }
 
+    /// <summary>
+    /// 实体释放时清空所有订阅，避免池化实体保留旧回调。
+    /// 常规退订仍应优先使用 Subscribe 返回的 IDisposable。
+    /// </summary>
+    public void Clear()
+    {
+        _subscriptions.Clear();
+        _dispatchingTypes.Clear();
+    }
+
     private bool DispatchLocal<T>(Type eventType, in T @event) where T : struct, IEvent
     {
         _observation.RecordPublish(eventType);

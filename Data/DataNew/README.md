@@ -20,6 +20,7 @@ var chain = ChainAbilityData.ChainLightning;
 ```
 
 Entity 生成时仍然可以把 DTO 传给 `EntitySpawnConfig.Config`，`Data.LoadFromConfig(object config)` 会把公开属性注入到运行时 `Data` 容器。
+当前主路径已经改为 typed snapshot apply；`LoadFromConfig(object config)` 仅保留给非 DataOS runtime config 的迁移 fallback。
 
 ## authoring 位置
 

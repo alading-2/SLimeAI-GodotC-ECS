@@ -7,7 +7,7 @@ using Godot;
 public partial class VisualPreviewEntity : Node2D, IEntity
 {
     public Data Data { get; private set; }
-    public EventBus Events { get; } = new EventBus();
+    public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
 
     public VisualPreviewEntity()
     {

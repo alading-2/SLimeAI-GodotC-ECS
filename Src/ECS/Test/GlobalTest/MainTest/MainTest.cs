@@ -20,7 +20,7 @@ public partial class MainTest : Node
     private async void ExecuteTestScenario()
     {
         await WaitForSystemBootstrapAsync();
-        GlobalEventBus.TriggerGameStart();
+        WorldEvents.World.Publish(new GlobalEvents.GameStart());
 
         _log.Info("=== 开始测试: 主动技能输入系统 ===");
         _log.Info("操作说明:");

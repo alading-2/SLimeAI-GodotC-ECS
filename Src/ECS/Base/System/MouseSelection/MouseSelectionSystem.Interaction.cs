@@ -103,9 +103,7 @@ public partial class MouseSelectionSystem
         _isDragging = true;
         var screenRect = CreateRect(_startScreenPosition, motionEvent.Position);
         UpdateSelectionBoxUi(screenRect);
-        GlobalEventBus.Global.Emit(
-            GameEventType.Global.MouseSelectionPreviewUpdated,
-            new GameEventType.Global.MouseSelectionPreviewUpdatedEventData(
+        WorldEvents.World.Publish(new GlobalEvents.MouseSelectionPreviewUpdated(
                 _startScreenPosition, // 拖拽起点屏幕坐标
                 motionEvent.Position, // 当前屏幕坐标
                 screenRect // 当前屏幕框选矩形
@@ -153,7 +151,9 @@ public partial class MouseSelectionSystem
         {
             // 如果物理拾取失败，再按距离在全局实体列表中找最近目标，保证调试选择对纯视觉实体也可用。
             entity = FindEntityByDistance(worldPosition, DefaultMaxDistance);
-            hitKind = entity == null ? GameEventType.Global.MouseSelectionHitKind.None : GameEventType.Global.MouseSelectionHitKind.DistanceFallback;
+            hitKind = entity == null
+                ? GlobalEvents.MouseSelectionHitKind.None
+                : GlobalEvents.MouseSelectionHitKind.DistanceFallback;
         }
 
         // 仍然没有任何目标，则广播未命中事件，让业务方决定是否取消高亮或保持原状态。
@@ -163,7 +163,7 @@ public partial class MouseSelectionSystem
                 screenPosition, // 屏幕位置
                 worldPosition, // 世界位置
                 screenRect, // 选择矩形
-                GameEventType.Global.MouseSelectionInteractionKind.Click // 单击交互
+                GlobalEvents.MouseSelectionInteractionKind.Click // 单击交互
             );
             return;
         }
@@ -177,7 +177,7 @@ public partial class MouseSelectionSystem
             worldPosition, // 世界位置
             screenRect, // 选择矩形
             hitKind, // 命中来源
-            GameEventType.Global.MouseSelectionInteractionKind.Click // 单击交互
+            GlobalEvents.MouseSelectionInteractionKind.Click // 单击交互
         );
     }
 
@@ -197,7 +197,7 @@ public partial class MouseSelectionSystem
                 screenPosition, // 屏幕位置
                 worldPosition, // 世界位置
                 screenRect, // 选择矩形
-                GameEventType.Global.MouseSelectionInteractionKind.Box // 框选交互
+                GlobalEvents.MouseSelectionInteractionKind.Box // 框选交互
             );
             return;
         }
@@ -223,8 +223,8 @@ public partial class MouseSelectionSystem
             screenPosition, // 屏幕位置
             worldPosition, // 世界位置
             screenRect, // 选择矩形
-            GameEventType.Global.MouseSelectionHitKind.BoxRect, // 命中来源
-            GameEventType.Global.MouseSelectionInteractionKind.Box // 框选交互
+            GlobalEvents.MouseSelectionHitKind.BoxRect, // 命中来源
+            GlobalEvents.MouseSelectionInteractionKind.Box // 框选交互
         );
     }
 
@@ -238,16 +238,14 @@ public partial class MouseSelectionSystem
         Vector2 screenPosition,
         Vector2 worldPosition,
         Rect2 screenRect,
-        GameEventType.Global.MouseSelectionHitKind hitKind,
-        GameEventType.Global.MouseSelectionInteractionKind interactionKind)
+        GlobalEvents.MouseSelectionHitKind hitKind,
+        GlobalEvents.MouseSelectionInteractionKind interactionKind)
     {
         // 在广播结果前先清空鼠标交互状态，避免事件回调里再次进入脏状态。
         ResetPointerState();
 
         // 统一广播成功事件：业务层只关心命中的实体集合、主目标和命中来源即可。
-        GlobalEventBus.Global.Emit(
-            GameEventType.Global.MouseSelectionCompleted,
-            new GameEventType.Global.MouseSelectionCompletedEventData(
+        WorldEvents.World.Publish(new GlobalEvents.MouseSelectionCompleted(
                 entities, // 命中的实体集合
                 primaryEntity, // 默认主目标
                 screenPosition, // 完成时的屏幕坐标
@@ -270,15 +268,13 @@ public partial class MouseSelectionSystem
         Vector2 screenPosition,
         Vector2 worldPosition,
         Rect2 screenRect,
-        GameEventType.Global.MouseSelectionInteractionKind interactionKind)
+        GlobalEvents.MouseSelectionInteractionKind interactionKind)
     {
         // 未命中也要清空鼠标交互状态，由监听方决定是否保持现有选择。
         ResetPointerState();
 
         // 广播未命中事件，由上层决定是关闭选择模式、保持当前选择，还是播放提示反馈。
-        GlobalEventBus.Global.Emit(
-            GameEventType.Global.MouseSelectionMissed,
-            new GameEventType.Global.MouseSelectionMissedEventData(
+        WorldEvents.World.Publish(new GlobalEvents.MouseSelectionMissed(
                 screenPosition, // 未命中时的屏幕坐标
                 worldPosition, // 未命中时的世界坐标
                 screenRect, // 本次点击或框选的屏幕矩形
@@ -333,7 +329,7 @@ public partial class MouseSelectionSystem
     private static string GetEntityStableId(IEntity entity)
     {
         // 优先使用 Data 中的业务 Id，保证排序在跨运行期或重复实例下也更稳定。
-        var id = entity.Data.Get<string>(DataKey.Id.Key);
+        var id = entity.Data.Get(DataKey.Id);
         if (!string.IsNullOrEmpty(id))
         {
             return id;

@@ -16,7 +16,7 @@ public partial class AbilityEntity : Node, IEntity, IPoolable
     // ================= IEntity 实现 =================
 
     public Data Data { get; private set; }
-    public EventBus Events { get; } = new EventBus();
+    public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
     // EntityId 由 IEntity 默认实现（从 DataKey.Id 读取）
 
     // ================= 构造函数 =================

@@ -89,9 +89,8 @@ internal class BezierShotExecutor : AbilityFeatureHandler
             );
             if (projectile == null) continue;
 
-            projectile.Events.Emit(
-                GameEventType.Unit.MovementStarted, // 开始移动事件
-                new GameEventType.Unit.MovementStartedEventData(
+            projectile.Events.Publish(
+                new UnitEvents.MovementStarted(
                     MoveMode.BezierCurve, // 移动模式：贝塞尔曲线
                     new MovementParams
                     {

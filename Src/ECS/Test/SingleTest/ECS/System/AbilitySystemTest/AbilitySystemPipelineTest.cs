@@ -31,8 +31,41 @@ public partial class AbilitySystemPipelineTest : Node
             Fail($"测试过程中发生异常: {ex}");
         }
 
+        var passed = _failedCount == 0;
+        SceneTestArtifact.Write(
+            "AbilitySystemPipelineTest",
+            passed,
+            _passedCount,
+            _failedCount,
+            [
+                "manual CastContext with owner and ability entities",
+                "CostComponent, FeatureHandler and movement handler reflection test doubles"
+            ],
+            [
+                "AbilitySystem.TryTriggerAbility returns TriggerResult directly",
+                "cost is consumed through CostComponent method calls",
+                "feature handlers receive CastContext through FeatureContext.ActivationData",
+                "target-point helper regressions keep expected movement semantics"
+            ],
+            [
+                "all in-scene assertions pass",
+                "Godot process exits with code 0",
+                "scene-artifact.json status is pass"
+            ],
+            [
+                "any Ability pipeline assertion fails",
+                "Godot process exits non-zero",
+                "scene-artifact.json is missing or status is fail"
+            ],
+            [
+                "direct-trigger-result",
+                "cost-component-method-flow",
+                "feature-handler-cast-context",
+                "movement-target-regressions"
+            ]);
+
         _log.Info($"AbilitySystem 流水线测试结束: PASS={_passedCount}, FAIL={_failedCount}");
-        GetTree().Quit(_failedCount == 0 ? 0 : 1);
+        GetTree().Quit(passed ? 0 : 1);
     }
 
     /// <summary>
@@ -73,7 +106,7 @@ public partial class AbilitySystemPipelineTest : Node
 
         var ownerId = owner.GetInstanceId().ToString();
         owner.Data.Set(DataKey.Id, ownerId);
-        owner.Data.Set(DataKey.Name, owner.Name);
+        owner.Data.Set(DataKey.Name, owner.Name.ToString());
         owner.Data.Set(DataKey.CurrentMana, 50f);
 
         var abilityId = ability.GetInstanceId().ToString();
@@ -99,28 +132,16 @@ public partial class AbilitySystemPipelineTest : Node
 
         var costComponent = new CostComponent();
         EntityManager.AddComponent(ability, costComponent);
-        ability.Events.On<GameEventType.Ability.TryTriggerEventData>(
-            GameEventType.Ability.TryTrigger,
-            AbilitySystem.HandleTryTrigger
-        );
 
         AbilitySystemPipelineTestHandler.ExecuteCount = 0;
 
         var context = new CastContext
         {
             Ability = ability,
-            Caster = owner,
-            ResponseContext = new EventContext()
+            Caster = owner
         };
 
-        ability.Events.Emit(
-            GameEventType.Ability.TryTrigger,
-            new GameEventType.Ability.TryTriggerEventData(context) //触发上下文
-        );
-
-        var result = context.ResponseContext?.HasResult == true
-            ? context.ResponseContext.GetResult<TriggerResult>()
-            : TriggerResult.Failed;
+        var result = AbilitySystem.TryTriggerAbility(context);
 
         AssertEqual(
             "Entity 目标技能应允许 Handler 自行处理而不是被系统提前拦截",
@@ -162,9 +183,8 @@ public partial class AbilitySystemPipelineTest : Node
 
         var ownerId = owner.GetInstanceId().ToString();
         owner.Data.Set(DataKey.Id, ownerId);
-        owner.Data.Set(DataKey.Name, owner.Name);
+        owner.Data.Set(DataKey.Name, owner.Name.ToString());
         owner.Data.Set(DataKey.CurrentMana, 30f);
-        owner.Data.Set(DataKey.AbilityDamageBonus, 150f);
 
         var abilityId = ability.GetInstanceId().ToString();
         ability.Data.Set(DataKey.Id, abilityId);
@@ -179,6 +199,7 @@ public partial class AbilitySystemPipelineTest : Node
         ability.Data.Set(DataKey.AbilityCostAmount, 5f);
         ability.Data.Set(DataKey.IsAbilityUsesCharges, false);
         ability.Data.Set(DataKey.AbilityDamage, 20f);
+        ability.Data.Set(DataKey.AbilityDamageBonus, 50f);
 
         EntityManager.Register(owner);
         EntityManager.Register(ability);
@@ -190,10 +211,6 @@ public partial class AbilitySystemPipelineTest : Node
 
         var costComponent = new CostComponent();
         EntityManager.AddComponent(ability, costComponent);
-        ability.Events.On<GameEventType.Ability.TryTriggerEventData>(
-            GameEventType.Ability.TryTrigger,
-            AbilitySystem.HandleTryTrigger
-        );
 
         AbilityToolPipelineTestHandler.ExecuteCount = 0;
         AbilityToolPipelineTestHandler.finalDamage = 0f;
@@ -202,18 +219,10 @@ public partial class AbilitySystemPipelineTest : Node
         var context = new CastContext
         {
             Ability = ability,
-            Caster = owner,
-            ResponseContext = new EventContext()
+            Caster = owner
         };
 
-        ability.Events.Emit(
-            GameEventType.Ability.TryTrigger,
-            new GameEventType.Ability.TryTriggerEventData(context) //触发上下文
-        );
-
-        var result = context.ResponseContext?.HasResult == true
-            ? context.ResponseContext.GetResult<TriggerResult>()
-            : TriggerResult.Failed;
+        var result = AbilitySystem.TryTriggerAbility(context);
 
         AssertEqual(
             "AbilityTool Handler 应能正常通过流水线执行",
@@ -513,7 +522,7 @@ internal sealed class AbilityToolPipelineTestHandler : AbilityFeatureHandler
 /// </summary>
 internal partial class AbilityToolPipelineTestCaster : Node2D, IEntity
 {
-    public EventBus Events { get; } = new EventBus();
+    public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
     public Data Data { get; } = new();
 }
 
@@ -522,6 +531,6 @@ internal partial class AbilityToolPipelineTestCaster : Node2D, IEntity
 /// </summary>
 internal partial class AbilityPipelineTargetPointTestEntity : Node2D, IEntity
 {
-    public EventBus Events { get; } = new EventBus();
+    public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
     public Data Data { get; } = new();
 }

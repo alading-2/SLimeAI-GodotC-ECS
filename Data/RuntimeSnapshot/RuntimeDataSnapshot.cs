@@ -20,7 +20,7 @@ public static class RuntimeDataSnapshot
     public const string SnapshotPath = "res://DataOS/Snapshots/runtime_snapshot.json";
 
     private static readonly object LockObject = new();
-    private static SnapshotDocument? _snapshot;
+    private static RuntimeTypedSnapshotDocument? _snapshot;
 
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
@@ -30,12 +30,18 @@ public static class RuntimeDataSnapshot
     private static readonly Dictionary<string, Type> TableTypes = new(StringComparer.Ordinal)
     {
         ["PlayerData"] = typeof(PlayerData),
+        ["unit.player"] = typeof(PlayerData),
         ["EnemyData"] = typeof(EnemyData),
+        ["unit.enemy"] = typeof(EnemyData),
         ["TargetingIndicatorData"] = typeof(TargetingIndicatorData),
+        ["unit.targeting_indicator"] = typeof(TargetingIndicatorData),
         ["AbilityData"] = typeof(AbilityData),
         ["ChainAbilityData"] = typeof(ChainAbilityData),
+        ["ability"] = typeof(AbilityData),
         ["SystemData"] = typeof(SystemData),
+        ["system.config"] = typeof(SystemData),
         ["SystemPresetData"] = typeof(SystemPresetData),
+        ["system.preset"] = typeof(SystemPresetData),
     };
 
     /// <summary>
@@ -79,6 +85,142 @@ public static class RuntimeDataSnapshot
     }
 
     /// <summary>
+    /// 解析测试/验证场景使用的 typed snapshot 文本。
+    /// </summary>
+    public static RuntimeTypedSnapshotDocument ParseTypedSnapshot(string jsonText)
+    {
+        if (string.IsNullOrWhiteSpace(jsonText))
+        {
+            throw new InvalidOperationException("Runtime Data typed snapshot 为空");
+        }
+
+        var parsed = Json.ParseString(jsonText);
+        if (parsed.VariantType == Variant.Type.Nil)
+        {
+            throw new InvalidOperationException("Runtime Data typed snapshot JSON 无效");
+        }
+
+        return JsonSerializer.Deserialize<RuntimeTypedSnapshotDocument>(jsonText, SerializerOptions)
+            ?? throw new InvalidOperationException("Runtime Data typed snapshot 反序列化失败");
+    }
+
+    /// <summary>
+    /// 将 typed snapshot 中指定 record 应用到 Data 容器。
+    /// </summary>
+    public static DataApplyReport ApplyRecordToData(
+        RuntimeTypedSnapshotDocument document,
+        string table,
+        string id,
+        Data data)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(data);
+
+        var report = new DataApplyReport();
+        var descriptors = document.Descriptors.ToDictionary(GetDescriptorKey, StringComparer.Ordinal);
+        var record = document.Records.FirstOrDefault(candidate =>
+            string.Equals(candidate.Table, table, StringComparison.Ordinal)
+            && string.Equals(candidate.Id, id, StringComparison.Ordinal));
+
+        if (record == null)
+        {
+            report.AddError("snapshot.record_missing", $"Snapshot record not found: table={table}, id={id}");
+            return report;
+        }
+
+        foreach (var resource in document.Resources)
+        {
+            if (!string.Equals(resource.OwnerCapability, "shared", StringComparison.Ordinal)
+                && !document.Manifest.EnabledCapabilities.Contains(resource.OwnerCapability, StringComparer.Ordinal))
+            {
+                report.AddError(
+                    "snapshot.resource_disabled_capability",
+                    $"Resource owner capability is disabled: {resource.OwnerCapability}",
+                    resource.Key);
+            }
+        }
+
+        foreach (var field in record.Fields)
+        {
+            var key = field.Key;
+            var value = field.Value;
+
+            if (!data.Catalog.TryResolve(key, out var dataKey))
+            {
+                report.AddError("snapshot.unknown_key", $"Unknown DataKey: {key}", key);
+                continue;
+            }
+
+            if (!descriptors.TryGetValue(key, out var descriptor))
+            {
+                report.AddError("snapshot.missing_descriptor", $"Missing descriptor for DataKey: {key}", key);
+                continue;
+            }
+
+            var descriptorType = GetDescriptorType(descriptor);
+            if (!SnapshotTypeMatches(dataKey.ValueType, descriptorType))
+            {
+                report.AddError("snapshot.descriptor_type_drift", $"Snapshot descriptor type drift: {key}", key);
+                continue;
+            }
+
+            if (!string.Equals(value.Type, descriptorType, StringComparison.Ordinal))
+            {
+                report.AddError("snapshot.field_type_mismatch", $"Snapshot field type mismatch: {key}", key);
+                continue;
+            }
+
+            if (!SnapshotDefaultMatches(dataKey, descriptor.DefaultValue))
+            {
+                report.AddError("snapshot.default_drift", $"Snapshot descriptor default drift: {key}", key);
+                continue;
+            }
+
+            if (!TryConvertSnapshotValue(value.Value, dataKey.ValueType, out var converted))
+            {
+                report.AddError("snapshot.wrong_type", $"Snapshot field value type mismatch: {key}", key);
+                continue;
+            }
+
+            data.SetUntyped(dataKey, converted);
+        }
+
+        return report;
+    }
+
+    /// <summary>
+    /// 按 DataOS DTO 的 Name 从当前 snapshot 找到 typed record 并应用到 Data。
+    /// <para>返回 false 表示该 config 不是 snapshot-backed DTO，调用方可走迁移 fallback。</para>
+    /// </summary>
+    public static bool TryApplyConfigToData(object config, Data data, out DataApplyReport report)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+        ArgumentNullException.ThrowIfNull(data);
+
+        report = new DataApplyReport();
+        if (!TryResolveConfigRecord(config, out var table, out var legacyTable, out var recordName))
+        {
+            return false;
+        }
+
+        var snapshot = EnsureSnapshot();
+        var record = snapshot.Records.FirstOrDefault(candidate =>
+            string.Equals(candidate.Table, table, StringComparison.Ordinal)
+            && string.Equals(candidate.Name, recordName, StringComparison.Ordinal)
+            && (string.IsNullOrWhiteSpace(legacyTable)
+                || string.Equals(candidate.LegacyTable, legacyTable, StringComparison.Ordinal)));
+
+        if (record == null)
+        {
+            report.AddError("snapshot.record_missing", $"Snapshot record not found: table={table}, name={recordName}");
+            return true;
+        }
+
+        report = ApplyRecordToData(snapshot, record.Table, record.Id, data);
+        return true;
+    }
+
+    /// <summary>
     /// 清理缓存，供测试或重新生成 snapshot 后刷新。
     /// </summary>
     public static void ClearCache()
@@ -89,7 +231,7 @@ public static class RuntimeDataSnapshot
         }
     }
 
-    private static SnapshotDocument EnsureSnapshot()
+    private static RuntimeTypedSnapshotDocument EnsureSnapshot()
     {
         if (_snapshot != null)
         {
@@ -103,7 +245,7 @@ public static class RuntimeDataSnapshot
         }
     }
 
-    private static SnapshotDocument LoadSnapshot()
+    private static RuntimeTypedSnapshotDocument LoadSnapshot()
     {
         if (!Godot.FileAccess.FileExists(SnapshotPath))
         {
@@ -128,8 +270,17 @@ public static class RuntimeDataSnapshot
             throw new InvalidOperationException($"DataOS runtime snapshot JSON 无效: {SnapshotPath}");
         }
 
-        var snapshot = JsonSerializer.Deserialize<SnapshotDocument>(jsonText, SerializerOptions)
-            ?? throw new InvalidOperationException($"DataOS runtime snapshot 反序列化失败: {SnapshotPath}");
+        var snapshot = ParseTypedSnapshot(jsonText);
+
+        if (snapshot.Manifest == null)
+        {
+            throw new InvalidOperationException($"DataOS runtime snapshot 缺少 manifest: {SnapshotPath}");
+        }
+
+        if (snapshot.Descriptors.Count == 0)
+        {
+            throw new InvalidOperationException($"DataOS runtime snapshot 缺少 descriptors: {SnapshotPath}");
+        }
 
         if (snapshot.Records.Count == 0)
         {
@@ -139,17 +290,73 @@ public static class RuntimeDataSnapshot
         return snapshot;
     }
 
-    private static Type ResolveConcreteType(RuntimeDataRecord record)
+    private static RuntimeTypedSnapshotDocument ParseLegacySnapshot(string jsonText)
     {
-        if (!TableTypes.TryGetValue(record.Table, out var concreteType))
+        var snapshot = JsonSerializer.Deserialize<RuntimeTypedSnapshotDocument>(jsonText, SerializerOptions)
+            ?? throw new InvalidOperationException($"DataOS runtime snapshot 反序列化失败: {SnapshotPath}");
+
+        return snapshot;
+    }
+
+    private static Type ResolveConcreteType(RuntimeTypedSnapshotRecord record)
+    {
+        var table = string.IsNullOrWhiteSpace(record.LegacyTable) ? record.Table : record.LegacyTable;
+        if (!TableTypes.TryGetValue(table, out var concreteType))
         {
             throw new InvalidOperationException($"DataOS runtime snapshot 存在未知表: table={record.Table}, id={record.Id}");
+        }
+
+        if (table == "ability" && record.Fields.ContainsKey(DataKey.AbilityChainCount.Key))
+        {
+            return typeof(ChainAbilityData);
         }
 
         return concreteType;
     }
 
-    private static void ApplyRecordData(object instance, RuntimeDataRecord record)
+    private static bool TryResolveConfigRecord(object config, out string table, out string legacyTable, out string recordName)
+    {
+        table = string.Empty;
+        legacyTable = string.Empty;
+        recordName = string.Empty;
+
+        var configType = config.GetType();
+        if (configType == typeof(PlayerData))
+        {
+            table = "unit.player";
+            legacyTable = "PlayerData";
+        }
+        else if (configType == typeof(EnemyData))
+        {
+            table = "unit.enemy";
+            legacyTable = "EnemyData";
+        }
+        else if (configType == typeof(TargetingIndicatorData))
+        {
+            table = "unit.targeting_indicator";
+            legacyTable = "TargetingIndicatorData";
+        }
+        else if (configType == typeof(ChainAbilityData))
+        {
+            table = "ability";
+            legacyTable = "ChainAbilityData";
+        }
+        else if (configType == typeof(AbilityData))
+        {
+            table = "ability";
+            legacyTable = "AbilityData";
+        }
+        else
+        {
+            return false;
+        }
+
+        var nameProperty = configType.GetProperty(DataKey.Name, BindingFlags.Public | BindingFlags.Instance);
+        recordName = nameProperty?.GetValue(config) as string ?? string.Empty;
+        return !string.IsNullOrWhiteSpace(recordName);
+    }
+
+    private static void ApplyRecordData(object instance, RuntimeTypedSnapshotRecord record)
     {
         foreach (var property in instance.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
         {
@@ -158,19 +365,21 @@ public static class RuntimeDataSnapshot
                 continue;
             }
 
-            if (!record.Data.TryGetProperty(property.Name, out var valueElement))
+            var fieldKey = ResolveFieldKey(property);
+            var valueElement = ResolveRecordValue(record, property.Name, fieldKey);
+            if (valueElement == null)
             {
                 continue;
             }
 
-            if (valueElement.ValueKind == JsonValueKind.Null)
+            if (valueElement.Value.ValueKind == JsonValueKind.Null)
             {
                 continue;
             }
 
             try
             {
-                var value = ConvertJsonValue(valueElement, property.PropertyType);
+                var value = ConvertJsonValue(valueElement.Value, property.PropertyType);
                 property.SetValue(instance, value);
             }
             catch (Exception ex)
@@ -180,6 +389,43 @@ public static class RuntimeDataSnapshot
                     ex);
             }
         }
+    }
+
+    private static string ResolveFieldKey(PropertyInfo property)
+    {
+        var attr = property.GetCustomAttribute<DataKeyAttribute>();
+        return attr?.Key ?? property.Name;
+    }
+
+    private static JsonElement? ResolveRecordValue(RuntimeTypedSnapshotRecord record, string propertyName, string fieldKey)
+    {
+        if (record.LegacyData.ValueKind == JsonValueKind.Object
+            && record.LegacyData.TryGetProperty(propertyName, out var legacyValue))
+        {
+            return legacyValue;
+        }
+
+        if (record.Fields.TryGetValue(fieldKey, out var field))
+        {
+            return field.Value;
+        }
+
+        if (record.Fields.TryGetValue(propertyName, out var propertyField))
+        {
+            return propertyField.Value;
+        }
+
+        return null;
+    }
+
+    private static string GetDescriptorKey(RuntimeTypedSnapshotDescriptor descriptor)
+    {
+        return string.IsNullOrWhiteSpace(descriptor.StableKey) ? descriptor.Key : descriptor.StableKey;
+    }
+
+    private static string GetDescriptorType(RuntimeTypedSnapshotDescriptor descriptor)
+    {
+        return string.IsNullOrWhiteSpace(descriptor.ValueType) ? descriptor.Type : descriptor.ValueType;
     }
 
     private static object? ConvertJsonValue(JsonElement element, Type targetType)
@@ -291,14 +537,97 @@ public static class RuntimeDataSnapshot
         return text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
-    private sealed record SnapshotDocument(
-        [property: JsonPropertyName("schemaVersion")] int SchemaVersion,
-        [property: JsonPropertyName("generatedAtUtc")] string GeneratedAtUtc,
-        [property: JsonPropertyName("source")] string Source,
-        [property: JsonPropertyName("records")] List<RuntimeDataRecord> Records,
-        [property: JsonPropertyName("resources")] List<RuntimeResourceRecord> Resources
-    );
+    private static bool SnapshotTypeMatches(Type valueType, string snapshotType)
+    {
+        return snapshotType.Trim().ToLowerInvariant() switch
+        {
+            "string" or "string_array" => valueType == typeof(string) || valueType == typeof(string[]),
+            "float" => valueType == typeof(float) || valueType == typeof(double),
+            "int" or "integer" => valueType == typeof(int),
+            "bool" or "boolean" => valueType == typeof(bool),
+            "enum" => valueType.IsEnum || valueType == typeof(string),
+            _ => false
+        };
+    }
+
+    private static bool SnapshotDefaultMatches(IDataKey key, JsonElement defaultValue)
+    {
+        if (!TryConvertSnapshotValue(defaultValue, key.ValueType, out var convertedDefault))
+        {
+            return false;
+        }
+
+        var expectedDefault = key.UntypedDefaultValue;
+        if (expectedDefault is float expectedFloat && convertedDefault is float actualFloat)
+        {
+            return Math.Abs(expectedFloat - actualFloat) < 0.001f;
+        }
+
+        if (expectedDefault is double expectedDouble && convertedDefault is double actualDouble)
+        {
+            return Math.Abs(expectedDouble - actualDouble) < 0.001d;
+        }
+
+        return Equals(expectedDefault, convertedDefault);
+    }
+
+    private static bool TryConvertSnapshotValue(JsonElement element, Type targetType, out object? value)
+    {
+        try
+        {
+            value = ConvertJsonValue(element, targetType);
+            return true;
+        }
+        catch
+        {
+            value = null;
+            return false;
+        }
+    }
+
 }
+
+public sealed record RuntimeTypedSnapshotDocument(
+    [property: JsonPropertyName("schemaVersion")] int SchemaVersion,
+    [property: JsonPropertyName("generatedAtUtc")] string GeneratedAtUtc,
+    [property: JsonPropertyName("manifest")] RuntimeTypedSnapshotManifest Manifest,
+    [property: JsonPropertyName("descriptors")] List<RuntimeTypedSnapshotDescriptor> Descriptors,
+    [property: JsonPropertyName("records")] List<RuntimeTypedSnapshotRecord> Records,
+    [property: JsonPropertyName("resources")] List<RuntimeResourceRecord> Resources
+);
+
+public sealed record RuntimeTypedSnapshotManifest(
+    [property: JsonPropertyName("schemaVersion")] int SchemaVersion,
+    [property: JsonPropertyName("generatedAtUtc")] string GeneratedAtUtc,
+    [property: JsonPropertyName("profile")] string Profile,
+    [property: JsonPropertyName("catalogId")] string CatalogId,
+    [property: JsonPropertyName("enabledCapabilities")] List<string> EnabledCapabilities,
+    [property: JsonPropertyName("descriptorCount")] int DescriptorCount,
+    [property: JsonPropertyName("recordCount")] int RecordCount,
+    [property: JsonPropertyName("resourceCount")] int ResourceCount
+);
+
+public sealed record RuntimeTypedSnapshotDescriptor(
+    [property: JsonPropertyName("key")] string Key,
+    [property: JsonPropertyName("stableKey")] string StableKey,
+    [property: JsonPropertyName("type")] string Type,
+    [property: JsonPropertyName("valueType")] string ValueType,
+    [property: JsonPropertyName("defaultValue")] JsonElement DefaultValue
+);
+
+public sealed record RuntimeTypedSnapshotRecord(
+    [property: JsonPropertyName("table")] string Table,
+    [property: JsonPropertyName("legacyTable")] string LegacyTable,
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("fields")] Dictionary<string, RuntimeTypedSnapshotField> Fields,
+    [property: JsonPropertyName("legacyData")] JsonElement LegacyData
+);
+
+public sealed record RuntimeTypedSnapshotField(
+    [property: JsonPropertyName("type")] string Type,
+    [property: JsonPropertyName("value")] JsonElement Value
+);
 
 public sealed record RuntimeDataRecord(
     [property: JsonPropertyName("table")] string Table,

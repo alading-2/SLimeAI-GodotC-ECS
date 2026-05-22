@@ -33,6 +33,7 @@ public partial class SpawnSystem : Node, ISystem,
     public static SpawnSystem Instance { get; private set; }
 
     private bool _eventsBound;
+    private readonly EventSubscriptionCollector _runtimeSubscriptions = new();
 
 
     // === 实时运行状态 ===
@@ -90,7 +91,7 @@ public partial class SpawnSystem : Node, ISystem,
     /// <summary>
     /// 响应游戏开始事件，启动第一波。
     /// </summary>
-    private void OnGameStart() => StartWave(1);
+    private void OnGameStart(GlobalEvents.GameStart evt) => StartWave(1);
 
     /// <summary>
     /// 响应游戏结束事件，清理系统状态。
@@ -99,7 +100,7 @@ public partial class SpawnSystem : Node, ISystem,
     /// 响应游戏结束事件，清理系统状态。
     /// </summary>
     /// <param name="evt">游戏结束数据</param>
-    public void OnGameOver(GameEventType.Global.GameOverEventData evt)
+    public void OnGameOver(GlobalEvents.GameOver evt)
     {
         StopWaveRuntime(clearEnemies: true);
     }
@@ -114,7 +115,7 @@ public partial class SpawnSystem : Node, ISystem,
         if (SpawnSystemConfig.MaxWaves > 0 && waveIndex > SpawnSystemConfig.MaxWaves)
         {
             _log.Info("已通过最大波次，触发游戏结束");
-            GlobalEventBus.Global.Emit(GameEventType.Global.GameOver, new GameEventType.Global.GameOverEventData(true));
+            WorldEvents.World.Publish(new GlobalEvents.GameOver(true));
             return;
         }
 
@@ -154,8 +155,7 @@ public partial class SpawnSystem : Node, ISystem,
 
         _log.Info($"波次 {waveIndex} 开始! 持续时间: {SpawnSystemConfig.WaveDuration}s, 激活规则数: {_activeStates.Count}");
         // 通过事件总线通知 UI 和其他系统
-        GlobalEventBus.Global.Emit(GameEventType.Global.WaveStarted,
-            new GameEventType.Global.WaveStartedEventData(waveIndex));
+        WorldEvents.World.Publish(new GlobalEvents.WaveStarted(waveIndex));
     }
 
     /// <summary>
@@ -168,8 +168,7 @@ public partial class SpawnSystem : Node, ISystem,
 
         _log.Info($"第 {CurrentWaveIndex}波进攻结束!");
         // 触发波次完成事件,通常用于开启商店界面或奖励选择
-        GlobalEventBus.Global.Emit(GameEventType.Global.WaveCompleted,
-            new GameEventType.Global.WaveCompletedEventData(CurrentWaveIndex));
+        WorldEvents.World.Publish(new GlobalEvents.WaveCompleted(CurrentWaveIndex));
     }
 
     /// <inheritdoc />
@@ -199,8 +198,9 @@ public partial class SpawnSystem : Node, ISystem,
             return;
         }
 
-        GlobalEventBus.Global.On(GameEventType.Global.GameStart, OnGameStart);
-        GlobalEventBus.Global.On<GameEventType.Global.GameOverEventData>(GameEventType.Global.GameOver, OnGameOver);
+        _runtimeSubscriptions.Clear();
+        _runtimeSubscriptions.Subscribe<GlobalEvents.GameStart>(WorldEvents.World, OnGameStart);
+        _runtimeSubscriptions.Subscribe<GlobalEvents.GameOver>(WorldEvents.World, OnGameOver);
         _eventsBound = true;
     }
 
@@ -211,8 +211,7 @@ public partial class SpawnSystem : Node, ISystem,
             return;
         }
 
-        GlobalEventBus.Global.Off(GameEventType.Global.GameStart, OnGameStart);
-        GlobalEventBus.Global.Off<GameEventType.Global.GameOverEventData>(GameEventType.Global.GameOver, OnGameOver);
+        _runtimeSubscriptions.Clear();
         _eventsBound = false;
     }
 

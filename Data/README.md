@@ -6,8 +6,8 @@
 
 - **`Src/`**：负责运行时逻辑与系统实现。
   - 例如：`Data.cs` 如何读写、`Entity.Events` 如何派发、伤害和技能如何执行。
-- **`Data/`**：负责数据目录结构、配置、键定义与事件协议。
-  - 例如：有哪些配置字段、有哪些 `DataKey`、有哪些事件类型、某个配置默认值是多少。
+- **`Data/`**：负责数据目录结构、配置、typed 键定义与事件协议。
+  - 例如：有哪些配置字段、有哪些 `DataKey<T>`、有哪些事件类型、某个配置默认值是多少。
 
 > 迁移方向：`DataOS/` 已是唯一 authoring 真相源，`Data/DataNew` 仅保留 DTO / API 外壳，运行时只读 `DataOS/Snapshots/runtime_snapshot.json`。
 
@@ -44,7 +44,7 @@
 **DataKey 定义路径**。
 
 - **用途**：集中定义所有可写入 `Data` 容器的数据键。
-- **当前架构**：主流 DataKey 已从 `const string` 升级为 `static readonly DataMeta`。
+- **当前架构**：主流 DataKey 已升级为 `static readonly DataKey<T>`；`DataMeta` 仅保留兼容 metadata。
 - **核心职责**：定义键名、类型、默认值、分类、约束、是否支持修改器、是否为计算键等元数据。
 - **详细说明**：见 [`Data/DataKey/README.md`](DataKey/README.md)
 
@@ -78,7 +78,7 @@
 
 ### 新增一个可配置数据字段
 
-1. 先在 `Data/DataKey/` 对应域中定义 `DataKey`。
+1. 先在 `Data/DataKey/` 对应域中定义 `DataKey<T>`。
 2. 再在 `DataOS/Schema/` 和 `DataOS/Authoring/` 中补齐 authoring 列。
 3. `Data/DataNew/` 只保留 DTO 属性，运行时从 snapshot 注入到 Entity 的 `Data` 容器。
 

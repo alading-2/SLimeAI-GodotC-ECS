@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://runtime_data_validation_scene"]
+
+[ext_resource type="Script" path="res://Src/ECS/Test/SingleTest/ECS/Data/RuntimeDataValidationScene.cs" id="1_runtime_data_validation"]
+
+[node name="RuntimeDataValidationScene" type="Node"]
+script = ExtResource("1_runtime_data_validation")

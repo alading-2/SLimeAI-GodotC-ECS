@@ -65,6 +65,7 @@ public partial class AttributeTestModule : TestModuleBase
 
     /// <summary>当前订阅了 Data 变化事件的实体，避免重复订阅。</summary>
     private IEntity? _subscribedEntity;
+    private IDisposable? _propertyChangedSubscription;
 
     /// <summary>当前是否需要对整个分类区域执行重建。</summary>
     private bool _rebuildRequested = true;
@@ -477,12 +478,12 @@ public partial class AttributeTestModule : TestModuleBase
         var metaKey = GetMetaKey(meta);
         if (metaKey == GetMetaKey(DataKey.CurrentHp))
         {
-            var maxHp = selectedEntity.Data.Get<float>(DataKey.FinalHp.Key);
+            var maxHp = selectedEntity.Data.Get(DataKey.FinalHp);
             value = Mathf.Clamp(Convert.ToSingle(value), 0f, maxHp);
         }
         else if (metaKey == GetMetaKey(DataKey.CurrentMana))
         {
-            var maxMana = selectedEntity.Data.Get<float>(DataKey.FinalMana.Key);
+            var maxMana = selectedEntity.Data.Get(DataKey.FinalMana);
             value = Mathf.Clamp(Convert.ToSingle(value), 0f, maxMana);
         }
 
@@ -529,8 +530,8 @@ public partial class AttributeTestModule : TestModuleBase
 
         if (key == GetMetaKey(DataKey.BaseHp) || key == GetMetaKey(DataKey.HpBonus))
         {
-            var currentHp = selectedEntity.Data.Get<float>(DataKey.CurrentHp.Key);
-            var maxHp = selectedEntity.Data.Get<float>(DataKey.FinalHp.Key);
+            var currentHp = selectedEntity.Data.Get(DataKey.CurrentHp);
+            var maxHp = selectedEntity.Data.Get(DataKey.FinalHp);
             if (currentHp > maxHp)
             {
                 selectedEntity.Data.Set(DataKey.CurrentHp, maxHp);
@@ -540,8 +541,8 @@ public partial class AttributeTestModule : TestModuleBase
 
         if (key == GetMetaKey(DataKey.BaseMana) || key == GetMetaKey(DataKey.ManaBonus))
         {
-            var currentMana = selectedEntity.Data.Get<float>(DataKey.CurrentMana.Key);
-            var maxMana = selectedEntity.Data.Get<float>(DataKey.FinalMana.Key);
+            var currentMana = selectedEntity.Data.Get(DataKey.CurrentMana);
+            var maxMana = selectedEntity.Data.Get(DataKey.FinalMana);
             if (currentMana > maxMana)
             {
                 selectedEntity.Data.Set(DataKey.CurrentMana, maxMana);
@@ -566,10 +567,7 @@ public partial class AttributeTestModule : TestModuleBase
         }
 
         _subscribedEntity = selectedEntity;
-        _subscribedEntity.Events.On<GameEventType.Data.PropertyChangedEventData>(
-            GameEventType.Data.PropertyChanged,
-            OnEntityDataChanged
-        );
+        _propertyChangedSubscription = _subscribedEntity.Events.Subscribe<DataEvents.PropertyChanged>(OnEntityDataChanged);
     }
 
     /// <summary>
@@ -582,10 +580,8 @@ public partial class AttributeTestModule : TestModuleBase
             return;
         }
 
-        _subscribedEntity.Events.Off<GameEventType.Data.PropertyChangedEventData>(
-            GameEventType.Data.PropertyChanged,
-            OnEntityDataChanged
-        );
+        _propertyChangedSubscription?.Dispose();
+        _propertyChangedSubscription = null;
         _subscribedEntity = null;
     }
 
@@ -593,7 +589,7 @@ public partial class AttributeTestModule : TestModuleBase
     /// 数据变化后的统一刷新回调。
     /// </summary>
     /// <param name="evt">属性变更事件数据。</param>
-    private void OnEntityDataChanged(GameEventType.Data.PropertyChangedEventData evt)
+    private void OnEntityDataChanged(DataEvents.PropertyChanged evt)
     {
         if (!CanRefresh)
         {
@@ -804,7 +800,7 @@ public partial class AttributeTestModule : TestModuleBase
             return;
         }
 
-        var entityName = selectedEntity.Data.Get<string>(DataKey.Name.Key);
+        var entityName = selectedEntity.Data.Get(DataKey.Name);
         if (string.IsNullOrWhiteSpace(entityName))
         {
             entityName = entityNode.Name.ToString();

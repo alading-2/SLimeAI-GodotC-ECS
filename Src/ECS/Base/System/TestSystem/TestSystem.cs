@@ -34,7 +34,7 @@ public partial class TestSystem : CanvasLayer
     public IEntity? SelectedEntity => _selectionContext?.SelectedEntity;
 
     /// <summary>TestSystem 局部事件总线，仅用于测试面板内部通信。</summary>
-    public EventBus Events { get; } = new();
+    public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
 
     /// <summary>当前已注册的模块场景清单，顺序就是导航展示顺序。</summary>
     private readonly List<TestModuleSceneDefinition> _moduleScenes = new();
@@ -277,12 +277,9 @@ public partial class TestSystem : CanvasLayer
         // 设置选中的实体
         if (_selectionContext.SetSelectedEntity(entity))
         {
-            Events.Emit(
-                GameEventType.TestSystem.SelectionChanged,
-                new GameEventType.TestSystem.SelectionChangedEventData(
-                    entity // 当前选中实体
-                )
-            );
+            Events.Publish(new TestSystemEvents.SelectionChanged(
+                entity // 当前选中实体
+            ));
         }
         else
         {

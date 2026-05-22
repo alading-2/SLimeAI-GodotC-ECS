@@ -36,19 +36,10 @@ public class AutoCastAbilityAction : BehaviorNode
         var castContext = new CastContext
         {
             Ability = ability,
-            Caster = ctx.Entity,
-            ResponseContext = new EventContext()
+            Caster = ctx.Entity
         };
 
-        ability.Events.Emit(
-            GameEventType.Ability.TryTrigger,
-            new GameEventType.Ability.TryTriggerEventData(castContext)
-        );
-
-        var result = castContext.ResponseContext?.HasResult == true
-            ? castContext.ResponseContext.GetResult<TriggerResult>()
-            : TriggerResult.Failed;
-
+        var result = AbilitySystem.TryTriggerAbility(castContext);
         return result == TriggerResult.Success ? NodeState.Success : NodeState.Failure;
     }
 }

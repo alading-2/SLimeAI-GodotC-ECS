@@ -130,16 +130,8 @@ public static partial class EntityManager
         // 获取 ID（从 Data 读取，由 EntityManager.Spawn 设置）
         var ownerId = owner.Data.Get<string>(DataKey.Id) ?? string.Empty;
 
-        // 核心逻辑连通：订阅 TryTrigger 事件，由 AbilitySystem 统一处理
-        ability.Events.On<GameEventType.Ability.TryTriggerEventData>(
-            GameEventType.Ability.TryTrigger,
-            AbilitySystem.HandleTryTrigger
-        );
-
         // 发送事件
-        owner.Events.Emit(
-            GameEventType.Ability.Added,
-            new GameEventType.Ability.AddedEventData(ability, owner)
+        owner.Events.Publish(new AbilityEvents.Added(ability, owner)
         );
 
         // Feature 生命周期钩子：Granted
@@ -220,9 +212,7 @@ public static partial class EntityManager
         Destroy(ability);
 
         // 发送事件
-        owner.Events.Emit(
-            GameEventType.Ability.Removed,
-            new GameEventType.Ability.RemovedEventData(abilityName, abilityId, owner)
+        owner.Events.Publish(new AbilityEvents.Removed(abilityName, abilityId, owner)
         );
 
         _abilityLog.Info($"移除技能实例: {abilityName} ({abilityId}) <- {ownerId}");

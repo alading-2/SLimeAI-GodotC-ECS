@@ -15,8 +15,7 @@ using System.Runtime.CompilerServices;
 /// 4. 匀速性质：圆弧参数 t 与弧长严格成正比（角度线性推进），天然匀速；每帧按 speed * delta / curveLength 推进进度，直接按参数 t 采样。
 /// <code>
 /// 【使用示例：圆弧追踪目标（终点每帧跟随 TargetNode）】
-/// entity.Events.Emit(GameEventType.Unit.MovementStarted,
-///     new GameEventType.Unit.MovementStartedEventData(MoveMode.CircularArc, new MovementParams
+/// entity.Events.Publish(///     new UnitEvents.MovementStarted(MoveMode.CircularArc, new MovementParams
 ///     {
 ///         Mode = MoveMode.CircularArc,
 ///         MaxDuration = 2f,                // 最大持续时间

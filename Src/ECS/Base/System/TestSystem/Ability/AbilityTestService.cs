@@ -144,7 +144,7 @@ internal sealed class AbilityTestService
         {
             foreach (var ability in EntityManager.GetAbilities(owner))
             {
-                var abilityName = ability.Data.Get<string>(DataKey.Name.Key); // 解析 DataKey.Name 键名
+                var abilityName = ability.Data.Get(DataKey.Name); // 解析 DataKey.Name 键名
                 if (!string.IsNullOrWhiteSpace(abilityName))
                 {
                     ownedNames.Add(abilityName);
@@ -267,13 +267,13 @@ internal sealed class AbilityTestService
     /// </summary>
     private AbilityOwnedItemView CreateOwnedItemView(AbilityEntity ability)
     {
-        var abilityName = ability.Data.Get<string>(DataKey.Name.Key);
+        var abilityName = ability.Data.Get(DataKey.Name);
         var featureGroupId = ResolveFeatureGroupId(ability);
-        var description = ability.Data.Get<string>(DataKey.Description.Key);
-        var abilityId = ability.Data.Get<string>(DataKey.Id.Key);
-        var isEnabled = ability.Data.Get<bool>(DataKey.FeatureEnabled.Key);
-        var abilityType = ability.Data.Get<AbilityType>(DataKey.AbilityType.Key);
-        var triggerMode = ability.Data.Get<AbilityTriggerMode>(DataKey.AbilityTriggerMode.Key);
+        var description = ability.Data.Get(DataKey.Description);
+        var abilityId = ability.Data.Get(DataKey.Id);
+        var isEnabled = ability.Data.Get(DataKey.FeatureEnabled);
+        var abilityType = ability.Data.Get(DataKey.AbilityType);
+        var triggerMode = ability.Data.Get(DataKey.AbilityTriggerMode);
 
         RegisterFeatureGroupOrder(featureGroupId);
 
@@ -300,7 +300,7 @@ internal sealed class AbilityTestService
 
         foreach (var ability in EntityManager.GetAbilities(owner))
         {
-            var currentAbilityId = ability.Data.Get<string>(DataKey.Id.Key);
+            var currentAbilityId = ability.Data.Get(DataKey.Id);
             if (string.Equals(currentAbilityId, abilityId, StringComparison.Ordinal))
             {
                 return ability;
@@ -342,13 +342,13 @@ internal sealed class AbilityTestService
     /// </summary>
     private static string ResolveFeatureGroupId(AbilityEntity ability)
     {
-        var featureGroup = ability.Data.Get<string>(DataKey.AbilityFeatureGroup.Key);
+        var featureGroup = ability.Data.Get(DataKey.AbilityFeatureGroup);
         if (!string.IsNullOrWhiteSpace(featureGroup))
         {
             return NormalizeFeatureGroupId(featureGroup);
         }
 
-        var abilityType = ability.Data.Get<AbilityType>(DataKey.AbilityType.Key);
+        var abilityType = ability.Data.Get(DataKey.AbilityType);
         return abilityType switch
         {
             AbilityType.Active => NormalizeFeatureGroupId(FeatureId.Ability.Groups.Active),

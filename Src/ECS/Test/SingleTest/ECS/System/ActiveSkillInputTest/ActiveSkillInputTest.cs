@@ -243,7 +243,7 @@ namespace Slime.Test.ActiveSkillInputTest
         private partial class TestPlayerEntity : Node2D, IUnit, IEntity
         {
             public Data Data { get; } = new Data();
-            public EventBus Events { get; } = new EventBus();
+            public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
             public int FactionId { get; set; } = 0;
 
             public override void _Ready()

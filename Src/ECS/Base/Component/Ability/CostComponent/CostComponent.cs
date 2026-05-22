@@ -38,9 +38,6 @@ public partial class CostComponent : Node, IComponent
         {
             _data = iEntity.Data;
             _entity = iEntity;
-
-            // 订阅事件驱动请求
-            SubscribeEvents();
         }
     }
 
@@ -50,39 +47,27 @@ public partial class CostComponent : Node, IComponent
         _entity = null;
     }
 
-    // ================= 事件驱动 =================
+    // ================= 公共接口 =================
 
-    /// <summary>订阅请求事件</summary>
-    private void SubscribeEvents()
+    /// <summary>检查施法者是否有足够资源释放技能。</summary>
+    public bool CanUse(out string? failReason)
     {
-        if (_entity == null) return;
+        failReason = null;
+        if (_data == null || _entity == null)
+        {
+            failReason = "成本组件未初始化";
+            return false;
+        }
 
-        // 监听请求检查可用性事件
-        _entity.Events.On<GameEventType.Ability.CheckCanUseEventData>(
-            GameEventType.Ability.CheckCanUse,
-            OnCheckCanUse,
-            (int)AbilityCheckPhase.Cost
-        );
-
-        // 监听消耗成本请求事件
-        _entity.Events.On<GameEventType.Ability.ConsumeCostEventData>(
-            GameEventType.Ability.ConsumeCost,
-            OnConsumeCost
-        );
-    }
-
-    /// <summary>响应可用性检查请求 - 检查施法者是否有足够的资源</summary>
-    private void OnCheckCanUse(GameEventType.Ability.CheckCanUseEventData eventData)
-    {
         // 无消耗类型,跳过检查
-        if (CostType == AbilityCostType.None) return;
+        if (CostType == AbilityCostType.None) return true;
 
         // 获取施法者
         var caster = GetCaster();
         if (caster == null)
         {
-            eventData.Context.SetFailed("施法者不存在");
-            return;
+            failReason = "施法者不存在";
+            return false;
         }
 
         // 检查资源是否充足
@@ -90,31 +75,41 @@ public partial class CostComponent : Node, IComponent
         if (string.IsNullOrEmpty(resourceKey))
         {
             _log.Error($"未知的消耗类型: {CostType}");
-            eventData.Context.SetFailed("未知的消耗类型");
-            return;
+            failReason = "未知的消耗类型";
+            return false;
         }
 
         var currentResource = caster.Data.Get<float>(resourceKey);
         if (currentResource < CostAmount)
         {
-            var resourceName = GetResourceName(CostType);
-            eventData.Context.SetFailed($"{resourceName}不足");
-            _log.Debug($"技能 {AbilityName} 无法释放: {resourceName}不足 ({currentResource:F1}/{CostAmount:F1})");
+            var missingResourceName = GetResourceName(CostType);
+            failReason = $"{missingResourceName}不足";
+            _log.Debug($"技能 {AbilityName} 无法释放: {missingResourceName}不足 ({currentResource:F1}/{CostAmount:F1})");
+            return false;
         }
+
+        return true;
     }
 
-    /// <summary>响应消耗成本请求 - 从施法者扣除资源</summary>
-    private void OnConsumeCost(GameEventType.Ability.ConsumeCostEventData eventData)
+    /// <summary>从施法者扣除技能资源消耗。</summary>
+    public bool ConsumeCost(out string? failReason)
     {
+        failReason = null;
+        if (_data == null || _entity == null)
+        {
+            failReason = "成本组件未初始化";
+            return false;
+        }
+
         // 无消耗类型,跳过
-        if (CostType == AbilityCostType.None) return;
+        if (CostType == AbilityCostType.None) return true;
 
         // 获取施法者
         var caster = GetCaster();
         if (caster == null)
         {
-            eventData.Context.SetFailed("施法者不存在");
-            return;
+            failReason = "施法者不存在";
+            return false;
         }
 
         // 获取资源键
@@ -122,24 +117,29 @@ public partial class CostComponent : Node, IComponent
         if (string.IsNullOrEmpty(resourceKey))
         {
             _log.Error($"未知的消耗类型: {CostType}");
-            eventData.Context.SetFailed("未知的消耗类型");
-            return;
+            failReason = "未知的消耗类型";
+            return false;
+        }
+
+        var currentResource = caster.Data.Get<float>(resourceKey);
+        if (currentResource < CostAmount)
+        {
+            var missingResourceName = GetResourceName(CostType);
+            failReason = $"{missingResourceName}不足";
+            _log.Debug($"技能 {AbilityName} 无法释放: {missingResourceName}不足 ({currentResource:F1}/{CostAmount:F1})");
+            return false;
         }
 
         // 扣除资源
         caster.Data.Add(resourceKey, -CostAmount);
 
         // 发送消耗完成事件 (供 UI 监听)
-        if (_entity is AbilityEntity abilityEntity)
-        {
-            _entity.Events.Emit(
-                GameEventType.Ability.CostConsumed,
-                new GameEventType.Ability.CostConsumedEventData(CostType, CostAmount)
-            );
-        }
+        _entity.Events.Publish(new AbilityEvents.CostConsumed(CostType, CostAmount)
+        );
 
         var resourceName = GetResourceName(CostType);
         _log.Debug($"技能 {AbilityName} 消耗: {resourceName} -{CostAmount:F1}, 剩余: {caster.Data.Get<float>(resourceKey):F1}");
+        return true;
     }
 
     // ================= 辅助方法 =================

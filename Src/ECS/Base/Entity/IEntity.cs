@@ -27,5 +27,5 @@ public interface IEntity
     /// 实体局部事件总线
     /// 用于组件间通信 (Component <-> Component) 或 (Component <-> Entity)
     /// </summary>
-    EventBus Events { get; }
+    IEventBus Events { get; }
 }

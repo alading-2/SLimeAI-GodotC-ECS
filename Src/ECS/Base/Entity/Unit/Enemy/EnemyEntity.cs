@@ -27,7 +27,7 @@ public partial class EnemyEntity : CharacterBody2D, IPoolable, IUnit
     /// <summary>
     /// 实体局部事件总线
     /// </summary>
-    public EventBus Events { get; } = new EventBus();
+    public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
 
 
     // ================= Godot 生命周期 =================

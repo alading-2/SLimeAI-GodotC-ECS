@@ -27,6 +27,7 @@ public partial class ActiveSkillInputComponent : Node, IComponent
     private List<AbilityEntity> _cachedActiveAbilities = new();
     /// <summary> 缓存是否需要刷新 </summary>
     private bool _abilitiesDirty = true;
+    private readonly EventSubscriptionCollector _eventSubscriptions = new();
 
     // ================= IComponent 生命周期 =================
 
@@ -42,12 +43,8 @@ public partial class ActiveSkillInputComponent : Node, IComponent
             _data = iEntity.Data;
 
             // 订阅技能增删事件，标记缓存失效
-            _entity.Events.On<GameEventType.Ability.AddedEventData>(
-                GameEventType.Ability.Added, _ => _abilitiesDirty = true
-            );
-            _entity.Events.On<GameEventType.Ability.RemovedEventData>(
-                GameEventType.Ability.Removed, _ => _abilitiesDirty = true
-            );
+            _eventSubscriptions.Subscribe<AbilityEvents.Added>(_entity.Events, _ => _abilitiesDirty = true);
+            _eventSubscriptions.Subscribe<AbilityEvents.Removed>(_entity.Events, _ => _abilitiesDirty = true);
 
             _log.Info($"主动技能输入组件已注册到实体: {entity.Name}");
         }
@@ -58,6 +55,7 @@ public partial class ActiveSkillInputComponent : Node, IComponent
     /// </summary>
     public void OnComponentUnregistered()
     {
+        _eventSubscriptions.Clear();
         _entity = null;
         _data = null;
     }
@@ -115,10 +113,7 @@ public partial class ActiveSkillInputComponent : Node, IComponent
         _log.Debug($"切换主动技能: {abilityName} (索引: {newIndex})");
 
         // 发射 UI 事件，通知技能栏高亮切换，注意_entity是PlayerEntity
-        _entity!.Events.Emit(
-            GameEventType.UI.ActiveSkillSelected,
-            new GameEventType.UI.ActiveSkillSelectedEventData(newIndex, abilityName)
-        );
+        _entity!.Events.Publish(new UIEvents.ActiveSkillSelected(newIndex, abilityName));
     }
 
     /// <summary>
@@ -152,8 +147,7 @@ public partial class ActiveSkillInputComponent : Node, IComponent
             var context = new CastContext
             {
                 Ability = ability,
-                Caster = caster,
-                ResponseContext = new EventContext(),
+                Caster = caster
             };
 
             var targetSelection = ability.Data.Get<AbilityTargetSelection>(DataKey.AbilityTargetSelection);
@@ -190,9 +184,7 @@ public partial class ActiveSkillInputComponent : Node, IComponent
             return;
         }
 
-        GlobalEventBus.Global.Emit(
-            GameEventType.Targeting.StartTargeting,
-            new GameEventType.Targeting.StartTargetingEventData(context)); //施法上下文
+        WorldEvents.World.Publish(new TargetingEvents.StartTargeting(context)); //施法上下文
         _log.Debug($"技能 {abilityName} 进入瞄准模式");
     }
 
@@ -204,13 +196,7 @@ public partial class ActiveSkillInputComponent : Node, IComponent
     /// <param name="abilityName">技能名称，用于日志。</param>
     private void TriggerAbility(AbilityEntity ability, CastContext context, string abilityName)
     {
-        ability.Events.Emit(
-            GameEventType.Ability.TryTrigger,
-            new GameEventType.Ability.TryTriggerEventData(context) //施法上下文
-        );
-        var result = context.ResponseContext?.HasResult == true
-            ? (TriggerResult)context.ResponseContext.GetResult<TriggerResult>()
-            : TriggerResult.Failed;
+        var result = AbilitySystem.TryTriggerAbility(context);
 
         if (result == TriggerResult.Failed)
         {

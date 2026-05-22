@@ -19,7 +19,7 @@ using Godot;
 /// <para>
 /// 【策略切换方式】
 /// - 默认模式：Entity 初始化时设置 <c>DataKey.DefaultMoveMode</c>，组件注册时自动进入
-/// - 临时运动：业务方通过 <c>Entity.Events.Emit(MovementStarted, ...)</c> 触发切换
+/// - 临时运动：业务方通过 <c>Entity.Events.Publish(MovementStarted, ...)</c> 触发切换
 /// - 运动完成后自动回退到 <c>DataKey.DefaultMoveMode</c>
 /// </para>
 /// <para>
@@ -54,6 +54,8 @@ public partial class EntityMovementComponent : Node, IComponent
     /// <summary>本次运动的碰撞策略状态。</summary>
     private readonly MovementCollisionPolicy _collisionPolicy = new();
 
+    private readonly EventSubscriptionCollector _eventSubscriptions = new();
+
     // ================= 节点类型缓存 =================
 
     /// <summary>CharacterBody2D 引用缓存（非 CharacterBody2D 实体时为 null）</summary>
@@ -81,16 +83,13 @@ public partial class EntityMovementComponent : Node, IComponent
         _data.Set(DataKey.MovementFacingDirection, Vector2.Zero);
 
         // 订阅运动开始/切换事件（业务方通过此事件触发临时运动切换）
-        _entity.Events.On<GameEventType.Unit.MovementStartedEventData>(
-            GameEventType.Unit.MovementStarted, OnMovementStarted);
+        _eventSubscriptions.Subscribe<UnitEvents.MovementStarted>(_entity.Events, OnMovementStarted);
 
         // 订阅碰撞事件（Area2D 路径；CharacterBody2D 路径在 ApplyMovement 中通过 MoveAndSlide 检测）
-        _entity.Events.On<GameEventType.Collision.CollisionEnteredEventData>(
-            GameEventType.Collision.CollisionEntered, OnCollisionDetected);
+        _eventSubscriptions.Subscribe<CollisionEvents.CollisionEntered>(_entity.Events, OnCollisionDetected);
 
         // 订阅停止请求事件（外部系统或内部碰撞策略均可通过事件驱动停止当前运动）
-        _entity.Events.On<GameEventType.Unit.MovementStopRequestedEventData>(
-            GameEventType.Unit.MovementStopRequested, OnMovementStopRequested);
+        _eventSubscriptions.Subscribe<UnitEvents.MovementStopRequested>(_entity.Events, OnMovementStopRequested);
 
         // 根据 DefaultMoveMode 初始化默认策略（无 MovementParams，使用空参数）
         var defaultMode = _data.Get<MoveMode>(DataKey.DefaultMoveMode);
@@ -105,6 +104,8 @@ public partial class EntityMovementComponent : Node, IComponent
     /// <inheritdoc/>
     public void OnComponentUnregistered()
     {
+        _eventSubscriptions.Clear();
+
         // 退出当前策略
         if (_currentStrategy != null && _entity != null && _data != null)
         {
@@ -177,7 +178,7 @@ public partial class EntityMovementComponent : Node, IComponent
     /// 处理运动开始/切换事件（业务方触发临时运动切换）
     /// <para>当前为默认策略时可直接切换；非默认策略需满足可打断条件。</para>
     /// </summary>
-    private void OnMovementStarted(GameEventType.Unit.MovementStartedEventData evt)
+    private void OnMovementStarted(UnitEvents.MovementStarted evt)
     {
         if (_entity == null || _data == null) return;
 
@@ -371,7 +372,7 @@ public partial class EntityMovementComponent : Node, IComponent
     /// <summary>
     /// 停止请求回调。
     /// </summary>
-    private void OnMovementStopRequested(GameEventType.Unit.MovementStopRequestedEventData evt)
+    private void OnMovementStopRequested(UnitEvents.MovementStopRequested evt)
     {
         StopMovement(
             evt.Reason,
@@ -425,9 +426,7 @@ public partial class EntityMovementComponent : Node, IComponent
         // 按决议发出 MovementCompleted 事件
         if (resolution.EmitCompletedEvent)
         {
-            _entity.Events.Emit(
-                GameEventType.Unit.MovementCompleted,
-                new GameEventType.Unit.MovementCompletedEventData(
+            _entity.Events.Publish(new UnitEvents.MovementCompleted(
                     mode,
                     _params.ElapsedTime,
                     _params.TraveledDistance,

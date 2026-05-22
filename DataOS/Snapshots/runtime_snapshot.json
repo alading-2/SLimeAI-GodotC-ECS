@@ -1,738 +1,4125 @@
 {
-  "schemaVersion": 1,
-  "generatedAtUtc": "2026-05-22T07:59:10Z",
-  "source": "DataOS/Authoring/slimeainew.authoring.db",
+  "schemaVersion": 2,
+  "generatedAtUtc": "2026-05-22T10:08:58Z",
+  "manifest": {
+    "schemaVersion": 2,
+    "generatedAtUtc": "2026-05-22T10:08:58Z",
+    "profile": "slimeainew",
+    "catalogId": "slimeainew",
+    "source": "DataOS/Authoring/slimeainew.authoring.db",
+    "enabledCapabilities": [
+      "AI",
+      "Ability",
+      "Attribute",
+      "Base",
+      "Feature",
+      "Movement",
+      "Resource",
+      "System",
+      "Test",
+      "Unit"
+    ],
+    "descriptorCount": 73,
+    "recordCount": 29,
+    "resourceCount": 10,
+    "validation": {
+      "warningCount": 0,
+      "errorCount": 0
+    }
+  },
+  "descriptors": [
+    {
+      "key": "AbilityCastRange",
+      "stableKey": "AbilityCastRange",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "AbilityCastRange",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityChainCount",
+      "stableKey": "AbilityChainCount",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "int",
+      "valueType": "int",
+      "defaultValue": 3,
+      "displayName": "AbilityChainCount",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityChainDamageDecay",
+      "stableKey": "AbilityChainDamageDecay",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 100.0,
+      "displayName": "AbilityChainDamageDecay",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityChainDelay",
+      "stableKey": "AbilityChainDelay",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.2,
+      "displayName": "AbilityChainDelay",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityChainRange",
+      "stableKey": "AbilityChainRange",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 300.0,
+      "displayName": "AbilityChainRange",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityChargeTime",
+      "stableKey": "AbilityChargeTime",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "AbilityChargeTime",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityCooldown",
+      "stableKey": "AbilityCooldown",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "AbilityCooldown",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityCostAmount",
+      "stableKey": "AbilityCostAmount",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "AbilityCostAmount",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityCostType",
+      "stableKey": "AbilityCostType",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "enum",
+      "valueType": "enum",
+      "defaultValue": "None",
+      "displayName": "AbilityCostType",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityDamage",
+      "stableKey": "AbilityDamage",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "AbilityDamage",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityEffectRadius",
+      "stableKey": "AbilityEffectRadius",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "AbilityEffectRadius",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityFeatureGroup",
+      "stableKey": "AbilityFeatureGroup",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "",
+      "displayName": "AbilityFeatureGroup",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityIcon",
+      "stableKey": "AbilityIcon",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "",
+      "displayName": "AbilityIcon",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityMaxCharges",
+      "stableKey": "AbilityMaxCharges",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "int",
+      "valueType": "int",
+      "defaultValue": 0,
+      "displayName": "AbilityMaxCharges",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityTargetSelection",
+      "stableKey": "AbilityTargetSelection",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "enum",
+      "valueType": "enum",
+      "defaultValue": "None",
+      "displayName": "AbilityTargetSelection",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityTriggerMode",
+      "stableKey": "AbilityTriggerMode",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "enum",
+      "valueType": "enum",
+      "defaultValue": "None",
+      "displayName": "AbilityTriggerMode",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "AbilityType",
+      "stableKey": "AbilityType",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "enum",
+      "valueType": "enum",
+      "defaultValue": "Passive",
+      "displayName": "AbilityType",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "AllowedFlowStates",
+      "stableKey": "AllowedFlowStates",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "",
+      "displayName": "AllowedFlowStates",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "AllowedSimulationStates",
+      "stableKey": "AllowedSimulationStates",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "",
+      "displayName": "AllowedSimulationStates",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "AttackRange",
+      "stableKey": "AttackRange",
+      "ownerCapability": "Attribute",
+      "ownerSkill": "attribute-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "AttackRange",
+      "description": "",
+      "iconPath": "",
+      "category": "Attribute",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "AutoLoad",
+      "stableKey": "AutoLoad",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "bool",
+      "valueType": "bool",
+      "defaultValue": true,
+      "displayName": "AutoLoad",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "BaseAttack",
+      "stableKey": "BaseAttack",
+      "ownerCapability": "Attribute",
+      "ownerSkill": "attribute-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "BaseAttack",
+      "description": "",
+      "iconPath": "",
+      "category": "Attribute",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "BaseAttackSpeed",
+      "stableKey": "BaseAttackSpeed",
+      "ownerCapability": "Attribute",
+      "ownerSkill": "attribute-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 100.0,
+      "displayName": "BaseAttackSpeed",
+      "description": "",
+      "iconPath": "",
+      "category": "Attribute",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "BaseDefense",
+      "stableKey": "BaseDefense",
+      "ownerCapability": "Attribute",
+      "ownerSkill": "attribute-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "BaseDefense",
+      "description": "",
+      "iconPath": "",
+      "category": "Attribute",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "BaseHp",
+      "stableKey": "BaseHp",
+      "ownerCapability": "Attribute",
+      "ownerSkill": "attribute-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 10.0,
+      "displayName": "BaseHp",
+      "description": "",
+      "iconPath": "",
+      "category": "Attribute",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "BaseHpRegen",
+      "stableKey": "BaseHpRegen",
+      "ownerCapability": "Attribute",
+      "ownerSkill": "attribute-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "BaseHpRegen",
+      "description": "",
+      "iconPath": "",
+      "category": "Attribute",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "BlockedOverlays",
+      "stableKey": "BlockedOverlays",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "",
+      "displayName": "BlockedOverlays",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "CritDamage",
+      "stableKey": "CritDamage",
+      "ownerCapability": "Attribute",
+      "ownerSkill": "attribute-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 100.0,
+      "displayName": "CritDamage",
+      "description": "",
+      "iconPath": "",
+      "category": "Attribute",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "CritRate",
+      "stableKey": "CritRate",
+      "ownerCapability": "Attribute",
+      "ownerSkill": "attribute-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "CritRate",
+      "description": "",
+      "iconPath": "",
+      "category": "Attribute",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "DamageReduction",
+      "stableKey": "DamageReduction",
+      "ownerCapability": "Attribute",
+      "ownerSkill": "attribute-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "DamageReduction",
+      "description": "",
+      "iconPath": "",
+      "category": "Attribute",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "DeathType",
+      "stableKey": "DeathType",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "enum",
+      "valueType": "enum",
+      "defaultValue": "Normal",
+      "displayName": "DeathType",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "Dependencies",
+      "stableKey": "Dependencies",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "string_array",
+      "valueType": "string_array",
+      "defaultValue": "",
+      "displayName": "Dependencies",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "Description",
+      "stableKey": "Description",
+      "ownerCapability": "Base",
+      "ownerSkill": "base-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "",
+      "displayName": "Description",
+      "description": "",
+      "iconPath": "",
+      "category": "Base",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "DetectionRange",
+      "stableKey": "DetectionRange",
+      "ownerCapability": "AI",
+      "ownerSkill": "ai-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 500.0,
+      "displayName": "DetectionRange",
+      "description": "",
+      "iconPath": "",
+      "category": "AI",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "DisabledSystemIds",
+      "stableKey": "DisabledSystemIds",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "string_array",
+      "valueType": "string_array",
+      "defaultValue": "",
+      "displayName": "DisabledSystemIds",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "DodgeChance",
+      "stableKey": "DodgeChance",
+      "ownerCapability": "Attribute",
+      "ownerSkill": "attribute-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "DodgeChance",
+      "description": "",
+      "iconPath": "",
+      "category": "Attribute",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "EffectScene",
+      "stableKey": "EffectScene",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "",
+      "displayName": "EffectScene",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "EnabledSystemIds",
+      "stableKey": "EnabledSystemIds",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "string_array",
+      "valueType": "string_array",
+      "defaultValue": "",
+      "displayName": "EnabledSystemIds",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "EnabledTags",
+      "stableKey": "EnabledTags",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "",
+      "displayName": "EnabledTags",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "EntityType",
+      "stableKey": "EntityType",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "enum",
+      "valueType": "enum",
+      "defaultValue": "None",
+      "displayName": "EntityType",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "ExpReward",
+      "stableKey": "ExpReward",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "int",
+      "valueType": "int",
+      "defaultValue": 1,
+      "displayName": "ExpReward",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "FeatureHandlerId",
+      "stableKey": "FeatureHandlerId",
+      "ownerCapability": "Feature",
+      "ownerSkill": "feature-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "",
+      "displayName": "FeatureHandlerId",
+      "description": "",
+      "iconPath": "",
+      "category": "Feature",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "HealthBarHeight",
+      "stableKey": "HealthBarHeight",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 100.0,
+      "displayName": "HealthBarHeight",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "IsAbilityUsesCharges",
+      "stableKey": "IsAbilityUsesCharges",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "bool",
+      "valueType": "bool",
+      "defaultValue": false,
+      "displayName": "IsAbilityUsesCharges",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "IsActive",
+      "stableKey": "IsActive",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "bool",
+      "valueType": "bool",
+      "defaultValue": false,
+      "displayName": "IsActive",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "IsEnableSpawnRule",
+      "stableKey": "IsEnableSpawnRule",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "bool",
+      "valueType": "bool",
+      "defaultValue": true,
+      "displayName": "IsEnableSpawnRule",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "IsInvulnerable",
+      "stableKey": "IsInvulnerable",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "bool",
+      "valueType": "bool",
+      "defaultValue": false,
+      "displayName": "IsInvulnerable",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "IsShowHealthBar",
+      "stableKey": "IsShowHealthBar",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "bool",
+      "valueType": "bool",
+      "defaultValue": true,
+      "displayName": "IsShowHealthBar",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "LifeSteal",
+      "stableKey": "LifeSteal",
+      "ownerCapability": "Attribute",
+      "ownerSkill": "attribute-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "LifeSteal",
+      "description": "",
+      "iconPath": "",
+      "category": "Attribute",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "MountGroup",
+      "stableKey": "MountGroup",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "Else",
+      "displayName": "MountGroup",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "MoveSpeed",
+      "stableKey": "MoveSpeed",
+      "ownerCapability": "Attribute",
+      "ownerSkill": "attribute-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 100.0,
+      "displayName": "MoveSpeed",
+      "description": "",
+      "iconPath": "",
+      "category": "Attribute",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "Name",
+      "stableKey": "Name",
+      "ownerCapability": "Base",
+      "ownerSkill": "base-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "",
+      "displayName": "Name",
+      "description": "",
+      "iconPath": "",
+      "category": "Base",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "Penetration",
+      "stableKey": "Penetration",
+      "ownerCapability": "Attribute",
+      "ownerSkill": "attribute-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "Penetration",
+      "description": "",
+      "iconPath": "",
+      "category": "Attribute",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "PickupRange",
+      "stableKey": "PickupRange",
+      "ownerCapability": "Attribute",
+      "ownerSkill": "attribute-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 300.0,
+      "displayName": "PickupRange",
+      "description": "",
+      "iconPath": "",
+      "category": "Attribute",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": true,
+      "isComputed": false
+    },
+    {
+      "key": "PresetName",
+      "stableKey": "PresetName",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "DefaultPreset",
+      "displayName": "PresetName",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "Priority",
+      "stableKey": "Priority",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "int",
+      "valueType": "int",
+      "defaultValue": 0,
+      "displayName": "Priority",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "ProjectileScene",
+      "stableKey": "ProjectileScene",
+      "ownerCapability": "Ability",
+      "ownerSkill": "ability-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "",
+      "displayName": "ProjectileScene",
+      "description": "",
+      "iconPath": "",
+      "category": "Ability",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "Required",
+      "stableKey": "Required",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "bool",
+      "valueType": "bool",
+      "defaultValue": false,
+      "displayName": "Required",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "RequiredOverlays",
+      "stableKey": "RequiredOverlays",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "",
+      "displayName": "RequiredOverlays",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "SingleSpawnCount",
+      "stableKey": "SingleSpawnCount",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "int",
+      "valueType": "int",
+      "defaultValue": 1,
+      "displayName": "SingleSpawnCount",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "SingleSpawnVariance",
+      "stableKey": "SingleSpawnVariance",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "int",
+      "valueType": "int",
+      "defaultValue": 0,
+      "displayName": "SingleSpawnVariance",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "SpawnInterval",
+      "stableKey": "SpawnInterval",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 1.0,
+      "displayName": "SpawnInterval",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "SpawnMaxCountPerWave",
+      "stableKey": "SpawnMaxCountPerWave",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "int",
+      "valueType": "int",
+      "defaultValue": -1,
+      "displayName": "SpawnMaxCountPerWave",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "SpawnMaxWave",
+      "stableKey": "SpawnMaxWave",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "int",
+      "valueType": "int",
+      "defaultValue": -1,
+      "displayName": "SpawnMaxWave",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "SpawnMinWave",
+      "stableKey": "SpawnMinWave",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "int",
+      "valueType": "int",
+      "defaultValue": 0,
+      "displayName": "SpawnMinWave",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "SpawnStartDelay",
+      "stableKey": "SpawnStartDelay",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "float",
+      "valueType": "float",
+      "defaultValue": 0.0,
+      "displayName": "SpawnStartDelay",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "SpawnStrategy",
+      "stableKey": "SpawnStrategy",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "enum",
+      "valueType": "enum",
+      "defaultValue": "Rectangle",
+      "displayName": "SpawnStrategy",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "SpawnWeight",
+      "stableKey": "SpawnWeight",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "int",
+      "valueType": "int",
+      "defaultValue": 10,
+      "displayName": "SpawnWeight",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "StartEnabled",
+      "stableKey": "StartEnabled",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "bool",
+      "valueType": "bool",
+      "defaultValue": true,
+      "displayName": "StartEnabled",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "SystemId",
+      "stableKey": "SystemId",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "",
+      "displayName": "SystemId",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "Tags",
+      "stableKey": "Tags",
+      "ownerCapability": "System",
+      "ownerSkill": "system-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "",
+      "displayName": "Tags",
+      "description": "",
+      "iconPath": "",
+      "category": "System",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "Team",
+      "stableKey": "Team",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "enum",
+      "valueType": "enum",
+      "defaultValue": "Neutral",
+      "displayName": "Team",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    },
+    {
+      "key": "VisualScenePath",
+      "stableKey": "VisualScenePath",
+      "ownerCapability": "Unit",
+      "ownerSkill": "unit-system",
+      "type": "string",
+      "valueType": "string",
+      "defaultValue": "",
+      "displayName": "VisualScenePath",
+      "description": "",
+      "iconPath": "",
+      "category": "Unit",
+      "minValue": null,
+      "maxValue": null,
+      "options": [],
+      "isPercentage": false,
+      "supportsModifiers": false,
+      "isComputed": false
+    }
+  ],
   "records": [
     {
-      "table": "PlayerData",
-      "id": "player.deluyi",
-      "name": "德鲁伊",
-      "data": {
-        "Name": "德鲁伊",
-        "Team": "Player",
-        "EntityType": "Unit",
-        "DeathType": "Hero",
-        "VisualScenePath": "res://assets/Unit/Player/deluyi/AnimatedSprite2D/deluyi.tscn",
-        "HealthBarHeight": 120.0,
-        "BaseHp": 100.0,
-        "BaseHpRegen": 1.0,
-        "LifeSteal": 0.0,
-        "BaseAttack": 10.0,
-        "BaseAttackSpeed": 100.0,
-        "AttackRange": 150.0,
-        "CritRate": 5.0,
-        "CritDamage": 100.0,
-        "Penetration": 0.0,
-        "BaseDefense": 5.0,
-        "DamageReduction": 0.0,
-        "MoveSpeed": 200.0,
-        "DodgeChance": 0.0,
-        "PickupRange": 300.0
-      }
-    },
-    {
-      "table": "EnemyData",
-      "id": "enemy.yuren",
-      "name": "鱼人",
-      "data": {
-        "Name": "鱼人",
-        "Team": "Enemy",
-        "EntityType": "Unit",
-        "DeathType": "Normal",
-        "VisualScenePath": "res://assets/Unit/Enemy/yuren/AnimatedSprite2D/yuren.tscn",
-        "HealthBarHeight": 0.0,
-        "BaseHp": 150.0,
-        "BaseHpRegen": 0.0,
-        "LifeSteal": 0.0,
-        "BaseAttack": 6.0,
-        "BaseAttackSpeed": 100.0,
-        "AttackRange": 200.0,
-        "CritRate": 0.0,
-        "CritDamage": 100.0,
-        "Penetration": 0.0,
-        "BaseDefense": 1.0,
-        "DamageReduction": 0.0,
-        "MoveSpeed": 150.0,
-        "DodgeChance": 0.0,
-        "ExpReward": 2,
-        "DetectionRange": 500.0,
-        "IsEnableSpawnRule": 1,
-        "SpawnStrategy": "Rectangle",
-        "SpawnMinWave": 1,
-        "SpawnMaxWave": -1,
-        "SpawnInterval": 2.0,
-        "SpawnMaxCountPerWave": -1,
-        "SingleSpawnCount": 3,
-        "SingleSpawnVariance": 1,
-        "SpawnStartDelay": 0.0,
-        "SpawnWeight": 10
-      }
-    },
-    {
-      "table": "EnemyData",
-      "id": "enemy.chailangren",
-      "name": "豺狼人",
-      "data": {
-        "Name": "豺狼人",
-        "Team": "Enemy",
-        "EntityType": "Unit",
-        "DeathType": "Normal",
-        "VisualScenePath": "res://assets/Unit/Enemy/chailangren/AnimatedSprite2D/chailangren.tscn",
-        "HealthBarHeight": 155.0,
-        "BaseHp": 100.0,
-        "BaseHpRegen": 0.0,
-        "LifeSteal": 0.0,
-        "BaseAttack": 5.0,
-        "BaseAttackSpeed": 100.0,
-        "AttackRange": 200.0,
-        "CritRate": 0.0,
-        "CritDamage": 100.0,
-        "Penetration": 0.0,
-        "BaseDefense": 3.0,
-        "DamageReduction": 0.0,
-        "MoveSpeed": 150.0,
-        "DodgeChance": 0.0,
-        "ExpReward": 5,
-        "DetectionRange": 500.0,
-        "IsEnableSpawnRule": 1,
-        "SpawnStrategy": "Circle",
-        "SpawnMinWave": 1,
-        "SpawnMaxWave": -1,
-        "SpawnInterval": 3.0,
-        "SpawnMaxCountPerWave": -1,
-        "SingleSpawnCount": 2,
-        "SingleSpawnVariance": 0,
-        "SpawnStartDelay": 0.0,
-        "SpawnWeight": 10
-      }
-    },
-    {
-      "table": "TargetingIndicatorData",
-      "id": "unit.targeting_indicator",
-      "name": "TargetingIndicator",
-      "data": {
-        "Name": "TargetingIndicator",
-        "Team": "Neutral",
-        "EntityType": "TargetingIndicator",
-        "VisualScenePath": "",
-        "IsShowHealthBar": 0,
-        "BaseHp": 1000000.0,
-        "IsInvulnerable": 1,
-        "MoveSpeed": 400.0,
-        "BaseAttackSpeed": 0
-      }
-    },
-    {
-      "table": "AbilityData",
-      "id": "ability.slam",
-      "name": "猛击",
-      "data": {
-        "Name": "猛击",
-        "FeatureGroupId": "技能.主动",
-        "FeatureHandlerId": "技能.主动.猛击",
-        "Description": "在角色周围随机位置猛击地面，对范围内敌人造成物理伤害",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
-        "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "Mana",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 30.0,
-        "IsAbilityUsesCharges": 0,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
-        "AbilityCastRange": 500.0,
-        "AbilityEffectRadius": 300.0,
-        "EffectScenePath": "res://assets/Effect/020/AnimatedSprite2D/020.tscn",
-        "ProjectileScenePath": "",
-        "ChainCount": null,
-        "ChainRange": null,
-        "ChainDelay": null,
-        "ChainDamageDecay": null,
-        "LineEffectScenePath": ""
-      }
-    },
-    {
-      "table": "AbilityData",
-      "id": "ability.orbit_skill",
-      "name": "环绕技能",
-      "data": {
-        "Name": "环绕技能",
-        "FeatureGroupId": "技能.被动",
-        "FeatureHandlerId": "技能.被动.环绕技能",
-        "Description": "生成多个投射物环绕玩家旋转，碰触敌人造成伤害（验证 Orbit 模式）",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Passive",
-        "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 20.0,
-        "IsAbilityUsesCharges": 0,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
-        "AbilityCastRange": 0.0,
-        "AbilityEffectRadius": 0.0,
-        "EffectScenePath": "",
-        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/BulletDiamond.tscn",
-        "ChainCount": null,
-        "ChainRange": null,
-        "ChainDelay": null,
-        "ChainDamageDecay": null,
-        "LineEffectScenePath": ""
-      }
-    },
-    {
-      "table": "AbilityData",
-      "id": "ability.sine_wave_shot",
-      "name": "正弦波射击",
-      "data": {
-        "Name": "正弦波射击",
-        "FeatureGroupId": "技能.投射物",
-        "FeatureHandlerId": "技能.投射物.正弦波射击",
-        "Description": "发射正弦波形弹道向敌人射击（验证 SineWave 模式）",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
-        "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 25.0,
-        "IsAbilityUsesCharges": 0,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
-        "AbilityCastRange": 600.0,
-        "AbilityEffectRadius": 0.0,
-        "EffectScenePath": "",
-        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn",
-        "ChainCount": null,
-        "ChainRange": null,
-        "ChainDelay": null,
-        "ChainDamageDecay": null,
-        "LineEffectScenePath": ""
-      }
-    },
-    {
-      "table": "AbilityData",
-      "id": "ability.parabola_shot",
-      "name": "定点抛炸弹",
-      "data": {
-        "Name": "定点抛炸弹",
-        "FeatureGroupId": "技能.投射物",
-        "FeatureHandlerId": "技能.投射物.定点抛炸弹",
-        "Description": "每隔一段时间向施法者周围随机落点抛出一枚炸弹，落地时造成范围伤害（固定终点 Parabola 模式）",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
-        "AbilityTriggerMode": "Periodic",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 9.0,
-        "IsAbilityUsesCharges": 0,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
-        "AbilityCastRange": 700.0,
-        "AbilityEffectRadius": 250.0,
-        "EffectScenePath": "res://assets/Effect/004龙卷风/AnimatedSprite2D/004龙卷风.tscn",
-        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn",
-        "ChainCount": null,
-        "ChainRange": null,
-        "ChainDelay": null,
-        "ChainDamageDecay": null,
-        "LineEffectScenePath": ""
-      }
-    },
-    {
-      "table": "AbilityData",
-      "id": "ability.boomerang_throw",
-      "name": "回旋镖投掷",
-      "data": {
-        "Name": "回旋镖投掷",
-        "FeatureGroupId": "技能.投射物",
-        "FeatureHandlerId": "技能.投射物.回旋镖投掷",
-        "Description": "投掷回旋镖，飞出后自动返回，来回命中敌人（验证 Boomerang 模式）",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
-        "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 22.0,
-        "IsAbilityUsesCharges": 0,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
-        "AbilityCastRange": 800.0,
-        "AbilityEffectRadius": 0.0,
-        "EffectScenePath": "",
-        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/BulletDiamond.tscn",
-        "ChainCount": null,
-        "ChainRange": null,
-        "ChainDelay": null,
-        "ChainDamageDecay": null,
-        "LineEffectScenePath": ""
-      }
-    },
-    {
-      "table": "AbilityData",
+      "table": "ability",
+      "legacyTable": "AbilityData",
       "id": "ability.arc_shot",
       "name": "圆弧射击",
-      "data": {
-        "Name": "圆弧射击",
-        "FeatureGroupId": "技能.投射物",
-        "FeatureHandlerId": "技能.投射物.圆弧射击",
-        "Description": "发射沿圆弧轨迹飞行的投射物（验证 CircularArc 模式）",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
-        "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 26.0,
-        "IsAbilityUsesCharges": 0,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "Entity",
+      "fields": {
+        "AbilityCastRange": {
+          "type": "float",
+          "value": 700.0
+        },
+        "AbilityChargeTime": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCooldown": {
+          "type": "float",
+          "value": 1.0
+        },
+        "AbilityCostAmount": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCostType": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityDamage": {
+          "type": "float",
+          "value": 26.0
+        },
+        "AbilityEffectRadius": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityFeatureGroup": {
+          "type": "string",
+          "value": "技能.投射物"
+        },
+        "AbilityIcon": {
+          "type": "string",
+          "value": "res://icon.svg"
+        },
+        "AbilityMaxCharges": {
+          "type": "int",
+          "value": 0
+        },
+        "AbilityTargetSelection": {
+          "type": "enum",
+          "value": "Entity"
+        },
+        "AbilityTriggerMode": {
+          "type": "enum",
+          "value": "Manual"
+        },
+        "AbilityType": {
+          "type": "enum",
+          "value": "Active"
+        },
+        "Description": {
+          "type": "string",
+          "value": "发射沿圆弧轨迹飞行的投射物（验证 CircularArc 模式）"
+        },
+        "EffectScene": {
+          "type": "string",
+          "value": ""
+        },
+        "EntityType": {
+          "type": "enum",
+          "value": "Ability"
+        },
+        "FeatureHandlerId": {
+          "type": "string",
+          "value": "技能.投射物.圆弧射击"
+        },
+        "IsAbilityUsesCharges": {
+          "type": "bool",
+          "value": false
+        },
+        "Name": {
+          "type": "string",
+          "value": "圆弧射击"
+        },
+        "ProjectileScene": {
+          "type": "string",
+          "value": "res://assets/Projectile/Projectile/Polygon2D/BoomerangChevron.tscn"
+        }
+      },
+      "legacyData": {
         "AbilityCastRange": 700.0,
+        "AbilityChargeTime": 0.0,
+        "AbilityCooldown": 1.0,
+        "AbilityCostAmount": 0.0,
+        "AbilityCostType": "None",
+        "AbilityDamage": 26.0,
         "AbilityEffectRadius": 0.0,
+        "FeatureGroupId": "技能.投射物",
+        "AbilityIconPath": "res://icon.svg",
+        "AbilityMaxCharges": 0,
+        "AbilityTargetSelection": "Entity",
+        "AbilityTriggerMode": "Manual",
+        "AbilityType": "Active",
+        "Description": "发射沿圆弧轨迹飞行的投射物（验证 CircularArc 模式）",
         "EffectScenePath": "",
-        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/BoomerangChevron.tscn",
-        "ChainCount": null,
-        "ChainRange": null,
-        "ChainDelay": null,
-        "ChainDamageDecay": null,
-        "LineEffectScenePath": ""
+        "EntityType": "Ability",
+        "FeatureHandlerId": "技能.投射物.圆弧射击",
+        "IsAbilityUsesCharges": false,
+        "Name": "圆弧射击",
+        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/BoomerangChevron.tscn"
       }
     },
     {
-      "table": "AbilityData",
+      "table": "ability",
+      "legacyTable": "AbilityData",
       "id": "ability.bezier_shot",
       "name": "贝塞尔射击",
-      "data": {
-        "Name": "贝塞尔射击",
-        "FeatureGroupId": "技能.投射物",
-        "FeatureHandlerId": "技能.投射物.贝塞尔射击",
-        "Description": "发射沿二次贝塞尔曲线飞行的弓形弹（验证 BezierCurve 模式）",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
-        "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 30.0,
-        "IsAbilityUsesCharges": 0,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
+      "fields": {
+        "AbilityCastRange": {
+          "type": "float",
+          "value": 600.0
+        },
+        "AbilityChargeTime": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCooldown": {
+          "type": "float",
+          "value": 1.0
+        },
+        "AbilityCostAmount": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCostType": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityDamage": {
+          "type": "float",
+          "value": 30.0
+        },
+        "AbilityEffectRadius": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityFeatureGroup": {
+          "type": "string",
+          "value": "技能.投射物"
+        },
+        "AbilityIcon": {
+          "type": "string",
+          "value": "res://icon.svg"
+        },
+        "AbilityMaxCharges": {
+          "type": "int",
+          "value": 0
+        },
+        "AbilityTargetSelection": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityTriggerMode": {
+          "type": "enum",
+          "value": "Manual"
+        },
+        "AbilityType": {
+          "type": "enum",
+          "value": "Active"
+        },
+        "Description": {
+          "type": "string",
+          "value": "发射沿二次贝塞尔曲线飞行的弓形弹（验证 BezierCurve 模式）"
+        },
+        "EffectScene": {
+          "type": "string",
+          "value": ""
+        },
+        "EntityType": {
+          "type": "enum",
+          "value": "Ability"
+        },
+        "FeatureHandlerId": {
+          "type": "string",
+          "value": "技能.投射物.贝塞尔射击"
+        },
+        "IsAbilityUsesCharges": {
+          "type": "bool",
+          "value": false
+        },
+        "Name": {
+          "type": "string",
+          "value": "贝塞尔射击"
+        },
+        "ProjectileScene": {
+          "type": "string",
+          "value": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn"
+        }
+      },
+      "legacyData": {
         "AbilityCastRange": 600.0,
+        "AbilityChargeTime": 0.0,
+        "AbilityCooldown": 1.0,
+        "AbilityCostAmount": 0.0,
+        "AbilityCostType": "None",
+        "AbilityDamage": 30.0,
         "AbilityEffectRadius": 0.0,
-        "EffectScenePath": "",
-        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn",
-        "ChainCount": null,
-        "ChainRange": null,
-        "ChainDelay": null,
-        "ChainDamageDecay": null,
-        "LineEffectScenePath": ""
-      }
-    },
-    {
-      "table": "AbilityData",
-      "id": "ability.dash",
-      "name": "冲刺",
-      "data": {
-        "Name": "冲刺",
-        "FeatureGroupId": "技能.位移",
-        "FeatureHandlerId": "技能.位移.冲刺",
-        "Description": "高速冲向目标方向，瞬间位移躲避危险",
+        "FeatureGroupId": "技能.投射物",
         "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
+        "AbilityMaxCharges": 0,
+        "AbilityTargetSelection": "None",
         "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 0.0,
-        "IsAbilityUsesCharges": 0,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
-        "AbilityCastRange": 300.0,
-        "AbilityEffectRadius": 300.0,
-        "EffectScenePath": "res://assets/Effect/lrsc3/AnimatedSprite2D/lrsc3.tscn",
-        "ProjectileScenePath": "",
-        "ChainCount": null,
-        "ChainRange": null,
-        "ChainDelay": null,
-        "ChainDamageDecay": null,
-        "LineEffectScenePath": ""
-      }
-    },
-    {
-      "table": "AbilityData",
-      "id": "ability.circle_damage",
-      "name": "圆环伤害",
-      "data": {
-        "Name": "圆环伤害",
-        "FeatureGroupId": "技能.被动",
-        "FeatureHandlerId": "技能.被动.圆环伤害",
-        "Description": "周身燃起烈焰光环，每秒对周围敌人造成魔法伤害",
-        "AbilityIconPath": "res://icon.svg",
+        "AbilityType": "Active",
+        "Description": "发射沿二次贝塞尔曲线飞行的弓形弹（验证 BezierCurve 模式）",
+        "EffectScenePath": "",
         "EntityType": "Ability",
-        "AbilityType": "Passive",
-        "AbilityTriggerMode": "Permanent",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 10.0,
-        "IsAbilityUsesCharges": 0,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
-        "AbilityCastRange": 0.0,
-        "AbilityEffectRadius": 500.0,
-        "EffectScenePath": "res://assets/Effect/003/AnimatedSprite2D/003.tscn",
-        "ProjectileScenePath": "",
-        "ChainCount": null,
-        "ChainRange": null,
-        "ChainDelay": null,
-        "ChainDamageDecay": null,
-        "LineEffectScenePath": ""
+        "FeatureHandlerId": "技能.投射物.贝塞尔射击",
+        "IsAbilityUsesCharges": false,
+        "Name": "贝塞尔射击",
+        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn"
       }
     },
     {
-      "table": "ChainAbilityData",
+      "table": "ability",
+      "legacyTable": "AbilityData",
+      "id": "ability.boomerang_throw",
+      "name": "回旋镖投掷",
+      "fields": {
+        "AbilityCastRange": {
+          "type": "float",
+          "value": 800.0
+        },
+        "AbilityChargeTime": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCooldown": {
+          "type": "float",
+          "value": 1.0
+        },
+        "AbilityCostAmount": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCostType": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityDamage": {
+          "type": "float",
+          "value": 22.0
+        },
+        "AbilityEffectRadius": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityFeatureGroup": {
+          "type": "string",
+          "value": "技能.投射物"
+        },
+        "AbilityIcon": {
+          "type": "string",
+          "value": "res://icon.svg"
+        },
+        "AbilityMaxCharges": {
+          "type": "int",
+          "value": 0
+        },
+        "AbilityTargetSelection": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityTriggerMode": {
+          "type": "enum",
+          "value": "Manual"
+        },
+        "AbilityType": {
+          "type": "enum",
+          "value": "Active"
+        },
+        "Description": {
+          "type": "string",
+          "value": "投掷回旋镖，飞出后自动返回，来回命中敌人（验证 Boomerang 模式）"
+        },
+        "EffectScene": {
+          "type": "string",
+          "value": ""
+        },
+        "EntityType": {
+          "type": "enum",
+          "value": "Ability"
+        },
+        "FeatureHandlerId": {
+          "type": "string",
+          "value": "技能.投射物.回旋镖投掷"
+        },
+        "IsAbilityUsesCharges": {
+          "type": "bool",
+          "value": false
+        },
+        "Name": {
+          "type": "string",
+          "value": "回旋镖投掷"
+        },
+        "ProjectileScene": {
+          "type": "string",
+          "value": "res://assets/Projectile/Projectile/Polygon2D/BulletDiamond.tscn"
+        }
+      },
+      "legacyData": {
+        "AbilityCastRange": 800.0,
+        "AbilityChargeTime": 0.0,
+        "AbilityCooldown": 1.0,
+        "AbilityCostAmount": 0.0,
+        "AbilityCostType": "None",
+        "AbilityDamage": 22.0,
+        "AbilityEffectRadius": 0.0,
+        "FeatureGroupId": "技能.投射物",
+        "AbilityIconPath": "res://icon.svg",
+        "AbilityMaxCharges": 0,
+        "AbilityTargetSelection": "None",
+        "AbilityTriggerMode": "Manual",
+        "AbilityType": "Active",
+        "Description": "投掷回旋镖，飞出后自动返回，来回命中敌人（验证 Boomerang 模式）",
+        "EffectScenePath": "",
+        "EntityType": "Ability",
+        "FeatureHandlerId": "技能.投射物.回旋镖投掷",
+        "IsAbilityUsesCharges": false,
+        "Name": "回旋镖投掷",
+        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/BulletDiamond.tscn"
+      }
+    },
+    {
+      "table": "ability",
+      "legacyTable": "ChainAbilityData",
       "id": "ability.chain_lightning",
       "name": "闪电链",
-      "data": {
-        "Name": "闪电链",
-        "FeatureGroupId": "技能.主动",
-        "FeatureHandlerId": "技能.主动.连锁闪电",
-        "Description": "释放链式闪电，在多个敌人间弹跳造成魔法伤害，每次弹跳衰减",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
-        "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "Mana",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 50.0,
-        "IsAbilityUsesCharges": 0,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "Entity",
+      "fields": {
+        "AbilityCastRange": {
+          "type": "float",
+          "value": 600.0
+        },
+        "AbilityChainCount": {
+          "type": "int",
+          "value": 3
+        },
+        "AbilityChainDamageDecay": {
+          "type": "float",
+          "value": 100.0
+        },
+        "AbilityChainDelay": {
+          "type": "float",
+          "value": 0.2
+        },
+        "AbilityChainRange": {
+          "type": "float",
+          "value": 300.0
+        },
+        "AbilityChargeTime": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCooldown": {
+          "type": "float",
+          "value": 1.0
+        },
+        "AbilityCostAmount": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCostType": {
+          "type": "enum",
+          "value": "Mana"
+        },
+        "AbilityDamage": {
+          "type": "float",
+          "value": 50.0
+        },
+        "AbilityEffectRadius": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityFeatureGroup": {
+          "type": "string",
+          "value": "技能.主动"
+        },
+        "AbilityIcon": {
+          "type": "string",
+          "value": "res://icon.svg"
+        },
+        "AbilityMaxCharges": {
+          "type": "int",
+          "value": 0
+        },
+        "AbilityTargetSelection": {
+          "type": "enum",
+          "value": "Entity"
+        },
+        "AbilityTriggerMode": {
+          "type": "enum",
+          "value": "Manual"
+        },
+        "AbilityType": {
+          "type": "enum",
+          "value": "Active"
+        },
+        "Description": {
+          "type": "string",
+          "value": "释放链式闪电，在多个敌人间弹跳造成魔法伤害，每次弹跳衰减"
+        },
+        "EffectScene": {
+          "type": "string",
+          "value": ""
+        },
+        "EntityType": {
+          "type": "enum",
+          "value": "Ability"
+        },
+        "FeatureHandlerId": {
+          "type": "string",
+          "value": "技能.主动.连锁闪电"
+        },
+        "IsAbilityUsesCharges": {
+          "type": "bool",
+          "value": false
+        },
+        "Name": {
+          "type": "string",
+          "value": "闪电链"
+        },
+        "ProjectileScene": {
+          "type": "string",
+          "value": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn"
+        }
+      },
+      "legacyData": {
         "AbilityCastRange": 600.0,
-        "AbilityEffectRadius": 0.0,
-        "EffectScenePath": "",
-        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn",
         "ChainCount": 3,
-        "ChainRange": 300.0,
-        "ChainDelay": 0.2,
         "ChainDamageDecay": 100.0,
-        "LineEffectScenePath": ""
+        "ChainDelay": 0.2,
+        "ChainRange": 300.0,
+        "AbilityChargeTime": 0.0,
+        "AbilityCooldown": 1.0,
+        "AbilityCostAmount": 0.0,
+        "AbilityCostType": "Mana",
+        "AbilityDamage": 50.0,
+        "AbilityEffectRadius": 0.0,
+        "FeatureGroupId": "技能.主动",
+        "AbilityIconPath": "res://icon.svg",
+        "AbilityMaxCharges": 0,
+        "AbilityTargetSelection": "Entity",
+        "AbilityTriggerMode": "Manual",
+        "AbilityType": "Active",
+        "Description": "释放链式闪电，在多个敌人间弹跳造成魔法伤害，每次弹跳衰减",
+        "EffectScenePath": "",
+        "EntityType": "Ability",
+        "FeatureHandlerId": "技能.主动.连锁闪电",
+        "IsAbilityUsesCharges": false,
+        "Name": "闪电链",
+        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn"
       }
     },
     {
-      "table": "SystemData",
-      "id": "system.object_pool_init",
-      "name": "ObjectPoolInit",
-      "data": {
-        "SystemId": "ObjectPoolInit",
-        "MountGroup": "Base",
-        "Tags": "Core,Runtime",
-        "Required": 1,
-        "AutoLoad": 1,
-        "StartEnabled": 1,
-        "Priority": 0,
-        "AllowedFlowStates": "",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "",
-        "AllowedSimulationStates": "",
-        "Dependencies": "",
-        "Description": "对象池初始化系统，负责预热常用对象池"
+      "table": "ability",
+      "legacyTable": "AbilityData",
+      "id": "ability.circle_damage",
+      "name": "圆环伤害",
+      "fields": {
+        "AbilityCastRange": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityChargeTime": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCooldown": {
+          "type": "float",
+          "value": 1.0
+        },
+        "AbilityCostAmount": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCostType": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityDamage": {
+          "type": "float",
+          "value": 10.0
+        },
+        "AbilityEffectRadius": {
+          "type": "float",
+          "value": 500.0
+        },
+        "AbilityFeatureGroup": {
+          "type": "string",
+          "value": "技能.被动"
+        },
+        "AbilityIcon": {
+          "type": "string",
+          "value": "res://icon.svg"
+        },
+        "AbilityMaxCharges": {
+          "type": "int",
+          "value": 0
+        },
+        "AbilityTargetSelection": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityTriggerMode": {
+          "type": "enum",
+          "value": "Permanent"
+        },
+        "AbilityType": {
+          "type": "enum",
+          "value": "Passive"
+        },
+        "Description": {
+          "type": "string",
+          "value": "周身燃起烈焰光环，每秒对周围敌人造成魔法伤害"
+        },
+        "EffectScene": {
+          "type": "string",
+          "value": "res://assets/Effect/003/AnimatedSprite2D/003.tscn"
+        },
+        "EntityType": {
+          "type": "enum",
+          "value": "Ability"
+        },
+        "FeatureHandlerId": {
+          "type": "string",
+          "value": "技能.被动.圆环伤害"
+        },
+        "IsAbilityUsesCharges": {
+          "type": "bool",
+          "value": false
+        },
+        "Name": {
+          "type": "string",
+          "value": "圆环伤害"
+        },
+        "ProjectileScene": {
+          "type": "string",
+          "value": ""
+        }
+      },
+      "legacyData": {
+        "AbilityCastRange": 0.0,
+        "AbilityChargeTime": 0.0,
+        "AbilityCooldown": 1.0,
+        "AbilityCostAmount": 0.0,
+        "AbilityCostType": "None",
+        "AbilityDamage": 10.0,
+        "AbilityEffectRadius": 500.0,
+        "FeatureGroupId": "技能.被动",
+        "AbilityIconPath": "res://icon.svg",
+        "AbilityMaxCharges": 0,
+        "AbilityTargetSelection": "None",
+        "AbilityTriggerMode": "Permanent",
+        "AbilityType": "Passive",
+        "Description": "周身燃起烈焰光环，每秒对周围敌人造成魔法伤害",
+        "EffectScenePath": "res://assets/Effect/003/AnimatedSprite2D/003.tscn",
+        "EntityType": "Ability",
+        "FeatureHandlerId": "技能.被动.圆环伤害",
+        "IsAbilityUsesCharges": false,
+        "Name": "圆环伤害",
+        "ProjectileScenePath": ""
       }
     },
     {
-      "table": "SystemData",
-      "id": "system.timer_manager",
-      "name": "TimerManager",
-      "data": {
-        "SystemId": "TimerManager",
-        "MountGroup": "Base",
-        "Tags": "Core,Runtime",
-        "Required": 1,
-        "AutoLoad": 1,
-        "StartEnabled": 1,
-        "Priority": 1,
-        "AllowedFlowStates": "",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "",
-        "AllowedSimulationStates": "",
-        "Dependencies": "",
-        "Description": "定时器管理系统，提供全局定时器服务"
+      "table": "ability",
+      "legacyTable": "AbilityData",
+      "id": "ability.dash",
+      "name": "冲刺",
+      "fields": {
+        "AbilityCastRange": {
+          "type": "float",
+          "value": 300.0
+        },
+        "AbilityChargeTime": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCooldown": {
+          "type": "float",
+          "value": 1.0
+        },
+        "AbilityCostAmount": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCostType": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityDamage": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityEffectRadius": {
+          "type": "float",
+          "value": 300.0
+        },
+        "AbilityFeatureGroup": {
+          "type": "string",
+          "value": "技能.位移"
+        },
+        "AbilityIcon": {
+          "type": "string",
+          "value": "res://icon.svg"
+        },
+        "AbilityMaxCharges": {
+          "type": "int",
+          "value": 0
+        },
+        "AbilityTargetSelection": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityTriggerMode": {
+          "type": "enum",
+          "value": "Manual"
+        },
+        "AbilityType": {
+          "type": "enum",
+          "value": "Active"
+        },
+        "Description": {
+          "type": "string",
+          "value": "高速冲向目标方向，瞬间位移躲避危险"
+        },
+        "EffectScene": {
+          "type": "string",
+          "value": "res://assets/Effect/lrsc3/AnimatedSprite2D/lrsc3.tscn"
+        },
+        "EntityType": {
+          "type": "enum",
+          "value": "Ability"
+        },
+        "FeatureHandlerId": {
+          "type": "string",
+          "value": "技能.位移.冲刺"
+        },
+        "IsAbilityUsesCharges": {
+          "type": "bool",
+          "value": false
+        },
+        "Name": {
+          "type": "string",
+          "value": "冲刺"
+        },
+        "ProjectileScene": {
+          "type": "string",
+          "value": ""
+        }
+      },
+      "legacyData": {
+        "AbilityCastRange": 300.0,
+        "AbilityChargeTime": 0.0,
+        "AbilityCooldown": 1.0,
+        "AbilityCostAmount": 0.0,
+        "AbilityCostType": "None",
+        "AbilityDamage": 0.0,
+        "AbilityEffectRadius": 300.0,
+        "FeatureGroupId": "技能.位移",
+        "AbilityIconPath": "res://icon.svg",
+        "AbilityMaxCharges": 0,
+        "AbilityTargetSelection": "None",
+        "AbilityTriggerMode": "Manual",
+        "AbilityType": "Active",
+        "Description": "高速冲向目标方向，瞬间位移躲避危险",
+        "EffectScenePath": "res://assets/Effect/lrsc3/AnimatedSprite2D/lrsc3.tscn",
+        "EntityType": "Ability",
+        "FeatureHandlerId": "技能.位移.冲刺",
+        "IsAbilityUsesCharges": false,
+        "Name": "冲刺",
+        "ProjectileScenePath": ""
       }
     },
     {
-      "table": "SystemData",
-      "id": "system.project_state_bridge",
-      "name": "ProjectStateBridge",
-      "data": {
-        "SystemId": "ProjectStateBridge",
-        "MountGroup": "Base",
-        "Tags": "Core,Runtime",
-        "Required": 1,
-        "AutoLoad": 1,
-        "StartEnabled": 1,
-        "Priority": 2,
-        "AllowedFlowStates": "",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "",
-        "AllowedSimulationStates": "",
-        "Dependencies": "",
-        "Description": "项目状态桥接系统，监听全局事件并同步到 ProjectStateService"
+      "table": "ability",
+      "legacyTable": "AbilityData",
+      "id": "ability.orbit_skill",
+      "name": "环绕技能",
+      "fields": {
+        "AbilityCastRange": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityChargeTime": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCooldown": {
+          "type": "float",
+          "value": 1.0
+        },
+        "AbilityCostAmount": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCostType": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityDamage": {
+          "type": "float",
+          "value": 20.0
+        },
+        "AbilityEffectRadius": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityFeatureGroup": {
+          "type": "string",
+          "value": "技能.被动"
+        },
+        "AbilityIcon": {
+          "type": "string",
+          "value": "res://icon.svg"
+        },
+        "AbilityMaxCharges": {
+          "type": "int",
+          "value": 0
+        },
+        "AbilityTargetSelection": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityTriggerMode": {
+          "type": "enum",
+          "value": "Manual"
+        },
+        "AbilityType": {
+          "type": "enum",
+          "value": "Passive"
+        },
+        "Description": {
+          "type": "string",
+          "value": "生成多个投射物环绕玩家旋转，碰触敌人造成伤害（验证 Orbit 模式）"
+        },
+        "EffectScene": {
+          "type": "string",
+          "value": ""
+        },
+        "EntityType": {
+          "type": "enum",
+          "value": "Ability"
+        },
+        "FeatureHandlerId": {
+          "type": "string",
+          "value": "技能.被动.环绕技能"
+        },
+        "IsAbilityUsesCharges": {
+          "type": "bool",
+          "value": false
+        },
+        "Name": {
+          "type": "string",
+          "value": "环绕技能"
+        },
+        "ProjectileScene": {
+          "type": "string",
+          "value": "res://assets/Projectile/Projectile/Polygon2D/BulletDiamond.tscn"
+        }
+      },
+      "legacyData": {
+        "AbilityCastRange": 0.0,
+        "AbilityChargeTime": 0.0,
+        "AbilityCooldown": 1.0,
+        "AbilityCostAmount": 0.0,
+        "AbilityCostType": "None",
+        "AbilityDamage": 20.0,
+        "AbilityEffectRadius": 0.0,
+        "FeatureGroupId": "技能.被动",
+        "AbilityIconPath": "res://icon.svg",
+        "AbilityMaxCharges": 0,
+        "AbilityTargetSelection": "None",
+        "AbilityTriggerMode": "Manual",
+        "AbilityType": "Passive",
+        "Description": "生成多个投射物环绕玩家旋转，碰触敌人造成伤害（验证 Orbit 模式）",
+        "EffectScenePath": "",
+        "EntityType": "Ability",
+        "FeatureHandlerId": "技能.被动.环绕技能",
+        "IsAbilityUsesCharges": false,
+        "Name": "环绕技能",
+        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/BulletDiamond.tscn"
       }
     },
     {
-      "table": "SystemData",
-      "id": "system.entity_manager",
-      "name": "EntityManager",
-      "data": {
-        "SystemId": "EntityManager",
-        "MountGroup": "Base",
-        "Tags": "Core,Runtime",
-        "Required": 1,
-        "AutoLoad": 1,
-        "StartEnabled": 1,
-        "Priority": 5,
-        "AllowedFlowStates": "",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "",
-        "AllowedSimulationStates": "",
-        "Dependencies": "",
-        "Description": "实体管理器，负责实体的生成、注册、销毁和组件管理。"
+      "table": "ability",
+      "legacyTable": "AbilityData",
+      "id": "ability.parabola_shot",
+      "name": "定点抛炸弹",
+      "fields": {
+        "AbilityCastRange": {
+          "type": "float",
+          "value": 700.0
+        },
+        "AbilityChargeTime": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCooldown": {
+          "type": "float",
+          "value": 1.0
+        },
+        "AbilityCostAmount": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCostType": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityDamage": {
+          "type": "float",
+          "value": 9.0
+        },
+        "AbilityEffectRadius": {
+          "type": "float",
+          "value": 250.0
+        },
+        "AbilityFeatureGroup": {
+          "type": "string",
+          "value": "技能.投射物"
+        },
+        "AbilityIcon": {
+          "type": "string",
+          "value": "res://icon.svg"
+        },
+        "AbilityMaxCharges": {
+          "type": "int",
+          "value": 0
+        },
+        "AbilityTargetSelection": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityTriggerMode": {
+          "type": "enum",
+          "value": "Periodic"
+        },
+        "AbilityType": {
+          "type": "enum",
+          "value": "Active"
+        },
+        "Description": {
+          "type": "string",
+          "value": "每隔一段时间向施法者周围随机落点抛出一枚炸弹，落地时造成范围伤害（固定终点 Parabola 模式）"
+        },
+        "EffectScene": {
+          "type": "string",
+          "value": "res://assets/Effect/004龙卷风/AnimatedSprite2D/004龙卷风.tscn"
+        },
+        "EntityType": {
+          "type": "enum",
+          "value": "Ability"
+        },
+        "FeatureHandlerId": {
+          "type": "string",
+          "value": "技能.投射物.定点抛炸弹"
+        },
+        "IsAbilityUsesCharges": {
+          "type": "bool",
+          "value": false
+        },
+        "Name": {
+          "type": "string",
+          "value": "定点抛炸弹"
+        },
+        "ProjectileScene": {
+          "type": "string",
+          "value": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn"
+        }
+      },
+      "legacyData": {
+        "AbilityCastRange": 700.0,
+        "AbilityChargeTime": 0.0,
+        "AbilityCooldown": 1.0,
+        "AbilityCostAmount": 0.0,
+        "AbilityCostType": "None",
+        "AbilityDamage": 9.0,
+        "AbilityEffectRadius": 250.0,
+        "FeatureGroupId": "技能.投射物",
+        "AbilityIconPath": "res://icon.svg",
+        "AbilityMaxCharges": 0,
+        "AbilityTargetSelection": "None",
+        "AbilityTriggerMode": "Periodic",
+        "AbilityType": "Active",
+        "Description": "每隔一段时间向施法者周围随机落点抛出一枚炸弹，落地时造成范围伤害（固定终点 Parabola 模式）",
+        "EffectScenePath": "res://assets/Effect/004龙卷风/AnimatedSprite2D/004龙卷风.tscn",
+        "EntityType": "Ability",
+        "FeatureHandlerId": "技能.投射物.定点抛炸弹",
+        "IsAbilityUsesCharges": false,
+        "Name": "定点抛炸弹",
+        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn"
       }
     },
     {
-      "table": "SystemData",
-      "id": "system.damage_service",
-      "name": "DamageService",
-      "data": {
-        "SystemId": "DamageService",
-        "MountGroup": "Combat",
-        "Tags": "Core,Combat,Runtime",
-        "Required": 0,
-        "AutoLoad": 1,
-        "StartEnabled": 1,
-        "Priority": 10,
-        "AllowedFlowStates": "SessionPlaying",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "Blocking",
-        "AllowedSimulationStates": "Running",
-        "Dependencies": "",
-        "Description": "伤害处理服务，负责伤害计算、暴击、闪避等核心战斗逻辑"
+      "table": "ability",
+      "legacyTable": "AbilityData",
+      "id": "ability.sine_wave_shot",
+      "name": "正弦波射击",
+      "fields": {
+        "AbilityCastRange": {
+          "type": "float",
+          "value": 600.0
+        },
+        "AbilityChargeTime": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCooldown": {
+          "type": "float",
+          "value": 1.0
+        },
+        "AbilityCostAmount": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCostType": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityDamage": {
+          "type": "float",
+          "value": 25.0
+        },
+        "AbilityEffectRadius": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityFeatureGroup": {
+          "type": "string",
+          "value": "技能.投射物"
+        },
+        "AbilityIcon": {
+          "type": "string",
+          "value": "res://icon.svg"
+        },
+        "AbilityMaxCharges": {
+          "type": "int",
+          "value": 0
+        },
+        "AbilityTargetSelection": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityTriggerMode": {
+          "type": "enum",
+          "value": "Manual"
+        },
+        "AbilityType": {
+          "type": "enum",
+          "value": "Active"
+        },
+        "Description": {
+          "type": "string",
+          "value": "发射正弦波形弹道向敌人射击（验证 SineWave 模式）"
+        },
+        "EffectScene": {
+          "type": "string",
+          "value": ""
+        },
+        "EntityType": {
+          "type": "enum",
+          "value": "Ability"
+        },
+        "FeatureHandlerId": {
+          "type": "string",
+          "value": "技能.投射物.正弦波射击"
+        },
+        "IsAbilityUsesCharges": {
+          "type": "bool",
+          "value": false
+        },
+        "Name": {
+          "type": "string",
+          "value": "正弦波射击"
+        },
+        "ProjectileScene": {
+          "type": "string",
+          "value": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn"
+        }
+      },
+      "legacyData": {
+        "AbilityCastRange": 600.0,
+        "AbilityChargeTime": 0.0,
+        "AbilityCooldown": 1.0,
+        "AbilityCostAmount": 0.0,
+        "AbilityCostType": "None",
+        "AbilityDamage": 25.0,
+        "AbilityEffectRadius": 0.0,
+        "FeatureGroupId": "技能.投射物",
+        "AbilityIconPath": "res://icon.svg",
+        "AbilityMaxCharges": 0,
+        "AbilityTargetSelection": "None",
+        "AbilityTriggerMode": "Manual",
+        "AbilityType": "Active",
+        "Description": "发射正弦波形弹道向敌人射击（验证 SineWave 模式）",
+        "EffectScenePath": "",
+        "EntityType": "Ability",
+        "FeatureHandlerId": "技能.投射物.正弦波射击",
+        "IsAbilityUsesCharges": false,
+        "Name": "正弦波射击",
+        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn"
       }
     },
     {
-      "table": "SystemData",
-      "id": "system.damage_statistics",
-      "name": "DamageStatisticsSystem",
-      "data": {
-        "SystemId": "DamageStatisticsSystem",
-        "MountGroup": "Combat",
-        "Tags": "Core,Combat,Runtime",
-        "Required": 0,
-        "AutoLoad": 1,
-        "StartEnabled": 1,
-        "Priority": 11,
-        "AllowedFlowStates": "SessionPlaying",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "Blocking",
-        "AllowedSimulationStates": "Running",
-        "Dependencies": "DamageService",
-        "Description": "伤害统计系统，记录和分析战斗数据"
+      "table": "ability",
+      "legacyTable": "AbilityData",
+      "id": "ability.slam",
+      "name": "猛击",
+      "fields": {
+        "AbilityCastRange": {
+          "type": "float",
+          "value": 500.0
+        },
+        "AbilityChargeTime": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCooldown": {
+          "type": "float",
+          "value": 1.0
+        },
+        "AbilityCostAmount": {
+          "type": "float",
+          "value": 0.0
+        },
+        "AbilityCostType": {
+          "type": "enum",
+          "value": "Mana"
+        },
+        "AbilityDamage": {
+          "type": "float",
+          "value": 30.0
+        },
+        "AbilityEffectRadius": {
+          "type": "float",
+          "value": 300.0
+        },
+        "AbilityFeatureGroup": {
+          "type": "string",
+          "value": "技能.主动"
+        },
+        "AbilityIcon": {
+          "type": "string",
+          "value": "res://icon.svg"
+        },
+        "AbilityMaxCharges": {
+          "type": "int",
+          "value": 0
+        },
+        "AbilityTargetSelection": {
+          "type": "enum",
+          "value": "None"
+        },
+        "AbilityTriggerMode": {
+          "type": "enum",
+          "value": "Manual"
+        },
+        "AbilityType": {
+          "type": "enum",
+          "value": "Active"
+        },
+        "Description": {
+          "type": "string",
+          "value": "在角色周围随机位置猛击地面，对范围内敌人造成物理伤害"
+        },
+        "EffectScene": {
+          "type": "string",
+          "value": "res://assets/Effect/020/AnimatedSprite2D/020.tscn"
+        },
+        "EntityType": {
+          "type": "enum",
+          "value": "Ability"
+        },
+        "FeatureHandlerId": {
+          "type": "string",
+          "value": "技能.主动.猛击"
+        },
+        "IsAbilityUsesCharges": {
+          "type": "bool",
+          "value": false
+        },
+        "Name": {
+          "type": "string",
+          "value": "猛击"
+        },
+        "ProjectileScene": {
+          "type": "string",
+          "value": ""
+        }
+      },
+      "legacyData": {
+        "AbilityCastRange": 500.0,
+        "AbilityChargeTime": 0.0,
+        "AbilityCooldown": 1.0,
+        "AbilityCostAmount": 0.0,
+        "AbilityCostType": "Mana",
+        "AbilityDamage": 30.0,
+        "AbilityEffectRadius": 300.0,
+        "FeatureGroupId": "技能.主动",
+        "AbilityIconPath": "res://icon.svg",
+        "AbilityMaxCharges": 0,
+        "AbilityTargetSelection": "None",
+        "AbilityTriggerMode": "Manual",
+        "AbilityType": "Active",
+        "Description": "在角色周围随机位置猛击地面，对范围内敌人造成物理伤害",
+        "EffectScenePath": "res://assets/Effect/020/AnimatedSprite2D/020.tscn",
+        "EntityType": "Ability",
+        "FeatureHandlerId": "技能.主动.猛击",
+        "IsAbilityUsesCharges": false,
+        "Name": "猛击",
+        "ProjectileScenePath": ""
       }
     },
     {
-      "table": "SystemData",
-      "id": "system.recovery",
-      "name": "RecoverySystem",
-      "data": {
-        "SystemId": "RecoverySystem",
-        "MountGroup": "Combat",
-        "Tags": "Core,Combat,Runtime",
-        "Required": 0,
-        "AutoLoad": 1,
-        "StartEnabled": 1,
-        "Priority": 12,
-        "AllowedFlowStates": "SessionPlaying",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "Blocking",
-        "AllowedSimulationStates": "Running",
-        "Dependencies": "",
-        "Description": "恢复系统，处理生命值和护盾恢复逻辑"
-      }
-    },
-    {
-      "table": "SystemData",
-      "id": "system.spawn",
-      "name": "SpawnSystem",
-      "data": {
-        "SystemId": "SpawnSystem",
-        "MountGroup": "Gameplay",
-        "Tags": "Gameplay,Runtime",
-        "Required": 0,
-        "AutoLoad": 1,
-        "StartEnabled": 1,
-        "Priority": 13,
-        "AllowedFlowStates": "SessionPlaying",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "Blocking",
-        "AllowedSimulationStates": "Running",
-        "Dependencies": "",
-        "Description": "生成系统，负责敌人和道具的生成逻辑"
-      }
-    },
-    {
-      "table": "SystemData",
-      "id": "system.targeting_manager",
-      "name": "TargetingManagerRuntime",
-      "data": {
-        "SystemId": "TargetingManagerRuntime",
-        "MountGroup": "Combat",
-        "Tags": "Core,Combat,Runtime",
-        "Required": 0,
-        "AutoLoad": 1,
-        "StartEnabled": 1,
-        "Priority": 14,
-        "AllowedFlowStates": "SessionPlaying",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "Blocking",
-        "AllowedSimulationStates": "Running",
-        "Dependencies": "",
-        "Description": "目标选择管理系统，提供目标查询和筛选服务"
-      }
-    },
-    {
-      "table": "SystemData",
-      "id": "system.pause_menu",
-      "name": "PauseMenuSystem",
-      "data": {
-        "SystemId": "PauseMenuSystem",
-        "MountGroup": "UI",
-        "Tags": "UI,Runtime",
-        "Required": 0,
-        "AutoLoad": 1,
-        "StartEnabled": 1,
-        "Priority": 20,
-        "AllowedFlowStates": "SessionPlaying",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "",
-        "AllowedSimulationStates": "Any",
-        "Dependencies": "",
-        "Description": "暂停菜单系统，处理暂停菜单的显示和交互"
-      }
-    },
-    {
-      "table": "SystemData",
-      "id": "system.ui_manager",
-      "name": "UIManager",
-      "data": {
-        "SystemId": "UIManager",
-        "MountGroup": "UI",
-        "Tags": "Core,UI,Runtime",
-        "Required": 0,
-        "AutoLoad": 1,
-        "StartEnabled": 1,
-        "Priority": 21,
-        "AllowedFlowStates": "",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "",
-        "AllowedSimulationStates": "",
-        "Dependencies": "",
-        "Description": "UI 管理系统，负责 UI 的创建、显示和销毁"
-      }
-    },
-    {
-      "table": "SystemData",
+      "table": "system.config",
+      "legacyTable": "SystemData",
       "id": "system.damage_number_bridge",
       "name": "DamageNumberRuntimeBridge",
-      "data": {
-        "SystemId": "DamageNumberRuntimeBridge",
-        "MountGroup": "UI",
-        "Tags": "Combat,UI,Runtime",
-        "Required": 0,
-        "AutoLoad": 1,
-        "StartEnabled": 1,
-        "Priority": 22,
+      "fields": {
+        "AllowedFlowStates": {
+          "type": "string",
+          "value": "SessionPlaying"
+        },
+        "AllowedSimulationStates": {
+          "type": "string",
+          "value": "Running"
+        },
+        "AutoLoad": {
+          "type": "bool",
+          "value": true
+        },
+        "BlockedOverlays": {
+          "type": "string",
+          "value": "Blocking"
+        },
+        "Dependencies": {
+          "type": "string_array",
+          "value": ""
+        },
+        "Description": {
+          "type": "string",
+          "value": "伤害数字 UI 桥接系统，监听伤害事件并显示伤害数字"
+        },
+        "MountGroup": {
+          "type": "string",
+          "value": "UI"
+        },
+        "Priority": {
+          "type": "int",
+          "value": 22
+        },
+        "Required": {
+          "type": "bool",
+          "value": false
+        },
+        "RequiredOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "StartEnabled": {
+          "type": "bool",
+          "value": true
+        },
+        "SystemId": {
+          "type": "string",
+          "value": "DamageNumberRuntimeBridge"
+        },
+        "Tags": {
+          "type": "string",
+          "value": "Combat,UI,Runtime"
+        }
+      },
+      "legacyData": {
         "AllowedFlowStates": "SessionPlaying",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "Blocking",
         "AllowedSimulationStates": "Running",
+        "AutoLoad": true,
+        "BlockedOverlays": "Blocking",
         "Dependencies": "",
-        "Description": "伤害数字 UI 桥接系统，监听伤害事件并显示伤害数字"
-      }
-    },
-    {
-      "table": "SystemData",
-      "id": "system.test",
-      "name": "TestSystem",
-      "data": {
-        "SystemId": "TestSystem",
-        "MountGroup": "Test",
-        "Tags": "Debug,Test",
-        "Required": 0,
-        "AutoLoad": 0,
-        "StartEnabled": 1,
-        "Priority": 100,
-        "AllowedFlowStates": "",
+        "Description": "伤害数字 UI 桥接系统，监听伤害事件并显示伤害数字",
+        "MountGroup": "UI",
+        "Priority": 22,
+        "Required": false,
         "RequiredOverlays": "",
-        "BlockedOverlays": "",
-        "AllowedSimulationStates": "",
-        "Dependencies": "",
-        "Description": "测试系统，用于调试和监控系统运行状态"
+        "StartEnabled": true,
+        "SystemId": "DamageNumberRuntimeBridge",
+        "Tags": "Combat,UI,Runtime"
       }
     },
     {
-      "table": "SystemData",
+      "table": "system.config",
+      "legacyTable": "SystemData",
+      "id": "system.damage_service",
+      "name": "DamageService",
+      "fields": {
+        "AllowedFlowStates": {
+          "type": "string",
+          "value": "SessionPlaying"
+        },
+        "AllowedSimulationStates": {
+          "type": "string",
+          "value": "Running"
+        },
+        "AutoLoad": {
+          "type": "bool",
+          "value": true
+        },
+        "BlockedOverlays": {
+          "type": "string",
+          "value": "Blocking"
+        },
+        "Dependencies": {
+          "type": "string_array",
+          "value": ""
+        },
+        "Description": {
+          "type": "string",
+          "value": "伤害处理服务，负责伤害计算、暴击、闪避等核心战斗逻辑"
+        },
+        "MountGroup": {
+          "type": "string",
+          "value": "Combat"
+        },
+        "Priority": {
+          "type": "int",
+          "value": 10
+        },
+        "Required": {
+          "type": "bool",
+          "value": false
+        },
+        "RequiredOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "StartEnabled": {
+          "type": "bool",
+          "value": true
+        },
+        "SystemId": {
+          "type": "string",
+          "value": "DamageService"
+        },
+        "Tags": {
+          "type": "string",
+          "value": "Core,Combat,Runtime"
+        }
+      },
+      "legacyData": {
+        "AllowedFlowStates": "SessionPlaying",
+        "AllowedSimulationStates": "Running",
+        "AutoLoad": true,
+        "BlockedOverlays": "Blocking",
+        "Dependencies": "",
+        "Description": "伤害处理服务，负责伤害计算、暴击、闪避等核心战斗逻辑",
+        "MountGroup": "Combat",
+        "Priority": 10,
+        "Required": false,
+        "RequiredOverlays": "",
+        "StartEnabled": true,
+        "SystemId": "DamageService",
+        "Tags": "Core,Combat,Runtime"
+      }
+    },
+    {
+      "table": "system.config",
+      "legacyTable": "SystemData",
+      "id": "system.damage_statistics",
+      "name": "DamageStatisticsSystem",
+      "fields": {
+        "AllowedFlowStates": {
+          "type": "string",
+          "value": "SessionPlaying"
+        },
+        "AllowedSimulationStates": {
+          "type": "string",
+          "value": "Running"
+        },
+        "AutoLoad": {
+          "type": "bool",
+          "value": true
+        },
+        "BlockedOverlays": {
+          "type": "string",
+          "value": "Blocking"
+        },
+        "Dependencies": {
+          "type": "string_array",
+          "value": "DamageService"
+        },
+        "Description": {
+          "type": "string",
+          "value": "伤害统计系统，记录和分析战斗数据"
+        },
+        "MountGroup": {
+          "type": "string",
+          "value": "Combat"
+        },
+        "Priority": {
+          "type": "int",
+          "value": 11
+        },
+        "Required": {
+          "type": "bool",
+          "value": false
+        },
+        "RequiredOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "StartEnabled": {
+          "type": "bool",
+          "value": true
+        },
+        "SystemId": {
+          "type": "string",
+          "value": "DamageStatisticsSystem"
+        },
+        "Tags": {
+          "type": "string",
+          "value": "Core,Combat,Runtime"
+        }
+      },
+      "legacyData": {
+        "AllowedFlowStates": "SessionPlaying",
+        "AllowedSimulationStates": "Running",
+        "AutoLoad": true,
+        "BlockedOverlays": "Blocking",
+        "Dependencies": "DamageService",
+        "Description": "伤害统计系统，记录和分析战斗数据",
+        "MountGroup": "Combat",
+        "Priority": 11,
+        "Required": false,
+        "RequiredOverlays": "",
+        "StartEnabled": true,
+        "SystemId": "DamageStatisticsSystem",
+        "Tags": "Core,Combat,Runtime"
+      }
+    },
+    {
+      "table": "system.config",
+      "legacyTable": "SystemData",
+      "id": "system.entity_manager",
+      "name": "EntityManager",
+      "fields": {
+        "AllowedFlowStates": {
+          "type": "string",
+          "value": ""
+        },
+        "AllowedSimulationStates": {
+          "type": "string",
+          "value": ""
+        },
+        "AutoLoad": {
+          "type": "bool",
+          "value": true
+        },
+        "BlockedOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "Dependencies": {
+          "type": "string_array",
+          "value": ""
+        },
+        "Description": {
+          "type": "string",
+          "value": "实体管理器，负责实体的生成、注册、销毁和组件管理。"
+        },
+        "MountGroup": {
+          "type": "string",
+          "value": "Base"
+        },
+        "Priority": {
+          "type": "int",
+          "value": 5
+        },
+        "Required": {
+          "type": "bool",
+          "value": true
+        },
+        "RequiredOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "StartEnabled": {
+          "type": "bool",
+          "value": true
+        },
+        "SystemId": {
+          "type": "string",
+          "value": "EntityManager"
+        },
+        "Tags": {
+          "type": "string",
+          "value": "Core,Runtime"
+        }
+      },
+      "legacyData": {
+        "AllowedFlowStates": "",
+        "AllowedSimulationStates": "",
+        "AutoLoad": true,
+        "BlockedOverlays": "",
+        "Dependencies": "",
+        "Description": "实体管理器，负责实体的生成、注册、销毁和组件管理。",
+        "MountGroup": "Base",
+        "Priority": 5,
+        "Required": true,
+        "RequiredOverlays": "",
+        "StartEnabled": true,
+        "SystemId": "EntityManager",
+        "Tags": "Core,Runtime"
+      }
+    },
+    {
+      "table": "system.config",
+      "legacyTable": "SystemData",
       "id": "system.mouse_selection",
       "name": "MouseSelectionSystem",
-      "data": {
-        "SystemId": "MouseSelectionSystem",
-        "MountGroup": "Debug",
-        "Tags": "Debug,Test",
-        "Required": 0,
-        "AutoLoad": 0,
-        "StartEnabled": 1,
-        "Priority": 101,
+      "fields": {
+        "AllowedFlowStates": {
+          "type": "string",
+          "value": ""
+        },
+        "AllowedSimulationStates": {
+          "type": "string",
+          "value": ""
+        },
+        "AutoLoad": {
+          "type": "bool",
+          "value": false
+        },
+        "BlockedOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "Dependencies": {
+          "type": "string_array",
+          "value": ""
+        },
+        "Description": {
+          "type": "string",
+          "value": "鼠标选择系统，用于调试时选择和查看实体"
+        },
+        "MountGroup": {
+          "type": "string",
+          "value": "Debug"
+        },
+        "Priority": {
+          "type": "int",
+          "value": 101
+        },
+        "Required": {
+          "type": "bool",
+          "value": false
+        },
+        "RequiredOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "StartEnabled": {
+          "type": "bool",
+          "value": true
+        },
+        "SystemId": {
+          "type": "string",
+          "value": "MouseSelectionSystem"
+        },
+        "Tags": {
+          "type": "string",
+          "value": "Debug,Test"
+        }
+      },
+      "legacyData": {
         "AllowedFlowStates": "",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "",
         "AllowedSimulationStates": "",
+        "AutoLoad": false,
+        "BlockedOverlays": "",
         "Dependencies": "",
-        "Description": "鼠标选择系统，用于调试时选择和查看实体"
+        "Description": "鼠标选择系统，用于调试时选择和查看实体",
+        "MountGroup": "Debug",
+        "Priority": 101,
+        "Required": false,
+        "RequiredOverlays": "",
+        "StartEnabled": true,
+        "SystemId": "MouseSelectionSystem",
+        "Tags": "Debug,Test"
       }
     },
     {
-      "table": "SystemPresetData",
+      "table": "system.config",
+      "legacyTable": "SystemData",
+      "id": "system.object_pool_init",
+      "name": "ObjectPoolInit",
+      "fields": {
+        "AllowedFlowStates": {
+          "type": "string",
+          "value": ""
+        },
+        "AllowedSimulationStates": {
+          "type": "string",
+          "value": ""
+        },
+        "AutoLoad": {
+          "type": "bool",
+          "value": true
+        },
+        "BlockedOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "Dependencies": {
+          "type": "string_array",
+          "value": ""
+        },
+        "Description": {
+          "type": "string",
+          "value": "对象池初始化系统，负责预热常用对象池"
+        },
+        "MountGroup": {
+          "type": "string",
+          "value": "Base"
+        },
+        "Priority": {
+          "type": "int",
+          "value": 0
+        },
+        "Required": {
+          "type": "bool",
+          "value": true
+        },
+        "RequiredOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "StartEnabled": {
+          "type": "bool",
+          "value": true
+        },
+        "SystemId": {
+          "type": "string",
+          "value": "ObjectPoolInit"
+        },
+        "Tags": {
+          "type": "string",
+          "value": "Core,Runtime"
+        }
+      },
+      "legacyData": {
+        "AllowedFlowStates": "",
+        "AllowedSimulationStates": "",
+        "AutoLoad": true,
+        "BlockedOverlays": "",
+        "Dependencies": "",
+        "Description": "对象池初始化系统，负责预热常用对象池",
+        "MountGroup": "Base",
+        "Priority": 0,
+        "Required": true,
+        "RequiredOverlays": "",
+        "StartEnabled": true,
+        "SystemId": "ObjectPoolInit",
+        "Tags": "Core,Runtime"
+      }
+    },
+    {
+      "table": "system.config",
+      "legacyTable": "SystemData",
+      "id": "system.pause_menu",
+      "name": "PauseMenuSystem",
+      "fields": {
+        "AllowedFlowStates": {
+          "type": "string",
+          "value": "SessionPlaying"
+        },
+        "AllowedSimulationStates": {
+          "type": "string",
+          "value": "Any"
+        },
+        "AutoLoad": {
+          "type": "bool",
+          "value": true
+        },
+        "BlockedOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "Dependencies": {
+          "type": "string_array",
+          "value": ""
+        },
+        "Description": {
+          "type": "string",
+          "value": "暂停菜单系统，处理暂停菜单的显示和交互"
+        },
+        "MountGroup": {
+          "type": "string",
+          "value": "UI"
+        },
+        "Priority": {
+          "type": "int",
+          "value": 20
+        },
+        "Required": {
+          "type": "bool",
+          "value": false
+        },
+        "RequiredOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "StartEnabled": {
+          "type": "bool",
+          "value": true
+        },
+        "SystemId": {
+          "type": "string",
+          "value": "PauseMenuSystem"
+        },
+        "Tags": {
+          "type": "string",
+          "value": "UI,Runtime"
+        }
+      },
+      "legacyData": {
+        "AllowedFlowStates": "SessionPlaying",
+        "AllowedSimulationStates": "Any",
+        "AutoLoad": true,
+        "BlockedOverlays": "",
+        "Dependencies": "",
+        "Description": "暂停菜单系统，处理暂停菜单的显示和交互",
+        "MountGroup": "UI",
+        "Priority": 20,
+        "Required": false,
+        "RequiredOverlays": "",
+        "StartEnabled": true,
+        "SystemId": "PauseMenuSystem",
+        "Tags": "UI,Runtime"
+      }
+    },
+    {
+      "table": "system.config",
+      "legacyTable": "SystemData",
+      "id": "system.project_state_bridge",
+      "name": "ProjectStateBridge",
+      "fields": {
+        "AllowedFlowStates": {
+          "type": "string",
+          "value": ""
+        },
+        "AllowedSimulationStates": {
+          "type": "string",
+          "value": ""
+        },
+        "AutoLoad": {
+          "type": "bool",
+          "value": true
+        },
+        "BlockedOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "Dependencies": {
+          "type": "string_array",
+          "value": ""
+        },
+        "Description": {
+          "type": "string",
+          "value": "项目状态桥接系统，监听全局事件并同步到 ProjectStateService"
+        },
+        "MountGroup": {
+          "type": "string",
+          "value": "Base"
+        },
+        "Priority": {
+          "type": "int",
+          "value": 2
+        },
+        "Required": {
+          "type": "bool",
+          "value": true
+        },
+        "RequiredOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "StartEnabled": {
+          "type": "bool",
+          "value": true
+        },
+        "SystemId": {
+          "type": "string",
+          "value": "ProjectStateBridge"
+        },
+        "Tags": {
+          "type": "string",
+          "value": "Core,Runtime"
+        }
+      },
+      "legacyData": {
+        "AllowedFlowStates": "",
+        "AllowedSimulationStates": "",
+        "AutoLoad": true,
+        "BlockedOverlays": "",
+        "Dependencies": "",
+        "Description": "项目状态桥接系统，监听全局事件并同步到 ProjectStateService",
+        "MountGroup": "Base",
+        "Priority": 2,
+        "Required": true,
+        "RequiredOverlays": "",
+        "StartEnabled": true,
+        "SystemId": "ProjectStateBridge",
+        "Tags": "Core,Runtime"
+      }
+    },
+    {
+      "table": "system.config",
+      "legacyTable": "SystemData",
+      "id": "system.recovery",
+      "name": "RecoverySystem",
+      "fields": {
+        "AllowedFlowStates": {
+          "type": "string",
+          "value": "SessionPlaying"
+        },
+        "AllowedSimulationStates": {
+          "type": "string",
+          "value": "Running"
+        },
+        "AutoLoad": {
+          "type": "bool",
+          "value": true
+        },
+        "BlockedOverlays": {
+          "type": "string",
+          "value": "Blocking"
+        },
+        "Dependencies": {
+          "type": "string_array",
+          "value": ""
+        },
+        "Description": {
+          "type": "string",
+          "value": "恢复系统，处理生命值和护盾恢复逻辑"
+        },
+        "MountGroup": {
+          "type": "string",
+          "value": "Combat"
+        },
+        "Priority": {
+          "type": "int",
+          "value": 12
+        },
+        "Required": {
+          "type": "bool",
+          "value": false
+        },
+        "RequiredOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "StartEnabled": {
+          "type": "bool",
+          "value": true
+        },
+        "SystemId": {
+          "type": "string",
+          "value": "RecoverySystem"
+        },
+        "Tags": {
+          "type": "string",
+          "value": "Core,Combat,Runtime"
+        }
+      },
+      "legacyData": {
+        "AllowedFlowStates": "SessionPlaying",
+        "AllowedSimulationStates": "Running",
+        "AutoLoad": true,
+        "BlockedOverlays": "Blocking",
+        "Dependencies": "",
+        "Description": "恢复系统，处理生命值和护盾恢复逻辑",
+        "MountGroup": "Combat",
+        "Priority": 12,
+        "Required": false,
+        "RequiredOverlays": "",
+        "StartEnabled": true,
+        "SystemId": "RecoverySystem",
+        "Tags": "Core,Combat,Runtime"
+      }
+    },
+    {
+      "table": "system.config",
+      "legacyTable": "SystemData",
+      "id": "system.spawn",
+      "name": "SpawnSystem",
+      "fields": {
+        "AllowedFlowStates": {
+          "type": "string",
+          "value": "SessionPlaying"
+        },
+        "AllowedSimulationStates": {
+          "type": "string",
+          "value": "Running"
+        },
+        "AutoLoad": {
+          "type": "bool",
+          "value": true
+        },
+        "BlockedOverlays": {
+          "type": "string",
+          "value": "Blocking"
+        },
+        "Dependencies": {
+          "type": "string_array",
+          "value": ""
+        },
+        "Description": {
+          "type": "string",
+          "value": "生成系统，负责敌人和道具的生成逻辑"
+        },
+        "MountGroup": {
+          "type": "string",
+          "value": "Gameplay"
+        },
+        "Priority": {
+          "type": "int",
+          "value": 13
+        },
+        "Required": {
+          "type": "bool",
+          "value": false
+        },
+        "RequiredOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "StartEnabled": {
+          "type": "bool",
+          "value": true
+        },
+        "SystemId": {
+          "type": "string",
+          "value": "SpawnSystem"
+        },
+        "Tags": {
+          "type": "string",
+          "value": "Gameplay,Runtime"
+        }
+      },
+      "legacyData": {
+        "AllowedFlowStates": "SessionPlaying",
+        "AllowedSimulationStates": "Running",
+        "AutoLoad": true,
+        "BlockedOverlays": "Blocking",
+        "Dependencies": "",
+        "Description": "生成系统，负责敌人和道具的生成逻辑",
+        "MountGroup": "Gameplay",
+        "Priority": 13,
+        "Required": false,
+        "RequiredOverlays": "",
+        "StartEnabled": true,
+        "SystemId": "SpawnSystem",
+        "Tags": "Gameplay,Runtime"
+      }
+    },
+    {
+      "table": "system.config",
+      "legacyTable": "SystemData",
+      "id": "system.targeting_manager",
+      "name": "TargetingManagerRuntime",
+      "fields": {
+        "AllowedFlowStates": {
+          "type": "string",
+          "value": "SessionPlaying"
+        },
+        "AllowedSimulationStates": {
+          "type": "string",
+          "value": "Running"
+        },
+        "AutoLoad": {
+          "type": "bool",
+          "value": true
+        },
+        "BlockedOverlays": {
+          "type": "string",
+          "value": "Blocking"
+        },
+        "Dependencies": {
+          "type": "string_array",
+          "value": ""
+        },
+        "Description": {
+          "type": "string",
+          "value": "目标选择管理系统，提供目标查询和筛选服务"
+        },
+        "MountGroup": {
+          "type": "string",
+          "value": "Combat"
+        },
+        "Priority": {
+          "type": "int",
+          "value": 14
+        },
+        "Required": {
+          "type": "bool",
+          "value": false
+        },
+        "RequiredOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "StartEnabled": {
+          "type": "bool",
+          "value": true
+        },
+        "SystemId": {
+          "type": "string",
+          "value": "TargetingManagerRuntime"
+        },
+        "Tags": {
+          "type": "string",
+          "value": "Core,Combat,Runtime"
+        }
+      },
+      "legacyData": {
+        "AllowedFlowStates": "SessionPlaying",
+        "AllowedSimulationStates": "Running",
+        "AutoLoad": true,
+        "BlockedOverlays": "Blocking",
+        "Dependencies": "",
+        "Description": "目标选择管理系统，提供目标查询和筛选服务",
+        "MountGroup": "Combat",
+        "Priority": 14,
+        "Required": false,
+        "RequiredOverlays": "",
+        "StartEnabled": true,
+        "SystemId": "TargetingManagerRuntime",
+        "Tags": "Core,Combat,Runtime"
+      }
+    },
+    {
+      "table": "system.config",
+      "legacyTable": "SystemData",
+      "id": "system.test",
+      "name": "TestSystem",
+      "fields": {
+        "AllowedFlowStates": {
+          "type": "string",
+          "value": ""
+        },
+        "AllowedSimulationStates": {
+          "type": "string",
+          "value": ""
+        },
+        "AutoLoad": {
+          "type": "bool",
+          "value": false
+        },
+        "BlockedOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "Dependencies": {
+          "type": "string_array",
+          "value": ""
+        },
+        "Description": {
+          "type": "string",
+          "value": "测试系统，用于调试和监控系统运行状态"
+        },
+        "MountGroup": {
+          "type": "string",
+          "value": "Test"
+        },
+        "Priority": {
+          "type": "int",
+          "value": 100
+        },
+        "Required": {
+          "type": "bool",
+          "value": false
+        },
+        "RequiredOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "StartEnabled": {
+          "type": "bool",
+          "value": true
+        },
+        "SystemId": {
+          "type": "string",
+          "value": "TestSystem"
+        },
+        "Tags": {
+          "type": "string",
+          "value": "Debug,Test"
+        }
+      },
+      "legacyData": {
+        "AllowedFlowStates": "",
+        "AllowedSimulationStates": "",
+        "AutoLoad": false,
+        "BlockedOverlays": "",
+        "Dependencies": "",
+        "Description": "测试系统，用于调试和监控系统运行状态",
+        "MountGroup": "Test",
+        "Priority": 100,
+        "Required": false,
+        "RequiredOverlays": "",
+        "StartEnabled": true,
+        "SystemId": "TestSystem",
+        "Tags": "Debug,Test"
+      }
+    },
+    {
+      "table": "system.config",
+      "legacyTable": "SystemData",
+      "id": "system.timer_manager",
+      "name": "TimerManager",
+      "fields": {
+        "AllowedFlowStates": {
+          "type": "string",
+          "value": ""
+        },
+        "AllowedSimulationStates": {
+          "type": "string",
+          "value": ""
+        },
+        "AutoLoad": {
+          "type": "bool",
+          "value": true
+        },
+        "BlockedOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "Dependencies": {
+          "type": "string_array",
+          "value": ""
+        },
+        "Description": {
+          "type": "string",
+          "value": "定时器管理系统，提供全局定时器服务"
+        },
+        "MountGroup": {
+          "type": "string",
+          "value": "Base"
+        },
+        "Priority": {
+          "type": "int",
+          "value": 1
+        },
+        "Required": {
+          "type": "bool",
+          "value": true
+        },
+        "RequiredOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "StartEnabled": {
+          "type": "bool",
+          "value": true
+        },
+        "SystemId": {
+          "type": "string",
+          "value": "TimerManager"
+        },
+        "Tags": {
+          "type": "string",
+          "value": "Core,Runtime"
+        }
+      },
+      "legacyData": {
+        "AllowedFlowStates": "",
+        "AllowedSimulationStates": "",
+        "AutoLoad": true,
+        "BlockedOverlays": "",
+        "Dependencies": "",
+        "Description": "定时器管理系统，提供全局定时器服务",
+        "MountGroup": "Base",
+        "Priority": 1,
+        "Required": true,
+        "RequiredOverlays": "",
+        "StartEnabled": true,
+        "SystemId": "TimerManager",
+        "Tags": "Core,Runtime"
+      }
+    },
+    {
+      "table": "system.config",
+      "legacyTable": "SystemData",
+      "id": "system.ui_manager",
+      "name": "UIManager",
+      "fields": {
+        "AllowedFlowStates": {
+          "type": "string",
+          "value": ""
+        },
+        "AllowedSimulationStates": {
+          "type": "string",
+          "value": ""
+        },
+        "AutoLoad": {
+          "type": "bool",
+          "value": true
+        },
+        "BlockedOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "Dependencies": {
+          "type": "string_array",
+          "value": ""
+        },
+        "Description": {
+          "type": "string",
+          "value": "UI 管理系统，负责 UI 的创建、显示和销毁"
+        },
+        "MountGroup": {
+          "type": "string",
+          "value": "UI"
+        },
+        "Priority": {
+          "type": "int",
+          "value": 21
+        },
+        "Required": {
+          "type": "bool",
+          "value": false
+        },
+        "RequiredOverlays": {
+          "type": "string",
+          "value": ""
+        },
+        "StartEnabled": {
+          "type": "bool",
+          "value": true
+        },
+        "SystemId": {
+          "type": "string",
+          "value": "UIManager"
+        },
+        "Tags": {
+          "type": "string",
+          "value": "Core,UI,Runtime"
+        }
+      },
+      "legacyData": {
+        "AllowedFlowStates": "",
+        "AllowedSimulationStates": "",
+        "AutoLoad": true,
+        "BlockedOverlays": "",
+        "Dependencies": "",
+        "Description": "UI 管理系统，负责 UI 的创建、显示和销毁",
+        "MountGroup": "UI",
+        "Priority": 21,
+        "Required": false,
+        "RequiredOverlays": "",
+        "StartEnabled": true,
+        "SystemId": "UIManager",
+        "Tags": "Core,UI,Runtime"
+      }
+    },
+    {
+      "table": "system.preset",
+      "legacyTable": "SystemPresetData",
       "id": "system.preset.default",
       "name": "Default",
-      "data": {
-        "PresetName": "Default",
-        "IsActive": 1,
-        "EnabledTags": "Core,Gameplay,Combat,UI,Roguelike,Runtime",
-        "EnabledSystemIds": "TestSystem,MouseSelectionSystem",
+      "fields": {
+        "Description": {
+          "type": "string",
+          "value": "默认预设，加载核心、玩法、战斗、UI、运行时系统，并显式加载调试入口系统"
+        },
+        "DisabledSystemIds": {
+          "type": "string_array",
+          "value": ""
+        },
+        "EnabledSystemIds": {
+          "type": "string_array",
+          "value": "TestSystem,MouseSelectionSystem"
+        },
+        "EnabledTags": {
+          "type": "string",
+          "value": "Core,Gameplay,Combat,UI,Roguelike,Runtime"
+        },
+        "IsActive": {
+          "type": "bool",
+          "value": true
+        },
+        "PresetName": {
+          "type": "string",
+          "value": "Default"
+        }
+      },
+      "legacyData": {
+        "Description": "默认预设，加载核心、玩法、战斗、UI、运行时系统，并显式加载调试入口系统",
         "DisabledSystemIds": "",
-        "Description": "默认预设，加载核心、玩法、战斗、UI、运行时系统，并显式加载调试入口系统"
+        "EnabledSystemIds": "TestSystem,MouseSelectionSystem",
+        "EnabledTags": "Core,Gameplay,Combat,UI,Roguelike,Runtime",
+        "IsActive": true,
+        "PresetName": "Default"
+      }
+    },
+    {
+      "table": "unit.enemy",
+      "legacyTable": "EnemyData",
+      "id": "enemy.chailangren",
+      "name": "豺狼人",
+      "fields": {
+        "AttackRange": {
+          "type": "float",
+          "value": 200.0
+        },
+        "BaseAttack": {
+          "type": "float",
+          "value": 5.0
+        },
+        "BaseAttackSpeed": {
+          "type": "float",
+          "value": 100.0
+        },
+        "BaseDefense": {
+          "type": "float",
+          "value": 3.0
+        },
+        "BaseHp": {
+          "type": "float",
+          "value": 100.0
+        },
+        "BaseHpRegen": {
+          "type": "float",
+          "value": 0.0
+        },
+        "CritDamage": {
+          "type": "float",
+          "value": 100.0
+        },
+        "CritRate": {
+          "type": "float",
+          "value": 0.0
+        },
+        "DamageReduction": {
+          "type": "float",
+          "value": 0.0
+        },
+        "DeathType": {
+          "type": "enum",
+          "value": "Normal"
+        },
+        "DetectionRange": {
+          "type": "float",
+          "value": 500.0
+        },
+        "DodgeChance": {
+          "type": "float",
+          "value": 0.0
+        },
+        "EntityType": {
+          "type": "enum",
+          "value": "Unit"
+        },
+        "ExpReward": {
+          "type": "int",
+          "value": 5
+        },
+        "HealthBarHeight": {
+          "type": "float",
+          "value": 155.0
+        },
+        "IsEnableSpawnRule": {
+          "type": "bool",
+          "value": true
+        },
+        "LifeSteal": {
+          "type": "float",
+          "value": 0.0
+        },
+        "MoveSpeed": {
+          "type": "float",
+          "value": 150.0
+        },
+        "Name": {
+          "type": "string",
+          "value": "豺狼人"
+        },
+        "Penetration": {
+          "type": "float",
+          "value": 0.0
+        },
+        "SingleSpawnCount": {
+          "type": "int",
+          "value": 2
+        },
+        "SingleSpawnVariance": {
+          "type": "int",
+          "value": 0
+        },
+        "SpawnInterval": {
+          "type": "float",
+          "value": 3.0
+        },
+        "SpawnMaxCountPerWave": {
+          "type": "int",
+          "value": -1
+        },
+        "SpawnMaxWave": {
+          "type": "int",
+          "value": -1
+        },
+        "SpawnMinWave": {
+          "type": "int",
+          "value": 1
+        },
+        "SpawnStartDelay": {
+          "type": "float",
+          "value": 0.0
+        },
+        "SpawnStrategy": {
+          "type": "enum",
+          "value": "Circle"
+        },
+        "SpawnWeight": {
+          "type": "int",
+          "value": 10
+        },
+        "Team": {
+          "type": "enum",
+          "value": "Enemy"
+        },
+        "VisualScenePath": {
+          "type": "string",
+          "value": "res://assets/Unit/Enemy/chailangren/AnimatedSprite2D/chailangren.tscn"
+        }
+      },
+      "legacyData": {
+        "AttackRange": 200.0,
+        "BaseAttack": 5.0,
+        "BaseAttackSpeed": 100.0,
+        "BaseDefense": 3.0,
+        "BaseHp": 100.0,
+        "BaseHpRegen": 0.0,
+        "CritDamage": 100.0,
+        "CritRate": 0.0,
+        "DamageReduction": 0.0,
+        "DeathType": "Normal",
+        "DetectionRange": 500.0,
+        "DodgeChance": 0.0,
+        "EntityType": "Unit",
+        "ExpReward": 5,
+        "HealthBarHeight": 155.0,
+        "IsEnableSpawnRule": true,
+        "LifeSteal": 0.0,
+        "MoveSpeed": 150.0,
+        "Name": "豺狼人",
+        "Penetration": 0.0,
+        "SingleSpawnCount": 2,
+        "SingleSpawnVariance": 0,
+        "SpawnInterval": 3.0,
+        "SpawnMaxCountPerWave": -1,
+        "SpawnMaxWave": -1,
+        "SpawnMinWave": 1,
+        "SpawnStartDelay": 0.0,
+        "SpawnStrategy": "Circle",
+        "SpawnWeight": 10,
+        "Team": "Enemy",
+        "VisualScenePath": "res://assets/Unit/Enemy/chailangren/AnimatedSprite2D/chailangren.tscn"
+      }
+    },
+    {
+      "table": "unit.enemy",
+      "legacyTable": "EnemyData",
+      "id": "enemy.yuren",
+      "name": "鱼人",
+      "fields": {
+        "AttackRange": {
+          "type": "float",
+          "value": 200.0
+        },
+        "BaseAttack": {
+          "type": "float",
+          "value": 6.0
+        },
+        "BaseAttackSpeed": {
+          "type": "float",
+          "value": 100.0
+        },
+        "BaseDefense": {
+          "type": "float",
+          "value": 1.0
+        },
+        "BaseHp": {
+          "type": "float",
+          "value": 150.0
+        },
+        "BaseHpRegen": {
+          "type": "float",
+          "value": 0.0
+        },
+        "CritDamage": {
+          "type": "float",
+          "value": 100.0
+        },
+        "CritRate": {
+          "type": "float",
+          "value": 0.0
+        },
+        "DamageReduction": {
+          "type": "float",
+          "value": 0.0
+        },
+        "DeathType": {
+          "type": "enum",
+          "value": "Normal"
+        },
+        "DetectionRange": {
+          "type": "float",
+          "value": 500.0
+        },
+        "DodgeChance": {
+          "type": "float",
+          "value": 0.0
+        },
+        "EntityType": {
+          "type": "enum",
+          "value": "Unit"
+        },
+        "ExpReward": {
+          "type": "int",
+          "value": 2
+        },
+        "HealthBarHeight": {
+          "type": "float",
+          "value": 0.0
+        },
+        "IsEnableSpawnRule": {
+          "type": "bool",
+          "value": true
+        },
+        "LifeSteal": {
+          "type": "float",
+          "value": 0.0
+        },
+        "MoveSpeed": {
+          "type": "float",
+          "value": 150.0
+        },
+        "Name": {
+          "type": "string",
+          "value": "鱼人"
+        },
+        "Penetration": {
+          "type": "float",
+          "value": 0.0
+        },
+        "SingleSpawnCount": {
+          "type": "int",
+          "value": 3
+        },
+        "SingleSpawnVariance": {
+          "type": "int",
+          "value": 1
+        },
+        "SpawnInterval": {
+          "type": "float",
+          "value": 2.0
+        },
+        "SpawnMaxCountPerWave": {
+          "type": "int",
+          "value": -1
+        },
+        "SpawnMaxWave": {
+          "type": "int",
+          "value": -1
+        },
+        "SpawnMinWave": {
+          "type": "int",
+          "value": 1
+        },
+        "SpawnStartDelay": {
+          "type": "float",
+          "value": 0.0
+        },
+        "SpawnStrategy": {
+          "type": "enum",
+          "value": "Rectangle"
+        },
+        "SpawnWeight": {
+          "type": "int",
+          "value": 10
+        },
+        "Team": {
+          "type": "enum",
+          "value": "Enemy"
+        },
+        "VisualScenePath": {
+          "type": "string",
+          "value": "res://assets/Unit/Enemy/yuren/AnimatedSprite2D/yuren.tscn"
+        }
+      },
+      "legacyData": {
+        "AttackRange": 200.0,
+        "BaseAttack": 6.0,
+        "BaseAttackSpeed": 100.0,
+        "BaseDefense": 1.0,
+        "BaseHp": 150.0,
+        "BaseHpRegen": 0.0,
+        "CritDamage": 100.0,
+        "CritRate": 0.0,
+        "DamageReduction": 0.0,
+        "DeathType": "Normal",
+        "DetectionRange": 500.0,
+        "DodgeChance": 0.0,
+        "EntityType": "Unit",
+        "ExpReward": 2,
+        "HealthBarHeight": 0.0,
+        "IsEnableSpawnRule": true,
+        "LifeSteal": 0.0,
+        "MoveSpeed": 150.0,
+        "Name": "鱼人",
+        "Penetration": 0.0,
+        "SingleSpawnCount": 3,
+        "SingleSpawnVariance": 1,
+        "SpawnInterval": 2.0,
+        "SpawnMaxCountPerWave": -1,
+        "SpawnMaxWave": -1,
+        "SpawnMinWave": 1,
+        "SpawnStartDelay": 0.0,
+        "SpawnStrategy": "Rectangle",
+        "SpawnWeight": 10,
+        "Team": "Enemy",
+        "VisualScenePath": "res://assets/Unit/Enemy/yuren/AnimatedSprite2D/yuren.tscn"
+      }
+    },
+    {
+      "table": "unit.player",
+      "legacyTable": "PlayerData",
+      "id": "player.deluyi",
+      "name": "德鲁伊",
+      "fields": {
+        "AttackRange": {
+          "type": "float",
+          "value": 150.0
+        },
+        "BaseAttack": {
+          "type": "float",
+          "value": 10.0
+        },
+        "BaseAttackSpeed": {
+          "type": "float",
+          "value": 100.0
+        },
+        "BaseDefense": {
+          "type": "float",
+          "value": 5.0
+        },
+        "BaseHp": {
+          "type": "float",
+          "value": 100.0
+        },
+        "BaseHpRegen": {
+          "type": "float",
+          "value": 1.0
+        },
+        "CritDamage": {
+          "type": "float",
+          "value": 100.0
+        },
+        "CritRate": {
+          "type": "float",
+          "value": 5.0
+        },
+        "DamageReduction": {
+          "type": "float",
+          "value": 0.0
+        },
+        "DeathType": {
+          "type": "enum",
+          "value": "Hero"
+        },
+        "DodgeChance": {
+          "type": "float",
+          "value": 0.0
+        },
+        "EntityType": {
+          "type": "enum",
+          "value": "Unit"
+        },
+        "HealthBarHeight": {
+          "type": "float",
+          "value": 120.0
+        },
+        "LifeSteal": {
+          "type": "float",
+          "value": 0.0
+        },
+        "MoveSpeed": {
+          "type": "float",
+          "value": 200.0
+        },
+        "Name": {
+          "type": "string",
+          "value": "德鲁伊"
+        },
+        "Penetration": {
+          "type": "float",
+          "value": 0.0
+        },
+        "PickupRange": {
+          "type": "float",
+          "value": 300.0
+        },
+        "Team": {
+          "type": "enum",
+          "value": "Player"
+        },
+        "VisualScenePath": {
+          "type": "string",
+          "value": "res://assets/Unit/Player/deluyi/AnimatedSprite2D/deluyi.tscn"
+        }
+      },
+      "legacyData": {
+        "AttackRange": 150.0,
+        "BaseAttack": 10.0,
+        "BaseAttackSpeed": 100.0,
+        "BaseDefense": 5.0,
+        "BaseHp": 100.0,
+        "BaseHpRegen": 1.0,
+        "CritDamage": 100.0,
+        "CritRate": 5.0,
+        "DamageReduction": 0.0,
+        "DeathType": "Hero",
+        "DodgeChance": 0.0,
+        "EntityType": "Unit",
+        "HealthBarHeight": 120.0,
+        "LifeSteal": 0.0,
+        "MoveSpeed": 200.0,
+        "Name": "德鲁伊",
+        "Penetration": 0.0,
+        "PickupRange": 300.0,
+        "Team": "Player",
+        "VisualScenePath": "res://assets/Unit/Player/deluyi/AnimatedSprite2D/deluyi.tscn"
+      }
+    },
+    {
+      "table": "unit.targeting_indicator",
+      "legacyTable": "TargetingIndicatorData",
+      "id": "unit.targeting_indicator",
+      "name": "TargetingIndicator",
+      "fields": {
+        "BaseAttackSpeed": {
+          "type": "float",
+          "value": 0.0
+        },
+        "BaseHp": {
+          "type": "float",
+          "value": 1000000.0
+        },
+        "EntityType": {
+          "type": "enum",
+          "value": "TargetingIndicator"
+        },
+        "IsInvulnerable": {
+          "type": "bool",
+          "value": true
+        },
+        "IsShowHealthBar": {
+          "type": "bool",
+          "value": false
+        },
+        "MoveSpeed": {
+          "type": "float",
+          "value": 400.0
+        },
+        "Name": {
+          "type": "string",
+          "value": "TargetingIndicator"
+        },
+        "Team": {
+          "type": "enum",
+          "value": "Neutral"
+        },
+        "VisualScenePath": {
+          "type": "string",
+          "value": ""
+        }
+      },
+      "legacyData": {
+        "BaseAttackSpeed": 0.0,
+        "BaseHp": 1000000.0,
+        "EntityType": "TargetingIndicator",
+        "IsInvulnerable": true,
+        "IsShowHealthBar": false,
+        "MoveSpeed": 400.0,
+        "Name": "TargetingIndicator",
+        "Team": "Neutral",
+        "VisualScenePath": ""
       }
     }
   ],
