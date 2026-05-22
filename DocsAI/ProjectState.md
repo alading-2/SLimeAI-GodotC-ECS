@@ -6,6 +6,12 @@
 
 当前默认目标已从“迁移到 Godot AI Game OS / SkilmeAI 多仓库”纠偏为“回到旧 Godot C# ECS 框架主线，先治理事实源、入口和验证，再小步优化 `Src/ECS`”。
 
+当前正在推进：
+
+- `SlimeAINew/DataOS/` SQLite-only authoring 真相源。
+- `Data/DataNew` snapshot-backed DTO 外壳化。
+- 旧 `.tres` 数据插件停用。
+
 当前优先校准：
 
 - `DocsAI/Modules/` 模块契约。

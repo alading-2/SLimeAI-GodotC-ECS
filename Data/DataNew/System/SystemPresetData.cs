@@ -1,4 +1,5 @@
 using slime.data;
+using System.Linq;
 
 namespace slime.data.Systems;
 
@@ -8,29 +9,13 @@ namespace slime.data.Systems;
 public class SystemPresetData
 {
     /// <summary>全部系统预设实例。</summary>
-    public static SystemPresetData[] All =>
-    [
-        Default
-    ];
+    public static SystemPresetData[] All => DataTable.GetAll<SystemPresetData>().ToArray();
 
     /// <summary>按 PresetName 获取系统预设，找不到返回 null 并记录日志。</summary>
     public static SystemPresetData? Get(string name) => DataTable.GetByName<SystemPresetData>(name);
 
     /// <summary>默认系统预设。</summary>
-    public static readonly SystemPresetData Default = new()
-    {
-        PresetName = "Default",
-        IsActive = true,
-        EnabledTags = SystemTag.Core
-            | SystemTag.Gameplay
-            | SystemTag.Combat
-            | SystemTag.UI
-            | SystemTag.Roguelike
-            | SystemTag.Runtime,
-        // 调试面板与鼠标选择是当前开发期常驻入口，显式开启避免把所有 Debug/Test 标签系统都纳入默认预设。
-        EnabledSystemIds = ["TestSystem", "MouseSelectionSystem"],
-        Description = "默认预设，加载核心、玩法、战斗、UI、运行时系统，并显式加载调试入口系统"
-    };
+    public static SystemPresetData Default => DataTable.GetRequiredByName<SystemPresetData>("Default");
 
     /// <summary>预设名称。</summary>
     public string PresetName { get; set; } = "DefaultPreset";

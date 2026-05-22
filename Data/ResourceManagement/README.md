@@ -8,6 +8,7 @@
 2. **统一分类**: 资源必须属于 `ResourceCategory` 中的某一分类。
 3. **类型安全**: 优先使用 `ResourceManagement.Load<T>` 进行加载。
 4. **目录选择**: UI / 编辑器需要“列出可选资源”时，优先使用 `ResourceCatalog`，不要在运行时全盘扫描 `res://`。
+5. **数据目录**: Data 业务条目从 `DataOS` runtime snapshot 投影；`ResourceManagement` 不再承担 `.tres` authoring 配置读取职责。
 
 ## 使用方法
 
@@ -18,13 +19,10 @@
 var scene = ResourceManagement.Load<PackedScene>(typeof(PlayerEntity).Name, ResourceCategory.Entity);
 ```
 
-### 2. 加载配置 (Resource/tres)
+### 2. 加载业务数据引用
 ```csharp
-// 加载单个配置
-var config = ResourceManagement.Load<Resource>(ResourcePaths.DataUnit_deluyi, ResourceCategory.DataUnit);
-
-// 加载分类下所有配置
-var allEnemies = ResourceManagement.LoadAll<Resource>(ResourceCategory.DataUnit, "Unit/Enemy");
+// 业务数据 DTO 里只保存 res:// 字符串，最终消费点再按需加载
+var visual = ResourceManagement.LoadPath<PackedScene>("res://assets/Unit/Enemy/chailangren/AnimatedSprite2D/chailangren.tscn");
 ```
 
 ### 3. 加载 UI
@@ -34,16 +32,16 @@ var uiScene = ResourceManagement.Load<PackedScene>("HealthBarUI", ResourceCatego
 
 ### 4. 构建资源选择列表
 
-`ResourceCatalog` 基于 `ResourcePaths.Resources` 生成选择器条目，分类由资源路径自动推导：
+`ResourceCatalog` 基于两类输入生成选择器条目：
 
-- `Data/Data/Unit/Enemy/Resource/chailangren.tres` => `Unit.Enemy`
-- `Data/Data/Unit/Player/Resource/deluyi.tres` => `Unit.Player`
-- `Data/Data/Ability/Resource/Movement/DashConfig.tres` => `Ability.Movement`
+- `ResourcePaths.Resources`：场景、特效、视觉资产。
+- `DataOS` runtime snapshot：业务数据 DTO，源路径显示为 `DataOS/Authoring/slimeainew.authoring.db`。
+
+资产分类仍由资源路径自动推导，例如：
+
 - `assets/Effect/Explosion/Explosion.tscn` => `Effect.Explosion`
 - `assets/Unit/Enemy/chailangren/AnimatedSprite2D/chailangren.tscn` => `AssetUnit.Enemy`
 - `assets/Unit/Player/deluyi/AnimatedSprite2D/deluyi.tscn` => `AssetUnit.Player`
-
-路径中的 `Resource` 目录只是资源存放目录，不参与分类名。
 
 示例：
 
@@ -62,20 +60,22 @@ var allGroups = ResourceCatalog.GetGroups(
 ## 🛠️ 最佳实践
 
 ### 文件命名与分类规范
-为避免 `.tscn` (Asset) 与 `.tres` (Config) 冲突，项目采用以下约定：
+为避免资源与业务数据概念混淆，项目采用以下约定：
 
 - **Entity**: 游戏实体预制体 (如 `PlayerEntity.tscn`)
 - **Component**: 组件预制体 (如 `HealthComponent.tscn`)
 - **UI**: 界面预制体 (如 `HealthBarUI.tscn`)
 - **Asset**: 纯视觉资源场景 (如 `豺狼人.tscn` - 仅包含动画/解构视图)
-- **Config**: 数据配置文件 (如 `豺狼人.tres`)，通常存储在 `Data/Data/Resources` 下。
+- **Data**: 业务配置不再通过 `.tres` 主路径编辑，统一由 `DataOS` snapshot 驱动。
 
 ## 资源生成
 本项目使用 `Tools/ResourceGenerator` 自动扫描目录并生成 `ResourcePaths.cs`。
 
 > [!IMPORTANT]
 > **什么时候需要运行生成器？**
-> 当你 **添加、重命名、移动或删除** 了任何 `.tscn` 或 `.tres` 文件时，必须运行生成器更新索引，否则 `ResourceManagement.Load` 将无法找到资源。
+> 当你 **添加、重命名、移动或删除** 了任何被 `ResourcePaths.cs` 索引的资源文件时，必须运行生成器更新索引，否则 `ResourceManagement.Load` 将无法找到资源。
+>
+> 业务数据更新时不跑 ResourceGenerator，而是重建 DataOS authoring DB 并重新生成 runtime snapshot。
 > 
 > ```bash
 > dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj

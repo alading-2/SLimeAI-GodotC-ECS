@@ -23,15 +23,9 @@ namespace slime.data.Units
         /// </summary>
         public bool IsInvulnerable { get; set; } = true;
 
-        // ====== 实例 ======
+        // ====== 命名快捷属性 ======
 
         /// <summary>瞄准指示器</summary>
-        public static readonly TargetingIndicatorData Default = new()
-        {
-            Name = "TargetingIndicator",
-            BaseHp = 1000000f,
-            BaseAttackSpeed = 0f,
-            MoveSpeed = 400f,
-        };
+        public static TargetingIndicatorData Default => DataTable.GetRequiredByName<TargetingIndicatorData>("TargetingIndicator");
     }
 }

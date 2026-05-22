@@ -1,7 +1,7 @@
 # Godot Resource 属性映射规则 (DataKey 机制)
 
 本文档记录 `Data/Data/` 目录下旧 **Config / Resource 数据配置类** 的历史映射规则。
-当前运行时数据导入已迁移到 `Data/DataNew`，本目录保留但不再作为主数据源。
+当前运行时数据导入已迁移到 `DataOS` + `Data/DataNew` snapshot-backed DTO，本目录保留但不再作为主数据源。
 
 ## 1. 这个目录放什么
 
@@ -79,7 +79,7 @@
 
 ## 5. 新数据放到哪里
 
-新增运行时数据字段应写入 `Data/DataNew/` 和 `Data/DataKey/`，通过 `Data.LoadFromConfig()` 注入 `Entity.Data`。不要继续扩展旧 `.tres` 数据作为运行时主入口。
+新增运行时数据字段应写入 `DataOS/`，并同步 `Data/DataNew/` DTO 和 `Data/DataKey/`。不要继续扩展旧 `.tres` 数据作为运行时主入口。
 
 ## 6. 历史放置规则
 

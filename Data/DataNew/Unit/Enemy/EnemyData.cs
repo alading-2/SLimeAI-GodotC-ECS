@@ -79,42 +79,12 @@ namespace slime.data.Units
         /// </summary>
         public int SpawnWeight { get; set; } = (int)DataKey.SpawnWeight.DefaultValue!;
 
-        // ====== 实例 ======
+        // ====== 命名快捷属性 ======
 
         /// <summary>鱼人</summary>
-        public static readonly EnemyData Yuren = new()
-        {
-            ExpReward = 2,
-            SpawnMinWave = 1,
-            SpawnInterval = 2.0f,
-            SingleSpawnCount = 3,
-            SingleSpawnVariance = 1,
-            Name = "鱼人",
-            Team = Team.Enemy,
-            VisualScenePath = "res://assets/Unit/Enemy/yuren/AnimatedSprite2D/yuren.tscn",
-            BaseHp = 150f,
-            BaseAttack = 6f,
-            AttackRange = 200f,
-            BaseDefense = 1f,
-            MoveSpeed = 150f,
-        };
+        public static EnemyData Yuren => DataTable.GetRequiredByName<EnemyData>("鱼人");
 
         /// <summary>豺狼人</summary>
-        public static readonly EnemyData Chailangren = new()
-        {
-            ExpReward = 5,
-            SpawnStrategy = SpawnPositionStrategy.Circle,
-            SpawnMinWave = 1,
-            SpawnInterval = 3.0f,
-            SingleSpawnCount = 2,
-            Name = "豺狼人",
-            Team = Team.Enemy,
-            VisualScenePath = "res://assets/Unit/Enemy/chailangren/AnimatedSprite2D/chailangren.tscn",
-            HealthBarHeight = 155f,
-            BaseHp = 100f,
-            BaseAttack = 5f,
-            BaseDefense = 3f,
-            MoveSpeed = 150f,
-        };
+        public static EnemyData Chailangren => DataTable.GetRequiredByName<EnemyData>("豺狼人");
     }
 }

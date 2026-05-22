@@ -10,7 +10,7 @@ SystemCore 负责：
 
 - `SystemManager` 唯一 autoload 启动。
 - 从 `SystemRegistry` 创建系统实例。
-- 从 `Data/DataNew/System/SystemData.cs` 读取系统配置。
+- 从 `Data/DataNew/System/SystemData.cs` 读取系统配置外壳，实际数据来源是 DataOS snapshot。
 - 根据 `ProjectStateSnapshot` 和 `SystemRunCondition` 判断系统是否运行。
 - 通过 `SystemManager.Execute<TSystem,TRequest,TResult>` 统一执行外部命令。
 
@@ -34,7 +34,7 @@ SystemCore 不负责：
 
 - 代码注册只提供 `SystemId + Factory`。
 - 系统元数据、标签、Required、AutoLoad、StartEnabled、依赖和运行条件都写在 `SystemData`。
-- `SystemPresetData` 只负责选择装载哪些系统。
+- `SystemPresetData` 只负责选择装载哪些系统，配置本身同样来自 snapshot。
 - 最终运行裁决是 `shouldRun = IsEnabled && IsStateAllowed`。
 - 系统业务命令必须走 `SystemManager.Execute`，由 SystemCore 门禁统一裁决。
 - `ProjectStateService` 使用实例级 C# event 通知 `SystemManager`，不要替换成全局事件。
@@ -63,7 +63,7 @@ SystemCore 不负责：
 
 ## 人工审查重点
 
-- 是否保持“代码注册轻、DataNew 配置重”的模型。
+- 是否保持“代码注册轻、snapshot-backed 配置重”的模型。
 - `Required / AutoLoad / StartEnabled / Dependencies` 是否符合系统职责。
 - 运行态门禁是否会误挡或误放核心业务命令。
 - ProjectState 是否仍是三域模型。

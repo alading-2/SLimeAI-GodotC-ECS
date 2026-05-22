@@ -6,8 +6,8 @@ using System.Reflection;
 namespace slime.data;
 
 /// <summary>
-/// DataNew 纯 C# 表数据读取工具。
-/// <para>表由 C# 类型表示，例如 EnemyData / AbilityData；行由 public static readonly 静态实例表示。</para>
+/// DataNew DTO 兼容读取工具。
+/// <para>表由 C# DTO 类型表示，例如 EnemyData / AbilityData；行只来自 DataOS runtime snapshot。</para>
 /// <para>首次访问某个表类型时建立缓存，之后按 Name 字典读取。</para>
 /// </summary>
 public static class DataTable
@@ -49,6 +49,15 @@ public static class DataTable
     }
 
     /// <summary>
+    /// 按 Name 获取必需数据行；缺失时抛出明确异常，供命名快捷属性使用。
+    /// </summary>
+    public static T GetRequiredByName<T>(string name) where T : class
+    {
+        return GetByName<T>(name)
+            ?? throw new InvalidOperationException($"{typeof(T).Name} 缺少必需数据: Name='{name}'");
+    }
+
+    /// <summary>
     /// 泛型缓存桶：每个表类型 T 首次访问时自动构建并缓存全部数据行和按 Name 索引。
     /// <para>利用 C# 泛型静态字段的每类型独立性，无需手动管理缓存字典。</para>
     /// </summary>
@@ -61,37 +70,11 @@ public static class DataTable
         public static readonly Dictionary<string, T> ByName = BuildByName(All);
 
         /// <summary>
-        /// 扫描程序集中所有 T 的非抽象子类，收集其 public static readonly 字段值作为数据行。
-        /// <para>排序：先按类型全名排列，再按字段声明顺序（MetadataToken）排列，保证结果稳定。</para>
+        /// 从 DataOS runtime snapshot 构建数据行。
         /// </summary>
         private static IReadOnlyList<T> BuildAll()
         {
-            var result = new List<T>();
-            var tableType = typeof(T);
-
-            // 找到程序集中所有 T 的非抽象子类，按全名排序
-            var dataTypes = tableType.Assembly.GetTypes()
-                .Where(type => tableType.IsAssignableFrom(type) && !type.IsAbstract)
-                .OrderBy(type => type.FullName, StringComparer.Ordinal);
-
-            foreach (var dataType in dataTypes)
-            {
-                // 收集该子类中所有 T 类型的 public static 字段，按声明顺序排列
-                var fields = dataType.GetFields(BindingFlags.Public | BindingFlags.Static)
-                    .Where(field => tableType.IsAssignableFrom(field.FieldType))
-                    .OrderBy(field => field.MetadataToken);
-
-                foreach (var field in fields)
-                {
-                    // 读取静态字段值（null 传入因为字段是 static）
-                    if (field.GetValue(null) is T value)
-                    {
-                        result.Add(value);
-                    }
-                }
-            }
-
-            return result;
+            return RuntimeDataSnapshot.GetAll<T>();
         }
 
         /// <summary>
@@ -107,14 +90,12 @@ public static class DataTable
                 var name = ResolveName(data); // 按 Name > SystemId > PresetName 优先级解析
                 if (string.IsNullOrWhiteSpace(name))
                 {
-                    _log.Error($"{typeof(T).Name} 存在 Name 为空的数据: {data.GetType().Name}");
-                    continue;
+                    throw new InvalidOperationException($"{typeof(T).Name} 存在 Name/SystemId/PresetName 为空的数据: {data.GetType().Name}");
                 }
 
                 if (result.ContainsKey(name))
                 {
-                    _log.Error($"{typeof(T).Name} 存在重复 Name='{name}'，请保证同一张表内 Name 唯一");
-                    continue;
+                    throw new InvalidOperationException($"{typeof(T).Name} 存在重复 Name='{name}'，请保证同一张表内 Name 唯一");
                 }
 
                 result.Add(name, data);

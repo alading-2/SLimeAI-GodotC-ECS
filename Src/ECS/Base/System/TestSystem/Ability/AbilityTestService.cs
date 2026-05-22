@@ -18,7 +18,7 @@ internal sealed class AbilityTestService
     /// <summary>Feature 调试服务，用于复用正式链路执行授予、移除与启停。</summary>
     private readonly FeatureDebugService _featureDebugService = new();
 
-    /// <summary>缓存全部技能配置（名称 → DataNew 配置对象）。</summary>
+    /// <summary>缓存全部技能配置（名称 → snapshot-backed DTO）。</summary>
     private readonly Dictionary<string, AbilityData> _configByKey = new(StringComparer.Ordinal);
 
     /// <summary>缓存技能库顺序，供左侧分类树稳定展示。</summary>
@@ -207,7 +207,7 @@ internal sealed class AbilityTestService
         _catalogEntries.Clear();
         _featureGroupOrder.Clear();
 
-        LoadPureCSharpAbilityConfigs();
+        LoadSnapshotAbilityConfigs();
 
         _catalogEntries.Sort((left, right) =>
         {
@@ -222,23 +222,23 @@ internal sealed class AbilityTestService
     }
 
     /// <summary>
-    /// 从 DataNew 纯 C# 表加载技能配置。
+    /// 从 DataOS snapshot 加载技能配置。
     /// </summary>
-    private void LoadPureCSharpAbilityConfigs()
+    private void LoadSnapshotAbilityConfigs()
     {
         foreach (var config in AbilityData.All)
         {
             var abilityName = string.IsNullOrWhiteSpace(config.Name) ? config.GetType().Name : config.Name!;
-            AddDataNewAbilityConfigEntry(abilityName, config);
+            AddSnapshotAbilityConfigEntry(abilityName, config);
         }
     }
 
     /// <summary>
-    /// 写入 DataNew 技能配置缓存和展示条目。
+    /// 写入 snapshot-backed 技能配置缓存和展示条目。
     /// </summary>
-    /// <param name="resourceKey">测试面板内部使用的配置键，DataNew 模式下直接使用技能 Name。</param>
-    /// <param name="config">DataNew 技能配置。</param>
-    private void AddDataNewAbilityConfigEntry(string resourceKey, AbilityData config)
+    /// <param name="resourceKey">测试面板内部使用的配置键，直接使用技能 Name。</param>
+    /// <param name="config">snapshot-backed 技能配置。</param>
+    private void AddSnapshotAbilityConfigEntry(string resourceKey, AbilityData config)
     {
         var displayName = string.IsNullOrWhiteSpace(config.Name) ? resourceKey : config.Name!;
         var featureGroupId = ResolveFeatureGroupId(config, resourceKey);

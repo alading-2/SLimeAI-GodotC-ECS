@@ -581,7 +581,7 @@ public partial class SystemManager : Node
     }
 
     /// <summary>
-    /// 从 DataNew SystemData 创建 SystemRunCondition。
+    /// 从 snapshot-backed SystemData 创建 SystemRunCondition。
     /// </summary>
     private static SystemRunCondition CreateRunCondition(SystemData config)
     {

@@ -1,6 +1,6 @@
 # DataAuthoring 模块契约
 
-本文是 AI 修改 `Data/` 目录下数据配置、DataNew 表、DataKey、EventType 和资源映射时必须阅读的执行契约。运行时 Data 容器规则见 `DocsAI/Modules/Data.md`。迁移后的 DataOS 目标见 `DocsAI/Protocols/AI原生数据层协议.md`。
+本文是 AI 修改 `Data/` 目录下数据配置、DataNew 运行时外壳、DataKey、EventType 和资源映射时必须阅读的执行契约。运行时 Data 容器规则见 `DocsAI/Modules/Data.md`。迁移后的 DataOS 目标见 `DocsAI/Protocols/AI原生数据层协议.md`。
 
 ## 职责边界
 
@@ -8,8 +8,8 @@ DataAuthoring 负责“数据协议和配置写在哪里、怎么映射”，不
 
 DataAuthoring 负责：
 
-- `Data/DataNew/` 纯 C# 运行时表数据。
-- 迁移后的 `GameOS/Authoring/DataOS/` SQLite schema、seed、生成器和快照。
+- `Data/DataNew/` snapshot-backed DTO 外壳和兼容查询 API。
+- `SlimeAINew/DataOS/` SQLite schema、seed、生成器和快照。
 - `Data/DataKey/` 的 `DataMeta` 键定义、分类、默认值和计算规则。
 - `Data/EventType/` 的事件名与事件载荷。
 - `Data/Config/` 的系统级配置结构。
@@ -36,8 +36,8 @@ DataAuthoring 不负责：
 
 ## 数据目录分工
 
-- `Data/DataNew/`：当前运行时主数据源，纯 C# POCO，一张表一个 `XxxData`，一行一个 `public static readonly XxxData`。
-- `GameOS/Authoring/DataOS/`：迁移后的 AI-first 数据真相源，SQLite + schema + generator + runtime snapshot。
+- `Data/DataNew/`：运行时 DTO 外壳，不再是 authoring 主数据源。
+- `SlimeAINew/DataOS/`：AI-first 数据真相源，SQLite + schema + generator + runtime snapshot。
 - `Data/DataKey/`：运行时 Data 容器可用键，主流写法是 `static readonly DataMeta` + `DataRegistry.Register`。
 - `Data/EventType/`：Entity 局部事件和全局事件协议，事件数据优先 `readonly record struct`。
 - `Data/Config/`：系统级配置，不直接等于 Entity.Data 字段。
@@ -46,7 +46,7 @@ DataAuthoring 不负责：
 
 ## 必须遵守
 
-- 运行时配置优先写 `Data/DataNew/`。
+- 运行时配置优先写 `DataOS/`，`Data/DataNew/` 只保留运行时兼容外壳。
 - 新迁移任务不把 `DataNew` 当最终目标；目标是 DataOS 数据库真相源和生成快照。
 - `Name` 是 DataNew 默认查询键，同表内必须唯一。
 - DataNew 场景、贴图、特效、投射物引用保存 `res://` 字符串路径。
@@ -55,7 +55,7 @@ DataAuthoring 不负责：
 - 新普通 DataKey 使用 `static readonly DataMeta`，特殊运行时引用键才评估 `const string`。
 - 数值“不限制”统一使用 `-1`。
 - 概率统一使用 `0-100`，计算时再 `/100`。
-- 系统配置运行时主线是 `Data/DataNew/System/SystemData.cs` 与 `SystemPresetData.cs`。
+- 系统配置运行时入口是 `Data/DataNew/System/SystemData.cs` 与 `SystemPresetData.cs`，但它们的数据来源是 DataOS snapshot。
 
 ## 禁止事项
 
@@ -72,8 +72,8 @@ DataAuthoring 不负责：
 
 1. 判断字段属于运行时 Entity.Data、系统级配置、事件协议还是资源路径。
 2. 运行时 Entity.Data 字段先在 `Data/DataKey/` 定义 `DataMeta`。
-3. 需要配置输入时在 `Data/DataNew/` 对应表加属性，必要时加 `[DataKey]`。
-4. 系统级规则优先放 `Data/DataNew/System/` 或 `Data/Config/`，不要强行定义 DataKey。
+3. 需要配置输入时先在 `DataOS/` 补齐 schema 和 seed，再同步 `Data/DataNew/` 对应运行时外壳属性，必要时加 `[DataKey]`。
+4. 系统级规则优先放 `DataOS/`，再生成 `Data/DataNew/System/` 运行时外壳，不要强行定义 DataKey。
 5. 事件协议放 `Data/EventType/` 对应分域，并检查监听生命周期。
 6. 资源路径更新后检查 `ResourceManagement` / `ResourcePaths` / `ResourceCatalog` 入口。
 7. 更新 `Data/README.md`、`DocsAI/Modules/DataAuthoring.md` 或相关 Skill。

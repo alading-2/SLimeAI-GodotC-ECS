@@ -35,7 +35,7 @@ namespace slime.config.Units
 
         /// <summary>
         /// 视觉场景路径 (PackedScene)
-        /// 旧 Resource 导入流程曾读取此属性；运行时主数据源已迁移到 DataNew。
+        /// 旧 Resource 导入流程曾读取此属性；运行时主数据源已迁移到 DataOS snapshot-backed DTO。
         /// </summary>
         [ExportGroup("视觉")]
         [DataKey(nameof(DataKey.VisualScenePath))]

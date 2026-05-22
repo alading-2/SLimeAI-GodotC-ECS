@@ -434,9 +434,9 @@ public class Data
     private static readonly Dictionary<Type, (PropertyInfo prop, string key)[]> _resourcePropCache = new();
 
     /// <summary>
-    /// 从 DataNew 纯 C# 配置对象加载数据到容器。
+    /// 从 snapshot-backed DTO 配置对象加载数据到容器。
     /// </summary>
-    /// <param name="config">DataNew 纯 C# 配置对象。</param>
+    /// <param name="config">snapshot-backed DTO 配置对象。</param>
     public void LoadFromConfig(object config)
     {
         if (config == null) return;

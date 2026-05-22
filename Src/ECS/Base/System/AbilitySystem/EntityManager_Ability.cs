@@ -19,10 +19,10 @@ public static partial class EntityManager
     // ==================== Ability 管理 ====================
 
     /// <summary>
-    /// 为单位添加 DataNew 纯 C# 技能。
+    /// 为单位添加 snapshot-backed 技能。
     /// </summary>
     /// <param name="owner">技能拥有者。</param>
-    /// <param name="config">DataNew 技能配置。</param>
+    /// <param name="config">snapshot-backed 技能配置。</param>
     /// <returns>创建的技能实体，失败返回 null。</returns>
     public static AbilityEntity? AddAbility(IEntity owner, AbilityData config)
     {
@@ -53,7 +53,7 @@ public static partial class EntityManager
     }
 
     /// <summary>
-    /// 技能添加统一实现，外部优先使用 DataNew 重载。
+    /// 技能添加统一实现，外部优先使用 snapshot-backed 重载。
     /// </summary>
     /// <param name="owner">技能拥有者。</param>
     /// <param name="config">配置对象。</param>

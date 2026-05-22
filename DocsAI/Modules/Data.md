@@ -1,6 +1,6 @@
 # Data 模块契约
 
-本文是 AI 修改运行时 Data 容器、DataMeta、DataRegistry 和数据事件时必须阅读的执行契约。数据目录配置、DataNew 表、DataKey 定义和 EventType 协议见 `DocsAI/Modules/DataAuthoring.md`。
+本文是 AI 修改运行时 Data 容器、DataMeta、DataRegistry 和数据事件时必须阅读的执行契约。数据目录配置、DataNew 运行时外壳、DataKey 定义和 EventType 协议见 `DocsAI/Modules/DataAuthoring.md`。
 
 ## 职责边界
 
@@ -12,7 +12,7 @@ Data 负责：
 - 通过 `DataMeta` 提供类型、默认值、分类、约束和计算规则。
 - 承载修改器和计算属性。
 - 在值变化时通过 `Entity.Events` 发布 `PropertyChanged`。
-- 从 DataNew POCO 注入初始值。
+- 从 snapshot-backed DTO 注入初始值。
 
 Data 不负责：
 
@@ -34,7 +34,7 @@ Data 不负责：
 - 数值型“不限制”统一使用 `-1`。
 - 概率统一使用 `0-100`，计算时再 `/100`。
 - 对象池回收时 Data 清理由 EntityManager 统一处理。
-- 运行时配置优先来自 `Data/DataNew` 纯 C# POCO。
+- 运行时配置优先来自 `DataOS` 生成的 snapshot-backed DTO。
 - 场景引用在 Data 中保存 `res://` 字符串路径，最终实例化点再加载。
 - Data 变化监听必须通过 `Entity.Events`，不要使用 `Data.On`。
 
@@ -65,5 +65,5 @@ Data 不负责：
 - DataKey 类型、默认值、分类是否正确。
 - 是否误用 `const string` 或字符串字面量。
 - 是否把配置字段、运行时状态和事件协议混在一起。
-- 是否破坏 DataNew 作为运行时主配置源的方向。
+- 是否误把 snapshot-backed DTO 再写成 authoring 源。
 - 是否引入对象池复用后的脏数据风险。

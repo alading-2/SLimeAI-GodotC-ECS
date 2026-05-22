@@ -116,7 +116,7 @@ internal sealed class FeatureDebugService
     /// 通过正式 Ability 授予链路，为当前实体添加一个技能 Feature。
     /// </summary>
     /// <param name="owner">当前实体所有者；为空时返回失败结果。</param>
-    /// <param name="config">DataNew 技能配置；为空时返回失败结果。</param>
+    /// <param name="config">snapshot-backed 技能配置 DTO；为空时返回失败结果。</param>
     /// <param name="resourceKey">资源键；用于输出错误提示和日志定位。</param>
     /// <returns>执行结果，包含成功状态与提示信息。</returns>
     public TestActionResult GrantAbility(IEntity? owner, AbilityData? config, string resourceKey)

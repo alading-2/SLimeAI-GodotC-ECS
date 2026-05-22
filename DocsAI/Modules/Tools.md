@@ -38,7 +38,7 @@ Tools 不负责：
 - Entity 对象池生成统一通过 `EntityManager.Spawn`。
 - 范围查找统一用 `EntityTargetSelector.Query`。
 - 资源加载统一用 `ResourceManagement` 或明确允许的底层工具。
-- 运行时数据配置从 DataNew 读取，不通过 ResourceManagement 读旧 `.tres` 主数据。
+- 运行时数据配置从 DataOS snapshot-backed DTO 读取，不通过 ResourceManagement 读旧 `.tres` 主数据。
 
 ## 禁止事项
 

@@ -54,7 +54,7 @@ public static class ResourceManagement
 
     /// <summary>
     /// 按 Godot 资源路径加载资源。
-    /// <para>DataNew 纯 C# 数据使用 res:// 路径保存场景/贴图引用时，通过此入口统一加载。</para>
+    /// <para>snapshot-backed DTO 使用 res:// 路径保存场景/贴图引用时，通过此入口统一加载。</para>
     /// </summary>
     /// <typeparam name="T">资源类型。</typeparam>
     /// <param name="path">Godot 资源路径，例如 res://assets/Effect/xxx.tscn。</param>
