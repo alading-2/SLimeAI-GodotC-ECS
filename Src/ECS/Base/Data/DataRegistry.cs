@@ -32,6 +32,7 @@ public static class DataRegistry
 
     /// <summary>
     /// 注册元数据。仅用于迁移兼容；内部会转换为 typed key。
+    /// 新代码应使用 Register<T>(DataMeta) typed 重载。
     /// </summary>
     public static DataMeta Register(DataMeta meta)
     {

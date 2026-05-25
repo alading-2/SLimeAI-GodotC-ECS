@@ -15,6 +15,7 @@ public static partial class DataKey
 
     // ============ 修改器配置（绕过约束系统，直接存储 Godot Array） ============
 
+    // TODO: 迁移为 DataKey<Godot.Collections.Array<FeatureModifierEntry>>；当前因 Godot 泛型数组序列化约束暂保留 const string
     /// <summary>Feature 挂载的属性修改器列表（Godot.Collections.Array of FeatureModifierEntry）</summary>
     public const string FeatureModifiers = "FeatureModifiers";
 

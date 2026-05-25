@@ -174,6 +174,8 @@ public string? GetOptionName(int index)
 /// <summary>
 /// 隐式转换为 string（返回 Key 值）
 /// 使 DataMeta 字段可直接作为 Data.Get/Set 参数，无需显式 .Key 调用
+/// [Migration Shim] 此运算符使 DataMeta 可隐式转为 string 并走 string-keyed shim 路径；
+/// 业务代码应持有 DataKey<T> 并使用 typed 重载，避免依赖此隐式转换。
 /// </summary>
 public static implicit operator string(DataMeta meta) => meta.Key;
 }

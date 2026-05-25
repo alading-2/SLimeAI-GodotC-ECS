@@ -39,7 +39,9 @@ public class Data
     private readonly Dictionary<int, IDataSlot> _slots = new();
 
     /// <summary>
-    /// 临时迁移 shim：未进入 catalog 的旧运行时引用键仍落在这里。
+    /// [Migration Shim] 临时迁移 shim：未进入 catalog 的旧运行时引用键仍落在这里。
+    /// 目标：所有 DataKey 转为 typed 后此字典应为空，届时可删除。
+    /// 当前仅剩 FeatureModifiers (const string) 等少数键落入。
     /// </summary>
     private readonly Dictionary<string, object> _legacyData = new();
 
@@ -116,7 +118,8 @@ public class Data
     }
 
     /// <summary>
-    /// 设置基础值（迁移 shim：stable string 会先解析 catalog）。
+    /// [Migration Shim] 设置基础值（stable string 会先解析 catalog，未命中则写入 _legacyData）。
+    /// 优先使用 Set<T>(DataKey<T>, T) typed 重载。
     /// </summary>
     public bool Set<T>(string key, T value)
     {
@@ -184,7 +187,8 @@ public class Data
     }
 
     /// <summary>
-    /// 获取最终值（迁移 shim：stable string 会先解析 catalog）。
+    /// [Migration Shim] 获取最终值（stable string 会先解析 catalog，未命中则查 _legacyData）。
+    /// 优先使用 Get<T>(DataKey<T>) typed 重载。
     /// </summary>
     public T Get<T>(string key, object? defaultValue = null)
     {
@@ -223,7 +227,8 @@ public class Data
     }
 
     /// <summary>
-    /// 获取基础值（迁移 shim）。
+    /// [Migration Shim] 获取基础值（stable string 会先解析 catalog，未命中则查 _legacyData）。
+    /// 优先使用 GetBase<T>(DataKey<T>) typed 重载。
     /// </summary>
     public T GetBase<T>(string key, T defaultValue = default!)
     {
@@ -630,7 +635,10 @@ public class Data
     private static readonly Dictionary<Type, (PropertyInfo prop, string key)[]> _resourcePropCache = new();
 
     /// <summary>
-    /// 从 snapshot-backed DTO 配置对象加载数据到容器。
+    /// [Migration Shim] 从 snapshot-backed DTO 配置对象加载数据到容器。
+    /// 使用反射遍历属性并写入 string-keyed Set，是旧数据注入路径。
+    /// EntityManager.Spawn 已优先走 RuntimeDataSnapshot.TryApplyConfigToData typed 路径，
+    /// 此方法仅作为非 DataOS DTO 的 fallback。
     /// </summary>
     /// <param name="config">snapshot-backed DTO 配置对象。</param>
     public void LoadFromConfig(object config)

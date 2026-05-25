@@ -535,7 +535,7 @@ public partial class AttributeTestModule : TestModuleBase
             if (currentHp > maxHp)
             {
                 selectedEntity.Data.Set(DataKey.CurrentHp, maxHp);
-                return DataKey.CurrentHp.Key;
+                return DataKey.CurrentHp.Key; // TODO: 迁移为返回 DataKey<float> 直接比较
             }
         }
 
@@ -546,7 +546,7 @@ public partial class AttributeTestModule : TestModuleBase
             if (currentMana > maxMana)
             {
                 selectedEntity.Data.Set(DataKey.CurrentMana, maxMana);
-                return DataKey.CurrentMana.Key;
+                return DataKey.CurrentMana.Key; // TODO: 迁移为返回 DataKey<float> 直接比较
             }
         }
 
@@ -596,7 +596,7 @@ public partial class AttributeTestModule : TestModuleBase
             return;
         }
 
-        if (evt.Key == DataKey.Name.Key)
+        if (evt.Key == DataKey.Name.Key) // TODO: 改为 DataKey.Name.Key 比较可保留（事件 payload 是 string）
         {
             RequestFullRefresh();
             return;

@@ -37,8 +37,9 @@ public enum AIState
 
 public static partial class DataKey
 {
-    // TargetNode 是 Node2D 引用，不走 DataRegistry 类型约束
-    public const string TargetNode = "TargetNode";
+    // 目标实体引用（运行时 Node2D 引用，默认 null）
+    public static readonly DataKey<Godot.Node2D> TargetNode = DataRegistry.Register<Godot.Node2D>(
+        new DataMeta { Key = nameof(TargetNode), DisplayName = "目标实体", Description = "AI 当前锁定的目标节点引用", Category = DataCategory_AI.Combat, Type = typeof(Godot.Node2D) });
 
     // ========== AI 行为状态 ==========
     // AI状态
