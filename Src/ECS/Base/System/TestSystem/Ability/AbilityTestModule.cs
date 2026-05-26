@@ -362,13 +362,13 @@ public partial class AbilityTestModule : TestModuleBase
         }
 
         _subscribedEntity = selectedEntity;
-        _subscribedEntity.Events.On<GameEventType.Ability.AddedEventData>(
+        _subscribedEntity.Events.On<GameEventType.Ability.Added>(
             GameEventType.Ability.Added, OnAbilityChanged);
-        _subscribedEntity.Events.On<GameEventType.Ability.RemovedEventData>(
+        _subscribedEntity.Events.On<GameEventType.Ability.Removed>(
             GameEventType.Ability.Removed, OnAbilityRemovedEvt);
-        _subscribedEntity.Events.On<GameEventType.Feature.EnabledEventData>(
+        _subscribedEntity.Events.On<GameEventType.Feature.Enabled>(
             GameEventType.Feature.Enabled, OnFeatureEnabled);
-        _subscribedEntity.Events.On<GameEventType.Feature.DisabledEventData>(
+        _subscribedEntity.Events.On<GameEventType.Feature.Disabled>(
             GameEventType.Feature.Disabled, OnFeatureDisabled);
     }
 
@@ -382,13 +382,13 @@ public partial class AbilityTestModule : TestModuleBase
             return;
         }
 
-        _subscribedEntity.Events.Off<GameEventType.Ability.AddedEventData>(
+        _subscribedEntity.Events.Off<GameEventType.Ability.Added>(
             GameEventType.Ability.Added, OnAbilityChanged);
-        _subscribedEntity.Events.Off<GameEventType.Ability.RemovedEventData>(
+        _subscribedEntity.Events.Off<GameEventType.Ability.Removed>(
             GameEventType.Ability.Removed, OnAbilityRemovedEvt);
-        _subscribedEntity.Events.Off<GameEventType.Feature.EnabledEventData>(
+        _subscribedEntity.Events.Off<GameEventType.Feature.Enabled>(
             GameEventType.Feature.Enabled, OnFeatureEnabled);
-        _subscribedEntity.Events.Off<GameEventType.Feature.DisabledEventData>(
+        _subscribedEntity.Events.Off<GameEventType.Feature.Disabled>(
             GameEventType.Feature.Disabled, OnFeatureDisabled);
         _subscribedEntity = null;
     }
@@ -396,7 +396,7 @@ public partial class AbilityTestModule : TestModuleBase
     /// <summary>
     /// 技能新增后的统一刷新回调。
     /// </summary>
-    private void OnAbilityChanged(GameEventType.Ability.AddedEventData _)
+    private void OnAbilityChanged(GameEventType.Ability.Added _)
     {
         if (CanRefresh)
         {
@@ -407,7 +407,7 @@ public partial class AbilityTestModule : TestModuleBase
     /// <summary>
     /// 技能移除后的统一刷新回调。
     /// </summary>
-    private void OnAbilityRemovedEvt(GameEventType.Ability.RemovedEventData _)
+    private void OnAbilityRemovedEvt(GameEventType.Ability.Removed _)
     {
         if (CanRefresh)
         {
@@ -418,7 +418,7 @@ public partial class AbilityTestModule : TestModuleBase
     /// <summary>
     /// 技能启停状态变化后的刷新回调。
     /// </summary>
-    private void OnFeatureEnabled(GameEventType.Feature.EnabledEventData evt)
+    private void OnFeatureEnabled(GameEventType.Feature.Enabled evt)
     {
         RequestOwnedItemPatch(evt.Feature);
     }
@@ -426,7 +426,7 @@ public partial class AbilityTestModule : TestModuleBase
     /// <summary>
     /// 技能禁用后的刷新回调。
     /// </summary>
-    private void OnFeatureDisabled(GameEventType.Feature.DisabledEventData evt)
+    private void OnFeatureDisabled(GameEventType.Feature.Disabled evt)
     {
         RequestOwnedItemPatch(evt.Feature);
     }

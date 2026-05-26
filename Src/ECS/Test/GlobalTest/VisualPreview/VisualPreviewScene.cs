@@ -29,11 +29,11 @@ public partial class VisualPreviewScene : Node2D
 
     public override void _ExitTree()
     {
-        GlobalEventBus.Global.Off<GameEventType.Global.MouseSelectionCompletedEventData>(
+        GlobalEventBus.Global.Off<GameEventType.Global.MouseSelectionCompleted>(
             GameEventType.Global.MouseSelectionCompleted,
             OnMouseSelectionCompleted
         );
-        GlobalEventBus.Global.Off<GameEventType.Global.MouseSelectionMissedEventData>(
+        GlobalEventBus.Global.Off<GameEventType.Global.MouseSelectionMissed>(
             GameEventType.Global.MouseSelectionMissed,
             OnMouseSelectionMissed
         );
@@ -92,11 +92,11 @@ public partial class VisualPreviewScene : Node2D
     /// </summary>
     private void BindSelectionEvents()
     {
-        GlobalEventBus.Global.On<GameEventType.Global.MouseSelectionCompletedEventData>(
+        GlobalEventBus.Global.On<GameEventType.Global.MouseSelectionCompleted>(
             GameEventType.Global.MouseSelectionCompleted,
             OnMouseSelectionCompleted
         );
-        GlobalEventBus.Global.On<GameEventType.Global.MouseSelectionMissedEventData>(
+        GlobalEventBus.Global.On<GameEventType.Global.MouseSelectionMissed>(
             GameEventType.Global.MouseSelectionMissed,
             OnMouseSelectionMissed
         );
@@ -206,7 +206,7 @@ public partial class VisualPreviewScene : Node2D
     /// 鼠标选择完成。
     /// </summary>
     /// <param name="evt">选择事件数据。</param>
-    private void OnMouseSelectionCompleted(GameEventType.Global.MouseSelectionCompletedEventData evt)
+    private void OnMouseSelectionCompleted(GameEventType.Global.MouseSelectionCompleted evt)
     {
         if (!_world.TryGetEntry(evt.PrimaryEntity, out var entry)
             || !string.Equals(entry.CatalogPath, GetSelectedCatalogPath(), StringComparison.Ordinal))
@@ -229,7 +229,7 @@ public partial class VisualPreviewScene : Node2D
     /// 鼠标选择未命中。
     /// </summary>
     /// <param name="evt">选择事件数据。</param>
-    private void OnMouseSelectionMissed(GameEventType.Global.MouseSelectionMissedEventData evt)
+    private void OnMouseSelectionMissed(GameEventType.Global.MouseSelectionMissed evt)
     {
         _selectionLabel.Text = "未选择";
     }

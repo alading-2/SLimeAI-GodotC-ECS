@@ -32,7 +32,7 @@ public partial class RecoveryComponent : Node, IComponent
             _data = iEntity.Data;
 
             // 监听恢复属性变化
-            _entity.Events.On<GameEventType.Data.PropertyChangedEventData>(
+            _entity.Events.On<GameEventType.Data.PropertyChanged>(
                 GameEventType.Data.PropertyChanged,
                 OnDataPropertyChanged
             );
@@ -131,7 +131,7 @@ public partial class RecoveryComponent : Node, IComponent
     /// <summary>
     /// 监听数据属性变化
     /// </summary>
-    private void OnDataPropertyChanged(GameEventType.Data.PropertyChangedEventData evt)
+    private void OnDataPropertyChanged(GameEventType.Data.PropertyChanged evt)
     {
         // 只关心恢复属性的变化
         if (evt.Key != DataKey.FinalHpRegen && evt.Key != DataKey.FinalManaRegen)

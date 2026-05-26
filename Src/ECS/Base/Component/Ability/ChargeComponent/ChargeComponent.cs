@@ -82,24 +82,24 @@ public partial class ChargeComponent : Node, IComponent
     {
         if (_entity == null) return;
         // 监听请求检查可用性事件
-        _entity.Events.On<GameEventType.Ability.CheckCanUseEventData>(
+        _entity.Events.On<GameEventType.Ability.CheckCanUse>(
             GameEventType.Ability.CheckCanUse,
             OnCheckCanUse
         );
         // 监听使用技能消耗充能事件
-        _entity.Events.On<GameEventType.Ability.ConsumeChargeEventData>(
+        _entity.Events.On<GameEventType.Ability.ConsumeCharge>(
             GameEventType.Ability.ConsumeCharge,
             OnRequestConsumeCharge
         );
         // 监听增加充能事件
-        _entity.Events.On<GameEventType.Ability.AddChargeEventData>(
+        _entity.Events.On<GameEventType.Ability.AddCharge>(
             GameEventType.Ability.AddCharge,
             OnRequestAddCharge
         );
     }
 
     /// <summary>响应可用性检查请求</summary>
-    private void OnCheckCanUse(GameEventType.Ability.CheckCanUseEventData eventData)
+    private void OnCheckCanUse(GameEventType.Ability.CheckCanUse eventData)
     {
         // 仅主动技能需要检查充能
         if (AbilityType != AbilityType.Active) return;
@@ -111,7 +111,7 @@ public partial class ChargeComponent : Node, IComponent
     }
 
     /// <summary>响应消耗充能请求</summary>
-    private void OnRequestConsumeCharge(GameEventType.Ability.ConsumeChargeEventData eventData)
+    private void OnRequestConsumeCharge(GameEventType.Ability.ConsumeCharge eventData)
     {
         // 仅主动技能需要消耗充能
         if (AbilityType != AbilityType.Active) return;
@@ -125,7 +125,7 @@ public partial class ChargeComponent : Node, IComponent
     }
 
     /// <summary>响应增加充能请求</summary>
-    private void OnRequestAddCharge(GameEventType.Ability.AddChargeEventData eventData)
+    private void OnRequestAddCharge(GameEventType.Ability.AddCharge eventData)
     {
         InternalAddCharges(eventData.Amount);
     }
@@ -199,9 +199,7 @@ public partial class ChargeComponent : Node, IComponent
         }
 
         // ✅ 发送统一的充能恢复事件
-        _entity?.Events.Emit(
-            GameEventType.Ability.ChargeRestored,
-            new GameEventType.Ability.ChargeRestoredEventData(newCharges, MaxCharges)
+        _entity?.Events.Emit(new GameEventType.Ability.ChargeRestored(newCharges, MaxCharges)
         );
 
         return actualAdd;

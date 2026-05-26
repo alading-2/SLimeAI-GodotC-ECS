@@ -25,9 +25,7 @@ public static partial class GameEventType
         }
 
         /// <summary>鼠标选择完成。</summary>
-        public const string MouseSelectionCompleted = "global:mouse_selection:completed";
-        /// <summary>鼠标选择完成事件数据。</summary>
-        public readonly record struct MouseSelectionCompletedEventData(
+        public readonly record struct MouseSelectionCompleted(
             IReadOnlyList<IEntity> Entities, // 选中的实体列表
             IEntity? PrimaryEntity, // 主选实体
             Vector2 ScreenPosition, // 屏幕位置
@@ -38,18 +36,14 @@ public static partial class GameEventType
         );
 
         /// <summary>鼠标框选预览更新。</summary>
-        public const string MouseSelectionPreviewUpdated = "global:mouse_selection:preview_updated";
-        /// <summary>鼠标框选预览更新事件数据。</summary>
-        public readonly record struct MouseSelectionPreviewUpdatedEventData(
+        public readonly record struct MouseSelectionPreviewUpdated(
             Vector2 StartScreenPosition, // 起始屏幕位置
             Vector2 CurrentScreenPosition, // 当前屏幕位置
             Rect2 ScreenRect // 框选矩形
         );
 
         /// <summary>鼠标选择未命中。</summary>
-        public const string MouseSelectionMissed = "global:mouse_selection:missed";
-        /// <summary>鼠标选择未命中事件数据。</summary>
-        public readonly record struct MouseSelectionMissedEventData(
+        public readonly record struct MouseSelectionMissed(
             Vector2 ScreenPosition, // 屏幕位置
             Vector2 WorldPosition, // 世界位置
             Rect2 ScreenRect, // 选择矩形

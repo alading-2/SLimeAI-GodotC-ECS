@@ -22,8 +22,8 @@ using System.Runtime.CompilerServices;
 /// <para>
 /// <code>
 /// 【使用示例 1：显式指定 ActionSpeed，飞到目标点后停顿，再沿反向弧线回到发射者】
-/// entity.Events.Emit(GameEventType.Unit.MovementStarted,
-///     new GameEventType.Unit.MovementStartedEventData(MoveMode.Boomerang, new MovementParams
+/// entity.Events.Emit(new GameEventType.Unit.MovementStarted(
+///     new GameEventType.Unit.MovementStarted(MoveMode.Boomerang, new MovementParams
 ///     {
 ///         Mode = MoveMode.Boomerang,
 ///         TargetPoint = enemyNode.GlobalPosition,  // 设置目标点

@@ -25,13 +25,13 @@ public static class DamageNumberSystem
     {
         if (_isSubscribed) return;
 
-        GlobalEventBus.Global.On<GameEventType.Unit.DamagedEventData>(
+        GlobalEventBus.Global.On<GameEventType.Unit.Damaged>(
             GameEventType.Unit.Damaged, OnDamaged);
 
-        GlobalEventBus.Global.On<GameEventType.Unit.HealAppliedEventData>(
+        GlobalEventBus.Global.On<GameEventType.Unit.HealApplied>(
             GameEventType.Unit.HealApplied, OnHealApplied);
 
-        GlobalEventBus.Global.On<GameEventType.Unit.DodgedEventData>(
+        GlobalEventBus.Global.On<GameEventType.Unit.Dodged>(
             GameEventType.Unit.Dodged, OnDodged);
 
         _isSubscribed = true;
@@ -45,13 +45,13 @@ public static class DamageNumberSystem
     {
         if (!_isSubscribed) return;
 
-        GlobalEventBus.Global.Off<GameEventType.Unit.DamagedEventData>(
+        GlobalEventBus.Global.Off<GameEventType.Unit.Damaged>(
             GameEventType.Unit.Damaged, OnDamaged);
 
-        GlobalEventBus.Global.Off<GameEventType.Unit.HealAppliedEventData>(
+        GlobalEventBus.Global.Off<GameEventType.Unit.HealApplied>(
             GameEventType.Unit.HealApplied, OnHealApplied);
 
-        GlobalEventBus.Global.Off<GameEventType.Unit.DodgedEventData>(
+        GlobalEventBus.Global.Off<GameEventType.Unit.Dodged>(
             GameEventType.Unit.Dodged, OnDodged);
 
         _isSubscribed = false;
@@ -62,7 +62,7 @@ public static class DamageNumberSystem
     // 飘字触发
     // ============================================================
 
-    private static void OnDamaged(GameEventType.Unit.DamagedEventData data)
+    private static void OnDamaged(GameEventType.Unit.Damaged data)
     {
         var worldPos = GetEntityPosition(data.Victim);
         if (worldPos == null) return;
@@ -73,7 +73,7 @@ public static class DamageNumberSystem
         ui.Show(data.Amount, worldPos.Value, data.IsCritical, data.Type);
     }
 
-    private static void OnHealApplied(GameEventType.Unit.HealAppliedEventData data)
+    private static void OnHealApplied(GameEventType.Unit.HealApplied data)
     {
         var worldPos = GetEntityPosition(data.Victim);
         if (worldPos == null) return;
@@ -84,7 +84,7 @@ public static class DamageNumberSystem
         ui.ShowHeal(data.ActualAmount, worldPos.Value);
     }
 
-    private static void OnDodged(GameEventType.Unit.DodgedEventData data)
+    private static void OnDodged(GameEventType.Unit.Dodged data)
     {
         var worldPos = GetEntityPosition(data.Victim);
         if (worldPos == null) return;

@@ -81,15 +81,15 @@ public partial class EntityMovementComponent : Node, IComponent
         _data.Set(DataKey.MovementFacingDirection, Vector2.Zero);
 
         // 订阅运动开始/切换事件（业务方通过此事件触发临时运动切换）
-        _entity.Events.On<GameEventType.Unit.MovementStartedEventData>(
+        _entity.Events.On<GameEventType.Unit.MovementStarted>(
             GameEventType.Unit.MovementStarted, OnMovementStarted);
 
         // 订阅碰撞事件（Area2D 路径；CharacterBody2D 路径在 ApplyMovement 中通过 MoveAndSlide 检测）
-        _entity.Events.On<GameEventType.Collision.CollisionEnteredEventData>(
+        _entity.Events.On<GameEventType.Collision.CollisionEntered>(
             GameEventType.Collision.CollisionEntered, OnCollisionDetected);
 
         // 订阅停止请求事件（外部系统或内部碰撞策略均可通过事件驱动停止当前运动）
-        _entity.Events.On<GameEventType.Unit.MovementStopRequestedEventData>(
+        _entity.Events.On<GameEventType.Unit.MovementStopRequested>(
             GameEventType.Unit.MovementStopRequested, OnMovementStopRequested);
 
         // 根据 DefaultMoveMode 初始化默认策略（无 MovementParams，使用空参数）
@@ -177,7 +177,7 @@ public partial class EntityMovementComponent : Node, IComponent
     /// 处理运动开始/切换事件（业务方触发临时运动切换）
     /// <para>当前为默认策略时可直接切换；非默认策略需满足可打断条件。</para>
     /// </summary>
-    private void OnMovementStarted(GameEventType.Unit.MovementStartedEventData evt)
+    private void OnMovementStarted(GameEventType.Unit.MovementStarted evt)
     {
         if (_entity == null || _data == null) return;
 
@@ -371,7 +371,7 @@ public partial class EntityMovementComponent : Node, IComponent
     /// <summary>
     /// 停止请求回调。
     /// </summary>
-    private void OnMovementStopRequested(GameEventType.Unit.MovementStopRequestedEventData evt)
+    private void OnMovementStopRequested(GameEventType.Unit.MovementStopRequested evt)
     {
         StopMovement(
             evt.Reason,
@@ -425,9 +425,7 @@ public partial class EntityMovementComponent : Node, IComponent
         // 按决议发出 MovementCompleted 事件
         if (resolution.EmitCompletedEvent)
         {
-            _entity.Events.Emit(
-                GameEventType.Unit.MovementCompleted,
-                new GameEventType.Unit.MovementCompletedEventData(
+            _entity.Events.Emit(new GameEventType.Unit.MovementCompleted(
                     mode,
                     _params.ElapsedTime,
                     _params.TraveledDistance,

@@ -237,8 +237,8 @@ public partial class TriggerComponent : Node, IComponent
     /// <summary>
     /// 核心触发逻辑：发送 TryTrigger 请求，由 AbilitySystem 统一处理。
     /// </summary>
-    /// <param name="sourceEventData">触发源事件数据（事件触发时携带）</param>
-    private void TriggerAbility(object? sourceEventData = null)
+    /// <param name="source">触发源事件数据（事件触发时携带）</param>
+    private void TriggerAbility(object? source = null)
     {
         if (_entity is not AbilityEntity ability) return;
 
@@ -255,16 +255,14 @@ public partial class TriggerComponent : Node, IComponent
         {
             Ability = ability,
             Caster = caster,
-            SourceEventData = sourceEventData,
+            Source = source,
             ResponseContext = new EventContext()
             // RequestedTargets 默认为 null，表示自动选取
         };
 
         // 发送 TryTrigger 请求，由 AbilitySystem 统一处理
         // 包括：CanUse 检查、消耗资源、启动冷却、选择目标、执行效果
-        _entity.Events.Emit(
-            GameEventType.Ability.TryTrigger,
-            new GameEventType.Ability.TryTriggerEventData(context)
+        _entity.Events.Emit(new GameEventType.Ability.TryTrigger(context)
         );
 
         _log.Debug($"触发技能请求: {AbilityName}");

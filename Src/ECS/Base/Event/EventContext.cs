@@ -61,7 +61,7 @@ public class EventContext
     /// 使用示例：
     /// <code>
     /// var ctx = new EventContext();
-    /// Events.Emit("ability:try_trigger", ctx);
+    /// Events.Emit(new GameEventType.Ability.TryTrigger(ctx));
     /// var result = ctx.GetResult&lt;TriggerResult&gt;();
     /// </code>
     /// </summary>

@@ -103,9 +103,7 @@ public partial class MouseSelectionSystem
         _isDragging = true;
         var screenRect = CreateRect(_startScreenPosition, motionEvent.Position);
         UpdateSelectionBoxUi(screenRect);
-        GlobalEventBus.Global.Emit(
-            GameEventType.Global.MouseSelectionPreviewUpdated,
-            new GameEventType.Global.MouseSelectionPreviewUpdatedEventData(
+        GlobalEventBus.Global.Emit(new GameEventType.Global.MouseSelectionPreviewUpdated(
                 _startScreenPosition, // 拖拽起点屏幕坐标
                 motionEvent.Position, // 当前屏幕坐标
                 screenRect // 当前屏幕框选矩形
@@ -245,9 +243,7 @@ public partial class MouseSelectionSystem
         ResetPointerState();
 
         // 统一广播成功事件：业务层只关心命中的实体集合、主目标和命中来源即可。
-        GlobalEventBus.Global.Emit(
-            GameEventType.Global.MouseSelectionCompleted,
-            new GameEventType.Global.MouseSelectionCompletedEventData(
+        GlobalEventBus.Global.Emit(new GameEventType.Global.MouseSelectionCompleted(
                 entities, // 命中的实体集合
                 primaryEntity, // 默认主目标
                 screenPosition, // 完成时的屏幕坐标
@@ -276,9 +272,7 @@ public partial class MouseSelectionSystem
         ResetPointerState();
 
         // 广播未命中事件，由上层决定是关闭选择模式、保持当前选择，还是播放提示反馈。
-        GlobalEventBus.Global.Emit(
-            GameEventType.Global.MouseSelectionMissed,
-            new GameEventType.Global.MouseSelectionMissedEventData(
+        GlobalEventBus.Global.Emit(new GameEventType.Global.MouseSelectionMissed(
                 screenPosition, // 未命中时的屏幕坐标
                 worldPosition, // 未命中时的世界坐标
                 screenRect, // 本次点击或框选的屏幕矩形

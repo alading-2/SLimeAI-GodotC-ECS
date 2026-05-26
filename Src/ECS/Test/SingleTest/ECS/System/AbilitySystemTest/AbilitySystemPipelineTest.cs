@@ -99,7 +99,7 @@ public partial class AbilitySystemPipelineTest : Node
 
         var costComponent = new CostComponent();
         EntityManager.AddComponent(ability, costComponent);
-        ability.Events.On<GameEventType.Ability.TryTriggerEventData>(
+        ability.Events.On<GameEventType.Ability.TryTrigger>(
             GameEventType.Ability.TryTrigger,
             AbilitySystem.HandleTryTrigger
         );
@@ -113,9 +113,7 @@ public partial class AbilitySystemPipelineTest : Node
             ResponseContext = new EventContext()
         };
 
-        ability.Events.Emit(
-            GameEventType.Ability.TryTrigger,
-            new GameEventType.Ability.TryTriggerEventData(context) //触发上下文
+        ability.Events.Emit(new GameEventType.Ability.TryTrigger(context) //触发上下文
         );
 
         var result = context.ResponseContext?.HasResult == true
@@ -190,7 +188,7 @@ public partial class AbilitySystemPipelineTest : Node
 
         var costComponent = new CostComponent();
         EntityManager.AddComponent(ability, costComponent);
-        ability.Events.On<GameEventType.Ability.TryTriggerEventData>(
+        ability.Events.On<GameEventType.Ability.TryTrigger>(
             GameEventType.Ability.TryTrigger,
             AbilitySystem.HandleTryTrigger
         );
@@ -206,9 +204,7 @@ public partial class AbilitySystemPipelineTest : Node
             ResponseContext = new EventContext()
         };
 
-        ability.Events.Emit(
-            GameEventType.Ability.TryTrigger,
-            new GameEventType.Ability.TryTriggerEventData(context) //触发上下文
+        ability.Events.Emit(new GameEventType.Ability.TryTrigger(context) //触发上下文
         );
 
         var result = context.ResponseContext?.HasResult == true

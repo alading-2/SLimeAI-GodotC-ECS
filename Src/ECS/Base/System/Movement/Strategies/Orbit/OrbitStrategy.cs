@@ -18,8 +18,8 @@ using System.Runtime.CompilerServices;
 /// <para>
 /// <code>
 /// 【使用示例 1：固定点匀速环绕，转 3 圈后完成】
-/// entity.Events.Emit(GameEventType.Unit.MovementStarted,
-///     new GameEventType.Unit.MovementStartedEventData(MoveMode.Orbit, new MovementParams
+/// entity.Events.Emit(new GameEventType.Unit.MovementStarted(
+///     new GameEventType.Unit.MovementStarted(MoveMode.Orbit, new MovementParams
 ///     {
 ///         Mode              = MoveMode.Orbit,
 ///         OrbitCenter       = new Vector2(400f, 300f),    // 中心点
@@ -46,8 +46,8 @@ using System.Runtime.CompilerServices;
 ///
 /// 【使用示例 2：3 颗卫星均匀分布，围绕目标实体环绕】
 /// for (int i = 0; i < 3; i++)
-///     entity.Events.Emit(GameEventType.Unit.MovementStarted,
-///         new GameEventType.Unit.MovementStartedEventData(MoveMode.Orbit, new MovementParams
+///     entity.Events.Emit(new GameEventType.Unit.MovementStarted,
+///         new GameEventType.Unit.MovementStarted(MoveMode.Orbit, new MovementParams
 ///         {
 ///             Mode              = MoveMode.Orbit, // 环绕模式
 ///             DestroyOnComplete = true,   // 完成后销毁

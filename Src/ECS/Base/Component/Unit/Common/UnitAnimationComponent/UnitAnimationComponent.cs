@@ -130,19 +130,19 @@ public partial class UnitAnimationComponent : Node, IComponent
         }
 
         // ✅ 监听生命周期状态变化（Dead/Reviving/Alive）
-        _entity.Events.On<GameEventType.Unit.KilledEventData>(
+        _entity.Events.On<GameEventType.Unit.Killed>(
             GameEventType.Unit.Killed, OnKilled);
 
         // ✅ 监听受击事件
-        _entity.Events.On<GameEventType.Unit.DamagedEventData>(
+        _entity.Events.On<GameEventType.Unit.Damaged>(
             GameEventType.Unit.Damaged, OnDamaged);
 
         // ✅ 监听外部发来的动画播放请求事件
-        _entity.Events.On<GameEventType.Unit.PlayAnimationRequestedEventData>(
+        _entity.Events.On<GameEventType.Unit.PlayAnimationRequested>(
             GameEventType.Unit.PlayAnimationRequested, OnPlayAnimationRequested);
 
         // ✅ 监听停止动画请求（攻击取消等）
-        _entity.Events.On<GameEventType.Unit.StopAnimationRequestedEventData>(
+        _entity.Events.On<GameEventType.Unit.StopAnimationRequested>(
             GameEventType.Unit.StopAnimationRequested, OnStopAnimationRequested);
 
         // 初始播放 Idle
@@ -271,8 +271,7 @@ public partial class UnitAnimationComponent : Node, IComponent
         if (CurrentAnimation == Anim.Dead)
         {
             // 死亡动画播完：发出通用事件（携带动画名），LifecycleComponent 监听后处理
-            _entity.Events.Emit(GameEventType.Unit.AnimationFinished,
-                new GameEventType.Unit.AnimationFinishedEventData(Anim.Dead));
+            _entity.Events.Emit(new GameEventType.Unit.AnimationFinished(Anim.Dead));
             // 暂停在最后一帧（Pause 不重置帧，Stop 会回到第0帧）
             _sprite?.Pause();
         }
@@ -286,7 +285,7 @@ public partial class UnitAnimationComponent : Node, IComponent
     /// <summary>
     /// 生命周期状态变化 → 切换对应动画
     /// </summary>
-    private void OnKilled(GameEventType.Unit.KilledEventData evt)
+    private void OnKilled(GameEventType.Unit.Killed evt)
     {
         // IsDead 由 LifecycleComponent 写入 Data，Play() 内部会检查
         Play(Anim.Dead);
@@ -295,7 +294,7 @@ public partial class UnitAnimationComponent : Node, IComponent
     /// <summary>
     /// 受击事件 → 播放受击动画
     /// </summary>
-    private void OnDamaged(GameEventType.Unit.DamagedEventData evt)
+    private void OnDamaged(GameEventType.Unit.Damaged evt)
     {
         Play(Anim.BeAttacked);
     }
@@ -303,7 +302,7 @@ public partial class UnitAnimationComponent : Node, IComponent
     /// <summary>
     /// 收到动画播放请求事件 -> 直接播放
     /// </summary>
-    private void OnPlayAnimationRequested(GameEventType.Unit.PlayAnimationRequestedEventData evt)
+    private void OnPlayAnimationRequested(GameEventType.Unit.PlayAnimationRequested evt)
     {
         Play(evt.AnimName, evt.ForceRestart, evt.Duration);
     }
@@ -311,7 +310,7 @@ public partial class UnitAnimationComponent : Node, IComponent
     /// <summary>
     /// 收到停止动画请求 -> 立即中断当前动画并回到 idle
     /// </summary>
-    private void OnStopAnimationRequested(GameEventType.Unit.StopAnimationRequestedEventData evt)
+    private void OnStopAnimationRequested(GameEventType.Unit.StopAnimationRequested evt)
     {
         if (_sprite == null) return;
         if (IsDeadOrReviving) return; // Dead/Reviving 期间死亡动画不被中断

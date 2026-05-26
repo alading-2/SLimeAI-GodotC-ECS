@@ -48,16 +48,16 @@ public partial class EntityOrientationComponent : Node, IComponent
         _visualSprite = ResolveVisualSprite(node);
 
         // 订阅运动生命周期事件，用于跟随运动朝向的启停联动
-        _entity.Events.On<GameEventType.Unit.MovementStartedEventData>(
+        _entity.Events.On<GameEventType.Unit.MovementStarted>(
             GameEventType.Unit.MovementStarted, OnMovementStarted);
-        _entity.Events.On<GameEventType.Unit.MovementCompletedEventData>(
+        _entity.Events.On<GameEventType.Unit.MovementCompleted>(
             GameEventType.Unit.MovementCompleted, OnMovementCompleted);
-        _entity.Events.On<GameEventType.Unit.MovementStopRequestedEventData>(
+        _entity.Events.On<GameEventType.Unit.MovementStopRequested>(
             GameEventType.Unit.MovementStopRequested, OnMovementStopRequested);
         // 订阅朝向控制事件，用于外部主动启停
-        _entity.Events.On<GameEventType.Unit.OrientationStartedEventData>(
+        _entity.Events.On<GameEventType.Unit.OrientationStarted>(
             GameEventType.Unit.OrientationStarted, OnOrientationStarted);
-        _entity.Events.On<GameEventType.Unit.OrientationStoppedEventData>(
+        _entity.Events.On<GameEventType.Unit.OrientationStopped>(
             GameEventType.Unit.OrientationStopped, OnOrientationStopped);
 
         ResetOrientationState(GetCurrentPresentedAngle()); // 初始化默认跟随输出状态
@@ -84,7 +84,7 @@ public partial class EntityOrientationComponent : Node, IComponent
         ApplyOrientationOutput(baseAngle, spinOffset);
     }
 
-    private void OnMovementStarted(GameEventType.Unit.MovementStartedEventData evt)
+    private void OnMovementStarted(GameEventType.Unit.MovementStarted evt)
     {
         if (_data == null) return;
 
@@ -109,7 +109,7 @@ public partial class EntityOrientationComponent : Node, IComponent
         }
     }
 
-    private void OnMovementCompleted(GameEventType.Unit.MovementCompletedEventData evt)
+    private void OnMovementCompleted(GameEventType.Unit.MovementCompleted evt)
     {
         // 运动完成后，如果当前 movement 曾暂停朝向，恢复默认跟随
         if (_isSuspendedByMovement)
@@ -125,7 +125,7 @@ public partial class EntityOrientationComponent : Node, IComponent
         }
     }
 
-    private void OnMovementStopRequested(GameEventType.Unit.MovementStopRequestedEventData evt)
+    private void OnMovementStopRequested(GameEventType.Unit.MovementStopRequested evt)
     {
         // 外部请求打断运动时，若当前 movement 曾暂停朝向，同步恢复默认跟随
         if (_isSuspendedByMovement)
@@ -141,13 +141,13 @@ public partial class EntityOrientationComponent : Node, IComponent
         }
     }
 
-    private void OnOrientationStarted(GameEventType.Unit.OrientationStartedEventData evt)
+    private void OnOrientationStarted(GameEventType.Unit.OrientationStarted evt)
     {
         // 外部主动启动朝向控制
         ApplyOrientation(evt.Params, evt.Source, evt.StopWithMovement);
     }
 
-    private void OnOrientationStopped(GameEventType.Unit.OrientationStoppedEventData evt)
+    private void OnOrientationStopped(GameEventType.Unit.OrientationStopped evt)
     {
         if (_data == null) return;
         if (!_isActive) return;

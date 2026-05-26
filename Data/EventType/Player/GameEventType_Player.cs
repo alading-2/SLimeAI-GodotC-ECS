@@ -6,8 +6,8 @@ public static partial class GameEventType
     public static class Player
     {
         /// <summary>玩家等级变更</summary>
-        public const string LevelChanged = "player:level_changed";
+        public readonly record struct LevelChanged();
         /// <summary>玩家资源变更</summary>
-        public const string ResourceChanged = "player:resource_changed";
+        public readonly record struct ResourceChanged();
     }
 }

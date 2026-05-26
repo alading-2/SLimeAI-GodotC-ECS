@@ -46,25 +46,25 @@ public static class TargetingManager
         if (_isSubscribed) return;
 
         // 订阅瞄准开始事件
-        GlobalEventBus.Global.On<GameEventType.Targeting.StartTargetingEventData>(
+        GlobalEventBus.Global.On<GameEventType.Targeting.StartTargeting>(
             GameEventType.Targeting.StartTargeting,
             OnStartTargeting
         );
 
         // 订阅瞄准确认事件
-        GlobalEventBus.Global.On<GameEventType.Targeting.TargetConfirmedEventData>(
+        GlobalEventBus.Global.On<GameEventType.Targeting.TargetConfirmed>(
             GameEventType.Targeting.TargetConfirmed,
             OnTargetConfirmed
         );
 
         // 订阅瞄准取消事件
-        GlobalEventBus.Global.On<GameEventType.Targeting.TargetCancelledEventData>(
+        GlobalEventBus.Global.On<GameEventType.Targeting.TargetCancelled>(
             GameEventType.Targeting.TargetCancelled,
             OnTargetCancelled
         );
 
         // 订阅单位死亡事件（玩家死亡时取消瞄准）
-        GlobalEventBus.Global.On<GameEventType.Unit.KilledEventData>(
+        GlobalEventBus.Global.On<GameEventType.Unit.Killed>(
             GameEventType.Unit.Killed,
             OnUnitKilled
         );
@@ -80,22 +80,22 @@ public static class TargetingManager
     {
         if (!_isSubscribed) return;
 
-        GlobalEventBus.Global.Off<GameEventType.Targeting.StartTargetingEventData>(
+        GlobalEventBus.Global.Off<GameEventType.Targeting.StartTargeting>(
             GameEventType.Targeting.StartTargeting,
             OnStartTargeting
         );
 
-        GlobalEventBus.Global.Off<GameEventType.Targeting.TargetConfirmedEventData>(
+        GlobalEventBus.Global.Off<GameEventType.Targeting.TargetConfirmed>(
             GameEventType.Targeting.TargetConfirmed,
             OnTargetConfirmed
         );
 
-        GlobalEventBus.Global.Off<GameEventType.Targeting.TargetCancelledEventData>(
+        GlobalEventBus.Global.Off<GameEventType.Targeting.TargetCancelled>(
             GameEventType.Targeting.TargetCancelled,
             OnTargetCancelled
         );
 
-        GlobalEventBus.Global.Off<GameEventType.Unit.KilledEventData>(
+        GlobalEventBus.Global.Off<GameEventType.Unit.Killed>(
             GameEventType.Unit.Killed,
             OnUnitKilled
         );
@@ -113,7 +113,7 @@ public static class TargetingManager
     /// <summary>
     /// 处理开始瞄准事件
     /// </summary>
-    private static void OnStartTargeting(GameEventType.Targeting.StartTargetingEventData evt)
+    private static void OnStartTargeting(GameEventType.Targeting.StartTargeting evt)
     {
         // 如果已经在瞄准中，先取消之前的
         if (IsTargeting)
@@ -146,7 +146,7 @@ public static class TargetingManager
     /// <summary>
     /// 处理瞄准确认事件
     /// </summary>
-    private static void OnTargetConfirmed(GameEventType.Targeting.TargetConfirmedEventData evt)
+    private static void OnTargetConfirmed(GameEventType.Targeting.TargetConfirmed evt)
     {
         if (!IsTargeting || CurrentContext == null || CurrentAbility == null)
         {
@@ -164,9 +164,7 @@ public static class TargetingManager
         // 2. 确认后才正式提交 TryTrigger；AbilitySystem 会再次检查可用性并负责消耗/冷却。
         var responseContext = new EventContext();
         CurrentContext.ResponseContext = responseContext;
-        CurrentAbility.Events.Emit(
-            GameEventType.Ability.TryTrigger,
-            new GameEventType.Ability.TryTriggerEventData(CurrentContext) //施法上下文
+        CurrentAbility.Events.Emit(new GameEventType.Ability.TryTrigger(CurrentContext) //施法上下文
         );
 
         var result = responseContext.HasResult
@@ -185,7 +183,7 @@ public static class TargetingManager
     /// <summary>
     /// 处理瞄准取消事件
     /// </summary>
-    private static void OnTargetCancelled(GameEventType.Targeting.TargetCancelledEventData evt)
+    private static void OnTargetCancelled(GameEventType.Targeting.TargetCancelled evt)
     {
         if (!IsTargeting) return;
 
@@ -199,7 +197,7 @@ public static class TargetingManager
     /// <summary>
     /// 处理单位死亡事件（玩家死亡时强制取消瞄准）
     /// </summary>
-    private static void OnUnitKilled(GameEventType.Unit.KilledEventData evt)
+    private static void OnUnitKilled(GameEventType.Unit.Killed evt)
     {
         // 只处理玩家死亡
         if (evt.Victim is not PlayerEntity) return;
@@ -271,9 +269,7 @@ public static class TargetingManager
         DestroyIndicator(indicator);
 
         // 发送瞄准结束事件
-        GlobalEventBus.Global.Emit(
-            GameEventType.Targeting.TargetingEnded,
-            new GameEventType.Targeting.TargetingEndedEventData(wasConfirmed)
+        GlobalEventBus.Global.Emit(new GameEventType.Targeting.TargetingEnded(wasConfirmed)
         );
 
         // 清理状态

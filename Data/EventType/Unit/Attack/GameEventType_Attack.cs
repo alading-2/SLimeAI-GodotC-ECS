@@ -8,31 +8,21 @@ public static partial class GameEventType
         // === 命令事件（外部 → AttackComponent）===
 
         /// <summary>请求发动攻击（命令事件：AI/Player -> AttackComponent）</summary>
-        public const string Requested = "attack:requested";
-        /// <summary>请求发动攻击事件数据</summary>
-        public readonly record struct RequestedEventData(Godot.Node2D Target);
+        public readonly record struct Requested(Godot.Node2D Target);
 
         /// <summary>请求中断攻击（命令事件：AI/外部 -> AttackComponent）</summary>
-        public const string CancelRequested = "attack:cancel_requested";
-        /// <summary>请求中断攻击事件数据</summary>
-        public readonly record struct CancelRequestedEventData();
+        public readonly record struct CancelRequested();
 
         // === 通知事件（AttackComponent → AI/UI）===
 
         /// <summary>攻击开始（通知事件：进入 WindUp 或即时判定）</summary>
-        public const string Started = "attack:started";
-        /// <summary>攻击开始事件数据</summary>
-        public readonly record struct StartedEventData(Godot.Node2D Target);
+        public readonly record struct Started(Godot.Node2D Target);
 
         /// <summary>攻击完成（通知事件：伤害已判定，走完全部阶段）</summary>
-        public const string Finished = "attack:finished";
-        /// <summary>攻击完成事件数据</summary>
-        public readonly record struct FinishedEventData(Godot.Node2D? Target, bool DidHit);
+        public readonly record struct Finished(Godot.Node2D? Target, bool DidHit);
 
         /// <summary>攻击被取消（通知事件：目标丢失/自身死亡等）</summary>
-        public const string Cancelled = "attack:cancelled";
-        /// <summary>攻击被取消事件数据</summary>
-        public readonly record struct CancelledEventData(AttackCancelReason Reason);
+        public readonly record struct Cancelled(AttackCancelReason Reason);
     }
 }
 

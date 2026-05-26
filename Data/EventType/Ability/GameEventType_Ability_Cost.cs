@@ -10,17 +10,15 @@ public static partial class GameEventType
         /// 发送者：AbilitySystem (技能激活时)
         /// 接收者：CostComponent
         /// </summary>
-        public const string ConsumeCost = "ability:consume_cost";
         /// <summary>消耗成本请求事件数据</summary>
-        public readonly record struct ConsumeCostEventData(EventContext Context);
+        public readonly record struct ConsumeCost(EventContext Context);
 
         /// <summary>
         /// 成本消耗完成事件 (供 UI 监听)。
         /// 发送者：CostComponent
         /// 接收者：UI、统计系统等
         /// </summary>
-        public const string CostConsumed = "ability:cost_consumed";
         /// <summary>成本消耗完成事件数据</summary>
-        public readonly record struct CostConsumedEventData(AbilityCostType CostType, float Amount);
+        public readonly record struct CostConsumed(AbilityCostType CostType, float Amount);
     }
 }

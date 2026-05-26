@@ -15,8 +15,8 @@ using System.Runtime.CompilerServices;
 /// <para>
 /// <code>
 /// 【使用示例：持续附着到目标实体】
-/// entity.Events.Emit(GameEventType.Unit.MovementStarted,
-///     new GameEventType.Unit.MovementStartedEventData(MoveMode.AttachToHost, new MovementParams
+/// entity.Events.Emit(new GameEventType.Unit.MovementStarted(
+///     new GameEventType.Unit.MovementStarted(MoveMode.AttachToHost, new MovementParams
 ///     {
 ///         Mode              = MoveMode.AttachToHost,
 ///         TargetNode        = hostNode,    // 必须：宿主节点引用

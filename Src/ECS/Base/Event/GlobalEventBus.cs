@@ -27,7 +27,7 @@ public static class GlobalEventBus
     /// <param name="waveIndex">当前开始的波次索引（从 0 或 1 开始，取决于配置）</param>
     public static void TriggerWaveStarted(int waveIndex)
     {
-        Global.Emit(GameEventType.Global.WaveStarted, new GameEventType.Global.WaveStartedEventData(waveIndex));
+        Global.Emit(new GameEventType.Global.WaveStarted(waveIndex));
     }
 
     /// <summary>
@@ -36,7 +36,7 @@ public static class GlobalEventBus
     /// <param name="waveIndex">刚刚完成的波次索引</param>
     public static void TriggerWaveCompleted(int waveIndex)
     {
-        Global.Emit(GameEventType.Global.WaveCompleted, new GameEventType.Global.WaveCompletedEventData(waveIndex));
+        Global.Emit(new GameEventType.Global.WaveCompleted(waveIndex));
     }
 
     /// <summary>
@@ -44,7 +44,7 @@ public static class GlobalEventBus
     /// </summary>
     public static void TriggerGameStart()
     {
-        Global.Emit(GameEventType.Global.GameStart, new GameEventType.Global.GameStartEventData());
+        Global.Emit(new GameEventType.Global.GameStart());
     }
 
     /// <summary>
@@ -52,7 +52,7 @@ public static class GlobalEventBus
     /// </summary>
     public static void TriggerGamePause()
     {
-        Global.Emit(GameEventType.Global.GamePause, new GameEventType.Global.GamePauseEventData());
+        Global.Emit(new GameEventType.Global.GamePause());
     }
 
     /// <summary>
@@ -60,7 +60,7 @@ public static class GlobalEventBus
     /// </summary>
     public static void TriggerGameResume()
     {
-        Global.Emit(GameEventType.Global.GameResume, new GameEventType.Global.GameResumeEventData());
+        Global.Emit(new GameEventType.Global.GameResume());
     }
 
     /// <summary>
@@ -69,7 +69,7 @@ public static class GlobalEventBus
     /// <param name="isVictory">是否胜利</param>
     public static void TriggerGameOver(bool isVictory)
     {
-        Global.Emit(GameEventType.Global.GameOver, new GameEventType.Global.GameOverEventData(isVictory));
+        Global.Emit(new GameEventType.Global.GameOver(isVictory));
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ public static class GlobalEventBus
     /// </summary>
     public static void TriggerUnitKilled(IEntity victim, IEntity killer)
     {
-        Global.Emit(GameEventType.Unit.Killed, new GameEventType.Unit.KilledEventData(
+        Global.Emit(new GameEventType.Unit.Killed(
             Victim: victim,
             Killer: killer
         ));
@@ -88,7 +88,7 @@ public static class GlobalEventBus
     /// </summary>
     public static void TriggerLevelUp(IEntity entity, int oldLevel, int newLevel)
     {
-        Global.Emit(GameEventType.Unit.LevelUp, new GameEventType.Unit.LevelUpEventData(entity, oldLevel, newLevel));
+        Global.Emit(new GameEventType.Unit.LevelUp(entity, oldLevel, newLevel));
     }
 
     // ============================================================
@@ -101,8 +101,7 @@ public static class GlobalEventBus
     public static void TriggerDamaged(IEntity victim, float amount, IEntity? attacker = null,
         DamageType type = DamageType.True, bool isCritical = false)
     {
-        Global.Emit(GameEventType.Unit.Damaged,
-            new GameEventType.Unit.DamagedEventData(victim, amount, attacker, type, isCritical));
+        Global.Emit(new GameEventType.Unit.Damaged(victim, amount, attacker, type, isCritical));
     }
 
     /// <summary>
@@ -110,8 +109,7 @@ public static class GlobalEventBus
     /// </summary>
     public static void TriggerHealApplied(IEntity victim, float requestedAmount, float actualAmount, HealSource source)
     {
-        Global.Emit(GameEventType.Unit.HealApplied,
-            new GameEventType.Unit.HealAppliedEventData(victim, requestedAmount, actualAmount, source));
+        Global.Emit(new GameEventType.Unit.HealApplied(victim, requestedAmount, actualAmount, source));
     }
 
     /// <summary>
@@ -119,7 +117,6 @@ public static class GlobalEventBus
     /// </summary>
     public static void TriggerDodged(IEntity victim, IEntity? attacker = null)
     {
-        Global.Emit(GameEventType.Unit.Dodged,
-            new GameEventType.Unit.DodgedEventData(victim, attacker));
+        Global.Emit(new GameEventType.Unit.Dodged(victim, attacker));
     }
 }

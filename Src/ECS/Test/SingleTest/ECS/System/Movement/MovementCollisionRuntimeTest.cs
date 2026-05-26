@@ -140,7 +140,7 @@ namespace Slime.Test
 
         private void TestStopRequestedDefaults()
         {
-            var evt = new GameEventType.Unit.MovementStopRequestedEventData();
+            var evt = new GameEventType.Unit.MovementStopRequested();
 
             AssertEqual("默认停止原因", MovementStopReason.Requested, evt.Reason);
             AssertEqual("默认发完成事件", true, evt.EmitCompletedEvent);
@@ -151,7 +151,7 @@ namespace Slime.Test
 
         private void TestOrientationStartedDefaults()
         {
-            var evt = new GameEventType.Unit.OrientationStartedEventData();
+            var evt = new GameEventType.Unit.OrientationStarted();
 
             AssertEqual("默认朝向来源", OrientationSource.Standalone, evt.Source);
             AssertEqual("默认朝向参数模式", OrientationMode.FollowMovement, evt.Params.Mode);
@@ -160,7 +160,7 @@ namespace Slime.Test
 
         private void TestOrientationStoppedDefaults()
         {
-            var evt = new GameEventType.Unit.OrientationStoppedEventData();
+            var evt = new GameEventType.Unit.OrientationStopped();
 
             AssertEqual("默认停止来源", OrientationSource.Standalone, evt.Source);
             AssertEqual("默认停止原因", MovementStopReason.Requested, evt.Reason);
@@ -171,7 +171,7 @@ namespace Slime.Test
             var collisionTarget = new Node2D { Name = "CollisionTarget" };
             AddChild(collisionTarget);
 
-            var evt = new GameEventType.Unit.MovementCompletedEventData(
+            var evt = new GameEventType.Unit.MovementCompleted(
                 MoveMode.CircularArc,
                 1.5f,
                 123f,
@@ -564,7 +564,7 @@ namespace Slime.Test
                     }
                 );
 
-                target!.Events.Emit("migration:test:event");
+                // migration:test:event 已废弃，EventBus 不再支持 string 事件名
 
                 AssertEqual("Profile 排除的键不应被迁移", string.Empty, target.Data.Get<string>(DataKey.Name));
                 AssertEqual("DataOverrides 应覆盖迁移后的最终值", "OverrideDescription", target.Data.Get<string>(DataKey.Description));

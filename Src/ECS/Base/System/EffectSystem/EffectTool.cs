@@ -139,7 +139,7 @@ public static partial class EffectTool
 
         // GlobalEventBus.Global.Emit(
         //     GameEventType.Global.EntitySpawned,
-        //     new GameEventType.Global.EntitySpawnedEventData(entity));
+        //     new GameEventType.Global.EntitySpawned(entity));
 
         // 日志
         if (isAttached)

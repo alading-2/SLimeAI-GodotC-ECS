@@ -57,25 +57,25 @@ public partial class CooldownComponent : Node, IComponent
     {
         if (_entity == null) return;
         // 监听请求检查可用性事件
-        _entity.Events.On<GameEventType.Ability.CheckCanUseEventData>(
+        _entity.Events.On<GameEventType.Ability.CheckCanUse>(
             GameEventType.Ability.CheckCanUse,
             OnCheckCanUse,
             (int)AbilityCheckPhase.Cooldown
         );
         // 监听请求启动冷却事件
-        _entity.Events.On<GameEventType.Ability.StartCooldownEventData>(
+        _entity.Events.On<GameEventType.Ability.StartCooldown>(
             GameEventType.Ability.StartCooldown,
             StartCooldown
         );
         // 监听请求重置冷却事件
-        _entity.Events.On<GameEventType.Ability.ResetCooldownEventData>(
+        _entity.Events.On<GameEventType.Ability.ResetCooldown>(
             GameEventType.Ability.ResetCooldown,
             ResetCooldown
         );
     }
 
     /// <summary>响应可用性检查请求</summary>
-    private void OnCheckCanUse(GameEventType.Ability.CheckCanUseEventData eventData)
+    private void OnCheckCanUse(GameEventType.Ability.CheckCanUse eventData)
     {
         if (!IsReady())
         {
@@ -98,7 +98,7 @@ public partial class CooldownComponent : Node, IComponent
     }
 
     /// <summary>启动冷却计时</summary>
-    public void StartCooldown(GameEventType.Ability.StartCooldownEventData eventData)
+    public void StartCooldown(GameEventType.Ability.StartCooldown eventData)
     {
         if (_data == null) return;
 
@@ -117,9 +117,7 @@ public partial class CooldownComponent : Node, IComponent
                 // 冷却完成
                 _timer = null;
 
-                _entity?.Events.Emit(
-                    GameEventType.Ability.Ready,
-                    new GameEventType.Ability.ReadyEventData()
+                _entity?.Events.Emit(new GameEventType.Ability.Ready()
                 );
 
                 _log.Debug($"技能冷却完成: {AbilityName}");
@@ -129,7 +127,7 @@ public partial class CooldownComponent : Node, IComponent
     }
 
     /// <summary>重置冷却（立即完成冷却）</summary>
-    public void ResetCooldown(GameEventType.Ability.ResetCooldownEventData eventData)
+    public void ResetCooldown(GameEventType.Ability.ResetCooldown eventData)
     {
         CancelTimer();
         _log.Debug($"技能冷却重置: {AbilityName}");

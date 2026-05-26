@@ -20,12 +20,12 @@ public enum EventPriority
 
 /// <summary>
 /// 通用游戏事件总线
+/// 以 payload 类型（readonly record struct）作为事件标识，替代旧字符串主键。
 /// 支持泛型数据传递、优先级排序、一次性订阅。
-/// <para>详细设计与作用域划分规范请参考 README_EventBus.md</para>
+/// <para>typeof(T) 在泛型方法中是 JIT 常量，无反射开销。</para>
 /// </summary>
 public class EventBus
 {
-    // 使用 Log 系统
     private static readonly Log _log = new Log("EventBus");
 
     /// <summary>
@@ -34,9 +34,9 @@ public class EventBus
     private class Subscription
     {
         /// <summary>
-        /// 事件名称
+        /// 事件类型（payload 的 Type）
         /// </summary>
-        public string EventName { get; set; }
+        public Type EventType { get; set; }
 
         /// <summary>
         /// 事件处理器委托
@@ -53,104 +53,64 @@ public class EventBus
         /// </summary>
         public bool Once { get; set; }
 
-        /// <summary>
-        /// 参数类型缓存（用于类型检查和调试）
-        /// </summary>
-        public Type? ParameterType { get; set; }
-
         // 标记是否已被移除（处理迭代期间的安全删除）
         public bool IsPendingRemoval { get; set; } = false;
 
-        public Subscription(string eventName, Delegate handler, int priority, bool once)
+        public Subscription(Type eventType, Delegate handler, int priority, bool once)
         {
-            EventName = eventName;
+            EventType = eventType;
             Handler = handler;
             Priority = priority;
             Once = once;
         }
     }
 
-    // 事件存储字典：事件名 -> 订阅列表
-    private readonly Dictionary<string, List<Subscription>> _subscriptions = new();
+    // 事件存储字典：payload Type -> 订阅列表
+    private readonly Dictionary<Type, List<Subscription>> _subscriptions = new();
 
     // 防止在 Emit 过程中修改列表导致的集合修改异常
-    // 如果正在触发事件，所有的移除操作将延迟进行
     private int _emittingCount = 0;
     private readonly List<Subscription> _pendingRemovals = new();
 
-    // ✅ 重入保护：追踪正在执行的事件类型，防止同类型事件递归触发
-    private readonly HashSet<string> _emittingEvents = new();
+    // 重入保护：追踪正在执行的事件类型，防止同类型事件递归触发
+    private readonly HashSet<Type> _emittingEvents = new();
 
     // ==================== 订阅 (Subscribe) ====================
 
     /// <summary>
-    /// 订阅带参数的事件
+    /// 订阅带参数的事件，payload 类型 T 即事件标识
     /// </summary>
-    public void On<T>(string eventName, Action<T> handler, int priority = (int)EventPriority.Normal)
+    public void On<T>(Action<T> handler, int priority = (int)EventPriority.Normal) where T : struct
     {
-        Subscribe(eventName, handler, priority, false);
-    }
-
-    /// <summary>
-    /// 订阅无参数的事件
-    /// </summary>
-    public void On(string eventName, Action handler, int priority = (int)EventPriority.Normal)
-    {
-        Subscribe(eventName, handler, priority, false);
+        Subscribe<T>(handler, priority, false);
     }
 
     /// <summary>
     /// 订阅一次性事件（带参数）
     /// </summary>
-    public void Once<T>(string eventName, Action<T> handler, int priority = (int)EventPriority.Normal)
+    public void Once<T>(Action<T> handler, int priority = (int)EventPriority.Normal) where T : struct
     {
-        Subscribe(eventName, handler, priority, true);
+        Subscribe<T>(handler, priority, true);
     }
 
-    /// <summary>
-    /// 订阅一次性事件（无参数）
-    /// </summary>
-    public void Once(string eventName, Action handler, int priority = (int)EventPriority.Normal)
+    private void Subscribe<T>(Delegate handler, int priority, bool once) where T : struct
     {
-        Subscribe(eventName, handler, priority, true);
-    }
-
-    private void Subscribe(string eventName, Delegate handler, int priority, bool once)
-    {
-        if (string.IsNullOrEmpty(eventName))
-        {
-            _log.Error("尝试订阅空事件名");
-            return;
-        }
-
         if (handler == null)
         {
-            _log.Error($"尝试订阅空处理器: {eventName}");
+            _log.Error($"尝试订阅空处理器: {typeof(T).Name}");
             return;
         }
 
-        if (!_subscriptions.TryGetValue(eventName, out var list))
+        var key = typeof(T);
+        if (!_subscriptions.TryGetValue(key, out var list))
         {
             list = new List<Subscription>();
-            _subscriptions[eventName] = list;
+            _subscriptions[key] = list;
         }
 
-        // 提取参数类型（用于类型检查和调试）
-        var paramType = handler.Method.GetParameters().FirstOrDefault()?.ParameterType;
-
-        var sub = new Subscription(eventName, handler, priority, once)
-        {
-            ParameterType = paramType
-        };
-
-        // 插入并保持优先级排序 (降序：优先级高的在前)
-        // 简单实现：直接添加后排序，或者插入到正确位置
-        // 考虑到读多写少，直接 Add 然后 Sort 是可以接受的，但为了极致性能，做插入排序更好
-        // 这里为了代码清晰，且订阅操作频率通常远低于触发，使用 Sort
+        var sub = new Subscription(key, handler, priority, once);
         list.Add(sub);
         list.Sort((a, b) => b.Priority.CompareTo(a.Priority));
-
-        // _log.Debug($"订阅事件: {eventName} (Pri:{priority}, Once:{once})");
     }
 
     // ==================== 取消订阅 (Unsubscribe) ====================
@@ -158,24 +118,16 @@ public class EventBus
     /// <summary>
     /// 取消订阅带参数的事件
     /// </summary>
-    public void Off<T>(string eventName, Action<T> handler)
+    public void Off<T>(Action<T> handler) where T : struct
     {
-        Unsubscribe(eventName, handler);
+        Unsubscribe<T>(handler);
     }
 
-    /// <summary>
-    /// 取消订阅无参数的事件
-    /// </summary>
-    public void Off(string eventName, Action handler)
+    private void Unsubscribe<T>(Delegate handler) where T : struct
     {
-        Unsubscribe(eventName, handler);
-    }
+        var key = typeof(T);
+        if (!_subscriptions.TryGetValue(key, out var list)) return;
 
-    private void Unsubscribe(string eventName, Delegate handler)
-    {
-        if (!_subscriptions.TryGetValue(eventName, out var list)) return;
-
-        // 查找匹配的订阅
         var target = list.FirstOrDefault(s => s.Handler == handler);
         if (target != null)
         {
@@ -185,7 +137,6 @@ public class EventBus
 
     private void RemoveSubscription(Subscription sub, List<Subscription> list)
     {
-        // 如果当前正在分发事件，不能直接修改列表
         if (_emittingCount > 0)
         {
             sub.IsPendingRemoval = true;
@@ -194,10 +145,9 @@ public class EventBus
         else
         {
             list.Remove(sub);
-            // 如果列表为空，可以选择清理 Key，但为了缓存复用通常保留 Key
             if (list.Count == 0)
             {
-                _subscriptions.Remove(sub.EventName);
+                _subscriptions.Remove(sub.EventType);
             }
         }
     }
@@ -205,76 +155,74 @@ public class EventBus
     // ==================== 触发 (Emit) ====================
 
     /// <summary>
-    /// 触发带参数的事件
+    /// 触发事件，payload 类型 T 即事件标识
     /// </summary>
-    public void Emit<T>(string eventName, T data)
+    public void Emit<T>(in T data) where T : struct
     {
-        Trigger(eventName, data);
+        Trigger(in data);
     }
 
     /// <summary>
-    /// 触发无参数的事件
+    /// 动态触发事件（用于 Feature 系统等运行时场景，通过反射调用泛型 Trigger）。
+    /// 性能低于泛型 Emit，仅用于数据驱动场景。
     /// </summary>
-    public void Emit(string eventName)
+    public void EmitDynamic(object eventData)
     {
-        Trigger<object?>(eventName, null);
+        if (eventData == null) return;
+        var eventType = eventData.GetType();
+        var triggerMethod = typeof(EventBus).GetMethod(
+            nameof(TriggerDynamicInner),
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        if (triggerMethod == null) return;
+        var generic = triggerMethod.MakeGenericMethod(eventType);
+        generic.Invoke(this, new[] { eventData });
     }
 
-    private void Trigger<T>(string eventName, T data)
+    private void TriggerDynamicInner<T>(object data) where T : struct
     {
-        // ✅ 重入检测：阻止同类型事件递归触发（防止死循环）
-        if (_emittingEvents.Contains(eventName))
+        Trigger((T)data);
+    }
+
+    private void Trigger<T>(in T data) where T : struct
+    {
+        var key = typeof(T);
+
+        // 重入检测：阻止同类型事件递归触发
+        if (_emittingEvents.Contains(key))
         {
-            _log.Warn($"检测到事件重入，已阻止: [{eventName}]");
+            _log.Warn($"检测到事件重入，已阻止: [{key.Name}]");
             return;
         }
 
-        if (!_subscriptions.TryGetValue(eventName, out var list) || list.Count == 0)
+        if (!_subscriptions.TryGetValue(key, out var list) || list.Count == 0)
         {
             return;
         }
 
-        _emittingEvents.Add(eventName);  // 标记事件开始执行
+        _emittingEvents.Add(key);
         _emittingCount++;
         try
         {
-            // 使用 for 循环避免 foreach 的枚举器开销，同时配合 pendingRemoval 检查
-            // 注意：因为列表已经按优先级排序，所以直接遍历即可
             int count = list.Count;
             for (int i = 0; i < count; i++)
             {
                 var sub = list[i];
-
-                // 跳过已被标记移除的订阅
                 if (sub.IsPendingRemoval) continue;
 
                 try
                 {
-                    // 参数匹配检查与调用
-                    if (sub.Handler is Action action)
+                    // 带参处理器：直接强转 Action<T>，避免反射
+                    if (sub.Handler is Action<T> typedHandler)
                     {
-                        // 无参处理器：总是可以被调用，忽略数据
-                        action.Invoke();
+                        typedHandler(data);
                     }
                     else
                     {
-                        // 带参处理器：需匹配参数类型
-                        // 优化：尝试直接强转为 Action<T> 以避免 DynamicInvoke 的反射和装箱开销
-                        // 这是最常见的路径（Emit<T> 和 On<T> 类型一致）
-                        if (sub.Handler is Action<T> typedHandler)
-                        {
-                            typedHandler(data);
-                        }
-                        else
-                        {
-                            // 类型不匹配：记录警告并跳过（不再使用 DynamicInvoke 反射调用）
-                            _log.Warn($"事件 [{eventName}] 类型不匹配: " +
-                                     $"订阅者需要 {sub.Handler.GetType()}, " +
-                                     $"但事件数据是 Action<{typeof(T)}>");
-                        }
+                        _log.Warn($"事件 [{key.Name}] 类型不匹配: " +
+                                 $"订阅者需要 {sub.Handler.GetType()}, " +
+                                 $"但事件数据是 Action<{typeof(T)}>");
                     }
 
-                    // 处理 Once 逻辑
                     if (sub.Once)
                     {
                         RemoveSubscription(sub, list);
@@ -282,15 +230,14 @@ public class EventBus
                 }
                 catch (Exception ex)
                 {
-                    _log.Error($"事件处理异常 [{eventName}]: {ex.Message}\n{ex.StackTrace}");
+                    _log.Error($"事件处理异常 [{key.Name}]: {ex.Message}\n{ex.StackTrace}");
                 }
             }
         }
         finally
         {
             _emittingCount--;
-            _emittingEvents.Remove(eventName);  // 标记事件执行结束
-            // 如果所有嵌套的 Emit 都结束了，处理延迟移除
+            _emittingEvents.Remove(key);
             if (_emittingCount <= 0)
             {
                 ProcessPendingRemovals();
@@ -307,12 +254,12 @@ public class EventBus
 
         foreach (var sub in _pendingRemovals)
         {
-            if (_subscriptions.TryGetValue(sub.EventName, out var list))
+            if (_subscriptions.TryGetValue(sub.EventType, out var list))
             {
                 list.Remove(sub);
                 if (list.Count == 0)
                 {
-                    _subscriptions.Remove(sub.EventName);
+                    _subscriptions.Remove(sub.EventType);
                 }
             }
         }
@@ -322,14 +269,11 @@ public class EventBus
     // ==================== 管理 ====================
 
     /// <summary>
-    /// 清除指定事件的所有订阅
+    /// 清除指定事件类型的所有订阅
     /// </summary>
-    public void ClearEvent(string eventName)
+    public void ClearEvent<T>() where T : struct
     {
-        if (_subscriptions.ContainsKey(eventName))
-        {
-            _subscriptions.Remove(eventName);
-        }
+        _subscriptions.Remove(typeof(T));
     }
 
     /// <summary>

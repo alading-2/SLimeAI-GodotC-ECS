@@ -48,10 +48,7 @@ public static class FeatureSystem
         FeatureHandlerRegistry.Get(handlerId)?.OnGranted(context);
 
         // 3. 发出 Granted 事件（Owner 局部总线）
-        owner.Events.Emit(
-            GameEventType.Feature.Granted,
-            new GameEventType.Feature.GrantedEventData(feature, owner)
-        );
+        owner.Events.Emit(new GameEventType.Feature.Granted(feature, owner));
 
         _log.Debug($"Feature Granted: {feature.Data.Get<string>("Name")} -> {owner}");
     }
@@ -75,10 +72,7 @@ public static class FeatureSystem
         RemoveModifiers(feature, owner);
 
         // 3. 发出 Removed 事件
-        owner.Events.Emit(
-            GameEventType.Feature.Removed,
-            new GameEventType.Feature.RemovedEventData(name, owner)
-        );
+        owner.Events.Emit(new GameEventType.Feature.Removed(name, owner));
 
         _log.Debug($"Feature Removed: {name} <- {owner}");
     }
@@ -114,10 +108,7 @@ public static class FeatureSystem
         }
 
         // 2. 发出 Activated 事件（Feature 局部总线），表示本次运行已开始
-        ctx.Feature.Events.Emit(
-            GameEventType.Feature.Activated,
-            new GameEventType.Feature.ActivatedEventData(ctx)
-        );
+        ctx.Feature.Events.Emit(new GameEventType.Feature.Activated(ctx));
 
         // 3. 执行阶段（结果写入 ctx.ExecuteResult）
         if (handler != null)
@@ -137,10 +128,7 @@ public static class FeatureSystem
         ctx.Feature.Data.Set(DataKey.FeatureActivationCount, current + 1);
 
         // 5. 发出 Executed 事件（Feature 局部总线），表示核心效果已执行
-        ctx.Feature.Events.Emit(
-            GameEventType.Feature.Executed,
-            new GameEventType.Feature.ExecutedEventData(ctx)
-        );
+        ctx.Feature.Events.Emit(new GameEventType.Feature.Executed(ctx));
     }
 
     // ==================== Ended ====================
@@ -167,10 +155,7 @@ public static class FeatureSystem
         }
 
         // 发出 Ended 事件（Feature 局部总线）
-        ctx.Feature.Events.Emit(
-            GameEventType.Feature.Ended,
-            new GameEventType.Feature.EndedEventData(ctx, reason)
-        );
+        ctx.Feature.Events.Emit(new GameEventType.Feature.Ended(ctx, reason));
     }
 
     // ==================== Enable / Disable ====================
@@ -187,10 +172,7 @@ public static class FeatureSystem
         var ctx = new FeatureContext { Owner = owner, Feature = feature };
         FeatureHandlerRegistry.Get(handlerId)?.OnEnabled(ctx);
 
-        owner.Events.Emit(
-            GameEventType.Feature.Enabled,
-            new GameEventType.Feature.EnabledEventData(feature, owner)
-        );
+        owner.Events.Emit(new GameEventType.Feature.Enabled(feature, owner));
 
         _log.Debug($"Feature Enabled: {feature.Data.Get<string>("Name")}");
     }
@@ -207,10 +189,7 @@ public static class FeatureSystem
         var ctx = new FeatureContext { Owner = owner, Feature = feature };
         FeatureHandlerRegistry.Get(handlerId)?.OnDisabled(ctx);
 
-        owner.Events.Emit(
-            GameEventType.Feature.Disabled,
-            new GameEventType.Feature.DisabledEventData(feature, owner)
-        );
+        owner.Events.Emit(new GameEventType.Feature.Disabled(feature, owner));
 
         _log.Debug($"Feature Disabled: {feature.Data.Get<string>("Name")}");
     }

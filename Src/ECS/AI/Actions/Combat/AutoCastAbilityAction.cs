@@ -40,9 +40,7 @@ public class AutoCastAbilityAction : BehaviorNode
             ResponseContext = new EventContext()
         };
 
-        ability.Events.Emit(
-            GameEventType.Ability.TryTrigger,
-            new GameEventType.Ability.TryTriggerEventData(castContext)
+        ability.Events.Emit(new GameEventType.Ability.TryTrigger(castContext)
         );
 
         var result = castContext.ResponseContext?.HasResult == true

@@ -49,7 +49,7 @@ public partial class HealthComponent : Node, IComponent
             _data = iEntity.Data;
 
             // ✅ 监听治疗请求事件（命令事件）
-            _entity.Events.On<GameEventType.Unit.HealRequestEventData>(
+            _entity.Events.On<GameEventType.Unit.HealRequest>(
                 GameEventType.Unit.HealRequest, ApplyHeal);
         }
 
@@ -67,7 +67,7 @@ public partial class HealthComponent : Node, IComponent
     /// 应用治疗生命/魔法
     /// </summary>
     /// <param name="evt">治疗请求事件数据</param>
-    public void ApplyHeal(GameEventType.Unit.HealRequestEventData evt)
+    public void ApplyHeal(GameEventType.Unit.HealRequest evt)
     {
         float amount = evt.Amount;
         HealSource source = evt.Source;
@@ -102,21 +102,20 @@ public partial class HealthComponent : Node, IComponent
         _data.Set(DataKey.CurrentHp, newHp);
 
         // 触发 HealthChanged 事件
-        _entity.Events.Emit(GameEventType.Data.HealthChanged,
-            new GameEventType.Data.HealthChangedEventData(oldHp, newHp));
+        _entity.Events.Emit(new GameEventType.Data.HealthChanged(oldHp, newHp));
 
         // ✅ 触发治疗完成事件（结果事件：通知 UI 飘字等）
         // 复活来源不触发飘字
         if (source != HealSource.Revive)
         {
-            var healData = new GameEventType.Unit.HealAppliedEventData(
+            var healData = new GameEventType.Unit.HealApplied(
                     _entity,       // Victim
                     amount,        // 原始请求量
                     actualHeal,    // 实际治疗量（去溢出）
                     source
                 );
-            _entity.Events.Emit(GameEventType.Unit.HealApplied, healData);
-            GlobalEventBus.Global.Emit(GameEventType.Unit.HealApplied, healData);
+            _entity.Events.Emit(healData);
+            GlobalEventBus.Global.Emit(healData);
             _log.Debug($"治疗: {actualHeal}, 来源: {source}, HP: {oldHp} -> {newHp}");
         }
     }
@@ -142,14 +141,13 @@ public partial class HealthComponent : Node, IComponent
         _data.Add(DataKey.TotalDamageTaken, amount);
 
         // 发送 HealthChanged 事件（供 UI 等使用）
-        _entity.Events.Emit(GameEventType.Data.HealthChanged,
-            new GameEventType.Data.HealthChangedEventData(oldHp, newHp));
+        _entity.Events.Emit(new GameEventType.Data.HealthChanged(oldHp, newHp));
 
         // 发送 Damaged 事件（供飘字等使用）
         // Attacker 可能是子弹/武器，在需要时通过关系链查找 IUnit
-        var damagedData = new GameEventType.Unit.DamagedEventData(_entity, amount, info.Attacker as IEntity, info.Type, info.IsCritical);
-        _entity.Events.Emit(GameEventType.Unit.Damaged, damagedData);
-        GlobalEventBus.Global.Emit(GameEventType.Unit.Damaged, damagedData);
+        var damagedData = new GameEventType.Unit.Damaged(_entity, amount, info.Attacker as IEntity, info.Type, info.IsCritical);
+        _entity.Events.Emit(damagedData);
+        GlobalEventBus.Global.Emit(damagedData);
 
         _log.Debug($"受到伤害: {amount}, HP: {oldHp} -> {newHp}");
 
@@ -160,14 +158,14 @@ public partial class HealthComponent : Node, IComponent
             // 读取实体的配置死亡类型，默认为 Normal
             var deathType = _data.Get<DeathType>(DataKey.DeathType);
             // Killer 为 Attacker（直接攻击来源），统计归属通过关系链在 DamageStatisticsSystem 中处理
-            var killData = new GameEventType.Unit.KilledEventData(
+            var killData = new GameEventType.Unit.Killed(
                 Victim: _entity,
                 Killer: info.Attacker as IEntity,
                 DeathType: deathType,
                 DamageType: info.Type
             );
             // 全局事件：监听者通过 Victim 字段筛选是否是自己关心的实体
-            GlobalEventBus.Global.Emit(GameEventType.Unit.Killed, killData);
+            GlobalEventBus.Global.Emit(killData);
         }
     }
 

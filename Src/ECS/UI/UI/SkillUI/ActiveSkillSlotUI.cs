@@ -169,19 +169,19 @@ public partial class ActiveSkillSlotUI : UIBase
         UnsubscribeAbilityEvents();
 
         // 监听充能变化
-        _currentAbility.Events.On<GameEventType.Ability.ChargeRestoredEventData>(
+        _currentAbility.Events.On<GameEventType.Ability.ChargeRestored>(
             GameEventType.Ability.ChargeRestored,
             OnChargeRestored
         );
 
         // 监听冷却完成
-        _currentAbility.Events.On<GameEventType.Ability.ReadyEventData>(
+        _currentAbility.Events.On<GameEventType.Ability.Ready>(
             GameEventType.Ability.Ready,
             OnAbilityReady
         );
 
         // 监听技能激活
-        _currentAbility.Events.On<GameEventType.Ability.ActivatedEventData>(
+        _currentAbility.Events.On<GameEventType.Ability.Activated>(
             GameEventType.Ability.Activated,
             OnAbilityActivated
         );
@@ -194,34 +194,34 @@ public partial class ActiveSkillSlotUI : UIBase
     {
         if (_currentAbility == null) return;
 
-        _currentAbility.Events.Off<GameEventType.Ability.ChargeRestoredEventData>(
+        _currentAbility.Events.Off<GameEventType.Ability.ChargeRestored>(
             GameEventType.Ability.ChargeRestored,
             OnChargeRestored
         );
 
-        _currentAbility.Events.Off<GameEventType.Ability.ReadyEventData>(
+        _currentAbility.Events.Off<GameEventType.Ability.Ready>(
             GameEventType.Ability.Ready,
             OnAbilityReady
         );
 
-        _currentAbility.Events.Off<GameEventType.Ability.ActivatedEventData>(
+        _currentAbility.Events.Off<GameEventType.Ability.Activated>(
             GameEventType.Ability.Activated,
             OnAbilityActivated
         );
     }
 
-    private void OnChargeRestored(GameEventType.Ability.ChargeRestoredEventData evt)
+    private void OnChargeRestored(GameEventType.Ability.ChargeRestored evt)
     {
         UpdateChargeDisplay();
     }
 
-    private void OnAbilityReady(GameEventType.Ability.ReadyEventData evt)
+    private void OnAbilityReady(GameEventType.Ability.Ready evt)
     {
         // 冷却完成，隐藏遮罩
         _cooldownOverlay.Visible = false;
     }
 
-    private void OnAbilityActivated(GameEventType.Ability.ActivatedEventData evt)
+    private void OnAbilityActivated(GameEventType.Ability.Activated evt)
     {
         // 技能激活，更新充能和冷却显示
         UpdateChargeDisplay();

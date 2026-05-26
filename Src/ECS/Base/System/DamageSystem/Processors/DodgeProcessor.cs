@@ -31,9 +31,9 @@ public class DodgeProcessor : IDamageProcessor
             _log.Debug($"目标 {info.Victim.Data.Get<string>(DataKey.Name)} 触发了闪避! (几率: {dodgeChance}%)");
 
             // 发出闪避事件（供飘字系统显示 MISS）
-            var dodgedData = new GameEventType.Unit.DodgedEventData(info.Victim, info.Attacker as IEntity);
-            info.Victim.Events.Emit(GameEventType.Unit.Dodged, dodgedData);
-            GlobalEventBus.Global.Emit(GameEventType.Unit.Dodged, dodgedData);
+            var dodgedData = new GameEventType.Unit.Dodged(info.Victim, info.Attacker as IEntity);
+            info.Victim.Events.Emit(dodgedData);
+            GlobalEventBus.Global.Emit(dodgedData);
         }
     }
 }

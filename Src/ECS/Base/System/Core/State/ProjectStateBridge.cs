@@ -46,11 +46,11 @@ public sealed class ProjectStateBridge : ISystem
             return;
         }
 
-        GlobalEventBus.Global.On(GameEventType.Global.GameStart, OnGameStart);
-        GlobalEventBus.Global.On<GameEventType.Global.GamePauseEventData>(GameEventType.Global.GamePause, OnGamePause);
-        GlobalEventBus.Global.On<GameEventType.Global.GameResumeEventData>(GameEventType.Global.GameResume,
+        GlobalEventBus.Global.On<GameEventType.Global.GameStart>(OnGameStart);
+        GlobalEventBus.Global.On<GameEventType.Global.GamePause>(OnGamePause);
+        GlobalEventBus.Global.On<GameEventType.Global.GameResume>(
             OnGameResume);
-        GlobalEventBus.Global.On<GameEventType.Global.GameOverEventData>(GameEventType.Global.GameOver, OnGameOver);
+        GlobalEventBus.Global.On<GameEventType.Global.GameOver>(OnGameOver);
         _eventsBound = true;
     }
 
@@ -61,30 +61,30 @@ public sealed class ProjectStateBridge : ISystem
             return;
         }
 
-        GlobalEventBus.Global.Off(GameEventType.Global.GameStart, OnGameStart);
-        GlobalEventBus.Global.Off<GameEventType.Global.GamePauseEventData>(GameEventType.Global.GamePause, OnGamePause);
-        GlobalEventBus.Global.Off<GameEventType.Global.GameResumeEventData>(GameEventType.Global.GameResume,
+        GlobalEventBus.Global.Off<GameEventType.Global.GameStart>(OnGameStart);
+        GlobalEventBus.Global.Off<GameEventType.Global.GamePause>(OnGamePause);
+        GlobalEventBus.Global.Off<GameEventType.Global.GameResume>(
             OnGameResume);
-        GlobalEventBus.Global.Off<GameEventType.Global.GameOverEventData>(GameEventType.Global.GameOver, OnGameOver);
+        GlobalEventBus.Global.Off<GameEventType.Global.GameOver>(OnGameOver);
         _eventsBound = false;
     }
 
-    private void OnGameStart()
+    private void OnGameStart(GameEventType.Global.GameStart _)
     {
         _projectState?.BeginGameplaySession();
     }
 
-    private void OnGamePause(GameEventType.Global.GamePauseEventData data)
+    private void OnGamePause(GameEventType.Global.GamePause _)
     {
         _projectState?.OpenPauseMenu();
     }
 
-    private void OnGameResume(GameEventType.Global.GameResumeEventData data)
+    private void OnGameResume(GameEventType.Global.GameResume _)
     {
         _projectState?.ClosePauseMenu();
     }
 
-    private void OnGameOver(GameEventType.Global.GameOverEventData data)
+    private void OnGameOver(GameEventType.Global.GameOver _)
     {
         _projectState?.EndSession();
     }

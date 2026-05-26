@@ -13,8 +13,8 @@ using System.Runtime.CompilerServices;
 /// 4. 进度推进：每帧根据 speed * delta / curveLength 计算进度增量，直接按参数 t 采样曲线点。
 /// <code>
 /// 【使用示例：固定落点抛物线（推荐用法）】
-/// entity.Events.Emit(GameEventType.Unit.MovementStarted,
-///     new GameEventType.Unit.MovementStartedEventData(MoveMode.Parabola, new MovementParams
+/// entity.Events.Emit(new GameEventType.Unit.MovementStarted(
+///     new GameEventType.Unit.MovementStarted(MoveMode.Parabola, new MovementParams
 ///     {
 ///         Mode = MoveMode.Parabola,
 ///         TargetPoint = landingPoint,      // 固定落点

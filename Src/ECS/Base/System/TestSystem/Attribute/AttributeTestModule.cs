@@ -566,7 +566,7 @@ public partial class AttributeTestModule : TestModuleBase
         }
 
         _subscribedEntity = selectedEntity;
-        _subscribedEntity.Events.On<GameEventType.Data.PropertyChangedEventData>(
+        _subscribedEntity.Events.On<GameEventType.Data.PropertyChanged>(
             GameEventType.Data.PropertyChanged,
             OnEntityDataChanged
         );
@@ -582,7 +582,7 @@ public partial class AttributeTestModule : TestModuleBase
             return;
         }
 
-        _subscribedEntity.Events.Off<GameEventType.Data.PropertyChangedEventData>(
+        _subscribedEntity.Events.Off<GameEventType.Data.PropertyChanged>(
             GameEventType.Data.PropertyChanged,
             OnEntityDataChanged
         );
@@ -593,7 +593,7 @@ public partial class AttributeTestModule : TestModuleBase
     /// 数据变化后的统一刷新回调。
     /// </summary>
     /// <param name="evt">属性变更事件数据。</param>
-    private void OnEntityDataChanged(GameEventType.Data.PropertyChangedEventData evt)
+    private void OnEntityDataChanged(GameEventType.Data.PropertyChanged evt)
     {
         if (!CanRefresh)
         {

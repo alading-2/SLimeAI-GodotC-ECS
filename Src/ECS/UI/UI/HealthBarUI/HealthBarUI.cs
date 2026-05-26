@@ -28,13 +28,13 @@ public partial class HealthBarUI : UIBase, IPoolable
         _log.Info("[ModuleInitializer] HealthBarUI.Initialize() 开始执行");
 
         // 订阅全局实体生成事件
-        GlobalEventBus.Global.On<GameEventType.Global.EntitySpawnedEventData>(
+        GlobalEventBus.Global.On<GameEventType.Global.EntitySpawned>(
             GameEventType.Global.EntitySpawned,
             OnUnitCreated
         );
 
         // 订阅全局单位销毁事件
-        GlobalEventBus.Global.On<GameEventType.Global.EntityDestroyedEventData>(
+        GlobalEventBus.Global.On<GameEventType.Global.EntityDestroyed>(
             GameEventType.Global.EntityDestroyed,
             OnUnitDestroyed
         );
@@ -96,7 +96,7 @@ public partial class HealthBarUI : UIBase, IPoolable
     /// <summary>
     /// 单位创建事件处理：自动为新单位绑定血条
     /// </summary>
-    private static void OnUnitCreated(GameEventType.Global.EntitySpawnedEventData evt)
+    private static void OnUnitCreated(GameEventType.Global.EntitySpawned evt)
     {
         var entity = evt.Entity;
         var entityTypeName = entity.GetType().Name;
@@ -141,7 +141,7 @@ public partial class HealthBarUI : UIBase, IPoolable
     /// <summary>
     /// 单位销毁事件处理：自动解绑并回收血条
     /// </summary>
-    private static void OnUnitDestroyed(GameEventType.Global.EntityDestroyedEventData evt)
+    private static void OnUnitDestroyed(GameEventType.Global.EntityDestroyed evt)
     {
         // 解绑所有 UI（包括血条）
         UIManager.UnbindAllUI(evt.Entity);
@@ -154,7 +154,7 @@ public partial class HealthBarUI : UIBase, IPoolable
     protected override void OnBind()
     {
         // 订阅HP变化事件
-        _entity!.Events.On<GameEventType.Data.HealthChangedEventData>(
+        _entity!.Events.On<GameEventType.Data.HealthChanged>(
             GameEventType.Data.HealthChanged,
             OnHealthChanged
         );
@@ -205,7 +205,7 @@ public partial class HealthBarUI : UIBase, IPoolable
     // 事件处理
     // ============================================================
 
-    private void OnHealthChanged(GameEventType.Data.HealthChangedEventData evt)
+    private void OnHealthChanged(GameEventType.Data.HealthChanged evt)
     {
         UpdateHealthBar();
     }

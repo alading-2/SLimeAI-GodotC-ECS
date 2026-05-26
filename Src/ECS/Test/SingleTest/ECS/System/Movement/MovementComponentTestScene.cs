@@ -340,7 +340,7 @@ namespace Slime.Test
                 entity.Data.Set("EffectOffset", new Vector2(0f, -54f));
             }
 
-            entity.Events.On<GameEventType.Unit.MovementCompletedEventData>(GameEventType.Unit.MovementCompleted, _ => OnDemoCompleted(id));
+            entity.Events.On<GameEventType.Unit.MovementCompleted>(_ => OnDemoCompleted(id));
             StartDemo(id);
         }
 
@@ -354,7 +354,7 @@ namespace Slime.Test
 
             demo.Entity!.GlobalPosition = GetSpawnPosition(id);
             demo.Entity.Data.Set("Velocity", Vector2.Zero);
-            demo.Entity.Events.Emit(GameEventType.Unit.MovementStarted, new GameEventType.Unit.MovementStartedEventData(BuildMode(id), BuildParams(id)));
+            demo.Entity.Events.Emit(new GameEventType.Unit.MovementStarted(BuildMode(id), BuildParams(id)));
         }
 
         private void OnDemoCompleted(DemoId id)

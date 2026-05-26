@@ -36,14 +36,14 @@ public class FeatureContext
     public object? ExecuteResult { get; set; }
 
     /// <summary>触发源事件数据（OnEvent 触发时携带，其余为 null）</summary>
-    public object? SourceEventData { get; set; }
+    public object? Source { get; set; }
 
     //=======================Action的参数=====================
-    /// <summary>Action 侧对 SourceEventData 的语义别名</summary>
-    public object? TriggerEventData
+    /// <summary>Action 侧对 Source 的语义别名</summary>
+    public object? Trigger
     {
-        get => SourceEventData;
-        set => SourceEventData = value;
+        get => Source;
+        set => Source = value;
     }
 
     /// <summary>Action 间共享的临时数据（跨 Action 传值用）</summary>

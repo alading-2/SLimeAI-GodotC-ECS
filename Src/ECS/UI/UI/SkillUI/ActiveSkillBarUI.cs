@@ -45,19 +45,19 @@ public partial class ActiveSkillBarUI : UIBase
     protected override void OnBind()
     {
         // 订阅技能添加事件
-        _entity!.Events.On<GameEventType.Ability.AddedEventData>(
+        _entity!.Events.On<GameEventType.Ability.Added>(
             GameEventType.Ability.Added,
             OnAbilityAdded
         );
 
         // 订阅技能移除事件
-        _entity!.Events.On<GameEventType.Ability.RemovedEventData>(
+        _entity!.Events.On<GameEventType.Ability.Removed>(
             GameEventType.Ability.Removed,
             OnAbilityRemoved
         );
 
         // 订阅技能切换事件
-        _entity!.Events.On<GameEventType.UI.ActiveSkillSelectedEventData>(
+        _entity!.Events.On<GameEventType.UI.ActiveSkillSelected>(
             GameEventType.UI.ActiveSkillSelected,
             OnActiveSkillSelected
         );
@@ -74,17 +74,17 @@ public partial class ActiveSkillBarUI : UIBase
     /// </summary>
     protected override void OnUnbind()
     {
-        _entity!.Events.Off<GameEventType.Ability.AddedEventData>(
+        _entity!.Events.Off<GameEventType.Ability.Added>(
             GameEventType.Ability.Added,
             OnAbilityAdded
         );
 
-        _entity!.Events.Off<GameEventType.Ability.RemovedEventData>(
+        _entity!.Events.Off<GameEventType.Ability.Removed>(
             GameEventType.Ability.Removed,
             OnAbilityRemoved
         );
 
-        _entity!.Events.Off<GameEventType.UI.ActiveSkillSelectedEventData>(
+        _entity!.Events.Off<GameEventType.UI.ActiveSkillSelected>(
             GameEventType.UI.ActiveSkillSelected,
             OnActiveSkillSelected
         );
@@ -102,20 +102,20 @@ public partial class ActiveSkillBarUI : UIBase
         Visible = true;
     }
 
-    private void OnAbilityAdded(GameEventType.Ability.AddedEventData evt)
+    private void OnAbilityAdded(GameEventType.Ability.Added evt)
     {
         var abilityName = evt.Ability.Data.Get<string>(DataKey.Name);
         _log.Debug($"检测到技能添加: {abilityName}");
         UpdateAllSlots();
     }
 
-    private void OnAbilityRemoved(GameEventType.Ability.RemovedEventData evt)
+    private void OnAbilityRemoved(GameEventType.Ability.Removed evt)
     {
         _log.Debug($"检测到技能移除: {evt.abilityName} ({evt.abilityId})");
         UpdateAllSlots();
     }
 
-    private void OnActiveSkillSelected(GameEventType.UI.ActiveSkillSelectedEventData evt)
+    private void OnActiveSkillSelected(GameEventType.UI.ActiveSkillSelected evt)
     {
         _log.Debug($"收到 ActiveSkillSelected 事件: Index {evt.SlotIndex}, Name: {evt.AbilityName}");
         HighlightSelectedSlot(evt.SlotIndex);

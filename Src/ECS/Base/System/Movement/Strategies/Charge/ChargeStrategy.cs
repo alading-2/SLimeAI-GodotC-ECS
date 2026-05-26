@@ -20,8 +20,8 @@ using System.Runtime.CompilerServices;
 /// <para>
 /// <code>
 /// 【使用示例 1：追踪目标实体（追踪导弹）】
-/// entity.Events.Emit(GameEventType.Unit.MovementStarted,
-///     new GameEventType.Unit.MovementStartedEventData(MoveMode.Charge, new MovementParams
+/// entity.Events.Emit(new GameEventType.Unit.MovementStarted(
+///     new GameEventType.Unit.MovementStarted(MoveMode.Charge, new MovementParams
 ///     {
 ///         Mode = MoveMode.Charge,
 ///         MaxDuration       = 2f,          // 最大持续时间，追踪不需要设置距离
@@ -33,8 +33,8 @@ using System.Runtime.CompilerServices;
 ///     }));
 ///
 /// 【使用示例 2：冲向固定坐标点】
-/// entity.Events.Emit(GameEventType.Unit.MovementStarted,
-///     new GameEventType.Unit.MovementStartedEventData(MoveMode.Charge, new MovementParams
+/// entity.Events.Emit(new GameEventType.Unit.MovementStarted(
+///     new GameEventType.Unit.MovementStarted(MoveMode.Charge, new MovementParams
 ///     {
 ///         Mode = MoveMode.Charge,
 ///         MaxDuration       = 2f,                     // 最大持续时间，不用设置距离
@@ -44,8 +44,8 @@ using System.Runtime.CompilerServices;
 ///     }));
 ///
 /// 【使用示例 3：固定方向冲刺（方向角 / 右方向兜底）】
-/// entity.Events.Emit(GameEventType.Unit.MovementStarted,
-///     new GameEventType.Unit.MovementStartedEventData(MoveMode.Charge, new MovementParams
+/// entity.Events.Emit(new GameEventType.Unit.MovementStarted(
+///     new GameEventType.Unit.MovementStarted(MoveMode.Charge, new MovementParams
 ///     {
 ///         Mode = MoveMode.Charge,
 ///         MaxDistance = 800f,     // 最大移动距离

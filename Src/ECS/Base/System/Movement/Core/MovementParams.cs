@@ -12,8 +12,8 @@ using Godot;
 /// <para>
 /// 典型用法：
 /// <code>
-/// entity.Events.Emit(GameEventType.Unit.MovementStarted,
-///     new GameEventType.Unit.MovementStartedEventData(MoveMode.Charge, new MovementParams
+/// entity.Events.Emit(new GameEventType.Unit.MovementStarted(
+///     new GameEventType.Unit.MovementStarted(MoveMode.Charge, new MovementParams
 ///     {
 ///         isTrackTarget       = true,
 ///         TargetNode        = enemy,

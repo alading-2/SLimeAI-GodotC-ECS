@@ -67,10 +67,10 @@ public partial class TemplateEntity : Node, IEntity, IPoolable
     public void OnPoolAcquire()
     {
         // 示例:订阅全局 Kill 事件（通过 Victim 筛选是否是自己）
-        GlobalEventBus.Global.On<GameEventType.Unit.KilledEventData>(
+        GlobalEventBus.Global.On<GameEventType.Unit.Killed>(
             GameEventType.Unit.Killed, OnKilled);
         // 示例:订阅局部事件（仅在实体内部组件间通信）
-        Events.On<GameEventType.Unit.DamagedEventData>(
+        Events.On<GameEventType.Unit.Damaged>(
             GameEventType.Unit.Damaged, OnDamaged);
     }
 
@@ -82,7 +82,7 @@ public partial class TemplateEntity : Node, IEntity, IPoolable
     public void OnPoolRelease()
     {
         // 取消全局事件订阅
-        GlobalEventBus.Global.Off<GameEventType.Unit.KilledEventData>(
+        GlobalEventBus.Global.Off<GameEventType.Unit.Killed>(
             GameEventType.Unit.Killed, OnKilled);
     }
 
@@ -99,7 +99,7 @@ public partial class TemplateEntity : Node, IEntity, IPoolable
 
     #region ================= 事件处理 =================
 
-    private void OnKilled(GameEventType.Unit.KilledEventData evt)
+    private void OnKilled(GameEventType.Unit.Killed evt)
     {
         // 全局事件筛选：只处理自己被击杀的事件
         if (evt.Victim as Node != this) return;
@@ -107,7 +107,7 @@ public partial class TemplateEntity : Node, IEntity, IPoolable
         // 处理死亡逻辑...
     }
 
-    private void OnDamaged(GameEventType.Unit.DamagedEventData evt)
+    private void OnDamaged(GameEventType.Unit.Damaged evt)
     {
         _log.Info($"{Name} 受到 {evt.Amount} 点伤害");
         // 处理受伤逻辑

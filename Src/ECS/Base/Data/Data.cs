@@ -399,7 +399,7 @@ public class Data
     }
 
     // ================= 事件监听 (已移除) =================
-    // 请使用 Entity.Events.On(GameEventType.Data.PropertyChanged, ...)
+    // 请使用 Entity.Events.On<GameEventType.Data.PropertyChanged>(...)
     // 数据变更事件负载类型: (string Key, object? OldValue, object? NewValue)
 
 
@@ -642,8 +642,8 @@ public class Data
         {
             // 通过 Entity 事件总线广播数据变更
             // 下游监听示例: 
-            // entity.Events.On<GameEventType.Data.PropertyChangedEvent>(GameEventType.Data.PropertyChanged, evt => ...);
-            _owner.Events.Emit(GameEventType.Data.PropertyChanged, new GameEventType.Data.PropertyChangedEventData(key, oldValue, newValue));
+            // entity.Events.On<GameEventType.Data.PropertyChanged>(evt => ...);
+            _owner.Events.Emit(new GameEventType.Data.PropertyChanged(key, oldValue, newValue));
         }
     }
 

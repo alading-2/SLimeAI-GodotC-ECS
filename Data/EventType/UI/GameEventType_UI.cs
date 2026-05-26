@@ -9,8 +9,6 @@ public static partial class GameEventType
     {
         // === 技能 UI ===
         /// <summary>主动技能选中切换，PlayerEntity事件，不要在AbilityEntity里面Emit</summary>
-        public const string ActiveSkillSelected = "ui:active_skill_selected";
-        /// <summary>主动技能选中切换事件数据</summary>
-        public readonly record struct ActiveSkillSelectedEventData(int SlotIndex, string AbilityName);
+        public readonly record struct ActiveSkillSelected(int SlotIndex, string AbilityName);
     }
 }

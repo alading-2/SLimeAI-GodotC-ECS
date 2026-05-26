@@ -10,7 +10,7 @@ public partial class TestSystem
     /// </summary>
     private void BindMouseSelectionEvents()
     {
-        GlobalEventBus.Global.On<GameEventType.Global.MouseSelectionCompletedEventData>(
+        GlobalEventBus.Global.On<GameEventType.Global.MouseSelectionCompleted>(
             GameEventType.Global.MouseSelectionCompleted,
             OnMouseSelectionCompleted
         );
@@ -21,7 +21,7 @@ public partial class TestSystem
     /// </summary>
     private void UnbindMouseSelectionEvents()
     {
-        GlobalEventBus.Global.Off<GameEventType.Global.MouseSelectionCompletedEventData>(
+        GlobalEventBus.Global.Off<GameEventType.Global.MouseSelectionCompleted>(
             GameEventType.Global.MouseSelectionCompleted,
             OnMouseSelectionCompleted
         );
@@ -30,7 +30,7 @@ public partial class TestSystem
     /// <summary>
     /// 通用鼠标选择完成后，把结果回写到 TestSystem 当前选中实体。
     /// </summary>
-    private void OnMouseSelectionCompleted(GameEventType.Global.MouseSelectionCompletedEventData evt)
+    private void OnMouseSelectionCompleted(GameEventType.Global.MouseSelectionCompleted evt)
     {
         if (!ShouldAcceptMouseSelection())
         {
@@ -55,7 +55,7 @@ public partial class TestSystem
     /// </summary>
     private void BindSelectionContextEvents()
     {
-        Events.On<GameEventType.TestSystem.SelectionChangedEventData>(
+        Events.On<GameEventType.TestSystem.SelectionChanged>(
             GameEventType.TestSystem.SelectionChanged,
             OnSelectionChanged
         );
@@ -66,7 +66,7 @@ public partial class TestSystem
     /// </summary>
     private void UnbindSelectionContextEvents()
     {
-        Events.Off<GameEventType.TestSystem.SelectionChangedEventData>(
+        Events.Off<GameEventType.TestSystem.SelectionChanged>(
             GameEventType.TestSystem.SelectionChanged,
             OnSelectionChanged
         );
@@ -75,7 +75,7 @@ public partial class TestSystem
     /// <summary>
     /// 选中实体变化后的统一广播入口。
     /// </summary>
-    private void OnSelectionChanged(GameEventType.TestSystem.SelectionChangedEventData evt)
+    private void OnSelectionChanged(GameEventType.TestSystem.SelectionChanged evt)
     {
         // 显示选中实体名字+ID
         UpdateSelectedEntityDisplay();

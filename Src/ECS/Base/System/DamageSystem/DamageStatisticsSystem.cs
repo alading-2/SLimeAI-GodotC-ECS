@@ -39,7 +39,7 @@ public partial class DamageStatisticsSystem : Node, ISystem
     /// 波次开始时的处理逻辑
     /// </summary>
     /// <param name="data">包含当前波次索引等信息</param>
-    private void OnWaveStarted(GameEventType.Global.WaveStartedEventData data)
+    private void OnWaveStarted(GameEventType.Global.WaveStarted data)
     {
         _log.Debug($"波次 {data.WaveIndex} 开始，执行统计数据重置");
 
@@ -84,7 +84,7 @@ public partial class DamageStatisticsSystem : Node, ISystem
     /// 处理单位死亡事件，遍历攻击链为 IUnit 和 IWeapon 累加击杀数
     /// </summary>
     /// <param name="data">击杀事件上下文，包含凶手、受害者、伤害类型等</param>
-    private void OnUnitKilled(GameEventType.Unit.KilledEventData data)
+    private void OnUnitKilled(GameEventType.Unit.Killed data)
     {
         if (data.Killer is not Godot.Node killerNode) return;
 
@@ -130,11 +130,11 @@ public partial class DamageStatisticsSystem : Node, ISystem
         }
 
         // 当新波次开始时，需要清除上一波的临时统计数据（如每波造成的伤害、击杀数等）
-        GlobalEventBus.Global.On<GameEventType.Global.WaveStartedEventData>(
+        GlobalEventBus.Global.On<GameEventType.Global.WaveStarted>(
             GameEventType.Global.WaveStarted, OnWaveStarted);
 
         // 伤害系统（HealthComponent）在目标死亡时会发送 Kill 事件，本系统负责持久化这些统计
-        GlobalEventBus.Global.On<GameEventType.Unit.KilledEventData>(
+        GlobalEventBus.Global.On<GameEventType.Unit.Killed>(
             GameEventType.Unit.Killed, OnUnitKilled);
 
         _eventsBound = true;
@@ -147,10 +147,10 @@ public partial class DamageStatisticsSystem : Node, ISystem
             return;
         }
 
-        GlobalEventBus.Global.Off<GameEventType.Global.WaveStartedEventData>(
+        GlobalEventBus.Global.Off<GameEventType.Global.WaveStarted>(
             GameEventType.Global.WaveStarted, OnWaveStarted);
 
-        GlobalEventBus.Global.Off<GameEventType.Unit.KilledEventData>(
+        GlobalEventBus.Global.Off<GameEventType.Unit.Killed>(
             GameEventType.Unit.Killed, OnUnitKilled);
 
         _eventsBound = false;
