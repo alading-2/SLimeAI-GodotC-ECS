@@ -49,7 +49,6 @@ namespace Slime.Test
             public Color Color;
             public DemoSettings Settings = new DemoSettings();
             public MovementTestEntity? Entity;
-            public IDisposable? MovementCompletedSubscription;
         }
 
         [Export] private PackedScene? _movementTestEntityScene;
@@ -92,7 +91,7 @@ namespace Slime.Test
 
         public override void _Ready()
         {
-            WorldEvents.World.Publish(new GlobalEvents.GameStart());
+            GlobalEventBus.TriggerGameStart();
             _demoRoot = new Node2D();
             _demoRoot.Name = "DemoRoot";
             AddChild(_demoRoot);
@@ -116,8 +115,6 @@ namespace Slime.Test
 
             foreach (var demo in _demos.Values)
             {
-                demo.MovementCompletedSubscription?.Dispose();
-                demo.MovementCompletedSubscription = null;
                 if (GodotObject.IsInstanceValid(demo.Entity))
                 {
                     EntityManager.Destroy(demo.Entity!);
@@ -340,12 +337,10 @@ namespace Slime.Test
 
             if (id == DemoId.AttachToHost)
             {
-                entity.Data.Set(DataKey.EffectOffset, new Vector2(0f, -54f));
+                entity.Data.Set("EffectOffset", new Vector2(0f, -54f));
             }
 
-            demo.MovementCompletedSubscription?.Dispose();
-            demo.MovementCompletedSubscription =
-                entity.Events.Subscribe<UnitEvents.MovementCompleted>(_ => OnDemoCompleted(id));
+            entity.Events.On<GameEventType.Unit.MovementCompletedEventData>(GameEventType.Unit.MovementCompleted, _ => OnDemoCompleted(id));
             StartDemo(id);
         }
 
@@ -359,7 +354,7 @@ namespace Slime.Test
 
             demo.Entity!.GlobalPosition = GetSpawnPosition(id);
             demo.Entity.Data.Set("Velocity", Vector2.Zero);
-            demo.Entity.Events.Publish(new UnitEvents.MovementStarted(BuildMode(id), BuildParams(id)));
+            demo.Entity.Events.Emit(GameEventType.Unit.MovementStarted, new GameEventType.Unit.MovementStartedEventData(BuildMode(id), BuildParams(id)));
         }
 
         private void OnDemoCompleted(DemoId id)

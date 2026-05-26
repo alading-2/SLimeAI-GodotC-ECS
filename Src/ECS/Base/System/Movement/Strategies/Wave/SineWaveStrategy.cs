@@ -21,7 +21,8 @@ using System.Runtime.CompilerServices;
 /// <para>
 /// <code>
 /// 【使用示例：蛇形子弹】
-/// entity.Events.Publish(///     new UnitEvents.MovementStarted(MoveMode.SineWave, new MovementParams
+/// entity.Events.Emit(GameEventType.Unit.MovementStarted,
+///     new GameEventType.Unit.MovementStartedEventData(MoveMode.SineWave, new MovementParams
 ///     {
 ///         Mode          = MoveMode.SineWave,
 ///         Angle         = -45f,     // 初始前进方向（度，0=右、90=下）

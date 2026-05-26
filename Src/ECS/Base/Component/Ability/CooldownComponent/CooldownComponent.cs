@@ -35,6 +35,9 @@ public partial class CooldownComponent : Node, IComponent
         {
             _data = iEntity.Data;
             _entity = iEntity;
+
+            // 订阅事件驱动请求
+            SubscribeEvents();
         }
     }
 
@@ -45,6 +48,39 @@ public partial class CooldownComponent : Node, IComponent
         CancelTimer();
         _data = null;
         _entity = null;
+    }
+
+    // ================= 事件驱动 =================
+
+    /// <summary>订阅请求事件</summary>
+    private void SubscribeEvents()
+    {
+        if (_entity == null) return;
+        // 监听请求检查可用性事件
+        _entity.Events.On<GameEventType.Ability.CheckCanUseEventData>(
+            GameEventType.Ability.CheckCanUse,
+            OnCheckCanUse,
+            (int)AbilityCheckPhase.Cooldown
+        );
+        // 监听请求启动冷却事件
+        _entity.Events.On<GameEventType.Ability.StartCooldownEventData>(
+            GameEventType.Ability.StartCooldown,
+            StartCooldown
+        );
+        // 监听请求重置冷却事件
+        _entity.Events.On<GameEventType.Ability.ResetCooldownEventData>(
+            GameEventType.Ability.ResetCooldown,
+            ResetCooldown
+        );
+    }
+
+    /// <summary>响应可用性检查请求</summary>
+    private void OnCheckCanUse(GameEventType.Ability.CheckCanUseEventData eventData)
+    {
+        if (!IsReady())
+        {
+            eventData.Context.SetFailed("技能冷却中");
+        }
     }
 
     public override void _ExitTree()
@@ -62,7 +98,7 @@ public partial class CooldownComponent : Node, IComponent
     }
 
     /// <summary>启动冷却计时</summary>
-    public void StartCooldown()
+    public void StartCooldown(GameEventType.Ability.StartCooldownEventData eventData)
     {
         if (_data == null) return;
 
@@ -81,7 +117,10 @@ public partial class CooldownComponent : Node, IComponent
                 // 冷却完成
                 _timer = null;
 
-                _entity?.Events.Publish(new AbilityEvents.Ready());
+                _entity?.Events.Emit(
+                    GameEventType.Ability.Ready,
+                    new GameEventType.Ability.ReadyEventData()
+                );
 
                 _log.Debug($"技能冷却完成: {AbilityName}");
             });
@@ -90,7 +129,7 @@ public partial class CooldownComponent : Node, IComponent
     }
 
     /// <summary>重置冷却（立即完成冷却）</summary>
-    public void ResetCooldown()
+    public void ResetCooldown(GameEventType.Ability.ResetCooldownEventData eventData)
     {
         CancelTimer();
         _log.Debug($"技能冷却重置: {AbilityName}");

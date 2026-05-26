@@ -25,9 +25,9 @@ public partial class MouseSelectionSystem
     /// 使用物理查询拾取鼠标位置下的实体。
     /// <para>筛选有碰撞体的Entity</para>
     /// </summary>
-    private IEntity? FindEntityByPhysics(Vector2 worldPosition, out GlobalEvents.MouseSelectionHitKind hitKind)
+    private IEntity? FindEntityByPhysics(Vector2 worldPosition, out GameEventType.Global.MouseSelectionHitKind hitKind)
     {
-        hitKind = GlobalEvents.MouseSelectionHitKind.None;
+        hitKind = GameEventType.Global.MouseSelectionHitKind.None;
         var world2D = GetViewport().World2D;
         if (world2D == null)
         {
@@ -70,7 +70,7 @@ public partial class MouseSelectionSystem
             }
 
             visited.Add(instanceId);
-            hitKind = GlobalEvents.MouseSelectionHitKind.PhysicsPoint;
+            hitKind = GameEventType.Global.MouseSelectionHitKind.PhysicsPoint;
             return entity;
         }
 

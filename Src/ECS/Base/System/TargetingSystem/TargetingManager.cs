@@ -1,5 +1,4 @@
 using Godot;
-using System;
 using slime.data.Units;
 /// <summary>
 /// 瞄准状态管理器 - 管理由输入层发起的异步点选会话
@@ -17,7 +16,6 @@ public static class TargetingManager
 {
     private static readonly Log _log = new(nameof(TargetingManager));
     private static bool _isSubscribed;
-    private static readonly EventSubscriptionCollector _runtimeSubscriptions = new();
 
     // ================= 状态 =================
 
@@ -47,11 +45,29 @@ public static class TargetingManager
     {
         if (_isSubscribed) return;
 
-        _runtimeSubscriptions.Clear();
-        _runtimeSubscriptions.Subscribe<TargetingEvents.StartTargeting>(WorldEvents.World, OnStartTargeting);
-        _runtimeSubscriptions.Subscribe<TargetingEvents.TargetConfirmed>(WorldEvents.World, OnTargetConfirmed);
-        _runtimeSubscriptions.Subscribe<TargetingEvents.TargetCancelled>(WorldEvents.World, OnTargetCancelled);
-        _runtimeSubscriptions.Subscribe<UnitEvents.Killed>(WorldEvents.World, OnUnitKilled);
+        // 订阅瞄准开始事件
+        GlobalEventBus.Global.On<GameEventType.Targeting.StartTargetingEventData>(
+            GameEventType.Targeting.StartTargeting,
+            OnStartTargeting
+        );
+
+        // 订阅瞄准确认事件
+        GlobalEventBus.Global.On<GameEventType.Targeting.TargetConfirmedEventData>(
+            GameEventType.Targeting.TargetConfirmed,
+            OnTargetConfirmed
+        );
+
+        // 订阅瞄准取消事件
+        GlobalEventBus.Global.On<GameEventType.Targeting.TargetCancelledEventData>(
+            GameEventType.Targeting.TargetCancelled,
+            OnTargetCancelled
+        );
+
+        // 订阅单位死亡事件（玩家死亡时取消瞄准）
+        GlobalEventBus.Global.On<GameEventType.Unit.KilledEventData>(
+            GameEventType.Unit.Killed,
+            OnUnitKilled
+        );
 
         _isSubscribed = true;
         _log.Info("TargetingManager 已启用");
@@ -64,7 +80,25 @@ public static class TargetingManager
     {
         if (!_isSubscribed) return;
 
-        _runtimeSubscriptions.Clear();
+        GlobalEventBus.Global.Off<GameEventType.Targeting.StartTargetingEventData>(
+            GameEventType.Targeting.StartTargeting,
+            OnStartTargeting
+        );
+
+        GlobalEventBus.Global.Off<GameEventType.Targeting.TargetConfirmedEventData>(
+            GameEventType.Targeting.TargetConfirmed,
+            OnTargetConfirmed
+        );
+
+        GlobalEventBus.Global.Off<GameEventType.Targeting.TargetCancelledEventData>(
+            GameEventType.Targeting.TargetCancelled,
+            OnTargetCancelled
+        );
+
+        GlobalEventBus.Global.Off<GameEventType.Unit.KilledEventData>(
+            GameEventType.Unit.Killed,
+            OnUnitKilled
+        );
 
         _isSubscribed = false;
         ForceCancelTargeting();
@@ -79,7 +113,7 @@ public static class TargetingManager
     /// <summary>
     /// 处理开始瞄准事件
     /// </summary>
-    private static void OnStartTargeting(TargetingEvents.StartTargeting evt)
+    private static void OnStartTargeting(GameEventType.Targeting.StartTargetingEventData evt)
     {
         // 如果已经在瞄准中，先取消之前的
         if (IsTargeting)
@@ -112,7 +146,7 @@ public static class TargetingManager
     /// <summary>
     /// 处理瞄准确认事件
     /// </summary>
-    private static void OnTargetConfirmed(TargetingEvents.TargetConfirmed evt)
+    private static void OnTargetConfirmed(GameEventType.Targeting.TargetConfirmedEventData evt)
     {
         if (!IsTargeting || CurrentContext == null || CurrentAbility == null)
         {
@@ -127,8 +161,17 @@ public static class TargetingManager
         var abilityName = CurrentAbility.Data.Get<string>(DataKey.Name);
         _log.Info($"瞄准确认: {abilityName} -> {evt.TargetPosition}");
 
-        // 2. 确认后才正式提交施法流水线；AbilitySystem 会再次检查可用性并负责消耗/冷却。
-        var result = AbilitySystem.TryTriggerAbility(CurrentContext);
+        // 2. 确认后才正式提交 TryTrigger；AbilitySystem 会再次检查可用性并负责消耗/冷却。
+        var responseContext = new EventContext();
+        CurrentContext.ResponseContext = responseContext;
+        CurrentAbility.Events.Emit(
+            GameEventType.Ability.TryTrigger,
+            new GameEventType.Ability.TryTriggerEventData(CurrentContext) //施法上下文
+        );
+
+        var result = responseContext.HasResult
+            ? responseContext.GetResult<TriggerResult>()
+            : TriggerResult.Failed;
         if (result == TriggerResult.Failed)
         {
             _log.Debug($"点选确认后技能触发失败: {abilityName}");
@@ -142,7 +185,7 @@ public static class TargetingManager
     /// <summary>
     /// 处理瞄准取消事件
     /// </summary>
-    private static void OnTargetCancelled(TargetingEvents.TargetCancelled evt)
+    private static void OnTargetCancelled(GameEventType.Targeting.TargetCancelledEventData evt)
     {
         if (!IsTargeting) return;
 
@@ -156,7 +199,7 @@ public static class TargetingManager
     /// <summary>
     /// 处理单位死亡事件（玩家死亡时强制取消瞄准）
     /// </summary>
-    private static void OnUnitKilled(UnitEvents.Killed evt)
+    private static void OnUnitKilled(GameEventType.Unit.KilledEventData evt)
     {
         // 只处理玩家死亡
         if (evt.Victim is not PlayerEntity) return;
@@ -228,7 +271,9 @@ public static class TargetingManager
         DestroyIndicator(indicator);
 
         // 发送瞄准结束事件
-        WorldEvents.World.Publish(new TargetingEvents.TargetingEnded(wasConfirmed)
+        GlobalEventBus.Global.Emit(
+            GameEventType.Targeting.TargetingEnded,
+            new GameEventType.Targeting.TargetingEndedEventData(wasConfirmed)
         );
 
         // 清理状态

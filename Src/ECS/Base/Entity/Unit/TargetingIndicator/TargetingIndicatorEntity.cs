@@ -14,7 +14,7 @@ public partial class TargetingIndicatorEntity : Node2D, IEntity, IUnit
     // ================= IEntity 实现 =================
 
     public Data Data { get; private set; }
-    public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
+    public EventBus Events { get; } = new EventBus();
 
     // ================= 构造函数 =================
 

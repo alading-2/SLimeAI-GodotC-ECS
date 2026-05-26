@@ -64,7 +64,6 @@ public partial class AttackComponent : Node, IComponent
 
     /// <summary>校验计时器间隔（秒）- 兼顾性能与响应速度。0.2s 是人类反应级别的两倍，足够灵敏且开销极低</summary>
     private const float ValidationInterval = 0.2f;
-    private readonly EventSubscriptionCollector _eventSubscriptions = new();
 
     // ================= IComponent 实现 =================
 
@@ -83,10 +82,12 @@ public partial class AttackComponent : Node, IComponent
             _body = body;
 
         // 监听来自 AI 节点或玩家输入的攻击请求
-        _eventSubscriptions.Subscribe<AttackEvents.Requested>(_entity.Events, OnAttackRequested);
+        _entity.Events.On<GameEventType.Attack.RequestedEventData>(
+            GameEventType.Attack.Requested, OnAttackRequested);
 
         // 监听来自外部（如眩晕 Buff、强制位移等）的中断请求
-        _eventSubscriptions.Subscribe<AttackEvents.CancelRequested>(_entity.Events, OnCancelRequested);
+        _entity.Events.On<GameEventType.Attack.CancelRequestedEventData>(
+            GameEventType.Attack.CancelRequested, OnCancelRequested);
     }
 
     /// <summary>
@@ -94,8 +95,6 @@ public partial class AttackComponent : Node, IComponent
     /// </summary>
     public void OnComponentUnregistered()
     {
-        _eventSubscriptions.Clear();
-
         // 悄悄清理所有计时任务，不发出取消事件（因为组件已不在生命周期内）
         CleanupTimers();
         _state = AttackState.Idle;
@@ -111,7 +110,7 @@ public partial class AttackComponent : Node, IComponent
     /// <summary>
     /// 处理具体的攻击请求逻辑
     /// </summary>
-    private void OnAttackRequested(AttackEvents.Requested evt)
+    private void OnAttackRequested(GameEventType.Attack.RequestedEventData evt)
     {
         if (_data == null || _entity == null) return;
 
@@ -131,7 +130,8 @@ public partial class AttackComponent : Node, IComponent
         float windUpTime = _data.Get<float>(DataKey.AttackWindUpTime);
 
         // 发出 Started 通知，告知外部（如 UI 进度条、特效、AI 记录）攻击已正式进入准备阶段
-        _entity.Events.Publish(new AttackEvents.Started(target));
+        _entity.Events.Emit(GameEventType.Attack.Started,
+            new GameEventType.Attack.StartedEventData(target));
 
         // 统一走 WindUp 流程（WindUpTime=0 时 Timer 会在下一帧立即触发 OnWindUpComplete）
         // 这保证动画播放、校验计时器等逻辑只维护一处
@@ -141,7 +141,7 @@ public partial class AttackComponent : Node, IComponent
     /// <summary>
     /// 响应外部对攻击的中断请求（如 AI 决定临时撤退，或者单位进入控制状态）
     /// </summary>
-    private void OnCancelRequested(AttackEvents.CancelRequested evt)
+    private void OnCancelRequested(GameEventType.Attack.CancelRequestedEventData evt)
     {
         if (_state == AttackState.Idle) return;
         CancelAttack(AttackCancelReason.ExternalCancel);
@@ -164,8 +164,8 @@ public partial class AttackComponent : Node, IComponent
         // 从可用动画列表中随机选择攻击动画（支持 attack1, attack2 等多个攻击动画）
         string attackAnim = SelectRandomAttackAnimation();
 
-        _entity?.Events.Publish(
-            new UnitEvents.PlayAnimationRequested(
+        _entity?.Events.Emit(GameEventType.Unit.PlayAnimationRequested,
+            new GameEventType.Unit.PlayAnimationRequestedEventData(
                 attackAnim, ForceRestart: true, Duration: attackInterval));
 
         // 设置 Delay 定时器：当 WindUp 时间结束时，触发动作完成（命中）回调
@@ -294,7 +294,8 @@ public partial class AttackComponent : Node, IComponent
 
         _log.Trace($"攻击完结: → Idle (已上报 Finished 事件)");
 
-        _entity?.Events.Publish(new AttackEvents.Finished(target, didHit));
+        _entity?.Events.Emit(GameEventType.Attack.Finished,
+            new GameEventType.Attack.FinishedEventData(target, didHit));
     }
 
     /// <summary>
@@ -313,10 +314,12 @@ public partial class AttackComponent : Node, IComponent
         _log.Trace($"攻击异常中断: {oldState} → Idle (原因: {reason})");
 
         // 如果是在动作中被打断，通常需要立刻将模型强制扯回 Idle 动画
-        _entity?.Events.Publish(new UnitEvents.StopAnimationRequested());
+        _entity?.Events.Emit(GameEventType.Unit.StopAnimationRequested,
+            new GameEventType.Unit.StopAnimationRequestedEventData());
 
         // 通知业务层该次攻击尝试已非法中断
-        _entity?.Events.Publish(new AttackEvents.Cancelled(reason));
+        _entity?.Events.Emit(GameEventType.Attack.Cancelled,
+            new GameEventType.Attack.CancelledEventData(reason));
     }
 
     // ================= 决策逻辑 (Verification Logic) =================

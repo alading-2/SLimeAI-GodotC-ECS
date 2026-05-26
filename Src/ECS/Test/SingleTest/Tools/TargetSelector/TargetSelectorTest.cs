@@ -14,7 +14,7 @@ public partial class TargetSelectorTest : Node
     public partial class MockEntity : Node2D, IEntity
     {
         public Data Data { get; } = new Data();
-        public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
+        public EventBus Events { get; } = new EventBus();
 
         public MockEntity(string name, Vector2 pos, Team team = Team.Enemy, EntityType type = EntityType.Unit)
         {

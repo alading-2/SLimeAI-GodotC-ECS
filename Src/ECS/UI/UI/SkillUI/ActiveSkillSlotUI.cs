@@ -1,5 +1,4 @@
 using Godot;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -33,9 +32,6 @@ public partial class ActiveSkillSlotUI : UIBase
     // ============================================================
 
     private AbilityEntity? _currentAbility;
-    private IDisposable? _chargeRestoredSubscription;
-    private IDisposable? _abilityReadySubscription;
-    private IDisposable? _abilityActivatedSubscription;
     private float _cooldownOverlayMaxHeight;
     private Color _normalColor = new Color(0.2f, 0.2f, 0.2f, 0.8f);
     private Color _highlightColor = new Color(0.4f, 0.6f, 1.0f, 0.9f);
@@ -83,7 +79,7 @@ public partial class ActiveSkillSlotUI : UIBase
 
     protected override void OnBind()
     {
-        // 移除错误的 ActiveSkillSelected 订阅。
+        // Removed incorrect subscription to GameEventType.UI.ActiveSkillSelected
         // ActiveSkillSlotUI should NOT change its ability based on global selection.
         // The selection highlight is handled by ActiveSkillBarUI.
 
@@ -172,9 +168,23 @@ public partial class ActiveSkillSlotUI : UIBase
         // 先取消之前的订阅(如果有)
         UnsubscribeAbilityEvents();
 
-        _chargeRestoredSubscription = _currentAbility.Events.Subscribe<AbilityEvents.ChargeRestored>(OnChargeRestored);
-        _abilityReadySubscription = _currentAbility.Events.Subscribe<AbilityEvents.Ready>(OnAbilityReady);
-        _abilityActivatedSubscription = _currentAbility.Events.Subscribe<AbilityEvents.Activated>(OnAbilityActivated);
+        // 监听充能变化
+        _currentAbility.Events.On<GameEventType.Ability.ChargeRestoredEventData>(
+            GameEventType.Ability.ChargeRestored,
+            OnChargeRestored
+        );
+
+        // 监听冷却完成
+        _currentAbility.Events.On<GameEventType.Ability.ReadyEventData>(
+            GameEventType.Ability.Ready,
+            OnAbilityReady
+        );
+
+        // 监听技能激活
+        _currentAbility.Events.On<GameEventType.Ability.ActivatedEventData>(
+            GameEventType.Ability.Activated,
+            OnAbilityActivated
+        );
     }
 
     /// <summary>
@@ -184,26 +194,34 @@ public partial class ActiveSkillSlotUI : UIBase
     {
         if (_currentAbility == null) return;
 
-        _chargeRestoredSubscription?.Dispose();
-        _abilityReadySubscription?.Dispose();
-        _abilityActivatedSubscription?.Dispose();
-        _chargeRestoredSubscription = null;
-        _abilityReadySubscription = null;
-        _abilityActivatedSubscription = null;
+        _currentAbility.Events.Off<GameEventType.Ability.ChargeRestoredEventData>(
+            GameEventType.Ability.ChargeRestored,
+            OnChargeRestored
+        );
+
+        _currentAbility.Events.Off<GameEventType.Ability.ReadyEventData>(
+            GameEventType.Ability.Ready,
+            OnAbilityReady
+        );
+
+        _currentAbility.Events.Off<GameEventType.Ability.ActivatedEventData>(
+            GameEventType.Ability.Activated,
+            OnAbilityActivated
+        );
     }
 
-    private void OnChargeRestored(AbilityEvents.ChargeRestored evt)
+    private void OnChargeRestored(GameEventType.Ability.ChargeRestoredEventData evt)
     {
         UpdateChargeDisplay();
     }
 
-    private void OnAbilityReady(AbilityEvents.Ready evt)
+    private void OnAbilityReady(GameEventType.Ability.ReadyEventData evt)
     {
         // 冷却完成，隐藏遮罩
         _cooldownOverlay.Visible = false;
     }
 
-    private void OnAbilityActivated(AbilityEvents.Activated evt)
+    private void OnAbilityActivated(GameEventType.Ability.ActivatedEventData evt)
     {
         // 技能激活，更新充能和冷却显示
         UpdateChargeDisplay();

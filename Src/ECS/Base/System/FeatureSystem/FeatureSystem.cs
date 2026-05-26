@@ -48,10 +48,12 @@ public static class FeatureSystem
         FeatureHandlerRegistry.Get(handlerId)?.OnGranted(context);
 
         // 3. 发出 Granted 事件（Owner 局部总线）
-        owner.Events.Publish(new FeatureEvents.Granted(feature, owner)
+        owner.Events.Emit(
+            GameEventType.Feature.Granted,
+            new GameEventType.Feature.GrantedEventData(feature, owner)
         );
 
-        _log.Debug($"Feature Granted: {feature.Data.Get(DataKey.Name)} -> {owner}");
+        _log.Debug($"Feature Granted: {feature.Data.Get<string>("Name")} -> {owner}");
     }
 
     // ==================== Removed ====================
@@ -63,7 +65,7 @@ public static class FeatureSystem
 
         var instance = new FeatureInstance(owner, feature, 0);
         var context = new FeatureContext { Owner = owner, Feature = feature, Instance = instance };
-        var name = feature.Data.Get(DataKey.Name) ?? "";
+        var name = feature.Data.Get<string>("Name") ?? "";
 
         // 1. 先调用处理器（处理器可能依赖修改器数据）
         var handlerId = GetFeatureHandlerId(feature);
@@ -73,7 +75,9 @@ public static class FeatureSystem
         RemoveModifiers(feature, owner);
 
         // 3. 发出 Removed 事件
-        owner.Events.Publish(new FeatureEvents.Removed(name, owner)
+        owner.Events.Emit(
+            GameEventType.Feature.Removed,
+            new GameEventType.Feature.RemovedEventData(name, owner)
         );
 
         _log.Debug($"Feature Removed: {name} <- {owner}");
@@ -110,7 +114,9 @@ public static class FeatureSystem
         }
 
         // 2. 发出 Activated 事件（Feature 局部总线），表示本次运行已开始
-        ctx.Feature.Events.Publish(new FeatureEvents.Activated(ctx)
+        ctx.Feature.Events.Emit(
+            GameEventType.Feature.Activated,
+            new GameEventType.Feature.ActivatedEventData(ctx)
         );
 
         // 3. 执行阶段（结果写入 ctx.ExecuteResult）
@@ -131,7 +137,9 @@ public static class FeatureSystem
         ctx.Feature.Data.Set(DataKey.FeatureActivationCount, current + 1);
 
         // 5. 发出 Executed 事件（Feature 局部总线），表示核心效果已执行
-        ctx.Feature.Events.Publish(new FeatureEvents.Executed(ctx)
+        ctx.Feature.Events.Emit(
+            GameEventType.Feature.Executed,
+            new GameEventType.Feature.ExecutedEventData(ctx)
         );
     }
 
@@ -159,7 +167,9 @@ public static class FeatureSystem
         }
 
         // 发出 Ended 事件（Feature 局部总线）
-        ctx.Feature.Events.Publish(new FeatureEvents.Ended(ctx, reason)
+        ctx.Feature.Events.Emit(
+            GameEventType.Feature.Ended,
+            new GameEventType.Feature.EndedEventData(ctx, reason)
         );
     }
 
@@ -177,10 +187,12 @@ public static class FeatureSystem
         var ctx = new FeatureContext { Owner = owner, Feature = feature };
         FeatureHandlerRegistry.Get(handlerId)?.OnEnabled(ctx);
 
-        owner.Events.Publish(new FeatureEvents.Enabled(feature, owner)
+        owner.Events.Emit(
+            GameEventType.Feature.Enabled,
+            new GameEventType.Feature.EnabledEventData(feature, owner)
         );
 
-        _log.Debug($"Feature Enabled: {feature.Data.Get(DataKey.Name)}");
+        _log.Debug($"Feature Enabled: {feature.Data.Get<string>("Name")}");
     }
 
     /// <summary>禁用 Feature（保留在宿主上，但暂停响应）</summary>
@@ -195,10 +207,12 @@ public static class FeatureSystem
         var ctx = new FeatureContext { Owner = owner, Feature = feature };
         FeatureHandlerRegistry.Get(handlerId)?.OnDisabled(ctx);
 
-        owner.Events.Publish(new FeatureEvents.Disabled(feature, owner)
+        owner.Events.Emit(
+            GameEventType.Feature.Disabled,
+            new GameEventType.Feature.DisabledEventData(feature, owner)
         );
 
-        _log.Debug($"Feature Disabled: {feature.Data.Get(DataKey.Name)}");
+        _log.Debug($"Feature Disabled: {feature.Data.Get<string>("Name")}");
     }
 
     // ==================== Action 执行 ====================
@@ -250,13 +264,13 @@ public static class FeatureSystem
         }
 
         if (applied > 0)
-            _log.Debug($"Feature {feature.Data.Get(DataKey.Name)} 施加 {applied} 个修改器");
+            _log.Debug($"Feature {feature.Data.Get<string>("Name")} 施加 {applied} 个修改器");
     }
 
     /// <summary>按来源批量回滚修改器（Removed 阶段调用）</summary>
     private static void RemoveModifiers(IEntity feature, IEntity owner)
     {
         owner.Data.RemoveModifiersBySource(feature);
-        _log.Debug($"Feature {feature.Data.Get(DataKey.Name)} 修改器已回滚");
+        _log.Debug($"Feature {feature.Data.Get<string>("Name")} 修改器已回滚");
     }
 }

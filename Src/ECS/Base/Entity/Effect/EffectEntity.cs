@@ -19,7 +19,7 @@ public partial class EffectEntity : Area2D, IEntity, IPoolable
     /// <inheritdoc/>
     public Data Data { get; private set; }
     /// <inheritdoc/>
-    public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
+    public EventBus Events { get; } = new EventBus();
 
     // ================= 构造函数 =================
 

@@ -4,7 +4,7 @@ namespace Slime.Test
 {
     internal partial class MovementTestEntity : Area2D, IEntity
     {
-        public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
+        public EventBus Events { get; } = new EventBus();
         public Data Data { get; private set; }
 
         [Export] public string DisplayName { get; set; } = "Movement";
@@ -23,7 +23,7 @@ namespace Slime.Test
             Data.Set("Acceleration", 10f);
             Data.Set("AIMoveDirection", Vector2.Zero);
             Data.Set("AIMoveSpeedMultiplier", 0f);
-            Data.Set(DataKey.EffectOffset, Vector2.Zero);
+            Data.Set("EffectOffset", Vector2.Zero);
             Data.Set("IsDead", false);
         }
 

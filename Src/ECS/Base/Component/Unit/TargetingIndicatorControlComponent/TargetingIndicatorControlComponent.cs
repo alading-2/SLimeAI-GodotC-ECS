@@ -130,14 +130,18 @@ public partial class TargetingIndicatorControlComponent : Node, IComponent
         // X 键确认
         if (InputManager.IsX())
         {
-            WorldEvents.World.Publish(new TargetingEvents.TargetConfirmed(node2D.GlobalPosition)
+            GlobalEventBus.Global.Emit(
+                GameEventType.Targeting.TargetConfirmed,
+                new GameEventType.Targeting.TargetConfirmedEventData(node2D.GlobalPosition)
             );
         }
 
         // B 键取消
         if (InputManager.IsCancel())
         {
-            WorldEvents.World.Publish(new TargetingEvents.TargetCancelled()
+            GlobalEventBus.Global.Emit(
+                GameEventType.Targeting.TargetCancelled,
+                new GameEventType.Targeting.TargetCancelledEventData()
             );
         }
     }

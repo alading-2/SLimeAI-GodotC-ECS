@@ -27,7 +27,7 @@ public partial class PlayerEntity : CharacterBody2D, IUnit
 	/// <summary>
 	/// 实体局部事件总线
 	/// </summary>
-	public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
+	public EventBus Events { get; } = new EventBus();
 
 	public override void _Ready()
 	{

@@ -14,7 +14,7 @@ public partial class LightningLineEffect : Line2D, IPoolable, ILineEffect, IEnti
     // ================= IEntity 极简实现 =================
     // 仅为了满足接口约束，内部逻辑不强依赖它们
     public Data Data { get; private set; }
-    public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
+    public EventBus Events { get; } = new EventBus();
 
     public LightningLineEffect()
     {

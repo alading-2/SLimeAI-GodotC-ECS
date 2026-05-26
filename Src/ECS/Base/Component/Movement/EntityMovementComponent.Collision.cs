@@ -8,7 +8,7 @@ public partial class EntityMovementComponent
     /// 碰撞进入回调（由 CollisionComponent 通过 Entity.Events 转发，仅 Area2D Entity 根节点触发）
     /// <para>仅在非默认运动模式下响应，避免常驻 AI/Player 模式产生噪声事件。</para>
     /// </summary>
-    private void OnCollisionDetected(CollisionEvents.CollisionEntered evt)
+    private void OnCollisionDetected(GameEventType.Collision.CollisionEnteredEventData evt)
     {
         if (_entity == null || _data == null) return;
         if (_moveCompleted) return;
@@ -58,7 +58,9 @@ public partial class EntityMovementComponent
         // 发出 MovementCollision 事件，供外部订阅。
         if (collision.EmitCollisionEvent)
         {
-            _entity.Events.Publish(new UnitEvents.MovementCollision(
+            _entity.Events.Emit(
+                GameEventType.Unit.MovementCollision,
+                new GameEventType.Unit.MovementCollisionEventData(
                     context.Mode,
                     context.TargetNode,
                     context.TargetEntity,
@@ -76,8 +78,9 @@ public partial class EntityMovementComponent
             return;
         }
 
-        _entity.Events.Publish(
-            new UnitEvents.MovementStopRequested
+        _entity.Events.Emit(
+            GameEventType.Unit.MovementStopRequested,
+            new GameEventType.Unit.MovementStopRequestedEventData
             {
                 Reason = MovementStopReason.Collision,
                 EmitCompletedEvent = true,

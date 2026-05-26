@@ -29,7 +29,6 @@ public partial class TriggerComponent : Node, IComponent
 
     /// <summary>周期触发模式下的计时器实例</summary>
     private GameTimer? _periodicTimer;
-    private readonly EventSubscriptionCollector _eventSubscriptions = new();
 
     // ================= 属性访问 =================
 
@@ -144,16 +143,13 @@ public partial class TriggerComponent : Node, IComponent
             return;
         }
 
+        // 订阅全局事件总线
+        // 注意：目前实现为订阅全局总线，逻辑上应通过 DataKey 配置是监听全局还是监听拥有者
+        // 使用 On<object> 配合 EventBus 对 Action<object> 的支持，实现通用监听
         foreach (var evt in eventTypes)
         {
-            if (AbilityTriggerEventRegistry.TrySubscribe(evt, owner, _eventSubscriptions, OnEventTriggered))
-            {
-                _log.Debug($"技能 {AbilityName} 订阅 typed 触发器: {evt}");
-            }
-            else
-            {
-                _log.Warn($"技能 {AbilityName} 配置了未知 typed 触发器: {evt}");
-            }
+            GlobalEventBus.Global.On<object>(evt, OnEventTriggered);
+            _log.Debug($"技能 {AbilityName} 订阅事件: {evt}");
         }
     }
 
@@ -162,7 +158,24 @@ public partial class TriggerComponent : Node, IComponent
     /// </summary>
     private void UnsubscribeEvent()
     {
-        _eventSubscriptions.Clear();
+        if (_data == null) return;
+
+        var eventData = _data.Get<object>(DataKey.AbilityTriggerEvent);
+        var eventTypes = new List<string>();
+
+        if (eventData is string singleEvent && !string.IsNullOrEmpty(singleEvent))
+        {
+            eventTypes.Add(singleEvent);
+        }
+        else if (eventData is List<string> listEvents)
+        {
+            eventTypes.AddRange(listEvents);
+        }
+
+        foreach (var evt in eventTypes)
+        {
+            GlobalEventBus.Global.Off<object>(evt, OnEventTriggered);
+        }
     }
 
     // ================= 周期触发逻辑 =================
@@ -204,7 +217,7 @@ public partial class TriggerComponent : Node, IComponent
     /// <summary>
     /// 当监听的事件发生时的回调
     /// </summary>
-    private void OnEventTriggered(object? eventData)
+    private void OnEventTriggered(object eventData)
     {
         if (_data == null || _entity is not AbilityEntity ability) return;
 
@@ -222,7 +235,7 @@ public partial class TriggerComponent : Node, IComponent
     // ================= 触发执行 =================
 
     /// <summary>
-    /// 核心触发逻辑：直接调用 AbilitySystem 的施法流水线。
+    /// 核心触发逻辑：发送 TryTrigger 请求，由 AbilitySystem 统一处理。
     /// </summary>
     /// <param name="sourceEventData">触发源事件数据（事件触发时携带）</param>
     private void TriggerAbility(object? sourceEventData = null)
@@ -242,12 +255,17 @@ public partial class TriggerComponent : Node, IComponent
         {
             Ability = ability,
             Caster = caster,
-            SourceEventData = sourceEventData
+            SourceEventData = sourceEventData,
+            ResponseContext = new EventContext()
             // RequestedTargets 默认为 null，表示自动选取
         };
 
-        // 直接调用施法流水线，包括：CanUse 检查、消耗资源、启动冷却、选择目标、执行效果。
-        AbilitySystem.TryTriggerAbility(context);
+        // 发送 TryTrigger 请求，由 AbilitySystem 统一处理
+        // 包括：CanUse 检查、消耗资源、启动冷却、选择目标、执行效果
+        _entity.Events.Emit(
+            GameEventType.Ability.TryTrigger,
+            new GameEventType.Ability.TryTriggerEventData(context)
+        );
 
         _log.Debug($"触发技能请求: {AbilityName}");
     }

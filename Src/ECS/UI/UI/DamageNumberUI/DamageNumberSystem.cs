@@ -1,5 +1,4 @@
 using Godot;
-using System;
 
 /// <summary>
 /// 伤害飘字系统 (SystemManager Runtime Bridge)
@@ -18,7 +17,6 @@ public static class DamageNumberSystem
 {
     private static readonly Log _log = new("DamageNumberSystem");
     private static bool _isSubscribed;
-    private static readonly EventSubscriptionCollector _runtimeSubscriptions = new();
 
     /// <summary>
     /// 启用运行时事件监听。
@@ -27,10 +25,14 @@ public static class DamageNumberSystem
     {
         if (_isSubscribed) return;
 
-        _runtimeSubscriptions.Clear();
-        _runtimeSubscriptions.Subscribe<UnitEvents.Damaged>(WorldEvents.World, OnDamaged);
-        _runtimeSubscriptions.Subscribe<UnitEvents.HealApplied>(WorldEvents.World, OnHealApplied);
-        _runtimeSubscriptions.Subscribe<UnitEvents.Dodged>(WorldEvents.World, OnDodged);
+        GlobalEventBus.Global.On<GameEventType.Unit.DamagedEventData>(
+            GameEventType.Unit.Damaged, OnDamaged);
+
+        GlobalEventBus.Global.On<GameEventType.Unit.HealAppliedEventData>(
+            GameEventType.Unit.HealApplied, OnHealApplied);
+
+        GlobalEventBus.Global.On<GameEventType.Unit.DodgedEventData>(
+            GameEventType.Unit.Dodged, OnDodged);
 
         _isSubscribed = true;
         _log.Success("DamageNumberSystem 已启用（全局事件模式）");
@@ -43,7 +45,14 @@ public static class DamageNumberSystem
     {
         if (!_isSubscribed) return;
 
-        _runtimeSubscriptions.Clear();
+        GlobalEventBus.Global.Off<GameEventType.Unit.DamagedEventData>(
+            GameEventType.Unit.Damaged, OnDamaged);
+
+        GlobalEventBus.Global.Off<GameEventType.Unit.HealAppliedEventData>(
+            GameEventType.Unit.HealApplied, OnHealApplied);
+
+        GlobalEventBus.Global.Off<GameEventType.Unit.DodgedEventData>(
+            GameEventType.Unit.Dodged, OnDodged);
 
         _isSubscribed = false;
         _log.Info("DamageNumberSystem 已禁用");
@@ -53,7 +62,7 @@ public static class DamageNumberSystem
     // 飘字触发
     // ============================================================
 
-    private static void OnDamaged(UnitEvents.Damaged data)
+    private static void OnDamaged(GameEventType.Unit.DamagedEventData data)
     {
         var worldPos = GetEntityPosition(data.Victim);
         if (worldPos == null) return;
@@ -64,7 +73,7 @@ public static class DamageNumberSystem
         ui.Show(data.Amount, worldPos.Value, data.IsCritical, data.Type);
     }
 
-    private static void OnHealApplied(UnitEvents.HealApplied data)
+    private static void OnHealApplied(GameEventType.Unit.HealAppliedEventData data)
     {
         var worldPos = GetEntityPosition(data.Victim);
         if (worldPos == null) return;
@@ -75,7 +84,7 @@ public static class DamageNumberSystem
         ui.ShowHeal(data.ActualAmount, worldPos.Value);
     }
 
-    private static void OnDodged(UnitEvents.Dodged data)
+    private static void OnDodged(GameEventType.Unit.DodgedEventData data)
     {
         var worldPos = GetEntityPosition(data.Victim);
         if (worldPos == null) return;

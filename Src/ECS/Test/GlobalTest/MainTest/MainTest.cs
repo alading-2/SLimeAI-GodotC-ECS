@@ -20,7 +20,7 @@ public partial class MainTest : Node
     private async void ExecuteTestScenario()
     {
         await WaitForSystemBootstrapAsync();
-        WorldEvents.World.Publish(new GlobalEvents.GameStart());
+        GlobalEventBus.TriggerGameStart();
 
         _log.Info("=== 开始测试: 主动技能输入系统 ===");
         _log.Info("操作说明:");
@@ -136,7 +136,7 @@ public partial class MainTest : Node
     {
         if (_player == null) return;
 
-        // 加载正式技能配置：默认使用 snapshot-backed DTO，旧 .tres 不再作为主流程。
+        // 加载正式技能配置：默认使用 DataNew 纯 C# 表，旧 .tres 不再作为主流程。
         // 技能：冲刺 (Dash) - Charge 模式位移。
         var dashConfig = AbilityData.Get("冲刺") ?? AbilityData.Dash;
         EntityManager.AddAbility(_player, dashConfig);

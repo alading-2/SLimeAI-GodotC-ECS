@@ -82,7 +82,6 @@ public partial class LifecycleComponent : Node, IComponent
     private GameTimer? _deathLingerTimer;
     /// <summary> 单位原始碰撞层，用于复活后恢复 </summary>
     private uint _originalCollisionLayer;
-    private readonly EventSubscriptionCollector _eventSubscriptions = new();
 
     // ================= IComponent =================
 
@@ -99,23 +98,17 @@ public partial class LifecycleComponent : Node, IComponent
             _data = iEntity.Data;
         }
 
-        // ✅ 监听 Kill 事件（通过 Victim 筛选是否是自己）
-        if (_entity != null)
-        {
-            _eventSubscriptions.Subscribe<UnitEvents.Killed>(_entity.Events, OnUnitKilled);
-        }
+        // ✅ 全局监听 Kill 事件（通过 Victim 筛选是否是自己）
+        GlobalEventBus.Global.On<GameEventType.Unit.KilledEventData>(
+            GameEventType.Unit.Killed, OnUnitKilled);
 
         // ✅ 监听数据变化事件（处理 Spawn 后动态设置 MaxLifeTime 的场景）
-        if (_entity != null)
-        {
-            _eventSubscriptions.Subscribe<DataEvents.PropertyChanged>(_entity.Events, OnDataChanged);
-        }
+        _entity?.Events.On<GameEventType.Data.PropertyChangedEventData>(
+            GameEventType.Data.PropertyChanged, OnDataChanged);
 
         // ✅ 监听动画播放完毕事件（Hero 死亡动画结束后启动复活，普通单位延迟销毁）
-        if (_entity != null)
-        {
-            _eventSubscriptions.Subscribe<UnitEvents.AnimationFinished>(_entity.Events, OnAnimationFinished);
-        }
+        _entity?.Events.On<GameEventType.Unit.AnimationFinishedEventData>(
+            GameEventType.Unit.AnimationFinished, OnAnimationFinished);
 
         // 初始化状态为 Alive，确保单位生成后立即可用
         ChangeState(LifecycleState.Alive);
@@ -127,7 +120,7 @@ public partial class LifecycleComponent : Node, IComponent
     /// <summary>
     /// 数据变化事件处理：响应 MaxLifeTime 变化
     /// </summary>
-    private void OnDataChanged(DataEvents.PropertyChanged data)
+    private void OnDataChanged(GameEventType.Data.PropertyChangedEventData data)
     {
         if (data.Key == DataKey.MaxLifeTime)
         {
@@ -161,7 +154,9 @@ public partial class LifecycleComponent : Node, IComponent
     /// </summary>
     public void OnComponentUnregistered()
     {
-        _eventSubscriptions.Clear();
+        // Cancel global event subscription
+        GlobalEventBus.Global.Off<GameEventType.Unit.KilledEventData>(
+            GameEventType.Unit.Killed, OnUnitKilled);
 
         // 取消计时器
         _lifeTimer?.Cancel();
@@ -202,7 +197,7 @@ public partial class LifecycleComponent : Node, IComponent
     /// 当 HealthComponent 判定 HP<=0 后的回调。
     /// 执行死亡流程。
     /// </summary>
-    private void OnUnitKilled(UnitEvents.Killed data)
+    private void OnUnitKilled(GameEventType.Unit.KilledEventData data)
     {
         // 全局事件筛选：只处理自己被击杀的事件
         if (data.Victim != _entity) return;
@@ -232,8 +227,9 @@ public partial class LifecycleComponent : Node, IComponent
         _log.Debug($"状态变化: {oldState} -> {newState}");
 
         // 触发生命周期状态变化事件，方便其他系统（如 UI、动画、AI）响应
-        _entity?.Events.Publish(new UnitEvents.StateChanged(
-            "LifecycleState", oldState.ToString(), newState.ToString()));
+        _entity?.Events.Emit(GameEventType.Unit.StateChanged,
+            new GameEventType.Unit.StateChangedEventData(
+                "LifecycleState", oldState.ToString(), newState.ToString()));
     }
 
     // ================= 核心方法 =================
@@ -263,8 +259,8 @@ public partial class LifecycleComponent : Node, IComponent
         _log.Info($"单位死亡, 类型: {deathType}");
 
         // 向实体局部事件总线也发送 Killed 事件，让 UnitAnimationComponent 能收到并播放死亡动画
-        _entity?.Events.Publish(
-            new UnitEvents.Killed(
+        _entity?.Events.Emit(GameEventType.Unit.Killed,
+            new GameEventType.Unit.KilledEventData(
                 Victim: _entity,
                 Killer: null,
                 DeathType: deathType));
@@ -314,7 +310,7 @@ public partial class LifecycleComponent : Node, IComponent
     /// - dead 动画 + Hero：进入 Dead/Reviving 流程
     /// - dead 动画 + 普通单位：延迟 0.5 秒后销毁
     /// </summary>
-    private void OnAnimationFinished(UnitEvents.AnimationFinished data)
+    private void OnAnimationFinished(GameEventType.Unit.AnimationFinishedEventData data)
     {
         // 只处理 dead 动画
         if (data.AnimName != Anim.Dead) return;
@@ -344,7 +340,8 @@ public partial class LifecycleComponent : Node, IComponent
         ChangeState(LifecycleState.Reviving);
 
         // 广播复活开始事件，供 UI 显示复活进度条等
-        _entity?.Events.Publish(new UnitEvents.Reviving(ReviveDuration));
+        _entity?.Events.Emit(GameEventType.Unit.Reviving,
+            new GameEventType.Unit.RevivingEventData(ReviveDuration));
 
         // 启动复活计时器，每 0.1 秒执行一次进度回调
         _reviveTimer = TimerManager.Instance?.Countdown(ReviveDuration, 0.1f)
@@ -355,7 +352,8 @@ public partial class LifecycleComponent : Node, IComponent
                 float newHp = maxHp * progress;
                 float oldHp = _data.Get<float>(DataKey.CurrentHp);
                 _data.Set(DataKey.CurrentHp, newHp);
-                _entity?.Events.Publish(new DataEvents.HealthChanged(oldHp, newHp));
+                _entity?.Events.Emit(GameEventType.Data.HealthChanged,
+                    new GameEventType.Data.HealthChangedEventData(oldHp, newHp));
             })
             .OnComplete(CompleteRevive); // 计时结束，完成复活
     }
@@ -370,7 +368,8 @@ public partial class LifecycleComponent : Node, IComponent
         float oldHp = _data.Get<float>(DataKey.CurrentHp);
         float fullHp = _data.Get<float>(DataKey.FinalHp);
         _data.Set(DataKey.CurrentHp, fullHp);
-        _entity?.Events.Publish(new DataEvents.HealthChanged(oldHp, fullHp));
+        _entity?.Events.Emit(GameEventType.Data.HealthChanged,
+            new GameEventType.Data.HealthChangedEventData(oldHp, fullHp));
 
         // 2. 清除死亡标记
         _data.Set(DataKey.IsDead, false);
@@ -387,7 +386,8 @@ public partial class LifecycleComponent : Node, IComponent
         ChangeState(LifecycleState.Alive);
 
         // 5. 广播复活完成事件
-        _entity?.Events.Publish(new UnitEvents.Revived());
+        _entity?.Events.Emit(GameEventType.Unit.Revived,
+            new GameEventType.Unit.RevivedEventData());
         _log.Info("单位复活完成");
     }
 

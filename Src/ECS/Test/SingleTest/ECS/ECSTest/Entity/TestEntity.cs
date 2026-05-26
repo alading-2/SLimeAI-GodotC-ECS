@@ -9,7 +9,7 @@ namespace Slime.Test
         /// <summary>
         /// 实体局部事件总线
         /// </summary>
-        public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
+        public EventBus Events { get; } = new EventBus();
         // IEntity Implementation
         public Data Data { get; private set; } = new Data();
         // EntityId 由 IEntity 默认实现（从 DataKey.Id 读取）

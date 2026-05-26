@@ -18,7 +18,6 @@ public partial class VisualPreviewScene : Node2D
     private Button _refreshButton = null!;
     private Label _summaryLabel = null!;
     private Label _selectionLabel = null!;
-    private readonly EventSubscriptionCollector _selectionSubscriptions = new();
 
     public override void _Ready()
     {
@@ -30,7 +29,14 @@ public partial class VisualPreviewScene : Node2D
 
     public override void _ExitTree()
     {
-        _selectionSubscriptions.Clear();
+        GlobalEventBus.Global.Off<GameEventType.Global.MouseSelectionCompletedEventData>(
+            GameEventType.Global.MouseSelectionCompleted,
+            OnMouseSelectionCompleted
+        );
+        GlobalEventBus.Global.Off<GameEventType.Global.MouseSelectionMissedEventData>(
+            GameEventType.Global.MouseSelectionMissed,
+            OnMouseSelectionMissed
+        );
         _world.Clear();
     }
 
@@ -86,9 +92,14 @@ public partial class VisualPreviewScene : Node2D
     /// </summary>
     private void BindSelectionEvents()
     {
-        _selectionSubscriptions.Clear();
-        _selectionSubscriptions.Subscribe<GlobalEvents.MouseSelectionCompleted>(WorldEvents.World, OnMouseSelectionCompleted);
-        _selectionSubscriptions.Subscribe<GlobalEvents.MouseSelectionMissed>(WorldEvents.World, OnMouseSelectionMissed);
+        GlobalEventBus.Global.On<GameEventType.Global.MouseSelectionCompletedEventData>(
+            GameEventType.Global.MouseSelectionCompleted,
+            OnMouseSelectionCompleted
+        );
+        GlobalEventBus.Global.On<GameEventType.Global.MouseSelectionMissedEventData>(
+            GameEventType.Global.MouseSelectionMissed,
+            OnMouseSelectionMissed
+        );
     }
 
     /// <summary>
@@ -195,7 +206,7 @@ public partial class VisualPreviewScene : Node2D
     /// 鼠标选择完成。
     /// </summary>
     /// <param name="evt">选择事件数据。</param>
-    private void OnMouseSelectionCompleted(GlobalEvents.MouseSelectionCompleted evt)
+    private void OnMouseSelectionCompleted(GameEventType.Global.MouseSelectionCompletedEventData evt)
     {
         if (!_world.TryGetEntry(evt.PrimaryEntity, out var entry)
             || !string.Equals(entry.CatalogPath, GetSelectedCatalogPath(), StringComparison.Ordinal))
@@ -218,7 +229,7 @@ public partial class VisualPreviewScene : Node2D
     /// 鼠标选择未命中。
     /// </summary>
     /// <param name="evt">选择事件数据。</param>
-    private void OnMouseSelectionMissed(GlobalEvents.MouseSelectionMissed evt)
+    private void OnMouseSelectionMissed(GameEventType.Global.MouseSelectionMissedEventData evt)
     {
         _selectionLabel.Text = "未选择";
     }

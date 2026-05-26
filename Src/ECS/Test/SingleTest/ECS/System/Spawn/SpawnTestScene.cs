@@ -24,7 +24,7 @@ namespace Slime.Test
         // 状态
         private SpawnPositionStrategy _currentStrategy = SpawnPositionStrategy.Rectangle;
         private readonly SpawnPositionParams _previewParams = new(); // 用于绘图预览参数，保持默认值与 SpawnSystem 一致
-        // snapshot-backed 敌人测试数据
+        // DataNew 敌人测试数据
         private EnemyData? _testEnemy;
 
         public override void _Ready()
@@ -41,7 +41,7 @@ namespace Slime.Test
 
         private void SetupEnvironment()
         {
-            // 默认从 snapshot-backed DTO 按名字获取敌人数据；旧 .tres 不再作为测试主流程。
+            // 默认从 DataNew 纯 C# 表按名字获取敌人数据；旧 .tres 不再作为测试主流程。
             _testEnemy = EnemyData.Get("豺狼人") ?? EnemyData.Chailangren;
 
             if (_testEnemy == null) _log.Error("Failed to load test enemy data!");

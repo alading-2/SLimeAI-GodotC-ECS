@@ -55,7 +55,9 @@ public static partial class EntityManager
             config // 迁移配置
         );
 
-        WorldEvents.World.Publish(new GlobalEvents.EntityMigrating(
+        GlobalEventBus.Global.Emit(
+            GameEventType.Global.EntityMigrating,
+            new GameEventType.Global.EntityMigratingEventData(
                 sourceIEntity, // 源实体
                 typeof(TTarget).Name, // 目标实体类型名
                 profile.Name // Profile 名称
@@ -92,7 +94,9 @@ public static partial class EntityManager
                 snapshot.SourceEntityId // 源实体 Id
             );
 
-            WorldEvents.World.Publish(new GlobalEvents.EntityMigrated(
+            GlobalEventBus.Global.Emit(
+                GameEventType.Global.EntityMigrated,
+                new GameEventType.Global.EntityMigratedEventData(
                     sourceIEntity, // 源实体
                     targetEntity, // 目标实体
                     profile.Name // Profile 名称
@@ -290,7 +294,7 @@ public static partial class EntityManager
 
     /// <summary>
     /// 判断运行时值是否属于 v1 允许迁移的安全类型。
-        /// <para>规则：允许值类型、字符串、Resource；拒绝 Node / IEntity / IComponent / 委托 / IEventBus 等绑定旧实例生命周期的引用。</para>
+    /// <para>规则：允许值类型、字符串、Resource；拒绝 Node / IEntity / IComponent / 委托 / EventBus 等绑定旧实例生命周期的引用。</para>
     /// </summary>
     private static bool IsSafeMigrationValue(object value)
     {
@@ -301,7 +305,7 @@ public static partial class EntityManager
             typeof(IEntity).IsAssignableFrom(valueType) ||
             typeof(IComponent).IsAssignableFrom(valueType) ||
             typeof(Delegate).IsAssignableFrom(valueType) ||
-            typeof(IEventBus).IsAssignableFrom(valueType))
+            typeof(EventBus).IsAssignableFrom(valueType))
         {
             return false;
         }

@@ -18,7 +18,7 @@ internal sealed class AbilityTestService
     /// <summary>Feature 调试服务，用于复用正式链路执行授予、移除与启停。</summary>
     private readonly FeatureDebugService _featureDebugService = new();
 
-    /// <summary>缓存全部技能配置（名称 → snapshot-backed DTO）。</summary>
+    /// <summary>缓存全部技能配置（名称 → DataNew 配置对象）。</summary>
     private readonly Dictionary<string, AbilityData> _configByKey = new(StringComparer.Ordinal);
 
     /// <summary>缓存技能库顺序，供左侧分类树稳定展示。</summary>
@@ -144,7 +144,7 @@ internal sealed class AbilityTestService
         {
             foreach (var ability in EntityManager.GetAbilities(owner))
             {
-                var abilityName = ability.Data.Get(DataKey.Name); // 解析 DataKey.Name 键名
+                var abilityName = ability.Data.Get<string>(DataKey.Name.Key); // 解析 DataKey.Name 键名
                 if (!string.IsNullOrWhiteSpace(abilityName))
                 {
                     ownedNames.Add(abilityName);
@@ -207,7 +207,7 @@ internal sealed class AbilityTestService
         _catalogEntries.Clear();
         _featureGroupOrder.Clear();
 
-        LoadSnapshotAbilityConfigs();
+        LoadPureCSharpAbilityConfigs();
 
         _catalogEntries.Sort((left, right) =>
         {
@@ -222,23 +222,23 @@ internal sealed class AbilityTestService
     }
 
     /// <summary>
-    /// 从 DataOS snapshot 加载技能配置。
+    /// 从 DataNew 纯 C# 表加载技能配置。
     /// </summary>
-    private void LoadSnapshotAbilityConfigs()
+    private void LoadPureCSharpAbilityConfigs()
     {
         foreach (var config in AbilityData.All)
         {
             var abilityName = string.IsNullOrWhiteSpace(config.Name) ? config.GetType().Name : config.Name!;
-            AddSnapshotAbilityConfigEntry(abilityName, config);
+            AddDataNewAbilityConfigEntry(abilityName, config);
         }
     }
 
     /// <summary>
-    /// 写入 snapshot-backed 技能配置缓存和展示条目。
+    /// 写入 DataNew 技能配置缓存和展示条目。
     /// </summary>
-    /// <param name="resourceKey">测试面板内部使用的配置键，直接使用技能 Name。</param>
-    /// <param name="config">snapshot-backed 技能配置。</param>
-    private void AddSnapshotAbilityConfigEntry(string resourceKey, AbilityData config)
+    /// <param name="resourceKey">测试面板内部使用的配置键，DataNew 模式下直接使用技能 Name。</param>
+    /// <param name="config">DataNew 技能配置。</param>
+    private void AddDataNewAbilityConfigEntry(string resourceKey, AbilityData config)
     {
         var displayName = string.IsNullOrWhiteSpace(config.Name) ? resourceKey : config.Name!;
         var featureGroupId = ResolveFeatureGroupId(config, resourceKey);
@@ -267,13 +267,13 @@ internal sealed class AbilityTestService
     /// </summary>
     private AbilityOwnedItemView CreateOwnedItemView(AbilityEntity ability)
     {
-        var abilityName = ability.Data.Get(DataKey.Name);
+        var abilityName = ability.Data.Get<string>(DataKey.Name.Key);
         var featureGroupId = ResolveFeatureGroupId(ability);
-        var description = ability.Data.Get(DataKey.Description);
-        var abilityId = ability.Data.Get(DataKey.Id);
-        var isEnabled = ability.Data.Get(DataKey.FeatureEnabled);
-        var abilityType = ability.Data.Get(DataKey.AbilityType);
-        var triggerMode = ability.Data.Get(DataKey.AbilityTriggerMode);
+        var description = ability.Data.Get<string>(DataKey.Description.Key);
+        var abilityId = ability.Data.Get<string>(DataKey.Id.Key);
+        var isEnabled = ability.Data.Get<bool>(DataKey.FeatureEnabled.Key);
+        var abilityType = ability.Data.Get<AbilityType>(DataKey.AbilityType.Key);
+        var triggerMode = ability.Data.Get<AbilityTriggerMode>(DataKey.AbilityTriggerMode.Key);
 
         RegisterFeatureGroupOrder(featureGroupId);
 
@@ -300,7 +300,7 @@ internal sealed class AbilityTestService
 
         foreach (var ability in EntityManager.GetAbilities(owner))
         {
-            var currentAbilityId = ability.Data.Get(DataKey.Id);
+            var currentAbilityId = ability.Data.Get<string>(DataKey.Id.Key);
             if (string.Equals(currentAbilityId, abilityId, StringComparison.Ordinal))
             {
                 return ability;
@@ -342,13 +342,13 @@ internal sealed class AbilityTestService
     /// </summary>
     private static string ResolveFeatureGroupId(AbilityEntity ability)
     {
-        var featureGroup = ability.Data.Get(DataKey.AbilityFeatureGroup);
+        var featureGroup = ability.Data.Get<string>(DataKey.AbilityFeatureGroup.Key);
         if (!string.IsNullOrWhiteSpace(featureGroup))
         {
             return NormalizeFeatureGroupId(featureGroup);
         }
 
-        var abilityType = ability.Data.Get(DataKey.AbilityType);
+        var abilityType = ability.Data.Get<AbilityType>(DataKey.AbilityType.Key);
         return abilityType switch
         {
             AbilityType.Active => NormalizeFeatureGroupId(FeatureId.Ability.Groups.Active),

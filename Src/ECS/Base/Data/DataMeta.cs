@@ -11,53 +11,53 @@ public class DataMeta
     // === 必填字段 ===
 
     /// <summary>数据键名（必填）</summary>
-    public string Key { get; set; } = "";
+    public required string Key { get; init; }
 
     /// <summary>显示名称（用于 UI 标签）</summary>
-    public string DisplayName { get; set; } = "";
+    public string DisplayName { get; init; } = "";
 
     /// <summary>数据类型（必填）</summary>
-    public Type Type { get; set; } = typeof(object);
+    public required Type Type { get; init; }
 
 /// <summary>描述信息（用于 Tooltip 等）</summary>
-public string Description { get; set; } = "";
+public string Description { get; init; } = "";
 
 /// <summary>数据分类（用于属性面板分组）</summary>
-public Enum? Category { get; set; }
+public Enum? Category { get; init; }
 
 // === 可选约束字段 ===
 
 /// <summary>默认值（可选，根据 Type 自动推断）</summary>
-public object? DefaultValue { get; set; }
+public object? DefaultValue { get; init; }
 
 /// <summary>最小值（可选，仅数值类型有效）</summary>
-public float? MinValue { get; set; }
+public float? MinValue { get; init; }
 
 /// <summary>最大值（可选，仅数值类型有效）</summary>
-public float? MaxValue { get; set; }
+public float? MaxValue { get; init; }
 
 /// <summary>是否为百分比值（影响格式化输出）</summary>
-public bool IsPercentage { get; set; } = false;
+public bool IsPercentage { get; init; } = false;
 
 /// <summary>是否支持修改器（可选，属性键设 true，状态键默认 false）</summary>
-public bool? SupportModifiers { get; set; }
+public bool? SupportModifiers { get; init; }
 
 /// <summary>是否允许被 Entity 迁移流程复制到目标实体（默认允许）</summary>
-public bool CanMigrate { get; set; } = true;
+public bool CanMigrate { get; init; } = true;
 
 /// <summary>图标路径（可选）</summary>
-public string IconPath { get; set; } = "";
+public string IconPath { get; init; } = "";
 
 /// <summary>可选值列表（用于运行时选项验证，索引对应实际存储的 int 值）</summary>
-public List<string>? Options { get; set; }
+public List<string>? Options { get; init; }
 
 // === 计算属性支持 ===
 
 /// <summary>依赖的数据键列表（仅计算键使用）</summary>
-public string[]? Dependencies { get; set; }
+public string[]? Dependencies { get; init; }
 
 /// <summary>计算函数（仅计算键使用）</summary>
-public Func<Data, object>? Compute { get; set; }
+public Func<Data, object>? Compute { get; init; }
 
 // ==============================================
 
@@ -174,8 +174,6 @@ public string? GetOptionName(int index)
 /// <summary>
 /// 隐式转换为 string（返回 Key 值）
 /// 使 DataMeta 字段可直接作为 Data.Get/Set 参数，无需显式 .Key 调用
-/// [Migration Shim] 此运算符使 DataMeta 可隐式转为 string 并走 string-keyed shim 路径；
-/// 业务代码应持有 DataKey<T> 并使用 typed 重载，避免依赖此隐式转换。
 /// </summary>
 public static implicit operator string(DataMeta meta) => meta.Key;
 }

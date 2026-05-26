@@ -1,5 +1,4 @@
 using Godot;
-using System;
 using System.Linq;
 
 /// <summary>
@@ -56,7 +55,6 @@ public partial class EffectComponent : Node, IComponent
 
     /// <summary>当前动画名</summary>
     private string _currentAnimation = string.Empty;
-    private IDisposable? _hostDestroyedSubscription;
 
     // ================= IComponent 实现 =================
 
@@ -87,8 +85,9 @@ public partial class EffectComponent : Node, IComponent
         _lifeTimer?.Cancel();
         _lifeTimer = null;
 
-        _hostDestroyedSubscription?.Dispose();
-        _hostDestroyedSubscription = null;
+        // 取消宿主销毁事件监听
+        GlobalEventBus.Global.Off<GameEventType.Global.EntityDestroyedEventData>(
+            GameEventType.Global.EntityDestroyed, OnHostDestroyed);
 
         _sprite = null;
         _hostNode = null;
@@ -115,13 +114,15 @@ public partial class EffectComponent : Node, IComponent
             _log.Debug($"附着到宿主: {hostNode.Name}");
 
             // 通过事件触发策略切换，宿主引用通过 MovementParams.TargetNode 传入（EntityMovementComponent 监听此事件）
-            _entity!.Events.Publish(
-                new UnitEvents.MovementStarted(
+            _entity!.Events.Emit(
+                GameEventType.Unit.MovementStarted,
+                new GameEventType.Unit.MovementStartedEventData(
                     MoveMode.AttachToHost,
                     new MovementParams { Mode = MoveMode.AttachToHost, TargetNode = host2D }));
 
             // 监听宿主销毁事件（生命周期职责，不属于移动系统）
-            _hostDestroyedSubscription = WorldEvents.World.Subscribe<GlobalEvents.EntityDestroyed>(OnHostDestroyed);
+            GlobalEventBus.Global.On<GameEventType.Global.EntityDestroyedEventData>(
+                GameEventType.Global.EntityDestroyed, OnHostDestroyed);
         }
         else
         {
@@ -132,7 +133,7 @@ public partial class EffectComponent : Node, IComponent
     /// <summary>
     /// 宿主销毁事件处理：如果是自己的宿主，则自动销毁
     /// </summary>
-    private void OnHostDestroyed(GlobalEvents.EntityDestroyed evt)
+    private void OnHostDestroyed(GameEventType.Global.EntityDestroyedEventData evt)
     {
         if (_hostNode == null) return;
         if (evt.Entity is not Node destroyedNode) return;

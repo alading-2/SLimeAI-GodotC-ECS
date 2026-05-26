@@ -93,12 +93,12 @@ public partial class PauseMenuSystem : CanvasLayer, ISystem
         if ((projectState.Overlays & OverlayFlags.PauseMenu) != 0)
         {
             projectState.ClosePauseMenu();
-            WorldEvents.World.Publish(new GlobalEvents.GameResume());
+            GlobalEventBus.TriggerGameResume();
             return;
         }
 
         projectState.OpenPauseMenu();
-        WorldEvents.World.Publish(new GlobalEvents.GamePause());
+        GlobalEventBus.TriggerGamePause();
     }
 
     private void OnResumePressed()
@@ -110,7 +110,7 @@ public partial class PauseMenuSystem : CanvasLayer, ISystem
         }
 
         projectState.ClosePauseMenu();
-        WorldEvents.World.Publish(new GlobalEvents.GameResume());
+        GlobalEventBus.TriggerGameResume();
     }
 
     private void UpdateMenuState(ProjectStateSnapshot snapshot)

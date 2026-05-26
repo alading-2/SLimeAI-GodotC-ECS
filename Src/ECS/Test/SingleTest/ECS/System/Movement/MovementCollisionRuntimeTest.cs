@@ -14,7 +14,7 @@ namespace Slime.Test
         private sealed partial class MockEntity : Node2D, IEntity
         {
             public Data Data { get; } = new Data();
-            public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
+            public EventBus Events { get; } = new EventBus();
 
             public MockEntity(string name, Team team, EntityType type)
             {
@@ -140,7 +140,7 @@ namespace Slime.Test
 
         private void TestStopRequestedDefaults()
         {
-            var evt = new UnitEvents.MovementStopRequested();
+            var evt = new GameEventType.Unit.MovementStopRequestedEventData();
 
             AssertEqual("默认停止原因", MovementStopReason.Requested, evt.Reason);
             AssertEqual("默认发完成事件", true, evt.EmitCompletedEvent);
@@ -151,7 +151,7 @@ namespace Slime.Test
 
         private void TestOrientationStartedDefaults()
         {
-            var evt = new UnitEvents.OrientationStarted();
+            var evt = new GameEventType.Unit.OrientationStartedEventData();
 
             AssertEqual("默认朝向来源", OrientationSource.Standalone, evt.Source);
             AssertEqual("默认朝向参数模式", OrientationMode.FollowMovement, evt.Params.Mode);
@@ -160,7 +160,7 @@ namespace Slime.Test
 
         private void TestOrientationStoppedDefaults()
         {
-            var evt = new UnitEvents.OrientationStopped();
+            var evt = new GameEventType.Unit.OrientationStoppedEventData();
 
             AssertEqual("默认停止来源", OrientationSource.Standalone, evt.Source);
             AssertEqual("默认停止原因", MovementStopReason.Requested, evt.Reason);
@@ -171,7 +171,7 @@ namespace Slime.Test
             var collisionTarget = new Node2D { Name = "CollisionTarget" };
             AddChild(collisionTarget);
 
-            var evt = new UnitEvents.MovementCompleted(
+            var evt = new GameEventType.Unit.MovementCompletedEventData(
                 MoveMode.CircularArc,
                 1.5f,
                 123f,
@@ -535,7 +535,7 @@ namespace Slime.Test
             source.Data.Set("UnsafeNodeRef", new Node2D { Name = "UnsafeRef" });
 
             int callbackCount = 0;
-            using var subscription = source.Events.Subscribe<MigrationTestEvent>(_ => callbackCount++);
+            source.Events.On("migration:test:event", () => callbackCount++);
 
             string sourceId = source.Data.Get<string>(DataKey.Id);
 
@@ -564,7 +564,7 @@ namespace Slime.Test
                     }
                 );
 
-                target!.Events.Publish(new MigrationTestEvent());
+                target!.Events.Emit("migration:test:event");
 
                 AssertEqual("Profile 排除的键不应被迁移", string.Empty, target.Data.Get<string>(DataKey.Name));
                 AssertEqual("DataOverrides 应覆盖迁移后的最终值", "OverrideDescription", target.Data.Get<string>(DataKey.Description));
@@ -581,8 +581,6 @@ namespace Slime.Test
                 }
             }
         }
-
-        private readonly record struct MigrationTestEvent : IEntityEvent;
 
         /// <summary>
         /// 验证投射物会沿 PARENT 关系回溯到归属单位判敌我，而不是直接拿自身 Team（通常为 Neutral）判断。

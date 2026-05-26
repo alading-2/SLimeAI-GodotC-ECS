@@ -1,8 +1,10 @@
+using Godot;
+
 /// <summary>
 /// 技能系统 - 管理技能激活和执行逻辑
 /// 
 /// 职责：
-/// - 提供 TryTrigger 统一施法入口
+/// - 接收 TryTrigger 请求（统一施法入口）
 /// - 激活技能（就绪检查 → 消耗 → 冷却 → 执行）
 /// - 通过 FeatureSystem / IFeatureHandler.OnExecute 执行具体技能逻辑并回传 AbilityExecutedResult
 /// 
@@ -15,9 +17,29 @@ public static class AbilitySystem
     // ==================== TryTrigger 入口 ====================
 
     /// <summary>
-    /// 使用施法上下文触发技能。
+    /// 处理 TryTrigger 事件 - 统一施法入口
     /// </summary>
-    public static TriggerResult TryTriggerAbility(CastContext abilityContext)
+    public static void HandleTryTrigger(GameEventType.Ability.TryTriggerEventData eventData)
+    {
+        var context = eventData.Context;
+        var resultContext = context.ResponseContext;
+
+        if (context.Ability == null)
+        {
+            _log.Debug("TryTrigger 失败: Ability 为空");
+            resultContext?.SetResult(TriggerResult.Failed);
+            return;
+        }
+
+        var result = TryTriggerAbilityWithContext(context);
+        resultContext?.SetResult(result);
+    }
+
+    /// <summary>
+    /// 使用施法上下文触发技能（统一流水线入口）
+    /// </summary>
+    /// <returns>触发结果：Success / Failed</returns>
+    private static TriggerResult TryTriggerAbilityWithContext(CastContext abilityContext)
     {
         if (abilityContext.Ability == null || abilityContext.Caster == null) return TriggerResult.Failed;
 
@@ -30,29 +52,31 @@ public static class AbilitySystem
 
         var ability = abilityContext.Ability;
 
-        if (!CanUseAbility(ability, out var failReason))
+        // 事件驱动：就绪检查
+        if (!CanUseAbility(ability))
         {
-            _log.Debug($"技能不可用: {failReason}");
             return TriggerResult.Failed;
         }
 
+        // ==================== 资源消耗阶段 ====================
+        var consumeContext = new EventContext();
+        // 事件驱动：请求消耗资源（充能等）
         if (ability.Data.Get<bool>(DataKey.IsAbilityUsesCharges))
         {
-            var charge = EntityManager.GetComponent<ChargeComponent>(ability);
-            if (charge == null || !charge.ConsumeCharge())
-            {
-                _log.Debug("消耗资源失败: 充能不足");
-                return TriggerResult.Failed;
-            }
+            ability.Events.Emit(
+                GameEventType.Ability.ConsumeCharge,
+                new GameEventType.Ability.ConsumeChargeEventData(consumeContext)
+            );
         }
 
-        var cost = EntityManager.GetComponent<CostComponent>(ability);
-        if (cost != null && !cost.ConsumeCost(out var costFailReason))
+        // 检查消耗是否成功
+        if (!consumeContext.Success)
         {
-            _log.Debug($"消耗成本失败: {costFailReason}");
+            _log.Debug($"消耗资源失败: {consumeContext.FailReason}");
             return TriggerResult.Failed;
         }
 
+        // 事件驱动:请求启动冷却
         // 注意：如果是 Periodic (周期性) 技能，由 TriggerComponent 负责循环控制频率，
         // 这里不应该再启动 CooldownComponent 的冷却计时，否则会导致 TriggerComponent 下次循环时
         // 技能还在冷却中 (Race Condition) 或 刚结束冷却但 CanUse 检查失败。
@@ -60,14 +84,33 @@ public static class AbilitySystem
         var triggerMode = ability.Data.Get<AbilityTriggerMode>(DataKey.AbilityTriggerMode);
         if (!triggerMode.HasFlag(AbilityTriggerMode.Periodic))
         {
-            EntityManager.GetComponent<CooldownComponent>(ability)?.StartCooldown();
+            ability.Events.Emit(
+                GameEventType.Ability.StartCooldown,
+                new GameEventType.Ability.StartCooldownEventData()
+            );
+        }
+
+        // ==================== 消耗阶段 ====================
+        // 事件驱动:请求消耗成本 (魔法/能量等)
+        var costContext = new EventContext();
+        ability.Events.Emit(
+            GameEventType.Ability.ConsumeCost,
+            new GameEventType.Ability.ConsumeCostEventData(costContext)
+        );
+
+        if (!costContext.Success)
+        {
+            _log.Debug($"消耗成本失败: {costContext.FailReason}");
+            return TriggerResult.Failed;
         }
 
         // 标记为执行中
         ability.Data.Set(DataKey.FeatureIsActive, true);
 
         // 发送激活事件，技能UI使用
-        ability.Events.Publish(new AbilityEvents.Activated(abilityContext)
+        ability.Events.Emit(
+            GameEventType.Ability.Activated,
+            new GameEventType.Ability.ActivatedEventData(abilityContext)
         );
 
         // Feature 生命周期钩子：Activated（AbilitySystem 负责构建 FeatureContext，将 CastContext 存入 ActivationData）
@@ -97,17 +140,7 @@ public static class AbilitySystem
     /// </summary>
     public static bool CanUseAbility(AbilityEntity ability)
     {
-        return CanUseAbility(ability, out _);
-    }
-
-    private static bool CanUseAbility(AbilityEntity ability, out string? failReason)
-    {
-        failReason = null;
-        if (ability == null)
-        {
-            failReason = "技能实体为空";
-            return false;
-        }
+        if (ability == null) return false;
 
         var abilityName = ability.Data.Get<string>(DataKey.Name);
         var isEnabled = ability.Data.Get<bool>(DataKey.FeatureEnabled);
@@ -116,7 +149,6 @@ public static class AbilitySystem
         // 检查启用状态
         if (!isEnabled)
         {
-            failReason = "技能未启用";
             _log.Debug($"技能 {abilityName} 未启用");
             return false;
         }
@@ -124,30 +156,20 @@ public static class AbilitySystem
         // 检查Feature是否激活，也就是技能是否在执行中
         if (isActive)
         {
-            failReason = "技能正在执行中";
             _log.Debug($"技能 {abilityName} 正在执行中");
             return false;
         }
 
-        var cooldown = EntityManager.GetComponent<CooldownComponent>(ability);
-        if (cooldown != null && !cooldown.IsReady())
-        {
-            failReason = "技能冷却中";
-            _log.Debug($"技能 {abilityName} 不可用: {failReason}");
-            return false;
-        }
+        // 事件驱动：请求检查可用性（冷却、充能等组件响应）
+        var context = new EventContext();
+        ability.Events.Emit(
+            GameEventType.Ability.CheckCanUse,
+            new GameEventType.Ability.CheckCanUseEventData(context)
+        );
 
-        var charge = EntityManager.GetComponent<ChargeComponent>(ability);
-        if (charge != null && !charge.CanUse(out failReason))
+        if (!context.Success)
         {
-            _log.Debug($"技能 {abilityName} 不可用: {failReason}");
-            return false;
-        }
-
-        var cost = EntityManager.GetComponent<CostComponent>(ability);
-        if (cost != null && !cost.CanUse(out failReason))
-        {
-            _log.Debug($"技能 {abilityName} 不可用: {failReason}");
+            _log.Debug($"技能 {abilityName} 不可用: {context.FailReason}");
             return false;
         }
 
@@ -196,7 +218,9 @@ public static class AbilitySystem
         _log.Debug($"[AbilitySystem] 技能效果执行完成: '{abilityName}', 命中: {result.TargetsHit}");
 
         // 发送执行完成事件
-        ability.Events.Publish(new AbilityEvents.Executed(result)
+        ability.Events.Emit(
+            GameEventType.Ability.Executed,
+            new GameEventType.Ability.ExecutedEventData(result)
         );
     }
 }

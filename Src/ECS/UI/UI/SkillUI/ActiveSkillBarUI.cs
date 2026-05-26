@@ -1,5 +1,4 @@
 using Godot;
-using System;
 using System.Collections.Generic;
 
 
@@ -15,9 +14,6 @@ public partial class ActiveSkillBarUI : UIBase
 
     private List<ActiveSkillSlotUI> _skillSlots = new();
     private HBoxContainer _slotContainer = null!;
-    private IDisposable? _abilityAddedSubscription;
-    private IDisposable? _abilityRemovedSubscription;
-    private IDisposable? _activeSkillSelectedSubscription;
 
     public override void _Ready()
     {
@@ -48,9 +44,23 @@ public partial class ActiveSkillBarUI : UIBase
     /// </summary>
     protected override void OnBind()
     {
-        _abilityAddedSubscription = _entity!.Events.Subscribe<AbilityEvents.Added>(OnAbilityAdded);
-        _abilityRemovedSubscription = _entity!.Events.Subscribe<AbilityEvents.Removed>(OnAbilityRemoved);
-        _activeSkillSelectedSubscription = _entity!.Events.Subscribe<UIEvents.ActiveSkillSelected>(OnActiveSkillSelected);
+        // 订阅技能添加事件
+        _entity!.Events.On<GameEventType.Ability.AddedEventData>(
+            GameEventType.Ability.Added,
+            OnAbilityAdded
+        );
+
+        // 订阅技能移除事件
+        _entity!.Events.On<GameEventType.Ability.RemovedEventData>(
+            GameEventType.Ability.Removed,
+            OnAbilityRemoved
+        );
+
+        // 订阅技能切换事件
+        _entity!.Events.On<GameEventType.UI.ActiveSkillSelectedEventData>(
+            GameEventType.UI.ActiveSkillSelected,
+            OnActiveSkillSelected
+        );
 
         // 初始化显示
         if (_slotContainer != null)
@@ -64,12 +74,20 @@ public partial class ActiveSkillBarUI : UIBase
     /// </summary>
     protected override void OnUnbind()
     {
-        _abilityAddedSubscription?.Dispose();
-        _abilityRemovedSubscription?.Dispose();
-        _activeSkillSelectedSubscription?.Dispose();
-        _abilityAddedSubscription = null;
-        _abilityRemovedSubscription = null;
-        _activeSkillSelectedSubscription = null;
+        _entity!.Events.Off<GameEventType.Ability.AddedEventData>(
+            GameEventType.Ability.Added,
+            OnAbilityAdded
+        );
+
+        _entity!.Events.Off<GameEventType.Ability.RemovedEventData>(
+            GameEventType.Ability.Removed,
+            OnAbilityRemoved
+        );
+
+        _entity!.Events.Off<GameEventType.UI.ActiveSkillSelectedEventData>(
+            GameEventType.UI.ActiveSkillSelected,
+            OnActiveSkillSelected
+        );
 
         ClearAllSlots();
     }
@@ -84,20 +102,20 @@ public partial class ActiveSkillBarUI : UIBase
         Visible = true;
     }
 
-    private void OnAbilityAdded(AbilityEvents.Added evt)
+    private void OnAbilityAdded(GameEventType.Ability.AddedEventData evt)
     {
         var abilityName = evt.Ability.Data.Get<string>(DataKey.Name);
         _log.Debug($"检测到技能添加: {abilityName}");
         UpdateAllSlots();
     }
 
-    private void OnAbilityRemoved(AbilityEvents.Removed evt)
+    private void OnAbilityRemoved(GameEventType.Ability.RemovedEventData evt)
     {
-        _log.Debug($"检测到技能移除: {evt.AbilityName} ({evt.AbilityId})");
+        _log.Debug($"检测到技能移除: {evt.abilityName} ({evt.abilityId})");
         UpdateAllSlots();
     }
 
-    private void OnActiveSkillSelected(UIEvents.ActiveSkillSelected evt)
+    private void OnActiveSkillSelected(GameEventType.UI.ActiveSkillSelectedEventData evt)
     {
         _log.Debug($"收到 ActiveSkillSelected 事件: Index {evt.SlotIndex}, Name: {evt.AbilityName}");
         HighlightSelectedSlot(evt.SlotIndex);

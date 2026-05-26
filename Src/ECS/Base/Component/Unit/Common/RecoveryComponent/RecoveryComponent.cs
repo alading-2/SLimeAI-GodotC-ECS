@@ -21,7 +21,6 @@ public partial class RecoveryComponent : Node, IComponent
 
     private IEntity? _entity;
     private Data? _data;
-    private readonly EventSubscriptionCollector _eventSubscriptions = new();
 
     // ================= IComponent 实现 =================
 
@@ -33,7 +32,10 @@ public partial class RecoveryComponent : Node, IComponent
             _data = iEntity.Data;
 
             // 监听恢复属性变化
-            _eventSubscriptions.Subscribe<DataEvents.PropertyChanged>(_entity.Events, OnDataPropertyChanged);
+            _entity.Events.On<GameEventType.Data.PropertyChangedEventData>(
+                GameEventType.Data.PropertyChanged,
+                OnDataPropertyChanged
+            );
         }
 
         // 检查是否需要注册
@@ -42,8 +44,6 @@ public partial class RecoveryComponent : Node, IComponent
 
     public void OnComponentUnregistered()
     {
-        _eventSubscriptions.Clear();
-
         // 注销恢复
         TryUnregister();
 
@@ -131,7 +131,7 @@ public partial class RecoveryComponent : Node, IComponent
     /// <summary>
     /// 监听数据属性变化
     /// </summary>
-    private void OnDataPropertyChanged(DataEvents.PropertyChanged evt)
+    private void OnDataPropertyChanged(GameEventType.Data.PropertyChangedEventData evt)
     {
         // 只关心恢复属性的变化
         if (evt.Key != DataKey.FinalHpRegen && evt.Key != DataKey.FinalManaRegen)

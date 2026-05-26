@@ -1,21 +1,19 @@
 using Godot;
-using System;
 
 /// <summary>
 /// TestSystem 对通用鼠标选择结果事件的适配。
 /// </summary>
 public partial class TestSystem
 {
-    private IDisposable? _mouseSelectionCompletedSubscription;
-    private IDisposable? _selectionChangedSubscription;
-
     /// <summary>
     /// 绑定通用鼠标选择系统的结果事件。
     /// </summary>
     private void BindMouseSelectionEvents()
     {
-        _mouseSelectionCompletedSubscription ??=
-            WorldEvents.World.Subscribe<GlobalEvents.MouseSelectionCompleted>(OnMouseSelectionCompleted);
+        GlobalEventBus.Global.On<GameEventType.Global.MouseSelectionCompletedEventData>(
+            GameEventType.Global.MouseSelectionCompleted,
+            OnMouseSelectionCompleted
+        );
     }
 
     /// <summary>
@@ -23,14 +21,16 @@ public partial class TestSystem
     /// </summary>
     private void UnbindMouseSelectionEvents()
     {
-        _mouseSelectionCompletedSubscription?.Dispose();
-        _mouseSelectionCompletedSubscription = null;
+        GlobalEventBus.Global.Off<GameEventType.Global.MouseSelectionCompletedEventData>(
+            GameEventType.Global.MouseSelectionCompleted,
+            OnMouseSelectionCompleted
+        );
     }
 
     /// <summary>
     /// 通用鼠标选择完成后，把结果回写到 TestSystem 当前选中实体。
     /// </summary>
-    private void OnMouseSelectionCompleted(GlobalEvents.MouseSelectionCompleted evt)
+    private void OnMouseSelectionCompleted(GameEventType.Global.MouseSelectionCompletedEventData evt)
     {
         if (!ShouldAcceptMouseSelection())
         {
@@ -55,8 +55,10 @@ public partial class TestSystem
     /// </summary>
     private void BindSelectionContextEvents()
     {
-        _selectionChangedSubscription ??=
-            Events.Subscribe<TestSystemEvents.SelectionChanged>(OnSelectionChanged);
+        Events.On<GameEventType.TestSystem.SelectionChangedEventData>(
+            GameEventType.TestSystem.SelectionChanged,
+            OnSelectionChanged
+        );
     }
 
     /// <summary>
@@ -64,14 +66,16 @@ public partial class TestSystem
     /// </summary>
     private void UnbindSelectionContextEvents()
     {
-        _selectionChangedSubscription?.Dispose();
-        _selectionChangedSubscription = null;
+        Events.Off<GameEventType.TestSystem.SelectionChangedEventData>(
+            GameEventType.TestSystem.SelectionChanged,
+            OnSelectionChanged
+        );
     }
 
     /// <summary>
     /// 选中实体变化后的统一广播入口。
     /// </summary>
-    private void OnSelectionChanged(TestSystemEvents.SelectionChanged evt)
+    private void OnSelectionChanged(GameEventType.TestSystem.SelectionChangedEventData evt)
     {
         // 显示选中实体名字+ID
         UpdateSelectedEntityDisplay();
@@ -96,13 +100,13 @@ public partial class TestSystem
             return;
         }
 
-        var name = SelectedEntity.Data.Get(DataKey.Name);
+        var name = SelectedEntity.Data.Get<string>(DataKey.Name.Key);
         if (string.IsNullOrWhiteSpace(name))
         {
             name = node.Name.ToString();
         }
 
-        var id = SelectedEntity.Data.Get(DataKey.Id);
+        var id = SelectedEntity.Data.Get<string>(DataKey.Id.Key);
         _selectedEntityLabel.Text = $"{name} | {node.GetType().Name} | {id}";
     }
 }

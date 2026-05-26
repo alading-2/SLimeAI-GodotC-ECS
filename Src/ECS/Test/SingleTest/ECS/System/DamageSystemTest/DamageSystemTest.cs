@@ -298,12 +298,14 @@ namespace Slime.Test.DamageSystemTest
             attacker.Data.Set(DataKey.LifeSteal, 100f); // 100% 触发率
 
             bool healRequestReceived = false;
-            using var subscription = attacker.Events.Subscribe<UnitEvents.HealRequest>(
+            attacker.Events.On<GameEventType.Unit.HealRequestEventData>(
+                GameEventType.Unit.HealRequest,
                 evt =>
                 {
                     healRequestReceived = true;
                     _log.Debug($"  收到治疗请求: {evt.Amount}");
-                });
+                }
+            );
 
             var infoLifesteal = new DamageInfo
             {
@@ -444,7 +446,7 @@ namespace Slime.Test.DamageSystemTest
         private partial class TestUnit : Node2D, IUnit, IEntity
         {
             public Data Data { get; } = new Data();
-            public IEventBus Events { get; } = new EntityEventBus("entity", WorldEvents.World);
+            public EventBus Events { get; } = new EventBus();
             // EntityId 由 IEntity 默认实现（从 DataKey.Id 读取）
             // IUnit expects FactionId
             public int FactionId { get; set; } = 0;

@@ -20,30 +20,16 @@ public class Data
     private static readonly Log _log = new(nameof(Data), LogLevel.Warning);
 
     private readonly IEntity? _owner;
-    private readonly DataCatalog _catalog;
 
-    public Data(IEntity? owner = null, DataCatalog? catalog = null)
+    public Data(IEntity? owner = null)
     {
         _owner = owner;
-        _catalog = catalog ?? DataRegistry.Catalog;
     }
 
     /// <summary>
-    /// 当前 Data 容器绑定的 frozen catalog。
+    /// 内部存储基础数据的字典
     /// </summary>
-    public DataCatalog Catalog => _catalog;
-
-    /// <summary>
-    /// 主存储：catalog key id -> typed slot。
-    /// </summary>
-    private readonly Dictionary<int, IDataSlot> _slots = new();
-
-    /// <summary>
-    /// [Migration Shim] 临时迁移 shim：未进入 catalog 的旧运行时引用键仍落在这里。
-    /// 目标：所有 DataKey 转为 typed 后此字典应为空，届时可删除。
-    /// 当前仅剩 FeatureModifiers (const string) 等少数键落入。
-    /// </summary>
-    private readonly Dictionary<string, object> _legacyData = new();
+    private readonly Dictionary<string, object> _data = new();
 
     /// <summary>
     /// 修改器字典：Key -> 修改器列表
@@ -76,84 +62,36 @@ public class Data
     /// <param name="key">键名</param>
     /// <param name="value">要设置的新值</param>
     /// <returns>如果值发生了实际变化则返回 true</returns>
-    public bool Set<T>(DataKey<T> key, T value)
+    public bool Set<T>(string key, T value)
     {
         // 应用元数据约束
-        var meta = key;
+        var meta = DataRegistry.GetMeta(key);
         object finalValue = value!;
-        if (meta.HasOptions && !meta.IsValidOption(value!))
+        if (meta != null)
         {
-            _log.Error($"无效的选项值: {key.Key} = {value}");
-            return false;
+            // 选项验证
+            if (meta.HasOptions && !meta.IsValidOption(value!))
+            {
+                _log.Error($"无效的选项值: {key} = {value}");
+                return false;
+            }
+            finalValue = meta.Clamp(value!);
         }
-
-        finalValue = meta.Clamp(value!);
 
         object? oldValue = null;
-        var keyId = _catalog.GetId(key);
-        if (keyId < 0)
+        if (_data.TryGetValue(key, out var existing))
         {
-            _log.Error($"DataKey 未注册到 catalog: {key.Key}");
-            return false;
-        }
-
-        if (_slots.TryGetValue(keyId, out var existingSlot))
-        {
-            oldValue = existingSlot.UntypedValue;
-            if (Equals(oldValue, finalValue))
+            oldValue = existing;
+            if (Equals(existing, finalValue))
             {
                 return false;
             }
-
-            existingSlot.UntypedValue = ConvertValueBoxed(finalValue, typeof(T), key.GetDefaultValue());
-        }
-        else
-        {
-            _slots[keyId] = new DataSlot<T>(key, (T)ConvertValueBoxed(finalValue, typeof(T), key.GetDefaultValue()));
         }
 
-        MarkDirty(key.Key);
-        NotifyChanged(key.Key, oldValue, finalValue);
-        return true;
-    }
-
-    /// <summary>
-    /// [Migration Shim] 设置基础值（stable string 会先解析 catalog，未命中则写入 _legacyData）。
-    /// 优先使用 Set<T>(DataKey<T>, T) typed 重载。
-    /// </summary>
-    public bool Set<T>(string key, T value)
-    {
-        if (_catalog.TryResolve(key, out var typedKey))
-        {
-            return SetUntyped(typedKey, value);
-        }
-
-        object? oldValue = null;
-        if (_legacyData.TryGetValue(key, out var existing))
-        {
-            oldValue = existing;
-            if (Equals(existing, value)) return false;
-        }
-
-        _legacyData[key] = value!;
+        _data[key] = finalValue;
         MarkDirty(key);
-        NotifyChanged(key, oldValue, value);
+        NotifyChanged(key, oldValue, finalValue);
         return true;
-    }
-
-    /// <summary>
-    /// 使用 catalog resolved key 写入未知泛型值。
-    /// </summary>
-    public bool SetUntyped(IDataKey key, object? value)
-    {
-        var converted = ConvertValueBoxed(value ?? key.UntypedDefaultValue!, key.ValueType, key.UntypedDefaultValue!);
-        var method = typeof(Data).GetMethod(nameof(Set), [typeof(DataKey<>).MakeGenericType(key.ValueType), key.ValueType]);
-        if (method == null)
-        {
-            return TrySetSlotUntyped(key, converted);
-        }
-
-        return TrySetSlotUntyped(key, converted);
     }
 
     /// <summary>
@@ -164,49 +102,35 @@ public class Data
     /// <param name="key">键名</param>
     /// <param name="defaultValue">默认值（可选）。如果未提供，将使用 DataMeta 中注册的默认值</param>
     /// <returns>最终计算值</returns>
-    public T Get<T>(DataKey<T> key)
+    public T Get<T>(string key, object? defaultValue = null)
     {
-        // ── 计算键：最高优先级 ────────────────────────────────────────────
-        if (key.IsComputed)
+        // ── 快速路径：未注册键直接查字典，零约束开销 ──────────────────────
+        var meta = DataRegistry.GetMeta(key);
+        if (meta == null)
         {
-            object computedFallback = key.GetDefaultValue();
-            return (T)GetComputedValueBoxed(key.Key, key, computedFallback, typeof(T));
+            object fallback = defaultValue ?? DataMeta.GetTypeDefaultValue(typeof(T));
+            return _data.TryGetValue(key, out var rawValue) && rawValue != null
+                ? (T)ConvertValueBoxed(rawValue, typeof(T), fallback)
+                : (T)fallback;
+        }
+
+        // ── 计算键：最高优先级 ────────────────────────────────────────────
+        if (meta.IsComputed)
+        {
+            object computedFallback = defaultValue ?? meta.GetDefaultValue();
+            return (T)GetComputedValueBoxed(key, meta, computedFallback, typeof(T));
         }
 
         // ── 普通键：查基础值 ──────────────────────────────────────────────
-        object effectiveDefault = key.GetDefaultValue();
-        var keyId = _catalog.GetId(key);
-        if (keyId < 0 || !_slots.TryGetValue(keyId, out var slot) || slot.UntypedValue == null)
+        object effectiveDefault = defaultValue ?? meta.GetDefaultValue();
+        if (!_data.TryGetValue(key, out var baseValue) || baseValue == null)
             return (T)effectiveDefault;
 
         // ── 属性键：有修改器时才进入修改器路径（避免无效进入） ────────────
-        if (key.SupportModifiers == true && _modifiers.ContainsKey(key.Key))
-            return (T)GetModifiedValueBoxed(key.Key, slot.UntypedValue, effectiveDefault, typeof(T));
+        if (meta.SupportModifiers == true && _modifiers.ContainsKey(key))
+            return (T)GetModifiedValueBoxed(key, baseValue, effectiveDefault, typeof(T));
 
-        return (T)ConvertValueBoxed(slot.UntypedValue, typeof(T), effectiveDefault);
-    }
-
-    /// <summary>
-    /// [Migration Shim] 获取最终值（stable string 会先解析 catalog，未命中则查 _legacyData）。
-    /// 优先使用 Get<T>(DataKey<T>) typed 重载。
-    /// </summary>
-    public T Get<T>(string key, object? defaultValue = null)
-    {
-        if (_catalog.TryResolve<T>(key, out var typedKey))
-        {
-            return Get(typedKey);
-        }
-
-        if (_catalog.TryResolve(key, out var rawKey))
-        {
-            object fallback = defaultValue ?? rawKey.UntypedDefaultValue ?? DataMeta.GetTypeDefaultValue(typeof(T));
-            return (T)ConvertValueBoxed(GetUntyped(rawKey), typeof(T), fallback);
-        }
-
-        object legacyFallback = defaultValue ?? DataMeta.GetTypeDefaultValue(typeof(T));
-        return _legacyData.TryGetValue(key, out var rawValue) && rawValue != null
-            ? (T)ConvertValueBoxed(rawValue, typeof(T), legacyFallback)
-            : (T)legacyFallback;
+        return (T)ConvertValueBoxed(baseValue, typeof(T), effectiveDefault);
     }
 
     /// <summary>
@@ -216,33 +140,9 @@ public class Data
     /// <param name="key">键名</param>
     /// <param name="defaultValue">默认值</param>
     /// <returns>基础值</returns>
-    public T GetBase<T>(DataKey<T> key, T defaultValue = default!)
-    {
-        var keyId = _catalog.GetId(key);
-        if (keyId >= 0 && _slots.TryGetValue(keyId, out var slot) && slot.UntypedValue != null)
-        {
-            return (T)ConvertValueBoxed(slot.UntypedValue, typeof(T), defaultValue!);
-        }
-        return defaultValue;
-    }
-
-    /// <summary>
-    /// [Migration Shim] 获取基础值（stable string 会先解析 catalog，未命中则查 _legacyData）。
-    /// 优先使用 GetBase<T>(DataKey<T>) typed 重载。
-    /// </summary>
     public T GetBase<T>(string key, T defaultValue = default!)
     {
-        if (_catalog.TryResolve<T>(key, out var typedKey))
-        {
-            return GetBase(typedKey, defaultValue);
-        }
-
-        if (_catalog.TryResolve(key, out var rawKey))
-        {
-            return (T)ConvertValueBoxed(GetUntypedBase(rawKey), typeof(T), defaultValue!);
-        }
-
-        if (_legacyData.TryGetValue(key, out var value) && value != null)
+        if (_data.TryGetValue(key, out var value) && value != null)
         {
             return (T)ConvertValueBoxed(value, typeof(T), defaultValue!);
         }
@@ -251,21 +151,6 @@ public class Data
 
     /// <summary>
     /// 尝试获取数据值
-    /// </summary>
-    public bool TryGet<T>(DataKey<T> key, out T value)
-    {
-        if (Has(key))
-        {
-            value = Get(key);
-            return true;
-        }
-
-        value = default!;
-        return false;
-    }
-
-    /// <summary>
-    /// 尝试获取数据值（迁移 shim）。
     /// </summary>
     public bool TryGetValue<T>(string key, out T value)
     {
@@ -276,70 +161,31 @@ public class Data
             return true;
         }
         value = default!;
-        return Has(key);
+        return _data.ContainsKey(key);
     }
 
     /// <summary>
     /// 检查是否存在指定的键名
     /// </summary>
-    public bool Has<T>(DataKey<T> key)
-    {
-        var keyId = _catalog.GetId(key);
-        return key.IsComputed || (keyId >= 0 && _slots.ContainsKey(keyId));
-    }
-
-    /// <summary>
-    /// 检查是否存在指定的键名（迁移 shim）。
-    /// </summary>
     public bool Has(string key)
     {
-        if (_catalog.TryResolve(key, out var typedKey))
-        {
-            var keyId = _catalog.GetId(typedKey);
-            return typedKey.IsComputed || (keyId >= 0 && _slots.ContainsKey(keyId));
-        }
-
-        return _legacyData.ContainsKey(key);
+        return _data.ContainsKey(key) || DataRegistry.IsComputed(key);
     }
 
     /// <summary>
     /// 移除指定的数据项
     /// </summary>
-    public bool Remove<T>(DataKey<T> key)
-    {
-        var keyId = _catalog.GetId(key);
-        if (keyId >= 0 && _slots.TryGetValue(keyId, out var oldSlot))
-        {
-            _slots.Remove(keyId);
-            _modifiers.Remove(key.Key);
-            _cachedValues.Remove(key.Key);
-            _dirtyKeys.Remove(key.Key);
-            NotifyChanged(key.Key, oldSlot.UntypedValue, null);
-            return true;
-        }
-        return false;
-    }
-
-    /// <summary>
-    /// 移除指定的数据项（迁移 shim）。
-    /// </summary>
     public bool Remove(string key)
     {
-        if (_catalog.TryResolve(key, out var typedKey))
+        if (_data.TryGetValue(key, out var oldValue))
         {
-            return RemoveUntyped(typedKey);
-        }
-
-        if (_legacyData.TryGetValue(key, out var oldValue))
-        {
-            _legacyData.Remove(key);
+            _data.Remove(key);
             _modifiers.Remove(key);
             _cachedValues.Remove(key);
             _dirtyKeys.Remove(key);
             NotifyChanged(key, oldValue, null);
             return true;
         }
-
         return false;
     }
 
@@ -355,29 +201,11 @@ public class Data
     }
 
     /// <summary>
-    /// 对现有 typed 数值执行加法操作。
-    /// </summary>
-    public void Add<T>(DataKey<T> key, T delta) where T : INumber<T>
-    {
-        var current = GetBase(key, T.Zero);
-        Set(key, current + delta);
-    }
-
-    /// <summary>
     /// 对现有数值执行乘法操作
     /// </summary>
     public void Multiply<T>(string key, T factor) where T : INumber<T>
     {
         var current = GetBase<T>(key, T.Zero);
-        Set(key, current * factor);
-    }
-
-    /// <summary>
-    /// 对现有 typed 数值执行乘法操作。
-    /// </summary>
-    public void Multiply<T>(DataKey<T> key, T factor) where T : INumber<T>
-    {
-        var current = GetBase(key, T.Zero);
         Set(key, current * factor);
     }
 
@@ -399,26 +227,12 @@ public class Data
     /// </summary>
     /// <param name="key">目标数据键</param>
     /// <param name="modifier">修改器实例</param>
-    public bool AddModifier<T>(DataKey<T> key, DataModifier modifier)
-    {
-        if (!key.SupportsModifiers || !key.IsNumeric)
-        {
-            _log.Warn($"数据 '{key.Key}' 不支持数值修改器，已忽略");
-            return false;
-        }
-
-        return AddModifier(key.Key, modifier);
-    }
-
-    /// <summary>
-    /// 添加修改器（迁移 shim）。
-    /// </summary>
-    public bool AddModifier(string key, DataModifier modifier)
+    public void AddModifier(string key, DataModifier modifier)
     {
         if (!DataRegistry.SupportModifiers(key))
         {
             _log.Warn($"数据 '{key}' 不支持修改器，已忽略");
-            return false;
+            return;
         }
 
         if (!_modifiers.TryGetValue(key, out var list))
@@ -430,7 +244,7 @@ public class Data
             if (list[i].Id == modifier.Id)
             {
                 _log.Warn($"ID 为 '{modifier.Id}' 的修改器已存在于 '{key}'，已忽略");
-                return false;
+                return;
             }
         }
 
@@ -444,7 +258,6 @@ public class Data
 
         var finalValue = Get<float>(key);
         NotifyChanged(key, null, finalValue);
-        return true;
     }
 
     /// <summary>
@@ -597,7 +410,7 @@ public class Data
     /// </summary>
     public void Clear()
     {
-        var keys = GetAll().Keys.ToList();
+        var keys = new List<string>(_data.Keys);
         foreach (var key in keys)
         {
             Remove(key);
@@ -612,21 +425,7 @@ public class Data
     /// </summary>
     public Dictionary<string, object> GetAll()
     {
-        var result = new Dictionary<string, object>(StringComparer.Ordinal);
-        foreach (var slot in _slots.Values)
-        {
-            if (slot.UntypedValue != null)
-            {
-                result[slot.Key.Key] = slot.UntypedValue;
-            }
-        }
-
-        foreach (var pair in _legacyData)
-        {
-            result[pair.Key] = pair.Value;
-        }
-
-        return result;
+        return new Dictionary<string, object>(_data);
     }
 
     /// <summary>
@@ -635,12 +434,9 @@ public class Data
     private static readonly Dictionary<Type, (PropertyInfo prop, string key)[]> _resourcePropCache = new();
 
     /// <summary>
-    /// [Migration Shim] 从 snapshot-backed DTO 配置对象加载数据到容器。
-    /// 使用反射遍历属性并写入 string-keyed Set，是旧数据注入路径。
-    /// EntityManager.Spawn 已优先走 RuntimeDataSnapshot.TryApplyConfigToData typed 路径，
-    /// 此方法仅作为非 DataOS DTO 的 fallback。
+    /// 从 DataNew 纯 C# 配置对象加载数据到容器。
     /// </summary>
-    /// <param name="config">snapshot-backed DTO 配置对象。</param>
+    /// <param name="config">DataNew 纯 C# 配置对象。</param>
     public void LoadFromConfig(object config)
     {
         if (config == null) return;
@@ -693,7 +489,7 @@ public class Data
         for (int i = 0; i < metas.Length; i++)
         {
             var meta = metas[i];
-            if (Has(meta.Key))
+            if (_data.ContainsKey(meta.Key))
             {
                 Set(meta.Key, meta.GetDefaultValue());
             }
@@ -717,8 +513,7 @@ public class Data
     /// </summary>
     public void Reset()
     {
-        _slots.Clear();
-        _legacyData.Clear();
+        _data.Clear();
         _modifiers.Clear();
         _cachedValues.Clear();
         _dirtyKeys.Clear();
@@ -727,91 +522,6 @@ public class Data
     }
 
     // ================= 私有方法 =================
-
-    private bool TrySetSlotUntyped(IDataKey key, object? value)
-    {
-        if (key is not DataMeta meta)
-        {
-            return false;
-        }
-
-        if (meta.HasOptions && value != null && !meta.IsValidOption(value))
-        {
-            _log.Error($"无效的选项值: {key.Key} = {value}");
-            return false;
-        }
-
-        var converted = ConvertValueBoxed(value ?? key.UntypedDefaultValue!, key.ValueType, key.UntypedDefaultValue!);
-        converted = meta.Clamp(converted);
-        var keyId = _catalog.GetId(key);
-        if (keyId < 0)
-        {
-            _log.Error($"DataKey 未注册到 catalog: {key.Key}");
-            return false;
-        }
-
-        object? oldValue = null;
-        if (_slots.TryGetValue(keyId, out var slot))
-        {
-            oldValue = slot.UntypedValue;
-            if (Equals(oldValue, converted))
-            {
-                return false;
-            }
-
-            slot.UntypedValue = converted;
-        }
-        else
-        {
-            var slotType = typeof(DataSlot<>).MakeGenericType(key.ValueType);
-            slot = (IDataSlot)Activator.CreateInstance(slotType, key, converted)!;
-            _slots[keyId] = slot;
-        }
-
-        MarkDirty(key.Key);
-        NotifyChanged(key.Key, oldValue, converted);
-        return true;
-    }
-
-    private bool RemoveUntyped(IDataKey key)
-    {
-        var keyId = _catalog.GetId(key);
-        if (keyId >= 0 && _slots.TryGetValue(keyId, out var oldSlot))
-        {
-            _slots.Remove(keyId);
-            _modifiers.Remove(key.Key);
-            _cachedValues.Remove(key.Key);
-            _dirtyKeys.Remove(key.Key);
-            NotifyChanged(key.Key, oldSlot.UntypedValue, null);
-            return true;
-        }
-
-        return false;
-    }
-
-    private object? GetUntyped(IDataKey key)
-    {
-        if (key.IsComputed && key is DataMeta meta)
-        {
-            return GetComputedValueBoxed(key.Key, meta, key.UntypedDefaultValue!, key.ValueType);
-        }
-
-        var baseValue = GetUntypedBase(key);
-        if (key.SupportsModifiers && baseValue != null && _modifiers.ContainsKey(key.Key))
-        {
-            return GetModifiedValueBoxed(key.Key, baseValue, key.UntypedDefaultValue!, key.ValueType);
-        }
-
-        return baseValue ?? key.UntypedDefaultValue;
-    }
-
-    private object? GetUntypedBase(IDataKey key)
-    {
-        var keyId = _catalog.GetId(key);
-        return keyId >= 0 && _slots.TryGetValue(keyId, out var slot)
-            ? slot.UntypedValue
-            : key.UntypedDefaultValue;
-    }
 
     /// <summary>
     /// 获取计算数据的值（带缓存逻辑）
@@ -933,7 +643,7 @@ public class Data
             // 通过 Entity 事件总线广播数据变更
             // 下游监听示例: 
             // entity.Events.On<GameEventType.Data.PropertyChangedEvent>(GameEventType.Data.PropertyChanged, evt => ...);
-            _owner.Events.Publish(new DataEvents.PropertyChanged(key, oldValue, newValue));
+            _owner.Events.Emit(GameEventType.Data.PropertyChanged, new GameEventType.Data.PropertyChangedEventData(key, oldValue, newValue));
         }
     }
 

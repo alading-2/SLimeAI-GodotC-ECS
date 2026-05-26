@@ -18,7 +18,6 @@ public partial class TemplateComponent : Node, IComponent
 
     private IEntity? _entity;
     private Data? _data;
-    private readonly EventSubscriptionCollector _eventSubscriptions = new();
 
     // ================= 属性访问 =================
 
@@ -63,16 +62,18 @@ public partial class TemplateComponent : Node, IComponent
             // 示例1:监听 Data 属性变化(响应 Spawn 后设置的初始数据)
             // ⚠️ 关键: 许多数据(如 SkillLevel, Target)是在 Spawn 之后才设置的
             // 所以必须监听 PropertyChanged 事件,而不是假设它们已经存在
-            _eventSubscriptions.Subscribe<DataEvents.PropertyChanged>(_entity.Events, OnDataChanged);
+            _entity.Events.On<GameEventType.Data.PropertyChangedEventData>(
+                GameEventType.Data.PropertyChanged, OnDataChanged);
 
             // 示例2:跨组件通信 - 监听治疗请求事件
-            _eventSubscriptions.Subscribe<UnitEvents.HealRequest>(_entity.Events, OnHealRequest);
+            _entity.Events.On<GameEventType.Unit.HealRequestEventData>(
+                GameEventType.Unit.HealRequest, OnHealRequest);
         }
     }
 
     public void OnComponentUnregistered()
     {
-        _eventSubscriptions.Clear();
+        // ✅ 无需手动解绑事件(EntityManager会自动调用Events.Clear())
 
         // 清理引用
         _data = null;
@@ -108,7 +109,7 @@ public partial class TemplateComponent : Node, IComponent
     /// <summary>
     /// 示例:监听Data属性变化
     /// </summary>
-    private void OnDataChanged(DataEvents.PropertyChanged evt)
+    private void OnDataChanged(GameEventType.Data.PropertyChangedEventData evt)
     {
         if (evt.Key != DataKey.Name) return;
 
@@ -119,7 +120,7 @@ public partial class TemplateComponent : Node, IComponent
     /// 示例:跨组件通信 - 处理治疗请求
     /// 通过事件而非 GetComponent 实现解耦通信
     /// </summary>
-    private void OnHealRequest(UnitEvents.HealRequest evt)
+    private void OnHealRequest(GameEventType.Unit.HealRequestEventData evt)
     {
         // 处理治疗逻辑
         float healAmount = evt.Amount;

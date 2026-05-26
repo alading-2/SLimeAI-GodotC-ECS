@@ -30,8 +30,6 @@ public partial class ContactDamageComponent : Node, IComponent
     /// <summary>接触目标 -> 伤害计时器的映射表</summary>
     private readonly Dictionary<Node2D, GameTimer> _bodyTimers = new();
 
-    private readonly EventSubscriptionCollector _eventSubscriptions = new();
-
     /// <summary>
     /// 组件注册时初始化，订阅受击区碰撞事件
     /// </summary>
@@ -44,10 +42,10 @@ public partial class ContactDamageComponent : Node, IComponent
         _data = iEntity.Data;
         _team = _data.Get<Team>(DataKey.Team, Team.Neutral);
 
-        _eventSubscriptions.Subscribe<CollisionEvents.HurtboxEntered>(_entity.Events, OnHurtboxEntered);
-        _eventSubscriptions.Subscribe<CollisionEvents.HurtboxExited>(_entity.Events, OnHurtboxExited);
-        _eventSubscriptions.Subscribe<UnitEvents.Killed>(_entity.Events, OnKilled);
-        _eventSubscriptions.Subscribe<UnitEvents.Revived>(_entity.Events, OnRevived);
+        _entity.Events.On<GameEventType.Collision.HurtboxEnteredEventData>(GameEventType.Collision.HurtboxEntered, OnHurtboxEntered);
+        _entity.Events.On<GameEventType.Collision.HurtboxExitedEventData>(GameEventType.Collision.HurtboxExited, OnHurtboxExited);
+        _entity.Events.On<GameEventType.Unit.KilledEventData>(GameEventType.Unit.Killed, OnKilled);
+        _entity.Events.On<GameEventType.Unit.RevivedEventData>(GameEventType.Unit.Revived, OnRevived);
 
         _log.Debug($"[{entity.Name}] 接触伤害处理组件注册完成，阵营={_team}，开始监听局部碰撞事件。");
     }
@@ -57,7 +55,6 @@ public partial class ContactDamageComponent : Node, IComponent
     /// </summary>
     public void OnComponentUnregistered()
     {
-        _eventSubscriptions.Clear();
         CancelAllBodyTimers();
         _contactBodies.Clear();
         _entity = null;
@@ -71,7 +68,7 @@ public partial class ContactDamageComponent : Node, IComponent
     /// 3. 创建循环计时器，按攻击间隔持续造成伤害
     /// </summary>
     /// <param name="evt">受击区进入事件数据</param>
-    private void OnHurtboxEntered(CollisionEvents.HurtboxEntered evt)
+    private void OnHurtboxEntered(GameEventType.Collision.HurtboxEnteredEventData evt)
     {
         var attacker = evt.Target;
         if (!IsInstanceValid(attacker)) return;
@@ -91,7 +88,7 @@ public partial class ContactDamageComponent : Node, IComponent
     /// 受击区退出事件处理：取消对应目标的伤害计时器
     /// </summary>
     /// <param name="evt">受击区退出事件数据</param>
-    private void OnHurtboxExited(CollisionEvents.HurtboxExited evt)
+    private void OnHurtboxExited(GameEventType.Collision.HurtboxExitedEventData evt)
     {
         _contactBodies.Remove(evt.Target);
         CancelBodyTimer(evt.Target);
@@ -101,7 +98,7 @@ public partial class ContactDamageComponent : Node, IComponent
     /// 死亡事件处理：立即暂停所有持续接触伤害，但保留当前接触集合，供复活后恢复
     /// </summary>
     /// <param name="evt">死亡事件数据</param>
-    private void OnKilled(UnitEvents.Killed evt)
+    private void OnKilled(GameEventType.Unit.KilledEventData evt)
     {
         CancelAllBodyTimers();
     }
@@ -110,7 +107,7 @@ public partial class ContactDamageComponent : Node, IComponent
     /// 复活事件处理：若复活完成时仍与敌人重叠，重新建立持续接触伤害
     /// </summary>
     /// <param name="evt">复活完成事件数据</param>
-    private void OnRevived(UnitEvents.Revived evt)
+    private void OnRevived(GameEventType.Unit.RevivedEventData evt)
     {
         ResumeContactDamage();
     }
