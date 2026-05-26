@@ -1,8 +1,25 @@
 using Godot;
 using System.Collections.Generic;
 
+// ==================================================================================
+// GlobalEvents — 框架级全局事件 payload 定义
+// ==================================================================================
+//
+// 此文件集中定义框架级 IGlobalEvent payload。所有事件均为 readonly record struct。
+//
+// 事件归属规则：
+//   - 框架级全局事件（跨实体、跨系统）→ 本文件 GlobalEvents
+//   - 模块专属事件 → 跟随 owner 模块目录（如 AbilityEvents.cs、UnitEvents.cs）
+//   - 游戏专属事件 → 游戏侧事件目录，不放框架核心
+//
+// payload 设计约束：
+//   - 必须是 readonly record struct（值类型、不可变、自动实现相等性）
+//   - 框架级 payload 不包含 Godot engine type（Vector2 等 Godot 基础类型除外）
+//   - 事件名使用过去式或完成式（EntitySpawned 而非 EntitySpawn）
+// ==================================================================================
+
 /// <summary>
-/// World 级全局事件。
+/// 框架级全局事件 payload。所有事件实现 IGlobalEvent，在 WorldEventBus 发布和订阅。
 /// </summary>
 public static class GlobalEvents
 {
