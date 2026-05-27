@@ -70,11 +70,11 @@ public static class DataTable
         public static readonly Dictionary<string, T> ByName = BuildByName(All);
 
         /// <summary>
-        /// 从 DataOS runtime snapshot 构建数据行。
+        /// 旧 typed DTO 数据表已迁移到 DataOS snapshot + SnapshotLoader，此处暂返回空列表作为兼容占位。
         /// </summary>
         private static IReadOnlyList<T> BuildAll()
         {
-            return RuntimeDataSnapshot.GetAll<T>();
+            return Array.Empty<T>();
         }
 
         /// <summary>
