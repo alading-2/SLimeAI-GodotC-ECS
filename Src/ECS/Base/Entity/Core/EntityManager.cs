@@ -47,6 +47,12 @@ public readonly record struct EntitySpawnConfig
 
     /// <summary>父实体销毁时对子实体的处理策略（默认级联销毁）</summary>
     public ParentDestroyPolicy ParentDestroyPolicy { get; init; }
+
+    /// <summary>Snapshot 表名（可选；与 SnapshotId 配合，在 Spawn 阶段自动通过 SnapshotLoader 加载数据，优先级高于 POCO 反射）</summary>
+    public string? SnapshotTable { get; init; }
+
+    /// <summary>Snapshot 记录 ID（可选；在 Spawn 阶段通过 SnapshotLoader 加载对应记录的字段到 entity.Data）</summary>
+    public string? SnapshotId { get; init; }
 }
 
 /// <summary>
@@ -200,8 +206,14 @@ public static partial class EntityManager
         string id = entity.GetInstanceId().ToString();
         entity.Data.Set(DataKey.Id, id);
 
-        // 2. 数据注入 (从 Resource)
+        // 2. 数据注入 (从 Resource/POCO)
         entity.Data.LoadFromConfig(config.Config);
+
+        // 2.5. Snapshot 数据注入（优先级高于 POCO 反射，后写覆盖前写；VisualScenePath 也在此写入）
+        if (!string.IsNullOrEmpty(config.SnapshotTable) && !string.IsNullOrEmpty(config.SnapshotId))
+        {
+            SnapshotLoader.Apply(SnapshotLoader.DefaultSnapshotPath, entity.Data, config.SnapshotTable, config.SnapshotId);
+        }
 
         // 3. 自动加载 VisualScene (如有)
         InjectVisualScene(
@@ -296,6 +308,16 @@ public static partial class EntityManager
                         path, // res:// 场景路径
                         $"{entity.Name} 视觉"); // 日志用途名称
                 }
+            }
+        }
+
+        // 配置对象无 VisualScenePath 时，回退到 entity.Data（由 SnapshotLoader 写入）
+        if (scene == null && entity is IEntity entityData)
+        {
+            var pathFromData = entityData.Data.Get<string>(DataKey.VisualScenePath);
+            if (!string.IsNullOrEmpty(pathFromData))
+            {
+                scene = CommonTool.LoadPackedScene(pathFromData, $"{entity.Name} 视觉");
             }
         }
 

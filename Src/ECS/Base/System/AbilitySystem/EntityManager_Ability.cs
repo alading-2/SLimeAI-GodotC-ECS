@@ -19,6 +19,37 @@ public static partial class EntityManager
     // ==================== Ability 管理 ====================
 
     /// <summary>
+    /// 从 runtime_snapshot 为单位添加技能（snapshot-first 路径，数据由 SnapshotLoader 加载）。
+    /// </summary>
+    /// <param name="owner">技能拥有者。</param>
+    /// <param name="snapshotId">snapshot 中的技能记录 ID（如 "ability.dash"）。</param>
+    /// <returns>创建的技能实体，失败返回 null。</returns>
+    public static AbilityEntity? AddAbility(IEntity owner, string snapshotId)
+    {
+        // 先读一次 snapshot 获取 Name 和 FeatureHandlerId，再走统一核心路径
+        var tempData = new Data();
+        SnapshotLoader.Apply(SnapshotLoader.DefaultSnapshotPath, tempData, "ability", snapshotId);
+        var name = tempData.Get<string>(DataKey.Name);
+        var handlerId = tempData.Get<string>(DataKey.FeatureHandlerId);
+
+        if (string.IsNullOrEmpty(name))
+        {
+            _abilityLog.Error($"无法从 snapshot 加载技能: id={snapshotId}");
+            return null;
+        }
+
+        return AddAbilityCore(
+            owner, // 技能拥有者
+            new object(), // 空占位 config，数据由 snapshot 注入
+            name, // 技能名称
+            handlerId, // FeatureHandlerId
+            validateAbilityHandler: true, // 技能必须绑定处理器
+            snapshotTable: "ability", // snapshot 表
+            snapshotId: snapshotId // snapshot 记录 ID
+        );
+    }
+
+    /// <summary>
     /// 为单位添加 DataNew 纯 C# 技能。
     /// </summary>
     /// <param name="owner">技能拥有者。</param>
@@ -66,7 +97,9 @@ public static partial class EntityManager
         object config,
         string abilityName,
         string handlerIdFromConfig,
-        bool validateAbilityHandler)
+        bool validateAbilityHandler,
+        string? snapshotTable = null,
+        string? snapshotId = null)
     {
         if (owner == null)
         {
@@ -98,6 +131,8 @@ public static partial class EntityManager
         ability = Spawn<AbilityEntity>(new EntitySpawnConfig
         {
             Config = config, // 技能配置数据
+            SnapshotTable = snapshotTable, // snapshot 表名（snapshot-first 路径）
+            SnapshotId = snapshotId, // snapshot 记录 ID（snapshot-first 路径）
             UsingObjectPool = true, // 技能实体统一走对象池
             PoolName = ObjectPoolNames.AbilityPool, // 技能对象池
             ParentEntity = owner, // 父实体/技能拥有者
