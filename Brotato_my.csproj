@@ -9,6 +9,7 @@
     <ItemGroup>
         <Compile Remove="备份\**" />
         <Compile Remove="Tools\**" />
+        <Compile Remove="Data\DataOld\**" />
     </ItemGroup>
     <ItemGroup>
         <Folder Include=".godot\" />

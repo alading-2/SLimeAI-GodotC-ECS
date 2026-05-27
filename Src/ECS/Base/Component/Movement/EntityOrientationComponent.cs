@@ -48,17 +48,12 @@ public partial class EntityOrientationComponent : Node, IComponent
         _visualSprite = ResolveVisualSprite(node);
 
         // 订阅运动生命周期事件，用于跟随运动朝向的启停联动
-        _entity.Events.On<GameEventType.Unit.MovementStarted>(
-            GameEventType.Unit.MovementStarted, OnMovementStarted);
-        _entity.Events.On<GameEventType.Unit.MovementCompleted>(
-            GameEventType.Unit.MovementCompleted, OnMovementCompleted);
-        _entity.Events.On<GameEventType.Unit.MovementStopRequested>(
-            GameEventType.Unit.MovementStopRequested, OnMovementStopRequested);
+        _entity.Events.On<GameEventType.Unit.MovementStarted>(OnMovementStarted);
+        _entity.Events.On<GameEventType.Unit.MovementCompleted>(OnMovementCompleted);
+        _entity.Events.On<GameEventType.Unit.MovementStopRequested>(OnMovementStopRequested);
         // 订阅朝向控制事件，用于外部主动启停
-        _entity.Events.On<GameEventType.Unit.OrientationStarted>(
-            GameEventType.Unit.OrientationStarted, OnOrientationStarted);
-        _entity.Events.On<GameEventType.Unit.OrientationStopped>(
-            GameEventType.Unit.OrientationStopped, OnOrientationStopped);
+        _entity.Events.On<GameEventType.Unit.OrientationStarted>(OnOrientationStarted);
+        _entity.Events.On<GameEventType.Unit.OrientationStopped>(OnOrientationStopped);
 
         ResetOrientationState(GetCurrentPresentedAngle()); // 初始化默认跟随输出状态
     }

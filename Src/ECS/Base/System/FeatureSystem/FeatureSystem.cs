@@ -1,5 +1,6 @@
 using Godot.Collections;
 using System.Collections.Generic;
+using slime.data.Features;
 
 /// <summary>
 /// Feature 系统 - 管理 Feature 完整生命周期
@@ -225,7 +226,7 @@ public static class FeatureSystem
     private static void ApplyModifiers(IEntity feature, IEntity owner)
     {
         var raw = feature.Data.Get<object>(DataKey.FeatureModifiers);
-        if (raw is not Array<FeatureModifierEntry> modifiers || modifiers.Count == 0) return;
+        if (raw is not List<FeatureModifierEntryData> modifiers || modifiers.Count == 0) return;
 
         int applied = 0;
         foreach (var entry in modifiers)

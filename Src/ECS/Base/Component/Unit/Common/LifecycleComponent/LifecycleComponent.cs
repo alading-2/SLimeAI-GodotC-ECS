@@ -99,16 +99,13 @@ public partial class LifecycleComponent : Node, IComponent
         }
 
         // ✅ 全局监听 Kill 事件（通过 Victim 筛选是否是自己）
-        GlobalEventBus.Global.On<GameEventType.Unit.Killed>(
-            GameEventType.Unit.Killed, OnUnitKilled);
+        GlobalEventBus.Global.On<GameEventType.Unit.Killed>(OnUnitKilled);
 
         // ✅ 监听数据变化事件（处理 Spawn 后动态设置 MaxLifeTime 的场景）
-        _entity?.Events.On<GameEventType.Data.PropertyChanged>(
-            GameEventType.Data.PropertyChanged, OnDataChanged);
+        _entity?.Events.On<GameEventType.Data.PropertyChanged>(OnDataChanged);
 
         // ✅ 监听动画播放完毕事件（Hero 死亡动画结束后启动复活，普通单位延迟销毁）
-        _entity?.Events.On<GameEventType.Unit.AnimationFinished>(
-            GameEventType.Unit.AnimationFinished, OnAnimationFinished);
+        _entity?.Events.On<GameEventType.Unit.AnimationFinished>(OnAnimationFinished);
 
         // 初始化状态为 Alive，确保单位生成后立即可用
         ChangeState(LifecycleState.Alive);
@@ -155,8 +152,7 @@ public partial class LifecycleComponent : Node, IComponent
     public void OnComponentUnregistered()
     {
         // Cancel global event subscription
-        GlobalEventBus.Global.Off<GameEventType.Unit.Killed>(
-            GameEventType.Unit.Killed, OnUnitKilled);
+        GlobalEventBus.Global.Off<GameEventType.Unit.Killed>(OnUnitKilled);
 
         // 取消计时器
         _lifeTimer?.Cancel();

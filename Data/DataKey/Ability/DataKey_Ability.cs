@@ -338,4 +338,5 @@ public static partial class DataKey
             Key = nameof(CurrentActiveAbilityIndex), DisplayName = "当前激活技能索引", Category = DataCategory_Ability.Input,
             Type = typeof(int), DefaultValue = 0, MinValue = 0
         });
+
 }

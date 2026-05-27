@@ -449,6 +449,9 @@ public partial class AttributeTestModule : TestModuleBase
     /// </summary>
     private static string GetMetaKey(DataMeta meta) => meta.Key;
 
+    /// <summary>获取 DataKey<T> 的键名（重载，避免 DataKey<T>→DataMeta 转换错误）</summary>
+    private static string GetMetaKey(IDataKey key) => key.Key;
+
     private static Control CreateInlineErrorLabel(string message)
     {
         return new Label
@@ -566,9 +569,7 @@ public partial class AttributeTestModule : TestModuleBase
         }
 
         _subscribedEntity = selectedEntity;
-        _subscribedEntity.Events.On<GameEventType.Data.PropertyChanged>(
-            GameEventType.Data.PropertyChanged,
-            OnEntityDataChanged
+        _subscribedEntity.Events.On<GameEventType.Data.PropertyChanged>(OnEntityDataChanged
         );
     }
 
@@ -582,9 +583,7 @@ public partial class AttributeTestModule : TestModuleBase
             return;
         }
 
-        _subscribedEntity.Events.Off<GameEventType.Data.PropertyChanged>(
-            GameEventType.Data.PropertyChanged,
-            OnEntityDataChanged
+        _subscribedEntity.Events.Off<GameEventType.Data.PropertyChanged>(OnEntityDataChanged
         );
         _subscribedEntity = null;
     }

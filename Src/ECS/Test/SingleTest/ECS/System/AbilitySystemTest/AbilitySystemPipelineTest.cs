@@ -73,7 +73,7 @@ public partial class AbilitySystemPipelineTest : Node
 
         var ownerId = owner.GetInstanceId().ToString();
         owner.Data.Set(DataKey.Id, ownerId);
-        owner.Data.Set(DataKey.Name, owner.Name);
+        owner.Data.Set(DataKey.Name, (string)owner.Name);
         owner.Data.Set(DataKey.CurrentMana, 50f);
 
         var abilityId = ability.GetInstanceId().ToString();
@@ -99,9 +99,7 @@ public partial class AbilitySystemPipelineTest : Node
 
         var costComponent = new CostComponent();
         EntityManager.AddComponent(ability, costComponent);
-        ability.Events.On<GameEventType.Ability.TryTrigger>(
-            GameEventType.Ability.TryTrigger,
-            AbilitySystem.HandleTryTrigger
+        ability.Events.On<GameEventType.Ability.TryTrigger>(AbilitySystem.HandleTryTrigger
         );
 
         AbilitySystemPipelineTestHandler.ExecuteCount = 0;
@@ -160,7 +158,7 @@ public partial class AbilitySystemPipelineTest : Node
 
         var ownerId = owner.GetInstanceId().ToString();
         owner.Data.Set(DataKey.Id, ownerId);
-        owner.Data.Set(DataKey.Name, owner.Name);
+        owner.Data.Set(DataKey.Name, (string)owner.Name);
         owner.Data.Set(DataKey.CurrentMana, 30f);
         owner.Data.Set(DataKey.AbilityDamageBonus, 150f);
 
@@ -188,9 +186,7 @@ public partial class AbilitySystemPipelineTest : Node
 
         var costComponent = new CostComponent();
         EntityManager.AddComponent(ability, costComponent);
-        ability.Events.On<GameEventType.Ability.TryTrigger>(
-            GameEventType.Ability.TryTrigger,
-            AbilitySystem.HandleTryTrigger
+        ability.Events.On<GameEventType.Ability.TryTrigger>(AbilitySystem.HandleTryTrigger
         );
 
         AbilityToolPipelineTestHandler.ExecuteCount = 0;

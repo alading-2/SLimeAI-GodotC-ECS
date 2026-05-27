@@ -111,7 +111,7 @@ public static class AbilitySystem
             Owner = abilityContext.Caster,
             Feature = ability,
             ActivationData = abilityContext,
-            Source = abilityContext.Source
+            Source = abilityContext.SourceEventData
         };
         FeatureSystem.OnFeatureActivated(featureCtx);
 

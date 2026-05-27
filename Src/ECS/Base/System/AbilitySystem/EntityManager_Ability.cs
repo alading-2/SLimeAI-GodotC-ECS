@@ -3,7 +3,7 @@
 // 放在 AbilitySystem 目录下，逻辑上属于 Ability 模块
 
 using System.Collections.Generic;
-using slime.config.Features;
+using slime.data.Features;
 using slime.data.Abilities;
 
 /// <summary>
@@ -41,7 +41,7 @@ public static partial class EntityManager
     /// <param name="owner">技能拥有者。</param>
     /// <param name="config">运行时 Feature 定义。</param>
     /// <returns>创建的技能实体，失败返回 null。</returns>
-    public static AbilityEntity? AddAbility(IEntity owner, FeatureDefinition config)
+    public static AbilityEntity? AddAbility(IEntity owner, FeatureDefinitionData config)
     {
         return AddAbilityCore(
             owner, // 技能拥有者
@@ -131,9 +131,7 @@ public static partial class EntityManager
         var ownerId = owner.Data.Get<string>(DataKey.Id) ?? string.Empty;
 
         // 核心逻辑连通：订阅 TryTrigger 事件，由 AbilitySystem 统一处理
-        ability.Events.On<GameEventType.Ability.TryTrigger>(
-            GameEventType.Ability.TryTrigger,
-            AbilitySystem.HandleTryTrigger
+        ability.Events.On<GameEventType.Ability.TryTrigger>(AbilitySystem.HandleTryTrigger
         );
 
         // 发送事件

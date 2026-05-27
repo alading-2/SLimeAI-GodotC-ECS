@@ -42,11 +42,9 @@ public partial class ActiveSkillInputComponent : Node, IComponent
             _data = iEntity.Data;
 
             // 订阅技能增删事件，标记缓存失效
-            _entity.Events.On<GameEventType.Ability.Added>(
-                GameEventType.Ability.Added, _ => _abilitiesDirty = true
+            _entity.Events.On<GameEventType.Ability.Added>(_ => _abilitiesDirty = true
             );
-            _entity.Events.On<GameEventType.Ability.Removed>(
-                GameEventType.Ability.Removed, _ => _abilitiesDirty = true
+            _entity.Events.On<GameEventType.Ability.Removed>(_ => _abilitiesDirty = true
             );
 
             _log.Info($"主动技能输入组件已注册到实体: {entity.Name}");

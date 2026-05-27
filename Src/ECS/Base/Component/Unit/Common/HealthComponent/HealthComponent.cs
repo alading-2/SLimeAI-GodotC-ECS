@@ -49,8 +49,7 @@ public partial class HealthComponent : Node, IComponent
             _data = iEntity.Data;
 
             // ✅ 监听治疗请求事件（命令事件）
-            _entity.Events.On<GameEventType.Unit.HealRequest>(
-                GameEventType.Unit.HealRequest, ApplyHeal);
+            _entity.Events.On<GameEventType.Unit.HealRequest>(ApplyHeal);
         }
 
     }

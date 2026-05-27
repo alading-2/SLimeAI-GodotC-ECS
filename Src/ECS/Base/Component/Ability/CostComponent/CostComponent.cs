@@ -58,16 +58,12 @@ public partial class CostComponent : Node, IComponent
         if (_entity == null) return;
 
         // 监听请求检查可用性事件
-        _entity.Events.On<GameEventType.Ability.CheckCanUse>(
-            GameEventType.Ability.CheckCanUse,
-            OnCheckCanUse,
+        _entity.Events.On<GameEventType.Ability.CheckCanUse>(OnCheckCanUse,
             (int)AbilityCheckPhase.Cost
         );
 
         // 监听消耗成本请求事件
-        _entity.Events.On<GameEventType.Ability.ConsumeCost>(
-            GameEventType.Ability.ConsumeCost,
-            OnConsumeCost
+        _entity.Events.On<GameEventType.Ability.ConsumeCost>(OnConsumeCost
         );
     }
 
