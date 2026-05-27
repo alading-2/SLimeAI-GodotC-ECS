@@ -9,7 +9,7 @@
 /// </para>
 /// <para>
 /// 每次运动的输入参数（目标点、最大距离/时长、波形参数等）已迁移到 <see cref="MovementParams"/>，
-/// 通过 <see cref="UnitEvents.MovementStarted"/> 传入，存于 EntityMovementComponent。
+/// 通过 <see cref="GameEventType.Unit.MovementStarted"/> 传入，存于 EntityMovementComponent。
 /// 策略运行时内部状态（角度、起点、LUT 等）存于各策略类的私有字段。
 /// </para>
 /// </summary>

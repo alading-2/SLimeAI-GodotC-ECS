@@ -49,8 +49,8 @@ internal class SineWaveShotExecutor : AbilityFeatureHandler
         );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
-        projectile.Events.Publish(
-            new UnitEvents.MovementStarted(
+        projectile.Events.Emit(
+            new GameEventType.Unit.MovementStarted(
                 MoveMode.SineWave, // 移动模式：正弦波
                 new MovementParams
                 {

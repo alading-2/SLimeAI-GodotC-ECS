@@ -39,7 +39,7 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
         );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
-        projectile.Events.Publish(new UnitEvents.MovementStarted(
+        projectile.Events.Emit(new GameEventType.Unit.MovementStarted(
                 MoveMode.Boomerang,
                 new MovementParams
                 {
