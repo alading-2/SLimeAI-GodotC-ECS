@@ -56,7 +56,6 @@ public static partial class EntityManager
         );
 
         GlobalEventBus.Global.Emit(
-            GameEventType.Global.EntityMigrating,
             new GameEventType.Global.EntityMigrating(
                 sourceIEntity, // 源实体
                 typeof(TTarget).Name, // 目标实体类型名
@@ -95,7 +94,6 @@ public static partial class EntityManager
             );
 
             GlobalEventBus.Global.Emit(
-                GameEventType.Global.EntityMigrated,
                 new GameEventType.Global.EntityMigrated(
                     sourceIEntity, // 源实体
                     targetEntity, // 目标实体

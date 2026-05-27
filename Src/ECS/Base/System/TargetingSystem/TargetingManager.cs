@@ -47,25 +47,21 @@ public static class TargetingManager
 
         // 订阅瞄准开始事件
         GlobalEventBus.Global.On<GameEventType.Targeting.StartTargeting>(
-            GameEventType.Targeting.StartTargeting,
             OnStartTargeting
         );
 
         // 订阅瞄准确认事件
         GlobalEventBus.Global.On<GameEventType.Targeting.TargetConfirmed>(
-            GameEventType.Targeting.TargetConfirmed,
             OnTargetConfirmed
         );
 
         // 订阅瞄准取消事件
         GlobalEventBus.Global.On<GameEventType.Targeting.TargetCancelled>(
-            GameEventType.Targeting.TargetCancelled,
             OnTargetCancelled
         );
 
         // 订阅单位死亡事件（玩家死亡时取消瞄准）
         GlobalEventBus.Global.On<GameEventType.Unit.Killed>(
-            GameEventType.Unit.Killed,
             OnUnitKilled
         );
 
@@ -81,22 +77,18 @@ public static class TargetingManager
         if (!_isSubscribed) return;
 
         GlobalEventBus.Global.Off<GameEventType.Targeting.StartTargeting>(
-            GameEventType.Targeting.StartTargeting,
             OnStartTargeting
         );
 
         GlobalEventBus.Global.Off<GameEventType.Targeting.TargetConfirmed>(
-            GameEventType.Targeting.TargetConfirmed,
             OnTargetConfirmed
         );
 
         GlobalEventBus.Global.Off<GameEventType.Targeting.TargetCancelled>(
-            GameEventType.Targeting.TargetCancelled,
             OnTargetCancelled
         );
 
         GlobalEventBus.Global.Off<GameEventType.Unit.Killed>(
-            GameEventType.Unit.Killed,
             OnUnitKilled
         );
 
@@ -165,7 +157,6 @@ public static class TargetingManager
         var responseContext = new EventContext();
         CurrentContext.ResponseContext = responseContext;
         CurrentAbility.Events.Emit(
-            GameEventType.Ability.TryTrigger,
             new GameEventType.Ability.TryTrigger(CurrentContext) //施法上下文
         );
 
@@ -272,7 +263,6 @@ public static class TargetingManager
 
         // 发送瞄准结束事件
         GlobalEventBus.Global.Emit(
-            GameEventType.Targeting.TargetingEnded,
             new GameEventType.Targeting.TargetingEnded(wasConfirmed)
         );
 

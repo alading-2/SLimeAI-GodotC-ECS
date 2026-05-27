@@ -46,19 +46,16 @@ public partial class ActiveSkillBarUI : UIBase
     {
         // 订阅技能添加事件
         _entity!.Events.On<GameEventType.Ability.Added>(
-            GameEventType.Ability.Added,
             OnAbilityAdded
         );
 
         // 订阅技能移除事件
         _entity!.Events.On<GameEventType.Ability.Removed>(
-            GameEventType.Ability.Removed,
             OnAbilityRemoved
         );
 
         // 订阅技能切换事件
         _entity!.Events.On<GameEventType.UI.ActiveSkillSelected>(
-            GameEventType.UI.ActiveSkillSelected,
             OnActiveSkillSelected
         );
 
@@ -75,17 +72,14 @@ public partial class ActiveSkillBarUI : UIBase
     protected override void OnUnbind()
     {
         _entity!.Events.Off<GameEventType.Ability.Added>(
-            GameEventType.Ability.Added,
             OnAbilityAdded
         );
 
         _entity!.Events.Off<GameEventType.Ability.Removed>(
-            GameEventType.Ability.Removed,
             OnAbilityRemoved
         );
 
         _entity!.Events.Off<GameEventType.UI.ActiveSkillSelected>(
-            GameEventType.UI.ActiveSkillSelected,
             OnActiveSkillSelected
         );
 

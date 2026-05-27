@@ -59,7 +59,6 @@ public partial class EntityMovementComponent
         if (collision.EmitCollisionEvent)
         {
             _entity.Events.Emit(
-                GameEventType.Unit.MovementCollision,
                 new GameEventType.Unit.MovementCollision(
                     context.Mode,
                     context.TargetNode,
@@ -79,7 +78,6 @@ public partial class EntityMovementComponent
         }
 
         _entity.Events.Emit(
-            GameEventType.Unit.MovementStopRequested,
             new GameEventType.Unit.MovementStopRequested
             {
                 Reason = MovementStopReason.Collision,

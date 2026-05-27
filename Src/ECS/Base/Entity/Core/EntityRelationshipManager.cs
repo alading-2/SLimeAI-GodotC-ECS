@@ -154,7 +154,6 @@ public static class EntityRelationshipManager
 
         // 广播关系添加事件
         GlobalEventBus.Global.Emit(
-            GameEventType.Global.RelationshipAdded,
             new GameEventType.Global.RelationshipAdded(
                 parentId, // 父实体Id
                 childId, // 子实体Id
@@ -191,7 +190,6 @@ public static class EntityRelationshipManager
 
         // 广播关系移除事件
         GlobalEventBus.Global.Emit(
-            GameEventType.Global.RelationshipRemoved,
             new GameEventType.Global.RelationshipRemoved(
                 parentId, // 父实体Id
                 childId, // 子实体Id

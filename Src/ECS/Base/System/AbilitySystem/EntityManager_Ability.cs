@@ -132,13 +132,11 @@ public static partial class EntityManager
 
         // 核心逻辑连通：订阅 TryTrigger 事件，由 AbilitySystem 统一处理
         ability.Events.On<GameEventType.Ability.TryTrigger>(
-            GameEventType.Ability.TryTrigger,
             AbilitySystem.HandleTryTrigger
         );
 
         // 发送事件
         owner.Events.Emit(
-            GameEventType.Ability.Added,
             new GameEventType.Ability.Added(ability, owner)
         );
 
@@ -221,7 +219,6 @@ public static partial class EntityManager
 
         // 发送事件
         owner.Events.Emit(
-            GameEventType.Ability.Removed,
             new GameEventType.Ability.Removed(abilityName, abilityId, owner)
         );
 

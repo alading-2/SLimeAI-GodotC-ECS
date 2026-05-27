@@ -49,7 +49,6 @@ public static class FeatureSystem
 
         // 3. 发出 Granted 事件（Owner 局部总线）
         owner.Events.Emit(
-            GameEventType.Feature.Granted,
             new GameEventType.Feature.Granted(feature, owner)
         );
 
@@ -76,7 +75,6 @@ public static class FeatureSystem
 
         // 3. 发出 Removed 事件
         owner.Events.Emit(
-            GameEventType.Feature.Removed,
             new GameEventType.Feature.Removed(name, owner)
         );
 
@@ -115,7 +113,6 @@ public static class FeatureSystem
 
         // 2. 发出 Activated 事件（Feature 局部总线），表示本次运行已开始
         ctx.Feature.Events.Emit(
-            GameEventType.Feature.Activated,
             new GameEventType.Feature.Activated(ctx)
         );
 
@@ -138,7 +135,6 @@ public static class FeatureSystem
 
         // 5. 发出 Executed 事件（Feature 局部总线），表示核心效果已执行
         ctx.Feature.Events.Emit(
-            GameEventType.Feature.Executed,
             new GameEventType.Feature.Executed(ctx)
         );
     }
@@ -168,7 +164,6 @@ public static class FeatureSystem
 
         // 发出 Ended 事件（Feature 局部总线）
         ctx.Feature.Events.Emit(
-            GameEventType.Feature.Ended,
             new GameEventType.Feature.Ended(ctx, reason)
         );
     }
@@ -188,7 +183,6 @@ public static class FeatureSystem
         FeatureHandlerRegistry.Get(handlerId)?.OnEnabled(ctx);
 
         owner.Events.Emit(
-            GameEventType.Feature.Enabled,
             new GameEventType.Feature.Enabled(feature, owner)
         );
 
@@ -208,7 +202,6 @@ public static class FeatureSystem
         FeatureHandlerRegistry.Get(handlerId)?.OnDisabled(ctx);
 
         owner.Events.Emit(
-            GameEventType.Feature.Disabled,
             new GameEventType.Feature.Disabled(feature, owner)
         );
 

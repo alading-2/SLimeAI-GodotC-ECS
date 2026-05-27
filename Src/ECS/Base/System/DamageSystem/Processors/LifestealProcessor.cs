@@ -36,8 +36,7 @@ public class LifestealProcessor : IDamageProcessor
             // float LifeSteal = 1;
             float LifeSteal = info.FinalDamage * (lifestealChance / 100);
             // 发送治疗请求事件到正确的 IUnit（角色）
-            targetUnit.Events.Emit(GameEventType.Unit.HealRequest,
-                new GameEventType.Unit.HealRequest(LifeSteal, HealSource.Lifesteal));
+            targetUnit.Events.Emit(new GameEventType.Unit.HealRequest(LifeSteal, HealSource.Lifesteal));
             info.AddLog($"触发吸血 (恢复 {LifeSteal} 生命值)");
         }
     }

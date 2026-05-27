@@ -567,7 +567,6 @@ public partial class AttributeTestModule : TestModuleBase
 
         _subscribedEntity = selectedEntity;
         _subscribedEntity.Events.On<GameEventType.Data.PropertyChanged>(
-            GameEventType.Data.PropertyChanged,
             OnEntityDataChanged
         );
     }
@@ -583,7 +582,6 @@ public partial class AttributeTestModule : TestModuleBase
         }
 
         _subscribedEntity.Events.Off<GameEventType.Data.PropertyChanged>(
-            GameEventType.Data.PropertyChanged,
             OnEntityDataChanged
         );
         _subscribedEntity = null;

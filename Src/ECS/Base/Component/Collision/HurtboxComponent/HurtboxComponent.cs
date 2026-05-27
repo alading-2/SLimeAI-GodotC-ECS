@@ -73,16 +73,14 @@ public partial class HurtboxComponent : Area2D, IComponent
     {
         if (_entity == null || !IsInstanceValid(target)) return;
         var targetEntity = ResolveOwningEntity(target);
-        _entity.Events.Emit(GameEventType.Collision.HurtboxEntered,
-            new GameEventType.Collision.HurtboxEntered(_entity, this, target, targetEntity));
+        _entity.Events.Emit(new GameEventType.Collision.HurtboxEntered(_entity, this, target, targetEntity));
     }
 
     private void EmitExited(Node2D target)
     {
         if (_entity == null || !IsInstanceValid(target)) return;
         var targetEntity = ResolveOwningEntity(target);
-        _entity.Events.Emit(GameEventType.Collision.HurtboxExited,
-            new GameEventType.Collision.HurtboxExited(_entity, this, target, targetEntity));
+        _entity.Events.Emit(new GameEventType.Collision.HurtboxExited(_entity, this, target, targetEntity));
     }
 
     // ================= 工具 =================

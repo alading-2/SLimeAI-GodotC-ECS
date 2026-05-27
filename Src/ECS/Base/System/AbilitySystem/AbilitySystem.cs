@@ -64,7 +64,6 @@ public static class AbilitySystem
         if (ability.Data.Get<bool>(DataKey.IsAbilityUsesCharges))
         {
             ability.Events.Emit(
-                GameEventType.Ability.ConsumeCharge,
                 new GameEventType.Ability.ConsumeCharge(consumeContext)
             );
         }
@@ -85,7 +84,6 @@ public static class AbilitySystem
         if (!triggerMode.HasFlag(AbilityTriggerMode.Periodic))
         {
             ability.Events.Emit(
-                GameEventType.Ability.StartCooldown,
                 new GameEventType.Ability.StartCooldown()
             );
         }
@@ -94,7 +92,6 @@ public static class AbilitySystem
         // 事件驱动:请求消耗成本 (魔法/能量等)
         var costContext = new EventContext();
         ability.Events.Emit(
-            GameEventType.Ability.ConsumeCost,
             new GameEventType.Ability.ConsumeCost(costContext)
         );
 
@@ -109,7 +106,6 @@ public static class AbilitySystem
 
         // 发送激活事件，技能UI使用
         ability.Events.Emit(
-            GameEventType.Ability.Activated,
             new GameEventType.Ability.Activated(abilityContext)
         );
 
@@ -119,7 +115,7 @@ public static class AbilitySystem
             Owner = abilityContext.Caster,
             Feature = ability,
             ActivationData = abilityContext,
-            Source = abilityContext.Source
+            Source = abilityContext.SourceEventData
         };
         FeatureSystem.OnFeatureActivated(featureCtx);
 
@@ -163,7 +159,6 @@ public static class AbilitySystem
         // 事件驱动：请求检查可用性（冷却、充能等组件响应）
         var context = new EventContext();
         ability.Events.Emit(
-            GameEventType.Ability.CheckCanUse,
             new GameEventType.Ability.CheckCanUse(context)
         );
 
@@ -219,7 +214,6 @@ public static class AbilitySystem
 
         // 发送执行完成事件
         ability.Events.Emit(
-            GameEventType.Ability.Executed,
             new GameEventType.Ability.Executed(result)
         );
     }

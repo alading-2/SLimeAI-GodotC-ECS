@@ -49,8 +49,7 @@ public class RequestAttackAction : BehaviorNode
         }
 
         // 至此必定是真正开始新的单次攻击
-        ctx.Entity.Events?.Emit(GameEventType.Attack.Requested,
-            new GameEventType.Attack.Requested(target));
+        ctx.Entity.Events?.Emit(new GameEventType.Attack.Requested(target));
 
         // 刚派发完事件，攻击动作将在未来几帧异步执行
         return NodeState.Running;

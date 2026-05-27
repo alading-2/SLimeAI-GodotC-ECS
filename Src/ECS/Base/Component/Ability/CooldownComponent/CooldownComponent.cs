@@ -58,18 +58,15 @@ public partial class CooldownComponent : Node, IComponent
         if (_entity == null) return;
         // 监听请求检查可用性事件
         _entity.Events.On<GameEventType.Ability.CheckCanUse>(
-            GameEventType.Ability.CheckCanUse,
             OnCheckCanUse,
             (int)AbilityCheckPhase.Cooldown
         );
         // 监听请求启动冷却事件
         _entity.Events.On<GameEventType.Ability.StartCooldown>(
-            GameEventType.Ability.StartCooldown,
             StartCooldown
         );
         // 监听请求重置冷却事件
         _entity.Events.On<GameEventType.Ability.ResetCooldown>(
-            GameEventType.Ability.ResetCooldown,
             ResetCooldown
         );
     }
@@ -118,7 +115,6 @@ public partial class CooldownComponent : Node, IComponent
                 _timer = null;
 
                 _entity?.Events.Emit(
-                    GameEventType.Ability.Ready,
                     new GameEventType.Ability.Ready()
                 );
 

@@ -29,13 +29,11 @@ public partial class HealthBarUI : UIBase, IPoolable
 
         // 订阅全局实体生成事件
         GlobalEventBus.Global.On<GameEventType.Global.EntitySpawned>(
-            GameEventType.Global.EntitySpawned,
             OnUnitCreated
         );
 
         // 订阅全局单位销毁事件
         GlobalEventBus.Global.On<GameEventType.Global.EntityDestroyed>(
-            GameEventType.Global.EntityDestroyed,
             OnUnitDestroyed
         );
 
@@ -155,7 +153,6 @@ public partial class HealthBarUI : UIBase, IPoolable
     {
         // 订阅HP变化事件
         _entity!.Events.On<GameEventType.Data.HealthChanged>(
-            GameEventType.Data.HealthChanged,
             OnHealthChanged
         );
 

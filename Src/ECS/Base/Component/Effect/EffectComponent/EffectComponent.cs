@@ -86,8 +86,7 @@ public partial class EffectComponent : Node, IComponent
         _lifeTimer = null;
 
         // 取消宿主销毁事件监听
-        GlobalEventBus.Global.Off<GameEventType.Global.EntityDestroyed>(
-            GameEventType.Global.EntityDestroyed, OnHostDestroyed);
+        GlobalEventBus.Global.Off<GameEventType.Global.EntityDestroyed>(OnHostDestroyed);
 
         _sprite = null;
         _hostNode = null;
@@ -115,14 +114,12 @@ public partial class EffectComponent : Node, IComponent
 
             // 通过事件触发策略切换，宿主引用通过 MovementParams.TargetNode 传入（EntityMovementComponent 监听此事件）
             _entity!.Events.Emit(
-                GameEventType.Unit.MovementStarted,
                 new GameEventType.Unit.MovementStarted(
                     MoveMode.AttachToHost,
                     new MovementParams { Mode = MoveMode.AttachToHost, TargetNode = host2D }));
 
             // 监听宿主销毁事件（生命周期职责，不属于移动系统）
-            GlobalEventBus.Global.On<GameEventType.Global.EntityDestroyed>(
-                GameEventType.Global.EntityDestroyed, OnHostDestroyed);
+            GlobalEventBus.Global.On<GameEventType.Global.EntityDestroyed>(OnHostDestroyed);
         }
         else
         {

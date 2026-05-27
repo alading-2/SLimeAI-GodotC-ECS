@@ -250,8 +250,7 @@ public static partial class EntityManager
             }
         }
 
-        GlobalEventBus.Global.Emit(GameEventType.Global.EntitySpawned,
-            new GameEventType.Global.EntitySpawned(entity));
+        GlobalEventBus.Global.Emit(new GameEventType.Global.EntitySpawned(entity));
 
         return entity;
     }
@@ -458,8 +457,7 @@ public static partial class EntityManager
         if (entity is IEntity iEntity)
         {
             // 通用 Entity 销毁事件（所有 IEntity）
-            GlobalEventBus.Global.Emit(GameEventType.Global.EntityDestroyed,
-                new GameEventType.Global.EntityDestroyed(iEntity));
+            GlobalEventBus.Global.Emit(new GameEventType.Global.EntityDestroyed(iEntity));
         }
 
         // 1. 注销（内部已清理 Component、关系、Data、Events）

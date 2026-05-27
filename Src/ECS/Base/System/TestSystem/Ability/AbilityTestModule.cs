@@ -363,13 +363,13 @@ public partial class AbilityTestModule : TestModuleBase
 
         _subscribedEntity = selectedEntity;
         _subscribedEntity.Events.On<GameEventType.Ability.Added>(
-            GameEventType.Ability.Added, OnAbilityChanged);
+            OnAbilityChanged);
         _subscribedEntity.Events.On<GameEventType.Ability.Removed>(
-            GameEventType.Ability.Removed, OnAbilityRemovedEvt);
+            OnAbilityRemovedEvt);
         _subscribedEntity.Events.On<GameEventType.Feature.Enabled>(
-            GameEventType.Feature.Enabled, OnFeatureEnabled);
+            OnFeatureEnabled);
         _subscribedEntity.Events.On<GameEventType.Feature.Disabled>(
-            GameEventType.Feature.Disabled, OnFeatureDisabled);
+            OnFeatureDisabled);
     }
 
     /// <summary>
@@ -383,13 +383,13 @@ public partial class AbilityTestModule : TestModuleBase
         }
 
         _subscribedEntity.Events.Off<GameEventType.Ability.Added>(
-            GameEventType.Ability.Added, OnAbilityChanged);
+            OnAbilityChanged);
         _subscribedEntity.Events.Off<GameEventType.Ability.Removed>(
-            GameEventType.Ability.Removed, OnAbilityRemovedEvt);
+            OnAbilityRemovedEvt);
         _subscribedEntity.Events.Off<GameEventType.Feature.Enabled>(
-            GameEventType.Feature.Enabled, OnFeatureEnabled);
+            OnFeatureEnabled);
         _subscribedEntity.Events.Off<GameEventType.Feature.Disabled>(
-            GameEventType.Feature.Disabled, OnFeatureDisabled);
+            OnFeatureDisabled);
         _subscribedEntity = null;
     }
 

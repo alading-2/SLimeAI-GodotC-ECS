@@ -83,17 +83,14 @@ public partial class ChargeComponent : Node, IComponent
         if (_entity == null) return;
         // 监听请求检查可用性事件
         _entity.Events.On<GameEventType.Ability.CheckCanUse>(
-            GameEventType.Ability.CheckCanUse,
             OnCheckCanUse
         );
         // 监听使用技能消耗充能事件
         _entity.Events.On<GameEventType.Ability.ConsumeCharge>(
-            GameEventType.Ability.ConsumeCharge,
             OnRequestConsumeCharge
         );
         // 监听增加充能事件
         _entity.Events.On<GameEventType.Ability.AddCharge>(
-            GameEventType.Ability.AddCharge,
             OnRequestAddCharge
         );
     }
@@ -200,7 +197,6 @@ public partial class ChargeComponent : Node, IComponent
 
         // ✅ 发送统一的充能恢复事件
         _entity?.Events.Emit(
-            GameEventType.Ability.ChargeRestored,
             new GameEventType.Ability.ChargeRestored(newCharges, MaxCharges)
         );
 

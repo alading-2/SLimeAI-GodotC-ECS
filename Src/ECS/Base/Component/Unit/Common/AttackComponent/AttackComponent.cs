@@ -82,12 +82,10 @@ public partial class AttackComponent : Node, IComponent
             _body = body;
 
         // 监听来自 AI 节点或玩家输入的攻击请求
-        _entity.Events.On<GameEventType.Attack.Requested>(
-            GameEventType.Attack.Requested, OnAttackRequested);
+        _entity.Events.On<GameEventType.Attack.Requested>(OnAttackRequested);
 
         // 监听来自外部（如眩晕 Buff、强制位移等）的中断请求
-        _entity.Events.On<GameEventType.Attack.CancelRequested>(
-            GameEventType.Attack.CancelRequested, OnCancelRequested);
+        _entity.Events.On<GameEventType.Attack.CancelRequested>(OnCancelRequested);
     }
 
     /// <summary>
@@ -130,8 +128,7 @@ public partial class AttackComponent : Node, IComponent
         float windUpTime = _data.Get<float>(DataKey.AttackWindUpTime);
 
         // 发出 Started 通知，告知外部（如 UI 进度条、特效、AI 记录）攻击已正式进入准备阶段
-        _entity.Events.Emit(GameEventType.Attack.Started,
-            new GameEventType.Attack.Started(target));
+        _entity.Events.Emit(new GameEventType.Attack.Started(target));
 
         // 统一走 WindUp 流程（WindUpTime=0 时 Timer 会在下一帧立即触发 OnWindUpComplete）
         // 这保证动画播放、校验计时器等逻辑只维护一处
@@ -164,8 +161,7 @@ public partial class AttackComponent : Node, IComponent
         // 从可用动画列表中随机选择攻击动画（支持 attack1, attack2 等多个攻击动画）
         string attackAnim = SelectRandomAttackAnimation();
 
-        _entity?.Events.Emit(GameEventType.Unit.PlayAnimationRequested,
-            new GameEventType.Unit.PlayAnimationRequested(
+        _entity?.Events.Emit(new GameEventType.Unit.PlayAnimationRequested(
                 attackAnim, ForceRestart: true, Duration: attackInterval));
 
         // 设置 Delay 定时器：当 WindUp 时间结束时，触发动作完成（命中）回调
@@ -294,8 +290,7 @@ public partial class AttackComponent : Node, IComponent
 
         _log.Trace($"攻击完结: → Idle (已上报 Finished 事件)");
 
-        _entity?.Events.Emit(GameEventType.Attack.Finished,
-            new GameEventType.Attack.Finished(target, didHit));
+        _entity?.Events.Emit(new GameEventType.Attack.Finished(target, didHit));
     }
 
     /// <summary>
@@ -314,12 +309,10 @@ public partial class AttackComponent : Node, IComponent
         _log.Trace($"攻击异常中断: {oldState} → Idle (原因: {reason})");
 
         // 如果是在动作中被打断，通常需要立刻将模型强制扯回 Idle 动画
-        _entity?.Events.Emit(GameEventType.Unit.StopAnimationRequested,
-            new GameEventType.Unit.StopAnimationRequested());
+        _entity?.Events.Emit(new GameEventType.Unit.StopAnimationRequested());
 
         // 通知业务层该次攻击尝试已非法中断
-        _entity?.Events.Emit(GameEventType.Attack.Cancelled,
-            new GameEventType.Attack.Cancelled(reason));
+        _entity?.Events.Emit(new GameEventType.Attack.Cancelled(reason));
     }
 
     // ================= 决策逻辑 (Verification Logic) =================

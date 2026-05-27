@@ -131,7 +131,6 @@ public partial class TargetingIndicatorControlComponent : Node, IComponent
         if (InputManager.IsX())
         {
             GlobalEventBus.Global.Emit(
-                GameEventType.Targeting.TargetConfirmed,
                 new GameEventType.Targeting.TargetConfirmed(node2D.GlobalPosition)
             );
         }
@@ -140,7 +139,6 @@ public partial class TargetingIndicatorControlComponent : Node, IComponent
         if (InputManager.IsCancel())
         {
             GlobalEventBus.Global.Emit(
-                GameEventType.Targeting.TargetCancelled,
                 new GameEventType.Targeting.TargetCancelled()
             );
         }

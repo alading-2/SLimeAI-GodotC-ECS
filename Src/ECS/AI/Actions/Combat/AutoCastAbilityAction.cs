@@ -41,7 +41,6 @@ public class AutoCastAbilityAction : BehaviorNode
         };
 
         ability.Events.Emit(
-            GameEventType.Ability.TryTrigger,
             new GameEventType.Ability.TryTrigger(castContext)
         );
 

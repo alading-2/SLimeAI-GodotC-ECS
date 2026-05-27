@@ -299,7 +299,6 @@ namespace Slime.Test.DamageSystemTest
 
             bool healRequestReceived = false;
             attacker.Events.On<GameEventType.Unit.HealRequest>(
-                GameEventType.Unit.HealRequest,
                 evt =>
                 {
                     healRequestReceived = true;

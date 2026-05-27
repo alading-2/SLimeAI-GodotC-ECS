@@ -535,7 +535,8 @@ namespace Slime.Test
             source.Data.Set("UnsafeNodeRef", new Node2D { Name = "UnsafeRef" });
 
             int callbackCount = 0;
-            source.Events.On("migration:test:event", () => callbackCount++);
+            // 使用一个具体的事件类型 struct 来替代字符串事件
+            source.Events.On<GameEventType.Test.MigrationTestEvent>(_ => callbackCount++);
 
             string sourceId = source.Data.Get<string>(DataKey.Id);
 
@@ -564,7 +565,7 @@ namespace Slime.Test
                     }
                 );
 
-                target!.Events.Emit("migration:test:event");
+                target!.Events.Emit(new GameEventType.Test.MigrationTestEvent());
 
                 AssertEqual("Profile 排除的键不应被迁移", string.Empty, target.Data.Get<string>(DataKey.Name));
                 AssertEqual("DataOverrides 应覆盖迁移后的最终值", "OverrideDescription", target.Data.Get<string>(DataKey.Description));

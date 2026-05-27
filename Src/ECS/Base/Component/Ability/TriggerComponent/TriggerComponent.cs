@@ -148,7 +148,7 @@ public partial class TriggerComponent : Node, IComponent
         // 使用 On<object> 配合 EventBus 对 Action<object> 的支持，实现通用监听
         foreach (var evt in eventTypes)
         {
-            GlobalEventBus.Global.On<object>(evt, OnEventTriggered);
+            // TODO: 动态事件订阅待迁移
             _log.Debug($"技能 {AbilityName} 订阅事件: {evt}");
         }
     }
@@ -174,7 +174,7 @@ public partial class TriggerComponent : Node, IComponent
 
         foreach (var evt in eventTypes)
         {
-            GlobalEventBus.Global.Off<object>(evt, OnEventTriggered);
+            // TODO: 动态事件订阅待迁移
         }
     }
 
@@ -255,7 +255,7 @@ public partial class TriggerComponent : Node, IComponent
         {
             Ability = ability,
             Caster = caster,
-            Source = source,
+            SourceEventData = source,
             ResponseContext = new EventContext()
             // RequestedTargets 默认为 null，表示自动选取
         };
@@ -263,7 +263,6 @@ public partial class TriggerComponent : Node, IComponent
         // 发送 TryTrigger 请求，由 AbilitySystem 统一处理
         // 包括：CanUse 检查、消耗资源、启动冷却、选择目标、执行效果
         _entity.Events.Emit(
-            GameEventType.Ability.TryTrigger,
             new GameEventType.Ability.TryTrigger(context)
         );
 

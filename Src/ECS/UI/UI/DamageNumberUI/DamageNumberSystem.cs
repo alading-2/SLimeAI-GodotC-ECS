@@ -26,13 +26,13 @@ public static class DamageNumberSystem
         if (_isSubscribed) return;
 
         GlobalEventBus.Global.On<GameEventType.Unit.Damaged>(
-            GameEventType.Unit.Damaged, OnDamaged);
+            OnDamaged);
 
         GlobalEventBus.Global.On<GameEventType.Unit.HealApplied>(
-            GameEventType.Unit.HealApplied, OnHealApplied);
+            OnHealApplied);
 
         GlobalEventBus.Global.On<GameEventType.Unit.Dodged>(
-            GameEventType.Unit.Dodged, OnDodged);
+            OnDodged);
 
         _isSubscribed = true;
         _log.Success("DamageNumberSystem 已启用（全局事件模式）");
@@ -46,13 +46,13 @@ public static class DamageNumberSystem
         if (!_isSubscribed) return;
 
         GlobalEventBus.Global.Off<GameEventType.Unit.Damaged>(
-            GameEventType.Unit.Damaged, OnDamaged);
+            OnDamaged);
 
         GlobalEventBus.Global.Off<GameEventType.Unit.HealApplied>(
-            GameEventType.Unit.HealApplied, OnHealApplied);
+            OnHealApplied);
 
         GlobalEventBus.Global.Off<GameEventType.Unit.Dodged>(
-            GameEventType.Unit.Dodged, OnDodged);
+            OnDodged);
 
         _isSubscribed = false;
         _log.Info("DamageNumberSystem 已禁用");
