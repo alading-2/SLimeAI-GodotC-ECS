@@ -121,7 +121,9 @@ public partial class StatusControllerComponent : Node, IComponent
         _data.Set(DataKey.IsMovementLocked, snapshot.IsMovementLocked);
         _data.Set(DataKey.IsStunned, !snapshot.CanThink && !snapshot.CanMoveInput && !snapshot.CanAttack && !snapshot.CanCast);
 
-        _entity?.Events.Emit(new GameEventType.Unit.StateChanged("StatusSnapshot", string.Empty, snapshot.Flags.ToString()));
+        _entity?.Events.Emit(
+            GameEventType.Unit.StateChanged,
+            new GameEventType.Unit.StateChanged("StatusSnapshot", string.Empty, snapshot.Flags.ToString()));
     }
 
     private static string BuildTimerKey(string sourceId, string statusId)

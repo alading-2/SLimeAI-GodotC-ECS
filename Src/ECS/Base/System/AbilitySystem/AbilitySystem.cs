@@ -63,7 +63,9 @@ public static class AbilitySystem
         // 事件驱动：请求消耗资源（充能等）
         if (ability.Data.Get<bool>(DataKey.IsAbilityUsesCharges))
         {
-            ability.Events.Emit(new GameEventType.Ability.ConsumeCharge(consumeContext)
+            ability.Events.Emit(
+                GameEventType.Ability.ConsumeCharge,
+                new GameEventType.Ability.ConsumeCharge(consumeContext)
             );
         }
 
@@ -82,14 +84,18 @@ public static class AbilitySystem
         var triggerMode = ability.Data.Get<AbilityTriggerMode>(DataKey.AbilityTriggerMode);
         if (!triggerMode.HasFlag(AbilityTriggerMode.Periodic))
         {
-            ability.Events.Emit(new GameEventType.Ability.StartCooldown()
+            ability.Events.Emit(
+                GameEventType.Ability.StartCooldown,
+                new GameEventType.Ability.StartCooldown()
             );
         }
 
         // ==================== 消耗阶段 ====================
         // 事件驱动:请求消耗成本 (魔法/能量等)
         var costContext = new EventContext();
-        ability.Events.Emit(new GameEventType.Ability.ConsumeCost(costContext)
+        ability.Events.Emit(
+            GameEventType.Ability.ConsumeCost,
+            new GameEventType.Ability.ConsumeCost(costContext)
         );
 
         if (!costContext.Success)
@@ -102,7 +108,9 @@ public static class AbilitySystem
         ability.Data.Set(DataKey.FeatureIsActive, true);
 
         // 发送激活事件，技能UI使用
-        ability.Events.Emit(new GameEventType.Ability.Activated(abilityContext)
+        ability.Events.Emit(
+            GameEventType.Ability.Activated,
+            new GameEventType.Ability.Activated(abilityContext)
         );
 
         // Feature 生命周期钩子：Activated（AbilitySystem 负责构建 FeatureContext，将 CastContext 存入 ActivationData）
@@ -111,7 +119,7 @@ public static class AbilitySystem
             Owner = abilityContext.Caster,
             Feature = ability,
             ActivationData = abilityContext,
-            Source = abilityContext.SourceEventData
+            Source = abilityContext.Source
         };
         FeatureSystem.OnFeatureActivated(featureCtx);
 
@@ -154,7 +162,9 @@ public static class AbilitySystem
 
         // 事件驱动：请求检查可用性（冷却、充能等组件响应）
         var context = new EventContext();
-        ability.Events.Emit(new GameEventType.Ability.CheckCanUse(context)
+        ability.Events.Emit(
+            GameEventType.Ability.CheckCanUse,
+            new GameEventType.Ability.CheckCanUse(context)
         );
 
         if (!context.Success)
@@ -208,7 +218,9 @@ public static class AbilitySystem
         _log.Debug($"[AbilitySystem] 技能效果执行完成: '{abilityName}', 命中: {result.TargetsHit}");
 
         // 发送执行完成事件
-        ability.Events.Emit(new GameEventType.Ability.Executed(result)
+        ability.Events.Emit(
+            GameEventType.Ability.Executed,
+            new GameEventType.Ability.Executed(result)
         );
     }
 }

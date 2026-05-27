@@ -5,19 +5,22 @@
 /// </summary>
 public class EmitEventAction : IFeatureAction
 {
-    /// <summary>事件数据实例</summary>
-    public object? EventData { get; set; }
+    /// <summary>要发出的事件键名</summary>
+    public string EventKey { get; set; } = "";
+
+    /// <summary>事件数据（null 时发送空数据）</summary>
+    public object?  { get; set; }
 
     /// <summary>在 Owner 的事件总线上发出（true = Owner，false = Feature）</summary>
     public bool EmitOnOwner { get; set; } = true;
 
     public void Execute(FeatureContext ctx)
     {
-        if (EventData == null) return;
+        if (string.IsNullOrEmpty(EventKey)) return;
 
         if (EmitOnOwner)
-            ctx.Owner?.Events.EmitDynamic(EventData);
+            ctx.Owner?.Events.Emit(EventKey, );
         else
-            ctx.Feature?.Events.EmitDynamic(EventData);
+            ctx.Feature?.Events.Emit(EventKey, );
     }
 }

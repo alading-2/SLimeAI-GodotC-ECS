@@ -12,7 +12,7 @@ using Godot;
 /// <para>
 /// 典型用法：
 /// <code>
-/// entity.Events.Emit(new GameEventType.Unit.MovementStarted(
+/// entity.Events.Emit(GameEventType.Unit.MovementStarted,
 ///     new GameEventType.Unit.MovementStarted(MoveMode.Charge, new MovementParams
 ///     {
 ///         isTrackTarget       = true,

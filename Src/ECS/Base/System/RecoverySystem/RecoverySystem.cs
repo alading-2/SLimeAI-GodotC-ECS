@@ -251,7 +251,8 @@ public partial class RecoverySystem : Node, ISystem,
             {
                 // ✅ 发送治疗请求事件，由 HealthComponent 监听处理
                 // IsFullHp 检查在 HealthComponent.ApplyHeal 内部处理
-                entity.Events.Emit(new GameEventType.Unit.HealRequest(hpRegen, HealSource.Regen));
+                entity.Events.Emit(GameEventType.Unit.HealRequest,
+                    new GameEventType.Unit.HealRequest(hpRegen, HealSource.Regen));
 
                 // 记录恢复量
                 RecordRecovery(hpRegen);

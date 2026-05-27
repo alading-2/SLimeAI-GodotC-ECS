@@ -130,10 +130,12 @@ public partial class DamageStatisticsSystem : Node, ISystem
         }
 
         // 当新波次开始时，需要清除上一波的临时统计数据（如每波造成的伤害、击杀数等）
-        GlobalEventBus.Global.On<GameEventType.Global.WaveStarted>(OnWaveStarted);
+        GlobalEventBus.Global.On<GameEventType.Global.WaveStarted>(
+            GameEventType.Global.WaveStarted, OnWaveStarted);
 
         // 伤害系统（HealthComponent）在目标死亡时会发送 Kill 事件，本系统负责持久化这些统计
-        GlobalEventBus.Global.On<GameEventType.Unit.Killed>(OnUnitKilled);
+        GlobalEventBus.Global.On<GameEventType.Unit.Killed>(
+            GameEventType.Unit.Killed, OnUnitKilled);
 
         _eventsBound = true;
     }
@@ -145,9 +147,11 @@ public partial class DamageStatisticsSystem : Node, ISystem
             return;
         }
 
-        GlobalEventBus.Global.Off<GameEventType.Global.WaveStarted>(OnWaveStarted);
+        GlobalEventBus.Global.Off<GameEventType.Global.WaveStarted>(
+            GameEventType.Global.WaveStarted, OnWaveStarted);
 
-        GlobalEventBus.Global.Off<GameEventType.Unit.Killed>(OnUnitKilled);
+        GlobalEventBus.Global.Off<GameEventType.Unit.Killed>(
+            GameEventType.Unit.Killed, OnUnitKilled);
 
         _eventsBound = false;
     }

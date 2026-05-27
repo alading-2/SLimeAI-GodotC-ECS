@@ -1,5 +1,7 @@
 using Godot;
 using System.Threading.Tasks;
+using slime.data.Abilities;
+using slime.data.Units;
 
 
 
@@ -25,13 +27,12 @@ public partial class MainTest : Node
         _log.Info("  LB/RB - 切换技能");
         _log.Info("  X     - 释放技能");
 
-        // 1. 生成玩家（从 snapshot 加载配置）
+        // 1. 生成玩家
         _log.Info("步骤 1: 生成玩家");
+        var playerConfig = PlayerData.Get("德鲁伊") ?? PlayerData.Deluyi;
         _player = EntityManager.Spawn<PlayerEntity>(new EntitySpawnConfig
         {
-            Config = new object(), // 数据由 SnapshotLoader 负责加载
-            SnapshotTable = "unit.player", // snapshot 表名
-            SnapshotId = "player.deluyi", // snapshot 记录 ID
+            Config = playerConfig,
             UsingObjectPool = false,
             Position = Vector2.Zero
         });
@@ -39,13 +40,12 @@ public partial class MainTest : Node
         _log.Info($"玩家生成成功: {_player.Name} at {_player.GlobalPosition}");
         await BindPlayerToTestSystemAsync();
 
-        // 1.5. 生成一个敌人用于测试单位目标选择（从 snapshot 加载配置）
+        // 1.5. 生成一个敌人用于测试单位目标选择
         _log.Info("步骤 1.5: 生成测试敌人");
+        var enemyConfig = EnemyData.Get("豺狼人") ?? EnemyData.Chailangren;
         var enemy = EntityManager.Spawn<EnemyEntity>(new EntitySpawnConfig
         {
-            Config = new object(), // 数据由 SnapshotLoader 负责加载
-            SnapshotTable = "unit.enemy", // snapshot 表名
-            SnapshotId = "enemy.chailangren", // snapshot 记录 ID
+            Config = enemyConfig,
             UsingObjectPool = false,
             Position = new Vector2(200, 200)
         });
@@ -136,8 +136,10 @@ public partial class MainTest : Node
     {
         if (_player == null) return;
 
-        // 技能：冲刺 (Dash) - 从 snapshot 加载配置。
-        EntityManager.AddAbility(_player, "ability.dash");
+        // 加载正式技能配置：默认使用 DataNew 纯 C# 表，旧 .tres 不再作为主流程。
+        // 技能：冲刺 (Dash) - Charge 模式位移。
+        var dashConfig = AbilityData.Get("冲刺") ?? AbilityData.Dash;
+        EntityManager.AddAbility(_player, dashConfig);
 
         _log.Info("已添加正式技能（含7种移动系新技能），等待UI自动更新");
     }

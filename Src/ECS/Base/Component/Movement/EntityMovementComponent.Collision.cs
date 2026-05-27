@@ -58,7 +58,9 @@ public partial class EntityMovementComponent
         // 发出 MovementCollision 事件，供外部订阅。
         if (collision.EmitCollisionEvent)
         {
-            _entity.Events.Emit(new GameEventType.Unit.MovementCollision(
+            _entity.Events.Emit(
+                GameEventType.Unit.MovementCollision,
+                new GameEventType.Unit.MovementCollision(
                     context.Mode,
                     context.TargetNode,
                     context.TargetEntity,
@@ -76,7 +78,9 @@ public partial class EntityMovementComponent
             return;
         }
 
-        _entity.Events.Emit(new GameEventType.Unit.MovementStopRequested
+        _entity.Events.Emit(
+            GameEventType.Unit.MovementStopRequested,
+            new GameEventType.Unit.MovementStopRequested
             {
                 Reason = MovementStopReason.Collision,
                 EmitCompletedEvent = true,

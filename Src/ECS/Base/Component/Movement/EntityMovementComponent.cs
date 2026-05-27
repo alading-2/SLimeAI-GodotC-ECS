@@ -81,13 +81,16 @@ public partial class EntityMovementComponent : Node, IComponent
         _data.Set(DataKey.MovementFacingDirection, Vector2.Zero);
 
         // 订阅运动开始/切换事件（业务方通过此事件触发临时运动切换）
-        _entity.Events.On<GameEventType.Unit.MovementStarted>(OnMovementStarted);
+        _entity.Events.On<GameEventType.Unit.MovementStarted>(
+            GameEventType.Unit.MovementStarted, OnMovementStarted);
 
         // 订阅碰撞事件（Area2D 路径；CharacterBody2D 路径在 ApplyMovement 中通过 MoveAndSlide 检测）
-        _entity.Events.On<GameEventType.Collision.CollisionEntered>(OnCollisionDetected);
+        _entity.Events.On<GameEventType.Collision.CollisionEntered>(
+            GameEventType.Collision.CollisionEntered, OnCollisionDetected);
 
         // 订阅停止请求事件（外部系统或内部碰撞策略均可通过事件驱动停止当前运动）
-        _entity.Events.On<GameEventType.Unit.MovementStopRequested>(OnMovementStopRequested);
+        _entity.Events.On<GameEventType.Unit.MovementStopRequested>(
+            GameEventType.Unit.MovementStopRequested, OnMovementStopRequested);
 
         // 根据 DefaultMoveMode 初始化默认策略（无 MovementParams，使用空参数）
         var defaultMode = _data.Get<MoveMode>(DataKey.DefaultMoveMode);
@@ -422,7 +425,9 @@ public partial class EntityMovementComponent : Node, IComponent
         // 按决议发出 MovementCompleted 事件
         if (resolution.EmitCompletedEvent)
         {
-            _entity.Events.Emit(new GameEventType.Unit.MovementCompleted(
+            _entity.Events.Emit(
+                GameEventType.Unit.MovementCompleted,
+                new GameEventType.Unit.MovementCompleted(
                     mode,
                     _params.ElapsedTime,
                     _params.TraveledDistance,

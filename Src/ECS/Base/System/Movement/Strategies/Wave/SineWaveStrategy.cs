@@ -21,7 +21,7 @@ using System.Runtime.CompilerServices;
 /// <para>
 /// <code>
 /// 【使用示例：蛇形子弹】
-/// entity.Events.Emit(new GameEventType.Unit.MovementStarted(
+/// entity.Events.Emit(GameEventType.Unit.MovementStarted,
 ///     new GameEventType.Unit.MovementStarted(MoveMode.SineWave, new MovementParams
 ///     {
 ///         Mode          = MoveMode.SineWave,

@@ -362,10 +362,14 @@ public partial class AbilityTestModule : TestModuleBase
         }
 
         _subscribedEntity = selectedEntity;
-        _subscribedEntity.Events.On<GameEventType.Ability.Added>(OnAbilityChanged);
-        _subscribedEntity.Events.On<GameEventType.Ability.Removed>(OnAbilityRemovedEvt);
-        _subscribedEntity.Events.On<GameEventType.Feature.Enabled>(OnFeatureEnabled);
-        _subscribedEntity.Events.On<GameEventType.Feature.Disabled>(OnFeatureDisabled);
+        _subscribedEntity.Events.On<GameEventType.Ability.Added>(
+            GameEventType.Ability.Added, OnAbilityChanged);
+        _subscribedEntity.Events.On<GameEventType.Ability.Removed>(
+            GameEventType.Ability.Removed, OnAbilityRemovedEvt);
+        _subscribedEntity.Events.On<GameEventType.Feature.Enabled>(
+            GameEventType.Feature.Enabled, OnFeatureEnabled);
+        _subscribedEntity.Events.On<GameEventType.Feature.Disabled>(
+            GameEventType.Feature.Disabled, OnFeatureDisabled);
     }
 
     /// <summary>
@@ -378,10 +382,14 @@ public partial class AbilityTestModule : TestModuleBase
             return;
         }
 
-        _subscribedEntity.Events.Off<GameEventType.Ability.Added>(OnAbilityChanged);
-        _subscribedEntity.Events.Off<GameEventType.Ability.Removed>(OnAbilityRemovedEvt);
-        _subscribedEntity.Events.Off<GameEventType.Feature.Enabled>(OnFeatureEnabled);
-        _subscribedEntity.Events.Off<GameEventType.Feature.Disabled>(OnFeatureDisabled);
+        _subscribedEntity.Events.Off<GameEventType.Ability.Added>(
+            GameEventType.Ability.Added, OnAbilityChanged);
+        _subscribedEntity.Events.Off<GameEventType.Ability.Removed>(
+            GameEventType.Ability.Removed, OnAbilityRemovedEvt);
+        _subscribedEntity.Events.Off<GameEventType.Feature.Enabled>(
+            GameEventType.Feature.Enabled, OnFeatureEnabled);
+        _subscribedEntity.Events.Off<GameEventType.Feature.Disabled>(
+            GameEventType.Feature.Disabled, OnFeatureDisabled);
         _subscribedEntity = null;
     }
 

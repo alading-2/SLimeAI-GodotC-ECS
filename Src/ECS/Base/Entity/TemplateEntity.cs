@@ -67,9 +67,11 @@ public partial class TemplateEntity : Node, IEntity, IPoolable
     public void OnPoolAcquire()
     {
         // 示例:订阅全局 Kill 事件（通过 Victim 筛选是否是自己）
-        GlobalEventBus.Global.On<GameEventType.Unit.Killed>(OnKilled);
+        GlobalEventBus.Global.On<GameEventType.Unit.Killed>(
+            GameEventType.Unit.Killed, OnKilled);
         // 示例:订阅局部事件（仅在实体内部组件间通信）
-        Events.On<GameEventType.Unit.Damaged>(OnDamaged);
+        Events.On<GameEventType.Unit.Damaged>(
+            GameEventType.Unit.Damaged, OnDamaged);
     }
 
     /// <summary>
@@ -80,7 +82,8 @@ public partial class TemplateEntity : Node, IEntity, IPoolable
     public void OnPoolRelease()
     {
         // 取消全局事件订阅
-        GlobalEventBus.Global.Off<GameEventType.Unit.Killed>(OnKilled);
+        GlobalEventBus.Global.Off<GameEventType.Unit.Killed>(
+            GameEventType.Unit.Killed, OnKilled);
     }
 
     /// <summary>

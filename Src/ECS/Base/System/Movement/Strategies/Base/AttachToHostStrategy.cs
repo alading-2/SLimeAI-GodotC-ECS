@@ -15,7 +15,7 @@ using System.Runtime.CompilerServices;
 /// <para>
 /// <code>
 /// 【使用示例：持续附着到目标实体】
-/// entity.Events.Emit(new GameEventType.Unit.MovementStarted(
+/// entity.Events.Emit(GameEventType.Unit.MovementStarted,
 ///     new GameEventType.Unit.MovementStarted(MoveMode.AttachToHost, new MovementParams
 ///     {
 ///         Mode              = MoveMode.AttachToHost,

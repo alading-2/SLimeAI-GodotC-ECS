@@ -28,11 +28,15 @@ public partial class HealthBarUI : UIBase, IPoolable
         _log.Info("[ModuleInitializer] HealthBarUI.Initialize() 开始执行");
 
         // 订阅全局实体生成事件
-        GlobalEventBus.Global.On<GameEventType.Global.EntitySpawned>(OnUnitCreated
+        GlobalEventBus.Global.On<GameEventType.Global.EntitySpawned>(
+            GameEventType.Global.EntitySpawned,
+            OnUnitCreated
         );
 
         // 订阅全局单位销毁事件
-        GlobalEventBus.Global.On<GameEventType.Global.EntityDestroyed>(OnUnitDestroyed
+        GlobalEventBus.Global.On<GameEventType.Global.EntityDestroyed>(
+            GameEventType.Global.EntityDestroyed,
+            OnUnitDestroyed
         );
 
         _log.Info("[ModuleInitializer] HealthBarUI 全局事件监听已初始化完成");
@@ -150,7 +154,9 @@ public partial class HealthBarUI : UIBase, IPoolable
     protected override void OnBind()
     {
         // 订阅HP变化事件
-        _entity!.Events.On<GameEventType.Data.HealthChanged>(OnHealthChanged
+        _entity!.Events.On<GameEventType.Data.HealthChanged>(
+            GameEventType.Data.HealthChanged,
+            OnHealthChanged
         );
 
         // 如果节点还未就绪（_healthBar 为空），ApplyInitialState 将在 _Ready 中被调用

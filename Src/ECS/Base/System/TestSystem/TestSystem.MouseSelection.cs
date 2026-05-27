@@ -10,7 +10,9 @@ public partial class TestSystem
     /// </summary>
     private void BindMouseSelectionEvents()
     {
-        GlobalEventBus.Global.On<GameEventType.Global.MouseSelectionCompleted>(OnMouseSelectionCompleted
+        GlobalEventBus.Global.On<GameEventType.Global.MouseSelectionCompleted>(
+            GameEventType.Global.MouseSelectionCompleted,
+            OnMouseSelectionCompleted
         );
     }
 
@@ -19,7 +21,9 @@ public partial class TestSystem
     /// </summary>
     private void UnbindMouseSelectionEvents()
     {
-        GlobalEventBus.Global.Off<GameEventType.Global.MouseSelectionCompleted>(OnMouseSelectionCompleted
+        GlobalEventBus.Global.Off<GameEventType.Global.MouseSelectionCompleted>(
+            GameEventType.Global.MouseSelectionCompleted,
+            OnMouseSelectionCompleted
         );
     }
 
@@ -51,7 +55,9 @@ public partial class TestSystem
     /// </summary>
     private void BindSelectionContextEvents()
     {
-        Events.On<GameEventType.TestSystem.SelectionChanged>(OnSelectionChanged
+        Events.On<GameEventType.TestSystem.SelectionChanged>(
+            GameEventType.TestSystem.SelectionChanged,
+            OnSelectionChanged
         );
     }
 
@@ -60,7 +66,9 @@ public partial class TestSystem
     /// </summary>
     private void UnbindSelectionContextEvents()
     {
-        Events.Off<GameEventType.TestSystem.SelectionChanged>(OnSelectionChanged
+        Events.Off<GameEventType.TestSystem.SelectionChanged>(
+            GameEventType.TestSystem.SelectionChanged,
+            OnSelectionChanged
         );
     }
 

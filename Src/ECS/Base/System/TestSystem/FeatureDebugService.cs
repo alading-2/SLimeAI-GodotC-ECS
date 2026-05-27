@@ -1,5 +1,5 @@
 using Godot;
-using slime.data.Features;
+using slime.config.Features;
 using slime.data.Abilities;
 using ECS.Base.System.TestSystem.Core;
 
@@ -152,7 +152,7 @@ internal sealed class FeatureDebugService
     /// <param name="definition">Feature 定义资源；为空时返回失败结果。</param>
     /// <param name="featureSource">Feature 来源标识；用于输出错误提示和日志定位。</param>
     /// <returns>执行结果，包含成功状态与提示信息。</returns>
-    public TestActionResult GrantFeature(IEntity? owner, FeatureDefinitionData? definition, string featureSource)
+    public TestActionResult GrantFeature(IEntity? owner, FeatureDefinition? definition, string featureSource)
     {
         if (owner == null)
         {
@@ -264,14 +264,14 @@ internal sealed class FeatureDebugService
     /// <param name="displayName">属性显示名；用于描述文本。</param>
     /// <param name="value">Modifier 数值；写入到定义中。</param>
     /// <param name="featureName">运行时 Feature 名称；用于唯一标识。</param>
-    /// <returns>构建好的运行时 FeatureDefinitionData。</returns>
-    private static FeatureDefinitionData BuildTemporaryModifierDefinition(
+    /// <returns>构建好的运行时 FeatureDefinition。</returns>
+    private static FeatureDefinition BuildTemporaryModifierDefinition(
         string dataKey,
         string displayName,
         float value,
         string featureName)
     {
-        return new FeatureDefinitionData
+        return new FeatureDefinition
         {
             Name = featureName,
             FeatureHandlerId = featureName,
@@ -279,9 +279,9 @@ internal sealed class FeatureDebugService
             Category = "TestSystem",
             EntityType = EntityType.Ability,
             Enabled = true,
-            Modifiers = new System.Collections.Generic.List<FeatureModifierEntryData>
+            Modifiers = new Godot.Collections.Array<FeatureModifierEntry>
             {
-                new FeatureModifierEntryData
+                new FeatureModifierEntry
                 {
                     DataKeyName = dataKey,
                     ModifierType = ModifierType.Additive,
@@ -321,7 +321,7 @@ internal sealed class FeatureDebugService
     private static float TryReadModifierValue(IEntity feature, string dataKey)
     {
         var raw = feature.Data.Get<object>(DataKey.FeatureModifiers);
-        if (raw is not System.Collections.Generic.List<FeatureModifierEntryData> modifiers || modifiers.Count == 0)
+        if (raw is not Godot.Collections.Array<FeatureModifierEntry> modifiers || modifiers.Count == 0)
         {
             return 0f;
         }

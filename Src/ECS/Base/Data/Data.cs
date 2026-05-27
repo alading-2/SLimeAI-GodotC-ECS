@@ -643,7 +643,7 @@ public class Data
             // 通过 Entity 事件总线广播数据变更
             // 下游监听示例: 
             // entity.Events.On<GameEventType.Data.PropertyChangedEvent>(GameEventType.Data.PropertyChanged, evt => ...);
-            _owner.Events.Emit(GameEventType.Data.PropertyChanged, new GameEventType.Data.PropertyChangedEventData(key, oldValue, newValue));
+            _owner.Events.Emit(GameEventType.Data.PropertyChanged, new GameEventType.Data.PropertyChanged(key, oldValue, newValue));
         }
     }
 

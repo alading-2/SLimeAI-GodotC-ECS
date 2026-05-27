@@ -1,5 +1,4 @@
 using Godot;
-using slime.data;
 using slime.data.Abilities;
 using slime.data.Units;
 using System;
@@ -37,13 +36,12 @@ public readonly record struct ResourceCatalogGroup(
 /// <summary>
 /// 通用资源目录服务。
 /// <para>
-/// DataOS snapshot-backed DTO 直接构建业务数据目录条目；runtime resources 从 typed snapshot 注册；UI/编辑器资产浏览仍可读取 ResourcePaths。
+/// DataNew 表数据直接构建目录条目；场景、特效等资产仍从 ResourcePaths 生成索引构建。
 /// </para>
 /// </summary>
 public static class ResourceCatalog
 {
-    // 目录推导只处理资产资源；运行时数据目录由 DataOS snapshot-backed DTO 提供。
-    private const string DataOsSourcePath = "DataOS/Authoring/slimeainew.authoring.db";
+    // 目录推导只处理资产资源；运行时数据目录由 DataNew 静态表直接提供。
     private const string EffectRoot = "assets/Effect";
     private const string AssetUnitEnemyRoot = "assets/Unit/Enemy";
     private const string AssetUnitPlayerRoot = "assets/Unit/Player";
@@ -158,16 +156,14 @@ public static class ResourceCatalog
     {
         var entries = new List<ResourceCatalogEntry>();
 
-        AddDataOsEntries(entries);
-        AddRuntimeSnapshotResourceEntries(entries);
+        AddDataNewEntries(entries);
 
         // 资产资源仍直接从 ResourcePaths.Resources 构建目录，不额外扫描 res://。
         foreach (var (_, resources) in ResourcePaths.Resources)
         {
             foreach (var (resourceKey, data) in resources)
             {
-                if (TryCreateEntry(resourceKey, data, out var entry)
-                    && !ContainsResourceEntry(entries, entry.ResourceKey, entry.Path))
+                if (TryCreateEntry(resourceKey, data, out var entry))
                 {
                     entries.Add(entry);
                 }
@@ -209,10 +205,10 @@ public static class ResourceCatalog
     }
 
     /// <summary>
-    /// 从 DataOS snapshot-backed DTO 构建目录条目。
+    /// 从 DataNew 纯 C# 表构建目录条目。
     /// </summary>
     /// <param name="entries">待写入的目录条目列表。</param>
-    private static void AddDataOsEntries(List<ResourceCatalogEntry> entries)
+    private static void AddDataNewEntries(List<ResourceCatalogEntry> entries)
     {
         foreach (var data in EnemyData.All)
         {
@@ -222,9 +218,9 @@ public static class ResourceCatalog
             }
 
             entries.Add(new ResourceCatalogEntry(
-                data.Name, // DataOS 显示名称键
+                data.Name, // DataNew 名称键
                 ResourceCategory.DataUnit, // 保持选择器分类兼容
-                DataOsSourcePath, // 源 authoring DB
+                "Data/DataNew/Unit/Enemy/EnemyData.cs", // 源数据文件
                 data.Name, // UI 显示名
                 "Unit.Enemy", // 目录分类路径
                 typeof(EnemyData) // 推荐数据类型
@@ -239,9 +235,9 @@ public static class ResourceCatalog
             }
 
             entries.Add(new ResourceCatalogEntry(
-                data.Name, // DataOS 显示名称键
+                data.Name, // DataNew 名称键
                 ResourceCategory.DataUnit, // 保持选择器分类兼容
-                DataOsSourcePath, // 源 authoring DB
+                "Data/DataNew/Unit/Player/PlayerData.cs", // 源数据文件
                 data.Name, // UI 显示名
                 "Unit.Player", // 目录分类路径
                 typeof(PlayerData) // 推荐数据类型
@@ -256,9 +252,9 @@ public static class ResourceCatalog
             }
 
             entries.Add(new ResourceCatalogEntry(
-                data.Name, // DataOS 显示名称键
+                data.Name, // DataNew 名称键
                 ResourceCategory.DataUnit, // 保持选择器分类兼容
-                DataOsSourcePath, // 源 authoring DB
+                "Data/DataNew/Unit/Targeting/TargetingIndicatorData.cs", // 源数据文件
                 data.Name, // UI 显示名
                 "Unit.Targeting", // 目录分类路径
                 typeof(TargetingIndicatorData) // 推荐数据类型
@@ -276,88 +272,14 @@ public static class ResourceCatalog
                 ? "Ability"
                 : $"Ability.{NormalizeCatalogPath(data.FeatureGroupId) ?? "未分类"}";
             entries.Add(new ResourceCatalogEntry(
-                data.Name, // DataOS 显示名称键
+                data.Name, // DataNew 名称键
                 ResourceCategory.DataAbility, // 保持选择器分类兼容
-                DataOsSourcePath, // 源 authoring DB
+                "Data/DataNew/Ability/AbilityData.cs", // 源数据文件
                 data.Name, // UI 显示名
                 group, // 目录分类路径
                 typeof(AbilityData) // 推荐数据类型
             ));
         }
-    }
-
-    /// <summary>
-    /// 从 generated runtime snapshot 注册资源条目。
-    /// </summary>
-    /// <param name="entries">待写入的目录条目列表。</param>
-    private static void AddRuntimeSnapshotResourceEntries(List<ResourceCatalogEntry> entries)
-    {
-        foreach (var resource in SnapshotLoader.GetResources(SnapshotLoader.DefaultSnapshotPath))
-        {
-            if (string.IsNullOrWhiteSpace(resource.Key) || string.IsNullOrWhiteSpace(resource.Path))
-            {
-                continue;
-            }
-
-            var category = Enum.TryParse<ResourceCategory>(resource.Category, ignoreCase: false, out var parsedCategory)
-                ? parsedCategory
-                : ResourceCategory.Other;
-            var catalogPath = ResolveRuntimeResourceCatalogPath(resource, category);
-            var entry = new ResourceCatalogEntry(
-                resource.Key, // snapshot resource stable key
-                category, // ResourceManagement 分类
-                resource.Path, // res:// 路径
-                ResolveAssetDisplayName(resource.Path), // UI 显示名
-                catalogPath, // 目录分类路径
-                typeof(PackedScene) // 当前 generated resources 均为场景路径
-            );
-
-            if (!ContainsResourceEntry(entries, entry.ResourceKey, entry.Path))
-            {
-                entries.Add(entry);
-            }
-        }
-    }
-
-    /// <summary>
-    /// 判断目录中是否已有同一个资源条目。
-    /// </summary>
-    /// <param name="entries">已有目录条目。</param>
-    /// <param name="resourceKey">资源稳定键。</param>
-    /// <param name="path">资源路径。</param>
-    private static bool ContainsResourceEntry(
-        IReadOnlyList<ResourceCatalogEntry> entries,
-        string resourceKey,
-        string path)
-    {
-        for (int i = 0; i < entries.Count; i++)
-        {
-            var existing = entries[i];
-            if (string.Equals(existing.ResourceKey, resourceKey, StringComparison.Ordinal)
-                && string.Equals(existing.Path, path, StringComparison.Ordinal))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// 为 runtime snapshot resource 推导目录路径。
-    /// </summary>
-    /// <param name="resource">snapshot resource 记录。</param>
-    /// <param name="category">解析后的资源分类。</param>
-    private static string ResolveRuntimeResourceCatalogPath(SnapshotResourceEntry resource, ResourceCategory category)
-    {
-        return category switch
-        {
-            ResourceCategory.AssetEffect => ResolveCatalogPath(resource.Path, EffectRoot, "Effect"),
-            ResourceCategory.AssetUnitEnemy => ResolveCatalogPath(resource.Path, AssetUnitEnemyRoot, "AssetUnit.Enemy"),
-            ResourceCategory.AssetUnitPlayer => ResolveCatalogPath(resource.Path, AssetUnitPlayerRoot, "AssetUnit.Player"),
-            ResourceCategory.AssetProjectile => ResolveCatalogPath(resource.Path, "assets/Projectile", "AssetProjectile"),
-            _ => NormalizeCatalogPath($"RuntimeResource.{category}") ?? UnknownCatalogPath
-        };
     }
 
     /// <summary>

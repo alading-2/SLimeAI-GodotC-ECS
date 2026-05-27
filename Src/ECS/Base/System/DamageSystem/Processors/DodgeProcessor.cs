@@ -32,8 +32,8 @@ public class DodgeProcessor : IDamageProcessor
 
             // 发出闪避事件（供飘字系统显示 MISS）
             var dodgedData = new GameEventType.Unit.Dodged(info.Victim, info.Attacker as IEntity);
-            info.Victim.Events.Emit(dodgedData);
-            GlobalEventBus.Global.Emit(dodgedData);
+            info.Victim.Events.Emit(GameEventType.Unit.Dodged, dodgedData);
+            GlobalEventBus.Global.Emit(GameEventType.Unit.Dodged, dodgedData);
         }
     }
 }

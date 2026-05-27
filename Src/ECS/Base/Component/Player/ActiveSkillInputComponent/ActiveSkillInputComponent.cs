@@ -42,9 +42,11 @@ public partial class ActiveSkillInputComponent : Node, IComponent
             _data = iEntity.Data;
 
             // 订阅技能增删事件，标记缓存失效
-            _entity.Events.On<GameEventType.Ability.Added>(_ => _abilitiesDirty = true
+            _entity.Events.On<GameEventType.Ability.Added>(
+                GameEventType.Ability.Added, _ => _abilitiesDirty = true
             );
-            _entity.Events.On<GameEventType.Ability.Removed>(_ => _abilitiesDirty = true
+            _entity.Events.On<GameEventType.Ability.Removed>(
+                GameEventType.Ability.Removed, _ => _abilitiesDirty = true
             );
 
             _log.Info($"主动技能输入组件已注册到实体: {entity.Name}");
@@ -113,7 +115,9 @@ public partial class ActiveSkillInputComponent : Node, IComponent
         _log.Debug($"切换主动技能: {abilityName} (索引: {newIndex})");
 
         // 发射 UI 事件，通知技能栏高亮切换，注意_entity是PlayerEntity
-        _entity!.Events.Emit(new GameEventType.UI.ActiveSkillSelected(newIndex, abilityName)
+        _entity!.Events.Emit(
+            GameEventType.UI.ActiveSkillSelected,
+            new GameEventType.UI.ActiveSkillSelected(newIndex, abilityName)
         );
     }
 
@@ -186,7 +190,9 @@ public partial class ActiveSkillInputComponent : Node, IComponent
             return;
         }
 
-        GlobalEventBus.Global.Emit(new GameEventType.Targeting.StartTargeting(context)); //施法上下文
+        GlobalEventBus.Global.Emit(
+            GameEventType.Targeting.StartTargeting,
+            new GameEventType.Targeting.StartTargeting(context)); //施法上下文
         _log.Debug($"技能 {abilityName} 进入瞄准模式");
     }
 
@@ -198,7 +204,9 @@ public partial class ActiveSkillInputComponent : Node, IComponent
     /// <param name="abilityName">技能名称，用于日志。</param>
     private void TriggerAbility(AbilityEntity ability, CastContext context, string abilityName)
     {
-        ability.Events.Emit(new GameEventType.Ability.TryTrigger(context) //施法上下文
+        ability.Events.Emit(
+            GameEventType.Ability.TryTrigger,
+            new GameEventType.Ability.TryTrigger(context) //施法上下文
         );
         var result = context.ResponseContext?.HasResult == true
             ? (TriggerResult)context.ResponseContext.GetResult<TriggerResult>()

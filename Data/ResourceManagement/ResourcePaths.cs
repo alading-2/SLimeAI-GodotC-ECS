@@ -122,8 +122,22 @@ public static class ResourcePaths
     // --- Data ---
 
     // --- DataAbility ---
+    public const string DataAbility_ArcShotConfig = "ArcShotConfig";
+    public const string DataAbility_BezierShotConfig = "BezierShotConfig";
+    public const string DataAbility_BoomerangThrowConfig = "BoomerangThrowConfig";
+    public const string DataAbility_CircleDamageConfig = "CircleDamageConfig";
+    public const string DataAbility_DashConfig = "DashConfig";
+    public const string DataAbility_OrbitSkillConfig = "OrbitSkillConfig";
+    public const string DataAbility_ParabolaShotConfig = "ParabolaShotConfig";
+    public const string DataAbility_SineWaveShotConfig = "SineWaveShotConfig";
+    public const string DataAbility_SlamConfig = "SlamConfig";
+    public const string DataAbility_TargetPointSkillConfig = "TargetPointSkillConfig";
 
     // --- DataUnit ---
+    public const string DataUnit_chailangren = "chailangren";
+    public const string DataUnit_deluyi = "deluyi";
+    public const string DataUnit_TargetingIndicatorConfig = "TargetingIndicatorConfig";
+    public const string DataUnit_yuren = "yuren";
 
     // --- ConfigSystem ---
     public const string ConfigSystem_DamageNumberRuntimeBridge = "DamageNumberRuntimeBridge";
@@ -296,10 +310,24 @@ public static class ResourcePaths
         },
         { ResourceCategory.DataAbility, new Dictionary<string, ResourceData>
             {
+                { DataAbility_ArcShotConfig, new ResourceData(ResourceCategory.DataAbility, "res://Data/Data/Ability/Resource/Movement/ArcShotConfig.tres") },
+                { DataAbility_BezierShotConfig, new ResourceData(ResourceCategory.DataAbility, "res://Data/Data/Ability/Resource/Movement/BezierShotConfig.tres") },
+                { DataAbility_BoomerangThrowConfig, new ResourceData(ResourceCategory.DataAbility, "res://Data/Data/Ability/Resource/Movement/BoomerangThrowConfig.tres") },
+                { DataAbility_CircleDamageConfig, new ResourceData(ResourceCategory.DataAbility, "res://Data/Data/Ability/Resource/CircleDamageConfig.tres") },
+                { DataAbility_DashConfig, new ResourceData(ResourceCategory.DataAbility, "res://Data/Data/Ability/Resource/Movement/DashConfig.tres") },
+                { DataAbility_OrbitSkillConfig, new ResourceData(ResourceCategory.DataAbility, "res://Data/Data/Ability/Resource/OrbitSkillConfig.tres") },
+                { DataAbility_ParabolaShotConfig, new ResourceData(ResourceCategory.DataAbility, "res://Data/Data/Ability/Resource/Movement/ParabolaShotConfig.tres") },
+                { DataAbility_SineWaveShotConfig, new ResourceData(ResourceCategory.DataAbility, "res://Data/Data/Ability/Resource/Movement/SineWaveShotConfig.tres") },
+                { DataAbility_SlamConfig, new ResourceData(ResourceCategory.DataAbility, "res://Data/Data/Ability/Resource/SlamConfig.tres") },
+                { DataAbility_TargetPointSkillConfig, new ResourceData(ResourceCategory.DataAbility, "res://Data/Data/Ability/Resource/TargetPointSkillConfig.tres") },
             }
         },
         { ResourceCategory.DataUnit, new Dictionary<string, ResourceData>
             {
+                { DataUnit_chailangren, new ResourceData(ResourceCategory.DataUnit, "res://Data/Data/Unit/Enemy/Resource/chailangren.tres") },
+                { DataUnit_deluyi, new ResourceData(ResourceCategory.DataUnit, "res://Data/Data/Unit/Player/Resource/deluyi.tres") },
+                { DataUnit_TargetingIndicatorConfig, new ResourceData(ResourceCategory.DataUnit, "res://Data/Data/Unit/Targeting/Resource/TargetingIndicatorConfig.tres") },
+                { DataUnit_yuren, new ResourceData(ResourceCategory.DataUnit, "res://Data/Data/Unit/Enemy/Resource/yuren.tres") },
             }
         },
         { ResourceCategory.ConfigSystem, new Dictionary<string, ResourceData>

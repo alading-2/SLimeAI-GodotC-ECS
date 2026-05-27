@@ -277,7 +277,9 @@ public partial class TestSystem : CanvasLayer
         // 设置选中的实体
         if (_selectionContext.SetSelectedEntity(entity))
         {
-            Events.Emit(new GameEventType.TestSystem.SelectionChanged(
+            Events.Emit(
+                GameEventType.TestSystem.SelectionChanged,
+                new GameEventType.TestSystem.SelectionChanged(
                     entity // 当前选中实体
                 )
             );

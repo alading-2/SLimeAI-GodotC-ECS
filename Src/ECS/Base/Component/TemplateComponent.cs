@@ -62,10 +62,12 @@ public partial class TemplateComponent : Node, IComponent
             // 示例1:监听 Data 属性变化(响应 Spawn 后设置的初始数据)
             // ⚠️ 关键: 许多数据(如 SkillLevel, Target)是在 Spawn 之后才设置的
             // 所以必须监听 PropertyChanged 事件,而不是假设它们已经存在
-            _entity.Events.On<GameEventType.Data.PropertyChanged>(OnDataChanged);
+            _entity.Events.On<GameEventType.Data.PropertyChanged>(
+                GameEventType.Data.PropertyChanged, OnDataChanged);
 
             // 示例2:跨组件通信 - 监听治疗请求事件
-            _entity.Events.On<GameEventType.Unit.HealRequest>(OnHealRequest);
+            _entity.Events.On<GameEventType.Unit.HealRequest>(
+                GameEventType.Unit.HealRequest, OnHealRequest);
         }
     }
 

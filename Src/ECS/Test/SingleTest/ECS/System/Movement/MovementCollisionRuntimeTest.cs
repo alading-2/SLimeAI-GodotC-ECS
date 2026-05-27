@@ -535,8 +535,7 @@ namespace Slime.Test
             source.Data.Set("UnsafeNodeRef", new Node2D { Name = "UnsafeRef" });
 
             int callbackCount = 0;
-            // TODO: EventBus 已升级为 typed struct，不再支持字符串事件订阅，此行暂注释
-            // source.Events.On("migration:test:event", () => callbackCount++);
+            source.Events.On("migration:test:event", () => callbackCount++);
 
             string sourceId = source.Data.Get<string>(DataKey.Id);
 
@@ -565,7 +564,7 @@ namespace Slime.Test
                     }
                 );
 
-                // migration:test:event 已废弃，EventBus 不再支持 string 事件名
+                target!.Events.Emit("migration:test:event");
 
                 AssertEqual("Profile 排除的键不应被迁移", string.Empty, target.Data.Get<string>(DataKey.Name));
                 AssertEqual("DataOverrides 应覆盖迁移后的最终值", "OverrideDescription", target.Data.Get<string>(DataKey.Description));

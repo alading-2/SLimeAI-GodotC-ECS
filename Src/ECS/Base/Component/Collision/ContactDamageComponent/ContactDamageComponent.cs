@@ -42,10 +42,10 @@ public partial class ContactDamageComponent : Node, IComponent
         _data = iEntity.Data;
         _team = _data.Get<Team>(DataKey.Team, Team.Neutral);
 
-        _entity.Events.On<GameEventType.Collision.HurtboxEntered>(OnHurtboxEntered);
-        _entity.Events.On<GameEventType.Collision.HurtboxExited>(OnHurtboxExited);
-        _entity.Events.On<GameEventType.Unit.Killed>(OnKilled);
-        _entity.Events.On<GameEventType.Unit.Revived>(OnRevived);
+        _entity.Events.On<GameEventType.Collision.HurtboxEntered>(GameEventType.Collision.HurtboxEntered, OnHurtboxEntered);
+        _entity.Events.On<GameEventType.Collision.HurtboxExited>(GameEventType.Collision.HurtboxExited, OnHurtboxExited);
+        _entity.Events.On<GameEventType.Unit.Killed>(GameEventType.Unit.Killed, OnKilled);
+        _entity.Events.On<GameEventType.Unit.Revived>(GameEventType.Unit.Revived, OnRevived);
 
         _log.Debug($"[{entity.Name}] 接触伤害处理组件注册完成，阵营={_team}，开始监听局部碰撞事件。");
     }

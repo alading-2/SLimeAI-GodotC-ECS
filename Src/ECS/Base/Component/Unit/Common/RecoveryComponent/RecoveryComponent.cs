@@ -32,7 +32,9 @@ public partial class RecoveryComponent : Node, IComponent
             _data = iEntity.Data;
 
             // 监听恢复属性变化
-            _entity.Events.On<GameEventType.Data.PropertyChanged>(OnDataPropertyChanged
+            _entity.Events.On<GameEventType.Data.PropertyChanged>(
+                GameEventType.Data.PropertyChanged,
+                OnDataPropertyChanged
             );
         }
 

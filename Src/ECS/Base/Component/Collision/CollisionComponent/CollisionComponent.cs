@@ -97,7 +97,8 @@ public partial class CollisionComponent : Node, IComponent
         if (_entity == null || !IsInstanceValid(target)) return;
 
         // 向实体局部事件总线发射碰撞进入事件
-        _entity.Events.Emit(new GameEventType.Collision.CollisionEntered(_entity, target));
+        _entity.Events.Emit(GameEventType.Collision.CollisionEntered,
+            new GameEventType.Collision.CollisionEntered(_entity, target));
     }
 
     /// <summary>
@@ -109,6 +110,7 @@ public partial class CollisionComponent : Node, IComponent
         if (_entity == null || !IsInstanceValid(target)) return;
 
         // 向实体局部事件总线发射碰撞退出事件
-        _entity.Events.Emit(new GameEventType.Collision.CollisionExited(_entity, target));
+        _entity.Events.Emit(GameEventType.Collision.CollisionExited,
+            new GameEventType.Collision.CollisionExited(_entity, target));
     }
 }

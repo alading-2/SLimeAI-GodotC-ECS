@@ -37,60 +37,59 @@ public enum AIState
 
 public static partial class DataKey
 {
-    // 目标实体引用（运行时 Node2D 引用，默认 null）
-    public static readonly DataKey<Godot.Node2D> TargetNode = DataRegistry.Register<Godot.Node2D>(
-        new DataMeta { Key = nameof(TargetNode), DisplayName = "目标实体", Description = "AI 当前锁定的目标节点引用", Category = DataCategory_AI.Combat, Type = typeof(Godot.Node2D) });
+    // TargetNode 是 Node2D 引用，不走 DataRegistry 类型约束
+    public const string TargetNode = "TargetNode";
 
     // ========== AI 行为状态 ==========
     // AI状态
-    public static readonly DataKey<global::AIState> AIState = DataRegistry.Register<global::AIState>(
-        new DataMeta { Key = nameof(AIState), DisplayName = "AI状态", Description = "Idle/Chasing/Attacking/Patrolling/Fleeing", Category = DataCategory_AI.Basic, Type = typeof(global::AIState), DefaultValue = global::AIState.Idle  });
+    public static readonly DataMeta AIState = DataRegistry.Register(
+        new DataMeta { Key = nameof(AIState), DisplayName = "AI状态", Description = "Idle/Chasing/Attacking/Patrolling/Fleeing", Category = DataCategory_AI.Basic, Type = typeof(global::AIState), DefaultValue = global::AIState.Idle });
 
     // 威胁值
-    public static readonly DataKey<float> Threat = DataRegistry.Register<float>(
-        new DataMeta { Key = nameof(Threat), DisplayName = "威胁值", Description = "仇恨值", Category = DataCategory_AI.Combat, Type = typeof(float), DefaultValue = 0f  });
+    public static readonly DataMeta Threat = DataRegistry.Register(
+        new DataMeta { Key = nameof(Threat), DisplayName = "威胁值", Description = "仇恨值", Category = DataCategory_AI.Combat, Type = typeof(float), DefaultValue = 0f });
 
     // AI是否启用
-    public static readonly DataKey<bool> AIEnabled = DataRegistry.Register<bool>(
-        new DataMeta { Key = nameof(AIEnabled), DisplayName = "AI是否启用", Description = "可用于暂停 AI 逻辑", Category = DataCategory_AI.Basic, Type = typeof(bool), DefaultValue = false  });
+    public static readonly DataMeta AIEnabled = DataRegistry.Register(
+        new DataMeta { Key = nameof(AIEnabled), DisplayName = "AI是否启用", Description = "可用于暂停 AI 逻辑", Category = DataCategory_AI.Basic, Type = typeof(bool), DefaultValue = false });
 
     // ========== AI 感知参数 ==========
     // 索敌范围
-    public static readonly DataKey<float> DetectionRange = DataRegistry.Register<float>(
-        new DataMeta { Key = nameof(DetectionRange), DisplayName = "索敌范围", Description = "圆形检测半径", Category = DataCategory_AI.Combat, Type = typeof(float), DefaultValue = 500f, MinValue = 0  });
+    public static readonly DataMeta DetectionRange = DataRegistry.Register(
+        new DataMeta { Key = nameof(DetectionRange), DisplayName = "索敌范围", Description = "圆形检测半径", Category = DataCategory_AI.Combat, Type = typeof(float), DefaultValue = 500f, MinValue = 0 });
 
     // 丢失目标范围
-    public static readonly DataKey<float> LoseTargetRange = DataRegistry.Register<float>(
-        new DataMeta { Key = nameof(LoseTargetRange), DisplayName = "丢失目标范围", Description = "超出此范围后放弃追逐", Category = DataCategory_AI.Combat, Type = typeof(float), DefaultValue = 800f, MinValue = 0  });
+    public static readonly DataMeta LoseTargetRange = DataRegistry.Register(
+        new DataMeta { Key = nameof(LoseTargetRange), DisplayName = "丢失目标范围", Description = "超出此范围后放弃追逐", Category = DataCategory_AI.Combat, Type = typeof(float), DefaultValue = 800f, MinValue = 0 });
 
     // ========== AI 移动参数 ==========
     // 巡逻半径
-    public static readonly DataKey<float> PatrolRadius = DataRegistry.Register<float>(
-        new DataMeta { Key = nameof(PatrolRadius), DisplayName = "巡逻半径", Description = "以出生点为中心的随机巡逻范围", Category = DataCategory_AI.Basic, Type = typeof(float), DefaultValue = 500f, MinValue = 0  });
+    public static readonly DataMeta PatrolRadius = DataRegistry.Register(
+        new DataMeta { Key = nameof(PatrolRadius), DisplayName = "巡逻半径", Description = "以出生点为中心的随机巡逻范围", Category = DataCategory_AI.Basic, Type = typeof(float), DefaultValue = 500f, MinValue = 0 });
 
     // 巡逻等待时间
-    public static readonly DataKey<float> PatrolWaitTime = DataRegistry.Register<float>(
-        new DataMeta { Key = nameof(PatrolWaitTime), DisplayName = "巡逻等待时间", Description = "到达巡逻点后等待多久再移动", Category = DataCategory_AI.Basic, Type = typeof(float), DefaultValue = 2f, MinValue = 0  });
+    public static readonly DataMeta PatrolWaitTime = DataRegistry.Register(
+        new DataMeta { Key = nameof(PatrolWaitTime), DisplayName = "巡逻等待时间", Description = "到达巡逻点后等待多久再移动", Category = DataCategory_AI.Basic, Type = typeof(float), DefaultValue = 2f, MinValue = 0 });
 
     // ========== AI 黑板数据 ==========
     // 出生位置
-    public static readonly DataKey<Godot.Vector2> SpawnPosition = DataRegistry.Register<Godot.Vector2>(
-        new DataMeta { Key = nameof(SpawnPosition), DisplayName = "出生位置", Description = "用于巡逻计算基准点", Category = DataCategory_AI.Basic, Type = typeof(Godot.Vector2), DefaultValue = Godot.Vector2.Zero  });
+    public static readonly DataMeta SpawnPosition = DataRegistry.Register(
+        new DataMeta { Key = nameof(SpawnPosition), DisplayName = "出生位置", Description = "用于巡逻计算基准点", Category = DataCategory_AI.Basic, Type = typeof(Godot.Vector2), DefaultValue = Godot.Vector2.Zero });
 
     // 巡逻目标点
-    public static readonly DataKey<Godot.Vector2> PatrolTargetPoint = DataRegistry.Register<Godot.Vector2>(
-        new DataMeta { Key = nameof(PatrolTargetPoint), DisplayName = "巡逻目标点", Description = "当前巡逻目标点", Category = DataCategory_AI.Basic, Type = typeof(Godot.Vector2), DefaultValue = Godot.Vector2.Zero  });
+    public static readonly DataMeta PatrolTargetPoint = DataRegistry.Register(
+        new DataMeta { Key = nameof(PatrolTargetPoint), DisplayName = "巡逻目标点", Description = "当前巡逻目标点", Category = DataCategory_AI.Basic, Type = typeof(Godot.Vector2), DefaultValue = Godot.Vector2.Zero });
 
     // 巡逻等待完成
-    public static readonly DataKey<bool> PatrolWaitDone = DataRegistry.Register<bool>(
-        new DataMeta { Key = nameof(PatrolWaitDone), DisplayName = "巡逻等待完成", Description = "TimerManager回调写入的完成标记", Category = DataCategory_AI.Basic, Type = typeof(bool), DefaultValue = false  });
+    public static readonly DataMeta PatrolWaitDone = DataRegistry.Register(
+        new DataMeta { Key = nameof(PatrolWaitDone), DisplayName = "巡逻等待完成", Description = "TimerManager回调写入的完成标记", Category = DataCategory_AI.Basic, Type = typeof(bool), DefaultValue = false });
 
     // ========== AI 移动意图 ==========
     // AI请求移动方向
-    public static readonly DataKey<Godot.Vector2> AIMoveDirection = DataRegistry.Register<Godot.Vector2>(
-        new DataMeta { Key = nameof(AIMoveDirection), DisplayName = "AI请求移动方向", Description = "请求的移动方向（归一化），Zero表示停止", Category = DataCategory_AI.Basic, Type = typeof(Godot.Vector2), DefaultValue = Godot.Vector2.Zero  });
+    public static readonly DataMeta AIMoveDirection = DataRegistry.Register(
+        new DataMeta { Key = nameof(AIMoveDirection), DisplayName = "AI请求移动方向", Description = "请求的移动方向（归一化），Zero表示停止", Category = DataCategory_AI.Basic, Type = typeof(Godot.Vector2), DefaultValue = Godot.Vector2.Zero });
 
     // AI移动速度倍率
-    public static readonly DataKey<float> AIMoveSpeedMultiplier = DataRegistry.Register<float>(
-        new DataMeta { Key = nameof(AIMoveSpeedMultiplier), DisplayName = "AI移动速度倍率", Description = "请求的移动速度倍率（默认1.0）", Category = DataCategory_AI.Basic, Type = typeof(float), DefaultValue = 1.0f, MinValue = 0  });
+    public static readonly DataMeta AIMoveSpeedMultiplier = DataRegistry.Register(
+        new DataMeta { Key = nameof(AIMoveSpeedMultiplier), DisplayName = "AI移动速度倍率", Description = "请求的移动速度倍率（默认1.0）", Category = DataCategory_AI.Basic, Type = typeof(float), DefaultValue = 1.0f, MinValue = 0 });
 }

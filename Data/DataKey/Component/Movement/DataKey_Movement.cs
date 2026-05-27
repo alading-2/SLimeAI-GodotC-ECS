@@ -9,7 +9,7 @@
 /// </para>
 /// <para>
 /// 每次运动的输入参数（目标点、最大距离/时长、波形参数等）已迁移到 <see cref="MovementParams"/>，
-/// 通过 <see cref="GameEventType.Unit.MovementStarted"/> 传入，存于 EntityMovementComponent。
+/// 通过 <see cref="GameEventType.Unit.MovementStartedEventData"/> 传入，存于 EntityMovementComponent。
 /// 策略运行时内部状态（角度、起点、LUT 等）存于各策略类的私有字段。
 /// </para>
 /// </summary>
@@ -18,7 +18,7 @@ public static partial class DataKey
     // ========================= 速度分层合成 =========================
 
     /// <summary>基础速度向量（由输入/AI/运动策略写入，VelocityResolver 合成时读取）</summary>
-    public static readonly DataKey<Godot.Vector2> Velocity = DataRegistry.Register<Godot.Vector2>(
+    public static readonly DataMeta Velocity = DataRegistry.Register(
         new DataMeta
         {
             Key = nameof(Velocity), DisplayName = "基础速度向量", Description = "基础移动意图速度，由输入/AI/运动策略写入",
@@ -26,7 +26,7 @@ public static partial class DataKey
         });
 
     /// <summary>强制覆盖速度（击退/控制技能期间覆盖基础速度；Zero=不覆盖）</summary>
-    public static readonly DataKey<Godot.Vector2> VelocityOverride = DataRegistry.Register<Godot.Vector2>(
+    public static readonly DataMeta VelocityOverride = DataRegistry.Register(
         new DataMeta
         {
             Key = nameof(VelocityOverride), DisplayName = "强制覆盖速度", Description = "击退/控制技能期间覆盖基础速度，Zero=不覆盖",
@@ -34,7 +34,7 @@ public static partial class DataKey
         });
 
     /// <summary>瞬时冲量（单帧叠加冲量，用后自动清零）</summary>
-    public static readonly DataKey<Godot.Vector2> VelocityImpulse = DataRegistry.Register<Godot.Vector2>(
+    public static readonly DataMeta VelocityImpulse = DataRegistry.Register(
         new DataMeta
         {
             Key = nameof(VelocityImpulse), DisplayName = "瞬时冲量", Description = "单帧叠加冲量，用后自动清零",
@@ -42,7 +42,7 @@ public static partial class DataKey
         });
 
     /// <summary>移动锁定标记（眩晕/冻结期间为 true，由状态效果系统写入）</summary>
-    public static readonly DataKey<bool> IsMovementLocked = DataRegistry.Register<bool>(
+    public static readonly DataMeta IsMovementLocked = DataRegistry.Register(
         new DataMeta
         {
             Key = nameof(IsMovementLocked), DisplayName = "移动锁定", Description = "眩晕/冻结期间锁定移动",
@@ -50,7 +50,7 @@ public static partial class DataKey
         });
 
     /// <summary>加速度（仅 PlayerInputStrategy 平滑移动读取，由实体属性系统管理；与 MovementParams.Acceleration 不同）</summary>
-    public static readonly DataKey<float> Acceleration = DataRegistry.Register<float>(
+    public static readonly DataMeta Acceleration = DataRegistry.Register(
         new DataMeta
         {
             Key = nameof(Acceleration), DisplayName = "加速度", Category = DataCategory_Movement.Basic,
@@ -60,7 +60,7 @@ public static partial class DataKey
     // ========================= 运动模式（外部观察用）=========================
 
     /// <summary>当前运动模式（由 EntityMovementComponent 写入，AI/外部系统可读取）</summary>
-    public static readonly DataKey<global::MoveMode> MoveMode = DataRegistry.Register<global::MoveMode>(
+    public static readonly DataMeta MoveMode = DataRegistry.Register(
         new DataMeta
         {
             Key = nameof(MoveMode), DisplayName = "运动模式", Description = "当前运动轨迹类型，由 EntityMovementComponent 维护",
@@ -69,7 +69,7 @@ public static partial class DataKey
         });
 
     /// <summary>默认运动模式（Entity 初始化时设置，运动完成后自动回退到此模式）</summary>
-    public static readonly DataKey<global::MoveMode> DefaultMoveMode = DataRegistry.Register<global::MoveMode>(
+    public static readonly DataMeta DefaultMoveMode = DataRegistry.Register(
         new DataMeta
         {
             Key = nameof(DefaultMoveMode), DisplayName = "默认运动模式", Description = "运动完成后自动回退的模式（由 Entity 初始化时设置）",
@@ -78,7 +78,7 @@ public static partial class DataKey
         });
 
     /// <summary>移动系统解析出的本帧朝向向量（Zero = 当前帧没有新的朝向输入）</summary>
-    public static readonly DataKey<Godot.Vector2> MovementFacingDirection = DataRegistry.Register<Godot.Vector2>(
+    public static readonly DataMeta MovementFacingDirection = DataRegistry.Register(
         new DataMeta
         {
             Key = nameof(MovementFacingDirection), DisplayName = "移动朝向向量", Description = "移动系统解析出的本帧朝向向量，供朝向组件消费",
@@ -87,7 +87,7 @@ public static partial class DataKey
         });
 
     /// <summary>最后一次主动移动输入方向（归一化，Zero = 尚未产生主动输入）</summary>
-    public static readonly DataKey<Godot.Vector2> LastMoveDirection = DataRegistry.Register<Godot.Vector2>(
+    public static readonly DataMeta LastMoveDirection = DataRegistry.Register(
         new DataMeta
         {
             Key = nameof(LastMoveDirection), DisplayName = "最后移动方向", Description = "最近一次非零主动移动输入方向，供 Dash 等瞬时位移复用",
