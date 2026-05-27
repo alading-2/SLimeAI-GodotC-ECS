@@ -148,8 +148,10 @@ public partial class TriggerComponent : Node, IComponent
         // 使用 On<object> 配合 EventBus 对 Action<object> 的支持，实现通用监听
         foreach (var evt in eventTypes)
         {
-            GlobalEventBus.Global.On<object>(evt, OnEventTriggered);
-            _log.Debug($"技能 {AbilityName} 订阅事件: {evt}");
+            // TODO: EventBus 已升级为 typed struct，字符串事件名订阅暂不支持
+            // 需要实现 string→Type 映射注册表后重新启用
+            // GlobalEventBus.Global.On<object>(evt, OnEventTriggered);
+            _log.Warn($"技能 {AbilityName} 事件订阅跳过（待重设计）: {evt}");
         }
     }
 
@@ -174,7 +176,8 @@ public partial class TriggerComponent : Node, IComponent
 
         foreach (var evt in eventTypes)
         {
-            GlobalEventBus.Global.Off<object>(evt, OnEventTriggered);
+            // TODO: 同 SubscribeEvent，待字符串事件订阅重设计后恢复
+            // GlobalEventBus.Global.Off<object>(evt, OnEventTriggered);
         }
     }
 
@@ -255,7 +258,7 @@ public partial class TriggerComponent : Node, IComponent
         {
             Ability = ability,
             Caster = caster,
-            Source = source,
+            SourceEventData = source,
             ResponseContext = new EventContext()
             // RequestedTargets 默认为 null，表示自动选取
         };

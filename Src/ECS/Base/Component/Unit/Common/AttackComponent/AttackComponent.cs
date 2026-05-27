@@ -82,12 +82,10 @@ public partial class AttackComponent : Node, IComponent
             _body = body;
 
         // 监听来自 AI 节点或玩家输入的攻击请求
-        _entity.Events.On<GameEventType.Attack.Requested>(
-            GameEventType.Attack.Requested, OnAttackRequested);
+        _entity.Events.On<GameEventType.Attack.Requested>(OnAttackRequested);
 
         // 监听来自外部（如眩晕 Buff、强制位移等）的中断请求
-        _entity.Events.On<GameEventType.Attack.CancelRequested>(
-            GameEventType.Attack.CancelRequested, OnCancelRequested);
+        _entity.Events.On<GameEventType.Attack.CancelRequested>(OnCancelRequested);
     }
 
     /// <summary>

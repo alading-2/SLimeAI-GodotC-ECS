@@ -29,13 +29,9 @@ public partial class VisualPreviewScene : Node2D
 
     public override void _ExitTree()
     {
-        GlobalEventBus.Global.Off<GameEventType.Global.MouseSelectionCompleted>(
-            GameEventType.Global.MouseSelectionCompleted,
-            OnMouseSelectionCompleted
+        GlobalEventBus.Global.Off<GameEventType.Global.MouseSelectionCompleted>(OnMouseSelectionCompleted
         );
-        GlobalEventBus.Global.Off<GameEventType.Global.MouseSelectionMissed>(
-            GameEventType.Global.MouseSelectionMissed,
-            OnMouseSelectionMissed
+        GlobalEventBus.Global.Off<GameEventType.Global.MouseSelectionMissed>(OnMouseSelectionMissed
         );
         _world.Clear();
     }
@@ -92,13 +88,9 @@ public partial class VisualPreviewScene : Node2D
     /// </summary>
     private void BindSelectionEvents()
     {
-        GlobalEventBus.Global.On<GameEventType.Global.MouseSelectionCompleted>(
-            GameEventType.Global.MouseSelectionCompleted,
-            OnMouseSelectionCompleted
+        GlobalEventBus.Global.On<GameEventType.Global.MouseSelectionCompleted>(OnMouseSelectionCompleted
         );
-        GlobalEventBus.Global.On<GameEventType.Global.MouseSelectionMissed>(
-            GameEventType.Global.MouseSelectionMissed,
-            OnMouseSelectionMissed
+        GlobalEventBus.Global.On<GameEventType.Global.MouseSelectionMissed>(OnMouseSelectionMissed
         );
     }
 

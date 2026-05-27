@@ -172,6 +172,18 @@ public class Data
         return _data.ContainsKey(key) || DataRegistry.IsComputed(key);
     }
 
+    // ================= 类型安全重载（DataKey<T>）=================
+
+    /// <summary>
+    /// 类型安全 Get（使用 DataKey<T>），返回类型由键声明决定，无需显式指定泛型
+    /// </summary>
+    public T Get<T>(DataKey<T> key) => Get<T>(key.Key);
+
+    /// <summary>
+    /// 类型安全 Set（使用 DataKey<T>），编译期拒绝类型不匹配的赋值
+    /// </summary>
+    public bool Set<T>(DataKey<T> key, T value) => Set<T>(key.Key, value);
+
     /// <summary>
     /// 移除指定的数据项
     /// </summary>

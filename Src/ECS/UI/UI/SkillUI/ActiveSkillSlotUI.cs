@@ -169,21 +169,15 @@ public partial class ActiveSkillSlotUI : UIBase
         UnsubscribeAbilityEvents();
 
         // 监听充能变化
-        _currentAbility.Events.On<GameEventType.Ability.ChargeRestored>(
-            GameEventType.Ability.ChargeRestored,
-            OnChargeRestored
+        _currentAbility.Events.On<GameEventType.Ability.ChargeRestored>(OnChargeRestored
         );
 
         // 监听冷却完成
-        _currentAbility.Events.On<GameEventType.Ability.Ready>(
-            GameEventType.Ability.Ready,
-            OnAbilityReady
+        _currentAbility.Events.On<GameEventType.Ability.Ready>(OnAbilityReady
         );
 
         // 监听技能激活
-        _currentAbility.Events.On<GameEventType.Ability.Activated>(
-            GameEventType.Ability.Activated,
-            OnAbilityActivated
+        _currentAbility.Events.On<GameEventType.Ability.Activated>(OnAbilityActivated
         );
     }
 
@@ -194,19 +188,13 @@ public partial class ActiveSkillSlotUI : UIBase
     {
         if (_currentAbility == null) return;
 
-        _currentAbility.Events.Off<GameEventType.Ability.ChargeRestored>(
-            GameEventType.Ability.ChargeRestored,
-            OnChargeRestored
+        _currentAbility.Events.Off<GameEventType.Ability.ChargeRestored>(OnChargeRestored
         );
 
-        _currentAbility.Events.Off<GameEventType.Ability.Ready>(
-            GameEventType.Ability.Ready,
-            OnAbilityReady
+        _currentAbility.Events.Off<GameEventType.Ability.Ready>(OnAbilityReady
         );
 
-        _currentAbility.Events.Off<GameEventType.Ability.Activated>(
-            GameEventType.Ability.Activated,
-            OnAbilityActivated
+        _currentAbility.Events.Off<GameEventType.Ability.Activated>(OnAbilityActivated
         );
     }
 

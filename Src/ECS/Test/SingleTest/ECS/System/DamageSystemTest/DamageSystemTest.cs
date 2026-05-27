@@ -298,9 +298,7 @@ namespace Slime.Test.DamageSystemTest
             attacker.Data.Set(DataKey.LifeSteal, 100f); // 100% 触发率
 
             bool healRequestReceived = false;
-            attacker.Events.On<GameEventType.Unit.HealRequest>(
-                GameEventType.Unit.HealRequest,
-                evt =>
+            attacker.Events.On<GameEventType.Unit.HealRequest>(evt =>
                 {
                     healRequestReceived = true;
                     _log.Debug($"  收到治疗请求: {evt.Amount}");

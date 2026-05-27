@@ -292,7 +292,7 @@ public static class ResourceCatalog
     /// <param name="entries">待写入的目录条目列表。</param>
     private static void AddRuntimeSnapshotResourceEntries(List<ResourceCatalogEntry> entries)
     {
-        foreach (var resource in RuntimeDataSnapshot.GetResources())
+        foreach (var resource in SnapshotLoader.GetResources(SnapshotLoader.DefaultSnapshotPath))
         {
             if (string.IsNullOrWhiteSpace(resource.Key) || string.IsNullOrWhiteSpace(resource.Path))
             {
@@ -348,7 +348,7 @@ public static class ResourceCatalog
     /// </summary>
     /// <param name="resource">snapshot resource 记录。</param>
     /// <param name="category">解析后的资源分类。</param>
-    private static string ResolveRuntimeResourceCatalogPath(RuntimeResourceRecord resource, ResourceCategory category)
+    private static string ResolveRuntimeResourceCatalogPath(SnapshotResourceEntry resource, ResourceCategory category)
     {
         return category switch
         {
