@@ -57,7 +57,8 @@ internal class DashExecutor : AbilityFeatureHandler
 
         // 3. 通信机制：通过 EventBus 发布位移启动事件
         // 移动系统（MovementSystem）会监听此事件并接管实体的坐标更新
-        caster.Events.Emit(new GameEventType.Unit.MovementStarted(
+        caster.Events.Emit(
+            new GameEventType.Unit.MovementStarted(
                 MoveMode.Charge,
                 new MovementParams
                 {

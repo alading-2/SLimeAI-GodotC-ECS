@@ -47,7 +47,8 @@ internal class ArcShotExecutor : AbilityFeatureHandler
         );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
-        projectile.Events.Emit(new GameEventType.Unit.MovementStarted(
+        projectile.Events.Emit(
+            new GameEventType.Unit.MovementStarted(
                 MoveMode.CircularArc,
                 new MovementParams
                 {

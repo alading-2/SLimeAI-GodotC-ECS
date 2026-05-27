@@ -44,7 +44,8 @@ internal class OrbitSkillExecutor : AbilityFeatureHandler
             );
             if (projectile == null) continue;
 
-            projectile.Events.Emit(new GameEventType.Unit.MovementStarted(
+            projectile.Events.Emit(
+            new GameEventType.Unit.MovementStarted(
                     MoveMode.Orbit,
                     new MovementParams
                     {

@@ -65,8 +65,7 @@ internal class ParabolaBombardmentExecutor : AbilityFeatureHandler
         );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
-        projectile.Events.Emit(
-            new GameEventType.Unit.MovementStarted(
+        projectile.Events.Emit(new GameEventType.Unit.MovementStarted(
                 MoveMode.CircularArc, // 移动模式：圆弧
                 new MovementParams
                 {
