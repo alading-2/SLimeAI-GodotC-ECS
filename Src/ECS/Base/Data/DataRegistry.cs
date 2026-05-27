@@ -29,16 +29,6 @@ public static class DataRegistry
         return meta;
     }
 
-    /// <summary>
-    /// 注册泛型类型安全键，返回 DataKey<T>（供 DataKey_*.cs 静态字段使用）
-    /// </summary>
-    /// <typeparam name="T">值的 C# 类型</typeparam>
-    public static DataKey<T> Register<T>(DataMeta meta)
-    {
-        Register(meta);  // 复用现有注册逻辑
-        return new DataKey<T>(meta);
-    }
-
     // === 公共查询接口 ===
 
     /// <summary>

@@ -172,18 +172,6 @@ public class Data
         return _data.ContainsKey(key) || DataRegistry.IsComputed(key);
     }
 
-    // ================= 类型安全重载（DataKey<T>）=================
-
-    /// <summary>
-    /// 类型安全 Get（使用 DataKey<T>），返回类型由键声明决定，无需显式指定泛型
-    /// </summary>
-    public T Get<T>(DataKey<T> key) => Get<T>(key.Key);
-
-    /// <summary>
-    /// 类型安全 Set（使用 DataKey<T>），编译期拒绝类型不匹配的赋值
-    /// </summary>
-    public bool Set<T>(DataKey<T> key, T value) => Set<T>(key.Key, value);
-
     /// <summary>
     /// 移除指定的数据项
     /// </summary>
@@ -411,7 +399,7 @@ public class Data
     }
 
     // ================= 事件监听 (已移除) =================
-    // 请使用 Entity.Events.On<GameEventType.Data.PropertyChanged>(...)
+    // 请使用 Entity.Events.On(GameEventType.Data.PropertyChanged, ...)
     // 数据变更事件负载类型: (string Key, object? OldValue, object? NewValue)
 
 
@@ -654,8 +642,8 @@ public class Data
         {
             // 通过 Entity 事件总线广播数据变更
             // 下游监听示例: 
-            // entity.Events.On<GameEventType.Data.PropertyChanged>(evt => ...);
-            _owner.Events.Emit(new GameEventType.Data.PropertyChanged(key, oldValue, newValue));
+            // entity.Events.On<GameEventType.Data.PropertyChangedEvent>(GameEventType.Data.PropertyChanged, evt => ...);
+            _owner.Events.Emit(GameEventType.Data.PropertyChanged, new GameEventType.Data.PropertyChangedEventData(key, oldValue, newValue));
         }
     }
 

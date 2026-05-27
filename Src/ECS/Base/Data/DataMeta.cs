@@ -171,4 +171,9 @@ public string? GetOptionName(int index)
     return Options[index];
 }
 
+/// <summary>
+/// 隐式转换为 string（返回 Key 值）
+/// 使 DataMeta 字段可直接作为 Data.Get/Set 参数，无需显式 .Key 调用
+/// </summary>
+public static implicit operator string(DataMeta meta) => meta.Key;
 }

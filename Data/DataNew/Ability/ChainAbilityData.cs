@@ -41,9 +41,23 @@ namespace slime.data.Abilities
         /// </summary>
         public string LineEffectScenePath { get; set; } = "";
 
-        // ====== 命名快捷属性 ======
+        // ====== 实例 ======
 
         /// <summary>连锁闪电</summary>
-        public static ChainAbilityData ChainLightning => DataTable.GetRequiredByName<ChainAbilityData>("闪电链");
+        public static readonly ChainAbilityData ChainLightning = new()
+        {
+            Name = "闪电链",
+            FeatureGroupId = "技能.主动",
+            FeatureHandlerId = "技能.主动.连锁闪电",
+            Description = "释放链式闪电，在多个敌人间弹跳造成魔法伤害，每次弹跳伤害衰减",
+            AbilityIconPath = "res://icon.svg",
+            AbilityType = AbilityType.Active,
+            AbilityTriggerMode = AbilityTriggerMode.Manual,
+            AbilityCostType = AbilityCostType.Mana,
+            AbilityCooldown = 1.0f,
+            AbilityTargetSelection = AbilityTargetSelection.Entity,
+            AbilityCastRange = 600f,
+            AbilityDamage = 50f,
+        };
     }
 }

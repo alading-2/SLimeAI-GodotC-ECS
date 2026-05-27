@@ -41,9 +41,23 @@ namespace slime.data.Units
         /// </summary>
         public float CooldownReduction { get; set; } = (float)DataKey.CooldownReduction.DefaultValue!;
 
-        // ====== 命名快捷属性 ======
+        // ====== 实例 ======
 
         /// <summary>德鲁伊</summary>
-        public static PlayerData Deluyi => DataTable.GetRequiredByName<PlayerData>("德鲁伊");
+        public static readonly PlayerData Deluyi = new()
+        {
+            Name = "德鲁伊",
+            Team = Team.Player,
+            DeathType = DeathType.Hero,
+            VisualScenePath = "res://assets/Unit/Player/deluyi/AnimatedSprite2D/deluyi.tscn",
+            HealthBarHeight = 120f,
+            BaseHp = 100f,
+            BaseHpRegen = 1f,
+            BaseAttack = 10f,
+            AttackRange = 150f,
+            CritRate = 5f,
+            BaseDefense = 5f,
+            MoveSpeed = 200f,
+        };
     }
 }
