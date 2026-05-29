@@ -48,7 +48,7 @@ Descriptor 是字段定义，运行时 DTO 是 `RuntimeDataDescriptorDto`，cata
 | computed | `computeId`、`dependencies`、`computeParams` |
 | 展示信息 | `displayName`、`description`、`uiGroup`、`unit`、`format` |
 
-Descriptor 是字段定义事实源。不要再新增 `DataRegistry.Register(new DataMeta { ... })` 作为长期入口。
+Descriptor 是字段定义事实源。不要再新增 C# metadata 注册作为长期入口。
 
 ### 2.3 Catalog
 

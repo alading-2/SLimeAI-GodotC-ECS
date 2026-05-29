@@ -7,10 +7,10 @@
 - **规则驱动 (Rule-Based)**: 不再手动配置每一波的敌人,而是定义"规则"。
   - 例如:"史莱姆在第 1-5 波出现,间隔 3 秒"。
   - 系统会根据当前波次自动筛选并激活符合条件的规则。
-- **DataOS runtime table 配置**: 敌人生成规则来自 `EnemyData.All`，系统节奏常量来自 `SpawnSystemConfig`。
+- **DataOS snapshot 配置**: 敌人生成规则来自 `runtime_snapshot.json` 的 `unit.enemy` records，系统节奏常量来自 `SpawnSystemConfig`。
 - **TimerManager 驱动**: 使用项目统一的 `TimerManager` 管理所有计时器,实现对象池复用,零 GC 压力。
 - **生成管线化 (Pipeline)**:
-  - **What (生成什么)**: 由 `EnemyData` 中启用的 Spawn Rule 字段决定。
+  - **What (生成什么)**: 由 `unit.enemy` snapshot projection 中启用的 Spawn Rule 字段决定。
   - **Where (在哪里生成)**: 委托给 `SpawnPositionCalculator` 处理（支持屏幕外、随机等策略）。
   - **How (如何生成)**: 系统在初始化时自动为所有配置的敌人创建对象池,并强制使用 `ObjectPoolManager` 进行复用。
 
@@ -37,7 +37,7 @@
 
 1. **系统初始化 (`_Ready`)**:
 
-   - 系统进入运行态后，按 `EnemyData.All` 筛选当前波次激活的生成规则。
+   - 系统进入运行态后，按 `unit.enemy` records 筛选当前波次激活的生成规则。
    - 敌人实体通过 `EntityManager.Spawn(... UsingObjectPool = true, PoolName = EnemyPool)` 生成。
    - 对象池由 `ObjectPoolInit` 预热，`SpawnSystem` 不直接创建对象池。
 

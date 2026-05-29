@@ -280,13 +280,6 @@ public static partial class EntityManager
             return false;
         }
 
-        DataMeta? meta = DataRegistry.GetMeta(key);
-        // DataMeta.CanMigrate 是默认规则；Profile.Includes 可用于对白名单项做显式放行。
-        if (meta != null && !meta.CanMigrate && !profile.Includes(key))
-        {
-            return false;
-        }
-
         return IsSafeMigrationValue(value);
     }
 

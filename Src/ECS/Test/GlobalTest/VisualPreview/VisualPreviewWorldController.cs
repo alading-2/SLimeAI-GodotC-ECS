@@ -207,16 +207,22 @@ internal sealed class VisualPreviewWorldController
     /// <param name="position">生成位置。</param>
     private static VisualPreviewEntity? SpawnPreviewEntity(VisualPreviewEntry entry, Vector2 position)
     {
-        var config = new VisualPreviewEntityConfig
+        var config = new RuntimeDataRecordDto
         {
+            Table = "test.visual_preview",
+            Id = $"visual_preview.{entry.ResourceKey}",
             Name = entry.SceneName,
-            VisualScenePath = entry.ResourcePath,
-            PreviewDefaultAnimation = entry.DefaultAnimation
+            Fields = new Dictionary<string, RuntimeDataFieldDto>
+            {
+                [GeneratedDataKey.Name.Key] = new() { Type = "string", Value = entry.SceneName },
+                [GeneratedDataKey.VisualScenePath.Key] = new() { Type = "string", Value = entry.ResourcePath }
+            }
         };
 
         var entity = EntityManager.Spawn<VisualPreviewEntity>(new EntitySpawnConfig
         {
             Config = config,
+            RuntimeDataRecord = config,
             UsingObjectPool = false,
             Position = position
         });

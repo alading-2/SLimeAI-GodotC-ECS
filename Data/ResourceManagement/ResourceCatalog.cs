@@ -1,6 +1,4 @@
 using Godot;
-using slime.data.Abilities;
-using slime.data.Units;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,12 +34,12 @@ public readonly record struct ResourceCatalogGroup(
 /// <summary>
 /// 通用资源目录服务。
 /// <para>
-/// DataOS runtime table 表数据直接构建目录条目；场景、特效等资产仍从 ResourcePaths 生成索引构建。
+/// runtime snapshot records 直接构建数据目录条目；场景、特效等资产仍从 ResourcePaths 生成索引构建。
 /// </para>
 /// </summary>
 public static class ResourceCatalog
 {
-    // 目录推导只处理资产资源；运行时数据目录由 DataOS runtime table 静态表直接提供。
+    // 目录推导只处理资产资源；运行时数据目录由 runtime snapshot records 提供。
     private const string EffectRoot = "assets/Effect";
     private const string AssetUnitEnemyRoot = "assets/Unit/Enemy";
     private const string AssetUnitPlayerRoot = "assets/Unit/Player";
@@ -205,79 +203,53 @@ public static class ResourceCatalog
     }
 
     /// <summary>
-    /// 从 DataOS runtime table 纯 C# 表构建目录条目。
+    /// 从 runtime snapshot records 构建目录条目。
     /// </summary>
     /// <param name="entries">待写入的目录条目列表。</param>
     private static void AddDataOsRuntimeTableEntries(List<ResourceCatalogEntry> entries)
     {
-        foreach (var data in EnemyData.All)
+        var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
+        AddSnapshotRecordEntries(entries, query.GetRecords("unit.enemy"), ResourceCategory.DataUnit, "Unit.Enemy");
+        AddSnapshotRecordEntries(entries, query.GetRecords("unit.player"), ResourceCategory.DataUnit, "Unit.Player");
+        AddSnapshotRecordEntries(entries, query.GetRecords("unit.targeting_indicator"), ResourceCategory.DataUnit, "Unit.Targeting");
+
+        foreach (var record in query.GetRecords("ability"))
         {
-            if (string.IsNullOrWhiteSpace(data.Name))
-            {
-                continue;
-            }
-
-            entries.Add(new ResourceCatalogEntry(
-                data.Name, // DataOS runtime table 名称键
-                ResourceCategory.DataUnit, // 保持选择器分类兼容
-                "Data/DataOS/RuntimeTables/Unit/Enemy/EnemyData.cs", // 源数据文件
-                data.Name, // UI 显示名
-                "Unit.Enemy", // 目录分类路径
-                typeof(EnemyData) // 推荐数据类型
-            ));
-        }
-
-        foreach (var data in PlayerData.All)
-        {
-            if (string.IsNullOrWhiteSpace(data.Name))
-            {
-                continue;
-            }
-
-            entries.Add(new ResourceCatalogEntry(
-                data.Name, // DataOS runtime table 名称键
-                ResourceCategory.DataUnit, // 保持选择器分类兼容
-                "Data/DataOS/RuntimeTables/Unit/Player/PlayerData.cs", // 源数据文件
-                data.Name, // UI 显示名
-                "Unit.Player", // 目录分类路径
-                typeof(PlayerData) // 推荐数据类型
-            ));
-        }
-
-        foreach (var data in TargetingIndicatorData.All)
-        {
-            if (string.IsNullOrWhiteSpace(data.Name))
-            {
-                continue;
-            }
-
-            entries.Add(new ResourceCatalogEntry(
-                data.Name, // DataOS runtime table 名称键
-                ResourceCategory.DataUnit, // 保持选择器分类兼容
-                "Data/DataOS/RuntimeTables/Unit/Targeting/TargetingIndicatorData.cs", // 源数据文件
-                data.Name, // UI 显示名
-                "Unit.Targeting", // 目录分类路径
-                typeof(TargetingIndicatorData) // 推荐数据类型
-            ));
-        }
-
-        foreach (var data in AbilityData.All)
-        {
-            if (string.IsNullOrWhiteSpace(data.Name))
-            {
-                continue;
-            }
-
-            var group = string.IsNullOrWhiteSpace(data.FeatureGroupId)
+            var ability = RuntimeDataRecordProjection.ToAbilityDefinitionView(record);
+            var group = string.IsNullOrWhiteSpace(ability.FeatureGroupId)
                 ? "Ability"
-                : $"Ability.{NormalizeCatalogPath(data.FeatureGroupId) ?? "未分类"}";
+                : $"Ability.{NormalizeCatalogPath(ability.FeatureGroupId) ?? "未分类"}";
             entries.Add(new ResourceCatalogEntry(
-                data.Name, // DataOS runtime table 名称键
+                record.Id, // snapshot record id
                 ResourceCategory.DataAbility, // 保持选择器分类兼容
-                "Data/DataOS/RuntimeTables/Ability/AbilityData.cs", // 源数据文件
-                data.Name, // UI 显示名
+                "Data/DataOS/Snapshots/runtime_snapshot.json", // 源 snapshot
+                ability.Name, // UI 显示名
                 group, // 目录分类路径
-                typeof(AbilityData) // 推荐数据类型
+                typeof(RuntimeDataRecordDto) // 推荐数据类型
+            ));
+        }
+    }
+
+    private static void AddSnapshotRecordEntries(
+        List<ResourceCatalogEntry> entries,
+        IReadOnlyList<RuntimeDataRecordDto> records,
+        ResourceCategory category,
+        string catalogPath)
+    {
+        foreach (var record in records)
+        {
+            if (string.IsNullOrWhiteSpace(record.Name))
+            {
+                continue;
+            }
+
+            entries.Add(new ResourceCatalogEntry(
+                record.Id, // snapshot record id
+                category, // 保持选择器分类兼容
+                "Data/DataOS/Snapshots/runtime_snapshot.json", // 源 snapshot
+                record.Name, // UI 显示名
+                catalogPath, // 目录分类路径
+                typeof(RuntimeDataRecordDto) // 推荐数据类型
             ));
         }
     }

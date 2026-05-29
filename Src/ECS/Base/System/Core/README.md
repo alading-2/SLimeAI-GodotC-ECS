@@ -1,6 +1,6 @@
 # System Core 使用说明
 
-> 2026-04 更新：系统管理已切到“代码只注册 `SystemId + Factory`，DataOS runtime table 声明装载、挂载分组、标签和运行条件”的数据驱动模型。旧版代码侧生命周期/形态枚举、Profile 装配表和四维阶段模型已退出正式流程。
+> 2026-05 更新：系统管理已切到“代码只注册 `SystemId + Factory`，DataOS snapshot records 声明装载、挂载分组、标签和运行条件”的数据驱动模型。旧版代码侧生命周期/形态枚举、Profile 装配表和四维阶段模型已退出正式流程。
 
 ## 0. 开发者从哪里开始看
 
@@ -13,9 +13,9 @@
    - 想看启动链路：`SystemManager.cs`
    - 想看注册约束：`SystemRegistry.cs`
    - 想看代码注册：`SystemDescriptor.cs`
-   - 想看系统配置：`Data/DataOS runtime table/System/SystemData.cs`
+   - 想看系统配置：`Data/DataOS/Snapshots/runtime_snapshot.json` 的 `system.config`
    - 想看状态门禁：`Lifecycle/SystemRunCondition.cs`
-   - 想看启动预设：`Data/DataOS runtime table/System/SystemPresetData.cs`
+   - 想看启动预设：`Data/DataOS/Snapshots/runtime_snapshot.json` 的 `system.preset`
 
 推荐这样看的原因是：
 
@@ -31,7 +31,7 @@
 
 1. Godot 先实例化 `SystemManager`
 2. `SystemManager._EnterTree()` 初始化 `ParentManager`
-3. `SystemManager._Ready()` 加载 `SystemData/SystemPresetData`，创建 Host 并启动被配置选中的系统
+3. `SystemManager._Ready()` 加载 `system.config` / `system.preset` snapshot records，创建 Host 并启动被配置选中的系统
 4. 主场景随后进入 `_Ready()`
 
 这意味着：
@@ -70,12 +70,11 @@
 - `Internal/`：管理器内部运行时结构
   - `ManagedSystemEntry.cs`
 
-系统配置数据放在：
+系统配置数据来自：
 
-- `Data/DataOS runtime table/System/SystemData.cs`
-- `Data/DataOS runtime table/System/SystemPresetData.cs`
+- `Data/DataOS/Snapshots/runtime_snapshot.json`
 
-## 3. SystemData：系统设置只在 DataOS runtime table 里写
+## 3. System Config：系统设置只在 DataOS 里写
 
 代码注册只回答两个问题：这个系统叫什么、怎么创建实例。
 
@@ -89,7 +88,7 @@ public static void Initialize()
 }
 ```
 
-其余系统级设置统一写在 `Data/DataOS runtime table/System/SystemData.cs`；旧 `.tres` 系统配置保留但运行时不导入。
+其余系统级设置统一写在 DataOS authoring，并通过 `system.config` snapshot records 投影；旧 `.tres` 系统配置不进入运行时。
 
 | 字段 | 语义 |
 | --- | --- |

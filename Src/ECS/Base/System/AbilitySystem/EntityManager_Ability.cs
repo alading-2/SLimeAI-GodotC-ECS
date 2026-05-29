@@ -4,7 +4,6 @@
 
 using System.Collections.Generic;
 using slime.config.Features;
-using slime.data.Abilities;
 
 /// <summary>
 /// EntityManager 的 Ability 扩展
@@ -19,19 +18,21 @@ public static partial class EntityManager
     // ==================== Ability 管理 ====================
 
     /// <summary>
-    /// 为单位添加 DataOS runtime table 纯 C# 技能。
+    /// 为单位添加 runtime snapshot 技能。
     /// </summary>
     /// <param name="owner">技能拥有者。</param>
-    /// <param name="config">DataOS runtime table 技能配置。</param>
+    /// <param name="config">runtime snapshot 技能投影。</param>
     /// <returns>创建的技能实体，失败返回 null。</returns>
-    public static AbilityEntity? AddAbility(IEntity owner, AbilityData config)
+    public static AbilityEntity? AddAbility(IEntity owner, AbilityDefinitionView config)
     {
         return AddAbilityCore(
             owner, // 技能拥有者
-            config, // DataOS runtime table 技能配置
-            config.Name ?? "", // 技能名称
-            config.FeatureHandlerId ?? "", // FeatureHandlerId
-            validateAbilityHandler: true // 技能必须绑定处理器
+            config, // runtime snapshot 技能投影
+            config.Name, // 技能名称
+            config.FeatureHandlerId, // FeatureHandlerId
+            validateAbilityHandler: true, // 技能必须绑定处理器
+            runtimeDataRecordTable: config.Table,
+            runtimeDataRecordId: config.RecordId
         );
     }
 
@@ -53,7 +54,7 @@ public static partial class EntityManager
     }
 
     /// <summary>
-    /// 技能添加统一实现，外部优先使用 DataOS runtime table 重载。
+    /// 技能添加统一实现，外部优先使用 snapshot ability 投影重载。
     /// </summary>
     /// <param name="owner">技能拥有者。</param>
     /// <param name="config">配置对象。</param>
@@ -66,7 +67,9 @@ public static partial class EntityManager
         object config,
         string abilityName,
         string handlerIdFromConfig,
-        bool validateAbilityHandler)
+        bool validateAbilityHandler,
+        string? runtimeDataRecordTable = null,
+        string? runtimeDataRecordId = null)
     {
         if (owner == null)
         {
@@ -98,6 +101,8 @@ public static partial class EntityManager
         ability = Spawn<AbilityEntity>(new EntitySpawnConfig
         {
             Config = config, // 技能配置数据
+            RuntimeDataRecordTable = runtimeDataRecordTable,
+            RuntimeDataRecordId = runtimeDataRecordId,
             UsingObjectPool = true, // 技能实体统一走对象池
             PoolName = ObjectPoolNames.AbilityPool, // 技能对象池
             ParentEntity = owner, // 父实体/技能拥有者

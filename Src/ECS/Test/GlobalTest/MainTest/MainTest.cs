@@ -1,7 +1,5 @@
 using Godot;
 using System.Threading.Tasks;
-using slime.data.Abilities;
-using slime.data.Units;
 
 
 
@@ -29,10 +27,12 @@ public partial class MainTest : Node
 
         // 1. 生成玩家
         _log.Info("步骤 1: 生成玩家");
-        var playerConfig = PlayerData.Get("德鲁伊") ?? PlayerData.Deluyi;
+        var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
+        var playerConfig = query.GetRequiredByName("unit.player", "德鲁伊");
         _player = EntityManager.Spawn<PlayerEntity>(new EntitySpawnConfig
         {
             Config = playerConfig,
+            RuntimeDataRecord = playerConfig,
             UsingObjectPool = false,
             Position = Vector2.Zero
         });
@@ -42,10 +42,11 @@ public partial class MainTest : Node
 
         // 1.5. 生成一个敌人用于测试单位目标选择
         _log.Info("步骤 1.5: 生成测试敌人");
-        var enemyConfig = EnemyData.Get("豺狼人") ?? EnemyData.Chailangren;
+        var enemyConfig = query.GetRequiredByName("unit.enemy", "豺狼人");
         var enemy = EntityManager.Spawn<EnemyEntity>(new EntitySpawnConfig
         {
             Config = enemyConfig,
+            RuntimeDataRecord = enemyConfig,
             UsingObjectPool = false,
             Position = new Vector2(200, 200)
         });
@@ -136,9 +137,10 @@ public partial class MainTest : Node
     {
         if (_player == null) return;
 
-        // 加载正式技能配置：默认使用 DataOS runtime table 纯 C# 表，旧 .tres 不再作为主流程。
+        // 加载正式技能配置：默认使用 runtime snapshot ability record，旧 .tres / RuntimeTables 不再作为主流程。
         // 技能：冲刺 (Dash) - Charge 模式位移。
-        var dashConfig = AbilityData.Get("冲刺") ?? AbilityData.Dash;
+        var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
+        var dashConfig = RuntimeDataRecordProjection.ToAbilityDefinitionView(query.GetRequiredByName("ability", "冲刺"));
         EntityManager.AddAbility(_player, dashConfig);
 
         _log.Info("已添加正式技能（含7种移动系新技能），等待UI自动更新");

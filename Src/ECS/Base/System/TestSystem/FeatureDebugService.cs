@@ -1,6 +1,5 @@
 using Godot;
 using slime.config.Features;
-using slime.data.Abilities;
 using ECS.Base.System.TestSystem.Core;
 
 /// <summary>
@@ -116,10 +115,10 @@ internal sealed class FeatureDebugService
     /// 通过正式 Ability 授予链路，为当前实体添加一个技能 Feature。
     /// </summary>
     /// <param name="owner">当前实体所有者；为空时返回失败结果。</param>
-    /// <param name="config">DataOS runtime table 技能配置；为空时返回失败结果。</param>
+    /// <param name="config">runtime snapshot 技能投影；为空时返回失败结果。</param>
     /// <param name="resourceKey">资源键；用于输出错误提示和日志定位。</param>
     /// <returns>执行结果，包含成功状态与提示信息。</returns>
-    public TestActionResult GrantAbility(IEntity? owner, AbilityData? config, string resourceKey)
+    public TestActionResult GrantAbility(IEntity? owner, AbilityDefinitionView? config, string resourceKey)
     {
         if (owner == null)
         {

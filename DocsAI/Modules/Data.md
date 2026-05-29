@@ -1,6 +1,6 @@
 # Data 模块契约
 
-本文是 AI 修改运行时 Data 容器、typed DataKey、DataCatalog 和数据事件时必须阅读的执行契约。数据目录配置、DataOS runtime table 运行时外壳、DataKey 定义和 EventType 协议见 `DocsAI/Modules/DataAuthoring.md`。
+本文是 AI 修改运行时 Data 容器、typed DataKey、DataCatalog 和数据事件时必须阅读的执行契约。数据目录配置、runtime snapshot、DataKey 定义和 EventType 协议见 `DocsAI/Modules/DataAuthoring.md`。
 
 ## 职责边界
 

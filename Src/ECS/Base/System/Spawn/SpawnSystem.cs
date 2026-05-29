@@ -2,7 +2,6 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using slime.data.Units;
 
 /// <summary>
 /// 敌人生成系统 - 核心的"敌人生成与波次管理系统"。
@@ -51,7 +50,7 @@ public partial class SpawnSystem : Node, ISystem,
     // 运行时状态跟踪 - 使用 struct 避免每波生成大量状态对象导致的 GC 压力
     private struct RuleRuntimeState
     {
-        public EnemyData Config; // 敌人配置
+        public UnitSpawnDefinition Config; // snapshot 投影后的敌人生成配置
         public float AccumulatedTime; // 累积时间
     }
 
@@ -130,10 +129,10 @@ public partial class SpawnSystem : Node, ISystem,
         // 2. 初始化规则状态
         _activeStates.Clear();
 
-        // 从 ResourceManagement 加载所有敌人配置，过滤路径以确保只加载敌人相关的配置
-        // 敌人配置位于 DataUnit 分类，不能使用 Data 分类（Data 分类下没有 Unit 配置映射）
-        foreach (var config in EnemyData.All)
+        var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
+        foreach (var record in query.GetRecords("unit.enemy"))
         {
+            var config = RuntimeDataRecordProjection.ToUnitSpawnDefinition(record);
             // 检查规则是否在当前波次激活，且规则本身被启用
             if (config.IsEnableSpawnRule && IsConfigActiveForWave(config, waveIndex))
             {
@@ -282,9 +281,9 @@ public partial class SpawnSystem : Node, ISystem,
     /// 手动批量生成敌人（用于测试或特殊事件）
     /// </summary>
     /// <param name="count">数量</param>
-    /// <param name="enemyConfig">敌人配置资源</param>
+    /// <param name="enemyConfig">敌人 snapshot 投影配置</param>
     /// <param name="strategy">生成策略</param>
-    public void SpawnBatch(int count, EnemyData enemyConfig, SpawnPositionStrategy strategy)
+    public void SpawnBatch(int count, UnitSpawnDefinition enemyConfig, SpawnPositionStrategy strategy)
     {
         // 1. 计算位置
         // 获取当前视口（Viewport），用于确定屏幕边界和相机位置，确保敌人能正确生成在玩家视野外
@@ -304,6 +303,8 @@ public partial class SpawnSystem : Node, ISystem,
             var enemy = EntityManager.Spawn<EnemyEntity>(new EntitySpawnConfig
             {
                 Config = enemyConfig,
+                RuntimeDataRecordTable = enemyConfig.Table,
+                RuntimeDataRecordId = enemyConfig.RecordId,
                 UsingObjectPool = true,
                 PoolName = ObjectPoolNames.EnemyPool,
                 Position = pos
@@ -327,11 +328,8 @@ public partial class SpawnSystem : Node, ISystem,
     /// <param name="config">敌人配置</param>
     /// <param name="waveIndex">当前波次索引 (1-based)</param>
     /// <returns>如果当前波次在规则设定的 [SpawnMinWave, SpawnMaxWave] 范围内，则返回 true</returns>
-    private bool IsConfigActiveForWave(EnemyData config, int waveIndex)
+    private bool IsConfigActiveForWave(UnitSpawnDefinition config, int waveIndex)
     {
-        // 基础安全性检查
-        if (config == null) return false;
-
         // 逻辑判断：
         // 1. waveIndex >= config.SpawnMinWave: 当前波次必须达到规则要求的起始波次
         // 2. config.SpawnMaxWave == -1: 表示该规则在起始波次后永久生效

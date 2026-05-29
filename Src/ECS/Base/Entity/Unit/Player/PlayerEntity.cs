@@ -21,7 +21,6 @@ public partial class PlayerEntity : CharacterBody2D, IUnit
 	public PlayerEntity()
 	{
 		Data = new Data(this);
-		Data.Set(DataKey.DefaultMoveMode, MoveMode.PlayerInput);
 	}
 
 	/// <summary>

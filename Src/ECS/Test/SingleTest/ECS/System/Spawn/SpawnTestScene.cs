@@ -2,7 +2,6 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using Slime.Test;
-using slime.data.Units;
 
 namespace Slime.Test
 {
@@ -24,8 +23,8 @@ namespace Slime.Test
         // 状态
         private SpawnPositionStrategy _currentStrategy = SpawnPositionStrategy.Rectangle;
         private readonly SpawnPositionParams _previewParams = new(); // 用于绘图预览参数，保持默认值与 SpawnSystem 一致
-        // DataOS runtime table 敌人测试数据
-        private EnemyData? _testEnemy;
+        // runtime snapshot 敌人测试数据
+        private UnitSpawnDefinition? _testEnemy;
 
         public override void _Ready()
         {
@@ -41,8 +40,9 @@ namespace Slime.Test
 
         private void SetupEnvironment()
         {
-            // 默认从 DataOS runtime table 纯 C# 表按名字获取敌人数据；旧 .tres 不再作为测试主流程。
-            _testEnemy = EnemyData.Get("豺狼人") ?? EnemyData.Chailangren;
+            // 默认从 runtime snapshot records 按名字获取敌人数据；旧 .tres / RuntimeTables 不再作为测试主流程。
+            var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
+            _testEnemy = RuntimeDataRecordProjection.ToUnitSpawnDefinition(query.GetRequiredByName("unit.enemy", "豺狼人"));
 
             if (_testEnemy == null) _log.Error("Failed to load test enemy data!");
 

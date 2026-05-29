@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Slime.Test.DataOS;
@@ -16,6 +17,9 @@ public partial class DataSnapshotApplyTestScene : DataSceneTestBase
         DataRuntimeBootstrap_ShouldBuildCatalogFindRecordAndCreateData();
         DataRuntimeBootstrap_ShouldBindExistingDataAndApplyRecord();
         RepositorySnapshot_RecordApply_ShouldUseGeneratedHandles();
+        RuntimeDataRecordQuery_ShouldQueryByTableIdAndName();
+        RuntimeDataRecordProjection_ShouldBuildTypedViews();
+        RuntimeDataRecordProjection_ShouldReportMissingFields();
     }
 
     private void RuntimeSnapshot_LoadFromJson_ShouldDeserializeDescriptorsAndRecords()
@@ -205,6 +209,53 @@ public partial class DataSnapshotApplyTestScene : DataSceneTestBase
         AssertEqual("snapshot name", "鱼人", data.Get<string>(GeneratedDataKey.Name));
         AssertEqual("snapshot team", Team.Enemy, data.Get<Team>(GeneratedDataKey.Team));
         AssertEqual("snapshot exp reward", 2, data.Get<int>(GeneratedDataKey.ExpReward));
+    }
+
+    private void RuntimeDataRecordQuery_ShouldQueryByTableIdAndName()
+    {
+        var query = new RuntimeDataRecordQuery(Bootstrap.Snapshot);
+
+        AssertEqual("query enemy count", 2, query.GetRecords("unit.enemy").Count);
+        AssertEqual("query by id", "enemy.yuren", query.GetRequired("unit.enemy", "enemy.yuren").Id);
+        AssertEqual("query by name", "enemy.yuren", query.GetRequiredByName("unit.enemy", "鱼人").Id);
+        AssertThrowsMessage<KeyNotFoundException>(
+            "query missing fails fast",
+            () => query.GetRequired("unit.enemy", "enemy.missing"),
+            "unit.enemy/enemy.missing");
+    }
+
+    private void RuntimeDataRecordProjection_ShouldBuildTypedViews()
+    {
+        var query = new RuntimeDataRecordQuery(Bootstrap.Snapshot);
+        var enemy = RuntimeDataRecordProjection.ToUnitSpawnDefinition(query.GetRequired("unit.enemy", "enemy.yuren"));
+        var ability = RuntimeDataRecordProjection.ToAbilityDefinitionView(query.GetRequired("ability", "ability.slam"));
+        var system = RuntimeDataRecordProjection.ToSystemConfigDefinition(query.GetRequired("system.config", "system.spawn"));
+        var preset = RuntimeDataRecordProjection.ToSystemPresetDefinition(query.GetRequired("system.preset", "system.preset.default"));
+
+        AssertEqual("enemy record id", "enemy.yuren", enemy.RecordId);
+        AssertEqual("enemy spawn interval", 2.0f, enemy.SpawnInterval);
+        AssertEqual("enemy strategy", SpawnPositionStrategy.Rectangle, enemy.SpawnStrategy);
+        AssertEqual("ability name", "猛击", ability.Name);
+        AssertEqual("ability trigger", AbilityTriggerMode.Manual, ability.TriggerMode);
+        AssertEqual("system group", SystemGroup.Gameplay, system.MountGroup);
+        AssertEqual("system flow state", GameFlowState.SessionPlaying, system.AllowedFlowStates);
+        AssertTrue("preset enabled tags", (preset.EnabledTags & SystemTag.Gameplay) != 0);
+    }
+
+    private void RuntimeDataRecordProjection_ShouldReportMissingFields()
+    {
+        var record = new RuntimeDataRecordDto
+        {
+            Table = "unit.enemy",
+            Id = "enemy.invalid",
+            Name = "Invalid",
+            Fields = new Dictionary<string, RuntimeDataFieldDto>()
+        };
+
+        AssertThrowsMessage<InvalidOperationException>(
+            "projection missing field",
+            () => RuntimeDataRecordProjection.ToUnitSpawnDefinition(record),
+            "unit.enemy/enemy.invalid");
     }
 
 }

@@ -42,8 +42,8 @@
 **数据存储**
 - ❌ Component 私有业务状态字段（`_currentHp`、`_moveSpeed`）→ 存 `Data`
 - ❌ `Data.On()` 监听数据变化 → 用 `Entity.Events`
-- ❌ 字符串字面量访问 Data（`"CurrentHp"`）→ 用 `DataKey.CurrentHp`（`static readonly DataMeta`）
-- ❌ 新增 `const string` DataKey → 用 `static readonly DataMeta` + `DataRegistry.Register`
+- ❌ 字符串字面量访问 Data（`"CurrentHp"`）→ 用 descriptor 生成的 typed `DataKey<T>`
+- ❌ 新增 `const string` / `DataMeta` DataKey → 先写 DataOS descriptor，再生成 typed handle
 
 **通信**
 - ❌ Godot Signal 处理核心逻辑 → 用 `EventBus`

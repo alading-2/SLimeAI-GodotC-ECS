@@ -51,13 +51,13 @@
 | `ResourceCatalog/ResourcePickerControl.tscn` | 资源选择控件场景骨架 |
 | `ResourceCatalog/ResourceCatalogTestModule.cs` | 资源目录测试模块，通过分类下拉框展示 `ResourceCatalog.GetGroups()` 返回的分类，选择分类后自动显示该分类资源 |
 | `ResourceCatalog/ResourceCatalogTestModule.tscn` | 资源目录测试模块固定布局骨架，提供分类选择、分类资源列表和详情展示 |
-| `System/SystemInfoService.cs` | 系统监控服务，合并 DataOS runtime table 系统配置、`SystemRegistry` 与 `SystemManager` 运行态，封装 Add / Remove / Enable / Disable 调试操作 |
+| `System/SystemInfoService.cs` | 系统监控服务，合并 snapshot 系统配置、`SystemRegistry` 与 `SystemManager` 运行态，封装 Add / Remove / Enable / Disable 调试操作 |
 | `System/SystemInfoTestModule.cs` | 系统监控模块，负责系统列表筛选、运行状态详情展示和按钮操作转发 |
 | `System/SystemInfoTestModule.tscn` | 系统监控模块固定布局骨架，提供分组 / 标签 / 状态 / 搜索筛选、系统列表、详情和操作按钮 |
 | `Info/ObjectPoolInfoService.cs` | 对象池信息服务，负责把 `ObjectPoolManager` 统计与容量元数据合并成测试面板快照 |
 | `Info/ObjectPoolInfoModule.cs` | 对象池信息模块，负责用中文展示对象池名称列表、当前池概览和紧凑详情 |
 | `Info/ObjectPoolInfoModule.tscn` | 对象池信息模块固定布局骨架，提供左侧名称列表和右侧概览 / 详情区 |
-| `Spawn/SpawnTestModule.cs` | 敌人生成测试模块，选择 `EnemyData` 后通过正式 `SpawnSystem.SpawnBatch(...)` 生成敌人 |
+| `Spawn/SpawnTestModule.cs` | 敌人生成测试模块，选择 snapshot 敌人记录后通过正式 `SpawnSystem.SpawnBatch(...)` 生成敌人 |
 | `Spawn/SpawnTestModule.tscn` | 敌人生成测试模块固定布局骨架 |
 
 ## 2.1 第一次看这个系统，推荐按这个顺序读
@@ -270,11 +270,11 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 
 左侧技能库来自：
 
-- `AbilityData.All`
+- `runtime_snapshot.json` 的 `ability` records
 
 分组优先看：
 
-- `AbilityData.FeatureGroupId`
+- `AbilityFeatureGroup` projection 字段
 
 显示规则：
 
@@ -301,7 +301,7 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 
 ### 当前支持
 
-- 从 `ResourceCatalog.GetEntries("Unit.Enemy")` 选择 DataOS runtime table 敌人条目
+- 从 `ResourceCatalog.GetEntries("Unit.Enemy")` 选择 snapshot 敌人条目
 - 选择 `SpawnPositionStrategy`
 - 设置生成数量
 - 调用 `SpawnSystem.SpawnBatch(...)`
@@ -313,7 +313,7 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 敌人列表来自：
 
 - `ResourceCatalog.GetEntries("Unit.Enemy")`
-- `EnemyData.All`
+- `runtime_snapshot.json` 的 `unit.enemy` records
 
 模块按目录前缀 `Unit.Enemy` 过滤，不展示玩家、目标指示器、技能或特效资源，避免把非敌人配置传入 `SpawnSystem`。
 

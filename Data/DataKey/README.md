@@ -25,7 +25,7 @@ Data/DataKey/
 
 ## 禁止
 
-- 不手写 `DataRegistry.Register` + `new DataMeta` 字段定义。
+- 不手写 C# metadata 字段定义。
 - 不在 DataKey handle 上放默认值、范围或计算函数。
 - 不新增 `const string` 作为普通业务字段。
 - 不把旧 `.tres` 或旧 Resource config 作为字段定义来源。

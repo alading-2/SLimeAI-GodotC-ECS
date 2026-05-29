@@ -31,7 +31,6 @@ public partial class DataCatalogTestScene : DataSceneTestBase
         BuildCatalog_ShouldRejectMissingComputeResolver();
         BuildCatalog_ShouldBuildIndexesIdempotently();
         DataComputeRegistry_ShouldRejectInvalidRegistrations();
-        LegacyAudit_ShouldReportDescriptorDrift();
     }
 
     private void BuildCatalog_ShouldRejectDuplicateStableKey()
@@ -270,28 +269,4 @@ public partial class DataCatalogTestScene : DataSceneTestBase
         AssertThrowsMessage<KeyNotFoundException>("reject missing resolver lookup", () => registry.GetRequired("Missing"), "Missing");
     }
 
-    private void LegacyAudit_ShouldReportDescriptorDrift()
-    {
-        var report = LegacyDataAuditReport.Build(
-            new[]
-            {
-                Meta("Attribute.BaseHp", typeof(float), 100f, minValue: 0f, maxValue: 999f),
-                Meta("Attribute.FinalHp", typeof(float), 0f, compute: _ => 0f, dependencies: new[] { "Attribute.BaseHp" }),
-                Meta("Attribute.Missing", typeof(float), 0f)
-            },
-            new[]
-            {
-                Definition("Attribute.BaseHp", DataValueType.Int, 100, minValue: 0f, maxValue: 100f),
-                Definition("Attribute.FinalHp", DataValueType.Float, 0f),
-                Definition("Attribute.New", DataValueType.Float, 0f)
-            },
-            new[] { "DataOS runtime table/Unit/PlayerData.cs", "Src/ECS/Test/SingleTest/ECS/Data/Legacy.tscn" });
-
-        AssertEqual("legacy missing descriptor count", 1, report.MissingInSnapshot.Count);
-        AssertEqual("legacy new descriptor count", 1, report.MissingInCSharp.Count);
-        AssertEqual("legacy type mismatch count", 1, report.TypeMismatches.Count);
-        AssertEqual("legacy range mismatch count", 1, report.RangeMismatches.Count);
-        AssertEqual("legacy computed mismatch count", 1, report.ComputedMismatches.Count);
-        AssertEqual("legacy old path count", 2, report.OldPathReferences.Count);
-    }
 }

@@ -5,7 +5,7 @@ using slime.data.Systems;
 
 /// <summary>
 /// TestSystem 系统信息服务。
-/// <para>合并 DataOS runtime table SystemData、SystemRegistry 与 SystemManager 运行态，供系统监控模块展示和操作。</para>
+/// <para>合并 snapshot system.config 投影、SystemRegistry 与 SystemManager 运行态，供系统监控模块展示和操作。</para>
 /// </summary>
 internal sealed class SystemInfoService
 {

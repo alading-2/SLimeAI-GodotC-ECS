@@ -1,12 +1,11 @@
 using Godot;
-using slime.data.Units;
 using System;
 using ECS.Base.System.TestSystem.Core;
 
 /// <summary>
 /// 敌人生成测试模块。
 /// <para>
-/// 默认通过 DataOS runtime table 敌人名称获取 EnemyData，并复用正式 SpawnSystem 执行批量生成。
+/// 默认通过 runtime snapshot 敌人记录，并复用正式 SpawnSystem 执行批量生成。
 /// </para>
 /// </summary>
 public partial class SpawnTestModule : TestModuleBase
@@ -135,11 +134,10 @@ public partial class SpawnTestModule : TestModuleBase
             return;
         }
 
-        var config = ResolveEnemyConfig(entry);
-        if (config == null)
+        if (!TryResolveEnemyConfig(entry, out var config, out var error))
         {
             _log.Error($"[敌人生成测试] 加载敌人配置失败: key={entry.ResourceKey} name={entry.DisplayName} path={entry.Path}");
-            ShowStatus($"加载失败: {entry.ResourceKey}");
+            ShowStatus($"加载失败: {error}");
             return;
         }
 
@@ -168,13 +166,37 @@ public partial class SpawnTestModule : TestModuleBase
     }
 
     /// <summary>
-    /// 解析敌人配置：按 DataOS runtime table 敌人 Name 获取。
+    /// 解析敌人配置：按 runtime snapshot unit.enemy name/id 获取。
     /// </summary>
     /// <param name="entry">资源选择器条目。</param>
-    /// <returns>敌人配置数据。</returns>
-    private static EnemyData? ResolveEnemyConfig(ResourceCatalogEntry entry)
+    /// <param name="definition">敌人生成配置。</param>
+    /// <param name="error">失败原因。</param>
+    private static bool TryResolveEnemyConfig(ResourceCatalogEntry entry, out UnitSpawnDefinition definition, out string error)
     {
-        return EnemyData.Get(entry.DisplayName) ?? EnemyData.Get(entry.ResourceKey);
+        var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
+        try
+        {
+            var record = query.GetRequiredByName("unit.enemy", entry.DisplayName);
+            definition = RuntimeDataRecordProjection.ToUnitSpawnDefinition(record);
+            error = string.Empty;
+            return true;
+        }
+        catch (Exception byNameError)
+        {
+            try
+            {
+                var record = query.GetRequired("unit.enemy", entry.ResourceKey);
+                definition = RuntimeDataRecordProjection.ToUnitSpawnDefinition(record);
+                error = string.Empty;
+                return true;
+            }
+            catch (Exception byIdError)
+            {
+                definition = default!;
+                error = $"{entry.DisplayName}/{entry.ResourceKey}: {byNameError.Message}; {byIdError.Message}";
+                return false;
+            }
+        }
     }
 
     private void ClearEnemies()

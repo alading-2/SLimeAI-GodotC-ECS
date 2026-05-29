@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Reflection;
-using Godot;
 
 /// <summary>
 /// 增强版动态数据容器 - 统一数据管理系统
@@ -74,26 +72,6 @@ public class Data
     }
 
     /// <summary>
-    /// 内部存储基础数据的字典
-    /// </summary>
-    private readonly Dictionary<string, object> _data = new();
-
-    /// <summary>
-    /// 修改器字典：Key -> 修改器列表
-    /// </summary>
-    private readonly Dictionary<string, List<DataModifier>> _modifiers = new();
-
-    /// <summary>
-    /// 最终值缓存字典
-    /// </summary>
-    private readonly Dictionary<string, object> _cachedValues = new();
-
-    /// <summary>
-    /// 脏标记集合（需要重新计算的键）
-    /// </summary>
-    private readonly HashSet<string> _dirtyKeys = new();
-
-    /// <summary>
     /// 当任何数据发生变化时触发的全局事件
     /// 参数依次为：键名 (Key), 旧值 (OldValue), 新值 (NewValue)
     /// </summary>
@@ -116,34 +94,7 @@ public class Data
             return _runtimeStorage.SetUntyped(key, value, DataWriteSource.Runtime);
         }
 
-        // 应用元数据约束
-        var meta = DataRegistry.GetMeta(key);
-        object finalValue = value!;
-        if (meta != null)
-        {
-            // 选项验证
-            if (meta.HasOptions && !meta.IsValidOption(value!))
-            {
-                _log.Error($"无效的选项值: {key} = {value}");
-                return false;
-            }
-            finalValue = meta.Clamp(value!);
-        }
-
-        object? oldValue = null;
-        if (_data.TryGetValue(key, out var existing))
-        {
-            oldValue = existing;
-            if (Equals(existing, finalValue))
-            {
-                return false;
-            }
-        }
-
-        _data[key] = finalValue;
-        MarkDirty(key);
-        NotifyChanged(key, oldValue, finalValue);
-        return true;
+        throw CreateUnboundDataException(key);
     }
 
     /// <summary>
@@ -152,7 +103,7 @@ public class Data
     /// </summary>
     /// <typeparam name="T">期望获取的类型</typeparam>
     /// <param name="key">键名</param>
-    /// <param name="defaultValue">默认值（可选）。如果未提供，将使用 DataMeta 中注册的默认值</param>
+    /// <param name="defaultValue">兼容旧签名的占位参数；实际默认值来自 DataDefinitionCatalog。</param>
     /// <returns>最终计算值</returns>
     public T Get<T>(string key, object? defaultValue = null)
     {
@@ -161,33 +112,7 @@ public class Data
             return _runtimeStorage.Get<T>(key);
         }
 
-        // ── 快速路径：未注册键直接查字典，零约束开销 ──────────────────────
-        var meta = DataRegistry.GetMeta(key);
-        if (meta == null)
-        {
-            object fallback = defaultValue ?? DataMeta.GetTypeDefaultValue(typeof(T));
-            return _data.TryGetValue(key, out var rawValue) && rawValue != null
-                ? (T)ConvertValueBoxed(rawValue, typeof(T), fallback)
-                : (T)fallback;
-        }
-
-        // ── 计算键：最高优先级 ────────────────────────────────────────────
-        if (meta.IsComputed)
-        {
-            object computedFallback = defaultValue ?? meta.GetDefaultValue();
-            return (T)GetComputedValueBoxed(key, meta, computedFallback, typeof(T));
-        }
-
-        // ── 普通键：查基础值 ──────────────────────────────────────────────
-        object effectiveDefault = defaultValue ?? meta.GetDefaultValue();
-        if (!_data.TryGetValue(key, out var baseValue) || baseValue == null)
-            return (T)effectiveDefault;
-
-        // ── 属性键：有修改器时才进入修改器路径（避免无效进入） ────────────
-        if (meta.SupportModifiers == true && _modifiers.ContainsKey(key))
-            return (T)GetModifiedValueBoxed(key, baseValue, effectiveDefault, typeof(T));
-
-        return (T)ConvertValueBoxed(baseValue, typeof(T), effectiveDefault);
+        throw CreateUnboundDataException(key);
     }
 
     /// <summary>
@@ -224,7 +149,7 @@ public class Data
             return _runtimeStorage.SetUntyped(definition, value, source);
         }
 
-        return Set(definition.StableKey, value);
+        throw CreateUnboundDataException(definition.StableKey);
     }
 
     /// <summary>
@@ -240,7 +165,7 @@ public class Data
             return _runtimeStorage.SetUntyped(stableKey, value, source);
         }
 
-        return Set(stableKey, value);
+        throw CreateUnboundDataException(stableKey);
     }
 
     /// <summary>
@@ -259,11 +184,7 @@ public class Data
                 : defaultValue;
         }
 
-        if (_data.TryGetValue(key, out var value) && value != null)
-        {
-            return (T)ConvertValueBoxed(value, typeof(T), defaultValue!);
-        }
-        return defaultValue;
+        throw CreateUnboundDataException(key);
     }
 
     /// <summary>
@@ -283,14 +204,8 @@ public class Data
             return false;
         }
 
-        var result = Get<T>(key);
-        if (result != null && !result.Equals(default(T)))
-        {
-            value = result;
-            return true;
-        }
         value = default!;
-        return _data.ContainsKey(key);
+        throw CreateUnboundDataException(key);
     }
 
     /// <summary>
@@ -303,7 +218,7 @@ public class Data
             return _runtimeStorage.HasDefinition(key);
         }
 
-        return _data.ContainsKey(key) || DataRegistry.IsComputed(key);
+        throw CreateUnboundDataException(key);
     }
 
     /// <summary>
@@ -316,16 +231,7 @@ public class Data
             return _runtimeStorage.Remove(key);
         }
 
-        if (_data.TryGetValue(key, out var oldValue))
-        {
-            _data.Remove(key);
-            _modifiers.Remove(key);
-            _cachedValues.Remove(key);
-            _dirtyKeys.Remove(key);
-            NotifyChanged(key, oldValue, null);
-            return true;
-        }
-        return false;
+        throw CreateUnboundDataException(key);
     }
 
     // ================= 算术运算 =================
@@ -383,36 +289,7 @@ public class Data
             return _runtimeStorage.AddModifier(key, modifier);
         }
 
-        if (!DataRegistry.SupportModifiers(key))
-        {
-            _log.Warn($"数据 '{key}' 不支持修改器，已忽略");
-            return false;
-        }
-
-        if (!_modifiers.TryGetValue(key, out var list))
-            _modifiers[key] = list = new List<DataModifier>();
-
-        // 检查 ID 冲突
-        for (int i = 0; i < list.Count; i++)
-        {
-            if (list[i].Id == modifier.Id)
-            {
-                _log.Warn($"ID 为 '{modifier.Id}' 的修改器已存在于 '{key}'，已忽略");
-                return false;
-            }
-        }
-
-        // 插入时维护 Priority 有序（替代每次 Get 时 OrderBy）
-        int insertIndex = list.BinarySearch(modifier, ModifierPriorityComparer.Instance);
-        if (insertIndex < 0) insertIndex = ~insertIndex;
-        list.Insert(insertIndex, modifier);
-
-        MarkDirty(key);
-        _log.Debug($"添加修改器: {modifier.Id} ({modifier.Type} {modifier.Value}) -> {key}");
-
-        var finalValue = Get<float>(key);
-        NotifyChanged(key, null, finalValue);
-        return true;
+        throw CreateUnboundDataException(key);
     }
 
     /// <summary>
@@ -428,18 +305,7 @@ public class Data
             return;
         }
 
-        if (_modifiers.TryGetValue(key, out var modifiers))
-        {
-            var removed = modifiers.RemoveAll(m => m.Id == modifierId);
-            if (removed > 0)
-            {
-                MarkDirty(key);
-                _log.Debug($"移除修改器: {modifierId} <- {key}");
-
-                var finalValue = Get<float>(key);
-                NotifyChanged(key, null, finalValue);
-            }
-        }
+        throw CreateUnboundDataException(key);
     }
 
     /// <summary>
@@ -448,10 +314,13 @@ public class Data
     /// <param name="modifierId">修改器 ID</param>
     public void RemoveModifierById(string modifierId)
     {
-        foreach (var key in _modifiers.Keys.ToList())
+        if (_runtimeStorage != null)
         {
-            RemoveModifier(key, modifierId);
+            _runtimeStorage.RemoveModifierById(modifierId);
+            return;
         }
+
+        throw CreateUnboundDataException("*");
     }
 
     /// <summary>
@@ -467,23 +336,7 @@ public class Data
             return;
         }
 
-        if (source == null) return;
-
-        foreach (var key in _modifiers.Keys.ToList())
-        {
-            if (_modifiers.TryGetValue(key, out var modifiers))
-            {
-                var removedCount = modifiers.RemoveAll(m => m.Source == source);
-                if (removedCount > 0)
-                {
-                    MarkDirty(key);
-                    _log.Debug($"移除来源为 {source} 的修改器: {removedCount} 个 <- {key}");
-
-                    var finalValue = Get<float>(key);
-                    NotifyChanged(key, null, finalValue);
-                }
-            }
-        }
+        throw CreateUnboundDataException("*");
     }
 
     /// <summary>
@@ -505,17 +358,13 @@ public class Data
                 float value = Convert.ToSingle(kvp.Value);
                 if (Math.Abs(value) < float.Epsilon) continue;
 
-                // 检查目标是否支持修改器
-                if (DataRegistry.SupportModifiers(kvp.Key))
-                {
-                    var modifier = new DataModifier(
-                        ModifierType.Additive,
-                        value,
-                        priority: 0,
-                        source: sourceEntity
-                    );
-                    AddModifier(kvp.Key, modifier);
-                }
+                var modifier = new DataModifier(
+                    ModifierType.Additive,
+                    value,
+                    priority: 0,
+                    source: sourceEntity
+                );
+                AddModifier(kvp.Key, modifier);
             }
         }
     }
@@ -539,8 +388,7 @@ public class Data
             return false;
         }
 
-        return _modifiers.TryGetValue(key, out var modifiers) &&
-               modifiers.Any(m => m.Id == modifierId);
+        throw CreateUnboundDataException(key);
     }
 
     /// <summary>
@@ -554,9 +402,7 @@ public class Data
             return _runtimeStorage.GetModifiers(key);
         }
 
-        return _modifiers.TryGetValue(key, out var modifiers)
-            ? new List<DataModifier>(modifiers)
-            : new List<DataModifier>();
+        throw CreateUnboundDataException(key);
     }
 
     /// <summary>
@@ -570,12 +416,7 @@ public class Data
             return;
         }
 
-        if (_modifiers.TryGetValue(key, out var modifiers) && modifiers.Count > 0)
-        {
-            modifiers.Clear();
-            MarkDirty(key);
-            _log.Debug($"清除所有修改器: {key}");
-        }
+        throw CreateUnboundDataException(key);
     }
 
     /// <summary>
@@ -583,11 +424,13 @@ public class Data
     /// </summary>
     public void ClearAllModifiers()
     {
-        foreach (var key in _modifiers.Keys.ToList())
+        if (_runtimeStorage != null)
         {
-            ClearModifiers(key);
+            _runtimeStorage.ClearAllModifiers();
+            return;
         }
-        _modifiers.Clear();
+
+        throw CreateUnboundDataException("*");
     }
 
     // ================= 事件监听 (已移除) =================
@@ -605,20 +448,10 @@ public class Data
         if (_runtimeStorage != null)
         {
             _runtimeStorage.Clear();
-            _modifiers.Clear();
-            _cachedValues.Clear();
-            _dirtyKeys.Clear();
             return;
         }
 
-        var keys = new List<string>(_data.Keys);
-        foreach (var key in keys)
-        {
-            Remove(key);
-        }
-        _modifiers.Clear();
-        _cachedValues.Clear();
-        _dirtyKeys.Clear();
+        throw CreateUnboundDataException("*");
     }
 
     /// <summary>
@@ -641,28 +474,17 @@ public class Data
             return result;
         }
 
-        return new Dictionary<string, object>(_data);
+        throw CreateUnboundDataException("*");
     }
 
     /// <summary>
-    /// 按数据分类批量重置为默认值（仅重置容器中已存在的键）
-    /// <para>
-    /// 遍历该 Category 下所有已注册的 DataMeta，若容器中存在对应键则将其设为 DefaultValue。
-    /// 使用 DataRegistry 的缓存查询，适合高频调用。
-    /// </para>
+    /// 按数据分类批量重置为默认值。
+    /// 当前 DataDefinitionCatalog 不再提供旧 DataMeta 分类重置路径。
     /// </summary>
     /// <param name="category">数据分类枚举值（如 DataCategory_Movement.Orbit）</param>
     public void ResetByCategory(Enum category)
     {
-        var metas = DataRegistry.GetCachedMetaByCategory(category);
-        for (int i = 0; i < metas.Length; i++)
-        {
-            var meta = metas[i];
-            if (_data.ContainsKey(meta.Key))
-            {
-                Set(meta.Key, meta.GetDefaultValue());
-            }
-        }
+        throw CreateUnboundDataException(category.ToString() ?? "*");
     }
 
     /// <summary>
@@ -685,132 +507,14 @@ public class Data
         if (_runtimeStorage != null)
         {
             _runtimeStorage.Clear();
-            _modifiers.Clear();
-            _cachedValues.Clear();
-            _dirtyKeys.Clear();
             _log.Debug("Data 容器已重置");
             return;
         }
 
-        _data.Clear();
-        _modifiers.Clear();
-        _cachedValues.Clear();
-        _dirtyKeys.Clear();
-        // 注意：不清除监听器，由外部管理
-        _log.Debug("Data 容器已重置");
+        throw CreateUnboundDataException("*");
     }
 
     // ================= 私有方法 =================
-
-    /// <summary>
-    /// 获取计算数据的值（带缓存逻辑）
-    /// </summary>
-    private object GetComputedValueBoxed(string key, DataMeta meta, object defaultValue, Type targetType)
-    {
-        // 1. 检查缓存：如果该键不是“脏”的，且缓存中存在值，则直接返回
-        if (!_dirtyKeys.Contains(key) && _cachedValues.TryGetValue(key, out var cached))
-        {
-            if (cached == null) return defaultValue;
-            return ConvertValueBoxed(cached, targetType, defaultValue);
-        }
-
-        // 2. 缓存失效或不存在，调用计算逻辑
-        var result = meta.Compute(this);
-
-        // 3. 更新缓存并移除脏标记
-        _cachedValues[key] = result;
-        _dirtyKeys.Remove(key);
-
-        if (result == null) return defaultValue;
-        return ConvertValueBoxed(result, targetType, defaultValue);
-    }
-
-    /// <summary>
-    /// 获取应用修改器后的最终值（带缓存逻辑）
-    /// </summary>
-    private object GetModifiedValueBoxed(string key, object baseValue, object defaultValue, Type targetType)
-    {
-        // 1. 检查缓存：修改器变动或基础值变动会标记为脏
-        if (!_dirtyKeys.Contains(key) && _cachedValues.TryGetValue(key, out var cached))
-        {
-            if (cached == null) return defaultValue;
-            return ConvertValueBoxed(cached, targetType, defaultValue);
-        }
-
-        // 2. 核心计算：将基础值（如 float）应用所有已注册的修改器
-        float baseFloat = Convert.ToSingle(baseValue);
-        float finalValue = CalculateFinalValue(key, baseFloat);
-
-        // 3. 更新缓存
-        _cachedValues[key] = finalValue;
-        _dirtyKeys.Remove(key);
-
-        return ConvertValueBoxed(finalValue, targetType, defaultValue);
-    }
-
-    /// <summary>
-    /// 修改器核心算法（无 LINQ，预排序列表直接遍历）
-    /// 公式：step1 = (base + Σ[Additive]) × Π[Multiplicative] + Σ[FinalAdditive]
-    ///       step2 = Override 存在时取最高优先级值
-    ///       step3 = Cap 存在时取 min(step, cap)
-    ///       step4 = Meta.Clamp 约束
-    /// </summary>
-    private float CalculateFinalValue(string key, float baseValue)
-    {
-        if (!_modifiers.TryGetValue(key, out var list) || list.Count == 0)
-            return baseValue;
-
-        float additive = 0f;
-        float multiplicative = 1f;
-        float finalAdditive = 0f;
-        float? overrideValue = null;
-        float? cap = null;
-
-        foreach (var m in list)  // list 在 AddModifier 时已维护 Priority 有序
-        {
-            switch (m.Type)
-            {
-                case ModifierType.Additive: additive += m.Value; break;
-                case ModifierType.Multiplicative: multiplicative *= m.Value; break;
-                case ModifierType.FinalAdditive: finalAdditive += m.Value; break;
-                case ModifierType.Override:
-                    if (!overrideValue.HasValue) overrideValue = m.Value;  // 取最高优先级（Priority最小）
-                    break;
-                case ModifierType.Cap:
-                    cap = cap.HasValue ? Math.Min(cap.Value, m.Value) : m.Value;
-                    break;
-            }
-        }
-
-        float result = overrideValue.HasValue
-            ? overrideValue.Value
-            : (baseValue + additive) * multiplicative + finalAdditive;
-
-        if (cap.HasValue) result = Math.Min(result, cap.Value);
-
-        var meta = DataRegistry.GetMeta(key);
-        return meta != null ? (float)meta.Clamp(result) : result;
-    }
-
-    /// <summary>
-    /// 标记数据及其依赖项为“脏”（Dirty）
-    /// 当基础值改变或修改器增删时调用，确保下次获取时重新计算
-    /// </summary>
-    private void MarkDirty(string key)
-    {
-        // 1. 标记当前键为脏
-        _dirtyKeys.Add(key);
-        _cachedValues.Remove(key);
-
-        // 2. 级联标记：查找所有依赖于此数据的计算数据 (ComputedData)
-        // 例如：若 Damage 改变，则依赖它的 DPS 缓存也必须失效
-        var dependents = DataRegistry.GetDependentComputedKeys(key);
-        foreach (var depKey in dependents)
-        {
-            _dirtyKeys.Add(depKey);
-            _cachedValues.Remove(depKey);
-        }
-    }
 
     /// <summary>
     /// 触发变更通知
@@ -831,70 +535,9 @@ public class Data
         NotifyChanged(change.StableKey, change.OldValue, change.NewValue);
     }
 
-    /// <summary>
-    /// 修改器优先级比较器（Priority 越小越靠前 = 优先级越高）
-    /// </summary>
-    private sealed class ModifierPriorityComparer : IComparer<DataModifier>
+    private static InvalidOperationException CreateUnboundDataException(string key)
     {
-        public static readonly ModifierPriorityComparer Instance = new();
-        public int Compare(DataModifier? x, DataModifier? y)
-        {
-            if (x == null && y == null) return 0;
-            if (x == null) return -1;
-            if (y == null) return 1;
-            return x.Priority.CompareTo(y.Priority);
-        }
+        return new InvalidOperationException($"Data 容器未绑定 DataDefinitionCatalog，拒绝访问字段：{key}");
     }
 
-    /// <summary>
-    /// 类型转换辅助方法
-    /// </summary>
-    private object ConvertValueBoxed(object value, Type targetType, object defaultValue)
-    {
-        if (value == null)
-        {
-            return defaultValue;
-        }
-
-        if (targetType.IsInstanceOfType(value))
-        {
-            return value;
-        }
-
-        try
-        {
-            var valueType = value.GetType();
-
-            // DataOS runtime table 直接写入枚举值，旧数据/部分旧调用仍可能按 int 读取；这里统一兼容 enum <-> int/string。
-            if (targetType.IsEnum)
-            {
-                if (value is string enumText)
-                {
-                    return Enum.Parse(targetType, enumText, ignoreCase: false);
-                }
-
-                var numericValue = valueType.IsEnum
-                    ? Convert.ToInt64(value)
-                    : Convert.ToInt64(value);
-                return Enum.ToObject(targetType, numericValue);
-            }
-
-            if (valueType.IsEnum)
-            {
-                if (targetType == typeof(string))
-                {
-                    return value.ToString() ?? defaultValue;
-                }
-
-                var numericValue = Convert.ToInt64(value);
-                return Convert.ChangeType(numericValue, targetType);
-            }
-
-            return Convert.ChangeType(value, targetType);
-        }
-        catch
-        {
-            return defaultValue;
-        }
-    }
 }

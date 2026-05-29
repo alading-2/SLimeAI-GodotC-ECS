@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Godot;
-using slime.data.Units;
 
 namespace Slime.Test
 {
@@ -264,12 +263,14 @@ namespace Slime.Test
 
         private void SpawnUnits()
         {
-            var playerConfig = PlayerData.Get("德鲁伊") ?? PlayerData.Deluyi;
+            var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
+            var playerConfig = query.GetRequiredByName("unit.player", "德鲁伊");
             if (playerConfig != null)
             {
                 var playerSpawn = new EntitySpawnConfig
                 {
                     Config = playerConfig,
+                    RuntimeDataRecord = playerConfig,
                     UsingObjectPool = false,
                     Position = _demos[DemoId.PlayerInput].SpawnPosition
                 };
@@ -281,12 +282,13 @@ namespace Slime.Test
                 }
             }
 
-            var enemyConfig = EnemyData.Get("豺狼人") ?? EnemyData.Chailangren;
+            var enemyConfig = query.GetRequiredByName("unit.enemy", "豺狼人");
             if (enemyConfig != null)
             {
                 var enemySpawn = new EntitySpawnConfig
                 {
                     Config = enemyConfig,
+                    RuntimeDataRecord = enemyConfig,
                     UsingObjectPool = false,
                     Position = _demos[DemoId.AIControlled].SpawnPosition
                 };

@@ -10,7 +10,7 @@ SystemCore 负责：
 
 - `SystemManager` 唯一 autoload 启动。
 - 从 `SystemRegistry` 创建系统实例。
-- 从 `Data/DataOS runtime table/System/SystemData.cs` 读取系统配置外壳，实际数据来源是 DataOS snapshot。
+- 从 `runtime_snapshot.json` 的 `system.config` / `system.preset` records 投影系统配置。
 - 根据 `ProjectStateSnapshot` 和 `SystemRunCondition` 判断系统是否运行。
 - 通过 `SystemManager.Execute<TSystem,TRequest,TResult>` 统一执行外部命令。
 
@@ -27,14 +27,14 @@ SystemCore 不负责：
 - `Src/ECS/Base/System/Core/SystemDescriptor.cs`
 - `Src/ECS/Base/System/Core/Lifecycle/`
 - `Src/ECS/Base/System/Core/State/`
-- `Data/DataOS runtime table/System/SystemData.cs`
-- `Data/DataOS runtime table/System/SystemPresetData.cs`
+- `Data/DataOS/Snapshots/runtime_snapshot.json`
+- `Src/ECS/Base/Data/RuntimeSnapshot/RuntimeDataRecordQuery.cs`
 
 ## 数据 / 事件 / 生命周期
 
 - 代码注册只提供 `SystemId + Factory`。
-- 系统元数据、标签、Required、AutoLoad、StartEnabled、依赖和运行条件都写在 `SystemData`。
-- `SystemPresetData` 只负责选择装载哪些系统，配置本身同样来自 snapshot。
+- 系统元数据、标签、Required、AutoLoad、StartEnabled、依赖和运行条件都写在 DataOS authoring，并由 snapshot projection 读取。
+- System preset 只负责选择装载哪些系统，配置本身同样来自 snapshot。
 - 最终运行裁决是 `shouldRun = IsEnabled && IsStateAllowed`。
 - 系统业务命令必须走 `SystemManager.Execute`，由 SystemCore 门禁统一裁决。
 - `ProjectStateService` 使用实例级 C# event 通知 `SystemManager`，不要替换成全局事件。

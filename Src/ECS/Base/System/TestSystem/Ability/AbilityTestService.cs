@@ -1,4 +1,3 @@
-using slime.data.Abilities;
 using System;
 using System.Collections.Generic;
 using ECS.Base.System.TestSystem.Core;
@@ -18,8 +17,8 @@ internal sealed class AbilityTestService
     /// <summary>Feature 调试服务，用于复用正式链路执行授予、移除与启停。</summary>
     private readonly FeatureDebugService _featureDebugService = new();
 
-    /// <summary>缓存全部技能配置（名称 → DataOS runtime table 配置对象）。</summary>
-    private readonly Dictionary<string, AbilityData> _configByKey = new(StringComparer.Ordinal);
+    /// <summary>缓存全部技能配置（名称 → runtime snapshot projection）。</summary>
+    private readonly Dictionary<string, AbilityDefinitionView> _configByKey = new(StringComparer.Ordinal);
 
     /// <summary>缓存技能库顺序，供左侧分类树稳定展示。</summary>
     private readonly List<AbilityConfigEntry> _catalogEntries = new();
@@ -222,25 +221,26 @@ internal sealed class AbilityTestService
     }
 
     /// <summary>
-    /// 从 DataOS runtime table 纯 C# 表加载技能配置。
+    /// 从 runtime snapshot ability records 加载技能配置。
     /// </summary>
     private void LoadPureCSharpAbilityConfigs()
     {
-        foreach (var config in AbilityData.All)
+        var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
+        foreach (var record in query.GetRecords("ability"))
         {
-            var abilityName = string.IsNullOrWhiteSpace(config.Name) ? config.GetType().Name : config.Name!;
-            AddDataOsRuntimeTableAbilityConfigEntry(abilityName, config);
+            var config = RuntimeDataRecordProjection.ToAbilityDefinitionView(record);
+            AddSnapshotAbilityConfigEntry(config.Name, config);
         }
     }
 
     /// <summary>
-    /// 写入 DataOS runtime table 技能配置缓存和展示条目。
+    /// 写入 runtime snapshot 技能配置缓存和展示条目。
     /// </summary>
-    /// <param name="resourceKey">测试面板内部使用的配置键，DataOS runtime table 模式下直接使用技能 Name。</param>
-    /// <param name="config">DataOS runtime table 技能配置。</param>
-    private void AddDataOsRuntimeTableAbilityConfigEntry(string resourceKey, AbilityData config)
+    /// <param name="resourceKey">测试面板内部使用的配置键，snapshot 模式下直接使用技能 Name。</param>
+    /// <param name="config">runtime snapshot 技能投影。</param>
+    private void AddSnapshotAbilityConfigEntry(string resourceKey, AbilityDefinitionView config)
     {
-        var displayName = string.IsNullOrWhiteSpace(config.Name) ? resourceKey : config.Name!;
+        var displayName = string.IsNullOrWhiteSpace(config.Name) ? resourceKey : config.Name;
         var featureGroupId = ResolveFeatureGroupId(config, resourceKey);
         var description = config.Description;
         if (string.IsNullOrWhiteSpace(description))
@@ -256,7 +256,7 @@ internal sealed class AbilityTestService
             featureGroupId,
             description,
             config.AbilityType,
-            config.AbilityTriggerMode
+            config.TriggerMode
         ));
 
         RegisterFeatureGroupOrder(featureGroupId);
@@ -316,14 +316,14 @@ internal sealed class AbilityTestService
     /// 统一使用 FeatureGroupId；缺失时按技能类型 / 触发模式兜底。
     /// </para>
     /// </summary>
-    private static string ResolveFeatureGroupId(AbilityData config, string resourceKey)
+    private static string ResolveFeatureGroupId(AbilityDefinitionView config, string resourceKey)
     {
         if (!string.IsNullOrWhiteSpace(config.FeatureGroupId))
         {
             return NormalizeFeatureGroupId(config.FeatureGroupId);
         }
 
-        if ((config.AbilityTriggerMode & AbilityTriggerMode.Manual) != 0)
+        if ((config.TriggerMode & AbilityTriggerMode.Manual) != 0)
         {
             return NormalizeFeatureGroupId(FeatureId.Ability.Groups.Active);
         }

@@ -581,7 +581,7 @@ public partial class SystemManager : Node
     }
 
     /// <summary>
-    /// 从 DataOS runtime table SystemData 创建 SystemRunCondition。
+    /// 从 runtime snapshot system.config 投影创建 SystemRunCondition。
     /// </summary>
     private static SystemRunCondition CreateRunCondition(SystemData config)
     {

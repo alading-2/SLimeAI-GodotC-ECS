@@ -190,27 +190,6 @@ public abstract partial class DataSceneTestBase : Node
         };
     }
 
-    protected DataMeta Meta(
-        string key,
-        Type type,
-        object? defaultValue,
-        float? minValue = null,
-        float? maxValue = null,
-        Func<Data, object>? compute = null,
-        string[]? dependencies = null)
-    {
-        return new DataMeta
-        {
-            Key = key,
-            Type = type,
-            DefaultValue = defaultValue,
-            MinValue = minValue,
-            MaxValue = maxValue,
-            Compute = compute,
-            Dependencies = dependencies
-        };
-    }
-
     protected DataRuntimeStorage CreateRuntimeStorage(params DataDefinition[] definitions)
     {
         var catalog = BuildCatalogFromDefinitions(null, definitions);

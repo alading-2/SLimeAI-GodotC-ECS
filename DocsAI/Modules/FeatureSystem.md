@@ -32,7 +32,7 @@ FeatureSystem 不负责：
 - `Src/ECS/Base/System/FeatureSystem/Action/`
 - `Data/Feature/Definition/FeatureDefinition.cs`
 - `Data/Feature/Definition/FeatureModifierEntry.cs`
-- `Data/DataOS runtime table/Feature/FeatureDefinitionData.cs`
+- `Data/DataOS/Snapshots/runtime_snapshot.json`
 - `Data/EventType/Feature/GameEventType_Feature.cs`
 
 ## 数据 / 事件 / 生命周期
@@ -43,7 +43,7 @@ FeatureSystem 不负责：
 - 子系统专有输入放 `FeatureContext.ActivationData`，Handler 自行转型。
 - Handler 的 `OnExecute` 返回值会写入 `FeatureContext.ExecuteResult`，调用方自行转型。
 - Ability 子域通过 `AbilityFeatureHandler` 把 `CastContext` 转给具体技能逻辑。
-- `AbilityData.FeatureHandlerId` 是运行时 Handler 主键；`FeatureGroupId` 只做 UI / 测试分组。
+- `ability` snapshot record 的 `FeatureHandlerId` 是运行时 Handler 主键；`FeatureGroupId` 只做 UI / 测试分组。
 - TestSystem 调试 Feature 时必须复用 `FeatureDebugService` 和正式生命周期。
 
 ## 禁止事项

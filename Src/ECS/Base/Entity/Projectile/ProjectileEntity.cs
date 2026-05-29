@@ -31,7 +31,6 @@ public partial class ProjectileEntity : Area2D, IEntity, IPoolable
     public ProjectileEntity()
     {
         Data = new Data(this);
-        Data.Set(DataKey.DefaultMoveMode, MoveMode.None);
     }
 
     // ================= Godot 生命周期 =================

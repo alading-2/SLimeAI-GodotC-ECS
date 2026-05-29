@@ -1,5 +1,4 @@
 using Godot;
-using slime.data.Units;
 /// <summary>
 /// 瞄准状态管理器 - 管理由输入层发起的异步点选会话
 /// 
@@ -210,18 +209,14 @@ public static class TargetingManager
     /// </summary>
     private static TargetingIndicatorEntity? SpawnIndicator(Vector2 position)
     {
-        // 瞄准指示器配置统一来自 DataOS runtime table。
-        var config = TargetingIndicatorData.Get("TargetingIndicator");
-
-        if (config == null)
-        {
-            _log.Error("无法加载 TargetingIndicator 配置数据");
-            return null;
-        }
+        // 瞄准指示器配置统一来自 runtime snapshot。
+        var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
+        var config = query.GetRequiredByName("unit.targeting_indicator", "TargetingIndicator");
 
         var indicator = EntityManager.Spawn<TargetingIndicatorEntity>(new EntitySpawnConfig
         {
             Config = config,
+            RuntimeDataRecord = config,
             UsingObjectPool = false,
             Position = position
         });

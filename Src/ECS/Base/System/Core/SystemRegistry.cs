@@ -4,7 +4,7 @@ using System.Collections.Generic;
 /// <summary>
 /// 系统注册表。
 /// <para>进程级全局注册表，保存系统静态描述符（SystemId + Factory）。</para>
-/// <para>其他元数据从 DataOS runtime table SystemData 读取。</para>
+/// <para>其他元数据从 runtime snapshot 的 system.config 记录读取。</para>
 /// </summary>
 public static class SystemRegistry
 {
@@ -16,7 +16,7 @@ public static class SystemRegistry
     /// <summary>
     /// 注册系统（简化签名：只传 SystemId + Factory）。
     /// </summary>
-    /// <param name="systemId">系统唯一 Id（必须与 SystemData.SystemId 和资源文件名一致）。</param>
+    /// <param name="systemId">系统唯一 Id（必须与 snapshot system.config 记录和资源文件名一致）。</param>
     /// <param name="factory">系统实例工厂。</param>
     public static void Register(string systemId, Func<object> factory)
     {

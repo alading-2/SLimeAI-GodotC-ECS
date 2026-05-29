@@ -6,7 +6,7 @@ using slime.data.Systems;
 /// <summary>
 /// 系统配置服务。
 /// <para>负责加载和解析系统配置，提供系统配置查询接口。</para>
-/// <para>只从 DataOS runtime table 纯 C# 系统表读取配置。</para>
+/// <para>只从 runtime snapshot 的 system.config records 读取配置。</para>
 /// </summary>
 public static class SystemConfigService
 {
@@ -26,14 +26,11 @@ public static class SystemConfigService
 
         _configs.Clear();
 
-        foreach (var data in SystemData.All)
+        var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
+        foreach (var record in query.GetRecords("system.config"))
         {
-            if (data == null)
-            {
-                _log.Error("SystemData.All 包含空配置项，请检查静态初始化顺序");
-                continue;
-            }
-
+            var definition = RuntimeDataRecordProjection.ToSystemConfigDefinition(record);
+            var data = ToSystemData(definition);
             TryAddConfig(data, data.SystemId, warnDuplicate: true);
         }
 
@@ -139,7 +136,7 @@ public static class SystemConfigService
             }
             else
             {
-                _log.Debug($"系统配置 {config.SystemId} 已由 DataOS runtime table 提供，跳过重复项");
+                _log.Debug($"系统配置 {config.SystemId} 已由 runtime snapshot 提供，跳过重复项");
             }
 
             return;
@@ -152,5 +149,25 @@ public static class SystemConfigService
 
         _configs.Add(config.SystemId, config);
         _log.Debug($"加载系统配置: {config.SystemId}");
+    }
+
+    private static SystemData ToSystemData(SystemConfigDefinition definition)
+    {
+        return new SystemData
+        {
+            SystemId = definition.SystemId,
+            MountGroup = definition.MountGroup,
+            Tags = definition.Tags,
+            Required = definition.Required,
+            AutoLoad = definition.AutoLoad,
+            StartEnabled = definition.StartEnabled,
+            Priority = definition.Priority,
+            AllowedFlowStates = definition.AllowedFlowStates,
+            RequiredOverlays = definition.RequiredOverlays,
+            BlockedOverlays = definition.BlockedOverlays,
+            AllowedSimulationStates = definition.AllowedSimulationStates,
+            Dependencies = definition.Dependencies,
+            Description = definition.Description
+        };
     }
 }

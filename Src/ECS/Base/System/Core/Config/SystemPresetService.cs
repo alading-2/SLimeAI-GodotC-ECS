@@ -6,7 +6,7 @@ using slime.data.Systems;
 /// <summary>
 /// 系统预设服务。
 /// <para>负责加载和解析系统预设，提供预设查询和应用接口。</para>
-/// <para>只从 DataOS runtime table 纯 C# 预设表读取配置。</para>
+/// <para>只从 runtime snapshot 的 system.preset records 读取配置。</para>
 /// </summary>
 public static class SystemPresetService
 {
@@ -28,15 +28,11 @@ public static class SystemPresetService
         _presets.Clear();
         _activePreset = null;
 
-        foreach (var data in SystemPresetData.All)
+        var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
+        foreach (var record in query.GetRecords("system.preset"))
         {
-            if (data == null)
-            {
-                _log.Error("SystemPresetData.All 包含空预设项，请检查静态初始化顺序");
-                continue;
-            }
-
-            TryAddPreset(data, warnDuplicate: true);
+            var definition = RuntimeDataRecordProjection.ToSystemPresetDefinition(record);
+            TryAddPreset(ToSystemPresetData(definition), warnDuplicate: true);
         }
 
         _isInitialized = true;
@@ -163,7 +159,7 @@ public static class SystemPresetService
             }
             else
             {
-                _log.Debug($"系统预设 {preset.PresetName} 已由 DataOS runtime table 提供，跳过重复项");
+                _log.Debug($"系统预设 {preset.PresetName} 已由 runtime snapshot 提供，跳过重复项");
             }
 
             return;
@@ -184,5 +180,18 @@ public static class SystemPresetService
         }
 
         _activePreset = preset;
+    }
+
+    private static SystemPresetData ToSystemPresetData(SystemPresetDefinition definition)
+    {
+        return new SystemPresetData
+        {
+            PresetName = definition.PresetName,
+            IsActive = definition.IsActive,
+            EnabledTags = definition.EnabledTags,
+            EnabledSystemIds = definition.EnabledSystemIds,
+            DisabledSystemIds = definition.DisabledSystemIds,
+            Description = definition.Description
+        };
     }
 }

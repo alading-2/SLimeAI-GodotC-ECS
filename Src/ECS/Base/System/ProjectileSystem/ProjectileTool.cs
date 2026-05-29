@@ -2,14 +2,6 @@ using Godot;
 
 internal static partial class ProjectileTool
 {
-    private sealed class RuntimeProjectileConfig
-    {
-        public string? Name { get; set; }
-
-        [DataKey(nameof(GeneratedDataKey.VisualScenePath))]
-        public string VisualScenePath { get; set; } = "";
-    }
-
     /// <summary>
     /// 生成投射物实体，并自动建立“拥有者 → 投射物”的关系链。
     /// </summary>
@@ -20,15 +12,23 @@ internal static partial class ProjectileTool
         string name = "Projectile"
     )
     {
-        var config = new RuntimeProjectileConfig
+        var config = new RuntimeDataRecordDto
         {
+            Table = "runtime.projectile",
+            Id = $"projectile.{name}",
             Name = name,
-            VisualScenePath = visualScenePath
+            Fields = new System.Collections.Generic.Dictionary<string, RuntimeDataFieldDto>
+            {
+                [GeneratedDataKey.Name.Key] = new() { Type = "string", Value = name },
+                [GeneratedDataKey.VisualScenePath.Key] = new() { Type = "string", Value = visualScenePath },
+                [GeneratedDataKey.EntityType.Key] = new() { Type = "enum", Value = nameof(EntityType.Projectile) }
+            }
         };
 
         var projectile = EntityManager.Spawn<ProjectileEntity>(new EntitySpawnConfig
         {
             Config = config, // 运行时最小配置
+            RuntimeDataRecord = config,
             UsingObjectPool = true, // 投射物统一走对象池
             PoolName = ObjectPoolNames.ProjectilePool, // 投射物对象池名
             Position = position, // 初始位置

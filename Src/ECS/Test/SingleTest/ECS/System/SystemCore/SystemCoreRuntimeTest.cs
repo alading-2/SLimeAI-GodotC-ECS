@@ -208,14 +208,17 @@ namespace Slime.Test.SystemCore
 
         private void TestDataOsRuntimeTableSystemCollectionsDoNotContainNull()
         {
-            foreach (var config in slime.data.Systems.SystemData.All)
+            SystemConfigService.Initialize();
+            SystemPresetService.Initialize();
+
+            foreach (var config in SystemConfigService.GetAllConfigs())
             {
-                AssertEqual("SystemData.All 不应包含空配置", true, config != null);
+                AssertEqual("snapshot system.config 不应包含空配置", true, config != null);
             }
 
-            foreach (var preset in slime.data.Systems.SystemPresetData.All)
+            foreach (var preset in SystemPresetService.GetAllPresets())
             {
-                AssertEqual("SystemPresetData.All 不应包含空预设", true, preset != null);
+                AssertEqual("snapshot system.preset 不应包含空预设", true, preset != null);
             }
         }
 

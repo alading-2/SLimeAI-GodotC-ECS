@@ -139,8 +139,8 @@ _data.Add(DataKey.Score, 10);
 
 1. 在对应 `Data/DataKey/{模块}/DataKey_{模块}.cs` 中定义 `static readonly DataMeta`：
 ```csharp
-public static readonly DataMeta MyKey = DataRegistry.Register(
-    new DataMeta {
+// 在 DataOS descriptor 中新增字段，再生成 typed DataKey<T> handle。
+public static readonly DataKey<float> MyKey = new("MyKey");
         Key = nameof(MyKey),
         DisplayName = "我的键",
         Description = "用途说明",
@@ -205,7 +205,7 @@ Spawn 流程:
   │
   ├─ RegisterComponents() ─► OnComponentRegistered (每个 Component)
   │
-  └─ Data.snapshot record apply() ─► 注入 DataOS runtime table 数据
+  └─ Data.snapshot record apply() ─► 注入 runtime snapshot 数据
 
 Destroy 流程:
   ┌─ UnregisterEntity()

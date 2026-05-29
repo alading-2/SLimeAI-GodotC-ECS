@@ -1,6 +1,6 @@
 # AI 原生数据层协议
 
-本文定义迁移后的 DataOS 目标。现有 `Data/DataOS runtime table` 和旧 `.tres` 都是迁移输入，不是最终形态。
+本文定义迁移后的 DataOS 目标。旧 C# 表和旧 `.tres` 都是迁移输入，不是最终形态。
 
 ## 核心判断
 
@@ -74,7 +74,7 @@ Tools/ai-game-os/run-capability-test.sh <Capability>
 1. 先迁 SystemData / SystemPresetData。
 2. 再迁 Unit / Ability / Feature。
 3. 再迁 ResourceCatalog / EventType / DataKey registry。
-4. 最后删除旧 `.tres` 和手写 DataOS runtime table 当前入口。
+4. 最后删除旧 `.tres` 和手写 RuntimeTables 当前入口。
 
 ## 人工审查重点
 

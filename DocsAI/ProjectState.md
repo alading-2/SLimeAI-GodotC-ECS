@@ -9,7 +9,7 @@
 当前正在推进：
 
 - `SlimeAINew/DataOS/` SQLite-only authoring 真相源。
-- `Data/DataOS runtime table` snapshot-backed DTO 外壳化。
+- Data runtime 已通过 SDD-0020 切到 `runtime_snapshot.json` + snapshot query/projection + catalog-bound `Data`；RuntimeTables、DataTable 反射扫描、Entity config 推断和 DataRegistry/DataMeta runtime fallback 不再作为当前事实源。
 - 旧 `.tres` 数据插件停用。
 
 当前优先校准：
@@ -104,7 +104,7 @@
 - Movement、AI、Collision 已完成第一轮深层模块族对齐；后续重点转向其它剩余模块和 `Docs/` 长设计归档。
 - 旧 `MainTest` 失败不属于本轮文档收敛，需独立 Debug。
 - 已有用户工作区改动集中在 Godot 场景测试 Skill、测试文档、Docs README 和项目索引，继续修改时必须合并而不是覆盖。
-- DataOS 已在 `/home/slime/Code/SlimeAI/SlimeAI` 建立 SQLite schema / migration / generator / validator / Runtime snapshot loader；`/home/slime/Code/SlimeAI/Games/BrotatoLike` 已扩大 authoring seed 到 TargetingIndicator、ChainAbility、旧 AbilityData 通用字段、Feature definition / modifier、System config / preset、Spawn config 和 ResourcePaths 第一批，并新增正式 snapshot bootstrap。当前旧仓库仍只作为迁移输入，不再扩展旧 DataOS runtime table。
+- DataOS 已在 `/home/slime/Code/SlimeAI/SlimeAI` 建立 SQLite schema / migration / generator / validator / runtime snapshot loader；`/home/slime/Code/SlimeAI/Games/BrotatoLike` 已扩大 authoring seed 到 TargetingIndicator、ChainAbility、旧 AbilityData 通用字段、Feature definition / modifier、System config / preset、Spawn config 和 ResourcePaths 第一批，并新增正式 snapshot bootstrap。当前旧仓库仍只作为迁移输入，不再扩展旧手写 RuntimeTables。
 - Godot 底层 trace 目前是方案，尚未修改引擎 fork 和 GodotSkill。
 - SlimeAI 新工作区和多仓库骨架已创建，Runtime 最小内核已迁移；当前仓库继续作为迁移计划和旧资产输入。
 - Godot Node Entity / Component 生命周期已迁入第一版；旧资产已复制；对象池碰撞隔离、Movement、Collision、Damage / ContactDamage / Damage 处理器管线 / HealService / DamageTool 第一批、Ability Runtime 最小切片、Ability 点选目标语义、Ability 自动索敌第一段、Projectile / Effect Runtime 生成第一段、Projectile 命中生命周期、Projectile 穿透 / 生命周期扩展、Effect 动画播放第一段和 Godot 实例化第一段、Feature Runtime 最小生命周期、AI Runtime 最小行为树 + 最近目标查询 + 攻击请求事件 + 巡逻 + 行为树预制块 + Ability 自动索敌上下文准备 + Godot AI bridge、Attack Runtime 最小结算、GodotAttackComponent bridge 第一段、旧 AttackComponent 场景适配、Attack 动画事件桥第一段、DataOS 正式适配最小闭环、M18 DataOS 扩大迁移切片、M19 旧 AbilityData 通用字段补齐切片、M20 BrotatoLike 统一 Godot 场景测试 runner / Observation 日志入口、M21 DataOS 敌人生成规则 catalog、M27 Ability handler-specific DataOS 参数第三段，以及 SineWave / Boomerang / BezierCurve / CircularArc / Orbit / ChainLightning 真实 handler 执行闭环已迁入；Feature actions、真实主场景和其它具体 Ability 逻辑的迁移尚未完成。

@@ -1,12 +1,10 @@
-using slime.data.Units;
-
 /// <summary>
 /// 批量生成敌人命令。
 /// </summary>
 /// <param name="Count">生成数量。</param>
-/// <param name="EnemyData">敌人配置。</param>
+/// <param name="EnemyData">敌人 snapshot 投影配置。</param>
 /// <param name="Strategy">生成位置策略。</param>
-public readonly record struct SpawnBatchRequest(int Count, EnemyData EnemyData, SpawnPositionStrategy Strategy);
+public readonly record struct SpawnBatchRequest(int Count, UnitSpawnDefinition EnemyData, SpawnPositionStrategy Strategy);
 
 /// <summary>
 /// 批量生成敌人结果。

@@ -131,7 +131,7 @@ public sealed class LegacyDataAuditReport
 
     private static bool IsOldPathReference(string path)
     {
-        return path.Contains("DataOS runtime table", StringComparison.Ordinal)
+        return path.Contains("legacy runtime table", StringComparison.Ordinal)
             || path.Contains("DataOS removed legacy Data/", StringComparison.Ordinal)
             || path.Contains("LoadFrom" + "Config", StringComparison.Ordinal)
             || path.Contains("SingleTest/ECS/" + "Data", StringComparison.Ordinal);

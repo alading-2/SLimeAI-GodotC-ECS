@@ -933,6 +933,35 @@ public sealed class DataRuntimeStorage
     }
 
     /// <summary>
+    /// 按 id 移除所有字段修改器。
+    /// </summary>
+    /// <param name="modifierId">修改器 id。</param>
+    public int RemoveModifierById(string modifierId)
+    {
+        if (string.IsNullOrWhiteSpace(modifierId))
+        {
+            return 0;
+        }
+
+        var removedTotal = 0;
+        foreach (var pair in _slots)
+        {
+            var oldValue = pair.Value.GetEffectiveValue();
+            var removed = pair.Value.RemoveModifier(modifierId) ? 1 : 0;
+            if (removed == 0)
+            {
+                continue;
+            }
+
+            removedTotal += removed;
+            MarkDependentComputedDirty(pair.Key);
+            Changed?.Invoke(new DataChangeRecord(pair.Key, oldValue, pair.Value.GetEffectiveValue()));
+        }
+
+        return removedTotal;
+    }
+
+    /// <summary>
     /// 获取字段修改器副本。
     /// </summary>
     /// <param name="stableKey">字段 stable key。</param>
@@ -959,6 +988,28 @@ public sealed class DataRuntimeStorage
         MarkDependentComputedDirty(stableKey);
         Changed?.Invoke(new DataChangeRecord(stableKey, oldValue, slot.GetEffectiveValue()));
         return true;
+    }
+
+    /// <summary>
+    /// 清除所有字段修改器。
+    /// </summary>
+    public int ClearAllModifiers()
+    {
+        var clearedTotal = 0;
+        foreach (var pair in _slots)
+        {
+            var oldValue = pair.Value.GetEffectiveValue();
+            if (!pair.Value.ClearModifiers())
+            {
+                continue;
+            }
+
+            clearedTotal++;
+            MarkDependentComputedDirty(pair.Key);
+            Changed?.Invoke(new DataChangeRecord(pair.Key, oldValue, pair.Value.GetEffectiveValue()));
+        }
+
+        return clearedTotal;
     }
 
     /// <summary>

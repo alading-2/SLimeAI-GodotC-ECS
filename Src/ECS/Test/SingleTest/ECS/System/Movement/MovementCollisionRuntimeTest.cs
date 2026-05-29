@@ -490,7 +490,8 @@ namespace Slime.Test
                     {
                         TargetSpawn = new EntitySpawnConfig
                         {
-                            Config = new Resource(), // 目标实体测试配置
+                            Config = new RuntimeDataRecordDto { Table = "test.visual_preview", Id = "test.migration.inherit", Name = "MigrationTarget" }, // 目标实体测试配置
+                            RuntimeDataRecord = new RuntimeDataRecordDto { Table = "test.visual_preview", Id = "test.migration.inherit", Name = "MigrationTarget" },
                             UsingObjectPool = false // 直接用场景实例化
                         }
                     }
@@ -549,7 +550,8 @@ namespace Slime.Test
                     {
                         TargetSpawn = new EntitySpawnConfig
                         {
-                            Config = new Resource(), // 目标实体测试配置
+                            Config = new RuntimeDataRecordDto { Table = "test.visual_preview", Id = "test.migration.profile", Name = "MigrationTarget" }, // 目标实体测试配置
+                            RuntimeDataRecord = new RuntimeDataRecordDto { Table = "test.visual_preview", Id = "test.migration.profile", Name = "MigrationTarget" },
                             UsingObjectPool = false // 直接用场景实例化
                         },
                         Profile = new EntityMigrationProfile

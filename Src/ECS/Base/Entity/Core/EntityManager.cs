@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 /// <summary>
 /// Entity 生成配置参数
@@ -18,7 +19,7 @@ public readonly record struct EntitySpawnConfig
         ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively;
     }
 
-    /// <summary>单位配置数据（必填，用于从 runtime snapshot 推断 record）</summary>
+    /// <summary>局部运行参数；只用于视觉覆盖等非事实源参数，不用于推断 snapshot record。</summary>
     public required object Config { get; init; }
 
     /// <summary>descriptor-first Data runtime 启动器（可选；未设置时使用仓库默认 snapshot）</summary>
@@ -211,7 +212,7 @@ public static partial class EntityManager
         string entityType = typeof(T).Name;
         string id = entity.GetInstanceId().ToString();
 
-        // 2. 数据注入（默认旧 Resource；显式配置时使用 runtime snapshot record）
+        // 2. 数据注入（必须显式使用 runtime snapshot record）
         if (!ApplySpawnData(entity, config, id))
         {
             Destroy(entity);
@@ -297,13 +298,9 @@ public static partial class EntityManager
                     return false;
                 }
             }
-            else if (TryResolveRecordByConfig(bootstrap, config.Config, out record, out var error))
-            {
-                // record 已按配置对象推断。
-            }
             else
             {
-                _log.Error($"runtime snapshot record 推断失败: {typeof(T).Name}, error={error}");
+                _log.Error($"runtime snapshot record 未显式指定: {typeof(T).Name}");
                 return false;
             }
         }
@@ -317,49 +314,6 @@ public static partial class EntityManager
 
         entity.Data.Set(GeneratedDataKey.Id, entityId);
         return true;
-    }
-
-    private static bool TryResolveRecordByConfig(
-        DataRuntimeBootstrap bootstrap,
-        object config,
-        out RuntimeDataRecordDto record,
-        out string error)
-    {
-        record = null!;
-        error = string.Empty;
-        var type = config.GetType();
-        var table = type.Name switch
-        {
-            "PlayerData" => "unit.player",
-            "EnemyData" => "unit.enemy",
-            "TargetingIndicatorData" => "unit.targeting_indicator",
-            "AbilityData" or "ChainAbilityData" => "ability",
-            _ => string.Empty
-        };
-
-        if (string.IsNullOrWhiteSpace(table))
-        {
-            error = $"unsupported config type {type.FullName}";
-            return false;
-        }
-
-        var name = type.GetProperty("Name")?.GetValue(config) as string;
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            error = $"config type {type.FullName} missing Name";
-            return false;
-        }
-
-        try
-        {
-            record = bootstrap.FindRecordByName(table, name);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            error = ex.Message;
-            return false;
-        }
     }
 
     /// <summary>
@@ -393,15 +347,26 @@ public static partial class EntityManager
         // 显式覆盖优先，其次回退到配置对象上的 VisualScenePath 字符串路径。
         if (scene == null)
         {
-            var prop = config.GetType().GetProperty(DataKey.VisualScenePath);
-            if (prop != null)
+            if (config is RuntimeDataRecordDto record
+                && TryReadRecordString(record, GeneratedDataKey.VisualScenePath.Key, out var recordPath)
+                && !string.IsNullOrWhiteSpace(recordPath))
             {
-                var value = prop.GetValue(config);
-                if (value is string path && !string.IsNullOrEmpty(path))
+                scene = CommonTool.LoadPackedScene(
+                    recordPath, // res:// 场景路径
+                    $"{entity.Name} 视觉"); // 日志用途名称
+            }
+            else
+            {
+                var prop = config.GetType().GetProperty(DataKey.VisualScenePath);
+                if (prop != null)
                 {
-                    scene = CommonTool.LoadPackedScene(
-                        path, // res:// 场景路径
-                        $"{entity.Name} 视觉"); // 日志用途名称
+                    var value = prop.GetValue(config);
+                    if (value is string path && !string.IsNullOrEmpty(path))
+                    {
+                        scene = CommonTool.LoadPackedScene(
+                            path, // res:// 场景路径
+                            $"{entity.Name} 视觉"); // 日志用途名称
+                    }
                 }
             }
         }
@@ -435,6 +400,25 @@ public static partial class EntityManager
         SyncAndRemoveCollisionTemplate(entity, visual);
 
         _log.Debug($"已加载 VisualScene: {scene.ResourcePath}");
+    }
+
+    private static bool TryReadRecordString(RuntimeDataRecordDto record, string fieldKey, out string value)
+    {
+        value = string.Empty;
+        if (!record.Fields.TryGetValue(fieldKey, out var field))
+        {
+            return false;
+        }
+
+        value = field.Value switch
+        {
+            string text => text,
+            JsonElement element when element.ValueKind == JsonValueKind.String => element.GetString() ?? string.Empty,
+            JsonElement element => element.GetRawText(),
+            null => string.Empty,
+            _ => Convert.ToString(field.Value) ?? string.Empty
+        };
+        return true;
     }
 
 
