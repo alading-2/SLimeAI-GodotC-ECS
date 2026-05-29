@@ -43,8 +43,8 @@
 **DataKey 定义路径**。
 
 - **用途**：集中定义所有可写入 `Data` 容器的数据键。
-- **当前架构**：主流 DataKey 已升级为 `static readonly DataKey<T>`；`DataMeta` 仅保留兼容 metadata。
-- **核心职责**：定义键名、类型、默认值、分类、约束、是否支持修改器、是否为计算键等元数据。
+- **当前架构**：DataKey 由 DataOS descriptor / runtime snapshot 生成；`DataMeta` 不作为当前字段定义事实源。
+- **核心职责**：保存 generated typed handle 和相关枚举；默认值、分类、约束、modifier、computed 等元数据来自 descriptor。
 - **详细说明**：见 [`Data/DataKey/README.md`](DataKey/README.md)
 
 ### 5. `EventType/`
@@ -77,9 +77,10 @@
 
 ### 新增一个可配置数据字段
 
-1. 先在 `Data/DataKey/` 对应域中定义 `DataKey<T>`。
-2. 再在 `DataOS/Schema/` 和 `DataOS/Authoring/` 中补齐 authoring 列。
-3. 运行生成器 / validator 更新 `DataOS/Snapshots/runtime_snapshot.json`，运行时通过 explicit record 注入 Entity 的 `Data` 容器。
+1. 先在 `DataOS/Schema/`、`DataOS/Authoring/` 和 descriptor seed 中补齐字段定义与 authoring 列。
+2. 运行 generator / validator 更新 `DataOS/Snapshots/runtime_snapshot.json`。
+3. 运行 generated handle 生成器更新 `Data/DataKey/Generated/DataKey_Generated.cs`。
+4. 运行时通过 explicit record 注入 Entity 的 `Data` 容器。
 
 ### 新增一个系统级规则
 
@@ -95,6 +96,6 @@
 
 - **不要**把运行时业务逻辑写进 `Data/`。
 - **不要**在 `DataOS removed legacy Data/` 里重复定义 `DataKey`。
-- **不要**新增 `const string` DataKey（特殊引用键除外）。
-- **优先使用** `[DataKey(nameof(DataKey.Xxx))]`，避免字符串字面量。
+- **不要**新增 `const string` DataKey。
+- **不要**使用 `DataKey.Xxx` 兼容别名；SDD-0021 要删除该别名和 `DataKey<T> -> string` 隐式转换。
 - **系统配置**由 `DataOS/` 驱动并通过 `system.config` / `system.preset` snapshot records 投影，**可注入 Data 的配置**同样先写 `DataOS/`，**键定义**来自 descriptor，**事件契约**放 `EventType/`。

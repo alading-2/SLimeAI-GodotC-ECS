@@ -1,6 +1,6 @@
 # Data 系统说明
 
-> 状态：当前实现说明。
+> 状态：当前实现说明；SDD-0021 正在执行 no-compat hard cutover，本文不再把兼容入口作为推荐路线。
 > 范围：`Src/ECS/Base/Data/`、`Data/DataOS/`、`Data/DataKey/Generated/`、`Data/EventType/`、`Data/Config/`、`Data/ResourceManagement/`、`Src/ECS/Test/SingleTest/ECS/DataOS/`。
 > 设计事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/`。
 
@@ -33,7 +33,7 @@ var hp = entity.Data.Get<float>(GeneratedDataKey.FinalHp);
 entity.Data.Set(GeneratedDataKey.BaseHp, 100f);
 ```
 
-兼容旧调用点时可以看到 `DataKey.Xxx`，但它现在只是 `GeneratedDataKey.Xxx` 的别名，不保存默认值、范围或计算规则。
+`DataKey.Xxx` 兼容别名属于旧调用点迁移残留。SDD-0021 裁决是删除该别名和 `DataKey<T> -> string` 隐式转换；新代码只写唯一 generated handle。
 
 ### 2.2 Descriptor
 
@@ -86,7 +86,7 @@ public readonly record struct DataKey<T>(string StableKey)
 - modifier 存在 slot 内，并按 Additive / Multiplicative / FinalAdditive / Override / Cap 管线计算有效值。
 - base value 或 modifier 变化会标脏依赖它的 computed 字段。
 
-未绑定 catalog 的 `new Data()` 旧路径仍存在，是迁移期兼容入口；新增字段和新代码不应依赖它。
+未绑定 catalog 的 `new Data()` 属于 SDD-0021 删除目标。新增字段、新测试和业务代码不应依赖它；运行时 Data 必须绑定 `DataDefinitionCatalog`。
 
 ### 2.6 Computed Resolver
 
@@ -121,7 +121,7 @@ FinalAttack
 | 目录 | 角色 |
 | ---- | ---- |
 | `Data/DataOS/` | SQLite authoring、schema、seed、generator 和 `runtime_snapshot.json`，是字段定义和数据输入事实源。 |
-| `Data/DataOS/RuntimeTables/` | snapshot-backed DTO 外壳和按 `Name` 查询的兼容 API，不是 authoring 主数据源，也不再通过反射直接灌入 `Entity.Data`。 |
+| `Data/DataOS/RuntimeTables/` | SDD-0021 删除/改名目标。若仍保留 DTO，不能叫 RuntimeTables，不能提供兼容查询 API，也不能作为 authoring 或 runtime 数据事实源。 |
 | `Data/DataKey/Generated/` | descriptor 生成的 typed handle，只保存 stable key 和 C# 类型。 |
 | `Data/EventType/` | `Entity.Events` / `GlobalEventBus` 的事件名和事件载荷协议。 |
 | `Data/Config/` | 系统级配置结构，不等同于 Entity 运行时状态。 |
@@ -134,7 +134,7 @@ FinalAttack
 先判断要改的是哪类数据：
 
 - Entity 运行时状态：写 DataOS descriptor，生成 `GeneratedDataKey`，通过 `DataRuntimeBootstrap` / snapshot record 注入。
-- 系统级规则或全局配置：优先放 `Data/Config/` 和 `Data/DataOS/RuntimeTables/System/` 对应外壳；不是 Entity 状态时不要强行定义 DataKey。
+- 系统级规则或全局配置：优先进入 DataOS 业务表并投影为 `system.config` / `system.preset` snapshot records；不是 Entity 状态时不要强行定义 DataKey。
 - 事件协议：放 `Data/EventType/` 对应分域，事件载荷优先保持稳定结构。
 - 资源路径或资源目录：放 `Data/ResourceManagement/` / `ResourcePaths` / `ResourceCatalog`；DataOS 和 Data 中保存 `res://` 字符串路径、稳定 id 或关系，不保存 `PackedScene`、Node、Resource 等运行时对象。
 - 复杂结构：优先建清晰业务表或关系表，不把稳定结构塞进未约束 JSON；只有 `Feature.Modifiers` 这类明确校验的输入才用 `authoring_blob`。
@@ -144,12 +144,12 @@ FinalAttack
 1. 改 DataOS descriptor authoring：`Data/DataOS/Authoring/DataKeyDescriptors.seed.sql` 或相关 schema / seed。
 2. 重新生成 `Data/DataOS/Snapshots/runtime_snapshot.json`。
 3. 运行 `Data/DataOS/Tools/generate-data-key-handles.py`，更新 `Data/DataKey/Generated/DataKey_Generated.cs`。
-4. 改 Component / System / RuntimeTables 调用点，使用 `GeneratedDataKey.Xxx`。
+4. 改 Component / System 调用点，使用唯一 generated handle 或 snapshot projection；不要走 RuntimeTables 兼容入口。
 5. 补或更新 `Src/ECS/Test/SingleTest/ECS/DataOS/` 下的场景测试。
 
 数据约定：
 
-- `Data/DataOS/RuntimeTables/` 的默认查询键是 `Name`，同表内必须唯一；兼容旧字段时可有 `SystemId` / `PresetName` fallback，但新增表优先明确稳定 id。
+- snapshot records 的稳定 id 必须明确；不要通过 RuntimeTables `Name` 查询或兼容 fallback 作为新入口。
 - 数值型“无限制”哨兵值统一用 `-1`，除非该域已有更具体 enum / flags 约定。
 - 概率 authoring 统一使用 `0-100`，计算时再换算成 `0-1`。
 - DataOS 数据只存标量、enum 文本、资源路径、稳定 id 和关系表。
