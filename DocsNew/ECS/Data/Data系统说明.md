@@ -1,8 +1,8 @@
 # Data 系统说明
 
 > 状态：当前实现说明。
-> 范围：`Src/ECS/Base/Data/`、`Data/DataOS/`、`Data/DataKey/Generated/`、`Src/ECS/Test/SingleTest/ECS/DataOS/`。
-> 设计事实源：`../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/`。
+> 范围：`Src/ECS/Base/Data/`、`Data/DataOS/`、`Data/DataKey/Generated/`、`Data/EventType/`、`Data/Config/`、`Data/ResourceManagement/`、`Src/ECS/Test/SingleTest/ECS/DataOS/`。
+> 设计事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/`。
 
 ## 1. 一句话定位
 
@@ -114,7 +114,30 @@ FinalAttack
 
 失败不会静默 fallback 到旧 `DataRegistry`。
 
+### 2.8 数据目录和协议边界
+
+`Src/ECS/Base/Data/` 负责运行时容器行为，`Data/` 负责数据协议和配置输入。不要把两者混成一个入口：
+
+| 目录 | 角色 |
+| ---- | ---- |
+| `Data/DataOS/` | SQLite authoring、schema、seed、generator 和 `runtime_snapshot.json`，是字段定义和数据输入事实源。 |
+| `Data/DataOS/RuntimeTables/` | snapshot-backed DTO 外壳和按 `Name` 查询的兼容 API，不是 authoring 主数据源，也不再通过反射直接灌入 `Entity.Data`。 |
+| `Data/DataKey/Generated/` | descriptor 生成的 typed handle，只保存 stable key 和 C# 类型。 |
+| `Data/EventType/` | `Entity.Events` / `GlobalEventBus` 的事件名和事件载荷协议。 |
+| `Data/Config/` | 系统级配置结构，不等同于 Entity 运行时状态。 |
+| `Data/ResourceManagement/` | 资源路径、资源目录和加载入口，不存业务运行时状态。 |
+
+共享业务状态应放进 `Entity.Data`，不要藏在 Component 私有字段里；跨系统命令和流程仍走事件或系统 API，不用 Data 替代 EventBus。
+
 ## 3. 怎么改字段
+
+先判断要改的是哪类数据：
+
+- Entity 运行时状态：写 DataOS descriptor，生成 `GeneratedDataKey`，通过 `DataRuntimeBootstrap` / snapshot record 注入。
+- 系统级规则或全局配置：优先放 `Data/Config/` 和 `Data/DataOS/RuntimeTables/System/` 对应外壳；不是 Entity 状态时不要强行定义 DataKey。
+- 事件协议：放 `Data/EventType/` 对应分域，事件载荷优先保持稳定结构。
+- 资源路径或资源目录：放 `Data/ResourceManagement/` / `ResourcePaths` / `ResourceCatalog`；DataOS 和 Data 中保存 `res://` 字符串路径、稳定 id 或关系，不保存 `PackedScene`、Node、Resource 等运行时对象。
+- 复杂结构：优先建清晰业务表或关系表，不把稳定结构塞进未约束 JSON；只有 `Feature.Modifiers` 这类明确校验的输入才用 `authoring_blob`。
 
 新增或修改普通 Entity.Data 字段时，按这个顺序：
 
@@ -123,6 +146,13 @@ FinalAttack
 3. 运行 `Data/DataOS/Tools/generate-data-key-handles.py`，更新 `Data/DataKey/Generated/DataKey_Generated.cs`。
 4. 改 Component / System / RuntimeTables 调用点，使用 `GeneratedDataKey.Xxx`。
 5. 补或更新 `Src/ECS/Test/SingleTest/ECS/DataOS/` 下的场景测试。
+
+数据约定：
+
+- `Data/DataOS/RuntimeTables/` 的默认查询键是 `Name`，同表内必须唯一；兼容旧字段时可有 `SystemId` / `PresetName` fallback，但新增表优先明确稳定 id。
+- 数值型“无限制”哨兵值统一用 `-1`，除非该域已有更具体 enum / flags 约定。
+- 概率 authoring 统一使用 `0-100`，计算时再换算成 `0-1`。
+- DataOS 数据只存标量、enum 文本、资源路径、稳定 id 和关系表。
 
 不要做：
 
@@ -182,6 +212,10 @@ data.RemoveModifiersBySource(featureInstance);
 ```
 
 这会触发依赖 computed 字段重新计算。
+
+### 4.5 生命周期和对象池
+
+对象池回收或 Entity 销毁时，`Events.Clear()` 和 `Data.Clear()` 由 `EntityManager` 的统一生命周期处理。业务 Component 不应为了回收自己手动清空整个 Data；只清理自己持有的外部订阅、临时缓存，或按 source 回滚自己授予的 modifier。
 
 ## 5. 事件
 
