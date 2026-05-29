@@ -92,21 +92,21 @@ public class ParabolaStrategy : IMovementStrategy
         // 1. 解析当前目标（如果开启 isTrackTarget 且有 TargetNode，则目标会随之移动）
         if (!TryResolveTargetPoint(node, @params, true, out Vector2 targetPoint))
         {
-            data.Set(DataKey.Velocity, Vector2.Zero);
+            data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
             return MovementUpdateResult.Continue();
         }
 
         // 2. 距离检查：是否到达目标
         if (MovementHelper.HasReachedTarget(node.GlobalPosition, targetPoint, @params.ReachDistance))
         {
-            data.Set(DataKey.Velocity, Vector2.Zero);
+            data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
             return MovementUpdateResult.Complete();
         }
 
         float speed = @params.ActionSpeed > 0f ? @params.ActionSpeed : DefaultActionSpeed;
         if (speed <= 0.001f)
         {
-            data.Set(DataKey.Velocity, Vector2.Zero);
+            data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
             return MovementUpdateResult.Continue();
         }
 
@@ -157,7 +157,7 @@ public class ParabolaStrategy : IMovementStrategy
 
         // 6. 设置速度以供物理系统或同步逻辑使用。
         data.Set(
-            DataKey.Velocity,
+            GeneratedDataKey.Velocity,
             displacementLength > 0.001f
                 ? displacement / Mathf.Max(delta, 0.001f)
                 : Vector2.Zero);
@@ -279,7 +279,7 @@ public class ParabolaStrategy : IMovementStrategy
         // 距离判定：若已在目标点附近，直接标记完成并停滞速度
         if (distance <= 0.001f)
         {
-            data.Set(DataKey.Velocity, Vector2.Zero);
+            data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
             return MovementUpdateResult.Complete();
         }
 
@@ -289,7 +289,7 @@ public class ParabolaStrategy : IMovementStrategy
 
         // 根据本帧实际步长反推物理瞬时速度（Velocity = Displacement / Time）
         // 这样做可以确保当物体因距离过近而减速刹车时，速度状态能被正确同步
-        data.Set(DataKey.Velocity, direction * (step / Mathf.Max(delta, 0.001f)));
+        data.Set(GeneratedDataKey.Velocity, direction * (step / Mathf.Max(delta, 0.001f)));
 
         // 返回包含位移量和朝向的更新结果，通知外部系统（如动画或旋转）
         return MovementUpdateResult.Continue(step, direction);

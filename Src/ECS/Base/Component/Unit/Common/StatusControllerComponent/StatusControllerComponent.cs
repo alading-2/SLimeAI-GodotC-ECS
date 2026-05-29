@@ -109,17 +109,17 @@ public partial class StatusControllerComponent : Node, IComponent
         _currentSnapshot = snapshot;
         if (_data == null) return;
 
-        _data.Set(DataKey.StatusCanThink, snapshot.CanThink);
-        _data.Set(DataKey.StatusCanMoveInput, snapshot.CanMoveInput);
-        _data.Set(DataKey.StatusCanAttack, snapshot.CanAttack);
-        _data.Set(DataKey.StatusCanCast, snapshot.CanCast);
-        _data.Set(DataKey.StatusIsInvulnerable, snapshot.IsInvulnerable);
-        _data.Set(DataKey.StatusIsControlImmune, snapshot.IsControlImmune);
+        _data.Set(GeneratedDataKey.StatusCanThink, snapshot.CanThink);
+        _data.Set(GeneratedDataKey.StatusCanMoveInput, snapshot.CanMoveInput);
+        _data.Set(GeneratedDataKey.StatusCanAttack, snapshot.CanAttack);
+        _data.Set(GeneratedDataKey.StatusCanCast, snapshot.CanCast);
+        _data.Set(GeneratedDataKey.StatusIsInvulnerable, snapshot.IsInvulnerable);
+        _data.Set(GeneratedDataKey.StatusIsControlImmune, snapshot.IsControlImmune);
 
         // 兼容旧链路：先同步到已有的运行时布尔键。
-        _data.Set(DataKey.IsInvulnerable, snapshot.IsInvulnerable);
-        _data.Set(DataKey.IsMovementLocked, snapshot.IsMovementLocked);
-        _data.Set(DataKey.IsStunned, !snapshot.CanThink && !snapshot.CanMoveInput && !snapshot.CanAttack && !snapshot.CanCast);
+        _data.Set(GeneratedDataKey.IsInvulnerable, snapshot.IsInvulnerable);
+        _data.Set(GeneratedDataKey.IsMovementLocked, snapshot.IsMovementLocked);
+        _data.Set(GeneratedDataKey.IsStunned, !snapshot.CanThink && !snapshot.CanMoveInput && !snapshot.CanAttack && !snapshot.CanCast);
 
         _entity?.Events.Emit(
             new GameEventType.Unit.StateChanged("StatusSnapshot", string.Empty, snapshot.Flags.ToString()));

@@ -68,7 +68,7 @@ public static readonly DataMeta BaseHp = DataRegistry.Register(
 收益：
 
 - 一个字段同时持有 **键名、类型、默认值、约束、分类**
-- `Config` 默认值可直接读取 `DataKey.Xxx.DefaultValue`
+- `Config` 默认值可直接读取 `descriptor default value`
 - `Data.Get/Set(DataKey.Xxx)` 保持兼容
 
 特殊引用键（如 `Node2D` 引用）仍允许保留 `const string`。
@@ -101,17 +101,17 @@ public static readonly DataMeta BaseHp = DataRegistry.Register(
 
 ## 6. Config 映射规则
 
-`Data/Data/` 下的配置类推荐写法：
+`DataOS removed legacy Data/` 下的配置类推荐写法：
 
 ```csharp
 [DataKey(nameof(DataKey.BaseHp))]
-[Export] public float BaseHp { get; set; } = (float)DataKey.BaseHp.DefaultValue!;
+[Export] public float BaseHp { get; set; } = 10f;
 ```
 
 规则：
 
 - `[DataKey]` 参数使用 `nameof(DataKey.Xxx)`
-- 默认值优先直接读取 `DataKey.Xxx.DefaultValue`
+- 默认值优先直接读取 `descriptor default value`
 - 核心字段不要依赖“按属性名回退”
 
 ## 7. 常见工作流
@@ -120,7 +120,7 @@ public static readonly DataMeta BaseHp = DataRegistry.Register(
 
 1. 在 `Data/DataKey/` 中新增 `DataKey`
 2. 补齐 `DataMeta`（类型、默认值、分类、约束）
-3. 在 `Data/Data/` 配置类中增加 `[DataKey(nameof(DataKey.Xxx))]`
+3. 在 `DataOS removed legacy Data/` 配置类中增加 `[DataKey(nameof(DataKey.Xxx))]`
 4. 运行时通过 `Data.LoadFromResource()` 注入到 Entity.Data
 
 ### 新增一个系统级规则
@@ -138,14 +138,14 @@ public static readonly DataMeta BaseHp = DataRegistry.Register(
 - ❌ 不要在业务代码里写字符串字面量访问 Data
 - ❌ 不要新增主流 `const string` DataKey
 - ❌ 不要使用 `Data.On()` 监听数据变化
-- ❌ 不要把系统全局配置误放进 `Data/Data/`
+- ❌ 不要把系统全局配置误放进 `DataOS removed legacy Data/`
 - ✅ 运行时规则看 `DocsAI/Modules/Data.md`
-- ✅ 数据目录写法看 `Data/README.md`、`Data/Data/README.md`、`Data/DataKey/README.md`
+- ✅ 数据目录写法看 `Data/README.md`、`DataOS removed legacy Data/README.md`、`Data/DataKey/README.md`
 
 ## 9. 相关文档
 
 - `DocsAI/Modules/Data.md`：运行时 Data 容器使用指南
 - `Data/README.md`：`Data/` 顶层目录职责
-- `Data/Data/README.md`：Config / Resource 映射规范
+- `DataOS removed legacy Data/README.md`：Config / Resource 映射规范
 - `Data/DataKey/README.md`：DataKey / DataMeta 定义规范
 - `Docs/框架/项目索引.md`：项目级导航入口

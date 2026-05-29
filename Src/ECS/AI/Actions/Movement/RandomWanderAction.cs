@@ -49,7 +49,7 @@ public class RandomWanderAction : BehaviorNode
         var selfNode = ctx.Entity as Node2D;
         if (selfNode == null) return NodeState.Failure;
 
-        Vector2 patrolTarget = ctx.Entity.Data.Get<Vector2>(DataKey.PatrolTargetPoint, Vector2.Zero);
+        Vector2 patrolTarget = ctx.Entity.Data.Get<Vector2>(GeneratedDataKey.PatrolTargetPoint, Vector2.Zero);
 
         // 判断是否需要选新目标点（首次 or 已到达）
         bool needNewTarget = patrolTarget == Vector2.Zero ||
@@ -59,7 +59,7 @@ public class RandomWanderAction : BehaviorNode
         {
             // 以当前位置为圆心，在圆环内随机选下一个巡逻点
             patrolTarget = PickRingPoint(selfNode);
-            ctx.Entity.Data.Set(DataKey.PatrolTargetPoint, patrolTarget);
+            ctx.Entity.Data.Set(GeneratedDataKey.PatrolTargetPoint, patrolTarget);
 
             // 到达后返回 Success，让上层 Sequence 继续（WaitIdleAction 等待）
             return NodeState.Success;
@@ -67,9 +67,9 @@ public class RandomWanderAction : BehaviorNode
 
         // 尚未到达：朝目标点移动
         Vector2 direction = (patrolTarget - selfNode.GlobalPosition).Normalized();
-        ctx.Entity.Data.Set(DataKey.AIMoveDirection, direction);
-        ctx.Entity.Data.Set(DataKey.AIMoveSpeedMultiplier, _speedMultiplier);
-        ctx.Entity.Data.Set(DataKey.AIState, AIState.Patrolling);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIMoveDirection, direction);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIMoveSpeedMultiplier, _speedMultiplier);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIState, AIState.Patrolling);
 
         return NodeState.Running;
     }
@@ -98,6 +98,6 @@ public class RandomWanderAction : BehaviorNode
         // 被高优先级分支打断时（如攻击抢占巡逻），清除巡逻目标点。
         // 下次重新进入巡逻分支时，needNewTarget 判断为 true，从当前位置重新选点，
         // 避免敌人恢复巡逻时"瞬移"到被打断前的旧目标点位置附近立刻 Success。
-        ctx?.Entity.Data.Set(DataKey.PatrolTargetPoint, Vector2.Zero);
+        ctx?.Entity.Data.Set(GeneratedDataKey.PatrolTargetPoint, Vector2.Zero);
     }
 }

@@ -145,7 +145,7 @@ public class BezierCurveStrategy : IMovementStrategy
 
         if (MovementHelper.HasReachedTarget(node.GlobalPosition, _trackedTargetPosition, @params.ReachDistance))
         {
-            data.Set(DataKey.Velocity, Vector2.Zero);
+            data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
             return MovementUpdateResult.Complete();
         }
 
@@ -180,7 +180,7 @@ public class BezierCurveStrategy : IMovementStrategy
         float displacementLength = displacement.Length();
 
         data.Set(
-            DataKey.Velocity,
+            GeneratedDataKey.Velocity,
             displacementLength > 0.001f
                 ? displacement / Mathf.Max(delta, 0.001f)
                 : Vector2.Zero);

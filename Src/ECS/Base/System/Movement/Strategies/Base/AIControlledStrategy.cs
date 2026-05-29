@@ -6,10 +6,10 @@ using System.Runtime.CompilerServices;
 /// <para>不做寻路/索敌，只消费 AI 层写入的方向与倍率。通常设为敌人/NPC 的 <c>DefaultMoveMode</c>，临时策略完成后自动回退。</para>
 /// <para>AI 每帧持续写入 Data（非 MovementParams）：
 /// <list type="bullet">
-/// <item> 使用：在Entity中设置Data.Set(DataKey.DefaultMoveMode, MoveMode.AIControlled);
-/// <item><c>DataKey.AIMoveDirection</c>（Vector2）：归一化移动方向，零向量 = 停步。</item>
-/// <item><c>DataKey.AIMoveSpeedMultiplier</c>（float）：速度倍率，0=停，1=满速。</item>
-/// <item><c>DataKey.FinalMoveSpeed</c>（float）：实体最终移动速度上限（属性系统计算后的结果）。</item>
+/// <item> 使用：在Entity中设置Data.Set(GeneratedDataKey.DefaultMoveMode, MoveMode.AIControlled);
+/// <item><c>GeneratedDataKey.AIMoveDirection</c>（Vector2）：归一化移动方向，零向量 = 停步。</item>
+/// <item><c>GeneratedDataKey.AIMoveSpeedMultiplier</c>（float）：速度倍率，0=停，1=满速。</item>
+/// <item><c>GeneratedDataKey.FinalMoveSpeed</c>（float）：实体最终移动速度上限（属性系统计算后的结果）。</item>
 /// </list>
 /// </para>
 /// <para>【典型用途】敌人追击、巡逻、游荡、逃跑等 AI 持续写方向的常驻模式。</para>
@@ -33,18 +33,18 @@ public class AIControlledStrategy : IMovementStrategy
     /// </summary>
     public MovementUpdateResult Update(IEntity entity, Data data, float delta, in MovementParams @params)
     {
-        if (data.Has(DataKey.StatusCanMoveInput) && !data.Get<bool>(DataKey.StatusCanMoveInput))
+        if (data.Has(GeneratedDataKey.StatusCanMoveInput) && !data.Get<bool>(GeneratedDataKey.StatusCanMoveInput))
         {
-            data.Set(DataKey.Velocity, Vector2.Zero);
+            data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
             return MovementUpdateResult.Continue(0f);
         }
 
-        Vector2 moveDirection = data.Get<Vector2>(DataKey.AIMoveDirection); // AI请求移动方向
-        float speedMultiplier = data.Get<float>(DataKey.AIMoveSpeedMultiplier); // AI移动速度倍率
-        float moveSpeed = data.Get<float>(DataKey.FinalMoveSpeed); // 最终移动速度
+        Vector2 moveDirection = data.Get<Vector2>(GeneratedDataKey.AIMoveDirection); // AI请求移动方向
+        float speedMultiplier = data.Get<float>(GeneratedDataKey.AIMoveSpeedMultiplier); // AI移动速度倍率
+        float moveSpeed = data.Get<float>(GeneratedDataKey.FinalMoveSpeed); // 最终移动速度
 
         Vector2 velocity = moveDirection * moveSpeed * speedMultiplier;
-        data.Set(DataKey.Velocity, velocity);
+        data.Set(GeneratedDataKey.Velocity, velocity);
 
         // 返回估算位移量（供 AccumulateTravel 统计，实际位移由 MoveAndSlide 决定）
         return MovementUpdateResult.Continue(velocity.Length() * delta);

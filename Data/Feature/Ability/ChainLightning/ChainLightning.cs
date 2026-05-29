@@ -58,25 +58,25 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
             firstTarget
         };
 
-        var chainCount = ability.Data.Get<int>(DataKey.AbilityChainCount);
+        var chainCount = ability.Data.Get<int>(GeneratedDataKey.AbilityChainCount);
         if (chainCount <= 0) chainCount = 1;
 
         // 计算初始伤害：技能基础伤害 × 施法者技能伤害倍率
-        var initialDamage = ability.Data.Get<float>(DataKey.FinalAbilityDamage);
+        var initialDamage = ability.Data.Get<float>(GeneratedDataKey.FinalAbilityDamage);
 
         var bounceContext = new ChainBounceContext
         {
             Caster = caster, // 技能施法者
-            Delay = ability.Data.Get<float>(DataKey.AbilityChainDelay), // 技能链式延迟
-            Range = ability.Data.Get<float>(DataKey.AbilityChainRange), // 技能链式范围
-            DamageDecay = ability.Data.Get<float>(DataKey.AbilityChainDamageDecay) / 100f, // 技能链式伤害衰减
+            Delay = ability.Data.Get<float>(GeneratedDataKey.AbilityChainDelay), // 技能链式延迟
+            Range = ability.Data.Get<float>(GeneratedDataKey.AbilityChainRange), // 技能链式范围
+            DamageDecay = ability.Data.Get<float>(GeneratedDataKey.AbilityChainDamageDecay) / 100f, // 技能链式伤害衰减
             TeamFilter = TeamFilter.Enemy, // 技能链式目标阵营
             Sorting = TargetSorting.Nearest, // 技能链式目标排序
-            LineScenePath = ability.Data.Get<string>(DataKey.AbilityChainLineEffect) // 技能链式特效路径
+            LineScenePath = ability.Data.Get<string>(GeneratedDataKey.AbilityChainLineEffect) // 技能链式特效路径
         };
 
         _log.Debug(
-            $"[Execute起步] 目标数: 1, 施法者: {(caster as Node)?.Name}, 第一目标: {(firstTarget as Node)?.Name}, 第一目标类型: {firstTarget.GetType().Name}, 第一目标是否死亡: {firstTarget.Data.Get<bool>(DataKey.IsDead)}");
+            $"[Execute起步] 目标数: 1, 施法者: {(caster as Node)?.Name}, 第一目标: {(firstTarget as Node)?.Name}, 第一目标类型: {firstTarget.GetType().Name}, 第一目标是否死亡: {firstTarget.Data.Get<bool>(GeneratedDataKey.IsDead)}");
 
         // 发起第一击
         ExecuteBounce(bounceContext, caster, firstTarget, initialDamage, chainCount, new HashSet<IEntity>());
@@ -95,7 +95,7 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
     {
         if (caster is not Node2D casterNode) return null;
 
-        float castRange = ability.Data.Get<float>(DataKey.AbilityCastRange); //索敌半径
+        float castRange = ability.Data.Get<float>(GeneratedDataKey.AbilityCastRange); //索敌半径
         if (castRange <= 0f) return null;
 
         var targets = EntityTargetSelector.Query(new TargetSelectorQuery
@@ -130,7 +130,7 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
             fromPos = fNode.GlobalPosition;
         }
 
-        bool isDead = currentTarget.Data.Get<bool>(DataKey.IsDead);
+        bool isDead = currentTarget.Data.Get<bool>(GeneratedDataKey.IsDead);
         _log.Debug(
             $"[弹跳准备] 起点: {(fromEntity as Node)?.Name}, 终点Entity: {(currentTarget as Node)?.Name}, 类型: {currentTarget.GetType().Name}, 死亡状态: {isDead}, 节点有效: {GodotObject.IsInstanceValid(currentTarget as GodotObject)}, 实例ID: {(currentTarget as Node)?.GetInstanceId()}");
 
@@ -148,14 +148,14 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
                 Tags = DamageTags.Ability
             };
 
-            float dodgeChance = unitVictim.Data.Get<float>(DataKey.DodgeChance);
+            float dodgeChance = unitVictim.Data.Get<float>(GeneratedDataKey.DodgeChance);
             _log.Debug(
-                $"[伤害发送前] 期望结算伤害: {currentDamage}, 目标当前Hp: {unitVictim.Data.Get<float>(DataKey.CurrentHp)}, IsDead: {isDead}, IsInvulnerable: {unitVictim.Data.Get<bool>(DataKey.IsInvulnerable)}, LifecycleState: {unitVictim.Data.Get<LifecycleState>(DataKey.LifecycleState)}, DodgeChance: {dodgeChance}");
+                $"[伤害发送前] 期望结算伤害: {currentDamage}, 目标当前Hp: {unitVictim.Data.Get<float>(GeneratedDataKey.CurrentHp)}, IsDead: {isDead}, IsInvulnerable: {unitVictim.Data.Get<bool>(GeneratedDataKey.IsInvulnerable)}, LifecycleState: {unitVictim.Data.Get<LifecycleState>(GeneratedDataKey.LifecycleState)}, DodgeChance: {dodgeChance}");
             SystemManager.Instance?.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(
                 new DamageProcessRequest(damageInfo) // 单次弹跳伤害请求
             );
             _log.Debug(
-                $"[伤害发送后] 实际最终伤害: {damageInfo.FinalDamage}, 目标当前Hp: {unitVictim.Data.Get<float>(DataKey.CurrentHp)} (如果无伤害，可能是被闪避或因为目标已标记为Dead)");
+                $"[伤害发送后] 实际最终伤害: {damageInfo.FinalDamage}, 目标当前Hp: {unitVictim.Data.Get<float>(GeneratedDataKey.CurrentHp)} (如果无伤害，可能是被闪避或因为目标已标记为Dead)");
 
             // 绘制特效
             if (!string.IsNullOrWhiteSpace(context.LineScenePath))
@@ -247,7 +247,7 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
         {
             bool isExcluded = excludeTargets.Contains(candidate);
             _log.Debug(
-                $"[TargetQuery - 候选] Entity: {(candidate as Node)?.Name}, 类型: {candidate.GetType().Name}, 是否死亡: {candidate.Data.Get<bool>(DataKey.IsDead)}, 是否已命中: {isExcluded}");
+                $"[TargetQuery - 候选] Entity: {(candidate as Node)?.Name}, 类型: {candidate.GetType().Name}, 是否死亡: {candidate.Data.Get<bool>(GeneratedDataKey.IsDead)}, 是否已命中: {isExcluded}");
             if (!isExcluded)
             {
                 _log.Debug($"[TargetQuery - 选中] 决定弹跳至: {(candidate as Node)?.Name}");

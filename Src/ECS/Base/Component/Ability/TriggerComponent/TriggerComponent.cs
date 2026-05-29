@@ -32,8 +32,8 @@ public partial class TriggerComponent : Node, IComponent
 
     // ================= 属性访问 =================
 
-    private AbilityTriggerMode TriggerMode => _data.Get<AbilityTriggerMode>(DataKey.AbilityTriggerMode);
-    private string AbilityName => _data.Get<string>(DataKey.Name);
+    private AbilityTriggerMode TriggerMode => _data.Get<AbilityTriggerMode>(GeneratedDataKey.AbilityTriggerMode);
+    private string AbilityName => _data.Get<string>(GeneratedDataKey.Name);
 
     // ================= IComponent 实现 =================
 
@@ -109,7 +109,7 @@ public partial class TriggerComponent : Node, IComponent
         if (_data == null || _entity is not AbilityEntity ability) return;
 
         // 获取需要监听的事件类型（支持 string 或 List<string>）
-        var eventData = _data.Get<object>(DataKey.AbilityTriggerEvent);
+        var eventData = _data.Get<object>(GeneratedDataKey.AbilityTriggerEvent);
         var eventTypes = new List<string>();
 
         if (eventData is string singleEvent && !string.IsNullOrEmpty(singleEvent))
@@ -129,7 +129,7 @@ public partial class TriggerComponent : Node, IComponent
 
         // 查找技能的拥有者 (例如：玩家实体)
         // 绝大多数事件触发技能是监听其拥有者的事件（如玩家受伤）
-        var abilityId = ability.Data.Get<string>(DataKey.Id) ?? string.Empty;
+        var abilityId = ability.Data.Get<string>(GeneratedDataKey.Id) ?? string.Empty;
         var ownerId = EntityRelationshipManager.GetParentEntitiesByChildAndType(
             abilityId, EntityRelationshipType.ENTITY_TO_ABILITY).FirstOrDefault();
 
@@ -160,7 +160,7 @@ public partial class TriggerComponent : Node, IComponent
     {
         if (_data == null) return;
 
-        var eventData = _data.Get<object>(DataKey.AbilityTriggerEvent);
+        var eventData = _data.Get<object>(GeneratedDataKey.AbilityTriggerEvent);
         var eventTypes = new List<string>();
 
         if (eventData is string singleEvent && !string.IsNullOrEmpty(singleEvent))
@@ -187,7 +187,7 @@ public partial class TriggerComponent : Node, IComponent
     {
         if (_data == null || _entity is not AbilityEntity ability) return;
 
-        float interval = _data.Get<float>(DataKey.AbilityCooldown);
+        float interval = _data.Get<float>(GeneratedDataKey.AbilityCooldown);
         if (interval <= 0f) return;
 
         // 取消旧的定时器
@@ -223,7 +223,7 @@ public partial class TriggerComponent : Node, IComponent
 
         // 1. 检查触发概率 (AbilityTriggerChance)
         // 规则：概率统一为 0-100
-        float chance = _data.Get<float>(DataKey.AbilityTriggerChance);
+        float chance = _data.Get<float>(GeneratedDataKey.AbilityTriggerChance);
         if (!MyMath.CheckProbability(chance))
         {
             return;
@@ -243,7 +243,7 @@ public partial class TriggerComponent : Node, IComponent
         if (_entity is not AbilityEntity ability) return;
 
         // 查找施法者
-        var abilityId = ability.Data.Get<string>(DataKey.Id) ?? string.Empty;
+        var abilityId = ability.Data.Get<string>(GeneratedDataKey.Id) ?? string.Empty;
         var ownerId = EntityRelationshipManager.GetParentEntitiesByChildAndType(
             abilityId, EntityRelationshipType.ENTITY_TO_ABILITY).FirstOrDefault();
         var caster = !string.IsNullOrEmpty(ownerId)
@@ -280,7 +280,7 @@ public partial class TriggerComponent : Node, IComponent
     {
         if (_data == null || _entity is not AbilityEntity ability) return false;
 
-        var mode = _data.Get<AbilityTriggerMode>(DataKey.AbilityTriggerMode);
+        var mode = _data.Get<AbilityTriggerMode>(GeneratedDataKey.AbilityTriggerMode);
 
         // 验证是否支持手动触发模式
         if (!mode.HasFlag(AbilityTriggerMode.Manual))

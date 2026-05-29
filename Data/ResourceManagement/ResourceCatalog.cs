@@ -36,12 +36,12 @@ public readonly record struct ResourceCatalogGroup(
 /// <summary>
 /// 通用资源目录服务。
 /// <para>
-/// DataNew 表数据直接构建目录条目；场景、特效等资产仍从 ResourcePaths 生成索引构建。
+/// DataOS runtime table 表数据直接构建目录条目；场景、特效等资产仍从 ResourcePaths 生成索引构建。
 /// </para>
 /// </summary>
 public static class ResourceCatalog
 {
-    // 目录推导只处理资产资源；运行时数据目录由 DataNew 静态表直接提供。
+    // 目录推导只处理资产资源；运行时数据目录由 DataOS runtime table 静态表直接提供。
     private const string EffectRoot = "assets/Effect";
     private const string AssetUnitEnemyRoot = "assets/Unit/Enemy";
     private const string AssetUnitPlayerRoot = "assets/Unit/Player";
@@ -156,7 +156,7 @@ public static class ResourceCatalog
     {
         var entries = new List<ResourceCatalogEntry>();
 
-        AddDataNewEntries(entries);
+        AddDataOsRuntimeTableEntries(entries);
 
         // 资产资源仍直接从 ResourcePaths.Resources 构建目录，不额外扫描 res://。
         foreach (var (_, resources) in ResourcePaths.Resources)
@@ -205,10 +205,10 @@ public static class ResourceCatalog
     }
 
     /// <summary>
-    /// 从 DataNew 纯 C# 表构建目录条目。
+    /// 从 DataOS runtime table 纯 C# 表构建目录条目。
     /// </summary>
     /// <param name="entries">待写入的目录条目列表。</param>
-    private static void AddDataNewEntries(List<ResourceCatalogEntry> entries)
+    private static void AddDataOsRuntimeTableEntries(List<ResourceCatalogEntry> entries)
     {
         foreach (var data in EnemyData.All)
         {
@@ -218,9 +218,9 @@ public static class ResourceCatalog
             }
 
             entries.Add(new ResourceCatalogEntry(
-                data.Name, // DataNew 名称键
+                data.Name, // DataOS runtime table 名称键
                 ResourceCategory.DataUnit, // 保持选择器分类兼容
-                "Data/DataNew/Unit/Enemy/EnemyData.cs", // 源数据文件
+                "Data/DataOS/RuntimeTables/Unit/Enemy/EnemyData.cs", // 源数据文件
                 data.Name, // UI 显示名
                 "Unit.Enemy", // 目录分类路径
                 typeof(EnemyData) // 推荐数据类型
@@ -235,9 +235,9 @@ public static class ResourceCatalog
             }
 
             entries.Add(new ResourceCatalogEntry(
-                data.Name, // DataNew 名称键
+                data.Name, // DataOS runtime table 名称键
                 ResourceCategory.DataUnit, // 保持选择器分类兼容
-                "Data/DataNew/Unit/Player/PlayerData.cs", // 源数据文件
+                "Data/DataOS/RuntimeTables/Unit/Player/PlayerData.cs", // 源数据文件
                 data.Name, // UI 显示名
                 "Unit.Player", // 目录分类路径
                 typeof(PlayerData) // 推荐数据类型
@@ -252,9 +252,9 @@ public static class ResourceCatalog
             }
 
             entries.Add(new ResourceCatalogEntry(
-                data.Name, // DataNew 名称键
+                data.Name, // DataOS runtime table 名称键
                 ResourceCategory.DataUnit, // 保持选择器分类兼容
-                "Data/DataNew/Unit/Targeting/TargetingIndicatorData.cs", // 源数据文件
+                "Data/DataOS/RuntimeTables/Unit/Targeting/TargetingIndicatorData.cs", // 源数据文件
                 data.Name, // UI 显示名
                 "Unit.Targeting", // 目录分类路径
                 typeof(TargetingIndicatorData) // 推荐数据类型
@@ -272,9 +272,9 @@ public static class ResourceCatalog
                 ? "Ability"
                 : $"Ability.{NormalizeCatalogPath(data.FeatureGroupId) ?? "未分类"}";
             entries.Add(new ResourceCatalogEntry(
-                data.Name, // DataNew 名称键
+                data.Name, // DataOS runtime table 名称键
                 ResourceCategory.DataAbility, // 保持选择器分类兼容
-                "Data/DataNew/Ability/AbilityData.cs", // 源数据文件
+                "Data/DataOS/RuntimeTables/Ability/AbilityData.cs", // 源数据文件
                 data.Name, // UI 显示名
                 group, // 目录分类路径
                 typeof(AbilityData) // 推荐数据类型

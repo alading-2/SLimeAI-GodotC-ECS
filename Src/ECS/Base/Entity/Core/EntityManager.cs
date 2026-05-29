@@ -18,8 +18,20 @@ public readonly record struct EntitySpawnConfig
         ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively;
     }
 
-    /// <summary>单位配置数据（必填，可为 DataNew POCO 或旧 Resource）</summary>
+    /// <summary>单位配置数据（必填，用于从 runtime snapshot 推断 record）</summary>
     public required object Config { get; init; }
+
+    /// <summary>descriptor-first Data runtime 启动器（可选；未设置时使用仓库默认 snapshot）</summary>
+    public DataRuntimeBootstrap? RuntimeDataBootstrap { get; init; }
+
+    /// <summary>直接指定的 runtime snapshot record（可选；优先级高于 RuntimeDataRecordTable/RuntimeDataRecordId）</summary>
+    public RuntimeDataRecordDto? RuntimeDataRecord { get; init; }
+
+    /// <summary>runtime snapshot record table（可选；需与 RuntimeDataRecordId 配套）</summary>
+    public string? RuntimeDataRecordTable { get; init; }
+
+    /// <summary>runtime snapshot record id（可选；需与 RuntimeDataRecordTable 配套）</summary>
+    public string? RuntimeDataRecordId { get; init; }
 
     /// <summary>是否使用对象池（默认 false）</summary>
     public bool UsingObjectPool { get; init; }
@@ -198,10 +210,13 @@ public static partial class EntityManager
 
         string entityType = typeof(T).Name;
         string id = entity.GetInstanceId().ToString();
-        entity.Data.Set(DataKey.Id, id);
 
-        // 2. 数据注入 (从 Resource)
-        entity.Data.LoadFromConfig(config.Config);
+        // 2. 数据注入（默认旧 Resource；显式配置时使用 runtime snapshot record）
+        if (!ApplySpawnData(entity, config, id))
+        {
+            Destroy(entity);
+            return null;
+        }
 
         // 3. 自动加载 VisualScene (如有)
         InjectVisualScene(
@@ -253,6 +268,98 @@ public static partial class EntityManager
         GlobalEventBus.Global.Emit(new GameEventType.Global.EntitySpawned(entity));
 
         return entity;
+    }
+
+    private static bool ApplySpawnData<T>(
+        T entity, // 实体节点
+        EntitySpawnConfig config, // 生成配置
+        string entityId // 实体实例 id
+    ) where T : Node, IEntity
+    {
+        var bootstrap = config.RuntimeDataBootstrap ?? DataRuntimeBootstrap.Default;
+
+        RuntimeDataRecordDto record;
+        if (config.RuntimeDataRecord != null)
+        {
+            record = config.RuntimeDataRecord;
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(config.RuntimeDataRecordTable) && !string.IsNullOrWhiteSpace(config.RuntimeDataRecordId))
+            {
+                try
+                {
+                    record = bootstrap.FindRecord(config.RuntimeDataRecordTable, config.RuntimeDataRecordId);
+                }
+                catch (Exception ex)
+                {
+                    _log.Error($"runtime snapshot record 查找失败: {typeof(T).Name}, {config.RuntimeDataRecordTable}/{config.RuntimeDataRecordId}, error={ex.Message}");
+                    return false;
+                }
+            }
+            else if (TryResolveRecordByConfig(bootstrap, config.Config, out record, out var error))
+            {
+                // record 已按配置对象推断。
+            }
+            else
+            {
+                _log.Error($"runtime snapshot record 推断失败: {typeof(T).Name}, error={error}");
+                return false;
+            }
+        }
+
+        var report = bootstrap.ApplyToData(entity.Data, record);
+        if (report.HasErrors)
+        {
+            _log.Error(report.ToSummary());
+            return false;
+        }
+
+        entity.Data.Set(GeneratedDataKey.Id, entityId);
+        return true;
+    }
+
+    private static bool TryResolveRecordByConfig(
+        DataRuntimeBootstrap bootstrap,
+        object config,
+        out RuntimeDataRecordDto record,
+        out string error)
+    {
+        record = null!;
+        error = string.Empty;
+        var type = config.GetType();
+        var table = type.Name switch
+        {
+            "PlayerData" => "unit.player",
+            "EnemyData" => "unit.enemy",
+            "TargetingIndicatorData" => "unit.targeting_indicator",
+            "AbilityData" or "ChainAbilityData" => "ability",
+            _ => string.Empty
+        };
+
+        if (string.IsNullOrWhiteSpace(table))
+        {
+            error = $"unsupported config type {type.FullName}";
+            return false;
+        }
+
+        var name = type.GetProperty("Name")?.GetValue(config) as string;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            error = $"config type {type.FullName} missing Name";
+            return false;
+        }
+
+        try
+        {
+            record = bootstrap.FindRecordByName(table, name);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            return false;
+        }
     }
 
     /// <summary>

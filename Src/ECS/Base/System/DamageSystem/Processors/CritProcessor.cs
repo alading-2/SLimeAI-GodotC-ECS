@@ -26,13 +26,13 @@ public class CritProcessor : IDamageProcessor
         }
 
         // 从攻击者数据中获取暴击率 (0-100)
-        float critChance = attackerEntity.Data.Get<float>(DataKey.CritRate);
+        float critChance = attackerEntity.Data.Get<float>(GeneratedDataKey.CritRate);
 
         // 执行随机判定
         if (MyMath.CheckProbability(critChance))
         {
             // 获取暴击伤害
-            float critMultiplier = attackerEntity.Data.Get<float>(DataKey.CritDamage);
+            float critMultiplier = attackerEntity.Data.Get<float>(GeneratedDataKey.CritDamage);
             critMultiplier /= 100f;
             info.IsCritical = true;
             info.FinalDamage *= critMultiplier;

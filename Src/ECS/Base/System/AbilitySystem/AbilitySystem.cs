@@ -44,7 +44,7 @@ public static class AbilitySystem
         if (abilityContext.Ability == null || abilityContext.Caster == null) return TriggerResult.Failed;
 
         // 拦截已死亡角色的技能请求，防止周期性光环等技能死后继续触发新一轮伤害判定。
-        if (abilityContext.Caster != null && abilityContext.Caster.Data.Get<bool>(DataKey.IsDead))
+        if (abilityContext.Caster != null && abilityContext.Caster.Data.Get<bool>(GeneratedDataKey.IsDead))
         {
             _log.Debug($"技能触发失败: 施法者已阵亡");
             return TriggerResult.Failed;
@@ -61,7 +61,7 @@ public static class AbilitySystem
         // ==================== 资源消耗阶段 ====================
         var consumeContext = new EventContext();
         // 事件驱动：请求消耗资源（充能等）
-        if (ability.Data.Get<bool>(DataKey.IsAbilityUsesCharges))
+        if (ability.Data.Get<bool>(GeneratedDataKey.IsAbilityUsesCharges))
         {
             ability.Events.Emit(
                 new GameEventType.Ability.ConsumeCharge(consumeContext)
@@ -80,7 +80,7 @@ public static class AbilitySystem
         // 这里不应该再启动 CooldownComponent 的冷却计时，否则会导致 TriggerComponent 下次循环时
         // 技能还在冷却中 (Race Condition) 或 刚结束冷却但 CanUse 检查失败。
         // 因此：周期性技能跳过冷却启动。
-        var triggerMode = ability.Data.Get<AbilityTriggerMode>(DataKey.AbilityTriggerMode);
+        var triggerMode = ability.Data.Get<AbilityTriggerMode>(GeneratedDataKey.AbilityTriggerMode);
         if (!triggerMode.HasFlag(AbilityTriggerMode.Periodic))
         {
             ability.Events.Emit(
@@ -102,7 +102,7 @@ public static class AbilitySystem
         }
 
         // 标记为执行中
-        ability.Data.Set(DataKey.FeatureIsActive, true);
+        ability.Data.Set(GeneratedDataKey.FeatureIsActive, true);
 
         // 发送激活事件，技能UI使用
         ability.Events.Emit(
@@ -124,7 +124,7 @@ public static class AbilitySystem
         // Feature 生命周期钩子：Ended（同步技能同帧完成；异步/引导型能力后续可延迟调用）
         FeatureSystem.OnFeatureEnded(featureCtx, FeatureEndReason.Completed);
 
-        var name = ability.Data.Get<string>(DataKey.Name);
+        var name = ability.Data.Get<string>(GeneratedDataKey.Name);
         _log.Debug($"激活技能: {name}");
         return TriggerResult.Success;
     }
@@ -138,9 +138,9 @@ public static class AbilitySystem
     {
         if (ability == null) return false;
 
-        var abilityName = ability.Data.Get<string>(DataKey.Name);
-        var isEnabled = ability.Data.Get<bool>(DataKey.FeatureEnabled);
-        var isActive = ability.Data.Get<bool>(DataKey.FeatureIsActive);
+        var abilityName = ability.Data.Get<string>(GeneratedDataKey.Name);
+        var isEnabled = ability.Data.Get<bool>(GeneratedDataKey.FeatureEnabled);
+        var isActive = ability.Data.Get<bool>(GeneratedDataKey.FeatureIsActive);
 
         // 检查启用状态
         if (!isEnabled)
@@ -181,8 +181,8 @@ public static class AbilitySystem
         if (context.Ability == null) return;
 
         var ability = context.Ability;
-        var abilityName = ability.Data.Get<string>(DataKey.Name) ?? string.Empty;
-        var handlerId = ability.Data.Get<string>(DataKey.FeatureHandlerId);
+        var abilityName = ability.Data.Get<string>(GeneratedDataKey.Name) ?? string.Empty;
+        var handlerId = ability.Data.Get<string>(GeneratedDataKey.FeatureHandlerId);
         AbilityExecutedResult result;
 
         if (featureCtx.ExecuteResult is AbilityExecutedResult executedResult)

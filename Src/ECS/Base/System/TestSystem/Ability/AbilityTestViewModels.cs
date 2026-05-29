@@ -28,7 +28,7 @@ internal readonly record struct AbilityCatalogItemView(
 /// </summary>
 /// <param name="AbilityId">运行时技能实例 Id（用于移除/启停）。</param>
 /// <param name="DisplayName">技能显示名称。</param>
-/// <param name="FeatureGroupId">技能分组 ID，直接来自运行时 DataKey.AbilityFeatureGroup。</param>
+/// <param name="FeatureGroupId">技能分组 ID，直接来自运行时 GeneratedDataKey.AbilityFeatureGroup。</param>
 /// <param name="Description">技能描述文本（用于提示信息）。</param>
 /// <param name="AbilityType">技能类型（主动/被动/武器等）。</param>
 /// <param name="TriggerMode">触发模式（主动/自动等）。</param>

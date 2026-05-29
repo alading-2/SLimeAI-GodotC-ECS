@@ -4,7 +4,7 @@ using Godot;
 /// 动作节点：调用 TargetSelector 搜索范围内最近的敌方目标
 /// <para>
 /// 包含仇恨锁定机制：已有目标时仅校验是否超出丢失范围，不会换目标。
-/// 无目标时在 DetectionRange 内搜索最近敌方单位并缓存到 DataKey.TargetNode。
+/// 无目标时在 DetectionRange 内搜索最近敌方单位并缓存到 GeneratedDataKey.TargetNode。
 /// </para>
 /// <para>
 /// 返回值：
@@ -30,14 +30,14 @@ public class FindEnemyAction : BehaviorNode
         if (selfNode == null) return NodeState.Failure;
 
         // 1. 已有存活目标：检查是否超出丢失范围
-        var targetNode = ctx.Entity.Data.Get<Node2D>(DataKey.TargetNode);
+        var targetNode = ctx.Entity.Data.Get<Node2D>(GeneratedDataKey.TargetNode);
         if (targetNode != null && GodotObject.IsInstanceValid(targetNode))
         {
-            float loseDist = ctx.Entity.Data.Get<float>(DataKey.LoseTargetRange);
+            float loseDist = ctx.Entity.Data.Get<float>(GeneratedDataKey.LoseTargetRange);
             if (selfNode.GlobalPosition.DistanceTo(targetNode.GlobalPosition) > loseDist)
             {
                 // 目标逃脱太远，放弃追踪
-                ctx.Entity.Data.Remove(DataKey.TargetNode);
+                ctx.Entity.Data.Remove(GeneratedDataKey.TargetNode);
             }
             else
             {
@@ -48,7 +48,7 @@ public class FindEnemyAction : BehaviorNode
 
         // 2. 无目标，使用 TargetSelector 搜索最近敌方
 
-        float detectionRange = ctx.Entity.Data.Get<float>(DataKey.DetectionRange);
+        float detectionRange = ctx.Entity.Data.Get<float>(GeneratedDataKey.DetectionRange);
         var targets = EntityTargetSelector.Query(new TargetSelectorQuery
         {
             Geometry = GeometryType.Circle,
@@ -65,7 +65,7 @@ public class FindEnemyAction : BehaviorNode
             var target = targets[0];
             if (target is Node2D node2D)
             {
-                ctx.Entity.Data.Set(DataKey.TargetNode, node2D);
+                ctx.Entity.Data.Set(GeneratedDataKey.TargetNode, node2D);
                 _log.Debug($"发现新目标开始锁定: {node2D.Name}");
                 return NodeState.Success;
             }

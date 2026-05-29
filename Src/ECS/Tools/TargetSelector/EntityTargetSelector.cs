@@ -76,9 +76,9 @@ public static class EntityTargetSelector
         {
             if (!PassTeamFilter(target, centerEntity, teamFilter)) continue;
             if (!PassTypeFilter(target, typeFilter)) continue;
-            if (target.Data.Has(DataKey.LifecycleState))
+            if (target.Data.Has(GeneratedDataKey.LifecycleState))
             {
-                var state = target.Data.Get<LifecycleState>(DataKey.LifecycleState);
+                var state = target.Data.Get<LifecycleState>(GeneratedDataKey.LifecycleState);
                 if (state == LifecycleState.Dead || state == LifecycleState.Reviving) continue;
             }
 
@@ -99,10 +99,10 @@ public static class EntityTargetSelector
         if (filter == TeamFilter.None || filter == TeamFilter.All) return true;
         bool isSelf = IsSameEntity(target, center);
         if (isSelf) return filter.HasFlag(TeamFilter.Self);
-        Team targetTeam = target.Data.Get<Team>(DataKey.Team);
+        Team targetTeam = target.Data.Get<Team>(GeneratedDataKey.Team);
         if (targetTeam == Team.Neutral) return filter.HasFlag(TeamFilter.Neutral);
         if (center == null) return false;
-        Team centerTeam = center.Data.Get<Team>(DataKey.Team);
+        Team centerTeam = center.Data.Get<Team>(GeneratedDataKey.Team);
         bool isSameTeam = centerTeam == targetTeam;
         if (isSameTeam) return filter.HasFlag(TeamFilter.Friendly);
         return filter.HasFlag(TeamFilter.Enemy);
@@ -115,8 +115,8 @@ public static class EntityTargetSelector
     private static bool PassTypeFilter(IEntity target, EntityType filter)
     {
         if (filter == EntityType.None) return true;
-        if (!target.Data.Has(DataKey.EntityType)) return false;
-        EntityType entityType = target.Data.Get<EntityType>(DataKey.EntityType);
+        if (!target.Data.Has(GeneratedDataKey.EntityType)) return false;
+        EntityType entityType = target.Data.Get<EntityType>(GeneratedDataKey.EntityType);
         return filter.HasFlag(entityType);
     }
 
@@ -139,19 +139,19 @@ public static class EntityTargetSelector
                 break;
             case TargetSorting.LowestHealth:
                 targets.Sort((a, b) =>
-                    a.Data.Get<float>(DataKey.CurrentHp).CompareTo(b.Data.Get<float>(DataKey.CurrentHp)));
+                    a.Data.Get<float>(GeneratedDataKey.CurrentHp).CompareTo(b.Data.Get<float>(GeneratedDataKey.CurrentHp)));
                 break;
             case TargetSorting.HighestHealth:
                 targets.Sort((a, b) =>
-                    b.Data.Get<float>(DataKey.CurrentHp).CompareTo(a.Data.Get<float>(DataKey.CurrentHp)));
+                    b.Data.Get<float>(GeneratedDataKey.CurrentHp).CompareTo(a.Data.Get<float>(GeneratedDataKey.CurrentHp)));
                 break;
             case TargetSorting.HighestHealthPercent:
                 targets.Sort((a, b) =>
-                    b.Data.Get<float>(DataKey.HpPercent).CompareTo(a.Data.Get<float>(DataKey.HpPercent)));
+                    b.Data.Get<float>(GeneratedDataKey.HpPercent).CompareTo(a.Data.Get<float>(GeneratedDataKey.HpPercent)));
                 break;
             case TargetSorting.LowestHealthPercent:
                 targets.Sort((a, b) =>
-                    a.Data.Get<float>(DataKey.HpPercent).CompareTo(b.Data.Get<float>(DataKey.HpPercent)));
+                    a.Data.Get<float>(GeneratedDataKey.HpPercent).CompareTo(b.Data.Get<float>(GeneratedDataKey.HpPercent)));
                 break;
             case TargetSorting.Random:
                 Random rng = new Random();
@@ -164,8 +164,8 @@ public static class EntityTargetSelector
                 break;
             case TargetSorting.HighestThreat:
                 targets.Sort((a, b) =>
-                    (b.Data.Has(DataKey.Threat) ? b.Data.Get<float>(DataKey.Threat) : 0).CompareTo(
-                        a.Data.Has(DataKey.Threat) ? a.Data.Get<float>(DataKey.Threat) : 0));
+                    (b.Data.Has(GeneratedDataKey.Threat) ? b.Data.Get<float>(GeneratedDataKey.Threat) : 0).CompareTo(
+                        a.Data.Has(GeneratedDataKey.Threat) ? a.Data.Get<float>(GeneratedDataKey.Threat) : 0));
                 break;
         }
     }

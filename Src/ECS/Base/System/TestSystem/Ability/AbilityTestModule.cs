@@ -190,7 +190,7 @@ public partial class AbilityTestModule : TestModuleBase
             return;
         }
 
-        var entityName = selectedEntity.Data.Get<string>(DataKey.Name.Key);
+        var entityName = selectedEntity.Data.Get<string>(GeneratedDataKey.Name.Key);
         var groups = _service.GetOwnedGroups(selectedEntity);
         var totalCount = 0;
 
@@ -441,7 +441,7 @@ public partial class AbilityTestModule : TestModuleBase
             return;
         }
 
-        var abilityId = feature.Data.Get<string>(DataKey.Id.Key);
+        var abilityId = feature.Data.Get<string>(GeneratedDataKey.Id.Key);
         if (string.IsNullOrWhiteSpace(abilityId))
         {
             RequestStructureRefresh(rebuildAvailable: false, rebuildCurrent: true);

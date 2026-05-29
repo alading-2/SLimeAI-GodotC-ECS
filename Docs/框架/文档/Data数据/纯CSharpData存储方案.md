@@ -47,7 +47,7 @@ Data/
 │   ├── Ability/
 │   ├── Unit/
 │   └── Feature/
-├── DataNew/                 # 新的纯 C# POCO 方案
+├── DataOS runtime table/                 # 新的纯 C# POCO 方案
 │   ├── Ability/
 │   │   ├── AbilityConfigData.cs      # 11 个技能实例
 │   │   └── ChainAbilityConfigData.cs # 连锁闪电
@@ -66,7 +66,7 @@ Data/
 |--------|------|------|
 | 配置类类型 | 纯 POCO（不继承 Resource） | 完全脱离 Godot 资源系统，代码即数据 |
 | 场景引用 | `string` 路径替代 `PackedScene` | 字符串更简单，无需 Godot 场景兼容 |
-| 插件数据源 | 只读 `DataNew` | 与旧数据分离，渐进迁移 |
+| 插件数据源 | 只读 `DataOS runtime table` | 与旧数据分离，渐进迁移 |
 | 表格布局 | 支持切换（行=实例/行=属性） | 属性多时切换为行=属性更直观 |
 
 ### 2.3 数据迁移对照
@@ -289,7 +289,7 @@ private static void CollectPropertiesRecursive(Type type, List<PropertyInfo> res
 
 ### 8.3 迁移建议
 
-1. **渐进迁移**：新数据放在 `DataNew`，旧数据保持 `Data/Data`
+1. **渐进迁移**：新数据放在 `DataOS runtime table`，旧数据保持 `Data/Data`
 2. **优先迁移简单配置**：先迁移枚举多的配置类
 3. **后续适配 Data.LoadFromResource()**：支持从纯 C# 加载
 

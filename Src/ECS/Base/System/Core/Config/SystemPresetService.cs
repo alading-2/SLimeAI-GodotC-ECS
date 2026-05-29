@@ -6,7 +6,7 @@ using slime.data.Systems;
 /// <summary>
 /// 系统预设服务。
 /// <para>负责加载和解析系统预设，提供预设查询和应用接口。</para>
-/// <para>只从 DataNew 纯 C# 预设表读取配置。</para>
+/// <para>只从 DataOS runtime table 纯 C# 预设表读取配置。</para>
 /// </summary>
 public static class SystemPresetService
 {
@@ -163,7 +163,7 @@ public static class SystemPresetService
             }
             else
             {
-                _log.Debug($"系统预设 {preset.PresetName} 已由 DataNew 提供，跳过重复项");
+                _log.Debug($"系统预设 {preset.PresetName} 已由 DataOS runtime table 提供，跳过重复项");
             }
 
             return;

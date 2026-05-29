@@ -38,7 +38,7 @@ public static partial class MovementHelper
     /// <list type="number">
     /// <item>按 <c>angularSpeed</c>（度/秒）推进极角 <c>currentAngle</c>（度）</item>
     /// <item>由极角 + 半径算出本帧目标轨道点 <c>newPos = center + (cos, sin) * radius</c></item>
-    /// <item>将 <c>(newPos - node.GlobalPosition) / delta</c> 写入 <c>DataKey.Velocity</c></item>
+    /// <item>将 <c>(newPos - node.GlobalPosition) / delta</c> 写入 <c>GeneratedDataKey.Velocity</c></item>
     /// <item>使用切向速度 + 径向速度合成轨迹切线，作为显式朝向意图返回</item>
     /// </list>
     /// 速度驱动（而非直接赋值 GlobalPosition），碰撞体走 MoveAndSlide 后若有偏移，下一帧速度会自动拉回轨道。
@@ -53,7 +53,7 @@ public static partial class MovementHelper
     /// </para>
     /// </summary>
     /// <param name="node">当前运动节点</param>
-    /// <param name="data">实体数据容器（写入 DataKey.Velocity）</param>
+    /// <param name="data">实体数据容器（写入 GeneratedDataKey.Velocity）</param>
     /// <param name="params">运动参数（读取 <c>IsOrbitClockwise</c>）</param>
     /// <param name="center">本帧圆心坐标（调用方已处理 null 检测）</param>
     /// <param name="radius">本帧环绕半径（调用方已处理径向变化，如螺旋 <c>_currentRadius</c>）</param>
@@ -89,7 +89,7 @@ public static partial class MovementHelper
         Vector2 toTarget = newPos - node.GlobalPosition;
         float displacement = toTarget.Length();
         Vector2 velocity = displacement > 0.001f ? toTarget / Mathf.Max(delta, 0.001f) : Vector2.Zero;
-        data.Set(DataKey.Velocity, velocity);
+        data.Set(GeneratedDataKey.Velocity, velocity);
 
         // 视觉朝向取解析轨迹切线，而不是当前位置到轨道点的纠偏向量。
         // 这样做的好处：朝向基于预期轨迹而非实际偏差，避免碰撞偏移导致的朝向抖动。

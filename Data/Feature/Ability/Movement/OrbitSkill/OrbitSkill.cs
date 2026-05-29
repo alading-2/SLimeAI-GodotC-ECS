@@ -27,11 +27,11 @@ internal class OrbitSkillExecutor : AbilityFeatureHandler
             return new AbilityExecutedResult();
         }
 
-        var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 最终技能伤害
+        var damage = ability.Data.Get<float>(GeneratedDataKey.FinalAbilityDamage); // 最终技能伤害
         var orbitCount = 3;
         var orbitRadius = 100f;
         var orbitDuration = 6f;
-        var projectileScenePath = ability.Data.Get<string>(DataKey.ProjectileScene); // 投射物场景路径
+        var projectileScenePath = ability.Data.Get<string>(GeneratedDataKey.ProjectileScene); // 投射物场景路径
 
         for (int i = 0; i < orbitCount; i++)
         {

@@ -19,7 +19,7 @@ public class DodgeProcessor : IDamageProcessor
             return;
         }
 
-        float dodgeChance = info.Victim!.Data.Get<float>(DataKey.DodgeChance);
+        float dodgeChance = info.Victim!.Data.Get<float>(GeneratedDataKey.DodgeChance);
 
         if (MyMath.CheckProbability(dodgeChance))
         {
@@ -28,7 +28,7 @@ public class DodgeProcessor : IDamageProcessor
             info.IsEnd = true;
             info.FinalDamage = 0;
             info.AddLog("闪避");
-            _log.Debug($"目标 {info.Victim.Data.Get<string>(DataKey.Name)} 触发了闪避! (几率: {dodgeChance}%)");
+            _log.Debug($"目标 {info.Victim.Data.Get<string>(GeneratedDataKey.Name)} 触发了闪避! (几率: {dodgeChance}%)");
 
             // 发出闪避事件（供飘字系统显示 MISS）
             var dodgedData = new GameEventType.Unit.Dodged(info.Victim, info.Attacker as IEntity);

@@ -92,21 +92,21 @@ public class CircularArcStrategy : IMovementStrategy
         // 1. 解析当前目标（如果开启 isTrackTarget 且有 TargetNode，则目标会随之移动）
         if (!TryResolveTargetPoint(node, @params, true, out Vector2 targetPoint))
         {
-            data.Set(DataKey.Velocity, Vector2.Zero);
+            data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
             return MovementUpdateResult.Continue();
         }
 
         // 2. 距离检查：是否到达目标
         if (MovementHelper.HasReachedTarget(node.GlobalPosition, targetPoint, @params.ReachDistance))
         {
-            data.Set(DataKey.Velocity, Vector2.Zero);
+            data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
             return MovementUpdateResult.Complete();
         }
 
         float speed = @params.ActionSpeed > 0f ? @params.ActionSpeed : DefaultActionSpeed;
         if (speed <= 0.001f)
         {
-            data.Set(DataKey.Velocity, Vector2.Zero);
+            data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
             return MovementUpdateResult.Continue();
         }
 
@@ -151,7 +151,7 @@ public class CircularArcStrategy : IMovementStrategy
 
         // 设置速度以供物理系统或同步逻辑使用
         data.Set(
-            DataKey.Velocity,
+            GeneratedDataKey.Velocity,
             displacementLength > 0.001f
                 ? displacement / Mathf.Max(delta, 0.001f)
                 : Vector2.Zero);
@@ -284,7 +284,7 @@ public class CircularArcStrategy : IMovementStrategy
         // 若已极度接近目标（小于 0.001 像素），直接判定为到达
         if (distance <= 0.001f)
         {
-            data.Set(DataKey.Velocity, Vector2.Zero);
+            data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
             return MovementUpdateResult.Complete();
         }
 
@@ -294,7 +294,7 @@ public class CircularArcStrategy : IMovementStrategy
 
         // 【同步速度】将步长映射回瞬时物理速度 [px/s]，供物理同步或外部监听使用
         // 注意：除以 delta 时需防止除零异常
-        data.Set(DataKey.Velocity, direction * (step / Mathf.Max(delta, 0.001f)));
+        data.Set(GeneratedDataKey.Velocity, direction * (step / Mathf.Max(delta, 0.001f)));
 
         // 返回继续移动状态，传入本帧产生的位移量和切线方向（即移动方向）
         return MovementUpdateResult.Continue(step, direction);

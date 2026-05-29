@@ -36,9 +36,9 @@ var uiScene = ResourceManagement.Load<PackedScene>("HealthBarUI", ResourceCatego
 
 `ResourceCatalog` 基于 `ResourcePaths.Resources` 生成选择器条目，分类由资源路径自动推导：
 
-- `Data/Data/Unit/Enemy/Resource/chailangren.tres` => `Unit.Enemy`
-- `Data/Data/Unit/Player/Resource/deluyi.tres` => `Unit.Player`
-- `Data/Data/Ability/Resource/Movement/DashConfig.tres` => `Ability.Movement`
+- `DataOS removed legacy Data/Unit/Enemy/Resource/chailangren.tres` => `Unit.Enemy`
+- `DataOS removed legacy Data/Unit/Player/Resource/deluyi.tres` => `Unit.Player`
+- `DataOS removed legacy Data/Ability/Resource/Movement/DashConfig.tres` => `Ability.Movement`
 - `assets/Effect/Explosion/Explosion.tscn` => `Effect.Explosion`
 - `assets/Unit/Enemy/chailangren/AnimatedSprite2D/chailangren.tscn` => `AssetUnit.Enemy`
 - `assets/Unit/Player/deluyi/AnimatedSprite2D/deluyi.tscn` => `AssetUnit.Player`
@@ -68,7 +68,7 @@ var allGroups = ResourceCatalog.GetGroups(
 - **Component**: 组件预制体 (如 `HealthComponent.tscn`)
 - **UI**: 界面预制体 (如 `HealthBarUI.tscn`)
 - **Asset**: 纯视觉资源场景 (如 `豺狼人.tscn` - 仅包含动画/解构视图)
-- **Config**: 数据配置文件 (如 `豺狼人.tres`)，通常存储在 `Data/Data/Resources` 下。
+- **Config**: 数据配置文件 (如 `豺狼人.tres`)，通常存储在 `DataOS removed legacy Data/Resources` 下。
 
 ## 资源生成
 本项目使用 `Tools/ResourceGenerator` 自动扫描目录并生成 `ResourcePaths.cs`。

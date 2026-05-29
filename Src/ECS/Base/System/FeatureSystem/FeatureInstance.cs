@@ -26,16 +26,16 @@ public class FeatureInstance
     public double GrantedTime { get; }
 
     /// <summary>Feature 名称（快捷访问 Data["Name"]）</summary>
-    public string FeatureName => FeatureEntity?.Data.Get<string>(DataKey.Name) ?? string.Empty;
+    public string FeatureName => FeatureEntity?.Data.Get<string>(GeneratedDataKey.Name) ?? string.Empty;
 
     /// <summary>当前是否启用</summary>
-    public bool IsEnabled => FeatureEntity?.Data.Get<bool>(DataKey.FeatureEnabled) ?? false;
+    public bool IsEnabled => FeatureEntity?.Data.Get<bool>(GeneratedDataKey.FeatureEnabled) ?? false;
 
     /// <summary>当前是否处于激活执行中</summary>
-    public bool IsActive => FeatureEntity?.Data.Get<bool>(DataKey.FeatureIsActive) ?? false;
+    public bool IsActive => FeatureEntity?.Data.Get<bool>(GeneratedDataKey.FeatureIsActive) ?? false;
 
     /// <summary>累计激活次数</summary>
-    public int ActivationCount => FeatureEntity?.Data.Get<int>(DataKey.FeatureActivationCount) ?? 0;
+    public int ActivationCount => FeatureEntity?.Data.Get<int>(GeneratedDataKey.FeatureActivationCount) ?? 0;
 
     public FeatureInstance(IEntity owner, IEntity featureEntity, double grantedTime)
     {

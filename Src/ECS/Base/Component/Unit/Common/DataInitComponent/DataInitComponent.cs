@@ -45,8 +45,8 @@ public partial class DataInitComponent : Node, IComponent
     {
         if (_data == null) return;
         // 初始化当前血量
-        _data.Set(DataKey.CurrentHp, _data.Get<float>(DataKey.FinalHp));
+        _data.Set(GeneratedDataKey.CurrentHp, _data.Get<float>(GeneratedDataKey.FinalHp));
         // 初始化当前魔法值
-        _data.Set(DataKey.CurrentMana, _data.Get<float>(DataKey.FinalMana));
+        _data.Set(GeneratedDataKey.CurrentMana, _data.Get<float>(GeneratedDataKey.FinalMana));
     }
 }

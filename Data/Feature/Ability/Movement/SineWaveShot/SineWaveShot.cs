@@ -26,7 +26,7 @@ internal class SineWaveShotExecutor : AbilityFeatureHandler
         var ability = context.Ability!;
         var casterNode = (Node2D)caster;
 
-        var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 最终技能伤害
+        var damage = ability.Data.Get<float>(GeneratedDataKey.FinalAbilityDamage); // 最终技能伤害
 
         // 正弦波弹不再朝最近敌人开火，而是在施法者周围随机取一点决定出射方向。
         Vector2 directionPoint = GetRandomDirectionPoint(casterNode); // 随机方向采样点
@@ -39,7 +39,7 @@ internal class SineWaveShotExecutor : AbilityFeatureHandler
             dir, // 初始朝向
             20f // 出生前推距离
         );
-        var projectileScenePath = ability.Data.Get<string>(DataKey.ProjectileScene); // 投射物场景路径
+        var projectileScenePath = ability.Data.Get<string>(GeneratedDataKey.ProjectileScene); // 投射物场景路径
 
         var projectile = ProjectileTool.Spawn(
             caster, // 投射物归属者

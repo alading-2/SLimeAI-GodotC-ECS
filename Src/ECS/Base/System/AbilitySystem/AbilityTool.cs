@@ -24,15 +24,15 @@ internal static class AbilityTool
             return filter.HasFlag(TeamFilter.Self);
         }
 
-        var casterId = caster.Data.Get<string>(DataKey.Id);
-        var targetId = target.Data.Get<string>(DataKey.Id);
+        var casterId = caster.Data.Get<string>(GeneratedDataKey.Id);
+        var targetId = target.Data.Get<string>(GeneratedDataKey.Id);
         if (!string.IsNullOrEmpty(casterId) && casterId == targetId)
         {
             return filter.HasFlag(TeamFilter.Self);
         }
 
-        var casterTeam = caster.Data.Get<Team>(DataKey.Team);
-        var targetTeam = target.Data.Get<Team>(DataKey.Team);
+        var casterTeam = caster.Data.Get<Team>(GeneratedDataKey.Team);
+        var targetTeam = target.Data.Get<Team>(GeneratedDataKey.Team);
         if (targetTeam == Team.Neutral)
         {
             return filter.HasFlag(TeamFilter.Neutral);

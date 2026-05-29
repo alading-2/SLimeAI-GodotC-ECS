@@ -35,7 +35,7 @@ public static class FeatureSystem
     {
         if (feature == null || owner == null) return;
 
-        feature.Data.Set(DataKey.FeatureIsActive, false);
+        feature.Data.Set(GeneratedDataKey.FeatureIsActive, false);
 
         var instance = new FeatureInstance(owner, feature, Godot.Time.GetTicksUsec() / 1_000_000.0);
         var context = new FeatureContext { Owner = owner, Feature = feature, Instance = instance };
@@ -52,7 +52,7 @@ public static class FeatureSystem
             new GameEventType.Feature.Granted(feature, owner)
         );
 
-        _log.Debug($"Feature Granted: {feature.Data.Get<string>("Name")} -> {owner}");
+        _log.Debug($"Feature Granted: {feature.Data.Get<string>(GeneratedDataKey.Name)} -> {owner}");
     }
 
     // ==================== Removed ====================
@@ -64,7 +64,7 @@ public static class FeatureSystem
 
         var instance = new FeatureInstance(owner, feature, 0);
         var context = new FeatureContext { Owner = owner, Feature = feature, Instance = instance };
-        var name = feature.Data.Get<string>("Name") ?? "";
+        var name = feature.Data.Get<string>(GeneratedDataKey.Name) ?? "";
 
         // 1. 先调用处理器（处理器可能依赖修改器数据）
         var handlerId = GetFeatureHandlerId(feature);
@@ -95,7 +95,7 @@ public static class FeatureSystem
         if (ctx.Instance == null)
             ctx.Instance = new FeatureInstance(ctx.Owner, ctx.Feature, 0);
 
-        ctx.Feature.Data.Set(DataKey.FeatureIsActive, true);
+        ctx.Feature.Data.Set(GeneratedDataKey.FeatureIsActive, true);
 
         // 调用代码处理器
         var handlerId = GetFeatureHandlerId(ctx.Feature);
@@ -130,8 +130,8 @@ public static class FeatureSystem
         }
 
         // 4. 累计执行次数
-        int current = ctx.Feature.Data.Get<int>(DataKey.FeatureActivationCount);
-        ctx.Feature.Data.Set(DataKey.FeatureActivationCount, current + 1);
+        int current = ctx.Feature.Data.Get<int>(GeneratedDataKey.FeatureActivationCount);
+        ctx.Feature.Data.Set(GeneratedDataKey.FeatureActivationCount, current + 1);
 
         // 5. 发出 Executed 事件（Feature 局部总线），表示核心效果已执行
         ctx.Feature.Events.Emit(
@@ -149,7 +149,7 @@ public static class FeatureSystem
     {
         if (ctx?.Owner == null || ctx.Feature == null) return;
 
-        ctx.Feature.Data.Set(DataKey.FeatureIsActive, false);
+        ctx.Feature.Data.Set(GeneratedDataKey.FeatureIsActive, false);
 
         // 调用代码处理器
         var handlerId = GetFeatureHandlerId(ctx.Feature);
@@ -175,7 +175,7 @@ public static class FeatureSystem
     {
         if (feature == null || owner == null) return;
 
-        feature.Data.Set(DataKey.FeatureEnabled, true);
+        feature.Data.Set(GeneratedDataKey.FeatureEnabled, true);
 
         // 调用代码处理器
         var handlerId = GetFeatureHandlerId(feature);
@@ -186,7 +186,7 @@ public static class FeatureSystem
             new GameEventType.Feature.Enabled(feature, owner)
         );
 
-        _log.Debug($"Feature Enabled: {feature.Data.Get<string>("Name")}");
+        _log.Debug($"Feature Enabled: {feature.Data.Get<string>(GeneratedDataKey.Name)}");
     }
 
     /// <summary>禁用 Feature（保留在宿主上，但暂停响应）</summary>
@@ -194,7 +194,7 @@ public static class FeatureSystem
     {
         if (feature == null || owner == null) return;
 
-        feature.Data.Set(DataKey.FeatureEnabled, false);
+        feature.Data.Set(GeneratedDataKey.FeatureEnabled, false);
 
         // 调用代码处理器
         var handlerId = GetFeatureHandlerId(feature);
@@ -205,7 +205,7 @@ public static class FeatureSystem
             new GameEventType.Feature.Disabled(feature, owner)
         );
 
-        _log.Debug($"Feature Disabled: {feature.Data.Get<string>("Name")}");
+        _log.Debug($"Feature Disabled: {feature.Data.Get<string>(GeneratedDataKey.Name)}");
     }
 
     // ==================== Action 执行 ====================
@@ -230,7 +230,7 @@ public static class FeatureSystem
     /// <summary>获取 FeatureHandlerId（允许为空，纯数据 Feature 可以没有处理器）</summary>
     private static string GetFeatureHandlerId(IEntity feature)
     {
-        var handlerId = feature.Data.Get<string>(DataKey.FeatureHandlerId);
+        var handlerId = feature.Data.Get<string>(GeneratedDataKey.FeatureHandlerId);
         if (!string.IsNullOrEmpty(handlerId)) return handlerId;
         return string.Empty;
     }
@@ -238,7 +238,7 @@ public static class FeatureSystem
     /// <summary>将 FeatureDefinition.Modifiers 施加到 Owner.Data（Granted 阶段调用）</summary>
     private static void ApplyModifiers(IEntity feature, IEntity owner)
     {
-        var raw = feature.Data.Get<object>(DataKey.FeatureModifiers);
+        var raw = feature.Data.Get<object>(GeneratedDataKey.FeatureModifiers);
         if (raw is not Array<FeatureModifierEntry> modifiers || modifiers.Count == 0) return;
 
         int applied = 0;
@@ -257,13 +257,13 @@ public static class FeatureSystem
         }
 
         if (applied > 0)
-            _log.Debug($"Feature {feature.Data.Get<string>("Name")} 施加 {applied} 个修改器");
+            _log.Debug($"Feature {feature.Data.Get<string>(GeneratedDataKey.Name)} 施加 {applied} 个修改器");
     }
 
     /// <summary>按来源批量回滚修改器（Removed 阶段调用）</summary>
     private static void RemoveModifiers(IEntity feature, IEntity owner)
     {
         owner.Data.RemoveModifiersBySource(feature);
-        _log.Debug($"Feature {feature.Data.Get<string>("Name")} 修改器已回滚");
+        _log.Debug($"Feature {feature.Data.Get<string>(GeneratedDataKey.Name)} 修改器已回滚");
     }
 }

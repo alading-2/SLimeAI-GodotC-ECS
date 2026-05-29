@@ -18,7 +18,7 @@ if [ ! -f "$db_path" ]; then
     exit 1
 fi
 
-"$repo_root/DataOS/Tools/validate-dataos.sh" "$db_path"
+bash "$repo_root/DataOS/Tools/validate-dataos.sh" "$db_path"
 mkdir -p "$(dirname "$output_path")"
 
 sqlite3 "$db_path" > "$output_path" <<SQL
@@ -145,118 +145,54 @@ field_rows AS (
 ),
 descriptor_source AS (
     SELECT
-        field_key,
-        CASE
-            WHEN field_key IN ('Name', 'Description', 'Id', 'SourceEntityId', 'OriginEntityId') THEN 'Base'
-            WHEN field_key IN ('Team', 'EntityType', 'DeathType', 'VisualScenePath', 'Level', 'UnitRank', 'IsShowHealthBar', 'IsEnableSpawnRule',
-                'SpawnStrategy', 'SpawnMinWave', 'SpawnMaxWave', 'SpawnInterval', 'SpawnMaxCountPerWave', 'SingleSpawnCount',
-                'SingleSpawnVariance', 'SpawnStartDelay', 'SpawnWeight', 'HealthBarHeight', 'ExpReward', 'IsDead', 'IsInvulnerable') THEN 'Unit'
-            WHEN field_key IN ('DetectionRange') THEN 'AI'
-            WHEN field_key IN ('BaseHp', 'BaseHpRegen', 'LifeSteal', 'BaseAttack', 'BaseAttackSpeed', 'AttackRange', 'CritRate',
-                'CritDamage', 'Penetration', 'BaseDefense', 'DamageReduction', 'MoveSpeed', 'DodgeChance', 'PickupRange') THEN 'Attribute'
-            WHEN field_key IN ('AbilityFeatureGroup', 'AbilityIcon', 'AbilityType', 'AbilityLevel', 'AbilityMaxLevel', 'AbilityDamage',
-                'AbilityDamageBonus', 'CooldownReduction', 'AbilityCooldown', 'IsAbilityUsesCharges', 'AbilityMaxCharges',
-                'AbilityChargeTime', 'AbilityCostType', 'AbilityCostAmount', 'AbilityTriggerMode', 'AbilityTargetSelection',
-                'AbilityCastRange', 'AbilityEffectRadius', 'AbilityChainCount', 'AbilityChainRange', 'AbilityChainDelay',
-                'AbilityChainDamageDecay', 'EffectScene', 'ProjectileScene') THEN 'Ability'
-            WHEN field_key IN ('FeatureHandlerId') THEN 'Feature'
-            WHEN field_key IN ('SystemId', 'MountGroup', 'Tags', 'Required', 'AutoLoad', 'StartEnabled', 'Priority',
-                'AllowedFlowStates', 'RequiredOverlays', 'BlockedOverlays', 'AllowedSimulationStates', 'Dependencies',
-                'PresetName', 'IsActive', 'EnabledTags', 'EnabledSystemIds', 'DisabledSystemIds') THEN 'System'
-            ELSE 'shared'
-        END AS owner_capability,
+        stable_key AS field_key,
+        owner_domain,
+        owner_capability,
+        owner_skill,
         value_type AS descriptor_type,
-        CASE field_key
-            WHEN 'Name' THEN ''
-            WHEN 'Team' THEN 'Neutral'
-            WHEN 'EntityType' THEN 'None'
-            WHEN 'DeathType' THEN 'Normal'
-            WHEN 'VisualScenePath' THEN ''
-            WHEN 'HealthBarHeight' THEN '100'
-            WHEN 'BaseHp' THEN '10'
-            WHEN 'BaseHpRegen' THEN '0'
-            WHEN 'LifeSteal' THEN '0'
-            WHEN 'BaseAttack' THEN '0'
-            WHEN 'BaseAttackSpeed' THEN '100'
-            WHEN 'AttackRange' THEN '0'
-            WHEN 'CritRate' THEN '0'
-            WHEN 'CritDamage' THEN '100'
-            WHEN 'Penetration' THEN '0'
-            WHEN 'BaseDefense' THEN '0'
-            WHEN 'DamageReduction' THEN '0'
-            WHEN 'MoveSpeed' THEN '100'
-            WHEN 'DodgeChance' THEN '0'
-            WHEN 'PickupRange' THEN '300'
-            WHEN 'ExpReward' THEN '1'
-            WHEN 'DetectionRange' THEN '500'
-            WHEN 'IsEnableSpawnRule' THEN 'true'
-            WHEN 'SpawnStrategy' THEN 'Rectangle'
-            WHEN 'SpawnMinWave' THEN '0'
-            WHEN 'SpawnMaxWave' THEN '-1'
-            WHEN 'SpawnInterval' THEN '1'
-            WHEN 'SpawnMaxCountPerWave' THEN '-1'
-            WHEN 'SingleSpawnCount' THEN '1'
-            WHEN 'SingleSpawnVariance' THEN '0'
-            WHEN 'SpawnStartDelay' THEN '0'
-            WHEN 'SpawnWeight' THEN '10'
-            WHEN 'IsShowHealthBar' THEN 'true'
-            WHEN 'IsInvulnerable' THEN 'false'
-            WHEN 'AbilityFeatureGroup' THEN ''
-            WHEN 'FeatureHandlerId' THEN ''
-            WHEN 'Description' THEN ''
-            WHEN 'AbilityIcon' THEN ''
-            WHEN 'AbilityType' THEN 'Passive'
-            WHEN 'AbilityLevel' THEN '1'
-            WHEN 'AbilityMaxLevel' THEN '10'
-            WHEN 'AbilityTriggerMode' THEN 'None'
-            WHEN 'AbilityCostType' THEN 'None'
-            WHEN 'AbilityCostAmount' THEN '0'
-            WHEN 'AbilityCooldown' THEN '0'
-            WHEN 'AbilityDamage' THEN '0'
-            WHEN 'IsAbilityUsesCharges' THEN 'false'
-            WHEN 'AbilityMaxCharges' THEN '0'
-            WHEN 'AbilityChargeTime' THEN '0'
-            WHEN 'AbilityTargetSelection' THEN 'None'
-            WHEN 'AbilityCastRange' THEN '0'
-            WHEN 'AbilityEffectRadius' THEN '0'
-            WHEN 'EffectScene' THEN ''
-            WHEN 'ProjectileScene' THEN ''
-            WHEN 'AbilityChainCount' THEN '3'
-            WHEN 'AbilityChainRange' THEN '300'
-            WHEN 'AbilityChainDelay' THEN '0.2'
-            WHEN 'AbilityChainDamageDecay' THEN '100'
-            WHEN 'SystemId' THEN ''
-            WHEN 'MountGroup' THEN 'Else'
-            WHEN 'Tags' THEN ''
-            WHEN 'Required' THEN 'false'
-            WHEN 'AutoLoad' THEN 'true'
-            WHEN 'StartEnabled' THEN 'true'
-            WHEN 'Priority' THEN '0'
-            WHEN 'AllowedFlowStates' THEN ''
-            WHEN 'RequiredOverlays' THEN ''
-            WHEN 'BlockedOverlays' THEN ''
-            WHEN 'AllowedSimulationStates' THEN ''
-            WHEN 'Dependencies' THEN ''
-            WHEN 'PresetName' THEN 'DefaultPreset'
-            WHEN 'IsActive' THEN 'false'
-            WHEN 'EnabledTags' THEN ''
-            WHEN 'EnabledSystemIds' THEN ''
-            WHEN 'DisabledSystemIds' THEN ''
-            ELSE ''
-        END AS default_value_text,
-        field_key AS display_name
-    FROM (
-        SELECT field_key, value_type
-        FROM field_rows
-        GROUP BY field_key, value_type
-    )
+        runtime_type_id,
+        default_value_text,
+        storage_policy,
+        write_policy,
+        range_policy,
+        modifier_policy,
+        migration_policy,
+        compute_id,
+        dependencies_json,
+        compute_params_json,
+        allowed_values_json,
+        display_name,
+        description,
+        ui_group,
+        reset_group,
+        unit,
+        format,
+        icon_path,
+        category,
+        min_value,
+        max_value,
+        options_json,
+        is_percentage,
+        supports_modifiers,
+        is_computed
+    FROM data_key_descriptor
 ),
 active_fields AS (
     SELECT f.*
     FROM field_rows f
     JOIN descriptor_source d ON d.field_key = f.field_key
     LEFT JOIN capability_manifest c ON c.capability_id = d.owner_capability
+    LEFT JOIN capability_manifest rc ON rc.capability_id = CASE f.table_id
+        WHEN 'unit.player' THEN 'Unit'
+        WHEN 'unit.enemy' THEN 'Unit'
+        WHEN 'unit.targeting_indicator' THEN 'Unit'
+        WHEN 'ability' THEN 'Ability'
+        WHEN 'system.config' THEN 'System'
+        WHEN 'system.preset' THEN 'System'
+        ELSE d.owner_capability
+    END
     WHERE COALESCE(c.enabled, 1) = 1
+      AND COALESCE(rc.enabled, 1) = 1
 ),
 record_docs AS (
     SELECT
@@ -318,34 +254,45 @@ descriptor_docs AS (
     SELECT json_object(
         'key', d.field_key,
         'stableKey', d.field_key,
+        'ownerDomain', d.owner_domain,
         'ownerCapability', d.owner_capability,
-        'ownerSkill', lower(d.owner_capability) || '-system',
+        'ownerSkill', d.owner_skill,
         'type', d.descriptor_type,
         'valueType', d.descriptor_type,
+        'runtimeTypeId', d.runtime_type_id,
         'defaultValue', CASE
             WHEN d.descriptor_type = 'int' THEN CAST(d.default_value_text AS INTEGER)
             WHEN d.descriptor_type = 'float' THEN CAST(d.default_value_text AS REAL)
             WHEN d.descriptor_type = 'bool' THEN json(CASE lower(d.default_value_text) WHEN 'true' THEN 'true' ELSE 'false' END)
             ELSE d.default_value_text
         END,
+        'storagePolicy', d.storage_policy,
+        'writePolicy', d.write_policy,
+        'rangePolicy', d.range_policy,
+        'modifierPolicy', d.modifier_policy,
+        'migrationPolicy', d.migration_policy,
+        'computeId', d.compute_id,
+        'dependencies', json(d.dependencies_json),
+        'computeParams', json(d.compute_params_json),
+        'allowedValues', json(d.allowed_values_json),
         'displayName', d.display_name,
-        'description', '',
-        'iconPath', '',
-        'category', d.owner_capability,
-        'minValue', NULL,
-        'maxValue', NULL,
-        'options', json('[]'),
-        'isPercentage', json('false'),
-        'supportsModifiers', json(CASE
-            WHEN d.field_key IN ('BaseHp', 'BaseHpRegen', 'LifeSteal', 'BaseAttack', 'BaseAttackSpeed', 'AttackRange',
-                'CritRate', 'CritDamage', 'Penetration', 'BaseDefense', 'DamageReduction', 'MoveSpeed', 'DodgeChance',
-                'PickupRange', 'AbilityDamage', 'AbilityDamageBonus', 'CooldownReduction', 'AbilityCooldown',
-                'AbilityChainCount', 'AbilityChainRange', 'AbilityChainDamageDecay') THEN 'true'
-            ELSE 'false'
-        END),
-        'isComputed', json('false')
+        'description', d.description,
+        'uiGroup', d.ui_group,
+        'resetGroup', d.reset_group,
+        'unit', d.unit,
+        'format', d.format,
+        'iconPath', d.icon_path,
+        'category', d.category,
+        'minValue', CASE WHEN d.min_value IS NULL OR d.min_value = '' THEN NULL ELSE CAST(d.min_value AS REAL) END,
+        'maxValue', CASE WHEN d.max_value IS NULL OR d.max_value = '' THEN NULL ELSE CAST(d.max_value AS REAL) END,
+        'options', json(d.options_json),
+        'isPercentage', json(CASE d.is_percentage WHEN 1 THEN 'true' ELSE 'false' END),
+        'supportsModifiers', json(CASE d.supports_modifiers WHEN 1 THEN 'true' ELSE 'false' END),
+        'isComputed', json(CASE d.is_computed WHEN 1 THEN 'true' ELSE 'false' END)
     ) AS doc
     FROM descriptor_source d
+    LEFT JOIN capability_manifest c ON c.capability_id = d.owner_capability
+    WHERE COALESCE(c.enabled, 1) = 1
     ORDER BY d.field_key
 ),
 resource_docs AS (

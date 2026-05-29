@@ -27,7 +27,7 @@ public class FleeFromTargetAction : BehaviorNode
     /// <inheritdoc/>
     public override NodeState Evaluate(AIContext ctx)
     {
-        var target = ctx.Entity.Data.Get<Node2D>(DataKey.TargetNode);
+        var target = ctx.Entity.Data.Get<Node2D>(GeneratedDataKey.TargetNode);
         if (target == null) return NodeState.Failure;
 
         var selfNode = ctx.Entity as Node2D;
@@ -36,9 +36,9 @@ public class FleeFromTargetAction : BehaviorNode
         // 反向逃跑：目标到自身的方向
         Vector2 fleeDirection = (selfNode.GlobalPosition - target.GlobalPosition).Normalized();
 
-        ctx.Entity.Data.Set(DataKey.AIMoveDirection, fleeDirection);
-        ctx.Entity.Data.Set(DataKey.AIMoveSpeedMultiplier, _speedMultiplier);
-        ctx.Entity.Data.Set(DataKey.AIState, AIState.Fleeing);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIMoveDirection, fleeDirection);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIMoveSpeedMultiplier, _speedMultiplier);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIState, AIState.Fleeing);
 
         return NodeState.Running;
     }

@@ -26,9 +26,9 @@ public partial class CostComponent : Node, IComponent
 
     // ================= 属性访问 =================
 
-    private string AbilityName => _data.Get<string>(DataKey.Name);
-    private AbilityCostType CostType => _data.Get<AbilityCostType>(DataKey.AbilityCostType);
-    private float CostAmount => _data.Get<float>(DataKey.AbilityCostAmount);
+    private string AbilityName => _data.Get<string>(GeneratedDataKey.Name);
+    private AbilityCostType CostType => _data.Get<AbilityCostType>(GeneratedDataKey.AbilityCostType);
+    private float CostAmount => _data.Get<float>(GeneratedDataKey.AbilityCostAmount);
 
     // ================= IComponent 实现 =================
 
@@ -148,7 +148,7 @@ public partial class CostComponent : Node, IComponent
     {
         if (_entity == null) return null;
 
-        var abilityId = _entity.Data.Get<string>(DataKey.Id);
+        var abilityId = _entity.Data.Get<string>(GeneratedDataKey.Id);
         var ownerId = EntityRelationshipManager.GetParentEntitiesByChildAndType(
             abilityId,
             EntityRelationshipType.ENTITY_TO_ABILITY
@@ -166,10 +166,10 @@ public partial class CostComponent : Node, IComponent
     {
         return type switch
         {
-            AbilityCostType.Mana => DataKey.CurrentMana,
+            AbilityCostType.Mana => GeneratedDataKey.CurrentMana,
             AbilityCostType.Energy => "CurrentEnergy", // TODO: 等待 Energy 系统定义
             AbilityCostType.Ammo => "CurrentAmmo",     // TODO: 等待 Ammo 系统定义
-            AbilityCostType.Health => DataKey.CurrentHp,
+            AbilityCostType.Health => GeneratedDataKey.CurrentHp,
             _ => string.Empty
         };
     }

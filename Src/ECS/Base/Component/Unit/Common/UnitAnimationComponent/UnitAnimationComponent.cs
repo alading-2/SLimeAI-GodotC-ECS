@@ -89,7 +89,7 @@ public partial class UnitAnimationComponent : Node, IComponent
         get
         {
             if (_data == null) return false;
-            var state = _data.Get<LifecycleState>(DataKey.LifecycleState);
+            var state = _data.Get<LifecycleState>(GeneratedDataKey.LifecycleState);
             return state == LifecycleState.Dead || state == LifecycleState.Reviving;
         }
     }
@@ -124,7 +124,7 @@ public partial class UnitAnimationComponent : Node, IComponent
                 {
                     animNames.Add(animName);
                 }
-                _data.Set(DataKey.AvailableAnimations, animNames);
+                _data.Set(GeneratedDataKey.AvailableAnimations, animNames);
                 _log.Debug($"[{entity.Name}] 缓存了 {animNames.Count} 个可用动画: {string.Join(", ", animNames.ToArray())}");
             }
         }
@@ -195,7 +195,7 @@ public partial class UnitAnimationComponent : Node, IComponent
         if (!forceRestart && CurrentAnimation == animName && _sprite.IsPlaying()) return;
 
         // 检查 SpriteFrames 中是否存在该动画
-        var availableAnims = _data.Get<System.Collections.Generic.List<string>>(DataKey.AvailableAnimations);
+        var availableAnims = _data.Get<System.Collections.Generic.List<string>>(GeneratedDataKey.AvailableAnimations);
         if (!availableAnims.Contains(animName))
         {
             // 不存在则 fallback 到 idle（避免无限递归）

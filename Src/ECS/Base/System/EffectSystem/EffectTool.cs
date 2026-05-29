@@ -93,7 +93,7 @@ public static partial class EffectTool
         }
 
         string effectId = entity.GetInstanceId().ToString();
-        entity.Data.Set(DataKey.Id, effectId);
+        entity.Data.Set(GeneratedDataKey.Id, effectId);
 
         // 写入 Data
         FillEffectData(entity, options, isAttached);
@@ -224,14 +224,14 @@ public static partial class EffectTool
     /// </summary>
     private static void FillEffectData(EffectEntity entity, EffectSpawnOptions options, bool isAttached)
     {
-        entity.Data.Set(DataKey.Name, options.Name);
-        entity.Data.Set(DataKey.EntityType, EntityType.Effect);
-        entity.Data.Set(DataKey.MaxLifeTime, options.MaxLifeTime);
-        entity.Data.Set(DataKey.EffectPlayRate, options.PlayRate);
-        entity.Data.Set(DataKey.EffectScale, options.Scale ?? Vector2.One);
-        entity.Data.Set(DataKey.EffectOffset, options.Offset ?? Vector2.Zero);
-        entity.Data.Set(DataKey.EffectIsLooping, options.IsLooping);
-        entity.Data.Set(DataKey.EffectIsAttached, isAttached);
+        entity.Data.Set(GeneratedDataKey.Name, options.Name);
+        entity.Data.Set(GeneratedDataKey.EntityType, EntityType.Effect);
+        entity.Data.Set(GeneratedDataKey.MaxLifeTime, options.MaxLifeTime);
+        entity.Data.Set(GeneratedDataKey.EffectPlayRate, options.PlayRate);
+        entity.Data.Set(GeneratedDataKey.EffectScale, options.Scale ?? Vector2.One);
+        entity.Data.Set(GeneratedDataKey.EffectOffset, options.Offset ?? Vector2.Zero);
+        entity.Data.Set(GeneratedDataKey.EffectIsLooping, options.IsLooping);
+        entity.Data.Set(GeneratedDataKey.EffectIsAttached, isAttached);
     }
 
     /// <summary>

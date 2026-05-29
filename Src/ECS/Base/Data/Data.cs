@@ -19,11 +19,58 @@ public class Data
 {
     private static readonly Log _log = new(nameof(Data), LogLevel.Warning);
 
-    private readonly IEntity? _owner;
+    private IEntity? _owner;
+    private DataRuntimeStorage? _runtimeStorage;
 
     public Data(IEntity? owner = null)
     {
         _owner = owner;
+    }
+
+    /// <summary>
+    /// 使用 descriptor catalog 创建无 owner 的 Data 容器。
+    /// </summary>
+    /// <param name="catalog">字段定义 catalog。</param>
+    public Data(DataDefinitionCatalog catalog)
+        : this(null, catalog)
+    {
+    }
+
+    /// <summary>
+    /// 使用 descriptor catalog 创建 Data 容器。
+    /// </summary>
+    /// <param name="owner">归属实体，用于 Entity.Events 数据变更通知。</param>
+    /// <param name="catalog">字段定义 catalog。</param>
+    public Data(IEntity? owner, DataDefinitionCatalog catalog)
+    {
+        BindRuntimeCatalog(owner, catalog);
+    }
+
+    /// <summary>
+    /// 将现有 Data 容器切换为 descriptor-first runtime storage。
+    /// </summary>
+    /// <param name="owner">归属实体，用于 Entity.Events 数据变更通知。</param>
+    /// <param name="catalog">字段定义 catalog。</param>
+    public void BindRuntimeCatalog(IEntity? owner, DataDefinitionCatalog catalog)
+    {
+        ArgumentNullException.ThrowIfNull(catalog);
+        if (_runtimeStorage != null)
+        {
+            _runtimeStorage.Changed -= OnRuntimeDataChanged;
+        }
+
+        _owner = owner;
+        _runtimeStorage = new DataRuntimeStorage(catalog, this); // descriptor-first 运行时存储
+        _runtimeStorage.Changed += OnRuntimeDataChanged;
+    }
+
+    /// <summary>
+    /// 将现有 Data 容器切换为 descriptor-first runtime storage，并保留当前 owner。
+    /// </summary>
+    /// <param name="catalog">字段定义 catalog。</param>
+    public void BindRuntimeCatalog(DataDefinitionCatalog catalog)
+    {
+        BindRuntimeCatalog(_owner, catalog);
     }
 
     /// <summary>
@@ -64,6 +111,11 @@ public class Data
     /// <returns>如果值发生了实际变化则返回 true</returns>
     public bool Set<T>(string key, T value)
     {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.SetUntyped(key, value, DataWriteSource.Runtime);
+        }
+
         // 应用元数据约束
         var meta = DataRegistry.GetMeta(key);
         object finalValue = value!;
@@ -104,6 +156,11 @@ public class Data
     /// <returns>最终计算值</returns>
     public T Get<T>(string key, object? defaultValue = null)
     {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.Get<T>(key);
+        }
+
         // ── 快速路径：未注册键直接查字典，零约束开销 ──────────────────────
         var meta = DataRegistry.GetMeta(key);
         if (meta == null)
@@ -134,6 +191,59 @@ public class Data
     }
 
     /// <summary>
+    /// 通过类型安全句柄设置字段值。
+    /// </summary>
+    /// <typeparam name="T">字段值类型。</typeparam>
+    /// <param name="key">descriptor stable key 句柄。</param>
+    /// <param name="value">要设置的新值。</param>
+    public bool Set<T>(DataKey<T> key, T value)
+    {
+        return Set(key.StableKey, value);
+    }
+
+    /// <summary>
+    /// 通过类型安全句柄读取字段值。
+    /// </summary>
+    /// <typeparam name="T">字段值类型。</typeparam>
+    /// <param name="key">descriptor stable key 句柄。</param>
+    public T Get<T>(DataKey<T> key)
+    {
+        return Get<T>(key.StableKey);
+    }
+
+    /// <summary>
+    /// 内部入口：按 descriptor definition 写入未泛型化值。
+    /// </summary>
+    /// <param name="definition">字段 descriptor 定义。</param>
+    /// <param name="value">要写入的值。</param>
+    /// <param name="source">写入来源。</param>
+    public bool SetUntyped(DataDefinition definition, object? value, DataWriteSource source = DataWriteSource.Loader)
+    {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.SetUntyped(definition, value, source);
+        }
+
+        return Set(definition.StableKey, value);
+    }
+
+    /// <summary>
+    /// 内部入口：按 stable key 写入未泛型化值。
+    /// </summary>
+    /// <param name="stableKey">字段 stable key。</param>
+    /// <param name="value">要写入的值。</param>
+    /// <param name="source">写入来源。</param>
+    public bool SetUntyped(string stableKey, object? value, DataWriteSource source = DataWriteSource.Loader)
+    {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.SetUntyped(stableKey, value, source);
+        }
+
+        return Set(stableKey, value);
+    }
+
+    /// <summary>
     /// 获取基础值（不应用修改器，用于计算数据内部调用）
     /// </summary>
     /// <typeparam name="T">期望获取的类型</typeparam>
@@ -142,6 +252,13 @@ public class Data
     /// <returns>基础值</returns>
     public T GetBase<T>(string key, T defaultValue = default!)
     {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.HasValue(key)
+                ? _runtimeStorage.Get<T>(key)
+                : defaultValue;
+        }
+
         if (_data.TryGetValue(key, out var value) && value != null)
         {
             return (T)ConvertValueBoxed(value, typeof(T), defaultValue!);
@@ -154,6 +271,18 @@ public class Data
     /// </summary>
     public bool TryGetValue<T>(string key, out T value)
     {
+        if (_runtimeStorage != null)
+        {
+            if (_runtimeStorage.HasValue(key))
+            {
+                value = _runtimeStorage.Get<T>(key);
+                return true;
+            }
+
+            value = default!;
+            return false;
+        }
+
         var result = Get<T>(key);
         if (result != null && !result.Equals(default(T)))
         {
@@ -169,6 +298,11 @@ public class Data
     /// </summary>
     public bool Has(string key)
     {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.HasDefinition(key);
+        }
+
         return _data.ContainsKey(key) || DataRegistry.IsComputed(key);
     }
 
@@ -177,6 +311,11 @@ public class Data
     /// </summary>
     public bool Remove(string key)
     {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.Remove(key);
+        }
+
         if (_data.TryGetValue(key, out var oldValue))
         {
             _data.Remove(key);
@@ -229,10 +368,25 @@ public class Data
     /// <param name="modifier">修改器实例</param>
     public void AddModifier(string key, DataModifier modifier)
     {
+        TryAddModifier(key, modifier);
+    }
+
+    /// <summary>
+    /// 尝试添加修改器，并返回是否成功应用。
+    /// </summary>
+    /// <param name="key">目标数据键</param>
+    /// <param name="modifier">修改器实例</param>
+    public bool TryAddModifier(string key, DataModifier modifier)
+    {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.AddModifier(key, modifier);
+        }
+
         if (!DataRegistry.SupportModifiers(key))
         {
             _log.Warn($"数据 '{key}' 不支持修改器，已忽略");
-            return;
+            return false;
         }
 
         if (!_modifiers.TryGetValue(key, out var list))
@@ -244,7 +398,7 @@ public class Data
             if (list[i].Id == modifier.Id)
             {
                 _log.Warn($"ID 为 '{modifier.Id}' 的修改器已存在于 '{key}'，已忽略");
-                return;
+                return false;
             }
         }
 
@@ -258,6 +412,7 @@ public class Data
 
         var finalValue = Get<float>(key);
         NotifyChanged(key, null, finalValue);
+        return true;
     }
 
     /// <summary>
@@ -267,6 +422,12 @@ public class Data
     /// <param name="modifierId">修改器 ID</param>
     public void RemoveModifier(string key, string modifierId)
     {
+        if (_runtimeStorage != null)
+        {
+            _runtimeStorage.RemoveModifier(key, modifierId);
+            return;
+        }
+
         if (_modifiers.TryGetValue(key, out var modifiers))
         {
             var removed = modifiers.RemoveAll(m => m.Id == modifierId);
@@ -300,6 +461,12 @@ public class Data
     /// <param name="source">来源对象（如 ItemEntity）</param>
     public void RemoveModifiersBySource(object source)
     {
+        if (_runtimeStorage != null)
+        {
+            _runtimeStorage.RemoveModifiersBySource(source);
+            return;
+        }
+
         if (source == null) return;
 
         foreach (var key in _modifiers.Keys.ToList())
@@ -358,6 +525,20 @@ public class Data
     /// </summary>
     public bool HasModifier(string key, string modifierId)
     {
+        if (_runtimeStorage != null)
+        {
+            var runtimeModifiers = _runtimeStorage.GetModifiers(key);
+            for (var i = 0; i < runtimeModifiers.Count; i++)
+            {
+                if (runtimeModifiers[i].Id == modifierId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         return _modifiers.TryGetValue(key, out var modifiers) &&
                modifiers.Any(m => m.Id == modifierId);
     }
@@ -368,6 +549,11 @@ public class Data
     /// </summary>
     public List<DataModifier> GetModifiers(string key)
     {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.GetModifiers(key);
+        }
+
         return _modifiers.TryGetValue(key, out var modifiers)
             ? new List<DataModifier>(modifiers)
             : new List<DataModifier>();
@@ -378,6 +564,12 @@ public class Data
     /// </summary>
     public void ClearModifiers(string key)
     {
+        if (_runtimeStorage != null)
+        {
+            _runtimeStorage.ClearModifiers(key);
+            return;
+        }
+
         if (_modifiers.TryGetValue(key, out var modifiers) && modifiers.Count > 0)
         {
             modifiers.Clear();
@@ -410,6 +602,15 @@ public class Data
     /// </summary>
     public void Clear()
     {
+        if (_runtimeStorage != null)
+        {
+            _runtimeStorage.Clear();
+            _modifiers.Clear();
+            _cachedValues.Clear();
+            _dirtyKeys.Clear();
+            return;
+        }
+
         var keys = new List<string>(_data.Keys);
         foreach (var key in keys)
         {
@@ -425,54 +626,22 @@ public class Data
     /// </summary>
     public Dictionary<string, object> GetAll()
     {
-        return new Dictionary<string, object>(_data);
-    }
-
-    /// <summary>
-    /// 反射属性缓存：Type → (PropertyInfo, key)[]，首次访问时构建，后续复用
-    /// </summary>
-    private static readonly Dictionary<Type, (PropertyInfo prop, string key)[]> _resourcePropCache = new();
-
-    /// <summary>
-    /// 从 DataNew 纯 C# 配置对象加载数据到容器。
-    /// </summary>
-    /// <param name="config">DataNew 纯 C# 配置对象。</param>
-    public void LoadFromConfig(object config)
-    {
-        if (config == null) return;
-
-        var type = config.GetType();
-        if (!_resourcePropCache.TryGetValue(type, out var cached))
-            cached = _resourcePropCache[type] = BuildPropertyCache(type);
-
-        foreach (var (prop, key) in cached)
+        if (_runtimeStorage != null)
         {
-            try
+            var runtimeValues = _runtimeStorage.GetAllValues();
+            var result = new Dictionary<string, object>(runtimeValues.Count);
+            foreach (var pair in runtimeValues)
             {
-                var value = prop.GetValue(config);
-                // 场景/贴图等资源引用只保存 res:// 字符串路径，具体系统在使用点显式加载。
-                if (value != null) Set(key, value);
+                if (pair.Value != null)
+                {
+                    result[pair.Key] = pair.Value;
+                }
             }
-            catch (Exception ex)
-            {
-                _log.Warn($"加载属性 {prop.Name} 失败: {ex.Message}");
-            }
-        }
-    }
 
-    private static (PropertyInfo, string)[] BuildPropertyCache(Type type)
-    {
-        return type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.CanRead
-                && p.DeclaringType != typeof(Resource)
-                && p.DeclaringType != typeof(Godot.RefCounted)
-                && p.DeclaringType != typeof(Godot.GodotObject))
-            .Select(p =>
-            {
-                var attr = p.GetCustomAttribute<DataKeyAttribute>();
-                return (p, attr?.Key ?? p.Name);
-            })
-            .ToArray();
+            return result;
+        }
+
+        return new Dictionary<string, object>(_data);
     }
 
     /// <summary>
@@ -513,6 +682,16 @@ public class Data
     /// </summary>
     public void Reset()
     {
+        if (_runtimeStorage != null)
+        {
+            _runtimeStorage.Clear();
+            _modifiers.Clear();
+            _cachedValues.Clear();
+            _dirtyKeys.Clear();
+            _log.Debug("Data 容器已重置");
+            return;
+        }
+
         _data.Clear();
         _modifiers.Clear();
         _cachedValues.Clear();
@@ -647,6 +826,11 @@ public class Data
         }
     }
 
+    private void OnRuntimeDataChanged(DataChangeRecord change)
+    {
+        NotifyChanged(change.StableKey, change.OldValue, change.NewValue);
+    }
+
     /// <summary>
     /// 修改器优先级比较器（Priority 越小越靠前 = 优先级越高）
     /// </summary>
@@ -681,7 +865,7 @@ public class Data
         {
             var valueType = value.GetType();
 
-            // DataNew 直接写入枚举值，旧数据/部分旧调用仍可能按 int 读取；这里统一兼容 enum <-> int/string。
+            // DataOS runtime table 直接写入枚举值，旧数据/部分旧调用仍可能按 int 读取；这里统一兼容 enum <-> int/string。
             if (targetType.IsEnum)
             {
                 if (value is string enumText)

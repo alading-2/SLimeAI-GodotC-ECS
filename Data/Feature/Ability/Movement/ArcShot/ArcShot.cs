@@ -35,9 +35,9 @@ internal class ArcShotExecutor : AbilityFeatureHandler
             target
         };
 
-        var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 最终技能伤害
+        var damage = ability.Data.Get<float>(GeneratedDataKey.FinalAbilityDamage); // 最终技能伤害
 
-        var projectileScenePath = ability.Data.Get<string>(DataKey.ProjectileScene); // 投射物场景路径
+        var projectileScenePath = ability.Data.Get<string>(GeneratedDataKey.ProjectileScene); // 投射物场景路径
 
         var projectile = ProjectileTool.Spawn(
             caster, // 投射物归属者
@@ -80,7 +80,7 @@ internal class ArcShotExecutor : AbilityFeatureHandler
     /// <returns>最近敌方目标，找不到则返回 null。</returns>
     private static IEntity? FindTarget(IEntity caster, AbilityEntity ability, Node2D casterNode)
     {
-        float castRange = ability.Data.Get<float>(DataKey.AbilityCastRange); //索敌半径
+        float castRange = ability.Data.Get<float>(GeneratedDataKey.AbilityCastRange); //索敌半径
 
         var targets = EntityTargetSelector.Query(new TargetSelectorQuery
         {
@@ -106,7 +106,7 @@ internal class ArcShotExecutor : AbilityFeatureHandler
         if (stopCtx.Reason != MovementStopReason.Completed) return;
         if (target is not Node2D targetNode) return;
         if (!GodotObject.IsInstanceValid(targetNode)) return;
-        if (target.Data.Has(DataKey.IsDead) && target.Data.Get<bool>(DataKey.IsDead)) return;
+        if (target.Data.Has(GeneratedDataKey.IsDead) && target.Data.Get<bool>(GeneratedDataKey.IsDead)) return;
 
         var targetEntity = target;
         if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return;

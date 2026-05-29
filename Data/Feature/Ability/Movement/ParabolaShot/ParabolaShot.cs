@@ -30,14 +30,14 @@ internal class ParabolaBombardmentExecutor : AbilityFeatureHandler
         var ability = context.Ability!;
         var casterNode = (Node2D)caster;
 
-        var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 最终技能伤害
+        var damage = ability.Data.Get<float>(GeneratedDataKey.FinalAbilityDamage); // 最终技能伤害
         var targetPoint = GetBombardTargetPoint(
             caster, // 技能施法者
             casterNode, // 施法者节点
-            ability.Data.Get<float>(DataKey.AbilityCastRange) // 技能施法距离
+            ability.Data.Get<float>(GeneratedDataKey.AbilityCastRange) // 技能施法距离
         );
-        float effectRadius = ability.Data.Get<float>(DataKey.AbilityEffectRadius); // 爆炸半径
-        var effectScenePath = ability.Data.Get<string>(DataKey.EffectScene); // 爆炸特效路径
+        float effectRadius = ability.Data.Get<float>(GeneratedDataKey.AbilityEffectRadius); // 爆炸半径
+        var effectScenePath = ability.Data.Get<string>(GeneratedDataKey.EffectScene); // 爆炸特效路径
         Vector2 rawDirection = targetPoint - casterNode.GlobalPosition; // 起点指向落点的向量
         Vector2 travelDirection = rawDirection.LengthSquared() >= 0.001f
             ? rawDirection.Normalized()
@@ -55,7 +55,7 @@ internal class ParabolaBombardmentExecutor : AbilityFeatureHandler
         float arcRadius = Mathf.Max(
             travelDistance * 0.72f, // 常规弧线半径
             travelDistance * 0.5f + 32f); // 保证半径始终大于半弦长
-        var projectileScenePath = ability.Data.Get<string>(DataKey.ProjectileScene); // 投射物场景路径
+        var projectileScenePath = ability.Data.Get<string>(GeneratedDataKey.ProjectileScene); // 投射物场景路径
 
         var projectile = ProjectileTool.Spawn(
             caster, // 投射物归属者

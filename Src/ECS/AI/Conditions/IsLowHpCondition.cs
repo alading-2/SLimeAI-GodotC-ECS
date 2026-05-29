@@ -25,9 +25,9 @@ public class IsLowHpCondition : BehaviorNode
     /// <inheritdoc/>
     public override NodeState Evaluate(AIContext ctx)
     {
-        if (!ctx.Entity.Data.Has(DataKey.HpPercent)) return NodeState.Failure;
+        if (!ctx.Entity.Data.Has(GeneratedDataKey.HpPercent)) return NodeState.Failure;
 
-        float hpPercent = ctx.Entity.Data.Get<float>(DataKey.HpPercent);
+        float hpPercent = ctx.Entity.Data.Get<float>(GeneratedDataKey.HpPercent);
         return hpPercent < _hpThresholdPercent ? NodeState.Success : NodeState.Failure;
     }
 }

@@ -15,7 +15,7 @@ public class ShieldProcessor : IDamageProcessor
         // if (info.IsDodged || info.FinalDamage <= 0) return;
         // if (info.Victim is not IEntity victimEntity) return;
 
-        // float shield = victimEntity.Data.Get<float>(DataKey.Shield, 0);
+        // float shield = victimEntity.Data.Get<float>(GeneratedDataKey.Shield, 0);
 
         // if (shield > 0)
         // {
@@ -37,7 +37,7 @@ public class ShieldProcessor : IDamageProcessor
         //     }
 
         //     // 更新护盾值
-        //     victimEntity.Data.Set(DataKey.Shield, shield);
+        //     victimEntity.Data.Set(GeneratedDataKey.Shield, shield);
         // }
     }
 }

@@ -6,7 +6,7 @@ using ECS.Base.System.TestSystem.Core;
 /// <summary>
 /// 敌人生成测试模块。
 /// <para>
-/// 默认通过 DataNew 敌人名称获取 EnemyData，并复用正式 SpawnSystem 执行批量生成。
+/// 默认通过 DataOS runtime table 敌人名称获取 EnemyData，并复用正式 SpawnSystem 执行批量生成。
 /// </para>
 /// </summary>
 public partial class SpawnTestModule : TestModuleBase
@@ -101,7 +101,7 @@ public partial class SpawnTestModule : TestModuleBase
             _enemyPicker, // 资源选择控件
             2 // 放在说明与当前选择标签之后
         );
-        _enemyPicker.Configure(EnemyCatalogPath); // 生成模块只允许选择 Data/Data/Unit/Enemy 下的配置
+        _enemyPicker.Configure(EnemyCatalogPath); // 生成模块只允许选择 DataOS removed legacy Data/Unit/Enemy 下的配置
     }
 
     private void BuildStrategyOptions()
@@ -168,7 +168,7 @@ public partial class SpawnTestModule : TestModuleBase
     }
 
     /// <summary>
-    /// 解析敌人配置：按 DataNew 敌人 Name 获取。
+    /// 解析敌人配置：按 DataOS runtime table 敌人 Name 获取。
     /// </summary>
     /// <param name="entry">资源选择器条目。</param>
     /// <returns>敌人配置数据。</returns>

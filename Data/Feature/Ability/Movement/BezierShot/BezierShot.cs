@@ -33,13 +33,13 @@ internal class BezierShotExecutor : AbilityFeatureHandler
         var ability = context.Ability!;
         var casterNode = (Node2D)caster;
 
-        var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 最终技能伤害
+        var damage = ability.Data.Get<float>(GeneratedDataKey.FinalAbilityDamage); // 最终技能伤害
 
         Vector2 startPos = casterNode.GlobalPosition;
         var targetInfo = GetTargetUnit(
             caster, // 技能施法者
             casterNode, // 施法者节点
-            ability.Data.Get<float>(DataKey.AbilityCastRange) // 技能施法距离
+            ability.Data.Get<float>(GeneratedDataKey.AbilityCastRange) // 技能施法距离
         );
         if (targetInfo == null)
         {
@@ -49,7 +49,7 @@ internal class BezierShotExecutor : AbilityFeatureHandler
 
         var (targetEntity, targetNode) = targetInfo.Value;
         Vector2 targetPos = targetNode.GlobalPosition;
-        var projectileScenePath = ability.Data.Get<string>(DataKey.ProjectileScene); // 投射物场景路径
+        var projectileScenePath = ability.Data.Get<string>(GeneratedDataKey.ProjectileScene); // 投射物场景路径
         int spawnedCount = 0;
 
         int randomSeed = Mathf.RoundToInt(startPos.X * 7f + startPos.Y * 11f + targetPos.X * 13f + targetPos.Y * 17f); // 基于当前战场位置生成稳定随机种子

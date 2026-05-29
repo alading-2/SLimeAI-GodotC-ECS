@@ -23,9 +23,9 @@ public partial class CooldownComponent : Node, IComponent
 
     // ================= 属性访问 =================
 
-    private string AbilityName => _data.Get<string>(DataKey.Name);
-    private float BaseCooldown => _data.Get<float>(DataKey.AbilityCooldown);
-    private float CooldownReduction => _data.Get<float>(DataKey.CooldownReduction);
+    private string AbilityName => _data.Get<string>(GeneratedDataKey.Name);
+    private float BaseCooldown => _data.Get<float>(GeneratedDataKey.AbilityCooldown);
+    private float CooldownReduction => _data.Get<float>(GeneratedDataKey.CooldownReduction);
 
     // ================= IComponent 实现 =================
 

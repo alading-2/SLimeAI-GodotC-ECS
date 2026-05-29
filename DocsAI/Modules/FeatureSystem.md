@@ -30,9 +30,9 @@ FeatureSystem 不负责：
 - `Src/ECS/Base/System/FeatureSystem/FeatureHandlerRegistry.cs`
 - `Src/ECS/Base/System/FeatureSystem/FeatureEndReason.cs`
 - `Src/ECS/Base/System/FeatureSystem/Action/`
-- `Data/Data/Feature/FeatureDefinition.cs`
-- `Data/Data/Feature/FeatureModifierEntry.cs`
-- `Data/DataNew/Feature/FeatureDefinitionData.cs`
+- `Data/Feature/Definition/FeatureDefinition.cs`
+- `Data/Feature/Definition/FeatureModifierEntry.cs`
+- `Data/DataOS runtime table/Feature/FeatureDefinitionData.cs`
 - `Data/EventType/Feature/GameEventType_Feature.cs`
 
 ## 数据 / 事件 / 生命周期

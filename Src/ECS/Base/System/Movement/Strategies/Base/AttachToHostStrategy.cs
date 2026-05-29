@@ -3,13 +3,13 @@ using System.Runtime.CompilerServices;
 
 /// <summary>
 /// 【模式】附着宿主。
-/// <para>每帧将实体位置对齐到 <c>TargetNode</c>，叠加 <c>DataKey.EffectOffset</c> 偏移。宿主失效时主动完成。</para>
+/// <para>每帧将实体位置对齐到 <c>TargetNode</c>，叠加 <c>GeneratedDataKey.EffectOffset</c> 偏移。宿主失效时主动完成。</para>
 /// <para>
 /// <list type="bullet">
 /// <item><c>TargetNode</c>（Node2D，必须）：宿主节点引用。</item>
 /// <item><c>DestroyOnComplete</c>（bool，可选）：宿主失效后是否自动销毁实体。</item>
 /// <item><c>MaxDuration</c>（float，可选）：最大附着时长（秒），-1 = 不限制，永久附着直到宿主失效。</item>
-/// <item><c>DataKey.EffectOffset</c>：相对宿主的位置偏移，通过 Data 设置（非 MovementParams）。</item>
+/// <item><c>GeneratedDataKey.EffectOffset</c>：相对宿主的位置偏移，通过 Data 设置（非 MovementParams）。</item>
 /// </list>
 /// </para>
 /// <para>
@@ -48,9 +48,9 @@ public class AttachToHostStrategy : IMovementStrategy
         if (@params.TargetNode == null || !GodotObject.IsInstanceValid(@params.TargetNode))
             return MovementUpdateResult.Complete();
 
-        var offset = data.Get<Vector2>(DataKey.EffectOffset); // Effect 系统概念，仍从 Data 读
+        var offset = data.Get<Vector2>(GeneratedDataKey.EffectOffset); // Effect 系统概念，仍从 Data 读
         Vector2 toTarget = @params.TargetNode.GlobalPosition + offset - selfNode.GlobalPosition;
-        data.Set(DataKey.Velocity, toTarget / Mathf.Max(delta, 0.001f));
+        data.Set(GeneratedDataKey.Velocity, toTarget / Mathf.Max(delta, 0.001f));
 
         return MovementUpdateResult.Continue(); // 位置对齐不计入 TraveledDistance
     }

@@ -144,12 +144,12 @@ public sealed class MovementCollisionPolicy
             return true;
         }
 
-        if (targetEntity == null || !targetEntity.Data.Has(DataKey.EntityType))
+        if (targetEntity == null || !targetEntity.Data.Has(GeneratedDataKey.EntityType))
         {
             return false;
         }
 
-        EntityType targetType = targetEntity.Data.Get<EntityType>(DataKey.EntityType);
+        EntityType targetType = targetEntity.Data.Get<EntityType>(GeneratedDataKey.EntityType);
         return (targetType & filter) != 0;
     }
 

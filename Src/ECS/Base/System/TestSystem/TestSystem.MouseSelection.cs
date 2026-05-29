@@ -96,13 +96,13 @@ public partial class TestSystem
             return;
         }
 
-        var name = SelectedEntity.Data.Get<string>(DataKey.Name.Key);
+        var name = SelectedEntity.Data.Get<string>(GeneratedDataKey.Name.Key);
         if (string.IsNullOrWhiteSpace(name))
         {
             name = node.Name.ToString();
         }
 
-        var id = SelectedEntity.Data.Get<string>(DataKey.Id.Key);
+        var id = SelectedEntity.Data.Get<string>(GeneratedDataKey.Id.Key);
         _selectedEntityLabel.Text = $"{name} | {node.GetType().Name} | {id}";
     }
 }

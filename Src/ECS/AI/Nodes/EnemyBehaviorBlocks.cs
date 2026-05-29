@@ -34,7 +34,7 @@ public static class EnemyBehaviorBlocks
         return new SequenceNode("攻击序列")
             .Add(new FindEnemyAction()) //搜索敌人
             .Add(new HasValidTargetCondition()) //校验目标是否有效
-            .Add(new IsInRangeCondition(DataKey.AttackRange)) //范围检测
+            .Add(new IsInRangeCondition(GeneratedDataKey.AttackRange)) //范围检测
             .Add(new IsAttackReadyCondition()) //攻击间隔检测
             .Add(new StopMovementAction()) //停止移动
             .Add(new FaceTargetAction()) //面向目标entity
@@ -49,7 +49,7 @@ public static class EnemyBehaviorBlocks
     /// </summary>
     /// <param name="abilityName">技能名称（需与 EntityManager.AddAbility 中的名称一致）</param>
     /// <param name="rangeKey">技能射程 DataKey（默认 AttackRange，可改为 AbilityRange 等）</param>
-    public static BehaviorNode SkillBranch(string abilityName, string rangeKey = nameof(DataKey.AttackRange))
+    public static BehaviorNode SkillBranch(string abilityName, string rangeKey = nameof(GeneratedDataKey.AttackRange))
     {
         return new SequenceNode("技能序列")
             .Add(new FindEnemyAction()) //搜索敌人
@@ -88,7 +88,7 @@ public static class EnemyBehaviorBlocks
         return new SequenceNode("追逐序列")
             .Add(new FindEnemyAction()) //搜索敌人
             .Add(new HasValidTargetCondition()) //校验目标是否有效
-            .Add(new MoveToTargetAction(DataKey.AttackRange)); //移动到目标位置
+            .Add(new MoveToTargetAction(GeneratedDataKey.AttackRange)); //移动到目标位置
     }
 
     /// <summary>

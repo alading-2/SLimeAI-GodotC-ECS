@@ -6,7 +6,7 @@ internal static partial class ProjectileTool
     {
         public string? Name { get; set; }
 
-        [DataKey(nameof(DataKey.VisualScenePath))]
+        [DataKey(nameof(GeneratedDataKey.VisualScenePath))]
         public string VisualScenePath { get; set; } = "";
     }
 
@@ -43,7 +43,7 @@ internal static partial class ProjectileTool
             return null;
         }
 
-        projectile.Data.Set(DataKey.EntityType, EntityType.Projectile); // 标记实体类型为投射物
+        projectile.Data.Set(GeneratedDataKey.EntityType, EntityType.Projectile); // 标记实体类型为投射物
 
         return projectile;
     }

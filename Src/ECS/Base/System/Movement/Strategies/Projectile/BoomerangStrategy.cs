@@ -127,7 +127,7 @@ public class BoomerangStrategy : IMovementStrategy
         if (_pauseTimer > 0f)
         {
             _pauseTimer = Mathf.Max(_pauseTimer - delta, 0f);
-            data.Set(DataKey.Velocity, Vector2.Zero);
+            data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
             return MovementUpdateResult.Continue();
         }
 
@@ -176,7 +176,7 @@ public class BoomerangStrategy : IMovementStrategy
         float speed = ResolveCurrentSpeed(@params, curveLength);
         if (speed <= 0.001f)
         {
-            data.Set(DataKey.Velocity, Vector2.Zero);
+            data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
             return MovementUpdateResult.Continue();
         }
 
@@ -194,7 +194,7 @@ public class BoomerangStrategy : IMovementStrategy
 
         // 根据位移计算当前物理速度，写入 Data 供移动系统消费。
         data.Set(
-            DataKey.Velocity,
+            GeneratedDataKey.Velocity,
             displacementLength > 0.001f
                 ? displacement / Mathf.Max(delta, 0.001f)
                 : Vector2.Zero);
@@ -227,7 +227,7 @@ public class BoomerangStrategy : IMovementStrategy
         // 数值溢出保护：若已极度接近目标，停止位移并触发阶段切换。
         if (distance <= 0.001f)
         {
-            data.Set(DataKey.Velocity, Vector2.Zero);
+            data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
             return HandlePhaseArrival(node, data, @params);
         }
 
@@ -236,7 +236,7 @@ public class BoomerangStrategy : IMovementStrategy
         Vector2 direction = toTarget / distance;
 
         // 速度转换：将计算出的“期望位移”转换为 Velocity，交由 EntityMovementComponent 执行最终移动。
-        data.Set(DataKey.Velocity, direction * (step / Mathf.Max(delta, 0.001f)));
+        data.Set(GeneratedDataKey.Velocity, direction * (step / Mathf.Max(delta, 0.001f)));
 
         // 返回本帧产生的位移大小与朝向。
         return MovementUpdateResult.Continue(step, direction);
@@ -251,7 +251,7 @@ public class BoomerangStrategy : IMovementStrategy
     /// </summary>
     private MovementUpdateResult HandlePhaseArrival(Node2D node, Data data, in MovementParams @params)
     {
-        data.Set(DataKey.Velocity, Vector2.Zero);
+        data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
 
         if (!_returning)
         {

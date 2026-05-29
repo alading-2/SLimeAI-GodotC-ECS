@@ -43,11 +43,11 @@ internal class DashExecutor : AbilityFeatureHandler
 
         // 1. 数据驱动：从技能动态 Data 容器中读取运行时配置
         // 冲刺距离：决定位移终点
-        var dashDistance = ability.Data.Get<float>(DataKey.AbilityCastRange);
+        var dashDistance = ability.Data.Get<float>(GeneratedDataKey.AbilityCastRange);
         // 落地伤害半径：决定冲刺停止时的圆形检测范围
-        var damageRadius = ability.Data.Get<float>(DataKey.AbilityEffectRadius);
+        var damageRadius = ability.Data.Get<float>(GeneratedDataKey.AbilityEffectRadius);
         // 落地特效场景：冲刺完成后的视觉表现
-        var effectScenePath = ability.Data.Get<string>(DataKey.EffectScene); // 落地特效场景路径
+        var effectScenePath = ability.Data.Get<string>(GeneratedDataKey.EffectScene); // 落地特效场景路径
         // 最大伤害目标数：当前固定为不限制，由技能逻辑自行决定
         const int maxTargets = -1;
 
@@ -85,13 +85,13 @@ internal class DashExecutor : AbilityFeatureHandler
         IEntity caster,
         Node2D casterNode2D)
     {
-        Vector2 moveDir = caster.Data.Get<Vector2>(DataKey.Velocity);
+        Vector2 moveDir = caster.Data.Get<Vector2>(GeneratedDataKey.Velocity);
         if (moveDir.LengthSquared() > 0.01f)
         {
             return moveDir.Normalized();
         }
 
-        Vector2 cachedMoveDir = caster.Data.Get<Vector2>(DataKey.LastMoveDirection);
+        Vector2 cachedMoveDir = caster.Data.Get<Vector2>(GeneratedDataKey.LastMoveDirection);
         if (cachedMoveDir.LengthSquared() > 0.01f)
         {
             return cachedMoveDir.Normalized();
@@ -146,7 +146,7 @@ internal class DashExecutor : AbilityFeatureHandler
                 : null,
             Damage = new DamageApplyOptions
             {
-                Damage = caster.Data.Get<float>(DataKey.FinalAttack), // 施法者最终攻击力
+                Damage = caster.Data.Get<float>(GeneratedDataKey.FinalAttack), // 施法者最终攻击力
                 Type = DamageType.Physical, // 物理伤害
                 Tags = DamageTags.Ability | DamageTags.Area, // 技能范围伤害
                 Attacker = casterNode2D // 伤害来源节点

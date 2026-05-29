@@ -44,11 +44,11 @@ public partial class AIComponent : Node, IComponent
         // 记录出生位置（用于巡逻基准点）
         if (_entity is CharacterBody2D body)
         {
-            _data.Set(DataKey.SpawnPosition, body.GlobalPosition);
+            _data.Set(GeneratedDataKey.SpawnPosition, body.GlobalPosition);
         }
 
         // 默认启用 AI
-        _data.Set(DataKey.AIEnabled, true);
+        _data.Set(GeneratedDataKey.AIEnabled, true);
 
         // 设置默认行为树
         SetBehaviorTree(EnemyBehaviorTreeBuilder.BuildMeleeEnemyTree());
@@ -92,16 +92,16 @@ public partial class AIComponent : Node, IComponent
         // 前置检查
         if (Runner == null) return;
         if (_data == null) return;
-        if (!_data.Get<bool>(DataKey.AIEnabled)) return;
+        if (!_data.Get<bool>(GeneratedDataKey.AIEnabled)) return;
 
         // 检查生命周期状态（死亡不执行 AI）
-        var lifecycleState = _data.Get<LifecycleState>(DataKey.LifecycleState);
+        var lifecycleState = _data.Get<LifecycleState>(GeneratedDataKey.LifecycleState);
         if (lifecycleState == LifecycleState.Dead)
         {
             return;
         }
 
-        if (_data.Has(DataKey.StatusCanThink) && !_data.Get<bool>(DataKey.StatusCanThink))
+        if (_data.Has(GeneratedDataKey.StatusCanThink) && !_data.Get<bool>(GeneratedDataKey.StatusCanThink))
         {
             return;
         }

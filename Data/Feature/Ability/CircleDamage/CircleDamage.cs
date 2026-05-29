@@ -28,9 +28,9 @@ internal class CircleDamageExecutor : AbilityFeatureHandler
         var casterNode2D = (Node2D)caster;
 
         // 从技能配置中读取参数
-        var range = ability.Data.Get<float>(DataKey.AbilityEffectRadius); // 伤害半径
-        var effectScenePath = ability.Data.Get<string>(DataKey.EffectScene); // 特效场景路径
-        var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 技能最终伤害
+        var range = ability.Data.Get<float>(GeneratedDataKey.AbilityEffectRadius); // 伤害半径
+        var effectScenePath = ability.Data.Get<string>(GeneratedDataKey.EffectScene); // 特效场景路径
+        var damage = ability.Data.Get<float>(GeneratedDataKey.FinalAbilityDamage); // 技能最终伤害
 
         // 执行命中（目标查询 + 特效 + 伤害，三步合一；位置来源统一收口到 Query / Effect 参数中）
         var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions

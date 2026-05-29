@@ -224,8 +224,8 @@ public partial class RecoverySystem : Node, ISystem,
         var data = entity.Data;
 
         // 1. 获取当前最终恢复属性（已计算装备、天赋等加成后的最终值）
-        float hpRegen = data.Get<float>(DataKey.FinalHpRegen);
-        float manaRegen = data.Get<float>(DataKey.FinalManaRegen);
+        float hpRegen = data.Get<float>(GeneratedDataKey.FinalHpRegen);
+        float manaRegen = data.Get<float>(GeneratedDataKey.FinalManaRegen);
 
         // 2. 智能性能优化：如果该单位目前没有任何恢复需求，自动从本系统中注销。
         // 这将减少下一帧遍历带来的开销。
@@ -237,7 +237,7 @@ public partial class RecoverySystem : Node, ISystem,
         }
 
         // 3. 基本逻辑状态检查：死亡单位停止恢复。
-        if (data.Get<bool>(DataKey.IsDead))
+        if (data.Get<bool>(GeneratedDataKey.IsDead))
         {
             return;
         }
@@ -247,7 +247,7 @@ public partial class RecoverySystem : Node, ISystem,
         if (hpRegen > 0)
         {
             // 检查是否受"禁疗"状态影响
-            if (!data.Get<bool>(DataKey.IsDisableHealthRecovery))
+            if (!data.Get<bool>(GeneratedDataKey.IsDisableHealthRecovery))
             {
                 // ✅ 发送治疗请求事件，由 HealthComponent 监听处理
                 // IsFullHp 检查在 HealthComponent.ApplyHeal 内部处理
@@ -262,10 +262,10 @@ public partial class RecoverySystem : Node, ISystem,
         if (manaRegen > 0)
         {
             // 检查魔法禁疗状态
-            if (!data.Get<bool>(DataKey.IsDisableManaRecovery))
+            if (!data.Get<bool>(GeneratedDataKey.IsDisableManaRecovery))
             {
-                float currentMana = data.Get<float>(DataKey.CurrentMana);
-                float maxMana = data.Get<float>(DataKey.FinalMana);
+                float currentMana = data.Get<float>(GeneratedDataKey.CurrentMana);
+                float maxMana = data.Get<float>(GeneratedDataKey.FinalMana);
 
                 // 仅在未满魔时恢复
                 if (currentMana < maxMana)
@@ -274,7 +274,7 @@ public partial class RecoverySystem : Node, ISystem,
                     // 手动处理上限 Clamp (下限已由 DataMeta MinValue 保证，但 Math.Clamp 可更保险)
                     newMana = Math.Clamp(newMana, 0, maxMana);
 
-                    data.Set(DataKey.CurrentMana, newMana);
+                    data.Set(GeneratedDataKey.CurrentMana, newMana);
                 }
             }
         }

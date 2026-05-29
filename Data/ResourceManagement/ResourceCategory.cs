@@ -28,11 +28,11 @@ public enum ResourceCategory
     /// <summary>Manager 管理器 (如 TimerManager)</summary>
     Tools,
 
-    /// <summary>数据配置兜底（Data/Data/ 下未匹配子分类的 .tres）</summary>
+    /// <summary>数据配置兜底（DataOS removed legacy Data/ 下未匹配子分类的 .tres）</summary>
     Data,
-    /// <summary>技能数据配置（Data/Data/Ability/）</summary>
+    /// <summary>技能数据配置（DataOS removed legacy Data/Ability/）</summary>
     DataAbility,
-    /// <summary>单位数据配置（Data/Data/Unit/）</summary>
+    /// <summary>单位数据配置（DataOS removed legacy Data/Unit/）</summary>
     DataUnit,
     /// <summary>系统配置（Data/Config/System/System/）</summary>
     ConfigSystem,

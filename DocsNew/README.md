@@ -8,17 +8,19 @@
 | 文档 | 作用 |
 | ---- | ---- |
 | [`01-ECS框架与AIFirst方向决策.md`](./01-ECS框架与AIFirst方向决策.md) | 当前方向事实源：确认 SlimeAI 继续走 AI-first ECS 游戏框架，而不是纯 AI/GameOS 替代旧 ECS |
+| [`02-Data系统说明.md`](./02-Data系统说明.md) | 当前旧 ECS Data 系统实现说明：概念、使用方式、测试场景和事件 |
 
 ## 阅读顺序
 
 1. **方向定位**：读 [`01-ECS框架与AIFirst方向决策.md`](./01-ECS框架与AIFirst方向决策.md)。
-2. **当前状态**：读 [`../DocsAI/ProjectState.md`](../DocsAI/ProjectState.md)。
-3. **具体系统设计**：进入 [`../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/`](../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/)。
-4. **执行前契约**：进入 [`../DocsAI/Modules/`](../DocsAI/Modules/) 查对应模块契约。
+2. **Data 当前实现**：读 [`02-Data系统说明.md`](./02-Data系统说明.md)。
+3. **当前状态**：读 [`../DocsAI/ProjectState.md`](../DocsAI/ProjectState.md)。
+4. **具体系统设计**：进入 [`../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/`](../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/)。
+5. **执行前契约**：进入 [`../DocsAI/Modules/`](../DocsAI/Modules/) 查对应模块契约。
 
 ## 边界
 
-DocsNew 只回答“为什么是 AI-first ECS，以及哪些方向不要再走”。具体系统方案不写在 DocsNew：
+DocsNew 优先回答“为什么是 AI-first ECS，以及哪些方向不要再走”。当前 Data 系统补充一份实现说明，用于降低跨 SDD 阅读成本；完整设计、任务和验证证据仍以 SDD / DocsAI 为准：
 
 | 内容 | 事实源 |
 | ---- | ---- |

@@ -253,7 +253,7 @@ public partial class EntityOrientationComponent : Node, IComponent
         }
 
         // 跟随移动模式：优先取移动朝向方向角
-        Vector2 facing = _data.Get<Vector2>(DataKey.MovementFacingDirection);
+        Vector2 facing = _data.Get<Vector2>(GeneratedDataKey.MovementFacingDirection);
         return facing.LengthSquared() >= 0.001f
             ? Mathf.RadToDeg(facing.Angle())
             : GetCurrentPresentedAngle(); // 无朝向输入时兜底取当前真实朝向
@@ -275,7 +275,7 @@ public partial class EntityOrientationComponent : Node, IComponent
         }
 
         // 跟随移动模式：实时读取移动朝向方向
-        Vector2 facing = _data.Get<Vector2>(DataKey.MovementFacingDirection);
+        Vector2 facing = _data.Get<Vector2>(GeneratedDataKey.MovementFacingDirection);
         if (facing.LengthSquared() < 0.001f)
         {
             return baseAngle; // 停顿或当前帧无朝向输入时，沿用上一帧基础角

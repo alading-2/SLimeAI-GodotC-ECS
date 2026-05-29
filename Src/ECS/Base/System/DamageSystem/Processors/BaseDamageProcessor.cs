@@ -33,7 +33,7 @@ public class BaseDamageProcessor : IDamageProcessor
 
         // 2. 状态前置检查 (相当于原来的 PreDamageCheckProcessor)
         // 死亡检测
-        if (data.Get<bool>(DataKey.IsDead))
+        if (data.Get<bool>(GeneratedDataKey.IsDead))
         {
             info.IsEnd = true;
             info.FinalDamage = 0;
@@ -42,7 +42,7 @@ public class BaseDamageProcessor : IDamageProcessor
         }
 
         // 无敌检测
-        if (data.Get<bool>(DataKey.IsInvulnerable))
+        if (data.Get<bool>(GeneratedDataKey.IsInvulnerable))
         {
             info.IsEnd = true;
             info.FinalDamage = 0;
@@ -83,6 +83,6 @@ public class BaseDamageProcessor : IDamageProcessor
             return false;
         }
 
-        return attackerEntity.Data.Get<bool>(DataKey.IsDead);
+        return attackerEntity.Data.Get<bool>(GeneratedDataKey.IsDead);
     }
 }

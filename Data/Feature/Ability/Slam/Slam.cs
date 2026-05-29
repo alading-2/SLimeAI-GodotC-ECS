@@ -31,10 +31,10 @@ internal class SlamExecutor : AbilityFeatureHandler
         var casterNode = (Node2D)caster;
 
         // 1. 获取技能参数
-        var abilityRange = ability.Data.Get<float>(DataKey.AbilityCastRange); // 选点范围（角色周围圆环半径）
-        var damageRadius = ability.Data.Get<float>(DataKey.AbilityEffectRadius); // 伤害范围（圆形半径）
+        var abilityRange = ability.Data.Get<float>(GeneratedDataKey.AbilityCastRange); // 选点范围（角色周围圆环半径）
+        var damageRadius = ability.Data.Get<float>(GeneratedDataKey.AbilityEffectRadius); // 伤害范围（圆形半径）
         const int maxTargets = -1; //不限制命中数量
-        var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 最终技能伤害
+        var damage = ability.Data.Get<float>(GeneratedDataKey.FinalAbilityDamage); // 最终技能伤害
 
         // 2. 在角色周围随机选点
         var pointQuery = new TargetSelectorQuery
@@ -47,7 +47,7 @@ internal class SlamExecutor : AbilityFeatureHandler
         var randomPoint = PositionTargetSelector.Query(pointQuery)[0];
 
         // 3. 获取特效场景
-        var effectScenePath = ability.Data.Get<string>(DataKey.EffectScene); // 特效场景路径
+        var effectScenePath = ability.Data.Get<string>(GeneratedDataKey.EffectScene); // 特效场景路径
 
         // 4. 执行命中（目标查询 + 特效生成 + 伤害结算，三步合一）
         var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions

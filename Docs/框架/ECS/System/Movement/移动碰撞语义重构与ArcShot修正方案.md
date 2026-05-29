@@ -149,7 +149,7 @@
 
   ### 6. ArcShot 改为“策略完成驱动命中”，不再订阅 MovementCollision
 
-  Data/Data/Ability/Ability/Movement/ArcShot/ArcShot.cs 的改法固定如下：
+  DataOS removed legacy Data/Ability/Ability/Movement/ArcShot/ArcShot.cs 的改法固定如下：
 
   - 不再订阅 MovementCollision 作为命中入口。
   - 使用 CircularArc + isTrackTarget + ReachDistance 作为唯一完成条件。

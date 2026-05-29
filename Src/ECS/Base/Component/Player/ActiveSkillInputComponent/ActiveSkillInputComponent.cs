@@ -72,7 +72,7 @@ public partial class ActiveSkillInputComponent : Node, IComponent
         // 确保实体和数据有效，防止非法访问
         if (_entity == null || _data == null) return;
         // 死亡/复活中不响应技能输入
-        if (_data.Get<bool>(DataKey.IsDead)) return;
+        if (_data.Get<bool>(GeneratedDataKey.IsDead)) return;
 
         HandleActiveAbilityInput();
     }
@@ -104,14 +104,14 @@ public partial class ActiveSkillInputComponent : Node, IComponent
         if (activeAbilities.Count <= 1) return; // 单个或无技能时不执行切换
 
         // 从实体数据缓存获取当前索引
-        int currentIndex = _data!.Get<int>(DataKey.CurrentActiveAbilityIndex);
+        int currentIndex = _data!.Get<int>(GeneratedDataKey.CurrentActiveAbilityIndex);
 
         // 计算新索引并实现首尾循环 (使用 Mathf.PosMod 确保在负数情况下也能正确取模)
         int newIndex = Mathf.PosMod(currentIndex + direction, activeAbilities.Count);
-        _data.Set(DataKey.CurrentActiveAbilityIndex, newIndex);
+        _data.Set(GeneratedDataKey.CurrentActiveAbilityIndex, newIndex);
 
         var selectedAbility = activeAbilities[newIndex];
-        var abilityName = selectedAbility.Data.Get<string>(DataKey.Name);
+        var abilityName = selectedAbility.Data.Get<string>(GeneratedDataKey.Name);
         _log.Debug($"切换主动技能: {abilityName} (索引: {newIndex})");
 
         // 发射 UI 事件，通知技能栏高亮切换，注意_entity是PlayerEntity
@@ -134,17 +134,17 @@ public partial class ActiveSkillInputComponent : Node, IComponent
         if (activeAbilities.Count == 0) return;
 
         // 获取当前索引并从列表提取对应技能实体
-        int currentIndex = _data!.Get<int>(DataKey.CurrentActiveAbilityIndex);
+        int currentIndex = _data!.Get<int>(GeneratedDataKey.CurrentActiveAbilityIndex);
 
         // 防御性检查：防止动态删除技能导致索引越界
         if (currentIndex < 0 || currentIndex >= activeAbilities.Count)
         {
             currentIndex = 0;
-            _data.Set(DataKey.CurrentActiveAbilityIndex, 0);
+            _data.Set(GeneratedDataKey.CurrentActiveAbilityIndex, 0);
         }
 
         var ability = activeAbilities[currentIndex];
-        var abilityName = ability.Data.Get<string>(DataKey.Name);
+        var abilityName = ability.Data.Get<string>(GeneratedDataKey.Name);
 
         if (_entity is IEntity caster)
         {
@@ -155,7 +155,7 @@ public partial class ActiveSkillInputComponent : Node, IComponent
                 ResponseContext = new EventContext(),
             };
 
-            var targetSelection = ability.Data.Get<AbilityTargetSelection>(DataKey.AbilityTargetSelection);
+            var targetSelection = ability.Data.Get<AbilityTargetSelection>(GeneratedDataKey.AbilityTargetSelection);
             if (targetSelection == AbilityTargetSelection.Point)
             {
                 TryBeginPointTargeting(

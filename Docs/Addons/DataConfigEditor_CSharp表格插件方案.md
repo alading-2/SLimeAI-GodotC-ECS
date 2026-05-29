@@ -1,12 +1,12 @@
 # DataConfigEditor C# 表格插件方案
 
 > 日期：2026-04-24  
-> 范围：`Data/DataNew/` 纯 C# 配置、`addons/DataConfigEditor/` Godot C# 插件、独立工具 `DataConfigEditor_CSharp` 的路线取舍  
+> 范围：`Data/DataOS runtime table/` 纯 C# 配置、`addons/DataConfigEditor/` Godot C# 插件、独立工具 `DataConfigEditor_CSharp` 的路线取舍  
 > 结论：短期继续完善 Godot C# 插件，长期抽取共享解析/写回核心给独立软件复用。
 
 ## 1. 背景
 
-当前项目已经把主要配置迁移到 `Data/DataNew/`：
+当前项目已经把主要配置迁移到 `Data/DataOS runtime table/`：
 
 - 一张表对应一个 C# 配置类，例如 `AbilityData`、`EnemyData`。
 - 一行数据对应一个 `public static readonly XxxData` 静态实例。
@@ -21,7 +21,7 @@
 
 ## 2. 核心决策
 
-### 2.1 DataNew 继续作为数据真相源
+### 2.1 DataOS runtime table 继续作为数据真相源
 
 保留当前形态：
 
@@ -80,7 +80,7 @@ public static IReadOnlyDictionary<string, EnemyData> ByName => DataTable.GetByNa
 
 当前 `addons/DataConfigEditor/` 已经具备这些基础：
 
-- 能扫描 `Data/DataNew` 类型。
+- 能扫描 `Data/DataOS runtime table` 类型。
 - 能显示配置类和静态实例。
 - 能读属性 `<summary>` 注释。
 - 能显示 enum、Flags enum、bool、数值、路径字符串。
@@ -90,7 +90,7 @@ public static IReadOnlyDictionary<string, EnemyData> ByName => DataTable.GetByNa
 
 - 已经嵌入 Godot 工程，不需要额外打开独立软件。
 - 可以直接使用 Godot 的 `res://`、`ResourceLoader`、资源拖拽和缩略图。
-- 与当前 DataNew 类型、DataKey、枚举、FeatureId 常量在同一编译上下文。
+- 与当前 DataOS runtime table 类型、DataKey、枚举、FeatureId 常量在同一编译上下文。
 - 见效快，先解决“能编辑并写回 C#”这个关键阻塞。
 
 ### 2.4 独立 C# 软件作为长期方向
@@ -161,7 +161,7 @@ BaseHp = 150f,
 ## 4. 推荐架构
 
 ```text
-Data/DataNew/*.cs
+Data/DataOS runtime table/*.cs
   ↓
 ConfigSourceParser
   ↓
@@ -180,7 +180,7 @@ Godot 重新编译 C# 项目
 
 ### 4.1 真相源
 
-- 真相源是 `Data/DataNew/*.cs`。
+- 真相源是 `Data/DataOS runtime table/*.cs`。
 - `.tres` 仅作为兼容回退。
 - 不再把 `.tres` 作为新数据的主要编辑入口。
 
@@ -359,7 +359,7 @@ Godot 插件只负责：
 
 ## 6. 数据规则
 
-### 6.1 DataNew 表写法
+### 6.1 DataOS runtime table 表写法
 
 必须遵循：
 
@@ -371,7 +371,7 @@ Godot 插件只负责：
 
 ### 6.2 系统配置
 
-系统级配置继续走 `Data/DataNew/System/`：
+系统级配置继续走 `Data/DataOS runtime table/System/`：
 
 - `SystemData` 是系统配置纯 C# 优先数据源。
 - `SystemPresetData` 是系统预设纯 C# 优先数据源。
@@ -434,7 +434,7 @@ Godot 插件只负责：
 可以做：
 
 ```text
-从 DataNew POCO 自动生成或缓存查询字典
+从 DataOS runtime table POCO 自动生成或缓存查询字典
 ```
 
 这样可以同时保留 C# 强类型配置的维护优势、运行时字典读取的便利性，以及插件快速落地的效率。

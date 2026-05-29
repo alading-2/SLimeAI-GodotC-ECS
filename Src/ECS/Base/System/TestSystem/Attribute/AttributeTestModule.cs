@@ -10,7 +10,7 @@ using ECS.Base.System.TestSystem.Core;
 /// 提供一个运行时调试面板，用于按分类查看并直接编辑实体的 Data 属性。
 /// </para>
 /// <para>
-/// 这个模块不关心具体属性如何计算，只负责把 DataRegistry 中的元数据转换成可交互 UI。
+/// 这个模块不关心具体属性如何计算，只负责把 descriptor catalog 中的字段定义转换成可交互 UI。
 /// </para>
 /// </summary>
 public partial class AttributeTestModule : TestModuleBase
@@ -20,8 +20,8 @@ public partial class AttributeTestModule : TestModuleBase
     /// <summary>单个分类页的缓存结构，保存分类标题、显示顺序和快速查找字典。</summary>
     private sealed record CategoryEntry(
         string Title,
-        List<DataMeta> Metas,
-        Dictionary<string, DataMeta> MetaByKey
+        List<DataDefinition> Metas,
+        Dictionary<string, DataDefinition> MetaByKey
     );
 
     /// <summary>Feature 调试服务，用于临时 Modifier 的挂载、读取与清理。</summary>
@@ -152,38 +152,43 @@ public partial class AttributeTestModule : TestModuleBase
     /// </summary>
     private void BuildCategoryData()
     {
-        AddCategory("生命", DataCategory_Attribute.Health);
-        AddCategory("魔法", DataCategory_Attribute.Mana);
-        AddCategory("攻击", DataCategory_Attribute.Attack);
-        AddCategory("防御", DataCategory_Attribute.Defense);
-        AddCategory("技能", DataCategory_Attribute.Skill);
-        AddCategory("移动", DataCategory_Attribute.Movement);
-        AddCategory("闪避", DataCategory_Attribute.Dodge);
-        AddCategory("暴击", DataCategory_Attribute.Crit);
-        AddCategory("资源", DataCategory_Attribute.Resource);
-        AddCategory("状态", DataCategory_Unit.State);
-        AddCategory("恢复控制", DataCategory_Unit.Recovery);
+        var catalog = DataRuntimeBootstrap.Default.Catalog;
+        AddCategory(catalog, "生命", "BaseHp", "HpBonus", "CurrentHp", "BaseHpRegen", "HpRegenBonus", "PercentHpRegen", "LifeSteal");
+        AddCategory(catalog, "魔法", "BaseMana", "ManaBonus", "CurrentMana", "BaseManaRegen", "ManaRegenBonus", "PercentManaRegen");
+        AddCategory(catalog, "攻击", "BaseAttack", "AttackBonus", "BaseAttackSpeed", "AttackSpeedBonus", "AttackRange", "AttackWindUpTime", "AttackRecoveryTime", "Knockback", "DamageAmplification", "Penetration");
+        AddCategory(catalog, "防御", "BaseDefense", "DefenseBonus", "DamageReduction", "DamageTakenMultiplier", "Shield", "Thorns", "Armor", "InvincibilityTime");
+        AddCategory(catalog, "技能", "AbilityDamage", "AbilityDamageBonus", "CooldownReduction", "AbilityCooldown", "AbilityCostAmount", "AbilityCastRange", "AbilityEffectRadius");
+        AddCategory(catalog, "移动", "MoveSpeed", "MoveSpeedBonus", "FollowSpeed", "StopDistance", "Velocity", "VelocityOverride", "VelocityImpulse", "IsMovementLocked");
+        AddCategory(catalog, "闪避", "DodgeChance");
+        AddCategory(catalog, "暴击", "CritRate", "CritDamage");
+        AddCategory(catalog, "资源", "PickupRange", "ExpGain", "LuckBonus", "MagnetSpeed", "MagnetEnabled");
+        AddCategory(catalog, "状态", "IsDead", "IsInvulnerable", "IsImmune", "IsStunned", "IsInvisible", "AttackState", "LifecycleState", "DeathType", "CanRevive", "DeathCount", "MaxLifeTime");
+        AddCategory(catalog, "恢复控制", "IsDisableHealthRecovery", "IsDisableManaRecovery", "StatusCanThink", "StatusCanMoveInput", "StatusCanAttack", "StatusCanCast", "StatusIsInvulnerable", "StatusIsControlImmune");
     }
 
     /// <summary>
-    /// 将某个分类中可编辑的 DataMeta 收集进缓存。
+    /// 将某个分类中可编辑的 descriptor 定义收集进缓存。
     /// <para>
     /// 只保留真正适合在运行时调试面板直接修改的元数据，避免把计算项或不可编辑项放进界面。
     /// </para>
     /// </summary>
-    private void AddCategory(string title, Enum category)
+    private void AddCategory(DataDefinitionCatalog catalog, string title, params string[] stableKeys)
     {
-        var metas = DataRegistry.GetCachedMetaByCategory(category)
-            .Where(IsEditableMeta)
-            .OrderBy(meta => meta.DisplayName)
-            .ToList();
+        var metas = new List<DataDefinition>();
+        foreach (var stableKey in stableKeys)
+        {
+            if (catalog.TryGet(stableKey, out var definition) && IsEditableDefinition(definition))
+            {
+                metas.Add(definition);
+            }
+        }
 
         if (metas.Count == 0)
         {
             return;
         }
 
-        var metaByKey = new Dictionary<string, DataMeta>(StringComparer.Ordinal);
+        var metaByKey = new Dictionary<string, DataDefinition>(StringComparer.Ordinal);
         foreach (var meta in metas)
         {
             metaByKey[GetMetaKey(meta)] = meta;
@@ -198,14 +203,14 @@ public partial class AttributeTestModule : TestModuleBase
     /// 计算项、不可枚举的复杂类型等不会出现在调试面板中。
     /// </para>
     /// </summary>
-    private static bool IsEditableMeta(DataMeta meta)
+    private static bool IsEditableDefinition(DataDefinition definition)
     {
-        if (meta.IsComputed)
+        if (definition.IsComputed || definition.WritePolicy == DataWritePolicy.ComputedReadonly)
         {
             return false;
         }
 
-        return meta.IsBoolean || meta.IsNumeric || meta.IsEnum || meta.IsString || meta.HasOptions;
+        return IsBoolean(definition) || IsNumeric(definition) || IsEnum(definition) || IsString(definition) || definition.AllowedValues.Count > 0;
     }
 
     private void CacheUiNodes()
@@ -241,7 +246,7 @@ public partial class AttributeTestModule : TestModuleBase
     /// 上层负责标题、键名与分割线；下层由 CreateEditor 按数据类型生成真正的编辑控件。
     /// </para>
     /// </summary>
-    private AttributeEditorRow CreateEditorRow(DataMeta meta)
+    private AttributeEditorRow CreateEditorRow(DataDefinition meta)
     {
         var metaKey = GetMetaKey(meta);
         var row = TestSceneHelper.InstantiateScene<AttributeEditorRow>(_editorRowScene, nameof(AttributeEditorRow));
@@ -274,7 +279,7 @@ public partial class AttributeTestModule : TestModuleBase
     /// <summary>
     /// 为支持 Modifier 的数值属性创建临时 Feature 调试控件。
     /// </summary>
-    private Control? CreateTemporaryModifierEditor(DataMeta meta)
+    private Control? CreateTemporaryModifierEditor(DataDefinition meta)
     {
         if (selectedEntity == null || !SupportsTemporaryModifier(meta))
         {
@@ -287,7 +292,7 @@ public partial class AttributeTestModule : TestModuleBase
         editor.ConfigureRange(
             meta.MinValue.HasValue ? -meta.MinValue.Value - 9999 : -999999,
             meta.MaxValue ?? 999999,
-            meta.IsInteger ? 1 : 0.1);
+            IsInteger(meta) ? 1 : 0.1);
         editor.Value = modifierValue;
         editor.BindApply(() =>
         {
@@ -300,7 +305,7 @@ public partial class AttributeTestModule : TestModuleBase
                 selectedEntity,
                 GetMetaKey(meta),
                 GetMetaDisplayName(meta),
-                meta.IsPercentage,
+                IsPercentage(meta),
                 (float)editor.Value);
             _entityHintLabel.Text = result.Message;
             RequestPatch(GetMetaKey(meta));
@@ -324,19 +329,19 @@ public partial class AttributeTestModule : TestModuleBase
     }
 
     /// <summary>
-    /// 创建单个 DataMeta 的编辑控件。
+    /// 创建单个 descriptor 定义的编辑控件。
     /// <para>
     /// 会根据元数据类型自动生成 CheckButton、OptionButton、SpinBox 或 LineEdit。
     /// </para>
     /// </summary>
-    private Control? CreateEditor(DataMeta meta)
+    private Control? CreateEditor(DataDefinition meta)
     {
         if (selectedEntity == null)
         {
             return null;
         }
 
-        if (meta.IsBoolean)
+        if (IsBoolean(meta))
         {
             var toggle = TestSceneHelper.InstantiateScene<CheckButton>(_checkEditorScene, nameof(CheckButton));
             toggle.ButtonPressed = selectedEntity.Data.Get<bool>(GetMetaKey(meta));
@@ -349,61 +354,53 @@ public partial class AttributeTestModule : TestModuleBase
             return toggle;
         }
 
-        if (meta.IsEnum)
+        if (meta.AllowedValues.Count > 0)
         {
             var option = TestSceneHelper.InstantiateScene<OptionButton>(_optionEditorScene, nameof(OptionButton));
-            var values = Enum.GetValues(meta.Type);
-            var currentValue = selectedEntity.Data.Get<int>(GetMetaKey(meta));
+            var currentValue = selectedEntity.Data.Get<string>(GetMetaKey(meta));
             int selectedIndex = 0;
-            int index = 0;
-            foreach (var value in values)
+            for (var index = 0; index < meta.AllowedValues.Count; index++)
             {
-                option.AddItem(value?.ToString() ?? string.Empty);
-                if (Convert.ToInt32(value) == currentValue)
+                var value = meta.AllowedValues[index];
+                option.AddItem(string.IsNullOrWhiteSpace(value.Label) ? value.Value : value.Label);
+                if (string.Equals(value.Value, currentValue, StringComparison.Ordinal))
                 {
                     selectedIndex = index;
                 }
-
-                index++;
             }
 
             option.Selected = selectedIndex;
             option.ItemSelected += idx =>
             {
-                var rawValue = values.GetValue((int)idx);
-                if (rawValue != null)
+                if (idx >= 0 && idx < meta.AllowedValues.Count)
                 {
-                    ApplyMetaValue(meta, rawValue);
+                    ApplyMetaValue(meta, meta.AllowedValues[(int)idx].Value);
                 }
             };
             return option;
         }
 
-        if (meta.HasOptions)
+        if (IsEnum(meta))
         {
-            var option = TestSceneHelper.InstantiateScene<OptionButton>(_optionEditorScene, nameof(OptionButton));
-            for (int i = 0; i < meta.Options!.Count; i++)
-            {
-                option.AddItem(meta.Options[i]);
-            }
-
-            option.Selected = selectedEntity.Data.Get<int>(GetMetaKey(meta));
-            option.ItemSelected += idx => ApplyMetaValue(meta, (int)idx);
-            return option;
+            var lineEdit = TestSceneHelper.InstantiateScene<LineEdit>(_textEditorScene, nameof(LineEdit));
+            lineEdit.Text = selectedEntity.Data.Get<string>(GetMetaKey(meta));
+            lineEdit.TextSubmitted += text => ApplyMetaValue(meta, text);
+            lineEdit.FocusExited += () => ApplyMetaValue(meta, lineEdit.Text);
+            return lineEdit;
         }
 
-        if (meta.IsNumeric)
+        if (IsNumeric(meta))
         {
             var spin = TestSceneHelper.InstantiateScene<SpinBox>(_numericEditorScene, nameof(SpinBox));
             spin.MinValue = meta.MinValue ?? -999999;
             spin.MaxValue = meta.MaxValue ?? 999999;
-            spin.Step = meta.IsInteger ? 1 : 0.1;
-            spin.Value = meta.IsInteger
+            spin.Step = IsInteger(meta) ? 1 : 0.1;
+            spin.Value = IsInteger(meta)
                 ? selectedEntity.Data.Get<int>(GetMetaKey(meta))
                 : selectedEntity.Data.Get<float>(GetMetaKey(meta));
             spin.ValueChanged += value =>
             {
-                if (meta.IsInteger)
+                if (IsInteger(meta))
                 {
                     ApplyMetaValue(meta, (int)Math.Round(value));
                 }
@@ -415,7 +412,7 @@ public partial class AttributeTestModule : TestModuleBase
             return spin;
         }
 
-        if (meta.IsString)
+        if (IsString(meta))
         {
             var lineEdit = TestSceneHelper.InstantiateScene<LineEdit>(_textEditorScene, nameof(LineEdit));
             lineEdit.Text = selectedEntity.Data.Get<string>(GetMetaKey(meta));
@@ -430,15 +427,15 @@ public partial class AttributeTestModule : TestModuleBase
     /// <summary>
     /// 判断某个属性是否适合使用临时 Modifier 调试。
     /// </summary>
-    private static bool SupportsTemporaryModifier(DataMeta meta)
+    private static bool SupportsTemporaryModifier(DataDefinition meta)
     {
-        return meta.IsNumeric && meta.SupportModifiers == true && !meta.IsComputed;
+        return IsNumeric(meta) && meta.ModifierPolicy != DataModifierPolicy.None && !meta.IsComputed;
     }
 
     /// <summary>
     /// 获取元数据的稳定展示名称。
     /// </summary>
-    private static string GetMetaDisplayName(DataMeta meta)
+    private static string GetMetaDisplayName(DataDefinition meta)
     {
         var metaKey = GetMetaKey(meta);
         return string.IsNullOrWhiteSpace(meta.DisplayName) ? metaKey : meta.DisplayName;
@@ -447,7 +444,34 @@ public partial class AttributeTestModule : TestModuleBase
     /// <summary>
     /// 获取元数据的键名。
     /// </summary>
-    private static string GetMetaKey(DataMeta meta) => meta.Key;
+    private static string GetMetaKey(DataDefinition meta) => meta.StableKey;
+
+    private static bool IsBoolean(DataDefinition definition) => definition.ValueType == DataValueType.Bool;
+
+    private static bool IsEnum(DataDefinition definition) => definition.ValueType == DataValueType.Enum;
+
+    private static bool IsString(DataDefinition definition)
+    {
+        return definition.ValueType is DataValueType.String or DataValueType.StringArray or DataValueType.ObjectRef or DataValueType.ModifierList;
+    }
+
+    private static bool IsNumeric(DataDefinition definition)
+    {
+        return definition.ValueType is DataValueType.Int or DataValueType.Float or DataValueType.Double;
+    }
+
+    private static bool IsInteger(DataDefinition definition) => definition.ValueType == DataValueType.Int;
+
+    private static bool IsFloatingPoint(DataDefinition definition)
+    {
+        return definition.ValueType is DataValueType.Float or DataValueType.Double;
+    }
+
+    private static bool IsPercentage(DataDefinition definition)
+    {
+        return string.Equals(definition.Unit, "%", StringComparison.Ordinal) ||
+               definition.Format.Contains("%", StringComparison.Ordinal);
+    }
 
     private static Control CreateInlineErrorLabel(string message)
     {
@@ -467,7 +491,7 @@ public partial class AttributeTestModule : TestModuleBase
     /// </summary>
     /// <param name="meta">属性元数据。</param>
     /// <param name="value">UI 编辑后的原始值。</param>
-    private void ApplyMetaValue(DataMeta meta, object value)
+    private void ApplyMetaValue(DataDefinition meta, object value)
     {
         if (selectedEntity == null)
         {
@@ -475,30 +499,30 @@ public partial class AttributeTestModule : TestModuleBase
         }
 
         var metaKey = GetMetaKey(meta);
-        if (metaKey == GetMetaKey(DataKey.CurrentHp))
+        if (metaKey == DataKey.CurrentHp.Key)
         {
             var maxHp = selectedEntity.Data.Get<float>(DataKey.FinalHp.Key);
             value = Mathf.Clamp(Convert.ToSingle(value), 0f, maxHp);
         }
-        else if (metaKey == GetMetaKey(DataKey.CurrentMana))
+        else if (metaKey == DataKey.CurrentMana.Key)
         {
             var maxMana = selectedEntity.Data.Get<float>(DataKey.FinalMana.Key);
             value = Mathf.Clamp(Convert.ToSingle(value), 0f, maxMana);
         }
 
-        if (meta.IsInteger)
+        if (IsInteger(meta))
         {
             selectedEntity.Data.Set(metaKey, Convert.ToInt32(value));
         }
-        else if (meta.IsFloatingPoint)
+        else if (IsFloatingPoint(meta))
         {
             selectedEntity.Data.Set(metaKey, Convert.ToSingle(value));
         }
-        else if (meta.IsBoolean)
+        else if (IsBoolean(meta))
         {
             selectedEntity.Data.Set(metaKey, Convert.ToBoolean(value));
         }
-        else if (meta.IsString)
+        else if (IsString(meta))
         {
             selectedEntity.Data.Set(metaKey, Convert.ToString(value) ?? string.Empty);
         }
@@ -527,7 +551,7 @@ public partial class AttributeTestModule : TestModuleBase
             return null;
         }
 
-        if (key == GetMetaKey(DataKey.BaseHp) || key == GetMetaKey(DataKey.HpBonus))
+        if (key == DataKey.BaseHp.Key || key == DataKey.HpBonus.Key)
         {
             var currentHp = selectedEntity.Data.Get<float>(DataKey.CurrentHp.Key);
             var maxHp = selectedEntity.Data.Get<float>(DataKey.FinalHp.Key);
@@ -538,7 +562,7 @@ public partial class AttributeTestModule : TestModuleBase
             }
         }
 
-        if (key == GetMetaKey(DataKey.BaseMana) || key == GetMetaKey(DataKey.ManaBonus))
+        if (key == DataKey.BaseMana.Key || key == DataKey.ManaBonus.Key)
         {
             var currentMana = selectedEntity.Data.Get<float>(DataKey.CurrentMana.Key);
             var maxMana = selectedEntity.Data.Get<float>(DataKey.FinalMana.Key);

@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 /// <para>沿基准前进方向推进并叠加横向正弦偏移，形成蛇形弹道。OnEnter 锁定方向和速度，防止波动分量污染后续计算。</para>
 /// <para>
 /// <list type="bullet">
-/// <item><c>ActionSpeed</c>（float，推荐）：前进速度（像素/秒）；也可不设此值，由 DataKey.Velocity 初始长度决定。</item>
+/// <item><c>ActionSpeed</c>（float，推荐）：前进速度（像素/秒）；也可不设此值，由 GeneratedDataKey.Velocity 初始长度决定。</item>
 /// <item><c>WaveAmplitude</c>（float，像素）：横向振幅，默认 50。</item>
 /// <item><c>WaveAmplitudeScalarDriver</c>（可选）：振幅驱动参数；<c>null</c> = 不驱动，保持 <c>WaveAmplitude</c> 常量。</item>
 /// <item><c>WaveFrequency</c>（float，周期/秒）：波动频率，默认 2。</item>
@@ -85,7 +85,7 @@ public class SineWaveStrategy : IMovementStrategy
     public void OnEnter(IEntity entity, Data data, in MovementParams @params)
     {
         // 获取初始速度向量（用于速度 fallback）
-        Vector2 initVelocity = data.Get<Vector2>(DataKey.Velocity);
+        Vector2 initVelocity = data.Get<Vector2>(GeneratedDataKey.Velocity);
 
         // 初始方向由 Angle（度）确定：0=右、90=下、180=左，正值顺时针
         _baseDirection = Vector2.Right.Rotated(Mathf.DegToRad(@params.Angle));
@@ -146,7 +146,7 @@ public class SineWaveStrategy : IMovementStrategy
         Vector2 totalDisp = forwardDisp + sideDisp;
 
         // 更新速度向量（位移 / 时间）
-        data.Set(DataKey.Velocity, totalDisp / Mathf.Max(delta, 0.001f));
+        data.Set(GeneratedDataKey.Velocity, totalDisp / Mathf.Max(delta, 0.001f));
 
         // 朝向取正弦轨迹在“本帧末”的切线方向，而不是简单取位移纠偏方向
         Vector2 tangentDirection = WaveMath.EvaluateSineTangent(

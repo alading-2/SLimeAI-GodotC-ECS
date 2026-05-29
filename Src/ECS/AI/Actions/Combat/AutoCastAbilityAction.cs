@@ -30,8 +30,8 @@ public class AutoCastAbilityAction : BehaviorNode
         if (ability == null) return NodeState.Failure;
 
         // 施法前停止移动
-        ctx.Entity.Data.Set(DataKey.AIMoveDirection, Godot.Vector2.Zero);
-        ctx.Entity.Data.Set(DataKey.AIMoveSpeedMultiplier, 0f);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIMoveDirection, Godot.Vector2.Zero);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIMoveSpeedMultiplier, 0f);
 
         var castContext = new CastContext
         {

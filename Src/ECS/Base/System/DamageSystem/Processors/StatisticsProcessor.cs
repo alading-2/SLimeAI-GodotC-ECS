@@ -52,7 +52,7 @@ public class StatisticsProcessor : IDamageProcessor
         if (info.Victim is IEntity victim)
         {
             // 记录受害者在该波次受到的总伤害
-            victim.Data.Add(DataKey.WaveDamageTaken, info.FinalDamage);
+            victim.Data.Add(GeneratedDataKey.WaveDamageTaken, info.FinalDamage);
         }
 
         // 将统计结果写入伤害日志，方便调试
@@ -67,25 +67,25 @@ public class StatisticsProcessor : IDamageProcessor
     private void RecordDamageStats(Data data, DamageInfo info)
     {
         // 累加总伤害和当前波次伤害
-        data.Add(DataKey.TotalDamageDealt, info.FinalDamage);
-        data.Add(DataKey.WaveDamageDealt, info.FinalDamage);
+        data.Add(GeneratedDataKey.TotalDamageDealt, info.FinalDamage);
+        data.Add(GeneratedDataKey.WaveDamageDealt, info.FinalDamage);
 
         // 累加总命中次数和当前波次命中次数
-        data.Add(DataKey.TotalHits, 1);
-        data.Add(DataKey.WaveHits, 1);
+        data.Add(GeneratedDataKey.TotalHits, 1);
+        data.Add(GeneratedDataKey.WaveHits, 1);
 
         // 如果触发暴击，记录暴击次数
         if (info.IsCritical)
         {
-            data.Add(DataKey.TotalCriticalHits, 1);
-            data.Add(DataKey.WaveCriticalHits, 1);
+            data.Add(GeneratedDataKey.TotalCriticalHits, 1);
+            data.Add(GeneratedDataKey.WaveCriticalHits, 1);
         }
 
         // 更新单次最高伤害记录
-        float highest = data.Get<float>(DataKey.HighestSingleDamage);
+        float highest = data.Get<float>(GeneratedDataKey.HighestSingleDamage);
         if (info.FinalDamage > highest)
         {
-            data.Set(DataKey.HighestSingleDamage, info.FinalDamage);
+            data.Set(GeneratedDataKey.HighestSingleDamage, info.FinalDamage);
         }
     }
 }

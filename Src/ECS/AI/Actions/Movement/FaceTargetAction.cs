@@ -22,14 +22,14 @@ public class FaceTargetAction : BehaviorNode
     /// <inheritdoc/>
     public override NodeState Evaluate(AIContext ctx)
     {
-        var target = ctx.Entity.Data.Get<Node2D>(DataKey.TargetNode);
+        var target = ctx.Entity.Data.Get<Node2D>(GeneratedDataKey.TargetNode);
         if (target == null) return NodeState.Failure;
 
         var selfNode = ctx.Entity as Node2D;
         if (selfNode == null) return NodeState.Failure;
 
         Vector2 faceDir = (target.GlobalPosition - selfNode.GlobalPosition).Normalized();
-        ctx.Entity.Data.Set(DataKey.AIMoveDirection, faceDir);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIMoveDirection, faceDir);
 
         return NodeState.Success;
     }

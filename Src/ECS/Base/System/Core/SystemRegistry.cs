@@ -4,7 +4,7 @@ using System.Collections.Generic;
 /// <summary>
 /// 系统注册表。
 /// <para>进程级全局注册表，保存系统静态描述符（SystemId + Factory）。</para>
-/// <para>其他元数据从 DataNew SystemData 读取。</para>
+/// <para>其他元数据从 DataOS runtime table SystemData 读取。</para>
 /// </summary>
 public static class SystemRegistry
 {

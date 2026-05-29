@@ -154,7 +154,7 @@ public class ChargeStrategy : IMovementStrategy
                 return MovementUpdateResult.Complete();
         }
 
-        data.Set(DataKey.Velocity, _lockedDirection * _currentSpeed);
+        data.Set(GeneratedDataKey.Velocity, _lockedDirection * _currentSpeed);
         return MovementUpdateResult.Continue(_currentSpeed * delta);
     }
 

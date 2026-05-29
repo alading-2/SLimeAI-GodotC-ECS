@@ -33,7 +33,7 @@ public class MoveToTargetAction : BehaviorNode
     /// <inheritdoc/>
     public override NodeState Evaluate(AIContext ctx)
     {
-        var target = ctx.Entity.Data.Get<Node2D>(DataKey.TargetNode);
+        var target = ctx.Entity.Data.Get<Node2D>(GeneratedDataKey.TargetNode);
         if (target == null) return NodeState.Failure;
 
         var selfNode = ctx.Entity as Node2D;
@@ -47,8 +47,8 @@ public class MoveToTargetAction : BehaviorNode
             float stopRange = ctx.Entity.Data.Get<float>(_stopRangeKey);
             if (distance <= stopRange)
             {
-                ctx.Entity.Data.Set(DataKey.AIMoveDirection, Vector2.Zero);
-                ctx.Entity.Data.Set(DataKey.AIMoveSpeedMultiplier, 0.0f);
+                ctx.Entity.Data.Set(GeneratedDataKey.AIMoveDirection, Vector2.Zero);
+                ctx.Entity.Data.Set(GeneratedDataKey.AIMoveSpeedMultiplier, 0.0f);
                 return NodeState.Success;
             }
         }
@@ -57,11 +57,11 @@ public class MoveToTargetAction : BehaviorNode
         Vector2 direction = (target.GlobalPosition - selfNode.GlobalPosition).Normalized();
 
         // 通过 DataKey 设置移动意图
-        ctx.Entity.Data.Set(DataKey.AIMoveDirection, direction);
-        ctx.Entity.Data.Set(DataKey.AIMoveSpeedMultiplier, 1.0f);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIMoveDirection, direction);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIMoveSpeedMultiplier, 1.0f);
 
         // 更新 AI 状态标记
-        ctx.Entity.Data.Set(DataKey.AIState, AIState.Chasing);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIState, AIState.Chasing);
 
         return NodeState.Running;
     }

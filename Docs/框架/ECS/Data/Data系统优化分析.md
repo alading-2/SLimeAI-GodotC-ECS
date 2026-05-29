@@ -9,7 +9,7 @@
 
 - `DataMeta` 已合并展示字段与运行时约束字段
 - 主域 `DataKey` 已升级为 `static readonly DataMeta`
-- Config 默认值已统一改为 `DataKey.Xxx.DefaultValue` 直读
+- Config 默认值已统一改为 `descriptor default value` 直读
 - `Data/` 与 `Src/ECS/Base/Data/` 的分工已重新整理
 
 ## 仍然有效的历史结论
@@ -25,7 +25,7 @@
 - 如果你要了解 **运行时代码怎么写**，看 `DocsAI/Modules/Data.md`
 - 如果你要了解 **Data 目录下的配置、DataKey、EventType 怎么组织**，看：
   - `Data/README.md`
-  - `Data/Data/README.md`
+  - `DataOS removed legacy Data/README.md`
   - `Data/DataKey/README.md`
 
 ## 说明

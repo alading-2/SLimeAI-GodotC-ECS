@@ -38,7 +38,7 @@ dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj
 - `Src/UI`: UI 界面
 - `Src/ECS/Entity`: 游戏实体
 - `Src/ECS/Component`: 基础组件
-- `Data/Data/Resources`: 游戏数据配置
+- `Data/Config/System/*/Resource`: 系统配置资源
 
 ### 排除路径 (`ExcludePaths`)
 
@@ -48,7 +48,7 @@ dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj
 
 ## 📂 自动分类逻辑
 
-1. **配置优先**: 位于 `Data/Data/Resources` 下的 `.tres` 文件。
+1. **配置优先**: 位于 `Data/Config/System/*/Resource` 下的 `.tres` 文件。
 2. **路径匹配**: 
    - `res://Src/ECS/UI/` -> `UI`
    - `res://Src/ECS/Base/Entity/` -> `Entity`

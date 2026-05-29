@@ -29,7 +29,7 @@ namespace Slime.Test.SystemCore
                 TestSystemRunCondition();
                 TestGameplayRunConditionPreset();
                 TestSystemRunConditionTreatsNoneAsUnrestricted();
-                TestDataNewSystemCollectionsDoNotContainNull();
+                TestDataOsRuntimeTableSystemCollectionsDoNotContainNull();
                 TestSystemConfigPresetCalculatesEnabledSystems();
                 TestCoreSystemDescriptorsRegistered();
                 TestRequiredSystemCannotBeDisabledOrRemoved();
@@ -206,7 +206,7 @@ namespace Slime.Test.SystemCore
             AssertEqual("None 运行条件应表示不限制", true, condition.Evaluate(pausedMenuSnapshot));
         }
 
-        private void TestDataNewSystemCollectionsDoNotContainNull()
+        private void TestDataOsRuntimeTableSystemCollectionsDoNotContainNull()
         {
             foreach (var config in slime.data.Systems.SystemData.All)
             {

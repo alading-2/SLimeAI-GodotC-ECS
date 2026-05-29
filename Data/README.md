@@ -9,7 +9,7 @@
 - **`Data/`**：负责数据目录结构、配置、typed 键定义与事件协议。
   - 例如：有哪些配置字段、有哪些 `DataKey<T>`、有哪些事件类型、某个配置默认值是多少。
 
-> 迁移方向：`DataOS/` 已是唯一 authoring 真相源，`Data/DataNew` 仅保留 DTO / API 外壳，运行时只读 `DataOS/Snapshots/runtime_snapshot.json`。
+> 迁移方向：`DataOS/` 已是唯一 authoring 真相源，`Data/DataOS runtime table` 仅保留 DTO / API 外壳，运行时只读 `DataOS/Snapshots/runtime_snapshot.json`。
 
 ## 当前目录职责
 
@@ -21,14 +21,14 @@
 - **典型内容**：波次配置、Spawn 全局规则、全局开关、系统阈值。
 - **特点**：更偏“系统配置”，不是 Entity 运行时状态，不直接等同于 `Data` 容器内容。
 
-### 2. `DataNew/`
+### 2. `DataOS runtime table/`
 
 **运行时 DTO 外壳路径**。
 
 - **用途**：保留旧调用面需要的 `XxxData.Get(name)`、`All` 和命名快捷属性。
 - **典型内容**：`AbilityData`、`EnemyData`、`PlayerData`、`TargetingIndicatorData`、`SystemData`、`SystemPresetData`。
 - **核心职责**：从 `DataOS/Snapshots/runtime_snapshot.json` 读取 DTO，不再承载 authoring 静态实例。
-- **详细说明**：见 [`Data/DataNew/README.md`](DataNew/README.md)
+- **详细说明**：见 [`Data/DataOS runtime table/README.md`](DataOS runtime table/README.md)
 
 ### 3. `Data/`
 
@@ -37,7 +37,7 @@
 - **用途**：保留旧 Resource/Config 类、DataKey 定义和运行时系统对接代码。
 - **典型内容**：`UnitConfig`、`PlayerConfig`、`EnemyConfig`、技能执行器、DataKey、EventType。
 - **核心职责**：历史输入和运行时协议，不再作为 authoring 真相源。
-- **详细说明**：见 [`Data/Data/README.md`](Data/README.md)
+- **详细说明**：见 [`DataOS removed legacy Data/README.md`](Data/README.md)
 
 ### 4. `DataKey/`
 
@@ -80,7 +80,7 @@
 
 1. 先在 `Data/DataKey/` 对应域中定义 `DataKey<T>`。
 2. 再在 `DataOS/Schema/` 和 `DataOS/Authoring/` 中补齐 authoring 列。
-3. `Data/DataNew/` 只保留 DTO 属性，运行时从 snapshot 注入到 Entity 的 `Data` 容器。
+3. `Data/DataOS runtime table/` 只保留 DTO 属性，运行时从 snapshot 注入到 Entity 的 `Data` 容器。
 
 ### 新增一个系统级规则
 
@@ -95,7 +95,7 @@
 ## 维护规则
 
 - **不要**把运行时业务逻辑写进 `Data/`。
-- **不要**在 `Data/Data/` 里重复定义 `DataKey`。
+- **不要**在 `DataOS removed legacy Data/` 里重复定义 `DataKey`。
 - **不要**新增 `const string` DataKey（特殊引用键除外）。
 - **优先使用** `[DataKey(nameof(DataKey.Xxx))]`，避免字符串字面量。
-- **系统配置**由 `DataOS/` 驱动并通过 `DataNew/System/` 暴露运行时外壳，**可注入 Data 的配置**同样先写 `DataOS/`，**键定义**放 `DataKey/`，**事件契约**放 `EventType/`。
+- **系统配置**由 `DataOS/` 驱动并通过 `DataOS runtime table/System/` 暴露运行时外壳，**可注入 Data 的配置**同样先写 `DataOS/`，**键定义**放 `DataKey/`，**事件契约**放 `EventType/`。

@@ -37,7 +37,7 @@ public enum DeathType
 /// 设计原则：
 /// - 单一职责：只管理生命周期状态
 /// - 不直接修改 HP：委托 HealthComponent
-/// - 不直接管理状态标记：通过 Data 系统 (DataKey.IsDead 等)
+/// - 不直接管理状态标记：通过 Data 系统 (GeneratedDataKey.IsDead 等)
 /// - 事件驱动：通过 EventBus 通知状态变化
 /// </summary>
 public partial class LifecycleComponent : Node, IComponent
@@ -47,19 +47,19 @@ public partial class LifecycleComponent : Node, IComponent
     // ================= 状态 =================
 
     /// <summary> 当前生命周期状态 </summary>
-    public LifecycleState State => _data.Get<LifecycleState>(DataKey.LifecycleState);
+    public LifecycleState State => _data.Get<LifecycleState>(GeneratedDataKey.LifecycleState);
 
     /// <summary> 死亡类型 </summary>
-    public DeathType DeathType => _data.Get<DeathType>(DataKey.DeathType);
+    public DeathType DeathType => _data.Get<DeathType>(GeneratedDataKey.DeathType);
 
     /// <summary> 是否可以复活 </summary>
-    public bool CanRevive => _data.Get<bool>(DataKey.CanRevive);
+    public bool CanRevive => _data.Get<bool>(GeneratedDataKey.CanRevive);
 
     /// <summary> 死亡次数 </summary>
-    public int DeathCount => _data.Get<int>(DataKey.DeathCount);
+    public int DeathCount => _data.Get<int>(GeneratedDataKey.DeathCount);
 
     /// <summary> 最大生存时间（秒），-1 表示永久 </summary>
-    public float MaxLifeTime => _data.Get<float>(DataKey.MaxLifeTime);
+    public float MaxLifeTime => _data.Get<float>(GeneratedDataKey.MaxLifeTime);
 
     // ================= 配置 =================
 
@@ -119,7 +119,7 @@ public partial class LifecycleComponent : Node, IComponent
     /// </summary>
     private void OnDataChanged(GameEventType.Data.PropertyChanged data)
     {
-        if (data.Key == DataKey.MaxLifeTime)
+        if (data.Key == GeneratedDataKey.MaxLifeTime)
         {
             UpdateLifeTimer();
         }
@@ -218,7 +218,7 @@ public partial class LifecycleComponent : Node, IComponent
 
         var oldState = State;
         // ✅ 通过 Data 修改状态（符合纯数据驱动规范）
-        _data.Set(DataKey.LifecycleState, newState);
+        _data.Set(GeneratedDataKey.LifecycleState, newState);
 
         _log.Debug($"状态变化: {oldState} -> {newState}");
 
@@ -241,15 +241,15 @@ public partial class LifecycleComponent : Node, IComponent
         if (!StateIsAlive()) return;
 
         // ✅ 通过 Data 记录死亡类型（符合纯数据驱动规范）
-        _data?.Set(DataKey.DeathType, deathType);
-        _data?.Add(DataKey.DeathCount, 1);
+        _data?.Set(GeneratedDataKey.DeathType, deathType);
+        _data?.Add(GeneratedDataKey.DeathCount, 1);
         ChangeState(LifecycleState.Dead);
 
         // 在 Data 容器中同步死亡标记，供无状态系统（如渲染器）查询
-        _data?.Set(DataKey.IsDead, true);
+        _data?.Set(GeneratedDataKey.IsDead, true);
 
         // 将 HP 归零
-        _data?.Set(DataKey.CurrentHp, 0f);
+        _data?.Set(GeneratedDataKey.CurrentHp, 0f);
 
         _log.Info($"单位死亡, 类型: {deathType}");
 
@@ -341,10 +341,10 @@ public partial class LifecycleComponent : Node, IComponent
             .OnCountdown((elapsed, progress) =>
             {
                 // 随着复活进度增加，逐步恢复血量并触发 HealthChanged 事件让血条 UI 更新
-                float maxHp = _data.Get<float>(DataKey.FinalHp);
+                float maxHp = _data.Get<float>(GeneratedDataKey.FinalHp);
                 float newHp = maxHp * progress;
-                float oldHp = _data.Get<float>(DataKey.CurrentHp);
-                _data.Set(DataKey.CurrentHp, newHp);
+                float oldHp = _data.Get<float>(GeneratedDataKey.CurrentHp);
+                _data.Set(GeneratedDataKey.CurrentHp, newHp);
                 _entity?.Events.Emit(new GameEventType.Data.HealthChanged(oldHp, newHp));
             })
             .OnComplete(CompleteRevive); // 计时结束，完成复活
@@ -357,20 +357,20 @@ public partial class LifecycleComponent : Node, IComponent
     private void CompleteRevive()
     {
         // 1. 恢复至满血，触发 HealthChanged 事件通知 UI 更新
-        float oldHp = _data.Get<float>(DataKey.CurrentHp);
-        float fullHp = _data.Get<float>(DataKey.FinalHp);
-        _data.Set(DataKey.CurrentHp, fullHp);
+        float oldHp = _data.Get<float>(GeneratedDataKey.CurrentHp);
+        float fullHp = _data.Get<float>(GeneratedDataKey.FinalHp);
+        _data.Set(GeneratedDataKey.CurrentHp, fullHp);
         _entity?.Events.Emit(new GameEventType.Data.HealthChanged(oldHp, fullHp));
 
         // 2. 清除死亡标记
-        _data.Set(DataKey.IsDead, false);
+        _data.Set(GeneratedDataKey.IsDead, false);
 
         // 3. 应用复活后的短暂无敌保护（防止复活瞬间被围攻致死）
         if (ReviveInvulnerabilityDuration > 0)
         {
-            _data?.Set(DataKey.IsInvulnerable, true);
+            _data?.Set(GeneratedDataKey.IsInvulnerable, true);
             TimerManager.Instance?.Delay(ReviveInvulnerabilityDuration)
-                .OnComplete(() => _data?.Set(DataKey.IsInvulnerable, false));
+                .OnComplete(() => _data?.Set(GeneratedDataKey.IsInvulnerable, false));
         }
 
         // 4. 回到存活状态

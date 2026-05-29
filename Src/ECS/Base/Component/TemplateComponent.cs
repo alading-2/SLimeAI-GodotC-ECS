@@ -29,14 +29,14 @@ public partial class TemplateComponent : Node, IComponent
 
     // 【强制】使用 DataKey 常量访问数据，禁止使用字符串字面量
     // ❌ 错误：_data.Get<float>("CurrentHp")
-    // ✅ 正确：_data.Get<float>(DataKey.CurrentHp)
+    // ✅ 正确：_data.Get<float>(GeneratedDataKey.CurrentHp)
 
     // 属性读取示例：
-    // public float CurrentHp => _data.Get<float>(DataKey.CurrentHp);
+    // public float CurrentHp => _data.Get<float>(GeneratedDataKey.CurrentHp);
 
     // 属性写入示例（在方法中使用，不要直接赋值属性）：
-    // _data.Set(DataKey.CurrentHp, 80f);
-    // _data.Add(DataKey.Score, 10);
+    // _data.Set(GeneratedDataKey.CurrentHp, 80f);
+    // _data.Add(GeneratedDataKey.Score, 10);
 
     // 固定配置示例（无需存 Data）：
     // public float ReviveDuration { get; set; } = Config.HeroReviveTime;
@@ -46,7 +46,7 @@ public partial class TemplateComponent : Node, IComponent
     // private float _accumulatedAngle;
 
     // 对外共享结果示例（必须存 Data）：
-    // _data.Set(DataKey.MovementFacingDirection, facingDirection);
+    // _data.Set(GeneratedDataKey.MovementFacingDirection, facingDirection);
 
     // ================= IComponent 实现 =================
 
@@ -111,7 +111,7 @@ public partial class TemplateComponent : Node, IComponent
     /// </summary>
     private void OnDataChanged(GameEventType.Data.PropertyChanged evt)
     {
-        if (evt.Key != DataKey.Name) return;
+        if (evt.Key != GeneratedDataKey.Name) return;
 
         // 响应数据变化
     }

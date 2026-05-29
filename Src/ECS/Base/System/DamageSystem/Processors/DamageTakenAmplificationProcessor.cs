@@ -15,7 +15,7 @@ public class DamageTakenAmplificationProcessor : IDamageProcessor
 
         // 默认为 1.0 (100%)
         // 如果 < 1.0 表示减伤，> 1.0 表示易伤
-        float multiplier = victimEntity.Data.Get<float>(DataKey.DamageTakenMultiplier, 1.0f);
+        float multiplier = victimEntity.Data.Get<float>(GeneratedDataKey.DamageTakenMultiplier, 1.0f);
         _log.Debug($"[DamageTakenAmplificationProcessor] multiplier={multiplier}, FinalDamage前={info.FinalDamage}");
 
         if (multiplier != 1.0f)

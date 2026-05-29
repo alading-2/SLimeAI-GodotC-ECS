@@ -33,7 +33,7 @@ TargetingManager 负责：
 - `Src/ECS/Base/System/AbilitySystem/AbilityImpactTool.cs`
 - `Src/ECS/Base/System/AbilitySystem/AbilityTool.cs`
 - `Src/ECS/Base/System/TargetingSystem/`
-- `Data/DataNew/Ability/AbilityData.cs`
+- `Data/DataOS runtime table/Ability/AbilityData.cs`
 
 ## 数据 / 事件 / 生命周期
 

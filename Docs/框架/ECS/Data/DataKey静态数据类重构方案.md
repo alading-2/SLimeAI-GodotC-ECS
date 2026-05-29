@@ -13,7 +13,7 @@
 - `DataRegistry.Register()` 返回 `DataMeta`
 - `DataMeta` 支持隐式转换为 `string`
 - Config 上的 `[DataKey]` 参数改为 `nameof(DataKey.Xxx)`
-- Config 默认值直接使用 `DataKey.Xxx.DefaultValue`
+- Config 默认值直接使用 `descriptor default value`
 
 ## 仍然需要记住的约定
 
@@ -28,7 +28,7 @@ public static readonly DataMeta BaseHp = DataRegistry.Register(
 
 ```csharp
 [DataKey(nameof(DataKey.BaseHp))]
-[Export] public float BaseHp { get; set; } = (float)DataKey.BaseHp.DefaultValue!;
+[Export] public float BaseHp { get; set; } = 10f;
 ```
 
 ### 3. 主流键不要再新增 `const string`
@@ -39,7 +39,7 @@ public static readonly DataMeta BaseHp = DataRegistry.Register(
 
 - **当前 Data 系统整体说明** → [`DataSystem_Design.md`](./DataSystem_Design.md)
 - **Data 目录职责** → `Data/README.md`
-- **Config 映射规则** → `Data/Data/README.md`
+- **Config 映射规则** → `DataOS removed legacy Data/README.md`
 - **DataKey 定义规范** → `Data/DataKey/README.md`
 
 ## 保留本文件的原因

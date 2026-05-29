@@ -35,7 +35,7 @@ public partial class TargetingIndicatorControlComponent : Node, IComponent
         if (entity is IEntity iEntity)
         {
             _owner = iEntity;
-            _log.Debug($"TargetingIndicatorControlComponent 已注册到 {iEntity.Data.Get<string>(DataKey.Name)}");
+            _log.Debug($"TargetingIndicatorControlComponent 已注册到 {iEntity.Data.Get<string>(GeneratedDataKey.Name)}");
         }
     }
 
@@ -85,7 +85,7 @@ public partial class TargetingIndicatorControlComponent : Node, IComponent
         if (aimInput.LengthSquared() > 0.1f)
         {
             // 获取移动速度，若未配置则使用默认值
-            var moveSpeed = _owner!.Data.Get<float>(DataKey.FinalMoveSpeed);
+            var moveSpeed = _owner!.Data.Get<float>(GeneratedDataKey.FinalMoveSpeed);
 
             // 根据输入更新相对偏移量
             _relativeOffset += aimInput.Normalized() * moveSpeed * (float)delta;

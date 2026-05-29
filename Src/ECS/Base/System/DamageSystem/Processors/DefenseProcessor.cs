@@ -13,7 +13,7 @@ public class DefenseProcessor : IDamageProcessor
     {
 
         // if (info.Type == DamageType.True) return; // 真实伤害无视护甲
-        float armor = info.Victim.Data.Get<float>(DataKey.Armor);
+        float armor = info.Victim.Data.Get<float>(GeneratedDataKey.Armor);
         float originalDamage = info.FinalDamage;
         info.FinalDamage *= MyMath.CalculateArmorDamageMultiplier(armor);
         _log.Debug($"[DefenseProcessor] armor={armor}, multiplier={MyMath.CalculateArmorDamageMultiplier(armor):F4}, FinalDamage: {originalDamage} -> {info.FinalDamage}");

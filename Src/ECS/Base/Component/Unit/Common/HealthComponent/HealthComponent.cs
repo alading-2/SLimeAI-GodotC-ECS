@@ -27,10 +27,10 @@ public partial class HealthComponent : Node, IComponent
     // ================= 属性访问 =================
 
     /// <summary>当前生命值</summary>
-    public float CurrentHp => _data.Get<float>(DataKey.CurrentHp);
+    public float CurrentHp => _data.Get<float>(GeneratedDataKey.CurrentHp);
 
     /// <summary>最大生命值</summary>
-    public float MaxHp => _data.Get<float>(DataKey.FinalHp);
+    public float MaxHp => _data.Get<float>(GeneratedDataKey.FinalHp);
 
     /// <summary>生命值百分比 (0-1)</summary>
     public float HpPercent => MaxHp > 0 ? CurrentHp / MaxHp : 0f;
@@ -74,7 +74,7 @@ public partial class HealthComponent : Node, IComponent
         if (_data == null || _entity == null) return;
 
         // 死亡检测
-        if (_data.Get<bool>(DataKey.IsDead))
+        if (_data.Get<bool>(GeneratedDataKey.IsDead))
         {
             return;
         }
@@ -82,7 +82,7 @@ public partial class HealthComponent : Node, IComponent
         // 禁疗检测（复活来源可以绕过禁疗）
         if (source != HealSource.Revive)
         {
-            bool isHealingDisabled = _data.Get<bool>(DataKey.IsDisableHealthRecovery);
+            bool isHealingDisabled = _data.Get<bool>(GeneratedDataKey.IsDisableHealthRecovery);
             if (isHealingDisabled)
             {
                 _log.Debug("禁疗状态，治疗无效");
@@ -98,7 +98,7 @@ public partial class HealthComponent : Node, IComponent
         if (actualHeal <= 0) return;
 
         // 修改 HP
-        _data.Set(DataKey.CurrentHp, newHp);
+        _data.Set(GeneratedDataKey.CurrentHp, newHp);
 
         // 触发 HealthChanged 事件
         _entity.Events.Emit(new GameEventType.Data.HealthChanged(oldHp, newHp));
@@ -134,10 +134,10 @@ public partial class HealthComponent : Node, IComponent
         float newHp = Mathf.Max(0f, oldHp - amount);
 
         // 修改 HP
-        _data.Set(DataKey.CurrentHp, newHp);
+        _data.Set(GeneratedDataKey.CurrentHp, newHp);
 
         // 统计伤害
-        _data.Add(DataKey.TotalDamageTaken, amount);
+        _data.Add(GeneratedDataKey.TotalDamageTaken, amount);
 
         // 发送 HealthChanged 事件（供 UI 等使用）
         _entity.Events.Emit(new GameEventType.Data.HealthChanged(oldHp, newHp));
@@ -155,7 +155,7 @@ public partial class HealthComponent : Node, IComponent
         {
             _log.Debug("HP 归零，发送致死伤害事件");
             // 读取实体的配置死亡类型，默认为 Normal
-            var deathType = _data.Get<DeathType>(DataKey.DeathType);
+            var deathType = _data.Get<DeathType>(GeneratedDataKey.DeathType);
             // Killer 为 Attacker（直接攻击来源），统计归属通过关系链在 DamageStatisticsSystem 中处理
             var killData = new GameEventType.Unit.Killed(
                 Victim: _entity,

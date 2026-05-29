@@ -26,10 +26,10 @@ public partial class ChargeComponent : Node, IComponent
 
     // ================= 属性访问 =================
 
-    private AbilityType AbilityType => _data.Get<AbilityType>(DataKey.AbilityType);
-    private string AbilityName => _data.Get<string>(DataKey.Name);
-    private int CurrentCharges => _data.Get<int>(DataKey.AbilityCurrentCharges);
-    private int MaxCharges => _data.Get<int>(DataKey.AbilityMaxCharges);
+    private AbilityType AbilityType => _data.Get<AbilityType>(GeneratedDataKey.AbilityType);
+    private string AbilityName => _data.Get<string>(GeneratedDataKey.Name);
+    private int CurrentCharges => _data.Get<int>(GeneratedDataKey.AbilityCurrentCharges);
+    private int MaxCharges => _data.Get<int>(GeneratedDataKey.AbilityMaxCharges);
 
     // ================= IComponent 实现 =================
 
@@ -46,17 +46,17 @@ public partial class ChargeComponent : Node, IComponent
 
             // 检查是否启用了充能系统
             // 如果未启用，则不初始化充能数据，也不订阅事件
-            if (!_data.Get<bool>(DataKey.IsAbilityUsesCharges))
+            if (!_data.Get<bool>(GeneratedDataKey.IsAbilityUsesCharges))
             {
                 return;
             }
 
             // 初始化当前充能：如果未设置（默认值0），则自动填充到最大值
-            int maxCharges = _data.Get<int>(DataKey.AbilityMaxCharges);
-            int currentCharges = _data.Get<int>(DataKey.AbilityCurrentCharges);
+            int maxCharges = _data.Get<int>(GeneratedDataKey.AbilityMaxCharges);
+            int currentCharges = _data.Get<int>(GeneratedDataKey.AbilityCurrentCharges);
             if (currentCharges <= 0 && maxCharges > 0)
             {
-                _data.Set(DataKey.AbilityCurrentCharges, maxCharges);
+                _data.Set(GeneratedDataKey.AbilityCurrentCharges, maxCharges);
                 _log.Debug($"初始化充能: {AbilityName}, 充能数: {maxCharges}/{maxCharges}");
             }
 
@@ -146,8 +146,8 @@ public partial class ChargeComponent : Node, IComponent
 
         // 计算充能时间间隔 (应用冷却缩减)
         // 充能回复速度某种意义上也是冷却时间，但跟冷却时间是不同的概念
-        float baseChargeTime = _data.Get<float>(DataKey.AbilityChargeTime);
-        float reduction = _data.Get<float>(DataKey.CooldownReduction);
+        float baseChargeTime = _data.Get<float>(GeneratedDataKey.AbilityChargeTime);
+        float reduction = _data.Get<float>(GeneratedDataKey.CooldownReduction);
         float chargeTime = MyMath.CalculateFinalCooldownTime(baseChargeTime, reduction);
 
         // 如果充能时间间隔<=0，不启动充能恢复计时器
@@ -185,7 +185,7 @@ public partial class ChargeComponent : Node, IComponent
         if (actualAdd <= 0) return 0;
 
         int newCharges = CurrentCharges + actualAdd;
-        _data.Set(DataKey.AbilityCurrentCharges, newCharges);
+        _data.Set(GeneratedDataKey.AbilityCurrentCharges, newCharges);
 
         _log.Debug($"充能增加: {AbilityName}, +{actualAdd}, 当前: {newCharges}/{MaxCharges}");
 
@@ -234,7 +234,7 @@ public partial class ChargeComponent : Node, IComponent
 
         // 减少一次充能
         int newCharges = CurrentCharges - 1;
-        _data.Set(DataKey.AbilityCurrentCharges, newCharges);
+        _data.Set(GeneratedDataKey.AbilityCurrentCharges, newCharges);
 
         _log.Debug($"消耗充能: {AbilityName}, 剩余: {newCharges}/{MaxCharges}");
 
@@ -295,7 +295,7 @@ public partial class ChargeComponent : Node, IComponent
     {
         if (_data == null) return;
 
-        _data.Set(DataKey.AbilityCurrentCharges, MaxCharges);
+        _data.Set(GeneratedDataKey.AbilityCurrentCharges, MaxCharges);
 
         // 停止恢复计时
         StopChargeRecovery();

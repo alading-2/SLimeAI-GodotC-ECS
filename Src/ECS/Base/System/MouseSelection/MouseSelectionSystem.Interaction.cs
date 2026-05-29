@@ -330,7 +330,7 @@ public partial class MouseSelectionSystem
     private static string GetEntityStableId(IEntity entity)
     {
         // 优先使用 Data 中的业务 Id，保证排序在跨运行期或重复实例下也更稳定。
-        var id = entity.Data.Get<string>(DataKey.Id.Key);
+        var id = entity.Data.Get<string>(GeneratedDataKey.Id.Key);
         if (!string.IsNullOrEmpty(id))
         {
             return id;

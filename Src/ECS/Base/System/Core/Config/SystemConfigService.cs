@@ -6,7 +6,7 @@ using slime.data.Systems;
 /// <summary>
 /// 系统配置服务。
 /// <para>负责加载和解析系统配置，提供系统配置查询接口。</para>
-/// <para>只从 DataNew 纯 C# 系统表读取配置。</para>
+/// <para>只从 DataOS runtime table 纯 C# 系统表读取配置。</para>
 /// </summary>
 public static class SystemConfigService
 {
@@ -139,7 +139,7 @@ public static class SystemConfigService
             }
             else
             {
-                _log.Debug($"系统配置 {config.SystemId} 已由 DataNew 提供，跳过重复项");
+                _log.Debug($"系统配置 {config.SystemId} 已由 DataOS runtime table 提供，跳过重复项");
             }
 
             return;

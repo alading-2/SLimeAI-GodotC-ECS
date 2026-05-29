@@ -125,7 +125,7 @@ public partial class AttackComponent : Node, IComponent
 
         // 从实体数据中心读取攻击时长配置。
         // 若为 0，则该框架表现为即时判定的轻量模式。
-        float windUpTime = _data.Get<float>(DataKey.AttackWindUpTime);
+        float windUpTime = _data.Get<float>(GeneratedDataKey.AttackWindUpTime);
 
         // 发出 Started 通知，告知外部（如 UI 进度条、特效、AI 记录）攻击已正式进入准备阶段
         _entity.Events.Emit(new GameEventType.Attack.Started(target));
@@ -152,11 +152,11 @@ public partial class AttackComponent : Node, IComponent
     private void EnterWindUp(float windUpTime)
     {
         _state = AttackState.WindUp;
-        _data?.Set(DataKey.AttackState, AttackState.WindUp);
+        _data?.Set(GeneratedDataKey.AttackState, AttackState.WindUp);
         _log.Trace($"状态转换: Idle → WindUp (预计耗时: {windUpTime:F2}s)");
 
         // 触发动画播放：攻击间隔越大，对应的动画通常播放得越慢。
-        float attackInterval = _data.Get<float>(DataKey.AttackInterval);
+        float attackInterval = _data.Get<float>(GeneratedDataKey.AttackInterval);
 
         // 从可用动画列表中随机选择攻击动画（支持 attack1, attack2 等多个攻击动画）
         string attackAnim = SelectRandomAttackAnimation();
@@ -202,7 +202,7 @@ public partial class AttackComponent : Node, IComponent
         bool didHit = ExecuteDamage(_currentTarget);
 
         // 检查是否有后摇配置（例如挥大剑会有很大的硬直）
-        float recoveryTime = _data.Get<float>(DataKey.AttackRecoveryTime);
+        float recoveryTime = _data.Get<float>(GeneratedDataKey.AttackRecoveryTime);
 
         if (recoveryTime > 0f)
         {
@@ -222,7 +222,7 @@ public partial class AttackComponent : Node, IComponent
     private void EnterRecovery(float recoveryTime)
     {
         _state = AttackState.Recovery;
-        _data?.Set(DataKey.AttackState, AttackState.Recovery);
+        _data?.Set(GeneratedDataKey.AttackState, AttackState.Recovery);
         _log.Trace($"状态转换: WindUp → Recovery (收招硬直: {recoveryTime:F2}s)");
 
         // 取消前摇计时任务（虽然已经到期了，但 Cleanup 时逻辑更稳），设置新的收招计时任务
@@ -257,16 +257,16 @@ public partial class AttackComponent : Node, IComponent
         // 计算剩余冷却时间 = AttackInterval - WindUp - Recovery
         // 目的：让 AttackState 在整个攻击间隔内保持非 Idle，
         // 使得 AI 的 IsAttackReady（检查 AttackState==Idle）自然生效，无需外部 CD 计时器
-        float attackInterval = _data.Get<float>(DataKey.AttackInterval);
-        float windUpTime = _data.Get<float>(DataKey.AttackWindUpTime);
-        float recoveryTime = _data.Get<float>(DataKey.AttackRecoveryTime);
+        float attackInterval = _data.Get<float>(GeneratedDataKey.AttackInterval);
+        float windUpTime = _data.Get<float>(GeneratedDataKey.AttackWindUpTime);
+        float recoveryTime = _data.Get<float>(GeneratedDataKey.AttackRecoveryTime);
         float remainingCooldown = attackInterval - windUpTime - recoveryTime;
 
         if (remainingCooldown > 0.001f)
         {
             // 进入追加冷却阶段（复用 Recovery 状态，语义等同于「出完刀还没到下次攻击时机」）
             _state = AttackState.Recovery;
-            _data.Set(DataKey.AttackState, AttackState.Recovery);
+            _data.Set(GeneratedDataKey.AttackState, AttackState.Recovery);
 
             _phaseTimer?.Cancel();
             _phaseTimer = TimerManager.Instance.Delay(remainingCooldown)
@@ -285,7 +285,7 @@ public partial class AttackComponent : Node, IComponent
         var target = _currentTarget;
         CleanupTimers();
         _state = AttackState.Idle;
-        _data?.Set(DataKey.AttackState, AttackState.Idle);
+        _data?.Set(GeneratedDataKey.AttackState, AttackState.Idle);
         _currentTarget = null;
 
         _log.Trace($"攻击完结: → Idle (已上报 Finished 事件)");
@@ -303,7 +303,7 @@ public partial class AttackComponent : Node, IComponent
         var oldState = _state;
         CleanupTimers();
         _state = AttackState.Idle;
-        _data?.Set(DataKey.AttackState, AttackState.Idle);
+        _data?.Set(GeneratedDataKey.AttackState, AttackState.Idle);
         _currentTarget = null;
 
         _log.Trace($"攻击异常中断: {oldState} → Idle (原因: {reason})");
@@ -325,22 +325,22 @@ public partial class AttackComponent : Node, IComponent
         if (_data == null) return false;
 
         // 自身合规
-        if (_data.Get<bool>(DataKey.IsDead)) return false;
-        if (_data.Has(DataKey.StatusCanAttack) && !_data.Get<bool>(DataKey.StatusCanAttack)) return false;
-        if (_data.Get<bool>(DataKey.IsStunned)) return false;
+        if (_data.Get<bool>(GeneratedDataKey.IsDead)) return false;
+        if (_data.Has(GeneratedDataKey.StatusCanAttack) && !_data.Get<bool>(GeneratedDataKey.StatusCanAttack)) return false;
+        if (_data.Get<bool>(GeneratedDataKey.IsStunned)) return false;
 
         // 目标合规
         if (target == null || !GodotObject.IsInstanceValid(target)) return false;
 
         if (target is IEntity targetEntity)
         {
-            if (targetEntity.Data.Get<bool>(DataKey.IsDead)) return false;
+            if (targetEntity.Data.Get<bool>(GeneratedDataKey.IsDead)) return false;
         }
 
         // 物理距离合规
         if (_body != null)
         {
-            float attackRange = _data.Get<float>(DataKey.AttackRange);
+            float attackRange = _data.Get<float>(GeneratedDataKey.AttackRange);
             float distance = _body.GlobalPosition.DistanceTo(target.GlobalPosition);
             if (distance > attackRange) return false;
         }
@@ -360,19 +360,19 @@ public partial class AttackComponent : Node, IComponent
         }
 
         // 1. 检查自身状态突变
-        if (_data.Get<bool>(DataKey.IsDead))
+        if (_data.Get<bool>(GeneratedDataKey.IsDead))
         {
             CancelAttack(AttackCancelReason.SelfDead);
             return;
         }
 
-        if (_data.Has(DataKey.StatusCanAttack) && !_data.Get<bool>(DataKey.StatusCanAttack))
+        if (_data.Has(GeneratedDataKey.StatusCanAttack) && !_data.Get<bool>(GeneratedDataKey.StatusCanAttack))
         {
             CancelAttack(AttackCancelReason.SelfDisabled);
             return;
         }
 
-        if (_data.Get<bool>(DataKey.IsStunned))
+        if (_data.Get<bool>(GeneratedDataKey.IsStunned))
         {
             CancelAttack(AttackCancelReason.SelfDisabled);
             return;
@@ -386,7 +386,7 @@ public partial class AttackComponent : Node, IComponent
         }
 
         // 3. 检查目标生命状态
-        if (_currentTarget is IEntity targetEntity && targetEntity.Data.Get<bool>(DataKey.IsDead))
+        if (_currentTarget is IEntity targetEntity && targetEntity.Data.Get<bool>(GeneratedDataKey.IsDead))
         {
             CancelAttack(AttackCancelReason.TargetDead);
             return;
@@ -396,7 +396,7 @@ public partial class AttackComponent : Node, IComponent
         // （设计点：后摇期间由于伤害已经爆发，通常允许对方跑开而不需要打断收招动画）
         if (_state == AttackState.WindUp && _body != null)
         {
-            float attackRange = _data.Get<float>(DataKey.AttackRange);
+            float attackRange = _data.Get<float>(GeneratedDataKey.AttackRange);
             float distance = _body.GlobalPosition.DistanceTo(_currentTarget.GlobalPosition);
 
             // 使用攻击距离的 1.5 倍作为"容差中断位点"。
@@ -420,7 +420,7 @@ public partial class AttackComponent : Node, IComponent
             return false;
         }
 
-        if (_currentTarget is IEntity targetEntity && targetEntity.Data.Get<bool>(DataKey.IsDead))
+        if (_currentTarget is IEntity targetEntity && targetEntity.Data.Get<bool>(GeneratedDataKey.IsDead))
         {
             CancelAttack(AttackCancelReason.TargetDead);
             return false;
@@ -429,7 +429,7 @@ public partial class AttackComponent : Node, IComponent
         // 移除对自身死亡 (SelfDead) 的检查
         // 确保前摇度过后，脱手伤害即使原主阵亡也能打出
         /*
-        if (_data != null && _data.Get<bool>(DataKey.IsDead))
+        if (_data != null && _data.Get<bool>(GeneratedDataKey.IsDead))
         {
             CancelAttack(AttackCancelReason.SelfDead);
             return false;
@@ -449,12 +449,12 @@ public partial class AttackComponent : Node, IComponent
         if (target == null || !GodotObject.IsInstanceValid(target)) return false;
 
         // 最后一次确保目标没死（双活规则）
-        if (target is IEntity targetEntity && targetEntity.Data.Get<bool>(DataKey.IsDead))
+        if (target is IEntity targetEntity && targetEntity.Data.Get<bool>(GeneratedDataKey.IsDead))
             return false;
 
         if (target is IUnit victimUnit && _body != null)
         {
-            float finalAttack = _data.Get<float>(DataKey.FinalAttack);
+            float finalAttack = _data.Get<float>(GeneratedDataKey.FinalAttack);
 
             // 构造伤害载体并掷入 Pipeline 处理管道
             var damageInfo = new DamageInfo
@@ -500,7 +500,7 @@ public partial class AttackComponent : Node, IComponent
         if (_data == null) return Anim.Attack1;
 
         // 从 Data 中获取可用动画列表
-        var availableAnims = _data.Get<System.Collections.Generic.List<string>>(DataKey.AvailableAnimations);
+        var availableAnims = _data.Get<System.Collections.Generic.List<string>>(GeneratedDataKey.AvailableAnimations);
         if (availableAnims == null || availableAnims.Count == 0)
         {
             return Anim.Attack1;

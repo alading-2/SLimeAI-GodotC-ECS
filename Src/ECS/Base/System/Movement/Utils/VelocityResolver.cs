@@ -25,17 +25,17 @@ public static class VelocityResolver
     public static Vector2 Resolve(Data data)
     {
         // 1. 移动锁定检查（眩晕/冻结）
-        if (data.Get<bool>(DataKey.IsMovementLocked))
+        if (data.Get<bool>(GeneratedDataKey.IsMovementLocked))
         {
             ConsumeImpulse(data);
             return Vector2.Zero;
         }
 
         // 2. 覆盖层检查（击退/控制技能）
-        Vector2 overrideVel = data.Get<Vector2>(DataKey.VelocityOverride);
+        Vector2 overrideVel = data.Get<Vector2>(GeneratedDataKey.VelocityOverride);
         Vector2 baseVel = overrideVel.LengthSquared() > 0.001f
             ? overrideVel
-            : data.Get<Vector2>(DataKey.Velocity);
+            : data.Get<Vector2>(GeneratedDataKey.Velocity);
 
         // 3. 叠加瞬时冲量
         Vector2 impulse = ConsumeImpulse(data);
@@ -48,10 +48,10 @@ public static class VelocityResolver
     /// </summary>
     private static Vector2 ConsumeImpulse(Data data)
     {
-        Vector2 impulse = data.Get<Vector2>(DataKey.VelocityImpulse);
+        Vector2 impulse = data.Get<Vector2>(GeneratedDataKey.VelocityImpulse);
         if (impulse.LengthSquared() > 0.001f)
         {
-            data.Set(DataKey.VelocityImpulse, Vector2.Zero);
+            data.Set(GeneratedDataKey.VelocityImpulse, Vector2.Zero);
         }
         return impulse;
     }

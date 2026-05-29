@@ -19,16 +19,16 @@ public static partial class EntityManager
     // ==================== Ability 管理 ====================
 
     /// <summary>
-    /// 为单位添加 DataNew 纯 C# 技能。
+    /// 为单位添加 DataOS runtime table 纯 C# 技能。
     /// </summary>
     /// <param name="owner">技能拥有者。</param>
-    /// <param name="config">DataNew 技能配置。</param>
+    /// <param name="config">DataOS runtime table 技能配置。</param>
     /// <returns>创建的技能实体，失败返回 null。</returns>
     public static AbilityEntity? AddAbility(IEntity owner, AbilityData config)
     {
         return AddAbilityCore(
             owner, // 技能拥有者
-            config, // DataNew 技能配置
+            config, // DataOS runtime table 技能配置
             config.Name ?? "", // 技能名称
             config.FeatureHandlerId ?? "", // FeatureHandlerId
             validateAbilityHandler: true // 技能必须绑定处理器
@@ -53,7 +53,7 @@ public static partial class EntityManager
     }
 
     /// <summary>
-    /// 技能添加统一实现，外部优先使用 DataNew 重载。
+    /// 技能添加统一实现，外部优先使用 DataOS runtime table 重载。
     /// </summary>
     /// <param name="owner">技能拥有者。</param>
     /// <param name="config">配置对象。</param>
@@ -112,7 +112,7 @@ public static partial class EntityManager
             return null;
         }
 
-        var handlerId = ability.Data.Get<string>(DataKey.FeatureHandlerId);
+        var handlerId = ability.Data.Get<string>(GeneratedDataKey.FeatureHandlerId);
         if (validateAbilityHandler && string.IsNullOrWhiteSpace(handlerId))
         {
             _abilityLog.Error($"无法添加技能 '{abilityName}'：FeatureHandlerId 为空");
@@ -128,7 +128,7 @@ public static partial class EntityManager
         }
 
         // 获取 ID（从 Data 读取，由 EntityManager.Spawn 设置）
-        var ownerId = owner.Data.Get<string>(DataKey.Id) ?? string.Empty;
+        var ownerId = owner.Data.Get<string>(GeneratedDataKey.Id) ?? string.Empty;
 
         // 核心逻辑连通：订阅 TryTrigger 事件，由 AbilitySystem 统一处理
         ability.Events.On<GameEventType.Ability.TryTrigger>(
@@ -200,9 +200,9 @@ public static partial class EntityManager
         if (owner == null || ability == null) return false;
 
         // 获取 ID（从 Data 读取）
-        var ownerId = owner.Data.Get<string>(DataKey.Id) ?? string.Empty;
-        var abilityId = ability.Data.Get<string>(DataKey.Id) ?? string.Empty;
-        var abilityName = ability.Data.Get<string>(DataKey.Name) ?? string.Empty;
+        var ownerId = owner.Data.Get<string>(GeneratedDataKey.Id) ?? string.Empty;
+        var abilityId = ability.Data.Get<string>(GeneratedDataKey.Id) ?? string.Empty;
+        var abilityName = ability.Data.Get<string>(GeneratedDataKey.Name) ?? string.Empty;
 
         // 移除关系
         EntityRelationshipManager.RemoveRelationship(
@@ -236,7 +236,7 @@ public static partial class EntityManager
         var abilities = new List<AbilityEntity>();
         if (owner == null) return abilities;
 
-        var ownerId = owner.Data.Get<string>(DataKey.Id) ?? string.Empty;
+        var ownerId = owner.Data.Get<string>(GeneratedDataKey.Id) ?? string.Empty;
         var abilityIds = EntityRelationshipManager.GetChildEntitiesByParentAndType(
             ownerId,
             EntityRelationshipType.ENTITY_TO_ABILITY
@@ -264,8 +264,8 @@ public static partial class EntityManager
         var result = new List<AbilityEntity>();
         foreach (var a in abilities)
         {
-            var mode = a.Data.Get<AbilityTriggerMode>(DataKey.AbilityTriggerMode);
-            var type = a.Data.Get<AbilityType>(DataKey.AbilityType);
+            var mode = a.Data.Get<AbilityTriggerMode>(GeneratedDataKey.AbilityTriggerMode);
+            var type = a.Data.Get<AbilityType>(GeneratedDataKey.AbilityType);
             if (type != AbilityType.Passive && mode.HasFlag(AbilityTriggerMode.Manual))
             {
                 result.Add(a);
@@ -283,7 +283,7 @@ public static partial class EntityManager
         foreach (var ability in abilities)
         {
             // 从 Data 读取技能名称（不使用便捷属性）
-            var name = ability.Data.Get<string>(DataKey.Name);
+            var name = ability.Data.Get<string>(GeneratedDataKey.Name);
             if (name == abilityName)
             {
                 return ability;
@@ -305,7 +305,7 @@ public static partial class EntityManager
         var abilities = GetAbilities(owner);
         foreach (var ability in abilities)
         {
-            var currentId = ability.Data.Get<string>(DataKey.Id);
+            var currentId = ability.Data.Get<string>(GeneratedDataKey.Id);
             if (currentId == abilityId)
             {
                 return ability;

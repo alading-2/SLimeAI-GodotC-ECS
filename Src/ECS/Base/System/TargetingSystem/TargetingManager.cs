@@ -119,7 +119,7 @@ public static class TargetingManager
         CurrentCaster = context.Caster;
         CurrentAbility = context.Ability;
         CurrentContext = context;
-        CurrentRange = CurrentAbility!.Data.Get<float>(DataKey.AbilityCastRange);
+        CurrentRange = CurrentAbility!.Data.Get<float>(GeneratedDataKey.AbilityCastRange);
 
         // 获取施法者位置
         Vector2 casterPos = Vector2.Zero;
@@ -131,7 +131,7 @@ public static class TargetingManager
         // 生成瞄准指示器（每次重新创建）
         _currentIndicator = SpawnIndicator(casterPos);
 
-        var abilityName = CurrentAbility?.Data.Get<string>(DataKey.Name);
+        var abilityName = CurrentAbility?.Data.Get<string>(GeneratedDataKey.Name);
         _log.Info($"开始瞄准: {abilityName}, 射程: {CurrentRange}");
     }
 
@@ -150,7 +150,7 @@ public static class TargetingManager
         // 注意：HasPreselectedPosition 是计算属性，基于 TargetPosition.HasValue
         CurrentContext.TargetPosition = evt.TargetPosition;
 
-        var abilityName = CurrentAbility.Data.Get<string>(DataKey.Name);
+        var abilityName = CurrentAbility.Data.Get<string>(GeneratedDataKey.Name);
         _log.Info($"瞄准确认: {abilityName} -> {evt.TargetPosition}");
 
         // 2. 确认后才正式提交 TryTrigger；AbilitySystem 会再次检查可用性并负责消耗/冷却。
@@ -180,7 +180,7 @@ public static class TargetingManager
     {
         if (!IsTargeting) return;
 
-        var abilityName = CurrentAbility?.Data.Get<string>(DataKey.Name);
+        var abilityName = CurrentAbility?.Data.Get<string>(GeneratedDataKey.Name);
         _log.Info($"瞄准取消: {abilityName}");
 
         EndTargeting(wasConfirmed: false, _currentIndicator);
@@ -210,7 +210,7 @@ public static class TargetingManager
     /// </summary>
     private static TargetingIndicatorEntity? SpawnIndicator(Vector2 position)
     {
-        // 瞄准指示器配置统一来自 DataNew。
+        // 瞄准指示器配置统一来自 DataOS runtime table。
         var config = TargetingIndicatorData.Get("TargetingIndicator");
 
         if (config == null)

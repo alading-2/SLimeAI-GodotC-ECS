@@ -10,7 +10,7 @@ SystemCore 负责：
 
 - `SystemManager` 唯一 autoload 启动。
 - 从 `SystemRegistry` 创建系统实例。
-- 从 `Data/DataNew/System/SystemData.cs` 读取系统配置外壳，实际数据来源是 DataOS snapshot。
+- 从 `Data/DataOS runtime table/System/SystemData.cs` 读取系统配置外壳，实际数据来源是 DataOS snapshot。
 - 根据 `ProjectStateSnapshot` 和 `SystemRunCondition` 判断系统是否运行。
 - 通过 `SystemManager.Execute<TSystem,TRequest,TResult>` 统一执行外部命令。
 
@@ -27,8 +27,8 @@ SystemCore 不负责：
 - `Src/ECS/Base/System/Core/SystemDescriptor.cs`
 - `Src/ECS/Base/System/Core/Lifecycle/`
 - `Src/ECS/Base/System/Core/State/`
-- `Data/DataNew/System/SystemData.cs`
-- `Data/DataNew/System/SystemPresetData.cs`
+- `Data/DataOS runtime table/System/SystemData.cs`
+- `Data/DataOS runtime table/System/SystemPresetData.cs`
 
 ## 数据 / 事件 / 生命周期
 

@@ -73,7 +73,7 @@ public partial class AbilitySystemPipelineTest : Node
 
         var ownerId = owner.GetInstanceId().ToString();
         owner.Data.Set(DataKey.Id, ownerId);
-        owner.Data.Set(DataKey.Name, owner.Name);
+        owner.Data.Set(DataKey.Name, owner.Name.ToString());
         owner.Data.Set(DataKey.CurrentMana, 50f);
 
         var abilityId = ability.GetInstanceId().ToString();
@@ -160,7 +160,7 @@ public partial class AbilitySystemPipelineTest : Node
 
         var ownerId = owner.GetInstanceId().ToString();
         owner.Data.Set(DataKey.Id, ownerId);
-        owner.Data.Set(DataKey.Name, owner.Name);
+        owner.Data.Set(DataKey.Name, owner.Name.ToString());
         owner.Data.Set(DataKey.CurrentMana, 30f);
         owner.Data.Set(DataKey.AbilityDamageBonus, 150f);
 

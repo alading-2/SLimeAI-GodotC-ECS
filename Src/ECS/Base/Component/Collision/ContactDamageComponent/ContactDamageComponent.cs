@@ -40,7 +40,7 @@ public partial class ContactDamageComponent : Node, IComponent
 
         _entity = iEntity;
         _data = iEntity.Data;
-        _team = _data.Get<Team>(DataKey.Team, Team.Neutral);
+        _team = _data.Get<Team>(GeneratedDataKey.Team, Team.Neutral);
 
         _entity.Events.On<GameEventType.Collision.HurtboxEntered>(OnHurtboxEntered);
         _entity.Events.On<GameEventType.Collision.HurtboxExited>(OnHurtboxExited);
@@ -255,7 +255,7 @@ public partial class ContactDamageComponent : Node, IComponent
     {
         return _entity != null
             && _data != null
-            && !_data.Get<bool>(DataKey.IsDead);
+            && !_data.Get<bool>(GeneratedDataKey.IsDead);
     }
 
     /// <summary>
@@ -295,7 +295,7 @@ public partial class ContactDamageComponent : Node, IComponent
         var entity = attackerEntity ?? attacker as IEntity;
         if (entity == null) return false;
 
-        var bodyTeam = entity.Data.Get<Team>(DataKey.Team);
+        var bodyTeam = entity.Data.Get<Team>(GeneratedDataKey.Team);
         return bodyTeam != Team.Neutral && bodyTeam != _team;
     }
 
@@ -309,7 +309,7 @@ public partial class ContactDamageComponent : Node, IComponent
     {
         var entity = attackerEntity ?? attacker as IEntity;
         if (entity == null) return 0f;
-        return entity.Data.Get<float>(DataKey.FinalAttack);
+        return entity.Data.Get<float>(GeneratedDataKey.FinalAttack);
     }
 
     /// <summary>
@@ -323,7 +323,7 @@ public partial class ContactDamageComponent : Node, IComponent
         var entity = attackerEntity ?? attacker as IEntity;
         if (entity == null) return 1.0f;
 
-        var interval = entity.Data.Get<float>(DataKey.AttackInterval);
+        var interval = entity.Data.Get<float>(GeneratedDataKey.AttackInterval);
         return Mathf.Max(interval, 0.1f);
     }
 }

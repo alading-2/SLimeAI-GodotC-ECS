@@ -23,18 +23,18 @@ public class RequestAttackAction : BehaviorNode
     /// <inheritdoc/>
     public override NodeState Evaluate(AIContext ctx)
     {
-        var target = ctx.Entity.Data.Get<Node2D>(DataKey.TargetNode);
+        var target = ctx.Entity.Data.Get<Node2D>(GeneratedDataKey.TargetNode);
         if (target == null) return NodeState.Failure;
 
         var selfNode = ctx.Entity as Node2D;
         if (selfNode == null) return NodeState.Failure;
 
-        var attackState = ctx.Entity.Data.Get<AttackState>(DataKey.AttackState);
+        var attackState = ctx.Entity.Data.Get<AttackState>(GeneratedDataKey.AttackState);
 
         // 攻击期间：面向目标但停止移动
         Vector2 faceDir = (target.GlobalPosition - selfNode.GlobalPosition).Normalized();
-        ctx.Entity.Data.Set(DataKey.AIMoveDirection, faceDir);
-        ctx.Entity.Data.Set(DataKey.AIMoveSpeedMultiplier, 0f);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIMoveDirection, faceDir);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIMoveSpeedMultiplier, 0f);
 
         if (attackState != AttackState.Idle)
         {

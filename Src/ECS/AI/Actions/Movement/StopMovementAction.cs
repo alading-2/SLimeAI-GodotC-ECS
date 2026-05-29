@@ -21,8 +21,8 @@ public class StopMovementAction : BehaviorNode
     /// <inheritdoc/>
     public override NodeState Evaluate(AIContext ctx)
     {
-        ctx.Entity.Data.Set(DataKey.AIMoveDirection, Vector2.Zero);
-        ctx.Entity.Data.Set(DataKey.AIMoveSpeedMultiplier, 0f);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIMoveDirection, Vector2.Zero);
+        ctx.Entity.Data.Set(GeneratedDataKey.AIMoveSpeedMultiplier, 0f);
         return NodeState.Success;
     }
 }

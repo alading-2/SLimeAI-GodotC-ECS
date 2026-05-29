@@ -18,9 +18,9 @@ using Godot;
 /// </para>
 /// <para>
 /// 【策略切换方式】
-/// - 默认模式：Entity 初始化时设置 <c>DataKey.DefaultMoveMode</c>，组件注册时自动进入
+/// - 默认模式：Entity 初始化时设置 <c>GeneratedDataKey.DefaultMoveMode</c>，组件注册时自动进入
 /// - 临时运动：业务方通过 <c>Entity.Events.Emit(MovementStarted, ...)</c> 触发切换
-/// - 运动完成后自动回退到 <c>DataKey.DefaultMoveMode</c>
+/// - 运动完成后自动回退到 <c>GeneratedDataKey.DefaultMoveMode</c>
 /// </para>
 /// <para>
 /// 【策略扩展方式】
@@ -78,7 +78,7 @@ public partial class EntityMovementComponent : Node, IComponent
         _facingDirection = Vector2.Zero;
 
         _body = entity as CharacterBody2D;
-        _data.Set(DataKey.MovementFacingDirection, Vector2.Zero);
+        _data.Set(GeneratedDataKey.MovementFacingDirection, Vector2.Zero);
 
         // 订阅运动开始/切换事件（业务方通过此事件触发临时运动切换）
         _entity.Events.On<GameEventType.Unit.MovementStarted>(OnMovementStarted);
@@ -90,7 +90,7 @@ public partial class EntityMovementComponent : Node, IComponent
         _entity.Events.On<GameEventType.Unit.MovementStopRequested>(OnMovementStopRequested);
 
         // 根据 DefaultMoveMode 初始化默认策略（无 MovementParams，使用空参数）
-        var defaultMode = _data.Get<MoveMode>(DataKey.DefaultMoveMode);
+        var defaultMode = _data.Get<MoveMode>(GeneratedDataKey.DefaultMoveMode);
         if (defaultMode != MoveMode.None)
         {
             SwitchStrategy(new MovementParams { Mode = defaultMode });
@@ -152,9 +152,9 @@ public partial class EntityMovementComponent : Node, IComponent
         if (_entity == null || _data == null) return;
 
         // 死亡期间停止移动
-        if (_data.Get<bool>(DataKey.IsDead))
+        if (_data.Get<bool>(GeneratedDataKey.IsDead))
         {
-            _data.Set(DataKey.Velocity, Vector2.Zero);
+            _data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
             _facingDirection = Vector2.Zero;
             if (_body != null)
             {
@@ -178,8 +178,8 @@ public partial class EntityMovementComponent : Node, IComponent
     {
         if (_entity == null || _data == null) return;
 
-        MoveMode currentMode = _data.Get<MoveMode>(DataKey.MoveMode);
-        MoveMode defaultMode = _data.Get<MoveMode>(DataKey.DefaultMoveMode);
+        MoveMode currentMode = _data.Get<MoveMode>(GeneratedDataKey.MoveMode);
+        MoveMode defaultMode = _data.Get<MoveMode>(GeneratedDataKey.DefaultMoveMode);
         bool isCurrentDefaultMode = currentMode == defaultMode;
 
         if (!isCurrentDefaultMode && _currentStrategy != null && !_currentStrategy.CanBeInterrupted)
@@ -214,7 +214,7 @@ public partial class EntityMovementComponent : Node, IComponent
 
         // 创建新策略实例并进入
         _currentStrategy = MovementStrategyRegistry.Create(newMode);
-        _data.Set(DataKey.MoveMode, newMode);
+        _data.Set(GeneratedDataKey.MoveMode, newMode);
 
         if (_currentStrategy != null)
         {
@@ -239,7 +239,7 @@ public partial class EntityMovementComponent : Node, IComponent
         if (_currentStrategy == null) return;
         if (_moveCompleted) return;
 
-        // 委托策略计算运动意图（策略只写 DataKey.Velocity，不直接操作 GlobalPosition）
+        // 委托策略计算运动意图（策略只写 GeneratedDataKey.Velocity，不直接操作 GlobalPosition）
         MovementUpdateResult result = _currentStrategy.Update(_entity!, _data!, delta, _params);
         _facingDirection = result.HasFacingDirection ? result.FacingDirection : Vector2.Zero;
 
@@ -271,9 +271,9 @@ public partial class EntityMovementComponent : Node, IComponent
         // 分层速度合成（眩晕/击退/冲量对所有实体通用）
         Vector2 finalVelocity = VelocityResolver.Resolve(_data!);
         // 朝向优先取策略显式提供的方向；未提供时回退到策略意图速度（合成前）
-        Vector2 intentVelocity = _data!.Get<Vector2>(DataKey.Velocity);
+        Vector2 intentVelocity = _data!.Get<Vector2>(GeneratedDataKey.Velocity);
         Vector2 facingDirection = _facingDirection.LengthSquared() >= 0.001f ? _facingDirection : intentVelocity;
-        _data.Set(DataKey.MovementFacingDirection, facingDirection);
+        _data.Set(GeneratedDataKey.MovementFacingDirection, facingDirection);
 
         if (_body != null)
         {
@@ -281,7 +281,7 @@ public partial class EntityMovementComponent : Node, IComponent
             _body.Velocity = finalVelocity;
             _body.MoveAndSlide();
             // 同步碰撞修正后的实际速度回 Data
-            _data.Set(DataKey.Velocity, _body.Velocity);
+            _data.Set(GeneratedDataKey.Velocity, _body.Velocity);
 
             // CharacterBody2D 路径没有 Area2D 的 entered 事件，
             // 因此这里仍需从 MoveAndSlide 的滑动碰撞中采样原始碰撞候选。
@@ -317,10 +317,10 @@ public partial class EntityMovementComponent : Node, IComponent
         if (_data == null) return;
 
         // 重置跨系统共享的速度状态
-        _data.Set(DataKey.Velocity, Vector2.Zero);
-        _data.Set(DataKey.VelocityOverride, Vector2.Zero);
-        _data.Set(DataKey.VelocityImpulse, Vector2.Zero);
-        _data.Set(DataKey.MovementFacingDirection, Vector2.Zero);
+        _data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
+        _data.Set(GeneratedDataKey.VelocityOverride, Vector2.Zero);
+        _data.Set(GeneratedDataKey.VelocityImpulse, Vector2.Zero);
+        _data.Set(GeneratedDataKey.MovementFacingDirection, Vector2.Zero);
         _facingDirection = Vector2.Zero;
 
         // 重置组件内部完成标志
@@ -399,8 +399,8 @@ public partial class EntityMovementComponent : Node, IComponent
         if (_currentStrategy == null) return;
 
         // 读取当前模式与默认模式，供协调器裁决
-        var mode = _data.Get<MoveMode>(DataKey.MoveMode);
-        var defaultMode = _data.Get<MoveMode>(DataKey.DefaultMoveMode);
+        var mode = _data.Get<MoveMode>(GeneratedDataKey.MoveMode);
+        var defaultMode = _data.Get<MoveMode>(GeneratedDataKey.DefaultMoveMode);
 
         // 协调器根据当前模式、停止原因、请求参数，输出最终决议
         var resolution = MovementStopCoordinator.Resolve(
@@ -452,7 +452,7 @@ public partial class EntityMovementComponent : Node, IComponent
         }
 
         // 无后续模式，归零当前运动模式
-        _data.Set(DataKey.MoveMode, MoveMode.None);
+        _data.Set(GeneratedDataKey.MoveMode, MoveMode.None);
     }
 
     /// <summary>
@@ -463,7 +463,7 @@ public partial class EntityMovementComponent : Node, IComponent
     {
         if (_currentStrategy == null || _entity == null || _data == null) return;
 
-        var currentMode = _data.Get<MoveMode>(DataKey.MoveMode);
+        var currentMode = _data.Get<MoveMode>(GeneratedDataKey.MoveMode);
         var stopContext = new MovementStopContext(reason, currentMode, _params, collisionTarget, nextMode);
         _currentStrategy.OnStop(_entity, _data, stopContext);
         _params.OnStop?.Invoke(stopContext);

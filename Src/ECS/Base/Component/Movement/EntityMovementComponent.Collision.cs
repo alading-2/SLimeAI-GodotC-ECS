@@ -13,8 +13,8 @@ public partial class EntityMovementComponent
         if (_entity == null || _data == null) return;
         if (_moveCompleted) return;
 
-        var mode = _data.Get<MoveMode>(DataKey.MoveMode);
-        var defaultMode = _data.Get<MoveMode>(DataKey.DefaultMoveMode);
+        var mode = _data.Get<MoveMode>(GeneratedDataKey.MoveMode);
+        var defaultMode = _data.Get<MoveMode>(GeneratedDataKey.DefaultMoveMode);
         // 移动模式为 defaultMode 或 None 时不处理碰撞通知。
         if (mode == defaultMode || mode == MoveMode.None) return;
 
@@ -34,8 +34,8 @@ public partial class EntityMovementComponent
         // 碰撞策略未启用则跳过。
         if (!_collisionPolicy.IsEnabled) return;
 
-        var moveMode = _data.Get<MoveMode>(DataKey.MoveMode);
-        var defaultMode = _data.Get<MoveMode>(DataKey.DefaultMoveMode);
+        var moveMode = _data.Get<MoveMode>(GeneratedDataKey.MoveMode);
+        var defaultMode = _data.Get<MoveMode>(GeneratedDataKey.DefaultMoveMode);
         // 默认模式（如 AI 巡逻/玩家移动）不触发碰撞处理，避免噪声。
         if (moveMode == MoveMode.None || moveMode == defaultMode) return;
 

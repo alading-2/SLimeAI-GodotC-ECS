@@ -52,7 +52,7 @@ public partial class DamageStatisticsSystem : Node, ISystem
             ResetWaveStats(player.Data);
 
             // 2. 重置玩家装备的所有武器/物品的波次统计
-            var playerId = player.Data.Get<string>(DataKey.Id) ?? string.Empty;
+            var playerId = player.Data.Get<string>(GeneratedDataKey.Id) ?? string.Empty;
             var itemIds = EntityRelationshipManager.GetChildEntitiesByParentAndType(
                 playerId, EntityRelationshipType.ENTITY_TO_ITEM);
 
@@ -73,11 +73,11 @@ public partial class DamageStatisticsSystem : Node, ISystem
     /// <param name="data">实体的动态数据容器</param>
     private void ResetWaveStats(Data data)
     {
-        data.Set(DataKey.WaveDamageDealt, 0f); // 重置波次造成伤害
-        data.Set(DataKey.WaveDamageTaken, 0f); // 重置波次承受伤害
-        data.Set(DataKey.WaveHits, 0); // 重置波次命中次数
-        data.Set(DataKey.WaveKills, 0); // 重置波次击杀数
-        data.Set(DataKey.WaveCriticalHits, 0); // 重置波次暴击次数
+        data.Set(GeneratedDataKey.WaveDamageDealt, 0f); // 重置波次造成伤害
+        data.Set(GeneratedDataKey.WaveDamageTaken, 0f); // 重置波次承受伤害
+        data.Set(GeneratedDataKey.WaveHits, 0); // 重置波次命中次数
+        data.Set(GeneratedDataKey.WaveKills, 0); // 重置波次击杀数
+        data.Set(GeneratedDataKey.WaveCriticalHits, 0); // 重置波次暴击次数
     }
 
     /// <summary>
@@ -97,8 +97,8 @@ public partial class DamageStatisticsSystem : Node, ISystem
             if (entity is IUnit or IWeapon)
             {
                 foundAnyTarget = true;
-                entity.Data.Add(DataKey.TotalKills, 1);
-                entity.Data.Add(DataKey.WaveKills, 1);
+                entity.Data.Add(GeneratedDataKey.TotalKills, 1);
+                entity.Data.Add(GeneratedDataKey.WaveKills, 1);
 
                 _log.Debug($"[击杀统计] {entity} 记录击杀 {data.Victim}");
             }

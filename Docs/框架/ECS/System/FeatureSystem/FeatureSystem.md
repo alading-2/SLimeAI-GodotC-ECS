@@ -104,9 +104,9 @@ Granted → Enabled → Activated/Execute/Ended（可重复）→ Disabled → R
 
  > FeatureSystem 在 Granted/Removed 时自动应用/回滚所有 Modifiers。
 
-### 5.1.1 `Data/Data/Feature` 怎么用
+### 5.1.1 `Data/Feature/Definition` 怎么用
 
-`Data/Data/Feature` 是 **通用 Feature 配置层**，不是“只给技能用的目录”。当前主要包含两类资源：
+`Data/Feature/Definition` 是 **通用 Feature 配置层**，不是“只给技能用的目录”。当前主要包含两类资源：
 
 1. `FeatureDefinition`
    - 定义一个可被授予到实体上的 Feature 模板
@@ -121,7 +121,7 @@ Granted → Enabled → Activated/Execute/Ended（可重复）→ Disabled → R
 当前项目里，`EntityManager.AddAbility(owner, featureDefinition)` 会复用 `AbilityEntity` 作为 Feature 的运行时承载实体。
 也就是说：
 
-- `Data/Data/Feature` 负责定义“一个 Feature 长什么样”
+- `Data/Feature/Definition` 负责定义“一个 Feature 长什么样”
 - `FeatureSystem` 负责管理“这个 Feature 被授予、激活、移除时做什么”
 - `AbilitySystem` 只是其中“主动施法型 Feature”的专用激活编排器
 
@@ -260,8 +260,8 @@ EntityManager.RemoveAbility(owner, name)
 
 | 文件 | 类型 | 说明 |
 |:---|:---|:---|
-| `Data/Data/Feature/FeatureDefinition.cs` | `[GlobalClass] Resource` | Feature 配置资源基类，编辑器填表 |
-| `Data/Data/Feature/FeatureModifierEntry.cs` | `[GlobalClass] Resource` | 单条修改器配置条目 |
+| `Data/Feature/Definition/FeatureDefinition.cs` | `[GlobalClass] Resource` | Feature 配置资源基类，编辑器填表 |
+| `Data/Feature/Definition/FeatureModifierEntry.cs` | `[GlobalClass] Resource` | 单条修改器配置条目 |
 | `Data/DataKey/Feature/DataKey_Feature.cs` | `partial DataKey` | FeatureCategory / FeatureHandlerId / FeatureType / FeatureTriggerMode / FeatureEnabled / FeatureIsActive / FeatureActivationCount |
 | `Data/DataKey/Feature/FeatureEnums.cs` | `enum` | FeatureType / FeatureTriggerMode 通用枚举 |
 | `Data/DataKey/Feature/DataCategory_Feature.cs` | `enum` | Feature 数据分类（Basic / Trigger / Modifier / State）|

@@ -327,7 +327,7 @@ public class DataForgeConfig
 {
     public string Name { get; set; }               // "EnemyData"
     public string SavePath { get; set; }           // "res://Data/Source/EnemyData.json"
-    public string OutputPath { get; set; }         // "res://Data/Data/.../EnemyData.cs"  
+    public string OutputPath { get; set; }         // "res://DataOS removed legacy Data/.../EnemyData.cs"  
     public string ClassName { get; set; }          // "EnemyData"
     public string[] RelevantDataKeyCategories { get; set; } // ["Base", "Unit", "AI"]
     public Dictionary<string, FieldConfig> FieldConfigs { get; set; }
@@ -462,7 +462,7 @@ public partial class DataForgeWindow : Window
             Name = "EnemyData",
             DisplayName = "敌人配置",
             SavePath = "res://Data/Source/EnemyData.json",
-            OutputPath = "res://Data/Data/Unit/Enemy/EnemyData.cs",
+            OutputPath = "res://DataOS removed legacy Data/Unit/Enemy/EnemyData.cs",
             ClassName = "EnemyData",
             DataKeyCategories = new[] { "Base", "Unit", "AI", "Attribute" },
             FieldOverrides = new Dictionary<string, FieldOverride>
@@ -487,7 +487,7 @@ public partial class DataForgeWindow : Window
             Name = "PlayerData",
             DisplayName = "玩家配置",
             SavePath = "res://Data/Source/PlayerData.json",
-            OutputPath = "res://Data/Data/Unit/Player/PlayerData.cs",
+            OutputPath = "res://DataOS removed legacy Data/Unit/Player/PlayerData.cs",
             ClassName = "PlayerData",
             // ...
         },
@@ -496,7 +496,7 @@ public partial class DataForgeWindow : Window
             Name = "AbilityData",
             DisplayName = "技能配置",
             SavePath = "res://Data/Source/AbilityData.json",
-            OutputPath = "res://Data/Data/Ability/AbilityData.cs",
+            OutputPath = "res://DataOS removed legacy Data/Ability/AbilityData.cs",
             ClassName = "AbilityData",
             // ...
         }

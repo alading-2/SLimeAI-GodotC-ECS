@@ -59,7 +59,7 @@ public partial class RecoveryComponent : Node, IComponent
     /// </summary>
     private void TryRegister()
     {
-        if (_entity == null || _data == null || _data.Get<bool>(DataKey.IsRecoverySystemRegistered))
+        if (_entity == null || _data == null || _data.Get<bool>(GeneratedDataKey.IsRecoverySystemRegistered))
             return;
 
         // 检查是否有任何恢复属性 > 0
@@ -81,7 +81,7 @@ public partial class RecoveryComponent : Node, IComponent
             return;
         }
 
-        _data.Set(DataKey.IsRecoverySystemRegistered, true);
+        _data.Set(GeneratedDataKey.IsRecoverySystemRegistered, true);
         _log.Debug($"已注册到 RecoverySystem: {(_entity as Node)?.Name}");
     }
 
@@ -90,7 +90,7 @@ public partial class RecoveryComponent : Node, IComponent
     /// </summary>
     private void TryUnregister()
     {
-        if (_entity == null || _data == null || !_data.Get<bool>(DataKey.IsRecoverySystemRegistered))
+        if (_entity == null || _data == null || !_data.Get<bool>(GeneratedDataKey.IsRecoverySystemRegistered))
             return;
 
         var result = SystemManager.Instance?.Execute<RecoverySystem, RecoveryUnregisterRequest, RecoveryRegistrationResult>(
@@ -108,7 +108,7 @@ public partial class RecoveryComponent : Node, IComponent
             return;
         }
 
-        _data.Set(DataKey.IsRecoverySystemRegistered, false);
+        _data.Set(GeneratedDataKey.IsRecoverySystemRegistered, false);
         _log.Debug($"已从 RecoverySystem 注销: {(_entity as Node)?.Name}");
     }
 
@@ -119,8 +119,8 @@ public partial class RecoveryComponent : Node, IComponent
     {
         if (_data == null) return false;
 
-        float hpRegen = _data.Get<float>(DataKey.FinalHpRegen);
-        float manaRegen = _data.Get<float>(DataKey.FinalManaRegen);
+        float hpRegen = _data.Get<float>(GeneratedDataKey.FinalHpRegen);
+        float manaRegen = _data.Get<float>(GeneratedDataKey.FinalManaRegen);
 
         return hpRegen > 0 || manaRegen > 0;
     }
@@ -133,7 +133,7 @@ public partial class RecoveryComponent : Node, IComponent
     private void OnDataPropertyChanged(GameEventType.Data.PropertyChanged evt)
     {
         // 只关心恢复属性的变化
-        if (evt.Key != DataKey.FinalHpRegen && evt.Key != DataKey.FinalManaRegen)
+        if (evt.Key != GeneratedDataKey.FinalHpRegen && evt.Key != GeneratedDataKey.FinalManaRegen)
             return;
 
         // 动态调整注册状态

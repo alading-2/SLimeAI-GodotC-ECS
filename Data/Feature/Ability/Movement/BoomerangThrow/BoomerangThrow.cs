@@ -26,10 +26,10 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
         var ability = context.Ability!;
         var casterNode = (Node2D)caster;
 
-        var damage = ability.Data.Get<float>(DataKey.FinalAbilityDamage); // 最终技能伤害
+        var damage = ability.Data.Get<float>(GeneratedDataKey.FinalAbilityDamage); // 最终技能伤害
 
-        var throwTarget = GetThrowTarget(caster, casterNode, ability.Data.Get<float>(DataKey.AbilityCastRange));
-        var projectileScenePath = ability.Data.Get<string>(DataKey.ProjectileScene); // 投射物场景路径
+        var throwTarget = GetThrowTarget(caster, casterNode, ability.Data.Get<float>(GeneratedDataKey.AbilityCastRange));
+        var projectileScenePath = ability.Data.Get<string>(GeneratedDataKey.ProjectileScene); // 投射物场景路径
 
         var projectile = ProjectileTool.Spawn(
             caster, // 投射物归属者

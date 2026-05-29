@@ -34,25 +34,25 @@ public class WaitIdleAction : BehaviorNode
         // 首次进入：启动定时器
         if (_timer == null)
         {
-            float waitTime = data.Get<float>(DataKey.PatrolWaitTime, 1.5f);
-            data.Set(DataKey.PatrolWaitDone, false);
+            float waitTime = data.Get<float>(GeneratedDataKey.PatrolWaitTime, 1.5f);
+            data.Set(GeneratedDataKey.PatrolWaitDone, false);
 
             _timer = TimerManager.Instance.Delay(waitTime).OnComplete(() =>
             {
-                data.Set(DataKey.PatrolWaitDone, true);
+                data.Set(GeneratedDataKey.PatrolWaitDone, true);
                 _timer = null;
             });
         }
 
         // 停止移动，进入 Idle
-        data.Set(DataKey.AIMoveDirection, Vector2.Zero);
-        data.Set(DataKey.AIMoveSpeedMultiplier, 0f);
-        data.Set(DataKey.AIState, AIState.Idle);
+        data.Set(GeneratedDataKey.AIMoveDirection, Vector2.Zero);
+        data.Set(GeneratedDataKey.AIMoveSpeedMultiplier, 0f);
+        data.Set(GeneratedDataKey.AIState, AIState.Idle);
 
         // 检查完成标记
-        if (data.Get<bool>(DataKey.PatrolWaitDone))
+        if (data.Get<bool>(GeneratedDataKey.PatrolWaitDone))
         {
-            data.Set(DataKey.PatrolWaitDone, false);
+            data.Set(GeneratedDataKey.PatrolWaitDone, false);
             return NodeState.Success;
         }
 
@@ -64,6 +64,6 @@ public class WaitIdleAction : BehaviorNode
     {
         _timer?.Cancel();
         _timer = null;
-        ctx?.Entity.Data.Set(DataKey.PatrolWaitDone, false);
+        ctx?.Entity.Data.Set(GeneratedDataKey.PatrolWaitDone, false);
     }
 }

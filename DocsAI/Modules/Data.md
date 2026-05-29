@@ -1,6 +1,6 @@
 # Data 模块契约
 
-本文是 AI 修改运行时 Data 容器、typed DataKey、DataCatalog 和数据事件时必须阅读的执行契约。数据目录配置、DataNew 运行时外壳、DataKey 定义和 EventType 协议见 `DocsAI/Modules/DataAuthoring.md`。
+本文是 AI 修改运行时 Data 容器、typed DataKey、DataCatalog 和数据事件时必须阅读的执行契约。数据目录配置、DataOS runtime table 运行时外壳、DataKey 定义和 EventType 协议见 `DocsAI/Modules/DataAuthoring.md`。
 
 ## 职责边界
 
@@ -13,7 +13,7 @@ Data 负责：
 - 绑定 frozen `DataCatalog`，以 typed slot 作为主存储。
 - 承载修改器和计算属性。
 - 在值变化时通过 `Entity.Events` 发布 `PropertyChanged`。
-- 从 typed runtime snapshot 或兼容 DTO 注入初始值。
+- 从 typed runtime snapshot record 注入初始值。
 
 Data 不负责：
 
@@ -24,16 +24,16 @@ Data 不负责：
 ## 核心入口
 
 - `Src/ECS/Base/Data/Data.cs`
-- `Src/ECS/Base/Data/DataKeyTyped.cs`
-- `Src/ECS/Base/Data/DataCatalog.cs`
-- `Src/ECS/Base/Data/DataMeta.cs`（兼容 metadata）
-- `Src/ECS/Base/Data/DataRegistry.cs`（兼容注册表）
+- `Src/ECS/Base/Data/DataKey.cs`
+- `Src/ECS/Base/Data/DataDefinitionCatalog.cs`
+- `Src/ECS/Base/Data/RuntimeSnapshot/`
+- `Data/DataKey/Generated/DataKey_Generated.cs`
 - 数据目录契约：`DocsAI/Modules/DataAuthoring.md`
 
 ## 数据 / 事件 / 生命周期
 
-- 新 DataKey 以 `DataKey<T>` 为主入口；`DataMeta` 只保留兼容 metadata 和编辑器展示。
-- `DataKey.Key` 用 `nameof(DataKey.Xxx)`。
+- 新 DataKey 以 descriptor 生成的 `DataKey<T>` 为主入口；`DataMeta/DataRegistry` 只允许作为迁移审计对照，不再作为字段定义事实源。
+- `GeneratedDataKey.Xxx` / `DataKey.Xxx` 只保存 stable key handle，不保存默认值、范围或计算规则。
 - 数值型“不限制”统一使用 `-1`。
 - 概率统一使用 `0-100`，计算时再 `/100`。
 - 对象池回收时 Data 清理由 EntityManager 统一处理。
@@ -44,7 +44,7 @@ Data 不负责：
 ## 禁止事项
 
 - 禁止 `_data.Get<float>("CurrentHp")` 这类字符串字面量。
-- 禁止新增普通业务 DataKey 时使用 `const string`。
+- 禁止新增普通业务 DataKey 时使用 `const string` 或手写 `DataMeta` 注册。
 - 禁止 Component 私有字段保存 HP、速度、状态机等共享业务状态。
 - 禁止把旧 `.tres` 配置重新作为运行时主数据源。
 - 禁止对象池回收时业务组件手动 Clear 整个 Data。
@@ -53,19 +53,21 @@ Data 不负责：
 
 1. 判断是运行时容器行为、DataMeta 规则、配置字段、事件类型还是资源映射。
 2. 容器行为改 `Src/ECS/Base/Data/` 下的源码，数据目录改动先读 `DocsAI/Modules/DataAuthoring.md`。
-3. 修改 DataKey / DataCatalog / 兼容 metadata 时检查默认值、类型转换、计算依赖和修改器语义。
+3. 修改 descriptor / generated DataKey / DataDefinitionCatalog 时检查默认值、类型转换、计算依赖和修改器语义。
 4. 若新增字段会被 UI / Component 监听，补充事件响应或测试。
 5. 更新 `DocsAI/Modules/Data.md`、`DocsAI/Modules/DataAuthoring.md` 或相关 Skill。
 
 ## 推荐测试
 
 - `dotnet build`
-- `node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/Data/DataTestScene.tscn --build`
-- `node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/Data/TestDataKeyMapping.tscn --build`
+- `node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/DataOS/DataCatalogTestScene.tscn --build`
+- `node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/DataOS/DataRuntimeTestScene.tscn --build`
+- `node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/DataOS/DataSnapshotApplyTestScene.tscn --build`
+- `node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/DataOS/DataFeatureBridgeTestScene.tscn --build`
 
 ## 人工审查重点
 
-- DataKey 类型、默认值、分类是否正确。
+- descriptor 类型、默认值、分类和 generated handle 是否一致。
 - 是否误用 `const string` 或字符串字面量。
 - 是否把配置字段、运行时状态和事件协议混在一起。
 - 是否误把 snapshot-backed DTO 再写成 authoring 源。

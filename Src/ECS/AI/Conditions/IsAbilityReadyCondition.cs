@@ -29,18 +29,18 @@ public class IsAbilityReadyCondition : BehaviorNode
         var ability = EntityManager.GetAbilityByName(ctx.Entity, _abilityName);
         if (ability == null) return NodeState.Failure;
 
-        if (!ability.Data.Get<bool>(DataKey.FeatureEnabled)) return NodeState.Failure;
+        if (!ability.Data.Get<bool>(GeneratedDataKey.FeatureEnabled)) return NodeState.Failure;
 
         // 充能模式：有充能次数即可施放
-        bool usesCharges = ability.Data.Get<bool>(DataKey.IsAbilityUsesCharges);
+        bool usesCharges = ability.Data.Get<bool>(GeneratedDataKey.IsAbilityUsesCharges);
         if (usesCharges)
         {
-            int charges = ability.Data.Get<int>(DataKey.AbilityCurrentCharges);
+            int charges = ability.Data.Get<int>(GeneratedDataKey.AbilityCurrentCharges);
             return charges > 0 ? NodeState.Success : NodeState.Failure;
         }
 
         // 冷却模式：IsAbilityActive 为 false 表示冷却完毕
-        bool isActive = ability.Data.Get<bool>(DataKey.FeatureIsActive);
+        bool isActive = ability.Data.Get<bool>(GeneratedDataKey.FeatureIsActive);
         return !isActive ? NodeState.Success : NodeState.Failure;
     }
 }

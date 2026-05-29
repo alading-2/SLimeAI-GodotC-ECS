@@ -28,19 +28,19 @@ public partial class EffectComponent : Node, IComponent
     // ================= Data 透传 =================
 
     /// <summary>是否附着到宿主</summary>
-    public bool IsAttached => _data.Get<bool>(DataKey.EffectIsAttached);
+    public bool IsAttached => _data.Get<bool>(GeneratedDataKey.EffectIsAttached);
 
     /// <summary>附着偏移</summary>
-    public Vector2 Offset => _data.Get<Vector2>(DataKey.EffectOffset);
+    public Vector2 Offset => _data.Get<Vector2>(GeneratedDataKey.EffectOffset);
 
     /// <summary>是否循环播放</summary>
-    public bool IsLooping => _data.Get<bool>(DataKey.EffectIsLooping);
+    public bool IsLooping => _data.Get<bool>(GeneratedDataKey.EffectIsLooping);
 
     /// <summary>播放速率</summary>
-    public float PlayRate => _data.Get<float>(DataKey.EffectPlayRate);
+    public float PlayRate => _data.Get<float>(GeneratedDataKey.EffectPlayRate);
 
     /// <summary>最大生存时间</summary>
-    public float MaxLifeTime => _data.Get<float>(DataKey.MaxLifeTime);
+    public float MaxLifeTime => _data.Get<float>(GeneratedDataKey.MaxLifeTime);
 
     // ================= 附着跟随 =================
 
@@ -196,7 +196,7 @@ public partial class EffectComponent : Node, IComponent
         if (_sprite?.SpriteFrames == null) return string.Empty;
 
         // 优先使用显式指定的动画名
-        string specifiedAnim = _data?.Get<string>(DataKey.EffectAnimationName) ?? string.Empty;
+        string specifiedAnim = _data?.Get<string>(GeneratedDataKey.EffectAnimationName) ?? string.Empty;
         if (!string.IsNullOrEmpty(specifiedAnim) && _sprite.SpriteFrames.HasAnimation(specifiedAnim))
         {
             return specifiedAnim;

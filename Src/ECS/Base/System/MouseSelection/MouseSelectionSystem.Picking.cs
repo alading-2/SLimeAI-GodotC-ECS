@@ -177,9 +177,9 @@ public partial class MouseSelectionSystem
     /// </summary>
     private static bool PassEntityFilters(IEntity entity)
     {
-        if (entity.Data.Has(DataKey.LifecycleState))
+        if (entity.Data.Has(GeneratedDataKey.LifecycleState))
         {
-            var state = entity.Data.Get<LifecycleState>(DataKey.LifecycleState);
+            var state = entity.Data.Get<LifecycleState>(GeneratedDataKey.LifecycleState);
             if (state == LifecycleState.Dead || state == LifecycleState.Reviving)
             {
                 return false;
