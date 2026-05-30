@@ -129,7 +129,7 @@ public partial class UIManager : Node
         ui.Bind(entity);
 
         // 4. 建立关系
-        var entityId = entity.Data.Get<string>(DataKey.Id);
+        var entityId = entity.Data.Get<string>(GeneratedDataKey.Id);
         if (!string.IsNullOrEmpty(entityId))
         {
             EntityRelationshipManager.AddRelationship(
@@ -154,7 +154,7 @@ public partial class UIManager : Node
         var entity = ui.GetBoundEntity();
         if (entity != null)
         {
-            var entityId = entity.Data.Get<string>(DataKey.Id);
+            var entityId = entity.Data.Get<string>(GeneratedDataKey.Id);
             if (!string.IsNullOrEmpty(entityId))
             {
                 EntityRelationshipManager.RemoveRelationship(
@@ -198,7 +198,7 @@ public partial class UIManager : Node
 
         if (uis.Count > 0)
         {
-            var entityId = entity.Data.Get<string>(DataKey.Id);
+            var entityId = entity.Data.Get<string>(GeneratedDataKey.Id);
             _log.Debug($"已解绑 Entity {entityId} 的所有 UI，共 {uis.Count} 个");
         }
     }
@@ -214,7 +214,7 @@ public partial class UIManager : Node
     {
         if (entity == null) yield break;
 
-        var entityId = entity.Data.Get<string>(DataKey.Id);
+        var entityId = entity.Data.Get<string>(GeneratedDataKey.Id);
         if (string.IsNullOrEmpty(entityId)) yield break;
 
         var uiIds = EntityRelationshipManager

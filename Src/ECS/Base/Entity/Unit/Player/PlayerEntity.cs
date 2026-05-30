@@ -47,7 +47,7 @@ public partial class PlayerEntity : CharacterBody2D, IUnit
 	// /// </summary>
 	// public void OnPoolAcquire()
 	// {
-	//     Data.Set(DataKey.DefaultMoveMode, MoveMode.PlayerInput);
+	//     Data.Set(GeneratedDataKey.DefaultMoveMode, MoveMode.PlayerInput);
 	//     // 直接订阅即可（EntityManager 已自动清空事件）
 	// }
 

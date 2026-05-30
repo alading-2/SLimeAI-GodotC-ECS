@@ -132,17 +132,10 @@ public partial class ActiveSkillSlotUI : UIBase
             return;
         }
 
-        // 更新图标（支持 Texture2D 或路径字符串）
-        Texture2D? iconTexture = null;
-        var iconValue = _currentAbility.Data.GetBase<object?>(DataKey.AbilityIcon, null);
-        if (iconValue is Texture2D texture)
-        {
-            iconTexture = texture;
-        }
-        else if (iconValue is string iconPath && !string.IsNullOrEmpty(iconPath))
-        {
-            iconTexture = ResourceManagement.LoadPath<Texture2D>(iconPath);
-        }
+        var iconRef = _currentAbility.Data.Get<ResourceRef>(GeneratedDataKey.AbilityIcon);
+        Texture2D? iconTexture = iconRef.HasValue
+            ? ResourceManagement.LoadPath<Texture2D>(iconRef.Path)
+            : null;
 
         _skillIcon.Texture = iconTexture ?? ResourceManagement.LoadPath<Texture2D>(DEFAULT_SKILL_ICON);
 
@@ -230,15 +223,15 @@ public partial class ActiveSkillSlotUI : UIBase
         if (_currentAbility == null) return;
 
         // 检查是否使用充能系统
-        bool usesCharges = _currentAbility.Data.Get<bool>(DataKey.IsAbilityUsesCharges);
+        bool usesCharges = _currentAbility.Data.Get<bool>(GeneratedDataKey.IsAbilityUsesCharges);
         if (!usesCharges)
         {
             _chargeLabel.Visible = false;
             return;
         }
 
-        int currentCharges = _currentAbility.Data.Get<int>(DataKey.AbilityCurrentCharges);
-        int maxCharges = _currentAbility.Data.Get<int>(DataKey.AbilityMaxCharges);
+        int currentCharges = _currentAbility.Data.Get<int>(GeneratedDataKey.AbilityCurrentCharges);
+        int maxCharges = _currentAbility.Data.Get<int>(GeneratedDataKey.AbilityMaxCharges);
 
         _chargeLabel.Text = $"{currentCharges}/{maxCharges}";
         _chargeLabel.Visible = true;
@@ -299,19 +292,12 @@ public partial class ActiveSkillSlotUI : UIBase
         UnsubscribeAbilityEvents();
 
         _currentAbility = ability;
-        var abilityName = ability.Data.Get<string>(DataKey.Name);
+        var abilityName = ability.Data.Get<string>(GeneratedDataKey.Name);
 
-        // 更新图标
-        Texture2D? iconTexture = null;
-        var iconValue = ability.Data.GetBase<object?>(DataKey.AbilityIcon, null);
-        if (iconValue is Texture2D texture)
-        {
-            iconTexture = texture;
-        }
-        else if (iconValue is string iconPath && !string.IsNullOrEmpty(iconPath))
-        {
-            iconTexture = ResourceManagement.LoadPath<Texture2D>(iconPath);
-        }
+        var iconRef = ability.Data.Get<ResourceRef>(GeneratedDataKey.AbilityIcon);
+        Texture2D? iconTexture = iconRef.HasValue
+            ? ResourceManagement.LoadPath<Texture2D>(iconRef.Path)
+            : null;
 
         _skillIcon.Texture = iconTexture ?? ResourceManagement.LoadPath<Texture2D>("res://icon.svg");
 

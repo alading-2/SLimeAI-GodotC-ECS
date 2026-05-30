@@ -98,7 +98,7 @@ public partial class ActiveSkillBarUI : UIBase
 
     private void OnAbilityAdded(GameEventType.Ability.Added evt)
     {
-        var abilityName = evt.Ability.Data.Get<string>(DataKey.Name);
+        var abilityName = evt.Ability.Data.Get<string>(GeneratedDataKey.Name);
         _log.Debug($"检测到技能添加: {abilityName}");
         UpdateAllSlots();
     }
@@ -142,7 +142,7 @@ public partial class ActiveSkillBarUI : UIBase
         }
 
         // 高亮当前选中的技能
-        int currentIndex = _entity.Data.Get<int>(DataKey.CurrentActiveAbilityIndex);
+        int currentIndex = _entity.Data.Get<int>(GeneratedDataKey.CurrentActiveAbilityIndex);
         HighlightSelectedSlot(currentIndex);
     }
 

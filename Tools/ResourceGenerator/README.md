@@ -5,7 +5,7 @@
 ## 📖 核心功能
 
 - **自动化**: 遍历指定目录，自动提取资源名称与路径。
-- **分类管理**: 根据文件路径和扩展名自动对资源进行分类（Entity, Component, UI, Config 等）。
+- **分类管理**: 根据文件路径和扩展名自动对资源进行分类（Entity, Component, UI, Asset 等）。
 - **去重与优先级**:
 
   - 自动处理同名资源冲突。
@@ -38,7 +38,7 @@ dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj
 - `Src/UI`: UI 界面
 - `Src/ECS/Entity`: 游戏实体
 - `Src/ECS/Component`: 基础组件
-- `Data/Config/System/*/Resource`: 系统配置资源
+- `Src/ECS/Base/System`: 系统和测试面板场景资源
 
 ### 排除路径 (`ExcludePaths`)
 
@@ -48,15 +48,14 @@ dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj
 
 ## 📂 自动分类逻辑
 
-1. **配置优先**: 位于 `Data/Config/System/*/Resource` 下的 `.tres` 文件。
-2. **路径匹配**: 
+1. **路径匹配**: 
    - `res://Src/ECS/UI/` -> `UI`
    - `res://Src/ECS/Base/Entity/` -> `Entity`
    - `res://Src/ECS/Base/Component/` -> `Component`
    - `res://assets/` -> `Asset`
-3. **兜底**: 其他 unrecognized 路径归类为 `Other`。
+2. **兜底**: 其他 unrecognized 路径归类为 `Other`。
 
 ## ⚠️ 开发规范
 
-- **命名规范**: 请保持资源文件名称唯一。如果 `Asset` 和 `Config` 需要同名，生成器会根据路径逻辑尝试区分，但建议在 Config 文件名后加 `Config` 后缀以示区别（例如 `豺狼人.tscn` 和 `豺狼人Config.tres`）。
+- **命名规范**: 请保持同分类资源文件名称唯一。DataOS 配置数据不进入 `ResourcePaths`，通过 runtime snapshot 查询。
 - **手动更改**: **不要手动修改 `ResourcePaths.cs`**，因为每次运行生成器都会覆盖该文件。

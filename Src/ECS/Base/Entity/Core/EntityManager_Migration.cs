@@ -255,14 +255,14 @@ public static partial class EntityManager
         string sourceEntityId // 源实体 Id
     )
     {
-        string originEntityId = sourceEntity.Data.Get<string>(DataKey.OriginEntityId); // 历史第一来源
+        string originEntityId = sourceEntity.Data.Get<string>(GeneratedDataKey.OriginEntityId); // 历史第一来源
         if (string.IsNullOrEmpty(originEntityId))
         {
             originEntityId = sourceEntityId;
         }
 
-        targetEntity.Data.Set(DataKey.SourceEntityId, sourceEntityId);
-        targetEntity.Data.Set(DataKey.OriginEntityId, originEntityId);
+        targetEntity.Data.Set(GeneratedDataKey.SourceEntityId, sourceEntityId);
+        targetEntity.Data.Set(GeneratedDataKey.OriginEntityId, originEntityId);
     }
 
     /// <summary>

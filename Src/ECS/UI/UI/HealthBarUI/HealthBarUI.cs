@@ -108,14 +108,14 @@ public partial class HealthBarUI : UIBase, IPoolable
         }
 
         // 只为有 HP 的单位创建血条
-        if (!entity.Data.Has(DataKey.CurrentHp))
+        if (!entity.Data.Has(GeneratedDataKey.CurrentHp))
         {
             _log.Debug($"[事件回调] 跳过无 HP 的实体: {entityTypeName}");
             return;
         }
 
         // 检查是否显示血条（新增）
-        bool showHealthBar = entity.Data.Get<bool>(DataKey.IsShowHealthBar);
+        bool showHealthBar = entity.Data.Get<bool>(GeneratedDataKey.IsShowHealthBar);
         if (!showHealthBar)
         {
             _log.Debug($"[事件回调] 跳过不显示血条的实体: {entityTypeName}");
@@ -128,7 +128,7 @@ public partial class HealthBarUI : UIBase, IPoolable
         var healthBar = UIManager.BindUI<HealthBarUI>(entity, ObjectPoolNames.HealthBarPool);
         if (healthBar == null)
         {
-            _log.Error($"绑定血条失败: Entity {entity.Data.Get<string>(DataKey.Id)}");
+            _log.Error($"绑定血条失败: Entity {entity.Data.Get<string>(GeneratedDataKey.Id)}");
         }
         else
         {
@@ -222,7 +222,7 @@ public partial class HealthBarUI : UIBase, IPoolable
         var worldPos = entityNode.GlobalPosition;
 
         // 偏移到Entity头顶
-        worldPos.Y -= _entity.Data.Get<float>(DataKey.HealthBarHeight);
+        worldPos.Y -= _entity.Data.Get<float>(GeneratedDataKey.HealthBarHeight);
 
         GlobalPosition = worldPos;
     }
@@ -240,12 +240,12 @@ public partial class HealthBarUI : UIBase, IPoolable
 
         // 尝试获取 Team
         Team team = Team.Neutral;
-        try { team = _entity.Data.Get<Team>(DataKey.Team); }
+        try { team = _entity.Data.Get<Team>(GeneratedDataKey.Team); }
         catch { /* ignored, use default */ }
 
         // 尝试获取 UnitRank
         UnitRank rank = UnitRank.Normal;
-        try { rank = _entity.Data.Get<UnitRank>(DataKey.UnitRank); }
+        try { rank = _entity.Data.Get<UnitRank>(GeneratedDataKey.UnitRank); }
         catch { /* ignored, use default */ }
 
         // 获取并应用颜色
@@ -261,7 +261,7 @@ public partial class HealthBarUI : UIBase, IPoolable
         if (_entity == null || _healthBar == null) return;
 
         // 使用计算属性 HpPercent（0-100）
-        var hpPercent = _entity.Data.Get<float>(DataKey.HpPercent);
+        var hpPercent = _entity.Data.Get<float>(GeneratedDataKey.HpPercent);
 
         // 设置目标值（会通过平滑插值过渡）
         _displayedHpPercent = hpPercent;

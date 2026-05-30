@@ -3,7 +3,6 @@
 // 放在 AbilitySystem 目录下，逻辑上属于 Ability 模块
 
 using System.Collections.Generic;
-using slime.config.Features;
 
 /// <summary>
 /// EntityManager 的 Ability 扩展
@@ -37,19 +36,22 @@ public static partial class EntityManager
     }
 
     /// <summary>
-    /// 为单位添加运行时构造的通用 Feature。
+    /// 为单位添加运行时构造的通用 Feature record。
     /// </summary>
     /// <param name="owner">技能拥有者。</param>
-    /// <param name="config">运行时 Feature 定义。</param>
+    /// <param name="record">运行时构造的 snapshot record。</param>
     /// <returns>创建的技能实体，失败返回 null。</returns>
-    public static AbilityEntity? AddAbility(IEntity owner, FeatureDefinition config)
+    public static AbilityEntity? AddRuntimeFeature(IEntity owner, RuntimeDataRecordDto record)
     {
+        var abilityName = ReadRecordString(record, GeneratedDataKey.Name.StableKey);
+        var handlerId = ReadRecordString(record, GeneratedDataKey.FeatureHandlerId.StableKey);
         return AddAbilityCore(
             owner, // 技能拥有者
-            config, // 运行时 Feature 定义
-            config.Name ?? "", // Feature 名称
-            config.FeatureHandlerId ?? "", // FeatureHandlerId
-            validateAbilityHandler: false // 通用 Feature 可由测试系统临时构造
+            record, // 运行时 snapshot record
+            abilityName, // Feature 名称
+            handlerId, // FeatureHandlerId
+            validateAbilityHandler: false, // 通用 Feature 可由测试系统临时构造
+            runtimeDataRecord: record
         );
     }
 
@@ -68,6 +70,7 @@ public static partial class EntityManager
         string abilityName,
         string handlerIdFromConfig,
         bool validateAbilityHandler,
+        RuntimeDataRecordDto? runtimeDataRecord = null,
         string? runtimeDataRecordTable = null,
         string? runtimeDataRecordId = null)
     {
@@ -101,6 +104,7 @@ public static partial class EntityManager
         ability = Spawn<AbilityEntity>(new EntitySpawnConfig
         {
             Config = config, // 技能配置数据
+            RuntimeDataRecord = runtimeDataRecord,
             RuntimeDataRecordTable = runtimeDataRecordTable,
             RuntimeDataRecordId = runtimeDataRecordId,
             UsingObjectPool = true, // 技能实体统一走对象池
@@ -150,6 +154,16 @@ public static partial class EntityManager
 
         _abilityLog.Info($"添加技能: {abilityName} -> {ownerId}");
         return ability;
+    }
+
+    private static string ReadRecordString(RuntimeDataRecordDto record, string stableKey)
+    {
+        if (record.Fields.TryGetValue(stableKey, out var field) && field.Value is string text)
+        {
+            return text;
+        }
+
+        return string.Empty;
     }
 
     /// <summary>

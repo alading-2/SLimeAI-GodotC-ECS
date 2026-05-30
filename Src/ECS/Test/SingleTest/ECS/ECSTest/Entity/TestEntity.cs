@@ -12,7 +12,7 @@ namespace Slime.Test
         public EventBus Events { get; } = new EventBus();
         // IEntity Implementation
         public Data Data { get; private set; } = new Data();
-        // EntityId 由 IEntity 默认实现（从 DataKey.Id 读取）
+        // EntityId 由 IEntity 默认实现（从 GeneratedDataKey.Id 读取）
 
         public override void _Ready()
         {
@@ -25,7 +25,7 @@ namespace Slime.Test
 
             // 仅在已注册时才注销，避免未注册实体的警告
             // 对象池初始化时创建的实体不会被注册，因此不需要注销
-            var id = Data.Get<string>(DataKey.Id);
+            var id = Data.Get<string>(GeneratedDataKey.Id);
             if (!string.IsNullOrEmpty(id) && EntityManager.GetEntityById(id) != null)
             {
                 EntityManager.UnregisterEntity(this);

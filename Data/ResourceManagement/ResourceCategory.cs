@@ -28,16 +28,12 @@ public enum ResourceCategory
     /// <summary>Manager 管理器 (如 TimerManager)</summary>
     Tools,
 
-    /// <summary>数据配置兜底（DataOS removed legacy Data/ 下未匹配子分类的 .tres）</summary>
+    /// <summary>DataOS snapshot 数据目录兜底</summary>
     Data,
-    /// <summary>技能数据配置（DataOS removed legacy Data/Ability/）</summary>
+    /// <summary>DataOS snapshot 技能数据目录</summary>
     DataAbility,
-    /// <summary>单位数据配置（DataOS removed legacy Data/Unit/）</summary>
+    /// <summary>DataOS snapshot 单位数据目录</summary>
     DataUnit,
-    /// <summary>系统配置（Data/Config/System/System/）</summary>
-    ConfigSystem,
-    /// <summary>系统预设配置（Data/Config/System/Preset/）</summary>
-    ConfigSystemPreset,
     /// <summary>Test 测试资源</summary>
     Test,
 

@@ -49,12 +49,13 @@ public static class EnemyBehaviorBlocks
     /// </summary>
     /// <param name="abilityName">技能名称（需与 EntityManager.AddAbility 中的名称一致）</param>
     /// <param name="rangeKey">技能射程 DataKey（默认 AttackRange，可改为 AbilityRange 等）</param>
-    public static BehaviorNode SkillBranch(string abilityName, string rangeKey = nameof(GeneratedDataKey.AttackRange))
+    public static BehaviorNode SkillBranch(string abilityName, DataKey<float>? rangeKey = null)
     {
+        var resolvedRangeKey = rangeKey ?? GeneratedDataKey.AttackRange;
         return new SequenceNode("技能序列")
             .Add(new FindEnemyAction()) //搜索敌人
             .Add(new HasValidTargetCondition()) //校验目标是否有效
-            .Add(new IsInRangeCondition(rangeKey)) //范围检测
+            .Add(new IsInRangeCondition(resolvedRangeKey)) //范围检测
             .Add(new IsAbilityReadyCondition(abilityName)) //技能就绪检测
             .Add(new StopMovementAction()) //停止移动
             .Add(new FaceTargetAction()) //面向目标entity

@@ -41,7 +41,7 @@ namespace Slime.Test.DamageSystemTest
 
             // 1. 测试死亡单位不受伤
             var deadUnit = CreateDummyUnit("DeadUnit");
-            deadUnit.Data.Set(DataKey.IsDead, true);
+            deadUnit.Data.Set(GeneratedDataKey.IsDead, true);
             var attacker = CreateDummyUnit("Attacker");
 
             var infoDead = new DamageInfo
@@ -64,7 +64,7 @@ namespace Slime.Test.DamageSystemTest
 
             // 2. 测试无敌单位不受伤
             var invulnerableUnit = CreateDummyUnit("InvulnerableUnit");
-            invulnerableUnit.Data.Set(DataKey.IsInvulnerable, true);
+            invulnerableUnit.Data.Set(GeneratedDataKey.IsInvulnerable, true);
 
             var infoInvulnerable = new DamageInfo
             {
@@ -95,7 +95,7 @@ namespace Slime.Test.DamageSystemTest
 
             var victim = CreateDummyUnit("Victim_DeadAttackerRule");
             var deadAttacker = CreateDummyUnit("DeadAttacker");
-            deadAttacker.Data.Set(DataKey.IsDead, true);
+            deadAttacker.Data.Set(GeneratedDataKey.IsDead, true);
 
             var attackInfo = new DamageInfo
             {
@@ -116,7 +116,7 @@ namespace Slime.Test.DamageSystemTest
                 _log.Error($"  FAIL: 已死亡 Attacker 的 Attack 伤害应被阻断. IsEnd: {attackInfo.IsEnd}, FinalDamage: {attackInfo.FinalDamage}");
             }
 
-            victim.Data.Set(DataKey.CurrentHp, 100f);
+            victim.Data.Set(GeneratedDataKey.CurrentHp, 100f);
 
             var abilityInfo = new DamageInfo
             {
@@ -147,7 +147,7 @@ namespace Slime.Test.DamageSystemTest
 
             // 1. 创建受害者 (高闪避)
             var victim = CreateDummyUnit("Victim_Dodger");
-            victim.Data.Set(DataKey.DodgeChance, 100f); // 100% 闪避
+            victim.Data.Set(GeneratedDataKey.DodgeChance, 100f); // 100% 闪避
 
             // 2. 创建用于触发伤害的 Mock 攻击者（必须是一个 IEntity）
             var attacker = CreateDummyUnit("Attacker");
@@ -202,8 +202,8 @@ namespace Slime.Test.DamageSystemTest
             var attacker = CreateDummyUnit("Attacker_Crit");
 
             // 设置 100% 暴击率
-            attacker.Data.Set(DataKey.CritRate, 100f);
-            attacker.Data.Set(DataKey.CritDamage, 200f); // 200% = 2倍伤害
+            attacker.Data.Set(GeneratedDataKey.CritRate, 100f);
+            attacker.Data.Set(GeneratedDataKey.CritDamage, 200f); // 200% = 2倍伤害
 
             var infoCrit = new DamageInfo
             {
@@ -232,7 +232,7 @@ namespace Slime.Test.DamageSystemTest
             _log.Info("Test 4: 护甲减伤测试");
 
             var victim = CreateDummyUnit("Victim_Armor");
-            victim.Data.Set(DataKey.Armor, 50f); // 正护甲
+            victim.Data.Set(GeneratedDataKey.Armor, 50f); // 正护甲
             var attacker = CreateDummyUnit("Attacker_Armor");
 
             var infoArmor = new DamageInfo
@@ -263,7 +263,7 @@ namespace Slime.Test.DamageSystemTest
             _log.Info("Test 5: 受伤倍率测试");
 
             var victim = CreateDummyUnit("Victim_Amplified");
-            victim.Data.Set(DataKey.DamageTakenMultiplier, 1.5f); // 易伤 +50%
+            victim.Data.Set(GeneratedDataKey.DamageTakenMultiplier, 1.5f); // 易伤 +50%
             var attacker = CreateDummyUnit("Attacker_Amplified");
 
             var infoAmplified = new DamageInfo
@@ -295,7 +295,7 @@ namespace Slime.Test.DamageSystemTest
 
             var victim = CreateDummyUnit("Victim_Lifesteal");
             var attacker = CreateDummyUnit("Attacker_Lifesteal");
-            attacker.Data.Set(DataKey.LifeSteal, 100f); // 100% 触发率
+            attacker.Data.Set(GeneratedDataKey.LifeSteal, 100f); // 100% 触发率
 
             bool healRequestReceived = false;
             attacker.Events.On<GameEventType.Unit.HealRequest>(
@@ -336,10 +336,10 @@ namespace Slime.Test.DamageSystemTest
             var attacker = CreateDummyUnit("Attacker_Stats");
 
             // 重置统计，确保从0开始
-            attacker.Data.Set(DataKey.TotalDamageDealt, 0f);
-            attacker.Data.Set(DataKey.WaveDamageDealt, 0f);
-            attacker.Data.Set(DataKey.TotalHits, 0);
-            attacker.Data.Set(DataKey.WaveHits, 0);
+            attacker.Data.Set(GeneratedDataKey.TotalDamageDealt, 0f);
+            attacker.Data.Set(GeneratedDataKey.WaveDamageDealt, 0f);
+            attacker.Data.Set(GeneratedDataKey.TotalHits, 0);
+            attacker.Data.Set(GeneratedDataKey.WaveHits, 0);
 
             var infoStats = new DamageInfo
             {
@@ -350,10 +350,10 @@ namespace Slime.Test.DamageSystemTest
             };
             ProcessDamage(infoStats);
 
-            float totalDamage = attacker.Data.Get<float>(DataKey.TotalDamageDealt);
-            float waveDamage = attacker.Data.Get<float>(DataKey.WaveDamageDealt);
-            int totalHits = attacker.Data.Get<int>(DataKey.TotalHits);
-            int waveHits = attacker.Data.Get<int>(DataKey.WaveHits);
+            float totalDamage = attacker.Data.Get<float>(GeneratedDataKey.TotalDamageDealt);
+            float waveDamage = attacker.Data.Get<float>(GeneratedDataKey.WaveDamageDealt);
+            int totalHits = attacker.Data.Get<int>(GeneratedDataKey.TotalHits);
+            int waveHits = attacker.Data.Get<int>(GeneratedDataKey.WaveHits);
 
             if (totalDamage == 50f && waveDamage == 50f && totalHits == 1 && waveHits == 1)
             {
@@ -374,8 +374,8 @@ namespace Slime.Test.DamageSystemTest
 
             var victim = CreateDummyUnit("Victim_Sim");
             float startHp = 100f;
-            victim.Data.Set(DataKey.CurrentHp, startHp);
-            victim.Data.Set(DataKey.FinalHp, startHp);
+            victim.Data.Set(GeneratedDataKey.CurrentHp, startHp);
+            victim.Data.Set(GeneratedDataKey.FinalHp, startHp);
 
             var attacker = CreateDummyUnit("Attacker_Sim");
 
@@ -401,7 +401,7 @@ namespace Slime.Test.DamageSystemTest
             }
 
             // 检查 HP 是否未变
-            float currentHp = victim.Data.Get<float>(DataKey.CurrentHp);
+            float currentHp = victim.Data.Get<float>(GeneratedDataKey.CurrentHp);
             if (Mathf.IsEqualApprox(currentHp, startHp))
             {
                 _log.Success("  PASS: 模拟模式未实际扣血");
@@ -427,9 +427,9 @@ namespace Slime.Test.DamageSystemTest
             EntityManager.AddComponent(unit, healthComp);
 
             // 初始化必要数据
-            unit.Data.Set(DataKey.BaseHp, 100f);
-            unit.Data.Set(DataKey.CurrentHp, 100f);
-            unit.Data.Set(DataKey.FinalHp, 100f);
+            unit.Data.Set(GeneratedDataKey.BaseHp, 100f);
+            unit.Data.Set(GeneratedDataKey.CurrentHp, 100f);
+            unit.Data.Set(GeneratedDataKey.FinalHp, 100f);
 
             return unit;
         }
@@ -446,13 +446,13 @@ namespace Slime.Test.DamageSystemTest
         {
             public Data Data { get; } = new Data();
             public EventBus Events { get; } = new EventBus();
-            // EntityId 由 IEntity 默认实现（从 DataKey.Id 读取）
+            // EntityId 由 IEntity 默认实现（从 GeneratedDataKey.Id 读取）
             // IUnit expects FactionId
             public int FactionId { get; set; } = 0;
 
             public TestUnit()
             {
-                // 初始化必要数据，使用 DataKey.BaseHp 代替不存在的 MaxHp
+                // 初始化必要数据，使用 GeneratedDataKey.BaseHp 代替不存在的 MaxHp
                 // 注意：CreateDummyUnit 中已经设置了一部分，这里是类定义
             }
         }

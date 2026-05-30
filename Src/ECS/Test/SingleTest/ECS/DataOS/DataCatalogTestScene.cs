@@ -99,17 +99,19 @@ public partial class DataCatalogTestScene : DataSceneTestBase
         {
             Descriptor("System.Dependencies", "string_array", "DamageService,TimerManager")
         });
-        var defaultValue = (string)catalog.GetRequired("System.Dependencies").DefaultValue!;
+        var defaultValue = (string[])catalog.GetRequired("System.Dependencies").DefaultValue!;
 
         AssertEqual("string array value type", DataValueType.StringArray, catalog.GetRequired("System.Dependencies").ValueType);
-        AssertEqual("string array default", "DamageService,TimerManager", defaultValue);
+        AssertEqual("string array default count", 2, defaultValue.Length);
+        AssertEqual("string array default[0]", "DamageService", defaultValue[0]);
+        AssertEqual("string array default[1]", "TimerManager", defaultValue[1]);
     }
 
     private void BuildCatalog_ShouldConsumeRepositoryRuntimeSnapshotDescriptors()
     {
         var catalog = Bootstrap.Catalog;
         AssertEqual("descriptor count", 212, catalog.Count);
-        AssertTrue("FinalHp descriptor exists", catalog.TryGet(GeneratedDataKey.FinalHp.Key, out var finalHp));
+        AssertTrue("FinalHp descriptor exists", catalog.TryGet(GeneratedDataKey.FinalHp.StableKey, out var finalHp));
         AssertEqual("FinalHp is computed", DataStoragePolicy.Computed, finalHp.StoragePolicy);
         AssertEqual("Dependencies descriptor is string array", DataValueType.StringArray, catalog.GetRequired("Dependencies").ValueType);
     }
@@ -126,12 +128,12 @@ public partial class DataCatalogTestScene : DataSceneTestBase
     {
         var generated = File.ReadAllText(ResolveRepositoryPath("Data/DataKey/Generated/DataKey_Generated.cs"));
         AssertContains("FinalHp generated handle", generated, "public static readonly DataKey<float> FinalHp = new(\"FinalHp\");");
-        AssertContains("Feature.Modifiers generated handle", generated, "public static readonly DataKey<string> FeatureModifiers = new(\"Feature.Modifiers\");");
+        AssertContains("Feature.Modifiers generated handle", generated, "public static readonly DataKey<slime.data.Features.FeatureModifierEntryData[]> FeatureModifiers = new(\"Feature.Modifiers\");");
         AssertFalse("generated handle has no defaults", generated.Contains("DefaultValue", StringComparison.Ordinal));
         AssertFalse("generated handle has no range policy", generated.Contains("RangePolicy", StringComparison.Ordinal));
         AssertFalse("generated handle has no modifier policy", generated.Contains("ModifierPolicy", StringComparison.Ordinal));
-        AssertEqual("generated key is thin stable handle", "FinalHp", GeneratedDataKey.FinalHp.Key);
-        AssertTrue("legacy DataKey alias is handle only", DataKey.FinalHp.Key == GeneratedDataKey.FinalHp.Key);
+        AssertEqual("generated key is thin stable handle", "FinalHp", GeneratedDataKey.FinalHp.StableKey);
+        AssertFalse("generated handle has no compatibility alias", generated.Contains("public static partial class DataKey", StringComparison.Ordinal));
     }
 
     private void BuildCatalog_ShouldConsumeMinimalDescriptorFixture()

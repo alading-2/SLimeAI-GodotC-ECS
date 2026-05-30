@@ -499,14 +499,14 @@ public partial class AttributeTestModule : TestModuleBase
         }
 
         var metaKey = GetMetaKey(meta);
-        if (metaKey == DataKey.CurrentHp.Key)
+        if (metaKey == GeneratedDataKey.CurrentHp.StableKey)
         {
-            var maxHp = selectedEntity.Data.Get<float>(DataKey.FinalHp.Key);
+            var maxHp = selectedEntity.Data.Get<float>(GeneratedDataKey.FinalHp.StableKey);
             value = Mathf.Clamp(Convert.ToSingle(value), 0f, maxHp);
         }
-        else if (metaKey == DataKey.CurrentMana.Key)
+        else if (metaKey == GeneratedDataKey.CurrentMana.StableKey)
         {
-            var maxMana = selectedEntity.Data.Get<float>(DataKey.FinalMana.Key);
+            var maxMana = selectedEntity.Data.Get<float>(GeneratedDataKey.FinalMana.StableKey);
             value = Mathf.Clamp(Convert.ToSingle(value), 0f, maxMana);
         }
 
@@ -551,25 +551,25 @@ public partial class AttributeTestModule : TestModuleBase
             return null;
         }
 
-        if (key == DataKey.BaseHp.Key || key == DataKey.HpBonus.Key)
+        if (key == GeneratedDataKey.BaseHp.StableKey || key == GeneratedDataKey.HpBonus.StableKey)
         {
-            var currentHp = selectedEntity.Data.Get<float>(DataKey.CurrentHp.Key);
-            var maxHp = selectedEntity.Data.Get<float>(DataKey.FinalHp.Key);
+            var currentHp = selectedEntity.Data.Get<float>(GeneratedDataKey.CurrentHp.StableKey);
+            var maxHp = selectedEntity.Data.Get<float>(GeneratedDataKey.FinalHp.StableKey);
             if (currentHp > maxHp)
             {
-                selectedEntity.Data.Set(DataKey.CurrentHp, maxHp);
-                return DataKey.CurrentHp.Key;
+                selectedEntity.Data.Set(GeneratedDataKey.CurrentHp, maxHp);
+                return GeneratedDataKey.CurrentHp.StableKey;
             }
         }
 
-        if (key == DataKey.BaseMana.Key || key == DataKey.ManaBonus.Key)
+        if (key == GeneratedDataKey.BaseMana.StableKey || key == GeneratedDataKey.ManaBonus.StableKey)
         {
-            var currentMana = selectedEntity.Data.Get<float>(DataKey.CurrentMana.Key);
-            var maxMana = selectedEntity.Data.Get<float>(DataKey.FinalMana.Key);
+            var currentMana = selectedEntity.Data.Get<float>(GeneratedDataKey.CurrentMana.StableKey);
+            var maxMana = selectedEntity.Data.Get<float>(GeneratedDataKey.FinalMana.StableKey);
             if (currentMana > maxMana)
             {
-                selectedEntity.Data.Set(DataKey.CurrentMana, maxMana);
-                return DataKey.CurrentMana.Key;
+                selectedEntity.Data.Set(GeneratedDataKey.CurrentMana, maxMana);
+                return GeneratedDataKey.CurrentMana.StableKey;
             }
         }
 
@@ -622,7 +622,7 @@ public partial class AttributeTestModule : TestModuleBase
             return;
         }
 
-        if (evt.Key == DataKey.Name.Key)
+        if (evt.Key == GeneratedDataKey.Name.StableKey)
         {
             RequestFullRefresh();
             return;
@@ -826,7 +826,7 @@ public partial class AttributeTestModule : TestModuleBase
             return;
         }
 
-        var entityName = selectedEntity.Data.Get<string>(DataKey.Name.Key);
+        var entityName = selectedEntity.Data.Get<string>(GeneratedDataKey.Name.StableKey);
         if (string.IsNullOrWhiteSpace(entityName))
         {
             entityName = entityNode.Name.ToString();

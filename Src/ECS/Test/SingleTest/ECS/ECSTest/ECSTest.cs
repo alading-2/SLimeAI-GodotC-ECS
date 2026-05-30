@@ -110,7 +110,7 @@ public partial class ECSTest : Node
 
         var data = new Data();
         // Use a registered key that supports modifiers
-        string keyHp = DataKey.BaseHp;
+        string keyHp = GeneratedDataKey.BaseHp.StableKey;
 
         // 1. Basic Set/Get
         data.Set(keyHp, 100f);
@@ -129,17 +129,8 @@ public partial class ECSTest : Node
         data.RemoveModifier(keyHp, buffId); // (100) * 1.5 = 150
         Assert(Mathf.IsEqualApprox(data.Get<float>(keyHp), 150f), "Data Remove Modifier");
 
-        // 5. Computed Data
-        // We need to register a computed data to test it. 
-        // DataRegistry is static, so we can register a temporary one or use an existing one if available.
-        // For safety, let's just test the Data behavior with local computed logic if possible, 
-        // but Data class uses DataRegistry for computed access.
-        // We will skip registering global data to avoid polluting the global registry for a test run,
-        // or we assume standard keys exist. Let's use standard keys.
-
-        // Let's use a dummy key if we can, but DataRegistry needs registration.
-        // We'll skip complex ComputedData test that requires global static registration to avoid side effects,
-        // unless we register a test specific key.
+        // 5. Computed Data 由 DataDefinitionCatalog + resolver 场景覆盖。
+        // 这里保留基础 Data 行为 smoke，避免在旧 ECSTest 中重复构造 catalog。
 
         Pass("Data System Basic Tests");
     }
@@ -215,7 +206,7 @@ public partial class ECSTest : Node
 
         EntityManager.Register(entity);
 
-        Assert(!string.IsNullOrEmpty(entity.Data.Get<string>(DataKey.Id)), "Entity ID assigned");
+        Assert(!string.IsNullOrEmpty(entity.Data.Get<string>(GeneratedDataKey.Id)), "Entity ID assigned");
 
         // 2. Add Component
         var comp = new TestComponent();

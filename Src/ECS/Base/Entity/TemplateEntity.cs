@@ -27,7 +27,7 @@ public partial class TemplateEntity : Node, IEntity, IPoolable
     /// <summary>实体局部事件总线</summary>
     public EventBus Events { get; } = new EventBus();
 
-    // EntityId 由 IEntity 默认实现（从 DataKey.Id 读取）
+    // EntityId 由 IEntity 默认实现（从 GeneratedDataKey.Id 读取）
 
     public TemplateEntity()
     {

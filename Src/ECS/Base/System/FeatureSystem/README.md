@@ -58,11 +58,11 @@
 
 ## 关键对象
 
-### 1. FeatureDefinition
+### 1. FeatureDefinitionData
 
-路径：`Data/Feature/Definition/FeatureDefinition.cs`
+路径：`Data/DataOS/RuntimeModels/Feature/FeatureDefinitionData.cs`
 
-作用：定义一个 Feature 模板。
+作用：表达 runtime snapshot projection 后的 Feature DTO，不作为 authoring 源。
 
 常用字段：
 
@@ -82,9 +82,9 @@
 - Buff / Debuff 模板
 - 任何需要“授予/移除/激活/结束”生命周期的通用能力
 
-### 2. FeatureModifierEntry
+### 2. FeatureModifierEntryData
 
-路径：`Data/Feature/Definition/FeatureModifierEntry.cs`
+路径：`Data/DataOS/RuntimeModels/Feature/FeatureDefinitionData.cs`
 
 作用：定义一条授予即生效、移除即回滚的 `DataModifier`。
 
@@ -159,10 +159,10 @@
 
 做法：
 
-1. 创建 `FeatureDefinition`
-2. 填写 `Name` / `Category`
-3. 在 `Modifiers` 里配置一组 `FeatureModifierEntry`
-4. 调用 `EntityManager.AddAbility(owner, featureDefinition)` 授予
+1. 在 DataOS 中写入 Feature / Modifier authoring 数据
+2. 生成 runtime snapshot record
+3. record 中的 `Feature.Modifiers` 投影为 `FeatureModifierEntryData[]`
+4. 调用 `EntityManager.AddAbility(owner, abilityView)` 或运行时显式 record 授予
 5. 调用 `EntityManager.RemoveAbility(owner, featureName)` 移除
 
 效果：
@@ -181,7 +181,7 @@
 
 做法：
 
-1. 创建 `FeatureDefinition`
+1. 创建 DataOS Feature / Ability record
 2. 配置 `FeatureHandlerId`
 3. 实现对应 `IFeatureHandler`
 4. 在 `OnGranted/OnEnabled/OnDisabled/OnActivated/OnExecute/OnRemoved/OnEnded` 中写逻辑
@@ -274,8 +274,8 @@ Buff / Item 等非 Ability 子域仍直接实现 `IFeatureHandler`，并在 `Act
 
 ### 通用 Feature
 
-1. 创建 `FeatureDefinition`
-2. 需要纯加成就只配 `Modifiers`
+1. 创建 DataOS Feature / Ability record
+2. 需要纯加成就配置 `Feature.Modifiers`
 3. 需要复杂逻辑就实现 `IFeatureHandler`
 4. 使用 `EntityManager.AddAbility` 授予
 
@@ -296,7 +296,7 @@ Buff / Item 等非 Ability 子域仍直接实现 `IFeatureHandler`，并在 `Act
 - 不要恢复 `AbilityExecutorRegistry`
 - 不要绕过 `TryTrigger` 直接调用技能逻辑
 - 不要在 Feature 核心里直接绑定 Ability 专有状态
-- 不要把持续数值效果手写成私有字段，优先使用 `FeatureModifierEntry + DataModifier`
+- 不要把持续数值效果手写成私有字段，优先使用 `FeatureModifierEntryData + DataModifier`
 
 ---
 
@@ -311,6 +311,5 @@ Buff / Item 等非 Ability 子域仍直接实现 `IFeatureHandler`，并在 `Act
 - `Src/ECS/Base/System/AbilitySystem/AbilityTool.cs`
 - `Src/ECS/Base/System/FeatureSystem/FeatureEndReason.cs`
 - `Src/ECS/Base/System/AbilitySystem/AbilitySystem.cs`
-- `Data/Feature/Definition/FeatureDefinition.cs`
-- `Data/Feature/Definition/FeatureModifierEntry.cs`
+- `Data/DataOS/RuntimeModels/Feature/FeatureDefinitionData.cs`
 - `Docs/框架/ECS/System/FeatureSystem/FeatureSystem.md`

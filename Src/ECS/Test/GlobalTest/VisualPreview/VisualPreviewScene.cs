@@ -212,13 +212,13 @@ public partial class VisualPreviewScene : Node2D
 
         var entity = (VisualPreviewEntity)evt.PrimaryEntity!;
         _selectionLabel.Text =
-            $"名称：{entity.Data.Get<string>(DataKey.Name)}\n" +
+            $"名称：{entity.Data.Get<string>(GeneratedDataKey.Name)}\n" +
             "\n" +
             $"资源键：{entry.ResourceKey}\n" +
             $"路径：{entry.ResourcePath}\n" +
             $"分类：{entry.Category}\n" +
-            $"默认动作：{FormatEmpty(entity.Data.Get<string>(DataKey.PreviewDefaultAnimation))}\n" +
-            $"当前动作：{FormatEmpty(entity.Data.Get<string>(DataKey.PreviewCurrentAnimation))}";
+            $"默认动作：{FormatEmpty(entity.Data.Get<string>(GeneratedDataKey.PreviewDefaultAnimation))}\n" +
+            $"当前动作：{FormatEmpty(entity.Data.Get<string>(GeneratedDataKey.PreviewCurrentAnimation))}";
     }
 
     /// <summary>

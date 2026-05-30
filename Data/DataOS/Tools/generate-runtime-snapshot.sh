@@ -18,7 +18,7 @@ if [ ! -f "$db_path" ]; then
     exit 1
 fi
 
-bash "$repo_root/DataOS/Tools/validate-dataos.sh" "$db_path"
+DATAOS_SKIP_FINAL_SNAPSHOT=1 DATAOS_SKIP_GENERATED_HANDLE=1 bash "$repo_root/DataOS/Tools/validate-dataos.sh" "$db_path"
 mkdir -p "$(dirname "$output_path")"
 
 sqlite3 "$db_path" > "$output_path" <<SQL
@@ -178,7 +178,17 @@ descriptor_source AS (
     FROM data_key_descriptor
 ),
 active_fields AS (
-    SELECT f.*
+    SELECT
+        f.legacy_table,
+        f.table_id,
+        f.record_id,
+        f.display_name,
+        f.field_key,
+        d.descriptor_type AS value_type,
+        f.value_text,
+        f.source_table,
+        f.source_row_id,
+        f.source_column
     FROM field_rows f
     JOIN descriptor_source d ON d.field_key = f.field_key
     LEFT JOIN capability_manifest c ON c.capability_id = d.owner_capability
@@ -201,7 +211,6 @@ record_docs AS (
         r.record_id,
         json_object(
             'table', r.table_id,
-            'legacyTable', r.legacy_table,
             'id', r.record_id,
             'name', COALESCE(NULLIF(MAX(r.display_name), ''), r.record_id),
             'fields', COALESCE((
@@ -213,33 +222,6 @@ record_docs AS (
                         ELSE json_object('type', f.value_type, 'value', COALESCE(f.value_text, ''))
                     END
                 ))
-                FROM active_fields f
-                WHERE f.table_id = r.table_id
-                  AND f.record_id = r.record_id
-                ORDER BY f.field_key
-            ), json('{}')),
-            'legacyData', COALESCE((
-                SELECT json_group_object(
-                    CASE f.field_key
-                        WHEN 'AbilityFeatureGroup' THEN 'FeatureGroupId'
-                        WHEN 'AbilityIcon' THEN 'AbilityIconPath'
-                        WHEN 'EffectScene' THEN 'EffectScenePath'
-                        WHEN 'ProjectileScene' THEN 'ProjectileScenePath'
-                        WHEN 'AbilityChainCount' THEN 'ChainCount'
-                        WHEN 'AbilityChainRange' THEN 'ChainRange'
-                        WHEN 'AbilityChainDelay' THEN 'ChainDelay'
-                        WHEN 'AbilityChainDamageDecay' THEN 'ChainDamageDecay'
-                        ELSE f.field_key
-                    END,
-                    json(
-                        CASE
-                            WHEN f.value_type = 'int' THEN CAST(f.value_text AS INTEGER)
-                            WHEN f.value_type = 'float' THEN CAST(f.value_text AS REAL)
-                            WHEN f.value_type = 'bool' THEN json(CASE lower(f.value_text) WHEN 'true' THEN 'true' ELSE 'false' END)
-                            ELSE json_quote(COALESCE(f.value_text, ''))
-                        END
-                    )
-                )
                 FROM active_fields f
                 WHERE f.table_id = r.table_id
                   AND f.record_id = r.record_id

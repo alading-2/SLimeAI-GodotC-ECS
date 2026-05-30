@@ -15,7 +15,7 @@ using Godot;
 /// </summary>
 public class MoveToTargetAction : BehaviorNode
 {
-    private readonly string? _stopRangeKey;
+    private readonly DataKey<float>? _stopRangeKey;
 
     /// <summary>
     /// 创建向目标移动的动作节点
@@ -25,7 +25,7 @@ public class MoveToTargetAction : BehaviorNode
     /// 传入后，到达该距离时停止移动并返回 Success；
     /// 不传则一直贴近目标，始终返回 Running。
     /// </param>
-    public MoveToTargetAction(string? stopRangeKey = null) : base("移动到目标")
+    public MoveToTargetAction(DataKey<float>? stopRangeKey = null) : base("移动到目标")
     {
         _stopRangeKey = stopRangeKey;
     }
@@ -33,7 +33,7 @@ public class MoveToTargetAction : BehaviorNode
     /// <inheritdoc/>
     public override NodeState Evaluate(AIContext ctx)
     {
-        var target = ctx.Entity.Data.Get<Node2D>(GeneratedDataKey.TargetNode);
+        var target = ctx.Entity.Data.Get(GeneratedDataKey.TargetNode);
         if (target == null) return NodeState.Failure;
 
         var selfNode = ctx.Entity as Node2D;
@@ -44,7 +44,7 @@ public class MoveToTargetAction : BehaviorNode
         // 已到达停止距离，停步并返回 Success
         if (_stopRangeKey != null)
         {
-            float stopRange = ctx.Entity.Data.Get<float>(_stopRangeKey);
+            float stopRange = ctx.Entity.Data.Get(_stopRangeKey.Value);
             if (distance <= stopRange)
             {
                 ctx.Entity.Data.Set(GeneratedDataKey.AIMoveDirection, Vector2.Zero);

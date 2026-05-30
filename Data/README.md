@@ -29,25 +29,16 @@
 - **典型内容**：`Authoring/`、`Schema/`、`Tools/`、`Snapshots/runtime_snapshot.json`。
 - **核心职责**：生成 descriptors、records 和 resources，供运行时只读消费。
 
-### 3. `Data/`
-
-**旧运行时代码与历史配置路径**。
-
-- **用途**：保留旧 Resource/Config 类、DataKey 定义和运行时系统对接代码。
-- **典型内容**：`UnitConfig`、`PlayerConfig`、`EnemyConfig`、技能执行器、DataKey、EventType。
-- **核心职责**：历史输入和运行时协议，不再作为 authoring 真相源。
-- **详细说明**：见 [`DataOS removed legacy Data/README.md`](Data/README.md)
-
-### 4. `DataKey/`
+### 3. `DataKey/`
 
 **DataKey 定义路径**。
 
-- **用途**：集中定义所有可写入 `Data` 容器的数据键。
+- **用途**：集中保存生成后的 typed handle 和相关枚举。
 - **当前架构**：DataKey 由 DataOS descriptor / runtime snapshot 生成；`DataMeta` 不作为当前字段定义事实源。
-- **核心职责**：保存 generated typed handle 和相关枚举；默认值、分类、约束、modifier、computed 等元数据来自 descriptor。
+- **核心职责**：保存 generated typed handle；默认值、分类、约束、modifier、computed 等元数据来自 descriptor。
 - **详细说明**：见 [`Data/DataKey/README.md`](DataKey/README.md)
 
-### 5. `EventType/`
+### 4. `EventType/`
 
 **事件协议路径**。
 
@@ -55,7 +46,7 @@
 - **核心职责**：作为模块间通信契约，统一事件名与事件载荷。
 - **典型内容**：`GameEventType_Data.cs`、Ability/Unit/Base 等分域事件定义。
 
-### 6. `ResourceManagement/`
+### 5. `ResourceManagement/`
 
 **资源注册与加载路径**。
 
@@ -84,7 +75,7 @@
 
 ### 新增一个系统级规则
 
-1. 放到 `Data/Config/`。
+1. 优先写入 `DataOS/` 业务表，并由 generator 投影为 runtime snapshot record。
 2. 如果它不是 Entity 运行时状态，通常**不需要**定义 `DataKey`。
 
 ### 新增一个事件协议
@@ -95,7 +86,7 @@
 ## 维护规则
 
 - **不要**把运行时业务逻辑写进 `Data/`。
-- **不要**在 `DataOS removed legacy Data/` 里重复定义 `DataKey`。
+- **不要**在旧 Resource/Config 类里重复定义 `DataKey`。
 - **不要**新增 `const string` DataKey。
-- **不要**使用 `DataKey.Xxx` 兼容别名；SDD-0021 要删除该别名和 `DataKey<T> -> string` 隐式转换。
+- **不要**使用旧 `DataKey` 别名；它和 `DataKey<T> -> string` 隐式转换已经删除。
 - **系统配置**由 `DataOS/` 驱动并通过 `system.config` / `system.preset` snapshot records 投影，**可注入 Data 的配置**同样先写 `DataOS/`，**键定义**来自 descriptor，**事件契约**放 `EventType/`。

@@ -9,14 +9,14 @@
 /// 完整生命周期：Granted → [Enabled ⇄ Disabled] → [Activated → Execute → Ended]* → Removed
 ///
 /// 简单属性类 Feature（只加减属性）无需实现此接口，
-/// 直接在 FeatureDefinition.Modifiers 中配置即可。
+/// 直接在 DataOS Feature.Modifiers 中配置即可。
 ///
 /// 注册方式：在 [ModuleInitializer] 方法中调用 FeatureHandlerRegistry.Register(new MyHandler())
 /// </summary>
 public interface IFeatureHandler
 {
     /// <summary>
-    /// Feature 标识符（完整唯一 ID，对应 .tres FeatureHandlerId 字段）
+    /// Feature 标识符（完整唯一 ID，对应 snapshot FeatureHandlerId 字段）
     /// </summary>
     string FeatureId { get; }
 

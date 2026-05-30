@@ -12,6 +12,11 @@ if [ ! -f "$db_path" ]; then
     exit 1
 fi
 
+data_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+snapshot_path="${DATAOS_RUNTIME_SNAPSHOT_PATH:-$data_root/DataOS/Snapshots/runtime_snapshot.json}"
+generated_handle_path="${DATAOS_GENERATED_HANDLE_PATH:-$data_root/DataKey/Generated/DataKey_Generated.cs}"
+skip_final_snapshot="${DATAOS_SKIP_FINAL_SNAPSHOT:-0}"
+skip_generated_handle="${DATAOS_SKIP_GENERATED_HANDLE:-0}"
 errors=0
 
 run_check() {
@@ -224,6 +229,135 @@ if [ -n "$record_rows" ]; then
     echo "ERROR [record_descriptor]"
     echo "$record_rows"
     errors=$((errors + 1))
+fi
+
+if [ "$skip_final_snapshot" != "1" ]; then
+    if [ ! -f "$snapshot_path" ]; then
+        echo "ERROR [runtime_snapshot]"
+        echo "missing snapshot: $snapshot_path"
+        errors=$((errors + 1))
+    else
+        snapshot_rows="$(python3 - "$snapshot_path" <<'PY'
+import json
+import sys
+
+snapshot_path = sys.argv[1]
+with open(snapshot_path, encoding='utf-8') as handle:
+    snapshot = json.load(handle)
+
+descriptor_types = {
+    descriptor.get('stableKey'): descriptor.get('valueType')
+    for descriptor in snapshot.get('descriptors', [])
+}
+
+errors = []
+for record in snapshot.get('records', []):
+    table = record.get('table', '<missing-table>')
+    record_id = record.get('id', '<missing-id>')
+    for legacy_key in ('legacy' + 'Table', 'legacy' + 'Data'):
+        if legacy_key in record:
+            errors.append(f'runtime_snapshot|{table}:{record_id}|{legacy_key}|legacy_field|deprecated snapshot field must not be emitted')
+
+    fields = record.get('fields') or {}
+    for field_key, field in fields.items():
+        descriptor_type = descriptor_types.get(field_key)
+        if descriptor_type is None:
+            errors.append(f'runtime_snapshot|{table}:{record_id}:{field_key}|field_key|unknown_key|{field_key}')
+            continue
+        record_type = field.get('type')
+        if record_type != descriptor_type:
+            errors.append(f'runtime_snapshot|{table}:{record_id}:{field_key}|type|type_mismatch|{record_type}!={descriptor_type}')
+
+print('\n'.join(errors))
+PY
+)"
+        if [ -n "$snapshot_rows" ]; then
+            echo "ERROR [runtime_snapshot]"
+            echo "$snapshot_rows"
+            errors=$((errors + 1))
+        fi
+    fi
+fi
+
+if [ "$skip_generated_handle" != "1" ]; then
+    if [ ! -f "$generated_handle_path" ]; then
+        echo "ERROR [generated_handle]"
+        echo "missing generated handle: $generated_handle_path"
+        errors=$((errors + 1))
+    else
+        handle_rows="$(python3 - "$snapshot_path" "$generated_handle_path" <<'PY'
+import json
+import re
+import sys
+from pathlib import Path
+
+snapshot_path = Path(sys.argv[1])
+handle_path = Path(sys.argv[2])
+if not snapshot_path.exists():
+    raise SystemExit(0)
+
+snapshot = json.loads(snapshot_path.read_text(encoding='utf-8'))
+generated = handle_path.read_text(encoding='utf-8')
+
+type_map = {
+    'string': 'string',
+    'string_array': 'string[]',
+    'int': 'int',
+    'float': 'float',
+    'double': 'double',
+    'bool': 'bool',
+    'vector2': 'Godot.Vector2',
+    'enum': 'string',
+    'modifier_list': None,
+    'object_ref': None,
+}
+
+def to_identifier(stable_key: str) -> str:
+    parts = re.split(r'[^0-9A-Za-z_]+', stable_key)
+    raw = ''.join(part[:1].upper() + part[1:] for part in parts if part)
+    if not raw:
+        return '<invalid>'
+    if raw[0].isdigit():
+        raw = '_' + raw
+    return raw
+
+def normalize_runtime_type(value_type: str, runtime_type_id: str) -> str:
+    if value_type == 'enum' and runtime_type_id:
+        return runtime_type_id
+    if value_type == 'modifier_list':
+        return runtime_type_id or 'slime.data.Features.FeatureModifierEntryData[]'
+    if value_type == 'object_ref':
+        if runtime_type_id in {'Godot.Node2D', 'Node2D'}:
+            return 'Godot.Node2D'
+        return 'ResourceRef'
+    mapped = type_map.get(value_type)
+    if mapped is None:
+        raise ValueError(value_type)
+    return mapped
+
+errors = []
+if ('Compatibility ' + 'aliases') in generated or ('public static partial class ' + 'DataKey') in generated:
+    errors.append('generated_handle|DataKey|compat_alias|forbidden|Compatibility alias class must not be emitted')
+
+for descriptor in snapshot.get('descriptors', []):
+    stable_key = descriptor.get('stableKey', '')
+    value_type = descriptor.get('valueType', '')
+    runtime_type_id = descriptor.get('runtimeTypeId') or ''
+    identifier = to_identifier(stable_key)
+    expected_type = normalize_runtime_type(value_type, runtime_type_id)
+    expected = f'public static readonly DataKey<{expected_type}> {identifier} = new("{stable_key}");'
+    if expected not in generated:
+        errors.append(f'generated_handle|{stable_key}|type|type_mismatch|expected {expected}')
+
+print('\n'.join(errors))
+PY
+)"
+        if [ -n "$handle_rows" ]; then
+            echo "ERROR [generated_handle]"
+            echo "$handle_rows"
+            errors=$((errors + 1))
+        fi
+    fi
 fi
 
 if [ "$errors" -ne 0 ]; then

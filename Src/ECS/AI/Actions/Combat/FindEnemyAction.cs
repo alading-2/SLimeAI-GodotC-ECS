@@ -14,7 +14,7 @@ using Godot;
 /// </summary>
 public class FindEnemyAction : BehaviorNode
 {
-    private static readonly Log _log = new("FindEnemy");
+    private static readonly Log _log = new("FindEnemy",LogLevel.Warning);
 
     /// <summary>
     /// 创建索敌动作节点
@@ -30,7 +30,7 @@ public class FindEnemyAction : BehaviorNode
         if (selfNode == null) return NodeState.Failure;
 
         // 1. 已有存活目标：检查是否超出丢失范围
-        var targetNode = ctx.Entity.Data.Get<Node2D>(GeneratedDataKey.TargetNode);
+        var targetNode = ctx.Entity.Data.Get(GeneratedDataKey.TargetNode);
         if (targetNode != null && GodotObject.IsInstanceValid(targetNode))
         {
             float loseDist = ctx.Entity.Data.Get<float>(GeneratedDataKey.LoseTargetRange);
@@ -65,7 +65,7 @@ public class FindEnemyAction : BehaviorNode
             var target = targets[0];
             if (target is Node2D node2D)
             {
-                ctx.Entity.Data.Set(GeneratedDataKey.TargetNode, node2D);
+                ctx.Entity.Data.Set<Node2D>(GeneratedDataKey.TargetNode, node2D);
                 _log.Debug($"发现新目标开始锁定: {node2D.Name}");
                 return NodeState.Success;
             }

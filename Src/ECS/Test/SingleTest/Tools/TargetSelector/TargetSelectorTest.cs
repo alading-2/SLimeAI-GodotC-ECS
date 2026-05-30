@@ -20,9 +20,9 @@ public partial class TargetSelectorTest : Node
         {
             Name = name;
             GlobalPosition = pos;
-            Data.Set(DataKey.Team, team);
-            Data.Set(DataKey.EntityType, type);
-            Data.Set(DataKey.Id, GetInstanceId().ToString());
+            Data.Set(GeneratedDataKey.Team, team);
+            Data.Set(GeneratedDataKey.EntityType, type);
+            Data.Set(GeneratedDataKey.Id, GetInstanceId().ToString());
         }
     }
 

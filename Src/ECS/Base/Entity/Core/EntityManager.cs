@@ -348,7 +348,7 @@ public static partial class EntityManager
         if (scene == null)
         {
             if (config is RuntimeDataRecordDto record
-                && TryReadRecordString(record, GeneratedDataKey.VisualScenePath.Key, out var recordPath)
+                && TryReadRecordString(record, GeneratedDataKey.VisualScenePath.StableKey, out var recordPath)
                 && !string.IsNullOrWhiteSpace(recordPath))
             {
                 scene = CommonTool.LoadPackedScene(
@@ -357,7 +357,7 @@ public static partial class EntityManager
             }
             else
             {
-                var prop = config.GetType().GetProperty(DataKey.VisualScenePath);
+                var prop = config.GetType().GetProperty(GeneratedDataKey.VisualScenePath.StableKey);
                 if (prop != null)
                 {
                     var value = prop.GetValue(config);

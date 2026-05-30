@@ -48,7 +48,7 @@ public partial class ProjectileEntity : Area2D, IEntity, IPoolable
     /// <summary>从对象池取出时调用</summary>
     public void OnPoolAcquire()
     {
-        Data.Set(DataKey.DefaultMoveMode, MoveMode.None);
+        Data.Set(GeneratedDataKey.DefaultMoveMode, MoveMode.None);
     }
 
     /// <summary>归还对象池时调用</summary>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using slime.data.Features;
 
 /// <summary>
 /// Data 写入来源，用于执行 descriptor write policy。
@@ -282,15 +283,15 @@ public static class DataValueConverter
         return valueType switch
         {
             DataValueType.String => targetType == typeof(string),
-            DataValueType.StringArray => targetType == typeof(string) || targetType == typeof(string[]),
+            DataValueType.StringArray => targetType == typeof(string[]),
             DataValueType.Int => targetType == typeof(int),
             DataValueType.Float => targetType == typeof(float),
             DataValueType.Double => targetType == typeof(double),
             DataValueType.Bool => targetType == typeof(bool),
             DataValueType.Vector2 => targetType == typeof(System.Numerics.Vector2) || IsGodotVector2Type(targetType),
             DataValueType.Enum => targetType == typeof(string) || targetType.IsEnum,
-            DataValueType.ModifierList => targetType == typeof(string),
-            DataValueType.ObjectRef => targetType == typeof(string),
+            DataValueType.ModifierList => targetType == typeof(FeatureModifierEntryData[]),
+            DataValueType.ObjectRef => targetType == typeof(ResourceRef) || (!targetType.IsValueType && targetType != typeof(string)),
             _ => false
         };
     }
@@ -323,8 +324,8 @@ public static class DataValueConverter
                 DataValueType.Bool => ConvertBool(rawValue),
                 DataValueType.Vector2 => ConvertVector2(rawValue),
                 DataValueType.Enum => ConvertEnum(rawValue),
-                DataValueType.ModifierList => ConvertString(rawValue),
-                DataValueType.ObjectRef => ConvertString(rawValue),
+                DataValueType.ModifierList => ConvertModifierList(rawValue),
+                DataValueType.ObjectRef => ConvertObjectRef(rawValue),
                 _ => throw new InvalidOperationException($"未知 DataValueType：{valueType}")
             };
             return true;
@@ -482,10 +483,50 @@ public static class DataValueConverter
 
         if (rawValue is string textValue)
         {
-            return textValue;
+            if (string.IsNullOrWhiteSpace(textValue))
+            {
+                return Array.Empty<string>();
+            }
+
+            return textValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         }
 
         throw new InvalidCastException($"期望 string_array，实际 {rawValue.GetType().Name}");
+    }
+
+    private static object? ConvertModifierList(object rawValue)
+    {
+        if (rawValue is FeatureModifierEntryData[] arrayValue)
+        {
+            return arrayValue;
+        }
+
+        if (rawValue is string textValue && (string.IsNullOrWhiteSpace(textValue) || textValue.Trim() == "[]"))
+        {
+            return Array.Empty<FeatureModifierEntryData>();
+        }
+
+        throw new InvalidCastException($"期望 modifier_list，实际 {rawValue.GetType().Name}");
+    }
+
+    private static object? ConvertObjectRef(object rawValue)
+    {
+        if (rawValue is ResourceRef resourceRef)
+        {
+            return resourceRef.HasValue ? resourceRef : null;
+        }
+
+        if (rawValue is string textValue)
+        {
+            return string.IsNullOrWhiteSpace(textValue) ? null : new ResourceRef(textValue);
+        }
+
+        if (!rawValue.GetType().IsValueType)
+        {
+            return rawValue;
+        }
+
+        throw new InvalidCastException($"期望 object_ref，实际 {rawValue.GetType().Name}");
     }
 
     private static object ConvertInt(object rawValue)
@@ -613,6 +654,45 @@ public static class DataValueConverter
                 }
 
                 return Enum.ToObject(targetType, Convert.ToInt32(rawValue, CultureInfo.InvariantCulture));
+            }
+        }
+
+        if (valueType == DataValueType.StringArray && targetType == typeof(string[]))
+        {
+            return rawValue switch
+            {
+                string[] arrayValue => arrayValue,
+                string textValue when string.IsNullOrWhiteSpace(textValue) => Array.Empty<string>(),
+                string textValue => textValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+                _ => rawValue
+            };
+        }
+
+        if (valueType == DataValueType.ModifierList && targetType == typeof(FeatureModifierEntryData[]))
+        {
+            return rawValue switch
+            {
+                FeatureModifierEntryData[] arrayValue => arrayValue,
+                string textValue when string.IsNullOrWhiteSpace(textValue) || textValue.Trim() == "[]" => Array.Empty<FeatureModifierEntryData>(),
+                _ => rawValue
+            };
+        }
+
+        if (valueType == DataValueType.ObjectRef)
+        {
+            if (targetType == typeof(ResourceRef))
+            {
+                return rawValue switch
+                {
+                    ResourceRef resourceRef => resourceRef,
+                    string textValue => new ResourceRef(textValue),
+                    _ => throw new InvalidCastException($"期望 ResourceRef，实际 {rawValue.GetType().Name}")
+                };
+            }
+
+            if (targetType.IsInstanceOfType(rawValue))
+            {
+                return rawValue;
             }
         }
 

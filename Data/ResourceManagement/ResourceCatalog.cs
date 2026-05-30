@@ -154,7 +154,7 @@ public static class ResourceCatalog
     {
         var entries = new List<ResourceCatalogEntry>();
 
-        AddDataOsRuntimeTableEntries(entries);
+        AddDataOsSnapshotEntries(entries);
 
         // 资产资源仍直接从 ResourcePaths.Resources 构建目录，不额外扫描 res://。
         foreach (var (_, resources) in ResourcePaths.Resources)
@@ -206,7 +206,7 @@ public static class ResourceCatalog
     /// 从 runtime snapshot records 构建目录条目。
     /// </summary>
     /// <param name="entries">待写入的目录条目列表。</param>
-    private static void AddDataOsRuntimeTableEntries(List<ResourceCatalogEntry> entries)
+    private static void AddDataOsSnapshotEntries(List<ResourceCatalogEntry> entries)
     {
         var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
         AddSnapshotRecordEntries(entries, query.GetRecords("unit.enemy"), ResourceCategory.DataUnit, "Unit.Enemy");
@@ -221,7 +221,7 @@ public static class ResourceCatalog
                 : $"Ability.{NormalizeCatalogPath(ability.FeatureGroupId) ?? "未分类"}";
             entries.Add(new ResourceCatalogEntry(
                 record.Id, // snapshot record id
-                ResourceCategory.DataAbility, // 保持选择器分类兼容
+                ResourceCategory.DataAbility, // snapshot 技能目录
                 "Data/DataOS/Snapshots/runtime_snapshot.json", // 源 snapshot
                 ability.Name, // UI 显示名
                 group, // 目录分类路径
@@ -245,7 +245,7 @@ public static class ResourceCatalog
 
             entries.Add(new ResourceCatalogEntry(
                 record.Id, // snapshot record id
-                category, // 保持选择器分类兼容
+                category, // snapshot 数据目录
                 "Data/DataOS/Snapshots/runtime_snapshot.json", // 源 snapshot
                 record.Name, // UI 显示名
                 catalogPath, // 目录分类路径

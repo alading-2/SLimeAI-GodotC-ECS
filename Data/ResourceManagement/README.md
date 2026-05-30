@@ -18,32 +18,23 @@
 var scene = ResourceManagement.Load<PackedScene>(typeof(PlayerEntity).Name, ResourceCategory.Entity);
 ```
 
-### 2. 加载配置 (Resource/tres)
-```csharp
-// 加载单个配置
-var config = ResourceManagement.Load<Resource>(ResourcePaths.DataUnit_deluyi, ResourceCategory.DataUnit);
-
-// 加载分类下所有配置
-var allEnemies = ResourceManagement.LoadAll<Resource>(ResourceCategory.DataUnit, "Unit/Enemy");
-```
-
-### 3. 加载 UI
+### 2. 加载 UI
 ```csharp
 var uiScene = ResourceManagement.Load<PackedScene>("HealthBarUI", ResourceCategory.UI);
 ```
 
-### 4. 构建资源选择列表
+### 3. 构建资源选择列表
 
-`ResourceCatalog` 基于 `ResourcePaths.Resources` 生成选择器条目，分类由资源路径自动推导：
+`ResourceCatalog` 从 runtime snapshot records 生成数据目录条目，并从 `ResourcePaths.Resources` 生成场景、特效和单位视觉 Asset 条目：
 
-- `DataOS removed legacy Data/Unit/Enemy/Resource/chailangren.tres` => `Unit.Enemy`
-- `DataOS removed legacy Data/Unit/Player/Resource/deluyi.tres` => `Unit.Player`
-- `DataOS removed legacy Data/Ability/Resource/Movement/DashConfig.tres` => `Ability.Movement`
+- `unit.enemy` snapshot record => `Unit.Enemy`
+- `unit.player` snapshot record => `Unit.Player`
+- `ability` snapshot record + `AbilityFeatureGroup` => `Ability.*`
 - `assets/Effect/Explosion/Explosion.tscn` => `Effect.Explosion`
 - `assets/Unit/Enemy/chailangren/AnimatedSprite2D/chailangren.tscn` => `AssetUnit.Enemy`
 - `assets/Unit/Player/deluyi/AnimatedSprite2D/deluyi.tscn` => `AssetUnit.Player`
 
-路径中的 `Resource` 目录只是资源存放目录，不参与分类名。
+Data 目录条目的加载对象是 snapshot record id，不是 `.tres` 配置资源。
 
 示例：
 
@@ -59,16 +50,16 @@ var allGroups = ResourceCatalog.GetGroups(
 
 目录服务只负责发现与展示分组；真正加载仍通过 `ResourceManagement.Load<T>(entry.ResourceKey, entry.Category)` 完成。独立视觉预览场景位于 `Src/ECS/Test/GlobalTest/VisualPreview/`，它直接基于 `ResourcePaths.Resources` 收集全部 `Asset*` 分类并批量生成可选中的预览 Entity。
 
-## 🛠️ 最佳实践
+## 最佳实践
 
 ### 文件命名与分类规范
-为避免 `.tscn` (Asset) 与 `.tres` (Config) 冲突，项目采用以下约定：
+项目采用以下资源分类约定：
 
 - **Entity**: 游戏实体预制体 (如 `PlayerEntity.tscn`)
 - **Component**: 组件预制体 (如 `HealthComponent.tscn`)
 - **UI**: 界面预制体 (如 `HealthBarUI.tscn`)
 - **Asset**: 纯视觉资源场景 (如 `豺狼人.tscn` - 仅包含动画/解构视图)
-- **Config**: 数据配置文件 (如 `豺狼人.tres`)，通常存储在 `DataOS removed legacy Data/Resources` 下。
+- **DataOS snapshot**: 单位、技能、系统配置等运行时数据来自 `Data/DataOS/Snapshots/runtime_snapshot.json`。
 
 ## 资源生成
 本项目使用 `Tools/ResourceGenerator` 自动扫描目录并生成 `ResourcePaths.cs`。

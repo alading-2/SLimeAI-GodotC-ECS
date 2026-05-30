@@ -72,22 +72,22 @@ public partial class AbilitySystemPipelineTest : Node
         AddChild(ability);
 
         var ownerId = owner.GetInstanceId().ToString();
-        owner.Data.Set(DataKey.Id, ownerId);
-        owner.Data.Set(DataKey.Name, owner.Name.ToString());
-        owner.Data.Set(DataKey.CurrentMana, 50f);
+        owner.Data.Set(GeneratedDataKey.Id, ownerId);
+        owner.Data.Set(GeneratedDataKey.Name, owner.Name.ToString());
+        owner.Data.Set(GeneratedDataKey.CurrentMana, 50f);
 
         var abilityId = ability.GetInstanceId().ToString();
-        ability.Data.Set(DataKey.Id, abilityId);
-        ability.Data.Set(DataKey.Name, "HandlerManagedEntityAbility");
-        ability.Data.Set(DataKey.FeatureEnabled, true);
-        ability.Data.Set(DataKey.FeatureIsActive, false);
-        ability.Data.Set(DataKey.FeatureHandlerId, AbilitySystemPipelineTestHandler.HandlerId);
-        ability.Data.Set(DataKey.AbilityType, (int)AbilityType.Active);
-        ability.Data.Set(DataKey.AbilityTriggerMode, (int)AbilityTriggerMode.Manual);
-        ability.Data.Set(DataKey.AbilityTargetSelection, (int)AbilityTargetSelection.Entity);
-        ability.Data.Set(DataKey.AbilityCostType, (int)AbilityCostType.Mana);
-        ability.Data.Set(DataKey.AbilityCostAmount, 10f);
-        ability.Data.Set(DataKey.IsAbilityUsesCharges, false);
+        ability.Data.Set(GeneratedDataKey.Id, abilityId);
+        ability.Data.Set(GeneratedDataKey.Name, "HandlerManagedEntityAbility");
+        ability.Data.Set(GeneratedDataKey.FeatureEnabled, true);
+        ability.Data.Set(GeneratedDataKey.FeatureIsActive, false);
+        ability.Data.Set(GeneratedDataKey.FeatureHandlerId, AbilitySystemPipelineTestHandler.HandlerId);
+        ability.Data.Set(GeneratedDataKey.AbilityType, AbilityType.Active);
+        ability.Data.Set(GeneratedDataKey.AbilityTriggerMode, AbilityTriggerMode.Manual);
+        ability.Data.Set(GeneratedDataKey.AbilityTargetSelection, AbilityTargetSelection.Entity);
+        ability.Data.Set(GeneratedDataKey.AbilityCostType, AbilityCostType.Mana);
+        ability.Data.Set(GeneratedDataKey.AbilityCostAmount, 10f);
+        ability.Data.Set(GeneratedDataKey.IsAbilityUsesCharges, false);
 
         EntityManager.Register(owner);
         EntityManager.Register(ability);
@@ -128,7 +128,7 @@ public partial class AbilitySystemPipelineTest : Node
         AssertEqual(
             "成功执行后应扣除法力",
             40f, //期望法力
-            owner.Data.Get<float>(DataKey.CurrentMana) //实际法力
+            owner.Data.Get<float>(GeneratedDataKey.CurrentMana) //实际法力
         );
         AssertEqual(
             "Handler 应被真正执行一次",
@@ -159,24 +159,24 @@ public partial class AbilitySystemPipelineTest : Node
         AddChild(ability);
 
         var ownerId = owner.GetInstanceId().ToString();
-        owner.Data.Set(DataKey.Id, ownerId);
-        owner.Data.Set(DataKey.Name, owner.Name.ToString());
-        owner.Data.Set(DataKey.CurrentMana, 30f);
-        owner.Data.Set(DataKey.AbilityDamageBonus, 150f);
+        owner.Data.Set(GeneratedDataKey.Id, ownerId);
+        owner.Data.Set(GeneratedDataKey.Name, owner.Name.ToString());
+        owner.Data.Set(GeneratedDataKey.CurrentMana, 30f);
+        owner.Data.Set(GeneratedDataKey.AbilityDamageBonus, 150f);
 
         var abilityId = ability.GetInstanceId().ToString();
-        ability.Data.Set(DataKey.Id, abilityId);
-        ability.Data.Set(DataKey.Name, "AbilityToolBridgeAbility");
-        ability.Data.Set(DataKey.FeatureEnabled, true);
-        ability.Data.Set(DataKey.FeatureIsActive, false);
-        ability.Data.Set(DataKey.FeatureHandlerId, AbilityToolPipelineTestHandler.HandlerId);
-        ability.Data.Set(DataKey.AbilityType, (int)AbilityType.Active);
-        ability.Data.Set(DataKey.AbilityTriggerMode, (int)AbilityTriggerMode.Manual);
-        ability.Data.Set(DataKey.AbilityTargetSelection, (int)AbilityTargetSelection.None);
-        ability.Data.Set(DataKey.AbilityCostType, (int)AbilityCostType.Mana);
-        ability.Data.Set(DataKey.AbilityCostAmount, 5f);
-        ability.Data.Set(DataKey.IsAbilityUsesCharges, false);
-        ability.Data.Set(DataKey.AbilityDamage, 20f);
+        ability.Data.Set(GeneratedDataKey.Id, abilityId);
+        ability.Data.Set(GeneratedDataKey.Name, "AbilityToolBridgeAbility");
+        ability.Data.Set(GeneratedDataKey.FeatureEnabled, true);
+        ability.Data.Set(GeneratedDataKey.FeatureIsActive, false);
+        ability.Data.Set(GeneratedDataKey.FeatureHandlerId, AbilityToolPipelineTestHandler.HandlerId);
+        ability.Data.Set(GeneratedDataKey.AbilityType, AbilityType.Active);
+        ability.Data.Set(GeneratedDataKey.AbilityTriggerMode, AbilityTriggerMode.Manual);
+        ability.Data.Set(GeneratedDataKey.AbilityTargetSelection, AbilityTargetSelection.None);
+        ability.Data.Set(GeneratedDataKey.AbilityCostType, AbilityCostType.Mana);
+        ability.Data.Set(GeneratedDataKey.AbilityCostAmount, 5f);
+        ability.Data.Set(GeneratedDataKey.IsAbilityUsesCharges, false);
+        ability.Data.Set(GeneratedDataKey.AbilityDamage, 20f);
 
         EntityManager.Register(owner);
         EntityManager.Register(ability);
@@ -249,9 +249,9 @@ public partial class AbilitySystemPipelineTest : Node
         };
         AddChild(caster);
 
-        caster.Data.Set(DataKey.Id, caster.GetInstanceId().ToString());
-        caster.Data.Set(DataKey.Velocity, Vector2.Zero);
-        caster.Data.Set(DataKey.LastMoveDirection, Vector2.Left);
+        caster.Data.Set(GeneratedDataKey.Id, caster.GetInstanceId().ToString());
+        caster.Data.Set(GeneratedDataKey.Velocity, Vector2.Zero);
+        caster.Data.Set(GeneratedDataKey.LastMoveDirection, Vector2.Left);
 
         EntityManager.Register(caster);
 
@@ -304,13 +304,13 @@ public partial class AbilitySystemPipelineTest : Node
         };
         AddChild(enemy);
 
-        caster.Data.Set(DataKey.Id, caster.GetInstanceId().ToString());
-        caster.Data.Set(DataKey.Team, Team.Player);
-        caster.Data.Set(DataKey.EntityType, EntityType.Unit);
+        caster.Data.Set(GeneratedDataKey.Id, caster.GetInstanceId().ToString());
+        caster.Data.Set(GeneratedDataKey.Team, Team.Player);
+        caster.Data.Set(GeneratedDataKey.EntityType, EntityType.Unit);
 
-        enemy.Data.Set(DataKey.Id, enemy.GetInstanceId().ToString());
-        enemy.Data.Set(DataKey.Team, Team.Enemy);
-        enemy.Data.Set(DataKey.EntityType, EntityType.Unit);
+        enemy.Data.Set(GeneratedDataKey.Id, enemy.GetInstanceId().ToString());
+        enemy.Data.Set(GeneratedDataKey.Team, Team.Enemy);
+        enemy.Data.Set(GeneratedDataKey.EntityType, EntityType.Unit);
 
         EntityManager.Register(caster);
         EntityManager.Register(enemy);
@@ -370,13 +370,13 @@ public partial class AbilitySystemPipelineTest : Node
         };
         AddChild(enemy);
 
-        caster.Data.Set(DataKey.Id, caster.GetInstanceId().ToString());
-        caster.Data.Set(DataKey.Team, Team.Player);
-        caster.Data.Set(DataKey.EntityType, EntityType.Unit);
+        caster.Data.Set(GeneratedDataKey.Id, caster.GetInstanceId().ToString());
+        caster.Data.Set(GeneratedDataKey.Team, Team.Player);
+        caster.Data.Set(GeneratedDataKey.EntityType, EntityType.Unit);
 
-        enemy.Data.Set(DataKey.Id, enemy.GetInstanceId().ToString());
-        enemy.Data.Set(DataKey.Team, Team.Enemy);
-        enemy.Data.Set(DataKey.EntityType, EntityType.Unit);
+        enemy.Data.Set(GeneratedDataKey.Id, enemy.GetInstanceId().ToString());
+        enemy.Data.Set(GeneratedDataKey.Team, Team.Enemy);
+        enemy.Data.Set(GeneratedDataKey.EntityType, EntityType.Unit);
 
         EntityManager.Register(caster);
         EntityManager.Register(enemy);
@@ -494,7 +494,7 @@ internal sealed class AbilityToolPipelineTestHandler : AbilityFeatureHandler
         var casterNode = (Node2D)caster;
 
         ExecuteCount++;
-        finalDamage = ability.Data.Get<float>(DataKey.FinalAbilityDamage);
+        finalDamage = ability.Data.Get<float>(GeneratedDataKey.FinalAbilityDamage);
         LastCasterName = casterNode.Name.ToString();
 
         return new AbilityExecutedResult

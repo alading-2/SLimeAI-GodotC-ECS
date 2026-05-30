@@ -137,7 +137,7 @@ public partial class MainTest : Node
     {
         if (_player == null) return;
 
-        // 加载正式技能配置：默认使用 runtime snapshot ability record，旧 .tres / RuntimeTables 不再作为主流程。
+        // 加载正式技能配置：默认使用 runtime snapshot ability record，旧 .tres 不再作为主流程。
         // 技能：冲刺 (Dash) - Charge 模式位移。
         var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
         var dashConfig = RuntimeDataRecordProjection.ToAbilityDefinitionView(query.GetRequiredByName("ability", "冲刺"));
@@ -160,16 +160,16 @@ public partial class MainTest : Node
         if (_player == null) return;
 
         _log.Info("--- 调试信息 ---");
-        _log.Info($"当前魔法: {_player.Data.Get<float>(DataKey.CurrentMana):F1}");
-        _log.Info($"当前技能索引: {_player.Data.Get<int>(DataKey.CurrentActiveAbilityIndex)}");
+        _log.Info($"当前魔法: {_player.Data.Get<float>(GeneratedDataKey.CurrentMana):F1}");
+        _log.Info($"当前技能索引: {_player.Data.Get<int>(GeneratedDataKey.CurrentActiveAbilityIndex)}");
 
         var abilities = EntityManager.GetAbilities(_player);
         foreach (var ability in abilities)
         {
-            var name = ability.Data.Get<string>(DataKey.Name);
-            var charges = ability.Data.Get<int>(DataKey.AbilityCurrentCharges);
-            var maxCharges = ability.Data.Get<int>(DataKey.AbilityMaxCharges);
-            var usesCharges = ability.Data.Get<bool>(DataKey.IsAbilityUsesCharges);
+            var name = ability.Data.Get<string>(GeneratedDataKey.Name);
+            var charges = ability.Data.Get<int>(GeneratedDataKey.AbilityCurrentCharges);
+            var maxCharges = ability.Data.Get<int>(GeneratedDataKey.AbilityMaxCharges);
+            var usesCharges = ability.Data.Get<bool>(GeneratedDataKey.IsAbilityUsesCharges);
 
             if (usesCharges)
             {

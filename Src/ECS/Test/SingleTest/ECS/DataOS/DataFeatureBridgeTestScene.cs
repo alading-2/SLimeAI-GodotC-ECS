@@ -17,7 +17,7 @@ public partial class DataFeatureBridgeTestScene : DataSceneTestBase
 
     private void FeatureModifiers_ShouldBeRepresentedAsAuthoringBlobDefinition()
     {
-        var definition = Bootstrap.Catalog.GetRequired(GeneratedDataKey.FeatureModifiers.Key);
+        var definition = Bootstrap.Catalog.GetRequired(GeneratedDataKey.FeatureModifiers.StableKey);
         AssertEqual("feature modifiers value type", DataValueType.ModifierList, definition.ValueType);
         AssertEqual("feature modifiers storage", DataStoragePolicy.AuthoringBlob, definition.StoragePolicy);
         AssertEqual("feature modifiers write policy", DataWritePolicy.LoaderOnly, definition.WritePolicy);

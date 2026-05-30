@@ -166,10 +166,10 @@ public partial class CostComponent : Node, IComponent
     {
         return type switch
         {
-            AbilityCostType.Mana => GeneratedDataKey.CurrentMana,
+            AbilityCostType.Mana => GeneratedDataKey.CurrentMana.StableKey,
             AbilityCostType.Energy => "CurrentEnergy", // TODO: 等待 Energy 系统定义
             AbilityCostType.Ammo => "CurrentAmmo",     // TODO: 等待 Ammo 系统定义
-            AbilityCostType.Health => GeneratedDataKey.CurrentHp,
+            AbilityCostType.Health => GeneratedDataKey.CurrentHp.StableKey,
             _ => string.Empty
         };
     }

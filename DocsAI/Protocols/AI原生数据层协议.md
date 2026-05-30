@@ -74,7 +74,7 @@ Tools/ai-game-os/run-capability-test.sh <Capability>
 1. 先迁 SystemData / SystemPresetData。
 2. 再迁 Unit / Ability / Feature。
 3. 再迁 ResourceCatalog / EventType / DataKey registry。
-4. 最后删除旧 `.tres` 和手写 RuntimeTables 当前入口。
+4. 最后删除旧 `.tres` 和手写 C# 数据表当前入口。
 
 ## 人工审查重点
 

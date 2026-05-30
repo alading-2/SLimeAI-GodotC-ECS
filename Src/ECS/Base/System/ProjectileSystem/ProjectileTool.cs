@@ -19,9 +19,9 @@ internal static partial class ProjectileTool
             Name = name,
             Fields = new System.Collections.Generic.Dictionary<string, RuntimeDataFieldDto>
             {
-                [GeneratedDataKey.Name.Key] = new() { Type = "string", Value = name },
-                [GeneratedDataKey.VisualScenePath.Key] = new() { Type = "string", Value = visualScenePath },
-                [GeneratedDataKey.EntityType.Key] = new() { Type = "enum", Value = nameof(EntityType.Projectile) }
+                [GeneratedDataKey.Name.StableKey] = new() { Type = "string", Value = name },
+                [GeneratedDataKey.VisualScenePath.StableKey] = new() { Type = "string", Value = visualScenePath },
+                [GeneratedDataKey.EntityType.StableKey] = new() { Type = "enum", Value = nameof(EntityType.Projectile) }
             }
         };
 

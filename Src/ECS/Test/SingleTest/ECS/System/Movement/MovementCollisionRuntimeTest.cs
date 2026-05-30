@@ -19,12 +19,12 @@ namespace Slime.Test
             public MockEntity(string name, Team team, EntityType type)
             {
                 Name = name;
-                Data.Set(DataKey.Team, team);
-                Data.Set(DataKey.EntityType, type);
-                Data.Set(DataKey.Id, GetInstanceId().ToString());
-                Data.Set(DataKey.DefaultMoveMode, MoveMode.None);
-                Data.Set(DataKey.MoveMode, MoveMode.None);
-                Data.Set(DataKey.IsDead, false);
+                Data.Set(GeneratedDataKey.Team, team);
+                Data.Set(GeneratedDataKey.EntityType, type);
+                Data.Set(GeneratedDataKey.Id, GetInstanceId().ToString());
+                Data.Set(GeneratedDataKey.DefaultMoveMode, MoveMode.None);
+                Data.Set(GeneratedDataKey.MoveMode, MoveMode.None);
+                Data.Set(GeneratedDataKey.IsDead, false);
             }
         }
 
@@ -315,13 +315,13 @@ namespace Slime.Test
                 );
 
                 bool hasBusinessRelation = EntityRelationshipManager.HasRelationship(
-                    owner.Data.Get<string>(DataKey.Id), // 父实体 Id
-                    projectile.Data.Get<string>(DataKey.Id), // 子实体 Id
+                    owner.Data.Get<string>(GeneratedDataKey.Id), // 父实体 Id
+                    projectile.Data.Get<string>(GeneratedDataKey.Id), // 子实体 Id
                     EntityRelationshipType.ENTITY_TO_PROJECTILE // 投射物业务关系
                 );
                 bool hasParentRelation = EntityRelationshipManager.HasRelationship(
-                    owner.Data.Get<string>(DataKey.Id), // 父实体 Id
-                    projectile.Data.Get<string>(DataKey.Id), // 子实体 Id
+                    owner.Data.Get<string>(GeneratedDataKey.Id), // 父实体 Id
+                    projectile.Data.Get<string>(GeneratedDataKey.Id), // 子实体 Id
                     EntityRelationshipType.PARENT // 统一父子关系
                 );
                 var ownerEntity = EntityRelationshipTraversal.FindAncestorOfType<IEntity>(projectile); // 统一沿 PARENT 追溯归属实体
@@ -394,8 +394,8 @@ namespace Slime.Test
             EntityManager.Register(owner);
             EntityManager.Register(projectile);
 
-            string ownerId = owner.Data.Get<string>(DataKey.Id);
-            string projectileId = projectile.Data.Get<string>(DataKey.Id);
+            string ownerId = owner.Data.Get<string>(GeneratedDataKey.Id);
+            string projectileId = projectile.Data.Get<string>(GeneratedDataKey.Id);
 
             bool bound = EntityManager.BindParentRelationships(
                 projectile, // 子实体：投射物
@@ -427,8 +427,8 @@ namespace Slime.Test
             EntityManager.Register(owner);
             EntityManager.Register(projectile);
 
-            string ownerId = owner.Data.Get<string>(DataKey.Id);
-            string projectileId = projectile.Data.Get<string>(DataKey.Id);
+            string ownerId = owner.Data.Get<string>(GeneratedDataKey.Id);
+            string projectileId = projectile.Data.Get<string>(GeneratedDataKey.Id);
 
             bool bound = EntityManager.BindParentRelationships(
                 projectile, // 子实体：投射物
@@ -467,8 +467,8 @@ namespace Slime.Test
             EntityManager.Register(owner);
             EntityManager.Register(source);
 
-            source.Data.Set(DataKey.Name, "MigratedProjectile");
-            source.Data.Set(DataKey.Description, "payload");
+            source.Data.Set(GeneratedDataKey.Name, "MigratedProjectile");
+            source.Data.Set(GeneratedDataKey.Description, "payload");
             source.Data.Set("CustomCount", 7);
 
             EntityManager.BindParentRelationships(
@@ -479,7 +479,7 @@ namespace Slime.Test
                 relationTypes: EntityRelationshipType.ENTITY_TO_PROJECTILE // 业务关系
             );
 
-            string sourceId = source.Data.Get<string>(DataKey.Id);
+            string sourceId = source.Data.Get<string>(GeneratedDataKey.Id);
 
             VisualPreviewEntity? target = null;
             try
@@ -499,16 +499,16 @@ namespace Slime.Test
 
                 AssertEqual("迁移应返回目标实体", false, target == null);
                 AssertEqual("迁移后源实体应被注销", false, NodeLifecycleManager.IsRegistered(sourceId));
-                AssertEqual("迁移后目标实体应持有新的 Id", false, target!.Data.Get<string>(DataKey.Id) == sourceId);
-                AssertEqual("迁移后应复制基础字符串数据", "MigratedProjectile", target.Data.Get<string>(DataKey.Name));
+                AssertEqual("迁移后目标实体应持有新的 Id", false, target!.Data.Get<string>(GeneratedDataKey.Id) == sourceId);
+                AssertEqual("迁移后应复制基础字符串数据", "MigratedProjectile", target.Data.Get<string>(GeneratedDataKey.Name));
                 AssertEqual("迁移后应复制自定义基础数据", 7, target.Data.Get<int>("CustomCount"));
-                AssertEqual("迁移后应记录直接来源实体 Id", sourceId, target.Data.Get<string>(DataKey.SourceEntityId));
-                AssertEqual("迁移后应沿用第一来源实体 Id 作为 Origin", sourceId, target.Data.Get<string>(DataKey.OriginEntityId));
+                AssertEqual("迁移后应记录直接来源实体 Id", sourceId, target.Data.Get<string>(GeneratedDataKey.SourceEntityId));
+                AssertEqual("迁移后应沿用第一来源实体 Id 作为 Origin", sourceId, target.Data.Get<string>(GeneratedDataKey.OriginEntityId));
                 AssertEqual("迁移后应继承直接父级", owner, EntityRelationshipTraversal.GetDirectParent(target));
 
                 ParentDestroyPolicy destroyPolicy = EntityRelationshipLifecycle.ReadParentDestroyPolicy(
-                    owner.Data.Get<string>(DataKey.Id), // 父实体 Id
-                    target.Data.Get<string>(DataKey.Id) // 目标实体 Id
+                    owner.Data.Get<string>(GeneratedDataKey.Id), // 父实体 Id
+                    target.Data.Get<string>(GeneratedDataKey.Id) // 目标实体 Id
                 );
                 AssertEqual("迁移后应继承直接父级上的销毁策略", ParentDestroyPolicy.Detach, destroyPolicy);
             }
@@ -531,15 +531,15 @@ namespace Slime.Test
             AddChild(source);
             EntityManager.Register(source);
 
-            source.Data.Set(DataKey.Name, "ShouldBeFiltered");
-            source.Data.Set(DataKey.Description, "ShouldStay");
+            source.Data.Set(GeneratedDataKey.Name, "ShouldBeFiltered");
+            source.Data.Set(GeneratedDataKey.Description, "ShouldStay");
             source.Data.Set("UnsafeNodeRef", new Node2D { Name = "UnsafeRef" });
 
             int callbackCount = 0;
             // 使用一个具体的事件类型 struct 来替代字符串事件
             source.Events.On<GameEventType.Test.MigrationTestEvent>(_ => callbackCount++);
 
-            string sourceId = source.Data.Get<string>(DataKey.Id);
+            string sourceId = source.Data.Get<string>(GeneratedDataKey.Id);
 
             VisualPreviewEntity? target = null;
             try
@@ -557,21 +557,21 @@ namespace Slime.Test
                         Profile = new EntityMigrationProfile
                         {
                             Name = "FilterName", // Profile 名称
-                            ExcludeDataKeys = [DataKey.Name] // 排除名称键
+                            ExcludeDataKeys = [GeneratedDataKey.Name.StableKey] // 排除名称键
                         },
                         DataOverrides = new Dictionary<string, object>
                         {
-                            [DataKey.Team] = Team.Enemy, // 覆写阵营
-                            [DataKey.Description] = "OverrideDescription" // 覆写描述
+                            [GeneratedDataKey.Team.StableKey] = Team.Enemy, // 覆写阵营
+                            [GeneratedDataKey.Description.StableKey] = "OverrideDescription" // 覆写描述
                         }
                     }
                 );
 
                 target!.Events.Emit(new GameEventType.Test.MigrationTestEvent());
 
-                AssertEqual("Profile 排除的键不应被迁移", string.Empty, target.Data.Get<string>(DataKey.Name));
-                AssertEqual("DataOverrides 应覆盖迁移后的最终值", "OverrideDescription", target.Data.Get<string>(DataKey.Description));
-                AssertEqual("DataOverrides 应覆盖阵营", Team.Enemy, target.Data.Get<Team>(DataKey.Team));
+                AssertEqual("Profile 排除的键不应被迁移", string.Empty, target.Data.Get<string>(GeneratedDataKey.Name));
+                AssertEqual("DataOverrides 应覆盖迁移后的最终值", "OverrideDescription", target.Data.Get<string>(GeneratedDataKey.Description));
+                AssertEqual("DataOverrides 应覆盖阵营", Team.Enemy, target.Data.Get<Team>(GeneratedDataKey.Team));
                 AssertEqual("Node 引用类型默认不应迁移", false, target.Data.Has("UnsafeNodeRef"));
                 AssertEqual("源实体的局部事件订阅不应复制到目标实体", 0, callbackCount);
                 AssertEqual("迁移后仍应销毁源实体", false, NodeLifecycleManager.IsRegistered(sourceId));
@@ -606,8 +606,8 @@ namespace Slime.Test
             EntityManager.Register(enemy);
 
             EntityRelationshipManager.AddRelationship(
-                owner.Data.Get<string>(DataKey.Id), // 父实体：归属单位
-                projectile.Data.Get<string>(DataKey.Id), // 子实体：投射物
+                owner.Data.Get<string>(GeneratedDataKey.Id), // 父实体：归属单位
+                projectile.Data.Get<string>(GeneratedDataKey.Id), // 子实体：投射物
                 EntityRelationshipType.PARENT // 统一溯源关系
             );
 

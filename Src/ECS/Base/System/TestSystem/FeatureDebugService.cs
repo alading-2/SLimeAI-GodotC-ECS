@@ -1,5 +1,5 @@
 using Godot;
-using slime.config.Features;
+using slime.data.Features;
 using ECS.Base.System.TestSystem.Core;
 
 /// <summary>
@@ -36,7 +36,7 @@ internal sealed class FeatureDebugService
     }
 
     /// <summary>
-    /// 通过运行时 FeatureDefinition 为指定属性施加一个临时 Modifier。
+    /// 通过运行时 snapshot record 为指定属性施加一个临时 Modifier。
     /// </summary>
     /// <param name="owner">当前实体所有者；为空时返回失败结果。</param>
     /// <param name="dataKey">属性键；用于构造临时 Feature 名称并写入 Modifier。</param>
@@ -73,8 +73,8 @@ internal sealed class FeatureDebugService
         }
 
         var featureName = BuildModifierFeatureName(dataKey);
-        var definition = BuildTemporaryModifierDefinition(dataKey, displayName, value, featureName);
-        var result = GrantFeature(owner, definition, dataKey);
+        var record = BuildTemporaryModifierRecord(dataKey, displayName, value, featureName);
+        var result = GrantRuntimeFeature(owner, record, dataKey);
         if (!result.Success)
         {
             return result;
@@ -136,43 +136,43 @@ internal sealed class FeatureDebugService
             return Fail($"添加失败: {config.Name}");
         }
 
-        var ownerName = owner.Data.Get<string>(GeneratedDataKey.Name.Key);
-        var abilityName = ability.Data.Get<string>(GeneratedDataKey.Name.Key);
-        var abilityId = ability.Data.Get<string>(GeneratedDataKey.Id.Key);
-        var handlerId = ability.Data.Get<string>(GeneratedDataKey.FeatureHandlerId.Key);
+        var ownerName = owner.Data.Get<string>(GeneratedDataKey.Name.StableKey);
+        var abilityName = ability.Data.Get<string>(GeneratedDataKey.Name.StableKey);
+        var abilityId = ability.Data.Get<string>(GeneratedDataKey.Id.StableKey);
+        var handlerId = ability.Data.Get<string>(GeneratedDataKey.FeatureHandlerId.StableKey);
         _log.Info($"[Feature调试] 授予技能Feature: owner={ownerName} feature={abilityName} featureId={abilityId} handler={handlerId} resourceKey={resourceKey}");
         return SuccessResult($"已添加: {abilityName}");
     }
 
     /// <summary>
-    /// 通过正式 Feature 授予链路，为当前实体添加一个通用 Feature。
+    /// 通过正式 Feature 授予链路，为当前实体添加一个运行时构造 Feature。
     /// </summary>
     /// <param name="owner">当前实体所有者；为空时返回失败结果。</param>
-    /// <param name="definition">Feature 定义资源；为空时返回失败结果。</param>
+    /// <param name="record">运行时构造的 snapshot record；为空时返回失败结果。</param>
     /// <param name="featureSource">Feature 来源标识；用于输出错误提示和日志定位。</param>
     /// <returns>执行结果，包含成功状态与提示信息。</returns>
-    public TestActionResult GrantFeature(IEntity? owner, FeatureDefinition? definition, string featureSource)
+    private TestActionResult GrantRuntimeFeature(IEntity? owner, RuntimeDataRecordDto? record, string featureSource)
     {
         if (owner == null)
         {
             return Fail("请先选择一个实体");
         }
 
-        if (definition == null)
+        if (record == null)
         {
             return Fail($"未找到Feature定义: {featureSource}");
         }
 
-        var feature = EntityManager.AddAbility(owner, definition);
+        var feature = EntityManager.AddRuntimeFeature(owner, record);
         if (feature == null)
         {
-            return Fail($"添加Feature失败: {definition.Name}");
+            return Fail($"添加Feature失败: {record.Name}");
         }
 
-        var ownerName = owner.Data.Get<string>(GeneratedDataKey.Name.Key);
-        var featureName = feature.Data.Get<string>(GeneratedDataKey.Name.Key);
-        var featureId = feature.Data.Get<string>(GeneratedDataKey.Id.Key);
-        var handlerId = feature.Data.Get<string>(GeneratedDataKey.FeatureHandlerId.Key);
+        var ownerName = owner.Data.Get<string>(GeneratedDataKey.Name.StableKey);
+        var featureName = feature.Data.Get<string>(GeneratedDataKey.Name.StableKey);
+        var featureId = feature.Data.Get<string>(GeneratedDataKey.Id.StableKey);
+        var handlerId = feature.Data.Get<string>(GeneratedDataKey.FeatureHandlerId.StableKey);
         _log.Info($"[Feature调试] 授予通用Feature: owner={ownerName} feature={featureName} featureId={featureId} handler={handlerId} source={featureSource}");
         return SuccessResult($"已添加: {featureName}");
     }
@@ -195,16 +195,16 @@ internal sealed class FeatureDebugService
             return Fail("未找到要移除的技能实例");
         }
 
-        var abilityName = ability.Data.Get<string>(GeneratedDataKey.Name.Key);
-        var abilityId = ability.Data.Get<string>(GeneratedDataKey.Id.Key);
+        var abilityName = ability.Data.Get<string>(GeneratedDataKey.Name.StableKey);
+        var abilityId = ability.Data.Get<string>(GeneratedDataKey.Id.StableKey);
         var removed = EntityManager.RemoveAbility(owner, ability);
         if (!removed)
         {
-            _log.Warn($"[Feature调试] 移除技能Feature失败: owner={owner.Data.Get<string>(GeneratedDataKey.Name.Key)} feature={abilityName} featureId={abilityId}");
+            _log.Warn($"[Feature调试] 移除技能Feature失败: owner={owner.Data.Get<string>(GeneratedDataKey.Name.StableKey)} feature={abilityName} featureId={abilityId}");
             return Fail($"移除失败: {abilityName}");
         }
 
-        _log.Info($"[Feature调试] 移除技能Feature: owner={owner.Data.Get<string>(GeneratedDataKey.Name.Key)} feature={abilityName} featureId={abilityId}");
+        _log.Info($"[Feature调试] 移除技能Feature: owner={owner.Data.Get<string>(GeneratedDataKey.Name.StableKey)} feature={abilityName} featureId={abilityId}");
         return SuccessResult($"已移除: {abilityName}");
     }
 
@@ -227,18 +227,18 @@ internal sealed class FeatureDebugService
             return Fail("未找到要切换的技能实例");
         }
 
-        var featureName = feature.Data.Get<string>(GeneratedDataKey.Name.Key);
-        var featureId = feature.Data.Get<string>(GeneratedDataKey.Id.Key);
-        var handlerId = feature.Data.Get<string>(GeneratedDataKey.FeatureHandlerId.Key);
+        var featureName = feature.Data.Get<string>(GeneratedDataKey.Name.StableKey);
+        var featureId = feature.Data.Get<string>(GeneratedDataKey.Id.StableKey);
+        var handlerId = feature.Data.Get<string>(GeneratedDataKey.FeatureHandlerId.StableKey);
         if (isEnabled)
         {
             FeatureSystem.EnableFeature(feature, owner);
-            _log.Info($"[Feature调试] 启用Feature: owner={owner.Data.Get<string>(GeneratedDataKey.Name.Key)} feature={featureName} featureId={featureId} handler={handlerId}");
+            _log.Info($"[Feature调试] 启用Feature: owner={owner.Data.Get<string>(GeneratedDataKey.Name.StableKey)} feature={featureName} featureId={featureId} handler={handlerId}");
             return SuccessResult($"已启用: {featureName}");
         }
 
         FeatureSystem.DisableFeature(feature, owner);
-        _log.Info($"[Feature调试] 禁用Feature: owner={owner.Data.Get<string>(GeneratedDataKey.Name.Key)} feature={featureName} featureId={featureId} handler={handlerId}");
+        _log.Info($"[Feature调试] 禁用Feature: owner={owner.Data.Get<string>(GeneratedDataKey.Name.StableKey)} feature={featureName} featureId={featureId} handler={handlerId}");
         return SuccessResult($"已禁用: {featureName}");
     }
 
@@ -257,39 +257,47 @@ internal sealed class FeatureDebugService
     private static TestActionResult Fail(string message) => new(false, message);
 
     /// <summary>
-    /// 构建临时 Modifier 对应的运行时 FeatureDefinition。
+    /// 构建临时 Modifier 对应的运行时 snapshot record。
     /// </summary>
     /// <param name="dataKey">属性键；用于写入 Modifier 的目标字段。</param>
     /// <param name="displayName">属性显示名；用于描述文本。</param>
     /// <param name="value">Modifier 数值；写入到定义中。</param>
     /// <param name="featureName">运行时 Feature 名称；用于唯一标识。</param>
-    /// <returns>构建好的运行时 FeatureDefinition。</returns>
-    private static FeatureDefinition BuildTemporaryModifierDefinition(
+    /// <returns>构建好的运行时 snapshot record。</returns>
+    private static RuntimeDataRecordDto BuildTemporaryModifierRecord(
         string dataKey,
         string displayName,
         float value,
         string featureName)
     {
-        return new FeatureDefinition
+        var modifier = new FeatureModifierEntryData
         {
+            DataKeyName = dataKey,
+            ModifierType = ModifierType.Additive,
+            Value = value,
+            Priority = 0
+        };
+
+        return new RuntimeDataRecordDto
+        {
+            Table = "runtime.feature",
+            Id = featureName,
             Name = featureName,
-            FeatureHandlerId = featureName,
-            Description = $"TestSystem 临时属性加成：{displayName}",
-            Category = "TestSystem",
-            EntityType = EntityType.Ability,
-            Enabled = true,
-            Modifiers = new Godot.Collections.Array<FeatureModifierEntry>
+            Fields = new()
             {
-                new FeatureModifierEntry
-                {
-                    DataKeyName = dataKey,
-                    ModifierType = ModifierType.Additive,
-                    Value = value,
-                    Priority = 0
-                }
+                [GeneratedDataKey.Name.StableKey] = Field("string", featureName),
+                [GeneratedDataKey.FeatureHandlerId.StableKey] = Field("string", featureName),
+                [GeneratedDataKey.Description.StableKey] = Field("string", $"TestSystem 临时属性加成：{displayName}"),
+                [GeneratedDataKey.FeatureCategory.StableKey] = Field("string", "TestSystem"),
+                [GeneratedDataKey.EntityType.StableKey] = Field("enum", EntityType.Ability),
+                [GeneratedDataKey.FeatureEnabled.StableKey] = Field("bool", true),
+                [GeneratedDataKey.FeatureModifiers.StableKey] = Field("modifier_list", new[] { modifier })
             }
         };
     }
+
+    private static RuntimeDataFieldDto Field(string type, object? value)
+        => new() { Type = type, Value = value };
 
     /// <summary>
     /// 构建临时 Modifier Feature 的唯一名称。
@@ -319,8 +327,8 @@ internal sealed class FeatureDebugService
     /// <returns>匹配到的 Modifier 数值；未找到时返回 0。</returns>
     private static float TryReadModifierValue(IEntity feature, string dataKey)
     {
-        var raw = feature.Data.Get<object>(GeneratedDataKey.FeatureModifiers);
-        if (raw is not Godot.Collections.Array<FeatureModifierEntry> modifiers || modifiers.Count == 0)
+        var modifiers = feature.Data.Get<FeatureModifierEntryData[]>(GeneratedDataKey.FeatureModifiers);
+        if (modifiers.Length == 0)
         {
             return 0f;
         }

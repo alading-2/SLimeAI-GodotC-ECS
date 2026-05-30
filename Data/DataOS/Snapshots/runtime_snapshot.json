@@ -1,9 +1,9 @@
 {
   "schemaVersion": 2,
-  "generatedAtUtc": "2026-05-29T00:00:00Z",
+  "generatedAtUtc": "2026-05-29T23:49:48Z",
   "manifest": {
     "schemaVersion": 2,
-    "generatedAtUtc": "2026-05-29T00:00:00Z",
+    "generatedAtUtc": "2026-05-29T23:49:48Z",
     "profile": "slimeainew",
     "catalogId": "slimeainew",
     "source": "DataOS/Authoring/slimeainew.authoring.db",
@@ -3242,7 +3242,7 @@
       "ownerSkill": "feature-system",
       "type": "modifier_list",
       "valueType": "modifier_list",
-      "runtimeTypeId": "Godot.Collections.Array<FeatureModifierEntry>",
+      "runtimeTypeId": "slime.data.Features.FeatureModifierEntryData[]",
       "defaultValue": "[]",
       "storagePolicy": "authoring_blob",
       "writePolicy": "loader_only",
@@ -7287,7 +7287,6 @@
   "records": [
     {
       "table": "ability",
-      "legacyTable": "AbilityData",
       "id": "ability.arc_shot",
       "name": "圆弧射击",
       "fields": {
@@ -7308,7 +7307,7 @@
           "value": "发射沿圆弧轨迹飞行的投射物（验证 CircularArc 模式）"
         },
         "AbilityIcon": {
-          "type": "string",
+          "type": "object_ref",
           "value": "res://icon.svg"
         },
         "EntityType": {
@@ -7371,33 +7370,10 @@
           "type": "string",
           "value": "res://assets/Projectile/Projectile/Polygon2D/BoomerangChevron.tscn"
         }
-      },
-      "legacyData": {
-        "Name": "圆弧射击",
-        "FeatureGroupId": "技能.投射物",
-        "FeatureHandlerId": "技能.投射物.圆弧射击",
-        "Description": "发射沿圆弧轨迹飞行的投射物（验证 CircularArc 模式）",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
-        "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 26.0,
-        "IsAbilityUsesCharges": false,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "Entity",
-        "AbilityCastRange": 700.0,
-        "AbilityEffectRadius": 0.0,
-        "EffectScenePath": "",
-        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/BoomerangChevron.tscn"
       }
     },
     {
       "table": "ability",
-      "legacyTable": "AbilityData",
       "id": "ability.bezier_shot",
       "name": "贝塞尔射击",
       "fields": {
@@ -7418,7 +7394,7 @@
           "value": "发射沿二次贝塞尔曲线飞行的弓形弹（验证 BezierCurve 模式）"
         },
         "AbilityIcon": {
-          "type": "string",
+          "type": "object_ref",
           "value": "res://icon.svg"
         },
         "EntityType": {
@@ -7481,33 +7457,10 @@
           "type": "string",
           "value": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn"
         }
-      },
-      "legacyData": {
-        "Name": "贝塞尔射击",
-        "FeatureGroupId": "技能.投射物",
-        "FeatureHandlerId": "技能.投射物.贝塞尔射击",
-        "Description": "发射沿二次贝塞尔曲线飞行的弓形弹（验证 BezierCurve 模式）",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
-        "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 30.0,
-        "IsAbilityUsesCharges": false,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
-        "AbilityCastRange": 600.0,
-        "AbilityEffectRadius": 0.0,
-        "EffectScenePath": "",
-        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn"
       }
     },
     {
       "table": "ability",
-      "legacyTable": "AbilityData",
       "id": "ability.boomerang_throw",
       "name": "回旋镖投掷",
       "fields": {
@@ -7528,7 +7481,7 @@
           "value": "投掷回旋镖，飞出后自动返回，来回命中敌人（验证 Boomerang 模式）"
         },
         "AbilityIcon": {
-          "type": "string",
+          "type": "object_ref",
           "value": "res://icon.svg"
         },
         "EntityType": {
@@ -7591,33 +7544,10 @@
           "type": "string",
           "value": "res://assets/Projectile/Projectile/Polygon2D/BulletDiamond.tscn"
         }
-      },
-      "legacyData": {
-        "Name": "回旋镖投掷",
-        "FeatureGroupId": "技能.投射物",
-        "FeatureHandlerId": "技能.投射物.回旋镖投掷",
-        "Description": "投掷回旋镖，飞出后自动返回，来回命中敌人（验证 Boomerang 模式）",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
-        "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 22.0,
-        "IsAbilityUsesCharges": false,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
-        "AbilityCastRange": 800.0,
-        "AbilityEffectRadius": 0.0,
-        "EffectScenePath": "",
-        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/BulletDiamond.tscn"
       }
     },
     {
       "table": "ability",
-      "legacyTable": "ChainAbilityData",
       "id": "ability.chain_lightning",
       "name": "闪电链",
       "fields": {
@@ -7638,7 +7568,7 @@
           "value": "释放链式闪电，在多个敌人间弹跳造成魔法伤害，每次弹跳衰减"
         },
         "AbilityIcon": {
-          "type": "string",
+          "type": "object_ref",
           "value": "res://icon.svg"
         },
         "EntityType": {
@@ -7717,37 +7647,10 @@
           "type": "float",
           "value": 100.0
         }
-      },
-      "legacyData": {
-        "Name": "闪电链",
-        "FeatureGroupId": "技能.主动",
-        "FeatureHandlerId": "技能.主动.连锁闪电",
-        "Description": "释放链式闪电，在多个敌人间弹跳造成魔法伤害，每次弹跳衰减",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
-        "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "Mana",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 50.0,
-        "IsAbilityUsesCharges": false,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "Entity",
-        "AbilityCastRange": 600.0,
-        "AbilityEffectRadius": 0.0,
-        "EffectScenePath": "",
-        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn",
-        "ChainCount": 3,
-        "ChainRange": 300.0,
-        "ChainDelay": 0.2,
-        "ChainDamageDecay": 100.0
       }
     },
     {
       "table": "ability",
-      "legacyTable": "AbilityData",
       "id": "ability.circle_damage",
       "name": "圆环伤害",
       "fields": {
@@ -7768,7 +7671,7 @@
           "value": "周身燃起烈焰光环，每秒对周围敌人造成魔法伤害"
         },
         "AbilityIcon": {
-          "type": "string",
+          "type": "object_ref",
           "value": "res://icon.svg"
         },
         "EntityType": {
@@ -7831,33 +7734,10 @@
           "type": "string",
           "value": ""
         }
-      },
-      "legacyData": {
-        "Name": "圆环伤害",
-        "FeatureGroupId": "技能.被动",
-        "FeatureHandlerId": "技能.被动.圆环伤害",
-        "Description": "周身燃起烈焰光环，每秒对周围敌人造成魔法伤害",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Passive",
-        "AbilityTriggerMode": "Permanent",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 10.0,
-        "IsAbilityUsesCharges": false,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
-        "AbilityCastRange": 0.0,
-        "AbilityEffectRadius": 500.0,
-        "EffectScenePath": "res://assets/Effect/003/AnimatedSprite2D/003.tscn",
-        "ProjectileScenePath": ""
       }
     },
     {
       "table": "ability",
-      "legacyTable": "AbilityData",
       "id": "ability.dash",
       "name": "冲刺",
       "fields": {
@@ -7878,7 +7758,7 @@
           "value": "高速冲向目标方向，瞬间位移躲避危险"
         },
         "AbilityIcon": {
-          "type": "string",
+          "type": "object_ref",
           "value": "res://icon.svg"
         },
         "EntityType": {
@@ -7941,33 +7821,10 @@
           "type": "string",
           "value": ""
         }
-      },
-      "legacyData": {
-        "Name": "冲刺",
-        "FeatureGroupId": "技能.位移",
-        "FeatureHandlerId": "技能.位移.冲刺",
-        "Description": "高速冲向目标方向，瞬间位移躲避危险",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
-        "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 0.0,
-        "IsAbilityUsesCharges": false,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
-        "AbilityCastRange": 300.0,
-        "AbilityEffectRadius": 300.0,
-        "EffectScenePath": "res://assets/Effect/lrsc3/AnimatedSprite2D/lrsc3.tscn",
-        "ProjectileScenePath": ""
       }
     },
     {
       "table": "ability",
-      "legacyTable": "AbilityData",
       "id": "ability.orbit_skill",
       "name": "环绕技能",
       "fields": {
@@ -7988,7 +7845,7 @@
           "value": "生成多个投射物环绕玩家旋转，碰触敌人造成伤害（验证 Orbit 模式）"
         },
         "AbilityIcon": {
-          "type": "string",
+          "type": "object_ref",
           "value": "res://icon.svg"
         },
         "EntityType": {
@@ -8051,33 +7908,10 @@
           "type": "string",
           "value": "res://assets/Projectile/Projectile/Polygon2D/BulletDiamond.tscn"
         }
-      },
-      "legacyData": {
-        "Name": "环绕技能",
-        "FeatureGroupId": "技能.被动",
-        "FeatureHandlerId": "技能.被动.环绕技能",
-        "Description": "生成多个投射物环绕玩家旋转，碰触敌人造成伤害（验证 Orbit 模式）",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Passive",
-        "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 20.0,
-        "IsAbilityUsesCharges": false,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
-        "AbilityCastRange": 0.0,
-        "AbilityEffectRadius": 0.0,
-        "EffectScenePath": "",
-        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/BulletDiamond.tscn"
       }
     },
     {
       "table": "ability",
-      "legacyTable": "AbilityData",
       "id": "ability.parabola_shot",
       "name": "定点抛炸弹",
       "fields": {
@@ -8098,7 +7932,7 @@
           "value": "每隔一段时间向施法者周围随机落点抛出一枚炸弹，落地时造成范围伤害（固定终点 Parabola 模式）"
         },
         "AbilityIcon": {
-          "type": "string",
+          "type": "object_ref",
           "value": "res://icon.svg"
         },
         "EntityType": {
@@ -8161,33 +7995,10 @@
           "type": "string",
           "value": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn"
         }
-      },
-      "legacyData": {
-        "Name": "定点抛炸弹",
-        "FeatureGroupId": "技能.投射物",
-        "FeatureHandlerId": "技能.投射物.定点抛炸弹",
-        "Description": "每隔一段时间向施法者周围随机落点抛出一枚炸弹，落地时造成范围伤害（固定终点 Parabola 模式）",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
-        "AbilityTriggerMode": "Periodic",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 9.0,
-        "IsAbilityUsesCharges": false,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
-        "AbilityCastRange": 700.0,
-        "AbilityEffectRadius": 250.0,
-        "EffectScenePath": "res://assets/Effect/004龙卷风/AnimatedSprite2D/004龙卷风.tscn",
-        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn"
       }
     },
     {
       "table": "ability",
-      "legacyTable": "AbilityData",
       "id": "ability.sine_wave_shot",
       "name": "正弦波射击",
       "fields": {
@@ -8208,7 +8019,7 @@
           "value": "发射正弦波形弹道向敌人射击（验证 SineWave 模式）"
         },
         "AbilityIcon": {
-          "type": "string",
+          "type": "object_ref",
           "value": "res://icon.svg"
         },
         "EntityType": {
@@ -8271,33 +8082,10 @@
           "type": "string",
           "value": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn"
         }
-      },
-      "legacyData": {
-        "Name": "正弦波射击",
-        "FeatureGroupId": "技能.投射物",
-        "FeatureHandlerId": "技能.投射物.正弦波射击",
-        "Description": "发射正弦波形弹道向敌人射击（验证 SineWave 模式）",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
-        "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "None",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 25.0,
-        "IsAbilityUsesCharges": false,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
-        "AbilityCastRange": 600.0,
-        "AbilityEffectRadius": 0.0,
-        "EffectScenePath": "",
-        "ProjectileScenePath": "res://assets/Projectile/Projectile/Polygon2D/ArrowNeedle.tscn"
       }
     },
     {
       "table": "ability",
-      "legacyTable": "AbilityData",
       "id": "ability.slam",
       "name": "猛击",
       "fields": {
@@ -8318,7 +8106,7 @@
           "value": "在角色周围随机位置猛击地面，对范围内敌人造成物理伤害"
         },
         "AbilityIcon": {
-          "type": "string",
+          "type": "object_ref",
           "value": "res://icon.svg"
         },
         "EntityType": {
@@ -8381,33 +8169,10 @@
           "type": "string",
           "value": ""
         }
-      },
-      "legacyData": {
-        "Name": "猛击",
-        "FeatureGroupId": "技能.主动",
-        "FeatureHandlerId": "技能.主动.猛击",
-        "Description": "在角色周围随机位置猛击地面，对范围内敌人造成物理伤害",
-        "AbilityIconPath": "res://icon.svg",
-        "EntityType": "Ability",
-        "AbilityType": "Active",
-        "AbilityTriggerMode": "Manual",
-        "AbilityCostType": "Mana",
-        "AbilityCostAmount": 0.0,
-        "AbilityCooldown": 1.0,
-        "AbilityDamage": 30.0,
-        "IsAbilityUsesCharges": false,
-        "AbilityMaxCharges": 0,
-        "AbilityChargeTime": 0.0,
-        "AbilityTargetSelection": "None",
-        "AbilityCastRange": 500.0,
-        "AbilityEffectRadius": 300.0,
-        "EffectScenePath": "res://assets/Effect/020/AnimatedSprite2D/020.tscn",
-        "ProjectileScenePath": ""
       }
     },
     {
       "table": "system.config",
-      "legacyTable": "SystemData",
       "id": "system.damage_number_bridge",
       "name": "DamageNumberRuntimeBridge",
       "fields": {
@@ -8463,26 +8228,10 @@
           "type": "string",
           "value": "伤害数字 UI 桥接系统，监听伤害事件并显示伤害数字"
         }
-      },
-      "legacyData": {
-        "SystemId": "DamageNumberRuntimeBridge",
-        "MountGroup": "UI",
-        "Tags": "Combat,UI,Runtime",
-        "Required": false,
-        "AutoLoad": true,
-        "StartEnabled": true,
-        "Priority": 22,
-        "AllowedFlowStates": "SessionPlaying",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "Blocking",
-        "AllowedSimulationStates": "Running",
-        "Dependencies": "",
-        "Description": "伤害数字 UI 桥接系统，监听伤害事件并显示伤害数字"
       }
     },
     {
       "table": "system.config",
-      "legacyTable": "SystemData",
       "id": "system.damage_service",
       "name": "DamageService",
       "fields": {
@@ -8538,26 +8287,10 @@
           "type": "string",
           "value": "伤害处理服务，负责伤害计算、暴击、闪避等核心战斗逻辑"
         }
-      },
-      "legacyData": {
-        "SystemId": "DamageService",
-        "MountGroup": "Combat",
-        "Tags": "Core,Combat,Runtime",
-        "Required": false,
-        "AutoLoad": true,
-        "StartEnabled": true,
-        "Priority": 10,
-        "AllowedFlowStates": "SessionPlaying",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "Blocking",
-        "AllowedSimulationStates": "Running",
-        "Dependencies": "",
-        "Description": "伤害处理服务，负责伤害计算、暴击、闪避等核心战斗逻辑"
       }
     },
     {
       "table": "system.config",
-      "legacyTable": "SystemData",
       "id": "system.damage_statistics",
       "name": "DamageStatisticsSystem",
       "fields": {
@@ -8613,26 +8346,10 @@
           "type": "string",
           "value": "伤害统计系统，记录和分析战斗数据"
         }
-      },
-      "legacyData": {
-        "SystemId": "DamageStatisticsSystem",
-        "MountGroup": "Combat",
-        "Tags": "Core,Combat,Runtime",
-        "Required": false,
-        "AutoLoad": true,
-        "StartEnabled": true,
-        "Priority": 11,
-        "AllowedFlowStates": "SessionPlaying",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "Blocking",
-        "AllowedSimulationStates": "Running",
-        "Dependencies": "DamageService",
-        "Description": "伤害统计系统，记录和分析战斗数据"
       }
     },
     {
       "table": "system.config",
-      "legacyTable": "SystemData",
       "id": "system.entity_manager",
       "name": "EntityManager",
       "fields": {
@@ -8688,26 +8405,10 @@
           "type": "string",
           "value": "实体管理器，负责实体的生成、注册、销毁和组件管理。"
         }
-      },
-      "legacyData": {
-        "SystemId": "EntityManager",
-        "MountGroup": "Base",
-        "Tags": "Core,Runtime",
-        "Required": true,
-        "AutoLoad": true,
-        "StartEnabled": true,
-        "Priority": 5,
-        "AllowedFlowStates": "",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "",
-        "AllowedSimulationStates": "",
-        "Dependencies": "",
-        "Description": "实体管理器，负责实体的生成、注册、销毁和组件管理。"
       }
     },
     {
       "table": "system.config",
-      "legacyTable": "SystemData",
       "id": "system.mouse_selection",
       "name": "MouseSelectionSystem",
       "fields": {
@@ -8763,26 +8464,10 @@
           "type": "string",
           "value": "鼠标选择系统，用于调试时选择和查看实体"
         }
-      },
-      "legacyData": {
-        "SystemId": "MouseSelectionSystem",
-        "MountGroup": "Debug",
-        "Tags": "Debug,Test",
-        "Required": false,
-        "AutoLoad": false,
-        "StartEnabled": true,
-        "Priority": 101,
-        "AllowedFlowStates": "",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "",
-        "AllowedSimulationStates": "",
-        "Dependencies": "",
-        "Description": "鼠标选择系统，用于调试时选择和查看实体"
       }
     },
     {
       "table": "system.config",
-      "legacyTable": "SystemData",
       "id": "system.object_pool_init",
       "name": "ObjectPoolInit",
       "fields": {
@@ -8838,26 +8523,10 @@
           "type": "string",
           "value": "对象池初始化系统，负责预热常用对象池"
         }
-      },
-      "legacyData": {
-        "SystemId": "ObjectPoolInit",
-        "MountGroup": "Base",
-        "Tags": "Core,Runtime",
-        "Required": true,
-        "AutoLoad": true,
-        "StartEnabled": true,
-        "Priority": 0,
-        "AllowedFlowStates": "",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "",
-        "AllowedSimulationStates": "",
-        "Dependencies": "",
-        "Description": "对象池初始化系统，负责预热常用对象池"
       }
     },
     {
       "table": "system.config",
-      "legacyTable": "SystemData",
       "id": "system.pause_menu",
       "name": "PauseMenuSystem",
       "fields": {
@@ -8913,26 +8582,10 @@
           "type": "string",
           "value": "暂停菜单系统，处理暂停菜单的显示和交互"
         }
-      },
-      "legacyData": {
-        "SystemId": "PauseMenuSystem",
-        "MountGroup": "UI",
-        "Tags": "UI,Runtime",
-        "Required": false,
-        "AutoLoad": true,
-        "StartEnabled": true,
-        "Priority": 20,
-        "AllowedFlowStates": "SessionPlaying",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "",
-        "AllowedSimulationStates": "Any",
-        "Dependencies": "",
-        "Description": "暂停菜单系统，处理暂停菜单的显示和交互"
       }
     },
     {
       "table": "system.config",
-      "legacyTable": "SystemData",
       "id": "system.project_state_bridge",
       "name": "ProjectStateBridge",
       "fields": {
@@ -8988,26 +8641,10 @@
           "type": "string",
           "value": "项目状态桥接系统，监听全局事件并同步到 ProjectStateService"
         }
-      },
-      "legacyData": {
-        "SystemId": "ProjectStateBridge",
-        "MountGroup": "Base",
-        "Tags": "Core,Runtime",
-        "Required": true,
-        "AutoLoad": true,
-        "StartEnabled": true,
-        "Priority": 2,
-        "AllowedFlowStates": "",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "",
-        "AllowedSimulationStates": "",
-        "Dependencies": "",
-        "Description": "项目状态桥接系统，监听全局事件并同步到 ProjectStateService"
       }
     },
     {
       "table": "system.config",
-      "legacyTable": "SystemData",
       "id": "system.recovery",
       "name": "RecoverySystem",
       "fields": {
@@ -9063,26 +8700,10 @@
           "type": "string",
           "value": "恢复系统，处理生命值和护盾恢复逻辑"
         }
-      },
-      "legacyData": {
-        "SystemId": "RecoverySystem",
-        "MountGroup": "Combat",
-        "Tags": "Core,Combat,Runtime",
-        "Required": false,
-        "AutoLoad": true,
-        "StartEnabled": true,
-        "Priority": 12,
-        "AllowedFlowStates": "SessionPlaying",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "Blocking",
-        "AllowedSimulationStates": "Running",
-        "Dependencies": "",
-        "Description": "恢复系统，处理生命值和护盾恢复逻辑"
       }
     },
     {
       "table": "system.config",
-      "legacyTable": "SystemData",
       "id": "system.spawn",
       "name": "SpawnSystem",
       "fields": {
@@ -9138,26 +8759,10 @@
           "type": "string",
           "value": "生成系统，负责敌人和道具的生成逻辑"
         }
-      },
-      "legacyData": {
-        "SystemId": "SpawnSystem",
-        "MountGroup": "Gameplay",
-        "Tags": "Gameplay,Runtime",
-        "Required": false,
-        "AutoLoad": true,
-        "StartEnabled": true,
-        "Priority": 13,
-        "AllowedFlowStates": "SessionPlaying",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "Blocking",
-        "AllowedSimulationStates": "Running",
-        "Dependencies": "",
-        "Description": "生成系统，负责敌人和道具的生成逻辑"
       }
     },
     {
       "table": "system.config",
-      "legacyTable": "SystemData",
       "id": "system.targeting_manager",
       "name": "TargetingManagerRuntime",
       "fields": {
@@ -9213,26 +8818,10 @@
           "type": "string",
           "value": "目标选择管理系统，提供目标查询和筛选服务"
         }
-      },
-      "legacyData": {
-        "SystemId": "TargetingManagerRuntime",
-        "MountGroup": "Combat",
-        "Tags": "Core,Combat,Runtime",
-        "Required": false,
-        "AutoLoad": true,
-        "StartEnabled": true,
-        "Priority": 14,
-        "AllowedFlowStates": "SessionPlaying",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "Blocking",
-        "AllowedSimulationStates": "Running",
-        "Dependencies": "",
-        "Description": "目标选择管理系统，提供目标查询和筛选服务"
       }
     },
     {
       "table": "system.config",
-      "legacyTable": "SystemData",
       "id": "system.test",
       "name": "TestSystem",
       "fields": {
@@ -9288,26 +8877,10 @@
           "type": "string",
           "value": "测试系统，用于调试和监控系统运行状态"
         }
-      },
-      "legacyData": {
-        "SystemId": "TestSystem",
-        "MountGroup": "Test",
-        "Tags": "Debug,Test",
-        "Required": false,
-        "AutoLoad": false,
-        "StartEnabled": true,
-        "Priority": 100,
-        "AllowedFlowStates": "",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "",
-        "AllowedSimulationStates": "",
-        "Dependencies": "",
-        "Description": "测试系统，用于调试和监控系统运行状态"
       }
     },
     {
       "table": "system.config",
-      "legacyTable": "SystemData",
       "id": "system.timer_manager",
       "name": "TimerManager",
       "fields": {
@@ -9363,26 +8936,10 @@
           "type": "string",
           "value": "定时器管理系统，提供全局定时器服务"
         }
-      },
-      "legacyData": {
-        "SystemId": "TimerManager",
-        "MountGroup": "Base",
-        "Tags": "Core,Runtime",
-        "Required": true,
-        "AutoLoad": true,
-        "StartEnabled": true,
-        "Priority": 1,
-        "AllowedFlowStates": "",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "",
-        "AllowedSimulationStates": "",
-        "Dependencies": "",
-        "Description": "定时器管理系统，提供全局定时器服务"
       }
     },
     {
       "table": "system.config",
-      "legacyTable": "SystemData",
       "id": "system.ui_manager",
       "name": "UIManager",
       "fields": {
@@ -9438,26 +8995,10 @@
           "type": "string",
           "value": "UI 管理系统，负责 UI 的创建、显示和销毁"
         }
-      },
-      "legacyData": {
-        "SystemId": "UIManager",
-        "MountGroup": "UI",
-        "Tags": "Core,UI,Runtime",
-        "Required": false,
-        "AutoLoad": true,
-        "StartEnabled": true,
-        "Priority": 21,
-        "AllowedFlowStates": "",
-        "RequiredOverlays": "",
-        "BlockedOverlays": "",
-        "AllowedSimulationStates": "",
-        "Dependencies": "",
-        "Description": "UI 管理系统，负责 UI 的创建、显示和销毁"
       }
     },
     {
       "table": "system.preset",
-      "legacyTable": "SystemPresetData",
       "id": "system.preset.default",
       "name": "Default",
       "fields": {
@@ -9485,19 +9026,10 @@
           "type": "string",
           "value": "默认预设，加载核心、玩法、战斗、UI、运行时系统，并显式加载调试入口系统"
         }
-      },
-      "legacyData": {
-        "PresetName": "Default",
-        "IsActive": true,
-        "EnabledTags": "Core,Gameplay,Combat,UI,Roguelike,Runtime",
-        "EnabledSystemIds": "TestSystem,MouseSelectionSystem",
-        "DisabledSystemIds": "",
-        "Description": "默认预设，加载核心、玩法、战斗、UI、运行时系统，并显式加载调试入口系统"
       }
     },
     {
       "table": "unit.enemy",
-      "legacyTable": "EnemyData",
       "id": "enemy.chailangren",
       "name": "豺狼人",
       "fields": {
@@ -9625,44 +9157,10 @@
           "type": "int",
           "value": 10
         }
-      },
-      "legacyData": {
-        "Name": "豺狼人",
-        "Team": "Enemy",
-        "EntityType": "Unit",
-        "DeathType": "Normal",
-        "VisualScenePath": "res://assets/Unit/Enemy/chailangren/AnimatedSprite2D/chailangren.tscn",
-        "HealthBarHeight": 155.0,
-        "BaseHp": 100.0,
-        "BaseHpRegen": 0.0,
-        "LifeSteal": 0.0,
-        "BaseAttack": 5.0,
-        "BaseAttackSpeed": 100.0,
-        "AttackRange": 200.0,
-        "CritRate": 0.0,
-        "CritDamage": 100.0,
-        "Penetration": 0.0,
-        "BaseDefense": 3.0,
-        "DamageReduction": 0.0,
-        "MoveSpeed": 150.0,
-        "DodgeChance": 0.0,
-        "ExpReward": 5,
-        "DetectionRange": 500.0,
-        "IsEnableSpawnRule": true,
-        "SpawnStrategy": "Circle",
-        "SpawnMinWave": 1,
-        "SpawnMaxWave": -1,
-        "SpawnInterval": 3.0,
-        "SpawnMaxCountPerWave": -1,
-        "SingleSpawnCount": 2,
-        "SingleSpawnVariance": 0,
-        "SpawnStartDelay": 0.0,
-        "SpawnWeight": 10
       }
     },
     {
       "table": "unit.enemy",
-      "legacyTable": "EnemyData",
       "id": "enemy.yuren",
       "name": "鱼人",
       "fields": {
@@ -9790,44 +9288,10 @@
           "type": "int",
           "value": 10
         }
-      },
-      "legacyData": {
-        "Name": "鱼人",
-        "Team": "Enemy",
-        "EntityType": "Unit",
-        "DeathType": "Normal",
-        "VisualScenePath": "res://assets/Unit/Enemy/yuren/AnimatedSprite2D/yuren.tscn",
-        "HealthBarHeight": 0.0,
-        "BaseHp": 150.0,
-        "BaseHpRegen": 0.0,
-        "LifeSteal": 0.0,
-        "BaseAttack": 6.0,
-        "BaseAttackSpeed": 100.0,
-        "AttackRange": 200.0,
-        "CritRate": 0.0,
-        "CritDamage": 100.0,
-        "Penetration": 0.0,
-        "BaseDefense": 1.0,
-        "DamageReduction": 0.0,
-        "MoveSpeed": 150.0,
-        "DodgeChance": 0.0,
-        "ExpReward": 2,
-        "DetectionRange": 500.0,
-        "IsEnableSpawnRule": true,
-        "SpawnStrategy": "Rectangle",
-        "SpawnMinWave": 1,
-        "SpawnMaxWave": -1,
-        "SpawnInterval": 2.0,
-        "SpawnMaxCountPerWave": -1,
-        "SingleSpawnCount": 3,
-        "SingleSpawnVariance": 1,
-        "SpawnStartDelay": 0.0,
-        "SpawnWeight": 10
       }
     },
     {
       "table": "unit.player",
-      "legacyTable": "PlayerData",
       "id": "player.deluyi",
       "name": "德鲁伊",
       "fields": {
@@ -9911,33 +9375,10 @@
           "type": "float",
           "value": 300.0
         }
-      },
-      "legacyData": {
-        "Name": "德鲁伊",
-        "Team": "Player",
-        "EntityType": "Unit",
-        "DeathType": "Hero",
-        "VisualScenePath": "res://assets/Unit/Player/deluyi/AnimatedSprite2D/deluyi.tscn",
-        "HealthBarHeight": 120.0,
-        "BaseHp": 100.0,
-        "BaseHpRegen": 1.0,
-        "LifeSteal": 0.0,
-        "BaseAttack": 10.0,
-        "BaseAttackSpeed": 100.0,
-        "AttackRange": 150.0,
-        "CritRate": 5.0,
-        "CritDamage": 100.0,
-        "Penetration": 0.0,
-        "BaseDefense": 5.0,
-        "DamageReduction": 0.0,
-        "MoveSpeed": 200.0,
-        "DodgeChance": 0.0,
-        "PickupRange": 300.0
       }
     },
     {
       "table": "unit.targeting_indicator",
-      "legacyTable": "TargetingIndicatorData",
       "id": "unit.targeting_indicator",
       "name": "TargetingIndicator",
       "fields": {
@@ -9977,17 +9418,6 @@
           "type": "float",
           "value": 0.0
         }
-      },
-      "legacyData": {
-        "Name": "TargetingIndicator",
-        "Team": "Neutral",
-        "EntityType": "TargetingIndicator",
-        "VisualScenePath": "",
-        "IsShowHealthBar": false,
-        "BaseHp": 1000000.0,
-        "IsInvulnerable": true,
-        "MoveSpeed": 400.0,
-        "BaseAttackSpeed": 0.0
       }
     }
   ],

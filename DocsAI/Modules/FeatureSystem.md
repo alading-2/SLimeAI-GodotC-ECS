@@ -11,7 +11,7 @@ FeatureSystem 负责：
 - `Granted / Removed` 一次性授予和移除。
 - `Enabled / Disabled` 启停状态切换。
 - `Activated / Execute / Ended` 单次运行生命周期。
-- 授予时应用 `FeatureModifierEntry`，移除时按 `source=feature` 回滚 Modifier。
+- 授予时应用 `FeatureModifierEntryData`，移除时按 `source=feature` 回滚 Modifier。
 - 通过 `FeatureContext.ActivationData` 接受子系统上下文，通过 `ExecuteResult` 返回子系统结果。
 
 FeatureSystem 不负责：
@@ -30,15 +30,14 @@ FeatureSystem 不负责：
 - `Src/ECS/Base/System/FeatureSystem/FeatureHandlerRegistry.cs`
 - `Src/ECS/Base/System/FeatureSystem/FeatureEndReason.cs`
 - `Src/ECS/Base/System/FeatureSystem/Action/`
-- `Data/Feature/Definition/FeatureDefinition.cs`
-- `Data/Feature/Definition/FeatureModifierEntry.cs`
+- `Data/DataOS/RuntimeModels/Feature/FeatureDefinitionData.cs`
 - `Data/DataOS/Snapshots/runtime_snapshot.json`
 - `Data/EventType/Feature/GameEventType_Feature.cs`
 
 ## 数据 / 事件 / 生命周期
 
 - 生命周期顺序是 `Granted -> Enabled/Disabled -> Activated -> Execute -> Ended -> Removed`。
-- 简单属性 Feature 优先只配置 `Modifiers`，不写 `IFeatureHandler`。
+- 简单属性 Feature 优先通过 DataOS `Feature.Modifiers` / runtime snapshot record 配置 `Modifiers`，不写 `IFeatureHandler`。
 - 复杂逻辑实现 `IFeatureHandler`，用完整唯一 `FeatureId` 注册到 `FeatureHandlerRegistry`。
 - 子系统专有输入放 `FeatureContext.ActivationData`，Handler 自行转型。
 - Handler 的 `OnExecute` 返回值会写入 `FeatureContext.ExecuteResult`，调用方自行转型。
@@ -58,7 +57,7 @@ FeatureSystem 不负责：
 ## 修改流程
 
 1. 判断需求是纯数据 Modifier、复杂 Handler、Ability 接入、测试调试还是 DataKey / EventType。
-2. 纯属性加成优先配置 `FeatureModifierEntry`。
+2. 纯属性加成优先配置 DataOS `feature_modifier`，由 snapshot 投影为 `FeatureModifierEntryData[]`。
 3. 复杂逻辑新增 `IFeatureHandler` 并注册完整唯一 `FeatureId`。
 4. Ability 技能逻辑优先继承 `AbilityFeatureHandler`，在 `ExecuteAbility(CastContext)` 中做具体效果。
 5. 需要目标选择读 `DocsAI/Modules/Tools.md`，需要伤害读 `DocsAI/Modules/DamageSystem.md`。

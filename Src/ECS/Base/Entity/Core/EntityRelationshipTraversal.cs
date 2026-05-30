@@ -12,7 +12,7 @@ public static class EntityRelationshipTraversal
     private static readonly Log _log = new(nameof(EntityRelationshipTraversal), LogLevel.Warning);
 
     /// <summary>
-    /// 统一解析实体 Id；优先使用 DataKey.Id，未初始化时回退到节点实例 Id。
+    /// 统一解析实体 Id；优先使用 GeneratedDataKey.Id，未初始化时回退到节点实例 Id。
     /// </summary>
     /// <param name="entity">实体节点</param>
     /// <returns>实体 Id；解析失败返回空字符串</returns>
@@ -25,7 +25,7 @@ public static class EntityRelationshipTraversal
 
         if (entity is IEntity iEntity)
         {
-            string entityId = iEntity.Data.Get<string>(DataKey.Id); // Data 中记录的实体 Id
+            string entityId = iEntity.Data.Get<string>(GeneratedDataKey.Id); // Data 中记录的实体 Id
             if (!string.IsNullOrEmpty(entityId))
             {
                 return entityId;

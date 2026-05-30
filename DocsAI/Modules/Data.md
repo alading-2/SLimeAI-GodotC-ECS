@@ -32,8 +32,8 @@ Data 不负责：
 
 ## 数据 / 事件 / 生命周期
 
-- 新 DataKey 以 descriptor 生成的 `DataKey<T>` 为主入口；`DataMeta/DataRegistry` 只允许作为迁移审计对照，不再作为字段定义事实源。
-- `GeneratedDataKey.Xxx` / `DataKey.Xxx` 只保存 stable key handle，不保存默认值、范围或计算规则。
+- 新 DataKey 以 descriptor 生成的 generated typed handle 为主入口；`DataMeta/DataRegistry` 不再作为字段定义事实源。
+- generated typed handle 只保存 stable key，不保存默认值、范围或计算规则。
 - 数值型“不限制”统一使用 `-1`。
 - 概率统一使用 `0-100`，计算时再 `/100`。
 - 对象池回收时 Data 清理由 EntityManager 统一处理。

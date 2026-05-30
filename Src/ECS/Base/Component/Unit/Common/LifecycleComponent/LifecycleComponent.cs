@@ -119,7 +119,7 @@ public partial class LifecycleComponent : Node, IComponent
     /// </summary>
     private void OnDataChanged(GameEventType.Data.PropertyChanged data)
     {
-        if (data.Key == GeneratedDataKey.MaxLifeTime)
+        if (data.Key == GeneratedDataKey.MaxLifeTime.StableKey)
         {
             UpdateLifeTimer();
         }

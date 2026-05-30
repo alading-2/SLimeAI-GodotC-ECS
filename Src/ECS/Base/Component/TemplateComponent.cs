@@ -111,7 +111,7 @@ public partial class TemplateComponent : Node, IComponent
     /// </summary>
     private void OnDataChanged(GameEventType.Data.PropertyChanged evt)
     {
-        if (evt.Key != GeneratedDataKey.Name) return;
+        if (evt.Key != GeneratedDataKey.Name.StableKey) return;
 
         // 响应数据变化
     }

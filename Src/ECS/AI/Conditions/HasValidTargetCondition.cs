@@ -17,7 +17,7 @@ public class HasValidTargetCondition : BehaviorNode
     /// <inheritdoc/>
     public override NodeState Evaluate(AIContext ctx)
     {
-        var target = ctx.Entity.Data.Get<Node2D>(GeneratedDataKey.TargetNode);
+        var target = ctx.Entity.Data.Get(GeneratedDataKey.TargetNode);
 
         // 目标不存在或已被释放
         if (target == null || !GodotObject.IsInstanceValid(target))

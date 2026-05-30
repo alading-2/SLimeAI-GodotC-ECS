@@ -45,9 +45,9 @@ namespace Slime.Test.ActiveSkillInputTest
             _player.Name = "TestPlayer";
             _player.Position = new Vector2(400, 300);
 
-            // 使用节点实例ID作为 DataKey.Id，与 NodeLifecycleManager 一致
+            // 使用节点实例ID作为 GeneratedDataKey.Id，与 NodeLifecycleManager 一致
             var instanceId = _player.GetInstanceId().ToString();
-            _player.Data.Set(DataKey.Id, instanceId);
+            _player.Data.Set(GeneratedDataKey.Id, instanceId);
 
             // 注册到 EntityManager
             EntityManager.Register(_player);
@@ -55,12 +55,12 @@ namespace Slime.Test.ActiveSkillInputTest
             AddChild(_player);
 
             // 初始化玩家数据
-            _player.Data.Set(DataKey.BaseHp, 100f);
-            _player.Data.Set(DataKey.CurrentHp, 100f);
-            _player.Data.Set(DataKey.FinalHp, 100f);
-            _player.Data.Set(DataKey.CurrentMana, 100f);
-            _player.Data.Set(DataKey.FinalMana, 100f);
-            _player.Data.Set(DataKey.CurrentActiveAbilityIndex, 0);
+            _player.Data.Set(GeneratedDataKey.BaseHp, 100f);
+            _player.Data.Set(GeneratedDataKey.CurrentHp, 100f);
+            _player.Data.Set(GeneratedDataKey.FinalHp, 100f);
+            _player.Data.Set(GeneratedDataKey.CurrentMana, 100f);
+            _player.Data.Set(GeneratedDataKey.FinalMana, 100f);
+            _player.Data.Set(GeneratedDataKey.CurrentActiveAbilityIndex, 0);
 
             // 添加主动技能输入组件
             var inputComponent = new ActiveSkillInputComponent();
@@ -76,71 +76,71 @@ namespace Slime.Test.ActiveSkillInputTest
             // 技能1: Dash (充能技能)
             var dashAbility = CreateAbility("Dash", new Dictionary<string, object>
             {
-                { DataKey.Name, "Dash" },
-                { DataKey.Description, "向前冲刺" },
-                { DataKey.EntityType, (int)EntityType.Ability },
-                { DataKey.AbilityType, (int)AbilityType.Active },
-                { DataKey.AbilityTriggerMode, (int)AbilityTriggerMode.Manual },
-                { DataKey.IsAbilityUsesCharges, true },
-                { DataKey.AbilityMaxCharges, 3 },
-                { DataKey.AbilityCurrentCharges, 3 },
-                { DataKey.AbilityChargeTime, 5f },
-                { DataKey.AbilityCooldown, 0.5f },
-                { DataKey.AbilityTargetSelection, (int)AbilityTargetSelection.None },
-                { DataKey.FeatureEnabled, true }
+                { GeneratedDataKey.Name.StableKey, "Dash" },
+                { GeneratedDataKey.Description.StableKey, "向前冲刺" },
+                { GeneratedDataKey.EntityType.StableKey, (int)EntityType.Ability },
+                { GeneratedDataKey.AbilityType.StableKey, (int)AbilityType.Active },
+                { GeneratedDataKey.AbilityTriggerMode.StableKey, (int)AbilityTriggerMode.Manual },
+                { GeneratedDataKey.IsAbilityUsesCharges.StableKey, true },
+                { GeneratedDataKey.AbilityMaxCharges.StableKey, 3 },
+                { GeneratedDataKey.AbilityCurrentCharges.StableKey, 3 },
+                { GeneratedDataKey.AbilityChargeTime.StableKey, 5f },
+                { GeneratedDataKey.AbilityCooldown.StableKey, 0.5f },
+                { GeneratedDataKey.AbilityTargetSelection.StableKey, (int)AbilityTargetSelection.None },
+                { GeneratedDataKey.FeatureEnabled.StableKey, true }
             });
             AddChild(dashAbility);
 
             // 手动注册技能关系
             EntityRelationshipManager.AddRelationship(
-                _player.Data.Get<string>(DataKey.Id),
-                dashAbility.Data.Get<string>(DataKey.Id),
+                _player.Data.Get<string>(GeneratedDataKey.Id),
+                dashAbility.Data.Get<string>(GeneratedDataKey.Id),
                 EntityRelationshipType.ENTITY_TO_ABILITY
             );
 
             // 技能2: Slam (消耗魔法)
             var slamAbility = CreateAbility("Slam", new Dictionary<string, object>
             {
-                { DataKey.Name, "Slam" },
-                { DataKey.Description, "猛击地面" },
-                { DataKey.EntityType, (int)EntityType.Ability },
-                { DataKey.AbilityType, (int)AbilityType.Active },
-                { DataKey.AbilityTriggerMode, (int)AbilityTriggerMode.Manual },
-                { DataKey.AbilityCostType, (int)AbilityCostType.Mana },
-                { DataKey.AbilityCostAmount, 20f },
-                { DataKey.AbilityCooldown, 3f },
-                { DataKey.AbilityTargetSelection, (int)AbilityTargetSelection.None },
-                { DataKey.FeatureEnabled, true }
+                { GeneratedDataKey.Name.StableKey, "Slam" },
+                { GeneratedDataKey.Description.StableKey, "猛击地面" },
+                { GeneratedDataKey.EntityType.StableKey, (int)EntityType.Ability },
+                { GeneratedDataKey.AbilityType.StableKey, (int)AbilityType.Active },
+                { GeneratedDataKey.AbilityTriggerMode.StableKey, (int)AbilityTriggerMode.Manual },
+                { GeneratedDataKey.AbilityCostType.StableKey, (int)AbilityCostType.Mana },
+                { GeneratedDataKey.AbilityCostAmount.StableKey, 20f },
+                { GeneratedDataKey.AbilityCooldown.StableKey, 3f },
+                { GeneratedDataKey.AbilityTargetSelection.StableKey, (int)AbilityTargetSelection.None },
+                { GeneratedDataKey.FeatureEnabled.StableKey, true }
             });
             AddChild(slamAbility);
 
             // 手动注册技能关系
             EntityRelationshipManager.AddRelationship(
-                _player.Data.Get<string>(DataKey.Id),
-                slamAbility.Data.Get<string>(DataKey.Id),
+                _player.Data.Get<string>(GeneratedDataKey.Id),
+                slamAbility.Data.Get<string>(GeneratedDataKey.Id),
                 EntityRelationshipType.ENTITY_TO_ABILITY
             );
 
             // 技能3: ChainLightning (消耗魔法+冷却)
             var lightningAbility = CreateAbility("ChainLightning", new Dictionary<string, object>
             {
-                { DataKey.Name, "ChainLightning" },
-                { DataKey.Description, "链式闪电" },
-                { DataKey.EntityType, (int)EntityType.Ability },
-                { DataKey.AbilityType, (int)AbilityType.Active },
-                { DataKey.AbilityTriggerMode, (int)AbilityTriggerMode.Manual },
-                { DataKey.AbilityCostType, (int)AbilityCostType.Mana },
-                { DataKey.AbilityCostAmount, 50f },
-                { DataKey.AbilityCooldown, 6f },
-                { DataKey.AbilityTargetSelection, (int)AbilityTargetSelection.None },
-                { DataKey.FeatureEnabled, true }
+                { GeneratedDataKey.Name.StableKey, "ChainLightning" },
+                { GeneratedDataKey.Description.StableKey, "链式闪电" },
+                { GeneratedDataKey.EntityType.StableKey, (int)EntityType.Ability },
+                { GeneratedDataKey.AbilityType.StableKey, (int)AbilityType.Active },
+                { GeneratedDataKey.AbilityTriggerMode.StableKey, (int)AbilityTriggerMode.Manual },
+                { GeneratedDataKey.AbilityCostType.StableKey, (int)AbilityCostType.Mana },
+                { GeneratedDataKey.AbilityCostAmount.StableKey, 50f },
+                { GeneratedDataKey.AbilityCooldown.StableKey, 6f },
+                { GeneratedDataKey.AbilityTargetSelection.StableKey, (int)AbilityTargetSelection.None },
+                { GeneratedDataKey.FeatureEnabled.StableKey, true }
             });
             AddChild(lightningAbility);
 
             // 手动注册技能关系
             EntityRelationshipManager.AddRelationship(
-                _player.Data.Get<string>(DataKey.Id),
-                lightningAbility.Data.Get<string>(DataKey.Id),
+                _player.Data.Get<string>(GeneratedDataKey.Id),
+                lightningAbility.Data.Get<string>(GeneratedDataKey.Id),
                 EntityRelationshipType.ENTITY_TO_ABILITY
             );
 
@@ -160,7 +160,7 @@ namespace Slime.Test.ActiveSkillInputTest
 
             // 生成唯一ID - 使用节点实例ID确保与 NodeLifecycleManager 一致
             var instanceId = ability.GetInstanceId().ToString();
-            ability.Data.Set(DataKey.Id, instanceId);
+            ability.Data.Set(GeneratedDataKey.Id, instanceId);
 
             // 注册到 EntityManager，使 GetEntityById 能找到
             EntityManager.Register(ability);
@@ -217,16 +217,16 @@ namespace Slime.Test.ActiveSkillInputTest
             if (_player == null) return;
 
             _log.Info("--- 调试信息 ---");
-            _log.Info($"当前魔法: {_player.Data.Get<float>(DataKey.CurrentMana):F1}");
-            _log.Info($"当前技能索引: {_player.Data.Get<int>(DataKey.CurrentActiveAbilityIndex)}");
+            _log.Info($"当前魔法: {_player.Data.Get<float>(GeneratedDataKey.CurrentMana):F1}");
+            _log.Info($"当前技能索引: {_player.Data.Get<int>(GeneratedDataKey.CurrentActiveAbilityIndex)}");
 
             var abilities = EntityManager.GetAbilities(_player);
             foreach (var ability in abilities)
             {
-                var name = ability.Data.Get<string>(DataKey.Name);
-                var charges = ability.Data.Get<int>(DataKey.AbilityCurrentCharges);
-                var maxCharges = ability.Data.Get<int>(DataKey.AbilityMaxCharges);
-                var usesCharges = ability.Data.Get<bool>(DataKey.IsAbilityUsesCharges);
+                var name = ability.Data.Get<string>(GeneratedDataKey.Name);
+                var charges = ability.Data.Get<int>(GeneratedDataKey.AbilityCurrentCharges);
+                var maxCharges = ability.Data.Get<int>(GeneratedDataKey.AbilityMaxCharges);
+                var usesCharges = ability.Data.Get<bool>(GeneratedDataKey.IsAbilityUsesCharges);
 
                 if (usesCharges)
                 {

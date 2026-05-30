@@ -214,8 +214,8 @@ internal sealed class VisualPreviewWorldController
             Name = entry.SceneName,
             Fields = new Dictionary<string, RuntimeDataFieldDto>
             {
-                [GeneratedDataKey.Name.Key] = new() { Type = "string", Value = entry.SceneName },
-                [GeneratedDataKey.VisualScenePath.Key] = new() { Type = "string", Value = entry.ResourcePath }
+                [GeneratedDataKey.Name.StableKey] = new() { Type = "string", Value = entry.SceneName },
+                [GeneratedDataKey.VisualScenePath.StableKey] = new() { Type = "string", Value = entry.ResourcePath }
             }
         };
 
@@ -231,11 +231,11 @@ internal sealed class VisualPreviewWorldController
             return null;
         }
 
-        entity.Data.Set(DataKey.PreviewResourceKey, entry.ResourceKey);
-        entity.Data.Set(DataKey.PreviewResourcePath, entry.ResourcePath);
-        entity.Data.Set(DataKey.PreviewResourceCategory, entry.Category.ToString());
-        entity.Data.Set(DataKey.PreviewCatalogPath, entry.CatalogPath);
-        entity.Data.Set(DataKey.PreviewDefaultAnimation, entry.DefaultAnimation);
+        entity.Data.Set(GeneratedDataKey.PreviewResourceKey, entry.ResourceKey);
+        entity.Data.Set(GeneratedDataKey.PreviewResourcePath, entry.ResourcePath);
+        entity.Data.Set(GeneratedDataKey.PreviewResourceCategory, entry.Category.ToString());
+        entity.Data.Set(GeneratedDataKey.PreviewCatalogPath, entry.CatalogPath);
+        entity.Data.Set(GeneratedDataKey.PreviewDefaultAnimation, entry.DefaultAnimation);
         return entity;
     }
 
@@ -278,7 +278,7 @@ internal sealed class VisualPreviewWorldController
         };
 
         BindAnimationFinished(runtime);
-        entity.Data.Set(DataKey.PreviewCurrentAnimation, string.Empty);
+        entity.Data.Set(GeneratedDataKey.PreviewCurrentAnimation, string.Empty);
         return runtime;
     }
 
@@ -409,7 +409,7 @@ internal sealed class VisualPreviewWorldController
     {
         runtime.CurrentPreviewAnimation = animationName;
         runtime.Entity.Data.Set(
-            DataKey.PreviewCurrentAnimation,
+            GeneratedDataKey.PreviewCurrentAnimation,
             animationName // 当前预览动作
         );
 

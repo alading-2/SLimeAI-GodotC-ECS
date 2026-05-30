@@ -22,7 +22,7 @@ public class Data
 
     public Data(IEntity? owner = null)
     {
-        _owner = owner;
+        BindRuntimeCatalog(owner, DataRuntimeBootstrap.Default.Catalog);
     }
 
     /// <summary>
@@ -87,7 +87,7 @@ public class Data
     /// <param name="key">键名</param>
     /// <param name="value">要设置的新值</param>
     /// <returns>如果值发生了实际变化则返回 true</returns>
-    public bool Set<T>(string key, T value)
+    internal bool Set<T>(string key, T value)
     {
         if (_runtimeStorage != null)
         {
@@ -105,7 +105,7 @@ public class Data
     /// <param name="key">键名</param>
     /// <param name="defaultValue">兼容旧签名的占位参数；实际默认值来自 DataDefinitionCatalog。</param>
     /// <returns>最终计算值</returns>
-    public T Get<T>(string key, object? defaultValue = null)
+    internal T Get<T>(string key, object? defaultValue = null)
     {
         if (_runtimeStorage != null)
         {
@@ -123,7 +123,12 @@ public class Data
     /// <param name="value">要设置的新值。</param>
     public bool Set<T>(DataKey<T> key, T value)
     {
-        return Set(key.StableKey, value);
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.Set(key, value);
+        }
+
+        throw CreateUnboundDataException(key.StableKey);
     }
 
     /// <summary>
@@ -133,7 +138,30 @@ public class Data
     /// <param name="key">descriptor stable key 句柄。</param>
     public T Get<T>(DataKey<T> key)
     {
-        return Get<T>(key.StableKey);
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.Get(key);
+        }
+
+        throw CreateUnboundDataException(key.StableKey);
+    }
+
+    /// <summary>
+    /// 通过类型安全句柄读取字段值；仅旧调用点需要显式覆盖默认值时使用。
+    /// </summary>
+    /// <typeparam name="T">字段值类型。</typeparam>
+    /// <param name="key">descriptor stable key 句柄。</param>
+    /// <param name="defaultValue">字段未显式写入且 descriptor default 不适用时的回退值。</param>
+    public T Get<T>(DataKey<T> key, T defaultValue)
+    {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.HasValue(key.StableKey)
+                ? _runtimeStorage.Get(key)
+                : defaultValue;
+        }
+
+        throw CreateUnboundDataException(key.StableKey);
     }
 
     /// <summary>
@@ -158,7 +186,7 @@ public class Data
     /// <param name="stableKey">字段 stable key。</param>
     /// <param name="value">要写入的值。</param>
     /// <param name="source">写入来源。</param>
-    public bool SetUntyped(string stableKey, object? value, DataWriteSource source = DataWriteSource.Loader)
+    internal bool SetUntyped(string stableKey, object? value, DataWriteSource source = DataWriteSource.Loader)
     {
         if (_runtimeStorage != null)
         {
@@ -175,7 +203,7 @@ public class Data
     /// <param name="key">键名</param>
     /// <param name="defaultValue">默认值</param>
     /// <returns>基础值</returns>
-    public T GetBase<T>(string key, T defaultValue = default!)
+    internal T GetBase<T>(string key, T defaultValue = default!)
     {
         if (_runtimeStorage != null)
         {
@@ -190,7 +218,7 @@ public class Data
     /// <summary>
     /// 尝试获取数据值
     /// </summary>
-    public bool TryGetValue<T>(string key, out T value)
+    internal bool TryGetValue<T>(string key, out T value)
     {
         if (_runtimeStorage != null)
         {
@@ -211,7 +239,7 @@ public class Data
     /// <summary>
     /// 检查是否存在指定的键名
     /// </summary>
-    public bool Has(string key)
+    internal bool Has(string key)
     {
         if (_runtimeStorage != null)
         {
@@ -222,9 +250,22 @@ public class Data
     }
 
     /// <summary>
+    /// 通过类型安全句柄检查字段是否存在于 catalog。
+    /// </summary>
+    public bool Has<T>(DataKey<T> key)
+    {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.HasDefinition(key.StableKey);
+        }
+
+        throw CreateUnboundDataException(key.StableKey);
+    }
+
+    /// <summary>
     /// 移除指定的数据项
     /// </summary>
-    public bool Remove(string key)
+    internal bool Remove(string key)
     {
         if (_runtimeStorage != null)
         {
@@ -234,21 +275,43 @@ public class Data
         throw CreateUnboundDataException(key);
     }
 
+    /// <summary>
+    /// 通过类型安全句柄移除字段运行时值和修改器。
+    /// </summary>
+    public bool Remove<T>(DataKey<T> key)
+    {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.Remove(key.StableKey);
+        }
+
+        throw CreateUnboundDataException(key.StableKey);
+    }
+
     // ================= 算术运算 =================
 
     /// <summary>
     /// 对现有数值执行加法操作
     /// </summary>
-    public void Add<T>(string key, T delta) where T : INumber<T>
+    internal void Add<T>(string key, T delta) where T : INumber<T>
     {
         var current = GetBase<T>(key, T.Zero);
         Set(key, current + delta);
     }
 
     /// <summary>
+    /// 通过类型安全句柄对现有数值执行加法操作。
+    /// </summary>
+    public void Add<T>(DataKey<T> key, T delta) where T : INumber<T>
+    {
+        var current = Get<T>(key, T.Zero);
+        Set(key, current + delta);
+    }
+
+    /// <summary>
     /// 对现有数值执行乘法操作
     /// </summary>
-    public void Multiply<T>(string key, T factor) where T : INumber<T>
+    internal void Multiply<T>(string key, T factor) where T : INumber<T>
     {
         var current = GetBase<T>(key, T.Zero);
         Set(key, current * factor);
@@ -257,7 +320,7 @@ public class Data
     /// <summary>
     /// 批量设置多个数据项
     /// </summary>
-    public void SetMultiple(Dictionary<string, object> properties)
+    internal void SetMultiple(Dictionary<string, object> properties)
     {
         foreach (var kvp in properties)
         {
@@ -272,7 +335,7 @@ public class Data
     /// </summary>
     /// <param name="key">目标数据键</param>
     /// <param name="modifier">修改器实例</param>
-    public void AddModifier(string key, DataModifier modifier)
+    internal void AddModifier(string key, DataModifier modifier)
     {
         TryAddModifier(key, modifier);
     }
@@ -282,7 +345,7 @@ public class Data
     /// </summary>
     /// <param name="key">目标数据键</param>
     /// <param name="modifier">修改器实例</param>
-    public bool TryAddModifier(string key, DataModifier modifier)
+    internal bool TryAddModifier(string key, DataModifier modifier)
     {
         if (_runtimeStorage != null)
         {
@@ -293,11 +356,32 @@ public class Data
     }
 
     /// <summary>
+    /// 通过类型安全句柄添加字段修改器。
+    /// </summary>
+    public void AddModifier<T>(DataKey<T> key, DataModifier modifier)
+    {
+        TryAddModifier(key, modifier);
+    }
+
+    /// <summary>
+    /// 通过类型安全句柄尝试添加字段修改器。
+    /// </summary>
+    public bool TryAddModifier<T>(DataKey<T> key, DataModifier modifier)
+    {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.AddModifier(key.StableKey, modifier);
+        }
+
+        throw CreateUnboundDataException(key.StableKey);
+    }
+
+    /// <summary>
     /// 移除修改器
     /// </summary>
     /// <param name="key">目标数据键</param>
     /// <param name="modifierId">修改器 ID</param>
-    public void RemoveModifier(string key, string modifierId)
+    internal void RemoveModifier(string key, string modifierId)
     {
         if (_runtimeStorage != null)
         {
@@ -372,7 +456,7 @@ public class Data
     /// <summary>
     /// 检查是否拥有特定修改器
     /// </summary>
-    public bool HasModifier(string key, string modifierId)
+    internal bool HasModifier(string key, string modifierId)
     {
         if (_runtimeStorage != null)
         {
@@ -395,7 +479,7 @@ public class Data
     /// 获取指定数据键的所有修改器副本
     /// 返回副本是为了确保迭代安全性，防止在遍历时修改器列表发生变动导致异常
     /// </summary>
-    public List<DataModifier> GetModifiers(string key)
+    internal List<DataModifier> GetModifiers(string key)
     {
         if (_runtimeStorage != null)
         {
@@ -408,7 +492,7 @@ public class Data
     /// <summary>
     /// 清除指定数据键的所有修改器
     /// </summary>
-    public void ClearModifiers(string key)
+    internal void ClearModifiers(string key)
     {
         if (_runtimeStorage != null)
         {

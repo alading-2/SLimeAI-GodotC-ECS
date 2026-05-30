@@ -9,15 +9,14 @@ using Godot;
 /// </summary>
 public class IsInRangeCondition : BehaviorNode
 {
-    private readonly string _rangeDataKey;
-    private readonly float _defaultRange;
+    private readonly DataKey<float> _rangeDataKey;
 
     /// <summary>
     /// 创建范围检测条件节点
     /// </summary>
     /// <param name="rangeDataKey">存储范围值的 DataKey（如 GeneratedDataKey.AttackRange）</param>
-    public IsInRangeCondition(string rangeDataKey)
-        : base($"在范围内({rangeDataKey})")
+    public IsInRangeCondition(DataKey<float> rangeDataKey)
+        : base($"在范围内({rangeDataKey.StableKey})")
     {
         _rangeDataKey = rangeDataKey;
     }
@@ -25,13 +24,13 @@ public class IsInRangeCondition : BehaviorNode
     /// <inheritdoc/>
     public override NodeState Evaluate(AIContext ctx)
     {
-        var target = ctx.Entity.Data.Get<Node2D>(GeneratedDataKey.TargetNode);
+        var target = ctx.Entity.Data.Get(GeneratedDataKey.TargetNode);
         if (target == null) return NodeState.Failure;
 
         var selfNode = ctx.Entity as Node2D;
         if (selfNode == null) return NodeState.Failure;
 
-        float range = ctx.Entity.Data.Get<float>(_rangeDataKey);
+        float range = ctx.Entity.Data.Get(_rangeDataKey);
         float distance = selfNode.GlobalPosition.DistanceTo(target.GlobalPosition);
 
         return distance <= range ? NodeState.Success : NodeState.Failure;

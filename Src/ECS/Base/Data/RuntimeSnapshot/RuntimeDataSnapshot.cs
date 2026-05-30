@@ -87,11 +87,6 @@ public sealed record RuntimeDataRecordDto
     public string Table { get; init; } = string.Empty;
 
     /// <summary>
-    /// 旧表名，仅用于迁移追溯。
-    /// </summary>
-    public string LegacyTable { get; init; } = string.Empty;
-
-    /// <summary>
     /// record 稳定 id。
     /// </summary>
     public string Id { get; init; } = string.Empty;
@@ -106,10 +101,6 @@ public sealed record RuntimeDataRecordDto
     /// </summary>
     public Dictionary<string, RuntimeDataFieldDto> Fields { get; init; } = new(StringComparer.Ordinal);
 
-    /// <summary>
-    /// 旧数据原始映射，仅用于审计追溯。
-    /// </summary>
-    public Dictionary<string, object?> LegacyData { get; init; } = new(StringComparer.Ordinal);
 }
 
 /// <summary>

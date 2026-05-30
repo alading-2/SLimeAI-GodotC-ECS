@@ -7,7 +7,7 @@ using System;
 /// </summary>
 public sealed class EntityMigrationProfile
 {
-    /// <summary>默认迁移 Profile：遵循 DataMeta.CanMigrate 与安全值类型过滤。</summary>
+    /// <summary>默认迁移 Profile：遵循 descriptor storage/write policy 与安全值类型过滤。</summary>
     public static EntityMigrationProfile Default { get; } = new();
 
     /// <summary>Profile 名称，用于调试与事件观测。</summary>

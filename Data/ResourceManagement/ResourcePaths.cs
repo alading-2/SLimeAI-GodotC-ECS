@@ -125,25 +125,6 @@ public static class ResourcePaths
 
     // --- DataUnit ---
 
-    // --- ConfigSystem ---
-    public const string ConfigSystem_DamageNumberRuntimeBridge = "DamageNumberRuntimeBridge";
-    public const string ConfigSystem_DamageService = "DamageService";
-    public const string ConfigSystem_DamageStatisticsSystem = "DamageStatisticsSystem";
-    public const string ConfigSystem_EntityManager = "EntityManager";
-    public const string ConfigSystem_MouseSelectionSystem = "MouseSelectionSystem";
-    public const string ConfigSystem_ObjectPoolInit = "ObjectPoolInit";
-    public const string ConfigSystem_PauseMenuSystem = "PauseMenuSystem";
-    public const string ConfigSystem_ProjectStateBridge = "ProjectStateBridge";
-    public const string ConfigSystem_RecoverySystem = "RecoverySystem";
-    public const string ConfigSystem_SpawnSystem = "SpawnSystem";
-    public const string ConfigSystem_TargetingManagerRuntime = "TargetingManagerRuntime";
-    public const string ConfigSystem_TestSystem = "TestSystem";
-    public const string ConfigSystem_TimerManager = "TimerManager";
-    public const string ConfigSystem_UIManager = "UIManager";
-
-    // --- ConfigSystemPreset ---
-    public const string ConfigSystemPreset_DefaultPreset = "DefaultPreset";
-
     // --- Test ---
     public const string Test_AbilitySystemPipelineTest = "AbilitySystemPipelineTest";
     public const string Test_ActiveSkillInputTest = "ActiveSkillInputTest";
@@ -302,29 +283,6 @@ public static class ResourcePaths
         },
         { ResourceCategory.DataUnit, new Dictionary<string, ResourceData>
             {
-            }
-        },
-        { ResourceCategory.ConfigSystem, new Dictionary<string, ResourceData>
-            {
-                { ConfigSystem_DamageNumberRuntimeBridge, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/System/Resource/DamageNumberRuntimeBridge.tres") },
-                { ConfigSystem_DamageService, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/System/Resource/DamageService.tres") },
-                { ConfigSystem_DamageStatisticsSystem, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/System/Resource/DamageStatisticsSystem.tres") },
-                { ConfigSystem_EntityManager, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/System/Resource/EntityManager.tres") },
-                { ConfigSystem_MouseSelectionSystem, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/System/Resource/MouseSelectionSystem.tres") },
-                { ConfigSystem_ObjectPoolInit, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/System/Resource/ObjectPoolInit.tres") },
-                { ConfigSystem_PauseMenuSystem, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/System/Resource/PauseMenuSystem.tres") },
-                { ConfigSystem_ProjectStateBridge, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/System/Resource/ProjectStateBridge.tres") },
-                { ConfigSystem_RecoverySystem, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/System/Resource/RecoverySystem.tres") },
-                { ConfigSystem_SpawnSystem, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/System/Resource/SpawnSystem.tres") },
-                { ConfigSystem_TargetingManagerRuntime, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/System/Resource/TargetingManagerRuntime.tres") },
-                { ConfigSystem_TestSystem, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/System/Resource/TestSystem.tres") },
-                { ConfigSystem_TimerManager, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/System/Resource/TimerManager.tres") },
-                { ConfigSystem_UIManager, new ResourceData(ResourceCategory.ConfigSystem, "res://Data/Config/System/System/Resource/UIManager.tres") },
-            }
-        },
-        { ResourceCategory.ConfigSystemPreset, new Dictionary<string, ResourceData>
-            {
-                { ConfigSystemPreset_DefaultPreset, new ResourceData(ResourceCategory.ConfigSystemPreset, "res://Data/Config/System/Preset/Resource/DefaultPreset.tres") },
             }
         },
         { ResourceCategory.Test, new Dictionary<string, ResourceData>

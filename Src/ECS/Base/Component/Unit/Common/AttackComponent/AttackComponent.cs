@@ -500,8 +500,8 @@ public partial class AttackComponent : Node, IComponent
         if (_data == null) return Anim.Attack1;
 
         // 从 Data 中获取可用动画列表
-        var availableAnims = _data.Get<System.Collections.Generic.List<string>>(GeneratedDataKey.AvailableAnimations);
-        if (availableAnims == null || availableAnims.Count == 0)
+        var availableAnims = _data.Get<string[]>(GeneratedDataKey.AvailableAnimations);
+        if (availableAnims.Length == 0)
         {
             return Anim.Attack1;
         }

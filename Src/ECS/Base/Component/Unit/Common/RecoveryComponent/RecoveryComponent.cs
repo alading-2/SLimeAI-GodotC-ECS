@@ -133,7 +133,7 @@ public partial class RecoveryComponent : Node, IComponent
     private void OnDataPropertyChanged(GameEventType.Data.PropertyChanged evt)
     {
         // 只关心恢复属性的变化
-        if (evt.Key != GeneratedDataKey.FinalHpRegen && evt.Key != GeneratedDataKey.FinalManaRegen)
+        if (evt.Key != GeneratedDataKey.FinalHpRegen.StableKey && evt.Key != GeneratedDataKey.FinalManaRegen.StableKey)
             return;
 
         // 动态调整注册状态

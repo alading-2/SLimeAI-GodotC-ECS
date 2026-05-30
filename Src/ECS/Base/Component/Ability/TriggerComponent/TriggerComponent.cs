@@ -108,20 +108,11 @@ public partial class TriggerComponent : Node, IComponent
     {
         if (_data == null || _entity is not AbilityEntity ability) return;
 
-        // 获取需要监听的事件类型（支持 string 或 List<string>）
-        var eventData = _data.Get<object>(GeneratedDataKey.AbilityTriggerEvent);
-        var eventTypes = new List<string>();
+        var eventTypes = _data.Get<string[]>(GeneratedDataKey.AbilityTriggerEvent)
+            .Where(item => !string.IsNullOrWhiteSpace(item))
+            .ToArray();
 
-        if (eventData is string singleEvent && !string.IsNullOrEmpty(singleEvent))
-        {
-            eventTypes.Add(singleEvent);
-        }
-        else if (eventData is List<string> listEvents)
-        {
-            eventTypes.AddRange(listEvents);
-        }
-
-        if (eventTypes.Count == 0)
+        if (eventTypes.Length == 0)
         {
             _log.Warn($"技能 {AbilityName} 配置为事件触发但未指定事件类型");
             return;
@@ -160,17 +151,9 @@ public partial class TriggerComponent : Node, IComponent
     {
         if (_data == null) return;
 
-        var eventData = _data.Get<object>(GeneratedDataKey.AbilityTriggerEvent);
-        var eventTypes = new List<string>();
-
-        if (eventData is string singleEvent && !string.IsNullOrEmpty(singleEvent))
-        {
-            eventTypes.Add(singleEvent);
-        }
-        else if (eventData is List<string> listEvents)
-        {
-            eventTypes.AddRange(listEvents);
-        }
+        var eventTypes = _data.Get<string[]>(GeneratedDataKey.AbilityTriggerEvent)
+            .Where(item => !string.IsNullOrWhiteSpace(item))
+            .ToArray();
 
         foreach (var evt in eventTypes)
         {

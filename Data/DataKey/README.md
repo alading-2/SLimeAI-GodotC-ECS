@@ -13,16 +13,16 @@ Data/DataKey/
 └── */DataCategory_*.cs             # 迁移期 UI 分类枚举
 ```
 
-`GeneratedDataKey.Xxx` 是 descriptor 生成的 `DataKey<T>` thin handle，只包含 stable key。默认值、范围、modifier、computed、allowed values 和展示信息全部来自 descriptor catalog。
+`GeneratedDataKey.<field>` 是 descriptor 生成的 `DataKey<T>` thin handle，只包含 stable key。默认值、范围、modifier、computed、allowed values 和展示信息全部来自 descriptor catalog。
 
-> SDD-0021 裁决：`DataKey.Xxx` 兼容别名属于旧调用点迁移残留，后续必须删除；新代码和新测试不得继续使用该别名。
+旧 `DataKey` 兼容别名和 `DataKey<T> -> string` 隐式转换已经删除；新代码和新测试只使用 generated typed handle。
 
 ## 新增或修改字段
 
 1. 修改 DataOS descriptor authoring。
 2. 重新生成 `Data/DataOS/Snapshots/runtime_snapshot.json`。
 3. 运行 `Data/DataOS/Tools/generate-data-key-handles.py` 生成 handle。
-4. 更新 Component / System 调用点，不走 RuntimeTables 兼容入口。
+4. 更新 Component / System 调用点，直接使用 typed handle 或 snapshot projection。
 5. 运行 `Src/ECS/Test/SingleTest/ECS/DataOS/` 下的 DataOS 场景测试。
 
 ## 禁止
@@ -39,4 +39,4 @@ var hp = entity.Data.Get<float>(GeneratedDataKey.FinalHp);
 entity.Data.Set(GeneratedDataKey.BaseHp, 100f);
 ```
 
-不要再写 `DataKey.BaseHp` 这类兼容别名。执行 SDD-0021 后，错误别名应直接编译失败，而不是通过 `DataKey<T> -> string` 进入旧 string API。
+不要再写 `DataKey.BaseHp` 这类旧别名。错误别名会直接编译失败，而不是通过 `DataKey<T> -> string` 进入旧 string API。

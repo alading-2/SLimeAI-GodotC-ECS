@@ -11,15 +11,15 @@ from pathlib import Path
 
 TYPE_MAP = {
     "string": "string",
-    "string_array": "string",
+    "string_array": "string[]",
     "int": "int",
     "float": "float",
     "double": "double",
     "bool": "bool",
     "vector2": "Godot.Vector2",
     "enum": "string",
-    "modifier_list": "string",
-    "object_ref": "string",
+    "modifier_list": "slime.data.Features.FeatureModifierEntryData[]",
+    "object_ref": "ResourceRef",
 }
 
 
@@ -31,6 +31,24 @@ def to_identifier(stable_key: str) -> str:
     if raw[0].isdigit():
         raw = "_" + raw
     return raw
+
+
+def to_csharp_type(value_type: str, runtime_type_id: str) -> str:
+    if value_type == "enum" and runtime_type_id:
+        return runtime_type_id
+
+    if value_type == "object_ref":
+        if runtime_type_id in {"Godot.Node2D", "Node2D"}:
+            return "Godot.Node2D"
+        return "ResourceRef"
+
+    if value_type == "modifier_list" and runtime_type_id:
+        return runtime_type_id
+
+    csharp_type = TYPE_MAP.get(value_type)
+    if csharp_type is None:
+        raise ValueError(f"unsupported descriptor valueType: {value_type}")
+    return csharp_type
 
 
 def main() -> int:
@@ -64,9 +82,7 @@ def main() -> int:
 
         value_type = descriptor.get("valueType", "")
         runtime_type_id = descriptor.get("runtimeTypeId", "")
-        csharp_type = runtime_type_id if value_type == "enum" and runtime_type_id else TYPE_MAP.get(value_type)
-        if csharp_type is None:
-            raise ValueError(f"unsupported descriptor valueType: {stable_key} -> {value_type}")
+        csharp_type = to_csharp_type(value_type, runtime_type_id)
 
         escaped_key = stable_key.replace("\\", "\\\\").replace('"', '\\"')
         lines.extend(
@@ -75,37 +91,6 @@ def main() -> int:
                 f"    /// {stable_key}",
                 "    /// </summary>",
                 f"    public static readonly DataKey<{csharp_type}> {identifier} = new(\"{escaped_key}\");",
-                "",
-            ]
-        )
-
-    lines.append("}")
-    lines.extend(
-        [
-            "",
-            "/// <summary>",
-            "/// Compatibility aliases for callsites that still use DataKey.Xxx during migration.",
-            "/// </summary>",
-            "public static partial class DataKey",
-            "{",
-        ]
-    )
-
-    for descriptor in descriptors:
-        stable_key = descriptor["stableKey"]
-        identifier = to_identifier(stable_key)
-        value_type = descriptor.get("valueType", "")
-        runtime_type_id = descriptor.get("runtimeTypeId", "")
-        csharp_type = runtime_type_id if value_type == "enum" and runtime_type_id else TYPE_MAP.get(value_type)
-        if csharp_type is None:
-            raise ValueError(f"unsupported descriptor valueType: {stable_key} -> {value_type}")
-
-        lines.extend(
-            [
-                "    /// <summary>",
-                f"    /// {stable_key}",
-                "    /// </summary>",
-                f"    public static readonly global::DataKey<{csharp_type}> {identifier} = GeneratedDataKey.{identifier};",
                 "",
             ]
         )

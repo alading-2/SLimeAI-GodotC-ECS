@@ -292,15 +292,17 @@ public sealed class RuntimeDataSnapshotLoader
             return valueType switch
             {
                 DataValueType.String => text,
-                DataValueType.StringArray => text,
+                DataValueType.StringArray => string.IsNullOrWhiteSpace(text)
+                    ? Array.Empty<string>()
+                    : text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
                 DataValueType.Int => int.Parse(text, NumberStyles.Integer, CultureInfo.InvariantCulture),
                 DataValueType.Float => float.Parse(text, NumberStyles.Float, CultureInfo.InvariantCulture),
                 DataValueType.Double => double.Parse(text, NumberStyles.Float, CultureInfo.InvariantCulture),
                 DataValueType.Bool => bool.Parse(text),
                 DataValueType.Enum => text,
                 DataValueType.Vector2 => text,
-                DataValueType.ModifierList => text,
-                DataValueType.ObjectRef => text,
+                DataValueType.ModifierList => Array.Empty<slime.data.Features.FeatureModifierEntryData>(),
+                DataValueType.ObjectRef => string.IsNullOrWhiteSpace(text) ? null : new ResourceRef(text),
                 _ => text
             };
         }

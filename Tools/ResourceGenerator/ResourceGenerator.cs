@@ -21,8 +21,6 @@ class ResourceGenerator
         { "Src/ECS/UI", ResourceCategory.UI },
         { "Src/ECS/Base/Entity", ResourceCategory.Entity },
         { "Src/ECS/Base/Component", ResourceCategory.Component },
-        { "Data/Config/System/System/Resource", ResourceCategory.ConfigSystem }, // 系统配置
-        { "Data/Config/System/Preset/Resource", ResourceCategory.ConfigSystemPreset }, // 系统预设配置
         { "Src/ECS/Base/System", ResourceCategory.System },
         { "Src/ECS/Tools", ResourceCategory.Tools },
         { "Src/ECS/Test", ResourceCategory.Test },

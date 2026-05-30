@@ -38,7 +38,7 @@ TargetingManager 负责：
 ## 数据 / 事件 / 生命周期
 
 - 手动技能必须显式写 `AbilityType.Active + AbilityTriggerMode.Manual`。
-- 技能运行时配置从 `ability` snapshot record 显式注入，不从旧 `.tres` 或 C# RuntimeTables 导入。
+- 技能运行时配置从 `ability` snapshot record 显式注入，不从旧 `.tres` 或 C# 静态表导入。
 - `FeatureHandlerId` 必须是完整唯一 Handler Id；`FeatureGroupId` 只做展示分组。
 - `FeatureContext.ActivationData` 承载 `CastContext`；`ExecuteResult` 承载 `AbilityExecutedResult`。
 - 点选取消不扣资源、不启动冷却、不执行技能。

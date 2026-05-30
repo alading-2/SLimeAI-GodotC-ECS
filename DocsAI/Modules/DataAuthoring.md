@@ -43,11 +43,11 @@ DataAuthoring 不负责：
 ## 必须遵守
 
 - 运行时配置写 `DataOS/`，运行时只读 generated snapshot。
-- 新迁移任务不把 C# RuntimeTables 当目标；目标是 DataOS 数据库真相源和生成快照。
+- 新迁移任务不把 C# 静态表或 Resource 配置类当目标；目标是 DataOS 数据库真相源和生成快照。
 - `Name` 是 snapshot record 展示名，同 table 内必须唯一。
 - DataOS 场景、贴图、特效、投射物引用保存 `res://` 字符串路径。
 - DataOS 数据只存标量、enum 文本、资源路径、稳定 id 和关系表，不存 Godot/C# 运行时对象。
-- 属性名和目标 DataKey 不一致时使用 `[DataKey(nameof(DataKey.Xxx))]`。
+- 属性名和目标 stable key 不一致时在 DataOS descriptor / generator 映射中显式声明，不依赖 C# attribute 做字段事实源。
 - 新普通 DataKey 写入 `data_key_descriptor`，再由生成器产出 `DataKey<T>` handle；特殊运行时引用键也应优先 descriptor 化。
 - 数值“不限制”统一使用 `-1`。
 - 概率统一使用 `0-100`，计算时再 `/100`。
@@ -58,7 +58,7 @@ DataAuthoring 不负责：
 - 禁止把运行时业务逻辑写进 `Data/`。
 - 禁止新增运行时字段时只改旧 `DataOS removed legacy Data/*.cs` 或 `.tres`。
 - 禁止在 DataKey 中新增同名旧常量或 `DataMeta` 注册。
-- 禁止用裸字符串替代 `[DataKey(nameof(DataKey.Xxx))]`。
+- 禁止用裸字符串替代 generated typed handle。
 - 禁止把 `PackedScene`、Node 或运行时对象引用作为 DataOS 主配置值。
 - 禁止在 DataOS 里把稳定结构塞进未约束 JSON 字符串。
 - 禁止运行时热路径绕过生成快照直接查询数据库。

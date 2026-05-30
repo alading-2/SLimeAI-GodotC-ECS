@@ -22,7 +22,7 @@ public class FaceTargetAction : BehaviorNode
     /// <inheritdoc/>
     public override NodeState Evaluate(AIContext ctx)
     {
-        var target = ctx.Entity.Data.Get<Node2D>(GeneratedDataKey.TargetNode);
+        var target = ctx.Entity.Data.Get(GeneratedDataKey.TargetNode);
         if (target == null) return NodeState.Failure;
 
         var selfNode = ctx.Entity as Node2D;

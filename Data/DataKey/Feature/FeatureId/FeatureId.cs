@@ -7,7 +7,7 @@
 /// 使用方式：
 /// - 每个 Feature 模块在各自的 partial 文件中扩展本类
 /// - 注册处理器时用 FeatureId.SpeedBoost 代替 "SpeedBoost"
-/// - FeatureDefinition.FeatureHandlerId 
+/// - snapshot FeatureHandlerId
 ///
 /// 示例（在各功能模块中新建 partial 文件扩展）：
 /// <code>
@@ -20,7 +20,7 @@
 /// // 注册处理器
 /// FeatureHandlerRegistry.Register(new SpeedBootsHandler());
 ///
-/// // FeatureDefinition.Name 填写 FeatureId.SpeedBoots 对应的字符串
+/// // DataOS record Name 填写 FeatureId.SpeedBoots 对应的字符串
 /// </code>
 /// </summary>
 public static partial class FeatureId

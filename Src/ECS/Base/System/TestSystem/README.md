@@ -189,7 +189,7 @@
 
 ### 3.1 运行时打开面板
 
-`TestSystem` 通过 `ModuleInitializer + SystemRegistry.Register(...)` 注册，挂载位置和默认装载策略由 `Data/Config/System/System/Resource/TestSystem.tres` 决定。
+`TestSystem` 通过 `ModuleInitializer + SystemRegistry.Register(...)` 注册，挂载位置和默认装载策略由 `system.config/TestSystem` snapshot record 决定。
 
 正常启动游戏后：
 
@@ -233,7 +233,7 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 
 - 临时改当前值
 - 快速验证状态字段
-- 回归检查 `DataMeta` 上下限与类型约束
+- 回归检查 `DataDefinition` 上下限与类型约束
 
 底层行为：
 
@@ -241,7 +241,7 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 
 ### 4.2 临时 Feature 加成
 
-当 `DataMeta` 满足：
+当 `DataDefinition` 满足：
 
 - `IsNumeric == true`
 - `SupportModifiers == true`
@@ -251,9 +251,9 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 
 底层行为：
 
-- 通过 `FeatureDebugService` 构造运行时 `FeatureDefinition`
-- 用 `EntityManager.AddAbility(owner, definition)` 挂到目标实体
-- 用 `FeatureModifierEntry` 验证正式 Modifier 链路
+- 通过 `FeatureDebugService` 构造运行时 `RuntimeDataRecordDto`
+- 用 `EntityManager.AddRuntimeFeature(owner, record)` 挂到目标实体
+- 用 `FeatureModifierEntryData` 验证正式 Modifier 链路
 
 ## 5. 技能测试怎么用
 

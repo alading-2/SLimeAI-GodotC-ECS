@@ -271,7 +271,7 @@ public partial class RecoverySystem : Node, ISystem,
                 if (currentMana < maxMana)
                 {
                     float newMana = currentMana + manaRegen;
-                    // 手动处理上限 Clamp (下限已由 DataMeta MinValue 保证，但 Math.Clamp 可更保险)
+                    // 手动处理上限 Clamp；descriptor range policy 负责长期约束。
                     newMana = Math.Clamp(newMana, 0, maxMana);
 
                     data.Set(GeneratedDataKey.CurrentMana, newMana);
