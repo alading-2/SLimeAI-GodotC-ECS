@@ -1,0 +1,44 @@
+{
+  "id": "SDD-0023",
+  "slug": "systemagent-root-migration-rule-sync",
+  "title": "SystemAgent Root Migration Rule Sync",
+  "status": "pending",
+  "type": "workflow",
+  "created_at": "2026-05-30",
+  "updated_at": "2026-05-30",
+  "scope": "SlimeAI",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI/SlimeAI"
+  ],
+  "affected_areas": [
+    "ai-config/systemagent"
+  ],
+  "tags": [
+    "systemagent",
+    "ai-config",
+    "sdd"
+  ],
+  "progress": {
+    "current_task": "T1.1",
+    "completed_tasks": 0,
+    "total_tasks": 8,
+    "percent": 0
+  },
+  "bdd": {
+    "required": true,
+    "reason": "This SDD changes CLI or workflow behavior."
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0002",
+  "project_order": 13,
+  "shared_design_refs": [
+    "../../design/INDEX.md"
+  ]
+}

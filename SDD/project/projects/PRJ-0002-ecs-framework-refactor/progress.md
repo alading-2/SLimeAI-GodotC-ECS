@@ -7,9 +7,9 @@
 ## Latest Resume
 
 - **Updated**: 2026-05-30
-- **Current SDD**: none
-- **Last Conclusion**: SDD-0022 已完成并验证通过。Data 子系统已完成 descriptor-first / snapshot-first / no-compat / residual contract hardening，包含 projection 单一事实源、record completeness、runtime diagnostics、object_ref/array/modifier 类型契约、spawn boundary、catalog freeze、display name query 和 docs gate。
-- **Next Action**: 创建 `Entity Relationship Full Rewrite` 执行 SDD；从 `design/3.Entity系统优化/README.md` 与 `entity-rewrite-execution-prompt.md` 进入 hard cutover。
+- **Current SDD**: SDD-0023
+- **Last Conclusion**: SDD-0023 已创建，承接 `design/4.SystemAgent目录更改到SlimeAI里面/README.md`，用于执行 `SDD/`、`Workspace/`、`.ai-config/` 迁入 `SlimeAI/` 后的 rules / skill / SDD template / DocsNew 语义收口。
+- **Next Action**: 从 SDD-0023 T1.1 readiness baseline 开始，随后重写 `.ai-config/rules/rules.md` 并运行 sync 生成框架仓规则副本。
 - **Open Blockers**: none
 
 ## Project Status Board
@@ -28,6 +28,7 @@
 | SDD-0020 | done | `design/2.Data系统优化/04-Data系统现状复查与兼任问题.md` | 已完成 Data snapshot-first usage 主链路：取用点切到 runtime snapshot / query / projection；但 06 审计发现类型契约和兼容入口仍未硬收口 |
 | SDD-0021 | done | `design/2.Data系统优化/06-无兼容完全重构总审计/README.md` | 已完成 Data no-compat hard cutover：record type 来自 descriptor，validator 检查最终 snapshot，非标量 generated handle typed 化，DataKey 隐式 string 和 alias 删除，业务调用点、RuntimeModels、旧 Resource authoring 和文档事实源收口 |
 | SDD-0022 | done | `design/2.Data系统优化/2.Data无兼容完全重构/03-*`、`04-*`、`05-*`、`06-*` | 已完成 Data residual contract hardening：record completeness、Movement/Ability 行为启动契约、projection 单一事实源、write diagnostics、object_ref 语义、spawn boundary、catalog freeze、display name query 和 docs gate |
+| SDD-0023 | pending | `design/4.SystemAgent目录更改到SlimeAI里面/README.md` | 当前：`SDD/`、`Workspace/`、`.ai-config` 迁入 `SlimeAI/` 后的 rules、skill、DocsNew、SDD template 和验证门禁语义收口 |
 | TBD | proposed | `design/3.Entity系统优化/` | P0 当前：创建 `Entity Relationship Full Rewrite`，按 hard cutover 完成 typed EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除 |
 | TBD | proposed | `design/13-旧ECS框架Event系统问题分析与优化方向.md` | P1：保留 EventBus，优化事件主键、事件定义和请求-响应边界 |
 

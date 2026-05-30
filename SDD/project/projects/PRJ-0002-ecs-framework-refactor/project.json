@@ -14,7 +14,7 @@
     "entity",
     "relationship"
   ],
-  "current_sdd": "none",
+  "current_sdd": "SDD-0023",
   "sdds": [
     {
       "id": "SDD-0011",
@@ -99,6 +99,13 @@
       "title": "Data Projection Diagnostics Contract Hardening",
       "order": 12,
       "status": "done"
+    },
+    {
+      "id": "SDD-0023",
+      "slug": "systemagent-root-migration-rule-sync",
+      "title": "SystemAgent Root Migration Rule Sync",
+      "order": 13,
+      "status": "pending"
     }
   ],
   "links": {

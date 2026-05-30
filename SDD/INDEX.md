@@ -2,7 +2,7 @@
 
 ## Summary
 
-- **pending**: 0
+- **pending**: 1
 - **active**: 0
 - **blocked**: 0
 - **done**: 22
@@ -13,11 +13,13 @@
 | ID | Title | Status | Bucket | Current SDD | Path |
 | --- | --- | --- | --- | --- | --- |
 | PRJ-0001 | SystemAgent Optimization | active | projects | SDD-0008 | SDD/project/projects/PRJ-0001-systemagent-optimization |
-| PRJ-0002 | ECS Framework Optimization | active | projects | none | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
+| PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0023 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
 
 ## Pending
 
-无。
+| ID | Project | Title | Updated | Scope | Current Task |
+| --- | --- | --- | --- | --- | --- |
+| SDD-0023 | PRJ-0002 | SystemAgent Root Migration Rule Sync | 2026-05-30 | SlimeAI | T1.1 |
 
 ## Active
 
@@ -70,6 +72,7 @@
 - SDD-0020 — Data Snapshot-First Usage Cutover
 - SDD-0021 — Data No-Compatibility Hard Cutover
 - SDD-0022 — Data Projection Diagnostics Contract Hardening
+- SDD-0023 — SystemAgent Root Migration Rule Sync
 
 ### Workspace/SDD
 
@@ -88,6 +91,10 @@
 - SDD-0010 — Git Worktree Subagent Safety Strategy
 
 ## By Tag
+
+### ai-config
+
+- SDD-0023 — SystemAgent Root Migration Rule Sync
 
 ### bootstrap
 
@@ -229,6 +236,7 @@
 - SDD-0003 — SDD CLI Information Quality Hardening
 - SDD-0004 — SDD Project Container Model
 - SDD-0005 — SDD CLI Source Modularization
+- SDD-0023 — SystemAgent Root Migration Rule Sync
 
 ### skill
 
@@ -252,6 +260,7 @@
 - SDD-0008 — Workflow Skill Role Layered Execution
 - SDD-0009 — DesignDiscovery and DesignCritic Capability
 - SDD-0010 — Git Worktree Subagent Safety Strategy
+- SDD-0023 — SystemAgent Root Migration Rule Sync
 
 ### tdd
 

@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-05-30 16:14",
+  "generated_at": "2026-05-30 21:03",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -42,7 +42,7 @@
         "entity",
         "relationship"
       ],
-      "current_sdd": "none",
+      "current_sdd": "SDD-0023",
       "bucket": "projects",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor"
     }
@@ -551,6 +551,27 @@
       "project_order": 12,
       "current_task": "done",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/012-SDD-0022-data-projection-diagnostics-contract-hardening"
+    },
+    {
+      "id": "SDD-0023",
+      "slug": "systemagent-root-migration-rule-sync",
+      "title": "SystemAgent Root Migration Rule Sync",
+      "status": "pending",
+      "type": "workflow",
+      "updated_at": "2026-05-30",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "ai-config/systemagent"
+      ],
+      "tags": [
+        "systemagent",
+        "ai-config",
+        "sdd"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 13,
+      "current_task": "T1.1",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/013-SDD-0023-systemagent-root-migration-rule-sync"
     }
   ]
 }
