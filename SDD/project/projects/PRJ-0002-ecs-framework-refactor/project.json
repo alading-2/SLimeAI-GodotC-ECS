@@ -1,0 +1,111 @@
+{
+  "id": "PRJ-0002",
+  "slug": "ecs-framework-optimization",
+  "title": "ECS Framework Optimization",
+  "status": "active",
+  "created_at": "2026-05-25",
+  "updated_at": "2026-05-30",
+  "scope": "SlimeAI",
+  "tags": [
+    "ecs",
+    "optimization",
+    "data",
+    "event",
+    "entity",
+    "relationship"
+  ],
+  "current_sdd": "none",
+  "sdds": [
+    {
+      "id": "SDD-0011",
+      "slug": "datakey-type-safety-and-runtime-snapshot-loader",
+      "title": "DataKey Type Safety and Runtime Snapshot Loader",
+      "order": 1,
+      "status": "done"
+    },
+    {
+      "id": "SDD-0012",
+      "slug": "data-system-full-rewrite-catalog-tdd-slice",
+      "title": "Data System Full Rewrite - Catalog TDD Slice",
+      "order": 2,
+      "status": "done"
+    },
+    {
+      "id": "SDD-0013",
+      "slug": "dataos-descriptor-authoring-and-snapshot-schema",
+      "title": "DataOS Descriptor Authoring and Snapshot Schema",
+      "order": 3,
+      "status": "done"
+    },
+    {
+      "id": "SDD-0014",
+      "slug": "data-runtime-slot-and-policy-model",
+      "title": "Data Runtime Slot and Policy Model",
+      "order": 4,
+      "status": "done"
+    },
+    {
+      "id": "SDD-0015",
+      "slug": "data-modifier-runtime-and-feature-bridge",
+      "title": "Data Modifier Runtime and Feature Bridge",
+      "order": 5,
+      "status": "done"
+    },
+    {
+      "id": "SDD-0016",
+      "slug": "data-compute-resolver-runtime",
+      "title": "Data Compute Resolver Runtime",
+      "order": 6,
+      "status": "done"
+    },
+    {
+      "id": "SDD-0017",
+      "slug": "runtime-snapshot-record-apply-and-entity-bootstrap",
+      "title": "Runtime Snapshot Record Apply and Entity Bootstrap",
+      "order": 7,
+      "status": "done"
+    },
+    {
+      "id": "SDD-0018",
+      "slug": "data-descriptor-migration-and-generated-handles",
+      "title": "Data Descriptor Migration and Generated Handles",
+      "order": 8,
+      "status": "done"
+    },
+    {
+      "id": "SDD-0019",
+      "slug": "data-legacy-path-removal-and-test-scene-rebuild",
+      "title": "Data Legacy Path Removal and Test Scene Rebuild",
+      "order": 9,
+      "status": "done"
+    },
+    {
+      "id": "SDD-0020",
+      "slug": "data-snapshot-first-usage-cutover",
+      "title": "Data Snapshot-First Usage Cutover",
+      "order": 10,
+      "status": "done"
+    },
+    {
+      "id": "SDD-0021",
+      "slug": "data-no-compatibility-hard-cutover",
+      "title": "Data No-Compatibility Hard Cutover",
+      "order": 11,
+      "status": "done"
+    },
+    {
+      "id": "SDD-0022",
+      "slug": "data-projection-diagnostics-contract-hardening",
+      "title": "Data Projection Diagnostics Contract Hardening",
+      "order": 12,
+      "status": "done"
+    }
+  ],
+  "links": {
+    "design_index": "design/INDEX.md",
+    "roadmap": "roadmap.md",
+    "progress": "progress.md",
+    "notes": "notes.md",
+    "sdds": "sdds"
+  }
+}

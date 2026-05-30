@@ -16,100 +16,100 @@ using Godot;
 /// </summary>
 public partial class AIComponent : Node, IComponent
 {
-    private static readonly Log _log = new(nameof(AIComponent));
+	private static readonly Log _log = new(nameof(AIComponent));
 
-    // ================= 组件依赖 =================
+	// ================= 组件依赖 =================
 
-    private IEntity? _entity;
-    private Data? _data;
+	private IEntity? _entity;
+	private Data? _data;
 
-    // ================= 行为树 =================
+	// ================= 行为树 =================
 
-    /// <summary>行为树运行器</summary>
-    public BehaviorTreeRunner Runner { get; private set; }
+	/// <summary>行为树运行器</summary>
+	public BehaviorTreeRunner Runner { get; private set; }
 
-    // ================= 运行时上下文（避免每帧 new） =================
+	// ================= 运行时上下文（避免每帧 new） =================
 
-    private readonly AIContext _context = new();
+	private readonly AIContext _context = new();
 
-    // ================= IComponent 实现 =================
+	// ================= IComponent 实现 =================
 
-    public void OnComponentRegistered(Node entity)
-    {
-        if (entity is not IEntity iEntity) return;
+	public void OnComponentRegistered(Node entity)
+	{
+		if (entity is not IEntity iEntity) return;
 
-        _entity = iEntity;
-        _data = iEntity.Data;
+		_entity = iEntity;
+		_data = iEntity.Data;
 
-        // 记录出生位置（用于巡逻基准点）
-        if (_entity is CharacterBody2D body)
-        {
-            _data.Set(GeneratedDataKey.SpawnPosition, body.GlobalPosition);
-        }
+		// 记录出生位置（用于巡逻基准点）
+		if (_entity is CharacterBody2D body)
+		{
+			_data.Set(GeneratedDataKey.SpawnPosition, body.GlobalPosition);
+		}
 
-        // 默认启用 AI
-        _data.Set(GeneratedDataKey.AIEnabled, true);
+		// 默认启用 AI
+		_data.Set(GeneratedDataKey.AIEnabled, true);
 
-        // 设置默认行为树
-        SetBehaviorTree(EnemyBehaviorTreeBuilder.BuildMeleeEnemyTree());
+		// 设置默认行为树
+		SetBehaviorTree(EnemyBehaviorTreeBuilder.BuildMeleeEnemyTree());
 
-        _log.Debug($"[{entity.Name}] AI 组件注册完成");
-    }
+		_log.Debug($"[{entity.Name}] AI 组件注册完成");
+	}
 
-    /// <summary>
-    /// 组件被注销时的清理（释放所有缓存的引用）
-    /// </summary>
-    public void OnComponentUnregistered()
-    {
-        Runner?.Reset();
+	/// <summary>
+	/// 组件被注销时的清理（释放所有缓存的引用）
+	/// </summary>
+	public void OnComponentUnregistered()
+	{
+		Runner?.Reset();
 
-        _entity = null;
-        _data = null;
-    }
+		_entity = null;
+		_data = null;
+	}
 
-    // ================= 公开 API =================
+	// ================= 公开 API =================
 
-    /// <summary>
-    /// 设置行为树（通常在 Entity 初始化时调用）
-    /// </summary>
-    public void SetBehaviorTree(BehaviorNode root)
-    {
-        if (Runner == null)
-            Runner = new BehaviorTreeRunner(root);
-        else
-            Runner.SetTree(root);
+	/// <summary>
+	/// 设置行为树（通常在 Entity 初始化时调用）
+	/// </summary>
+	public void SetBehaviorTree(BehaviorNode root)
+	{
+		if (Runner == null)
+			Runner = new BehaviorTreeRunner(root);
+		else
+			Runner.SetTree(root);
 
-        _log.Debug($"[{(_entity as Node)?.Name}] 行为树已设置: {root.NodeName}");
-    }
+		_log.Debug($"[{(_entity as Node)?.Name}] 行为树已设置: {root.NodeName}");
+	}
 
-    // ================= Godot 生命周期 =================
+	// ================= Godot 生命周期 =================
 
-    /// <summary>
-    /// 每帧执行 AI 逻辑，驱动行为树 Tick
-    /// </summary>
-    public override void _Process(double delta)
-    {
-        // 前置检查
-        if (Runner == null) return;
-        if (_data == null) return;
-        if (!_data.Get<bool>(GeneratedDataKey.AIEnabled)) return;
+	/// <summary>
+	/// 每帧执行 AI 逻辑，驱动行为树 Tick
+	/// </summary>
+	public override void _Process(double delta)
+	{
+		// 前置检查
+		if (Runner == null) return;
+		if (_data == null) return;
+		if (!_data.Get<bool>(GeneratedDataKey.AIEnabled)) return;
 
-        // 检查生命周期状态（死亡不执行 AI）
-        var lifecycleState = _data.Get<LifecycleState>(GeneratedDataKey.LifecycleState);
-        if (lifecycleState == LifecycleState.Dead)
-        {
-            return;
-        }
+		// 检查生命周期状态（死亡不执行 AI）
+		var lifecycleState = _data.Get<LifecycleState>(GeneratedDataKey.LifecycleState);
+		if (lifecycleState == LifecycleState.Dead)
+		{
+			return;
+		}
 
-        if (_data.Has(GeneratedDataKey.StatusCanThink) && !_data.Get<bool>(GeneratedDataKey.StatusCanThink))
-        {
-            return;
-        }
+		if (_data.Has(GeneratedDataKey.StatusCanThink) && !_data.Get<bool>(GeneratedDataKey.StatusCanThink))
+		{
+			return;
+		}
 
-        // 构建上下文（复用对象，避免 GC）
-        _context.Entity = _entity;
+		// 构建上下文（复用对象，避免 GC）
+		_context.Entity = _entity;
 
-        // 执行行为树
-        Runner.Tick(_context);
-    }
+		// 执行行为树
+		Runner.Tick(_context);
+	}
 }

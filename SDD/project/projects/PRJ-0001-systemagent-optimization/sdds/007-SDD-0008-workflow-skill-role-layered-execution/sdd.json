@@ -1,0 +1,56 @@
+{
+  "id": "SDD-0008",
+  "slug": "workflow-skill-role-layered-execution",
+  "title": "Workflow Skill Role Layered Execution",
+  "status": "done",
+  "type": "workflow",
+  "created_at": "2026-05-25",
+  "updated_at": "2026-05-25",
+  "scope": "Workspace/SystemAgent",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI"
+  ],
+  "affected_areas": [
+    "Workspace/SystemAgent",
+    ".ai-config/skills/systemagent",
+    ".ai-config/skills/ai"
+  ],
+  "tags": [
+    "systemagent",
+    "workflow",
+    "skill",
+    "role"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 6,
+    "total_tasks": 6,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "This SDD changes CLI or workflow behavior."
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0001",
+  "project_order": 7,
+  "shared_design_refs": [
+    "../../design/INDEX.md",
+    "../../design/02-Workflow与Skill触发优化方案.md",
+    "../../design/09-WorkflowSkillRole分层模型.md",
+    "../../design/06-实施路线图.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-05-25 14:16",
+      "summary": "grep_search Route/Phases checks returned 6 workflow matches; grep_search wrapper body-heading check returned No results found; python3 JSON/YAML parse smoke output json ok and yaml ok, passed."
+    }
+  ]
+}

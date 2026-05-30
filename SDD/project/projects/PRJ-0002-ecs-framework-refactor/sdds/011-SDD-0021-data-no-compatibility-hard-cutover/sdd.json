@@ -1,0 +1,54 @@
+{
+  "id": "SDD-0021",
+  "slug": "data-no-compatibility-hard-cutover",
+  "title": "Data No-Compatibility Hard Cutover",
+  "status": "done",
+  "type": "refactor",
+  "created_at": "2026-05-30",
+  "updated_at": "2026-05-30",
+  "scope": "SlimeAI",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI"
+  ],
+  "affected_areas": [
+    "SlimeAI/Src/ECS/Base/Data",
+    "SlimeAI/Data/DataOS",
+    "SlimeAI/Data/DataKey",
+    "SlimeAI/DocsAI"
+  ],
+  "tags": [
+    "data",
+    "dataos",
+    "no-compat",
+    "refactor"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 12,
+    "total_tasks": 12,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "Data no-compatibility hard cutover changes snapshot generation, generated handles, runtime Data API and documentation routing."
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0002",
+  "project_order": 11,
+  "shared_design_refs": [
+    "../../design/INDEX.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-05-30 08:18",
+      "summary": "DataOS validate passed; snapshot descriptor/record mismatch jq gate produced no output; dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly passed; grep gates returned no non-historical hits; Godot DataOS scenes DataCatalogTestScene/DataRuntimeTestScene/DataSnapshotApplyTestScene/DataFeatureBridgeTestScene passed in .ai-temp/scene-tests/runs/2026-05-30/08-15-52/index.json."
+    }
+  ]
+}

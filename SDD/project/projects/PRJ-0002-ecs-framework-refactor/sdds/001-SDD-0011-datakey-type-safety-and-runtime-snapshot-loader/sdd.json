@@ -1,0 +1,52 @@
+{
+  "id": "SDD-0011",
+  "slug": "datakey-type-safety-and-runtime-snapshot-loader",
+  "title": "DataKey Type Safety and Runtime Snapshot Loader",
+  "status": "done",
+  "type": "implementation",
+  "created_at": "2026-05-27",
+  "updated_at": "2026-05-27",
+  "scope": "SlimeAI",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI"
+  ],
+  "affected_areas": [
+    "SlimeAI/Src/ECS/Base/Data",
+    "SlimeAI/Data/DataKey",
+    "SlimeAI/Data/Data"
+  ],
+  "tags": [
+    "data",
+    "datakey",
+    "runtime_snapshot"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 8,
+    "total_tasks": 8,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "修改编译期类型系统和运行时数据加载路径，需要行为场景验证正确性。"
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0002",
+  "project_order": 1,
+  "shared_design_refs": [
+    "../../design/INDEX.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-05-27 14:55",
+      "summary": "dotnet build: DataKey 相关错误 196→0；剩余 120 为预存 GameEventType CS0119，与本 SDD 无关。python3 Workspace/SDD/sdd.py validate SDD-0011: 0 error / 0 warning"
+    }
+  ]
+}

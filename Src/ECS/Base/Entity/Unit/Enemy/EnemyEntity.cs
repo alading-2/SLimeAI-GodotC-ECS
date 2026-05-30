@@ -21,6 +21,8 @@ public partial class EnemyEntity : CharacterBody2D, IPoolable, IUnit
     public EnemyEntity()
     {
         Data = new Data(this);
+        // 敌人的默认移动模式是组件注册期数据；这里给对象池/场景直放路径提供保底值。
+        Data.Set(GeneratedDataKey.DefaultMoveMode, MoveMode.AIControlled);
     }
 
     /// <summary>
@@ -51,8 +53,7 @@ public partial class EnemyEntity : CharacterBody2D, IPoolable, IUnit
     /// </summary>
     public void OnPoolAcquire()
     {
-        // DefaultMoveMode 是组件注册期字段，必须来自 runtime snapshot record。
-        // OnPoolAcquire 发生在 RegisterComponents 之后，不能在这里补写默认运动模式。
+        // DefaultMoveMode 是组件注册期字段，已在构造时提供保底值；snapshot record 可在 Spawn 时覆盖。
     }
 
     /// <summary>

@@ -1,0 +1,556 @@
+{
+  "schema_version": 2,
+  "generated_at": "2026-05-30 16:14",
+  "root": "SDD",
+  "statuses": [
+    "pending",
+    "active",
+    "blocked",
+    "done"
+  ],
+  "project_buckets": [
+    "projects",
+    "archived"
+  ],
+  "projects": [
+    {
+      "id": "PRJ-0001",
+      "slug": "systemagent-optimization",
+      "title": "SystemAgent Optimization",
+      "status": "active",
+      "updated_at": "2026-05-25",
+      "scope": "Workspace/SystemAgent",
+      "tags": [
+        "systemagent"
+      ],
+      "current_sdd": "SDD-0008",
+      "bucket": "projects",
+      "path": "SDD/project/projects/PRJ-0001-systemagent-optimization"
+    },
+    {
+      "id": "PRJ-0002",
+      "slug": "ecs-framework-optimization",
+      "title": "ECS Framework Optimization",
+      "status": "active",
+      "updated_at": "2026-05-30",
+      "scope": "SlimeAI",
+      "tags": [
+        "ecs",
+        "optimization",
+        "data",
+        "event",
+        "entity",
+        "relationship"
+      ],
+      "current_sdd": "none",
+      "bucket": "projects",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor"
+    }
+  ],
+  "items": [
+    {
+      "id": "SDD-0002",
+      "slug": "systemagent-openspec-retirement",
+      "title": "SystemAgent OpenSpec Retirement",
+      "status": "done",
+      "type": "workflow",
+      "updated_at": "2026-05-24",
+      "scope": "Workspace/SystemAgent",
+      "affected_areas": [
+        "Workspace/SystemAgent",
+        ".ai-config/skills/ai",
+        ".ai-config/skills/systemagent",
+        ".ai-config/skills/core",
+        ".ai-config/skills/godot",
+        ".ai-config/skills/ecs",
+        ".ai-config/rules"
+      ],
+      "tags": [
+        "systemagent",
+        "sdd",
+        "openspec-retirement"
+      ],
+      "project_id": "",
+      "project_order": "",
+      "current_task": "done",
+      "path": "SDD/done/SDD-0002-systemagent-openspec-retirement"
+    },
+    {
+      "id": "SDD-0001",
+      "slug": "sdd-system-bootstrap",
+      "title": "SDD System Bootstrap",
+      "status": "done",
+      "type": "workflow",
+      "updated_at": "2026-05-24",
+      "scope": "Workspace/SDD",
+      "affected_areas": [
+        "Workspace/SDD",
+        "SDD",
+        ".ai-config/skills/sdd"
+      ],
+      "tags": [
+        "sdd",
+        "cli",
+        "systemagent"
+      ],
+      "project_id": "PRJ-0001",
+      "project_order": 1,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/001-SDD-0001-sdd-system-bootstrap"
+    },
+    {
+      "id": "SDD-0003",
+      "slug": "sdd-cli-information-quality-hardening",
+      "title": "SDD CLI Information Quality Hardening",
+      "status": "done",
+      "type": "workflow",
+      "updated_at": "2026-05-24",
+      "scope": "Workspace/SDD",
+      "affected_areas": [
+        "Workspace/SDD",
+        ".ai-config/skills/sdd"
+      ],
+      "tags": [
+        "sdd",
+        "cli-hardening"
+      ],
+      "project_id": "PRJ-0001",
+      "project_order": 2,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/002-SDD-0003-sdd-cli-information-quality-hardening"
+    },
+    {
+      "id": "SDD-0004",
+      "slug": "sdd-project-container-model",
+      "title": "SDD Project Container Model",
+      "status": "done",
+      "type": "workflow",
+      "updated_at": "2026-05-25",
+      "scope": "Workspace/SDD",
+      "affected_areas": [
+        "Workspace/SDD"
+      ],
+      "tags": [
+        "sdd",
+        "project-container"
+      ],
+      "project_id": "PRJ-0001",
+      "project_order": 3,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/003-SDD-0004-sdd-project-container-model"
+    },
+    {
+      "id": "SDD-0005",
+      "slug": "sdd-cli-source-modularization",
+      "title": "SDD CLI Source Modularization",
+      "status": "done",
+      "type": "workflow",
+      "updated_at": "2026-05-25",
+      "scope": "Workspace/SDD",
+      "affected_areas": [
+        "Workspace/SDD"
+      ],
+      "tags": [
+        "sdd",
+        "refactor"
+      ],
+      "project_id": "PRJ-0001",
+      "project_order": 4,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/004-SDD-0005-sdd-cli-source-modularization"
+    },
+    {
+      "id": "SDD-0006",
+      "slug": "systemagent-information-architecture-refresh",
+      "title": "SystemAgent Information Architecture Refresh",
+      "status": "done",
+      "type": "workflow",
+      "updated_at": "2026-05-25",
+      "scope": "Workspace/SystemAgent",
+      "affected_areas": [
+        "Workspace/SystemAgent"
+      ],
+      "tags": [
+        "systemagent"
+      ],
+      "project_id": "PRJ-0001",
+      "project_order": 5,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/005-SDD-0006-systemagent-information-architecture-refresh"
+    },
+    {
+      "id": "SDD-0007",
+      "slug": "hook-and-gate-p0-stability",
+      "title": "Hook and Gate P0 Stability",
+      "status": "done",
+      "type": "workflow",
+      "updated_at": "2026-05-25",
+      "scope": "Workspace/SystemAgent",
+      "affected_areas": [
+        "Workspace/SystemAgent",
+        "Workspace/SystemAgent/Tools/systemagent-hooks",
+        ".claude/settings.json",
+        ".codex/hooks.json"
+      ],
+      "tags": [
+        "systemagent",
+        "hook",
+        "gate"
+      ],
+      "project_id": "PRJ-0001",
+      "project_order": 6,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/006-SDD-0007-hook-and-gate-p0-stability"
+    },
+    {
+      "id": "SDD-0008",
+      "slug": "workflow-skill-role-layered-execution",
+      "title": "Workflow Skill Role Layered Execution",
+      "status": "done",
+      "type": "workflow",
+      "updated_at": "2026-05-25",
+      "scope": "Workspace/SystemAgent",
+      "affected_areas": [
+        "Workspace/SystemAgent",
+        ".ai-config/skills/systemagent",
+        ".ai-config/skills/ai"
+      ],
+      "tags": [
+        "systemagent",
+        "workflow",
+        "skill",
+        "role"
+      ],
+      "project_id": "PRJ-0001",
+      "project_order": 7,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/007-SDD-0008-workflow-skill-role-layered-execution"
+    },
+    {
+      "id": "SDD-0009",
+      "slug": "designdiscovery-and-designcritic-capability",
+      "title": "DesignDiscovery and DesignCritic Capability",
+      "status": "done",
+      "type": "workflow",
+      "updated_at": "2026-05-25",
+      "scope": "Workspace/SystemAgent",
+      "affected_areas": [
+        "Workspace/SystemAgent",
+        ".ai-config/skills/sdd",
+        ".ai-config/skills/systemagent"
+      ],
+      "tags": [
+        "systemagent",
+        "design-discovery",
+        "role"
+      ],
+      "project_id": "PRJ-0001",
+      "project_order": 8,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/008-SDD-0009-designdiscovery-and-designcritic-capability"
+    },
+    {
+      "id": "SDD-0010",
+      "slug": "git-worktree-subagent-safety-strategy",
+      "title": "Git Worktree Subagent Safety Strategy",
+      "status": "done",
+      "type": "workflow",
+      "updated_at": "2026-05-25",
+      "scope": "Workspace/SystemAgent",
+      "affected_areas": [
+        "Workspace/SystemAgent",
+        "Workspace/DocsAI",
+        ".claude/agents",
+        ".codex/agents"
+      ],
+      "tags": [
+        "systemagent",
+        "git",
+        "worktree",
+        "subagent"
+      ],
+      "project_id": "PRJ-0001",
+      "project_order": 9,
+      "current_task": "completed",
+      "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/009-SDD-0010-git-worktree-subagent-safety-strategy"
+    },
+    {
+      "id": "SDD-0011",
+      "slug": "datakey-type-safety-and-runtime-snapshot-loader",
+      "title": "DataKey Type Safety and Runtime Snapshot Loader",
+      "status": "done",
+      "type": "implementation",
+      "updated_at": "2026-05-27",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "SlimeAI/Src/ECS/Base/Data",
+        "SlimeAI/Data/DataKey",
+        "SlimeAI/Data/Data"
+      ],
+      "tags": [
+        "data",
+        "datakey",
+        "runtime_snapshot"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 1,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/001-SDD-0011-datakey-type-safety-and-runtime-snapshot-loader"
+    },
+    {
+      "id": "SDD-0012",
+      "slug": "data-system-full-rewrite-catalog-tdd-slice",
+      "title": "Data System Full Rewrite - Catalog TDD Slice",
+      "status": "done",
+      "type": "implementation",
+      "updated_at": "2026-05-28",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "SlimeAI/Src/ECS/Base/Data",
+        "SlimeAI/Data/DataKey",
+        "SlimeAI/Src/ECS/Test/SingleTest/ECS/Data"
+      ],
+      "tags": [
+        "data",
+        "data-rewrite",
+        "tdd"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 2,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/002-SDD-0012-data-system-full-rewrite-catalog-tdd-slice"
+    },
+    {
+      "id": "SDD-0013",
+      "slug": "dataos-descriptor-authoring-and-snapshot-schema",
+      "title": "DataOS Descriptor Authoring and Snapshot Schema",
+      "status": "done",
+      "type": "implementation",
+      "updated_at": "2026-05-28",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "SlimeAI/Data",
+        "SlimeAI/Src/ECS/Base/Data/RuntimeSnapshot"
+      ],
+      "tags": [
+        "data",
+        "dataos",
+        "snapshot"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 3,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/003-SDD-0013-dataos-descriptor-authoring-and-snapshot-schema"
+    },
+    {
+      "id": "SDD-0014",
+      "slug": "data-runtime-slot-and-policy-model",
+      "title": "Data Runtime Slot and Policy Model",
+      "status": "done",
+      "type": "implementation",
+      "updated_at": "2026-05-28",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "SlimeAI/Src/ECS/Base/Data"
+      ],
+      "tags": [
+        "data",
+        "runtime",
+        "policy"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 4,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/004-SDD-0014-data-runtime-slot-and-policy-model"
+    },
+    {
+      "id": "SDD-0015",
+      "slug": "data-modifier-runtime-and-feature-bridge",
+      "title": "Data Modifier Runtime and Feature Bridge",
+      "status": "done",
+      "type": "implementation",
+      "updated_at": "2026-05-28",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "SlimeAI/Src/ECS/Base/Data",
+        "SlimeAI/Src/ECS/Feature"
+      ],
+      "tags": [
+        "data",
+        "modifier",
+        "feature"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 5,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/005-SDD-0015-data-modifier-runtime-and-feature-bridge"
+    },
+    {
+      "id": "SDD-0016",
+      "slug": "data-compute-resolver-runtime",
+      "title": "Data Compute Resolver Runtime",
+      "status": "done",
+      "type": "implementation",
+      "updated_at": "2026-05-29",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "SlimeAI/Src/ECS/Base/Data"
+      ],
+      "tags": [
+        "data",
+        "compute",
+        "runtime"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 6,
+      "current_task": "complete",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/006-SDD-0016-data-compute-resolver-runtime"
+    },
+    {
+      "id": "SDD-0017",
+      "slug": "runtime-snapshot-record-apply-and-entity-bootstrap",
+      "title": "Runtime Snapshot Record Apply and Entity Bootstrap",
+      "status": "done",
+      "type": "implementation",
+      "updated_at": "2026-05-29",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "SlimeAI/Src/ECS/Base/Data",
+        "SlimeAI/Src/ECS"
+      ],
+      "tags": [
+        "data",
+        "snapshot",
+        "bootstrap"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 7,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/007-SDD-0017-runtime-snapshot-record-apply-and-entity-bootstrap"
+    },
+    {
+      "id": "SDD-0018",
+      "slug": "data-descriptor-migration-and-generated-handles",
+      "title": "Data Descriptor Migration and Generated Handles",
+      "status": "done",
+      "type": "migration",
+      "updated_at": "2026-05-29",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "SlimeAI/Data/DataKey",
+        "SlimeAI/Data",
+        "SlimeAI/Src/ECS"
+      ],
+      "tags": [
+        "data",
+        "migration",
+        "codegen"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 8,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/008-SDD-0018-data-descriptor-migration-and-generated-handles"
+    },
+    {
+      "id": "SDD-0019",
+      "slug": "data-legacy-path-removal-and-test-scene-rebuild",
+      "title": "Data Legacy Path Removal and Test Scene Rebuild",
+      "status": "done",
+      "type": "migration",
+      "updated_at": "2026-05-29",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "SlimeAI/Data/Data",
+        "SlimeAI/Data/DataNew",
+        "SlimeAI/Src/ECS/Test/SingleTest/ECS/Data",
+        "SlimeAI/DocsAI"
+      ],
+      "tags": [
+        "data",
+        "cleanup",
+        "godot-test"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 9,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/009-SDD-0019-data-legacy-path-removal-and-test-scene-rebuild"
+    },
+    {
+      "id": "SDD-0020",
+      "slug": "data-snapshot-first-usage-cutover",
+      "title": "Data Snapshot-First Usage Cutover",
+      "status": "done",
+      "type": "refactor",
+      "updated_at": "2026-05-29",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "SlimeAI/Src/ECS/Base/Data",
+        "SlimeAI/Data/DataOS",
+        "SlimeAI/Src/ECS/Base/System",
+        "SlimeAI/Src/ECS/Base/Entity/Core",
+        "SlimeAI/Data/ResourceManagement",
+        "SlimeAI/addons/DataConfigEditor",
+        "SlimeAI/DocsAI"
+      ],
+      "tags": [
+        "data",
+        "ecs",
+        "refactor"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 10,
+      "current_task": "complete",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/010-SDD-0020-data-snapshot-first-usage-cutover"
+    },
+    {
+      "id": "SDD-0021",
+      "slug": "data-no-compatibility-hard-cutover",
+      "title": "Data No-Compatibility Hard Cutover",
+      "status": "done",
+      "type": "refactor",
+      "updated_at": "2026-05-30",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "SlimeAI/Src/ECS/Base/Data",
+        "SlimeAI/Data/DataOS",
+        "SlimeAI/Data/DataKey",
+        "SlimeAI/DocsAI"
+      ],
+      "tags": [
+        "data",
+        "dataos",
+        "no-compat",
+        "refactor"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 11,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/011-SDD-0021-data-no-compatibility-hard-cutover"
+    },
+    {
+      "id": "SDD-0022",
+      "slug": "data-projection-diagnostics-contract-hardening",
+      "title": "Data Projection Diagnostics Contract Hardening",
+      "status": "done",
+      "type": "refactor",
+      "updated_at": "2026-05-30",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "SlimeAI/Data",
+        "SlimeAI/Src/ECS/Base/Data",
+        "SlimeAI/Src/ECS/Base/Entity",
+        "SlimeAI/Src/ECS/Base/Component/Movement"
+      ],
+      "tags": [
+        "data",
+        "diagnostics",
+        "projection",
+        "no-compat"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 12,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/012-SDD-0022-data-projection-diagnostics-contract-hardening"
+    }
+  ]
+}

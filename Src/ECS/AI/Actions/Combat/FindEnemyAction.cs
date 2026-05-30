@@ -14,7 +14,7 @@ using Godot;
 /// </summary>
 public class FindEnemyAction : BehaviorNode
 {
-    private static readonly Log _log = new("FindEnemy",LogLevel.Warning);
+    private static readonly Log _log = new("FindEnemy", LogLevel.Warning);
 
     /// <summary>
     /// 创建索敌动作节点
@@ -65,7 +65,14 @@ public class FindEnemyAction : BehaviorNode
             var target = targets[0];
             if (target is Node2D node2D)
             {
-                ctx.Entity.Data.Set<Node2D>(GeneratedDataKey.TargetNode, node2D);
+                // TargetNode 是 system_only 运行时黑板字段，AI 系统需要用 System 来源写入。
+                if (!ctx.Entity.Data.TrySetUntyped(GeneratedDataKey.TargetNode.StableKey, node2D, DataWriteSource.System, out var report))
+                {
+                    var firstError = report.Errors.Count > 0 ? report.Errors[0].Code : "unknown";
+                    _log.Warn($"[{selfNode.Name}] TargetNode 写入失败: target={node2D.Name}, error={firstError}");
+                    return NodeState.Failure;
+                }
+
                 _log.Debug($"发现新目标开始锁定: {node2D.Name}");
                 return NodeState.Success;
             }

@@ -1,0 +1,53 @@
+{
+  "id": "SDD-0003",
+  "slug": "sdd-cli-information-quality-hardening",
+  "title": "SDD CLI Information Quality Hardening",
+  "status": "done",
+  "type": "workflow",
+  "created_at": "2026-05-24",
+  "updated_at": "2026-05-24",
+  "scope": "Workspace/SDD",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI"
+  ],
+  "affected_areas": [
+    "Workspace/SDD",
+    ".ai-config/skills/sdd"
+  ],
+  "tags": [
+    "sdd",
+    "cli-hardening"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 12,
+    "total_tasks": 12,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "This SDD changes CLI or workflow behavior."
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "validation": [
+    {
+      "at": "2026-05-24 23:28",
+      "summary": "python3 -m unittest discover Workspace/SDD/tests: 10 tests passed; python3 Workspace/SDD/sdd.py validate --all: 0 error / 0 warning; python3 -m py_compile Workspace/SDD/sdd.py Workspace/SDD/tests/test_sdd_cli.py: passed; bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all: Critical 0 / Advisory 0; git diff --check: passed"
+    }
+  ],
+  "project_id": "PRJ-0001",
+  "project_order": 2,
+  "shared_design_refs": [
+    "../../design/INDEX.md",
+    "../../design/SDD/SlimeAI-SDD-MVP设计.md",
+    "../../design/SDD/SDD重构与CLI详细执行计划.md",
+    "../../design/SDD/SDD-CLI信息质量加固设计.md"
+  ]
+}

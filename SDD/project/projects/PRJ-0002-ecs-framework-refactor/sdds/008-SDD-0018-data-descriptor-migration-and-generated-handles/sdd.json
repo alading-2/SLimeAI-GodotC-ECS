@@ -1,0 +1,62 @@
+{
+  "id": "SDD-0018",
+  "slug": "data-descriptor-migration-and-generated-handles",
+  "title": "Data Descriptor Migration and Generated Handles",
+  "status": "done",
+  "type": "migration",
+  "created_at": "2026-05-28",
+  "updated_at": "2026-05-29",
+  "scope": "SlimeAI",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI/SlimeAI"
+  ],
+  "affected_areas": [
+    "SlimeAI/Data/DataKey",
+    "SlimeAI/Data",
+    "SlimeAI/Src/ECS"
+  ],
+  "tags": [
+    "data",
+    "migration",
+    "codegen"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 9,
+    "total_tasks": 9,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "Data 子系统完整重构会改变运行时行为、输入事实源或验证门禁，必须保留行为场景。"
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0002",
+  "project_order": 8,
+  "shared_design_refs": [
+    "../../design/INDEX.md",
+    "../../design/main.md",
+    "../../design/2.Data系统优化/README.md",
+    "../../design/2.Data系统优化/01-代码实现说明.md",
+    "../../design/2.Data系统优化/02-DataMeta属性审计与Feature计算边界.md",
+    "../../design/2.Data系统优化/03-完全重构范围与TDD测试计划.md",
+    "../../design/04-优化优先级与SDD拆分建议.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-05-29 08:35",
+      "summary": "DataOS build/validate/generate runtime_snapshot: pass, descriptorCount=212; python3 Data/DataOS/Tools/generate-data-key-handles.py: generated DataKey_Generated.cs; dotnet run --project Tools/DataCatalogTdd/DataCatalogTdd.csproj --no-restore: 50/50 pass; dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly: pass with existing warnings; grep gate: runtime/business calls use GeneratedDataKey, residual old DataKey only in TestSystem Attribute DataMeta UI."
+    },
+    {
+      "at": "2026-05-29 07:42",
+      "summary": "dotnet run --project Tools/DataCatalogTdd/DataCatalogTdd.csproj --no-restore: 50/50 pass; DataOS validate/generate runtime_snapshot: pass, descriptorCount=212; dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly: pass (1023 existing warnings); grep gate: business runtime uses GeneratedDataKey, residual DataKey only in TestSystem Attribute DataMeta UI"
+    }
+  ]
+}

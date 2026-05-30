@@ -1,0 +1,163 @@
+package: slimeai-systemagent
+version: "0.3.0"
+schema_version: 3
+schema_scope: package-manifest
+catalog_schema_versions:
+  manifest_package: 3
+  workflow_catalog: 3
+  skill_catalog: 3
+description: |
+  SlimeAI Workspace SystemAgent single fact-source root.
+  Routes/ = execution routing, Actors/ = executors, Rules/ = constraints,
+  Tools/ = verification tooling, Registry/ = machine-readable indexes + config.
+
+sources_of_truth:
+  systemagent_root: Workspace/SystemAgent/
+  routes: Workspace/SystemAgent/Routes/
+  actors: Workspace/SystemAgent/Actors/
+  rules: Workspace/SystemAgent/Rules/
+  tools: Workspace/SystemAgent/Tools/
+  registry: Workspace/SystemAgent/Registry/
+  rules_source: .ai-config/rules/rules.md
+  skills: .ai-config/skills/<category>/<name>/SKILL.md
+  claude_hooks: .claude/settings.json
+  claude_subagents: .claude/agents/
+  codex_hooks: .codex/hooks.json
+  codex_subagents: .codex/agents/
+  framework_docs: SlimeAI/DocsAI/
+
+sync_targets:
+  - .codex/skills/<name>/
+  - .claude/skills/<name>/
+  - .windsurf/skills/<name>/
+  - .claude/commands/opsx/*.md
+  - CLAUDE.md
+  - .windsurf/rules/windsurfrules.md
+  - AGENTS.md
+
+components:
+  rules:
+    - id: workspace-rules
+      source: .ai-config/rules/rules.md
+      status: active
+  skills:
+    - id: ai-feature-development
+      source: .ai-config/skills/ai/ai-feature-development/SKILL.md
+      role: compatibility-entry
+      status: active
+    - id: ai-process-retrospective
+      source: .ai-config/skills/ai/ai-process-retrospective/SKILL.md
+      role: compatibility-retrospective
+      status: active
+    - id: skill-test
+      source: .ai-config/skills/core/skill-test/SKILL.md
+      role: lint-entry
+      status: active
+  subagents:
+    - id: systemagent-planner
+      claude: .claude/agents/systemagent-planner.md
+      codex: .codex/agents/systemagent-planner.toml
+      role: Workspace/SystemAgent/Actors/Planner.md
+      status: active
+    - id: systemagent-test-designer
+      claude: .claude/agents/systemagent-test-designer.md
+      codex: .codex/agents/systemagent-test-designer.toml
+      role: Workspace/SystemAgent/Actors/TestDesigner.md
+      status: active
+    - id: systemagent-reviewer
+      claude: .claude/agents/systemagent-reviewer.md
+      codex: .codex/agents/systemagent-reviewer.toml
+      role: Workspace/SystemAgent/Actors/Reviewer.md
+      status: active
+    - id: systemagent-retrospective
+      claude: .claude/agents/systemagent-retrospective.md
+      codex: .codex/agents/systemagent-retrospective.toml
+      role: Workspace/SystemAgent/Actors/Retrospective.md
+      status: active
+  hooks:
+    - id: systemagent-hook
+      script: Workspace/SystemAgent/Tools/systemagent-hooks/systemagent_hook.py
+      claude_config: .claude/settings.json
+      codex_config: .codex/hooks.json
+      status: paused
+      reason: disabled until SystemAgent hook policy is redesigned
+  docs:
+    - id: systemagent-readme
+      path: Workspace/SystemAgent/README.md
+      role: entry
+    - id: framework-index
+      path: SlimeAI/DocsAI/INDEX.md
+      role: framework-entry
+  rules_files:
+    - id: review-gates
+      path: Workspace/SystemAgent/Rules/ReviewGates.md
+    - id: verdict-vocabulary
+      path: Workspace/SystemAgent/Rules/VerdictVocabulary.md
+    - id: git
+      path: Workspace/SystemAgent/Rules/Git.md
+    - id: subagent
+      path: Workspace/SystemAgent/Rules/Subagent.md
+    - id: ai-config
+      path: Workspace/SystemAgent/Rules/AIConfig.md
+    - id: boundary
+      path: Workspace/SystemAgent/Rules/Boundary.md
+    - id: tdd
+      path: Workspace/SystemAgent/Rules/TDD.md
+    - id: philosophy
+      path: Workspace/SystemAgent/Rules/Philosophy.md
+    - id: documentation
+      path: Workspace/SystemAgent/Rules/Documentation.md
+  gates:
+    catalog: Workspace/SystemAgent/Rules/ReviewGates.md
+    vocabulary: Workspace/SystemAgent/Rules/VerdictVocabulary.md
+    ids:
+      [
+        RV-PLAN-FEASIBILITY,
+        RV-TEST-COVERAGE,
+        RV-IMPL-BOUNDARY,
+        RV-INTEGRATION-BEHAVIOR,
+        RV-DOC-SYNC,
+        RV-CONFIG-SYNC,
+        RV-BEHAVIOR-COMPLIANCE,
+        RV-RETROSPECTIVE,
+      ]
+    status: active
+  workflow:
+    catalog: Workspace/SystemAgent/Registry/workflow-catalog.yaml
+    review_mode_file: Workspace/SystemAgent/Registry/review-mode.txt
+    default_review_mode: lean
+    status: active
+  actors:
+    path: Workspace/SystemAgent/Actors/
+    design:
+      - id: design-critic
+        role: Workspace/SystemAgent/Actors/DesignCritic.md
+        trigger: deep design analysis, large SDD task, or high-risk medium workflow change
+      - id: design-discovery
+        role: Workspace/SystemAgent/Actors/DesignDiscovery.md
+        trigger: design discovery, architecture trade-off, or SDD creation
+    conditional_review:
+      - id: senior-game-developer
+        role: Workspace/SystemAgent/Actors/SeniorGameDeveloper.md
+        trigger: multi-system gameplay, GodotBridge presentation, validation tooling, or validation gate changes
+      - id: senior-programmer
+        role: Workspace/SystemAgent/Actors/SeniorProgrammer.md
+        trigger: multi-owner architecture, validation tooling, manifest/analyzer/scene-gate, or workflow/gate changes
+    status: active
+  catalog:
+    manifest: Workspace/SystemAgent/Registry/manifest.yaml
+    workflow_catalog: Workspace/SystemAgent/Registry/workflow-catalog.yaml
+    skill_catalog: Workspace/SystemAgent/Registry/skills.yaml
+    skill_catalog_schema_version: 3
+    status: active
+  config:
+    review_mode_file: Workspace/SystemAgent/Registry/review-mode.txt
+    last_sync_marker: Workspace/SystemAgent/Registry/.last-sync
+    status: active
+  skill_testing:
+    runner: Workspace/SystemAgent/Tools/skill-test/lint.sh
+    rules_dir: Workspace/SystemAgent/Tools/skill-test/rules/
+    catalog: Workspace/SystemAgent/Registry/skills.yaml
+    rule_ids: [R001, R002, R003, R004, R005, R006]
+    last_sync_marker: Workspace/SystemAgent/Registry/.last-sync
+    status: active

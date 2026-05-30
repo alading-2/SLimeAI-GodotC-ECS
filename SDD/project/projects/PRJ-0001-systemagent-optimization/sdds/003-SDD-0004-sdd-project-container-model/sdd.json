@@ -1,0 +1,53 @@
+{
+  "id": "SDD-0004",
+  "slug": "sdd-project-container-model",
+  "title": "SDD Project Container Model",
+  "status": "done",
+  "type": "workflow",
+  "created_at": "2026-05-25",
+  "updated_at": "2026-05-25",
+  "scope": "Workspace/SDD",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI"
+  ],
+  "affected_areas": [
+    "Workspace/SDD"
+  ],
+  "tags": [
+    "sdd",
+    "project-container"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 5,
+    "total_tasks": 5,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "This SDD changes CLI or workflow behavior."
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0001",
+  "project_order": 3,
+  "shared_design_refs": [
+    "../../design/INDEX.md",
+    "../../design/08-SDD独立化与文档迁移方案.md",
+    "../../design/SDD/SlimeAI-SDD-MVP设计.md",
+    "../../design/SDD/SDD重构与CLI详细执行计划.md",
+    "../../design/SDD/SDD-CLI信息质量加固设计.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-05-25 07:28",
+      "summary": "python3 -m unittest discover Workspace/SDD/tests: 16 tests OK; python3 -m py_compile Workspace/SDD/sdd.py Workspace/SDD/tests/test_sdd_cli.py: passed; python3 Workspace/SDD/sdd.py validate --all: 0 error / 0 warning; bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all: Critical 0 / Advisory 0"
+    }
+  ]
+}

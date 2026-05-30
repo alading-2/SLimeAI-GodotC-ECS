@@ -1,0 +1,85 @@
+{
+  "id": "PRJ-0001",
+  "slug": "systemagent-optimization",
+  "title": "SystemAgent Optimization",
+  "status": "active",
+  "created_at": "2026-05-25",
+  "updated_at": "2026-05-25",
+  "scope": "Workspace/SystemAgent",
+  "tags": [
+    "systemagent"
+  ],
+  "current_sdd": "SDD-0008",
+  "sdds": [
+    {
+      "order": 1,
+      "id": "SDD-0001",
+      "title": "SDD System Bootstrap",
+      "status": "done",
+      "path": "sdds/001-SDD-0001-sdd-system-bootstrap"
+    },
+    {
+      "order": 2,
+      "id": "SDD-0003",
+      "title": "SDD CLI Information Quality Hardening",
+      "status": "done",
+      "path": "sdds/002-SDD-0003-sdd-cli-information-quality-hardening"
+    },
+    {
+      "order": 3,
+      "id": "SDD-0004",
+      "title": "SDD Project Container Model",
+      "status": "done",
+      "path": "sdds/003-SDD-0004-sdd-project-container-model"
+    },
+    {
+      "order": 4,
+      "id": "SDD-0005",
+      "title": "SDD CLI Source Modularization",
+      "status": "done",
+      "path": "sdds/004-SDD-0005-sdd-cli-source-modularization"
+    },
+    {
+      "order": 5,
+      "id": "SDD-0006",
+      "title": "SystemAgent Information Architecture Refresh",
+      "status": "done",
+      "path": "sdds/005-SDD-0006-systemagent-information-architecture-refresh"
+    },
+    {
+      "order": 6,
+      "id": "SDD-0007",
+      "title": "Hook and Gate P0 Stability",
+      "status": "done",
+      "path": "sdds/006-SDD-0007-hook-and-gate-p0-stability"
+    },
+    {
+      "order": 7,
+      "id": "SDD-0008",
+      "title": "Workflow Skill Role Layered Execution",
+      "status": "pending",
+      "path": "sdds/007-SDD-0008-workflow-skill-role-layered-execution"
+    },
+    {
+      "order": 8,
+      "id": "SDD-0009",
+      "title": "DesignDiscovery and DesignCritic Capability",
+      "status": "done",
+      "path": "sdds/008-SDD-0009-designdiscovery-and-designcritic-capability"
+    },
+    {
+      "order": 9,
+      "id": "SDD-0010",
+      "title": "Git Worktree Subagent Safety Strategy",
+      "status": "done",
+      "path": "sdds/009-SDD-0010-git-worktree-subagent-safety-strategy"
+    }
+  ],
+  "links": {
+    "design_index": "design/INDEX.md",
+    "roadmap": "roadmap.md",
+    "progress": "progress.md",
+    "notes": "notes.md",
+    "sdds": "sdds"
+  }
+}

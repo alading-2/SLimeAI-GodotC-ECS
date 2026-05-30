@@ -1,0 +1,283 @@
+schema_version: 3
+package: slimeai-systemagent
+coverage_rule: "All .ai-config/skills/<category>/<name>/SKILL.md are listed; owner capability skills are role=owner-skill-out-of-scope."
+
+# schema_version: 3 仅表示 skill catalog schema；Registry/manifest.yaml 的 package manifest schema 仍为 2。
+# 必填字段：id / source / category / role / status。
+# function_category：已纳入 rubric 覆盖的 SystemAgent-owned 高风险入口、收尾、维护或 wrapper skill 分类；未纳入覆盖或 owner-skill-out-of-scope 可省略。
+# spec：Behavioral Spec 试点字段；仅 pilot skill 需要填写，非 pilot 空值不视为失败。
+# last_static / last_static_result：Static Lint 可选人工快照；权威证据仍是命令输出或 .ai-temp/skill-test 报告。
+# last_spec / last_spec_result：Behavioral Spec 试点人工结果；非 pilot 空值允许。
+# last_category / last_category_result：Category Rubric 人工评审结果；未执行人工评审前空值允许。
+
+skills:
+  - id: ai-feature-development
+    source: .ai-config/skills/ai/ai-feature-development/SKILL.md
+    category: ai
+    function_category: gate
+    role: entry
+    status: active
+    priority: critical
+    spec: ""
+    last_static: ""
+    last_static_result: ""
+    last_spec: ""
+    last_spec_result: ""
+    last_category: ""
+    last_category_result: ""
+    canonical_docs:
+      - Workspace/SystemAgent/README.md
+      - Workspace/SystemAgent/README.md
+      - Workspace/SystemAgent/Registry/workflow-catalog.yaml
+  - id: ai-process-retrospective
+    source: .ai-config/skills/ai/ai-process-retrospective/SKILL.md
+    category: ai
+    function_category: sprint
+    role: closeout
+    status: active
+    priority: critical
+    spec: ""
+    last_static: ""
+    last_static_result: ""
+    last_spec: ""
+    last_spec_result: ""
+    last_category: ""
+    last_category_result: ""
+    canonical_docs:
+      - Workspace/SystemAgent/Actors/Retrospective.md
+      - Workspace/SystemAgent/Routes/WorkflowIteration.md
+  - id: ai-config-management
+    source: .ai-config/skills/core/ai-config-management/SKILL.md
+    category: core
+    role: maintenance
+    status: active
+  - id: project-index
+    source: .ai-config/skills/core/project-index/SKILL.md
+    category: core
+    role: maintenance
+    status: active
+  - id: runtime-command-buffer
+    source: .ai-config/skills/core/runtime-command-buffer/SKILL.md
+    category: core
+    role: owner-skill-out-of-scope
+    status: active
+  - id: skill-test
+    source: .ai-config/skills/core/skill-test/SKILL.md
+    category: core
+    function_category: utility
+    role: maintenance
+    status: active
+    priority: high
+    spec: ""
+    last_static: ""
+    last_static_result: ""
+    last_spec: ""
+    last_spec_result: ""
+    last_category: ""
+    last_category_result: ""
+    canonical_docs:
+      - Workspace/SystemAgent/Tools/skill-test/README.md
+      - Workspace/SystemAgent/Skills/WrapperSkillPolicy.md
+  - id: test-system
+    source: .ai-config/skills/core/test-system/SKILL.md
+    category: core
+    role: owner-skill-out-of-scope
+    status: active
+  - id: tools
+    source: .ai-config/skills/core/tools/SKILL.md
+    category: core
+    role: owner-skill-out-of-scope
+    status: active
+  - id: data-authoring
+    source: .ai-config/skills/data/data-authoring/SKILL.md
+    category: data
+    role: owner-skill-out-of-scope
+    status: active
+  - id: ecs-component
+    source: .ai-config/skills/ecs/ecs-component/SKILL.md
+    category: ecs
+    role: owner-skill-out-of-scope
+    status: active
+  - id: ecs-data
+    source: .ai-config/skills/ecs/ecs-data/SKILL.md
+    category: ecs
+    role: owner-skill-out-of-scope
+    status: active
+  - id: ecs-entity
+    source: .ai-config/skills/ecs/ecs-entity/SKILL.md
+    category: ecs
+    role: owner-skill-out-of-scope
+    status: active
+  - id: ecs-event
+    source: .ai-config/skills/ecs/ecs-event/SKILL.md
+    category: ecs
+    role: owner-skill-out-of-scope
+    status: active
+  - id: ability-system
+    source: .ai-config/skills/gameos/ability-system/SKILL.md
+    category: gameos
+    role: owner-skill-out-of-scope
+    status: active
+  - id: ai-system
+    source: .ai-config/skills/gameos/ai-system/SKILL.md
+    category: gameos
+    role: owner-skill-out-of-scope
+    status: active
+  - id: attack-system
+    source: .ai-config/skills/gameos/attack-system/SKILL.md
+    category: gameos
+    role: owner-skill-out-of-scope
+    status: active
+  - id: collision-system
+    source: .ai-config/skills/gameos/collision-system/SKILL.md
+    category: gameos
+    role: owner-skill-out-of-scope
+    status: active
+  - id: damage-system
+    source: .ai-config/skills/gameos/damage-system/SKILL.md
+    category: gameos
+    role: owner-skill-out-of-scope
+    status: active
+  - id: feature-system
+    source: .ai-config/skills/gameos/feature-system/SKILL.md
+    category: gameos
+    role: owner-skill-out-of-scope
+    status: active
+  - id: movement-system
+    source: .ai-config/skills/gameos/movement-system/SKILL.md
+    category: gameos
+    role: owner-skill-out-of-scope
+    status: active
+  - id: projectile-effect-system
+    source: .ai-config/skills/gameos/projectile-effect-system/SKILL.md
+    category: gameos
+    role: owner-skill-out-of-scope
+    status: active
+  - id: godot-scene-test
+    source: .ai-config/skills/godot/godot-scene-test/SKILL.md
+    category: godot
+    role: owner-skill-out-of-scope
+    status: active
+  - id: scene-gate
+    source: .ai-config/skills/godot/scene-gate/SKILL.md
+    category: godot
+    role: owner-skill-out-of-scope
+    status: active
+  - id: ui-bind
+    source: .ai-config/skills/godot/ui-bind/SKILL.md
+    category: godot
+    role: owner-skill-out-of-scope
+    status: active
+  - id: openspec-apply-change
+    source: .ai-config/skills/openspec/openspec-apply-change/SKILL.md
+    category: openspec
+    role: legacy-compatibility-entry
+    status: active
+  - id: openspec-archive-change
+    source: .ai-config/skills/openspec/openspec-archive-change/SKILL.md
+    category: openspec
+    role: legacy-compatibility-closeout
+    status: active
+  - id: openspec-explore
+    source: .ai-config/skills/openspec/openspec-explore/SKILL.md
+    category: openspec
+    role: legacy-compatibility-entry
+    status: active
+  - id: openspec-propose
+    source: .ai-config/skills/openspec/openspec-propose/SKILL.md
+    category: openspec
+    role: legacy-compatibility-entry
+    status: active
+  - id: sdd-workflow
+    source: .ai-config/skills/sdd/sdd-workflow/SKILL.md
+    category: sdd
+    role: entry
+    status: active
+    canonical_docs:
+      - Workspace/SDD/README.md
+      - Workspace/SDD/docs/SDDFormat.md
+      - Workspace/SDD/docs/CLI.md
+  - id: sdd-management
+    source: .ai-config/skills/sdd/sdd-management/SKILL.md
+    category: sdd
+    role: maintenance
+    status: active
+    canonical_docs:
+      - Workspace/SDD/README.md
+      - Workspace/SDD/docs/SDDFormat.md
+      - Workspace/SDD/docs/CLI.md
+      - Workspace/SDD/docs/ValidationRules.md
+  - id: sdd-design-discovery
+    source: .ai-config/skills/sdd/sdd-design-discovery/SKILL.md
+    category: sdd
+    function_category: authoring
+    role: capability
+    status: active
+    canonical_docs:
+      - Workspace/SystemAgent/Actors/DesignDiscovery.md
+      - Workspace/SystemAgent/Actors/DesignCritic.md
+      - Workspace/SDD/docs/SDDFormat.md
+      - Workspace/SDD/docs/CLI.md
+  - id: systemagent-config-maintenance
+    source: .ai-config/skills/systemagent/systemagent-config-maintenance/SKILL.md
+    category: systemagent
+    role: systemagent-wrapper
+    status: active
+    canonical_docs:
+      - Workspace/SystemAgent/Routes/ConfigMaintenance.md
+      - Workspace/SystemAgent/Rules/AIConfigBoundary.md
+  - id: systemagent-debug-fix
+    source: .ai-config/skills/systemagent/systemagent-debug-fix/SKILL.md
+    category: systemagent
+    role: systemagent-wrapper
+    status: active
+    canonical_docs:
+      - Workspace/SystemAgent/Routes/DebugFix.md
+  - id: systemagent-new-feature
+    source: .ai-config/skills/systemagent/systemagent-new-feature/SKILL.md
+    category: systemagent
+    role: systemagent-wrapper
+    status: active
+    canonical_docs:
+      - Workspace/SystemAgent/Routes/NewFeature.md
+      - Workspace/SystemAgent/Actors/DesignDiscovery.md
+  - id: systemagent-research-adoption
+    source: .ai-config/skills/systemagent/systemagent-research-adoption/SKILL.md
+    category: systemagent
+    role: systemagent-wrapper
+    status: active
+    canonical_docs:
+      - Workspace/SystemAgent/Routes/ResearchAdoption.md
+      - Workspace/SystemAgent/Rules/ExternalResources.md
+  - id: systemagent-retrospective
+    source: .ai-config/skills/systemagent/systemagent-retrospective/SKILL.md
+    category: systemagent
+    role: systemagent-wrapper
+    status: active
+    canonical_docs:
+      - Workspace/SystemAgent/Actors/Retrospective.md
+      - Workspace/SystemAgent/Rules/VerdictVocabulary.md
+  - id: systemagent-skill-test
+    source: .ai-config/skills/systemagent/systemagent-skill-test/SKILL.md
+    category: systemagent
+    role: systemagent-wrapper
+    status: active
+    canonical_docs:
+      - Workspace/SystemAgent/Tools/skill-test/README.md
+      - Workspace/SystemAgent/Skills/WrapperSkillPolicy.md
+  - id: systemagent-validation-release
+    source: .ai-config/skills/systemagent/systemagent-validation-release/SKILL.md
+    category: systemagent
+    role: systemagent-wrapper
+    status: active
+    canonical_docs:
+      - Workspace/SystemAgent/Routes/ValidationRelease.md
+  - id: systemagent-workflow-iteration
+    source: .ai-config/skills/systemagent/systemagent-workflow-iteration/SKILL.md
+    category: systemagent
+    role: systemagent-wrapper
+    status: active
+    canonical_docs:
+      - Workspace/SystemAgent/Routes/WorkflowIteration.md
+      - Workspace/SystemAgent/Actors/DesignDiscovery.md
+      - Workspace/SystemAgent/Actors/DesignCritic.md

@@ -1,0 +1,37 @@
+{
+  "id": "SDD-0000",
+  "slug": "example-title",
+  "title": "Example Title",
+  "status": "pending",
+  "type": "workflow",
+  "created_at": "YYYY-MM-DD",
+  "updated_at": "YYYY-MM-DD",
+  "scope": "Workspace/SDD",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI"
+  ],
+  "affected_areas": [
+    "Workspace/SDD"
+  ],
+  "tags": [
+    "sdd"
+  ],
+  "progress": {
+    "current_task": "T1.1",
+    "completed_tasks": 0,
+    "total_tasks": 1,
+    "percent": 0
+  },
+  "bdd": {
+    "required": true,
+    "reason": "This SDD changes CLI or workflow behavior."
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  }
+}

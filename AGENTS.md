@@ -59,16 +59,3 @@
 - ❌ 手写暴击/闪避/冷却/充能/范围检测 → 用对应系统组件
 - ❌ 手动 `new` + `QueueFree()` 高频对象 → 用对象池
 
-## 4. Skill 速查（@mention 或描述任务自动触发）
-
-| 任务场景 | Skill |
-|----------|-------|
-| 查找任意模块文档/源码/模板文件 | `@project-index` |
-| 新建/管理 Entity、对象池 | `@ecs-entity` |
-| 新建/修改 Component | `@ecs-component` |
-| 读写 Data、定义 DataKey | `@ecs-data` |
-| 事件发布/订阅、定义事件类型 | `@ecs-event` |
-| 实现技能功能 | `@ability-system` |
-| 造成伤害、扩展伤害处理器 | `@damage-system` |
-| 开发 UI、绑定 Entity | `@ui-bind` |
-| Timer/ObjectPool/TargetSelector/ResourceManagement | `@tools` |

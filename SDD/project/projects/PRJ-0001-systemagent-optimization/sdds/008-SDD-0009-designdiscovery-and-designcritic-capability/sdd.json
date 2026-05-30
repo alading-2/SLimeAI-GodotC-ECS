@@ -1,0 +1,55 @@
+{
+  "id": "SDD-0009",
+  "slug": "designdiscovery-and-designcritic-capability",
+  "title": "DesignDiscovery and DesignCritic Capability",
+  "status": "done",
+  "type": "workflow",
+  "created_at": "2026-05-25",
+  "updated_at": "2026-05-25",
+  "scope": "Workspace/SystemAgent",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI"
+  ],
+  "affected_areas": [
+    "Workspace/SystemAgent",
+    ".ai-config/skills/sdd",
+    ".ai-config/skills/systemagent"
+  ],
+  "tags": [
+    "systemagent",
+    "design-discovery",
+    "role"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 6,
+    "total_tasks": 6,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "This SDD changes CLI or workflow behavior."
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0001",
+  "project_order": 8,
+  "shared_design_refs": [
+    "../../design/INDEX.md",
+    "../../design/07-DesignDiscovery与DesignCritic方案.md",
+    "../../design/09-WorkflowSkillRole分层模型.md",
+    "../../design/02-Workflow与Skill触发优化方案.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-05-25 12:18",
+      "summary": "sync-ai-config.sh passed; skill-lint static all: 39 skills Critical 0 Advisory 0; validate SDD-0009: 0 errors 1 weak-resume warning before final progress update; git diff --check passed"
+    }
+  ]
+}

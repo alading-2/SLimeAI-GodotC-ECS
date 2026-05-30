@@ -1,0 +1,188 @@
+schema_version: 3
+default_review_mode: lean
+
+route_contract:
+  required_output_fields: [workflow, task_size, sdd, must_read, mode, subagent]
+  task_size:
+    small: 单文件或低风险少量修正，不跨模块，无长期恢复需求。
+    medium: 2-5 个文件或有限影响面，可能需要一次恢复；用户要求深度分析时建议使用 SDD。
+    large: 跨模块、跨配置、影响 contract 或需要多轮执行；必须使用 SDD。
+  must_read_policy: 默认只读 README 和选中的 route；actor、rule、tool、owner skill 与 SDD docs 只按 phase、risk 或当前 SDD 需要读取。
+  modes: [lean, full]
+  subagent_modes: [none, read-only, review-only]
+
+workflows:
+  new_feature:
+    label: New Feature
+    description: 新功能、重构、迁移、SDD 实施。
+    document: Workspace/SystemAgent/Routes/NewFeature.md
+    required_roles:
+      [Planner, TestDesigner, Implementer, Reviewer, Verifier, Retrospective]
+    conditional_roles:
+      - role: DesignCritic
+        when: large or high-risk medium feature, migration, SDD implementation, or explicit deep design analysis
+      - role: SeniorGameDeveloper
+        when: multi-system gameplay, GodotBridge presentation, validation tooling, or validation gate changes
+      - role: SeniorProgrammer
+        when: multi-owner architecture, validation tooling, manifest/analyzer/scene-gate, or workflow/gate changes
+    must_read:
+      - Workspace/SystemAgent/README.md
+      - Workspace/SystemAgent/Routes/NewFeature.md
+    conditional_read:
+      design:
+        - Workspace/SystemAgent/Actors/DesignDiscovery.md
+        - Workspace/SystemAgent/Actors/DesignCritic.md
+      git_worktree:
+        - Workspace/SystemAgent/Rules/Git.md
+        - Workspace/SystemAgent/Rules/Subagent.md
+      sdd:
+        - Workspace/SDD/README.md
+        - Workspace/SDD/docs/SDDFormat.md
+      behavior_contract:
+        - Workspace/SystemAgent/Tools/BDDSceneFormat.md
+      legacy_entry:
+        - .ai-config/skills/ai/ai-feature-development/SKILL.md
+    gates:
+      - id: RV-PLAN-FEASIBILITY
+      - id: RV-TEST-COVERAGE
+      - id: RV-IMPL-BOUNDARY
+      - id: RV-INTEGRATION-BEHAVIOR
+      - id: RV-DOC-SYNC
+      - id: RV-RETROSPECTIVE
+    external_resources: not_preloaded
+    completion_artifact: SDD design/tasks/progress/bdd, worktree decision record when applicable, DesignDiscovery confirmation package when used, validation output, git status, retrospective verdict
+  debug_fix:
+    label: Debug Fix
+    description: bug、构建失败、测试失败、验证失败或异常定位。
+    document: Workspace/SystemAgent/Routes/DebugFix.md
+    required_roles: [Debugger, Verifier, Reviewer, Retrospective]
+    must_read:
+      - Workspace/SystemAgent/README.md
+      - Workspace/SystemAgent/Routes/DebugFix.md
+    conditional_read:
+      roles:
+        - Workspace/SystemAgent/Actors/Debugger.md
+        - Workspace/SystemAgent/Actors/Verifier.md
+      gates:
+        - Workspace/SystemAgent/Rules/ReviewGates.md
+    gates:
+      - id: RV-IMPL-BOUNDARY
+      - id: RV-DOC-SYNC
+      - id: RV-RETROSPECTIVE
+    external_resources: ai_decided_by_task_need
+    completion_artifact: reproduction evidence, root cause, fix evidence, regression output
+  workflow_iteration:
+    label: Workflow Iteration
+    description: SystemAgent 流程、角色、策略、gate 或文档治理迭代。
+    document: Workspace/SystemAgent/Routes/WorkflowIteration.md
+    required_roles:
+      [Retrospective, Planner, Implementer, Reviewer, Documentarian]
+    conditional_roles:
+      - role: DesignCritic
+        when: workflow, role, gate, policy, or documentation governance change has unresolved assumptions or competing options
+      - role: SeniorGameDeveloper
+        when: validation governance, scene gate, gameplay evidence, or feature-slice workflow changes
+      - role: SeniorProgrammer
+        when: workflow/gate/tooling architecture, config boundary, or validation manifest changes
+    must_read:
+      - Workspace/SystemAgent/README.md
+      - Workspace/SystemAgent/Routes/WorkflowIteration.md
+    conditional_read:
+      design:
+        - Workspace/SystemAgent/Actors/DesignDiscovery.md
+        - Workspace/SystemAgent/Actors/DesignCritic.md
+      roles:
+        - Workspace/SystemAgent/Actors/Retrospective.md
+        - Workspace/SystemAgent/Actors/Planner.md
+        - Workspace/SystemAgent/Actors/Implementer.md
+        - Workspace/SystemAgent/Actors/Documentarian.md
+      gates:
+        - Workspace/SystemAgent/Rules/VerdictVocabulary.md
+    gates:
+      - id: RV-INTEGRATION-BEHAVIOR
+      - id: RV-BEHAVIOR-COMPLIANCE
+      - id: RV-DOC-SYNC
+      - id: RV-CONFIG-SYNC
+      - id: RV-RETROSPECTIVE
+    external_resources: ai_decided_by_task_need
+    completion_artifact: updated SystemAgent docs/config, DesignDiscovery/DesignCritic notes when used, plus retrospective verdict
+  config_maintenance:
+    label: Config Maintenance
+    description: skill、rule、command、hook、subagent、sync 或 skill-test 维护。
+    document: Workspace/SystemAgent/Routes/ConfigMaintenance.md
+    required_roles: [Planner, Reviewer, Verifier]
+    must_read:
+      - Workspace/SystemAgent/README.md
+      - Workspace/SystemAgent/Routes/ConfigMaintenance.md
+    conditional_read:
+      policies:
+        - Workspace/SystemAgent/Rules/AIConfig.md
+      tools:
+        - Workspace/SystemAgent/Tools/skill-test/README.md
+      skill_entry:
+        - .ai-config/skills/core/ai-config-management/SKILL.md
+    gates:
+      - id: RV-CONFIG-SYNC
+      - id: RV-IMPL-BOUNDARY
+      - id: RV-RETROSPECTIVE
+    external_resources: not_preloaded
+    completion_artifact: sync output, skill-test output, hook smoke output, git status
+  research_adoption:
+    label: Research Adoption
+    description: 外部资料、本地 Resources、官方文档或参考项目研究采纳。
+    document: Workspace/SystemAgent/Routes/ResearchAdoption.md
+    required_roles: [ResearchAnalyst, Reviewer]
+    must_read:
+      - Workspace/SystemAgent/README.md
+      - Workspace/SystemAgent/Routes/ResearchAdoption.md
+    conditional_read:
+      roles:
+        - Workspace/SystemAgent/Actors/ResearchAnalyst.md
+      policies:
+        - Workspace/SystemAgent/Rules/Boundary.md
+    gates:
+      - id: RV-PLAN-FEASIBILITY
+      - id: RV-DOC-SYNC
+      - id: RV-RETROSPECTIVE
+    external_resources: user_specified_or_ai_decided_by_task_need
+    completion_artifact: externalResources report, Evidence/Inference/Unknown, adoption decision
+  validation_release:
+    label: Validation Release
+    description: 大改后完整验证、archive 前检查、发布前证据闭环。
+    document: Workspace/SystemAgent/Routes/ValidationRelease.md
+    required_roles: [Verifier, Reviewer, Retrospective]
+    conditional_roles:
+      - role: DesignCritic
+        when: large or high-risk medium feature, migration, SDD implementation, or explicit deep design analysis
+      - role: SeniorGameDeveloper
+        when: feature-slice gameplay evidence, GodotBridge presentation, or release-batch scenes are in scope
+      - role: SeniorProgrammer
+        when: validation tooling, gate report, manifest, freshness, or catalog evidence is in scope
+    must_read:
+      - Workspace/SystemAgent/README.md
+      - Workspace/SystemAgent/Routes/ValidationRelease.md
+    conditional_read:
+      roles:
+        - Workspace/SystemAgent/Actors/Verifier.md
+      gates:
+        - Workspace/SystemAgent/Rules/ReviewGates.md
+        - Workspace/SystemAgent/Rules/VerdictVocabulary.md
+    gates:
+      - id: RV-INTEGRATION-BEHAVIOR
+      - id: RV-DOC-SYNC
+      - id: RV-CONFIG-SYNC
+      - id: RV-RETROSPECTIVE
+    external_resources: not_preloaded
+    completion_artifact: validation command matrix, old-path classification, archive readiness
+
+phase_gates:
+  - RV-PLAN-FEASIBILITY
+  - RV-RETROSPECTIVE
+
+external_resources:
+  default: not_preloaded
+  policy: Workspace/SystemAgent/Rules/Boundary.md
+  allowed_markers:
+    - not_preloaded
+    - ai_decided_by_task_need
+    - user_specified

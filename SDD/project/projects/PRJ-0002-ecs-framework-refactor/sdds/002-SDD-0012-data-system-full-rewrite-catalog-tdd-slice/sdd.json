@@ -1,0 +1,58 @@
+{
+  "id": "SDD-0012",
+  "slug": "data-system-full-rewrite-catalog-tdd-slice",
+  "title": "Data System Full Rewrite - Catalog TDD Slice",
+  "status": "done",
+  "type": "implementation",
+  "created_at": "2026-05-28",
+  "updated_at": "2026-05-28",
+  "scope": "SlimeAI",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI/SlimeAI"
+  ],
+  "affected_areas": [
+    "SlimeAI/Src/ECS/Base/Data",
+    "SlimeAI/Data/DataKey",
+    "SlimeAI/Src/ECS/Test/SingleTest/ECS/Data"
+  ],
+  "tags": [
+    "data",
+    "data-rewrite",
+    "tdd"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 8,
+    "total_tasks": 8,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "Data 子系统完整重构会改变运行时行为、输入事实源或验证门禁，必须保留行为场景。"
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0002",
+  "project_order": 2,
+  "shared_design_refs": [
+    "../../design/INDEX.md",
+    "../../design/main.md",
+    "../../design/2.Data系统优化/README.md",
+    "../../design/2.Data系统优化/01-代码实现说明.md",
+    "../../design/2.Data系统优化/02-DataMeta属性审计与Feature计算边界.md",
+    "../../design/2.Data系统优化/03-完全重构范围与TDD测试计划.md",
+    "../../design/04-优化优先级与SDD拆分建议.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-05-28 21:18",
+      "summary": "dotnet run --project Tools/DataCatalogTdd/DataCatalogTdd.csproj --no-restore: passed 18/18; dotnet build Brotato_my.csproj --no-restore: passed; bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only: 39 skills Critical 0 Advisory 0"
+    }
+  ]
+}

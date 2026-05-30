@@ -1,0 +1,59 @@
+{
+  "id": "SDD-0019",
+  "slug": "data-legacy-path-removal-and-test-scene-rebuild",
+  "title": "Data Legacy Path Removal and Test Scene Rebuild",
+  "status": "done",
+  "type": "migration",
+  "created_at": "2026-05-28",
+  "updated_at": "2026-05-29",
+  "scope": "SlimeAI",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI/SlimeAI"
+  ],
+  "affected_areas": [
+    "SlimeAI/Data/Data",
+    "SlimeAI/Data/DataNew",
+    "SlimeAI/Src/ECS/Test/SingleTest/ECS/Data",
+    "SlimeAI/DocsAI"
+  ],
+  "tags": [
+    "data",
+    "cleanup",
+    "godot-test"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 8,
+    "total_tasks": 8,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "Data 子系统完整重构会改变运行时行为、输入事实源或验证门禁，必须保留行为场景。"
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0002",
+  "project_order": 9,
+  "shared_design_refs": [
+    "../../design/INDEX.md",
+    "../../design/main.md",
+    "../../design/2.Data系统优化/README.md",
+    "../../design/2.Data系统优化/01-代码实现说明.md",
+    "../../design/2.Data系统优化/02-DataMeta属性审计与Feature计算边界.md",
+    "../../design/2.Data系统优化/03-完全重构范围与TDD测试计划.md",
+    "../../design/04-优化优先级与SDD拆分建议.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-05-29 08:22",
+      "summary": "rg legacy Data path gate: no matches; dotnet run --project Tools/DataCatalogTdd/DataCatalogTdd.csproj --no-restore: 50/50 passed; dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly: succeeded with 839 warnings and 0 errors; four SlimeAI headless DataOS scenes exited 0 with 15 PASS lines; bash Workspace/Tools/ai-config-sync/sync-ai-config.sh completed with advisory skill-test Critical 0 / Advisory 0; bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only: 39 skills Critical 0 / Advisory 0; python3 Workspace/SDD/sdd.py validate SDD-0019: 0 errors before done."
+    }
+  ]
+}

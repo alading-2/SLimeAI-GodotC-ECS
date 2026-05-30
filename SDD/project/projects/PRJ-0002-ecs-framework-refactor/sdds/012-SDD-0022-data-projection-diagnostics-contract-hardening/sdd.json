@@ -1,0 +1,54 @@
+{
+  "id": "SDD-0022",
+  "slug": "data-projection-diagnostics-contract-hardening",
+  "title": "Data Projection Diagnostics Contract Hardening",
+  "status": "done",
+  "type": "refactor",
+  "created_at": "2026-05-30",
+  "updated_at": "2026-05-30",
+  "scope": "SlimeAI",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI"
+  ],
+  "affected_areas": [
+    "SlimeAI/Data",
+    "SlimeAI/Src/ECS/Base/Data",
+    "SlimeAI/Src/ECS/Base/Entity",
+    "SlimeAI/Src/ECS/Base/Component/Movement"
+  ],
+  "tags": [
+    "data",
+    "diagnostics",
+    "projection",
+    "no-compat"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 12,
+    "total_tasks": 12,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "This SDD changes Data runtime behavior, DataOS validation, spawn bootstrap behavior, and current documentation gates."
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0002",
+  "project_order": 12,
+  "shared_design_refs": [
+    "../../design/INDEX.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-05-30 16:09",
+      "summary": "DataOS generate/validate passed; snapshot descriptor/record mismatch jq gate produced 0 rows; player/enemy DefaultMoveMode present as AIControlled/PlayerInput; AbilityDamageBonus default is 0 in authoring DB and snapshot; dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly passed; runtime and docs grep gates produced 0 rows; Godot headless DataRuntime/DataCatalog/DataSnapshotApply/Movement smoke/Ability pipeline scenes all exit 0, Ability PASS=16 FAIL=0."
+    }
+  ]
+}
