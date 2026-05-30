@@ -5,6 +5,15 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 
+# 确保所有目标目录存在（迁移或新克隆后可能缺失）
+mkdir -p "$ROOT/.codex/skills"
+mkdir -p "$ROOT/.claude/skills"
+mkdir -p "$ROOT/.claude/commands/opsx"
+mkdir -p "$ROOT/.windsurf/skills"
+mkdir -p "$ROOT/.windsurf/rules"
+mkdir -p "$(dirname "$ROOT/AGENTS.md")"
+mkdir -p "$(dirname "$ROOT/CLAUDE.md")"
+
 sync_skills_flat() {
     local source="$1"
     local target="$2"

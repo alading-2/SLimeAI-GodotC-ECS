@@ -20,6 +20,58 @@
                 "Tools/ResourceGenerator/ResourceGenerator.csproj"
             ],
             "problemMatcher": []
+        },
+        {
+            "label": "DataOS: 生成静态变量 + JSON",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "Data/DataOS/Tools/generate-all.sh"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "从 seed SQL 重建 authoring DB，生成 runtime_snapshot.json 和 DataKey_Generated.cs，并校验一致性"
+        },
+        {
+            "label": "DataOS: 仅生成 runtime_snapshot.json",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "Data/DataOS/Tools/generate-runtime-snapshot.sh",
+                "Data/DataOS/Authoring/slimeainew.authoring.db",
+                "Data/DataOS/Snapshots/runtime_snapshot.json"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "从 authoring DB 生成 runtime_snapshot.json（不重建 DB）"
+        },
+        {
+            "label": "DataOS: 仅生成 DataKey handles",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "Data/DataOS/Tools/generate-data-key-handles.py",
+                "Data/DataOS/Snapshots/runtime_snapshot.json",
+                "Data/DataKey/Generated/DataKey_Generated.cs"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "从 runtime_snapshot.json 生成 DataKey_Generated.cs 静态变量"
+        },
+        {
+            "label": "DataOS: 验证数据库",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "Data/DataOS/Tools/validate-dataos.sh",
+                "Data/DataOS/Authoring/slimeainew.authoring.db"
+            ],
+            "group": "test",
+            "problemMatcher": [],
+            "detail": "校验 authoring DB、snapshot 和 generated handle 的一致性"
         }
     ]
 }

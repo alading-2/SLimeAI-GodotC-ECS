@@ -51,8 +51,16 @@ def main():
             print(f"SKIP: skill not found: {skill_path}")
             continue
 
+        # 确保目标目录存在
+        os.makedirs(os.path.dirname(cmd_path), exist_ok=True)
+
         skill_fm, skill_body = extract_frontmatter_and_body(skill_path)
-        cmd_fm, _ = extract_frontmatter_and_body(cmd_path)
+
+        # command 文件可能不存在，首次生成时用空 dict
+        if os.path.exists(cmd_path):
+            cmd_fm, _ = extract_frontmatter_and_body(cmd_path)
+        else:
+            cmd_fm = {}
 
         # 保留 command 的 name/category/tags，只更新 description
         desc = skill_fm.get("description", "OpenSpec workflow command")

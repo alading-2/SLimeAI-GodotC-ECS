@@ -2,10 +2,10 @@
 
 ## Summary
 
-- **pending**: 1
+- **pending**: 0
 - **active**: 0
 - **blocked**: 0
-- **done**: 22
+- **done**: 23
 - **projects**: 2
 
 ## Projects
@@ -17,9 +17,7 @@
 
 ## Pending
 
-| ID | Project | Title | Updated | Scope | Current Task |
-| --- | --- | --- | --- | --- | --- |
-| SDD-0023 | PRJ-0002 | SystemAgent Root Migration Rule Sync | 2026-05-30 | SlimeAI | T1.1 |
+无。
 
 ## Active
 
@@ -55,6 +53,7 @@
 | SDD-0020 | PRJ-0002 | Data Snapshot-First Usage Cutover | 2026-05-29 | SlimeAI | complete |
 | SDD-0021 | PRJ-0002 | Data No-Compatibility Hard Cutover | 2026-05-30 | SlimeAI | done |
 | SDD-0022 | PRJ-0002 | Data Projection Diagnostics Contract Hardening | 2026-05-30 | SlimeAI | done |
+| SDD-0023 | PRJ-0002 | SystemAgent Root Migration Rule Sync | 2026-05-30 | SlimeAI | done |
 
 ## By Scope
 

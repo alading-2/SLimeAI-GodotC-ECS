@@ -2,7 +2,7 @@
 
 ## Index Card
 
-- **Status**: pending
+- **Status**: done
 - **Created**: 2026-05-30
 - **Updated**: 2026-05-30
 - **Type**: workflow

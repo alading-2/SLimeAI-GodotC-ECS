@@ -52,7 +52,7 @@ def template_readme() -> str:
 - **Updated**: YYYY-MM-DD
 - **Type**: workflow
 - **Scope**: Workspace/SDD
-- **Git Boundary**: /home/slime/Code/SlimeAI
+- **Git Boundary**: /home/slime/Code/SlimeAI/SlimeAI
 - **Affected Areas**:
   - Workspace/SDD
 - **Tags**: sdd

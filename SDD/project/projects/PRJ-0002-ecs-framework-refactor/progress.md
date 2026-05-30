@@ -8,8 +8,8 @@
 
 - **Updated**: 2026-05-30
 - **Current SDD**: SDD-0023
-- **Last Conclusion**: SDD-0023 已创建，承接 `design/4.SystemAgent目录更改到SlimeAI里面/README.md`，用于执行 `SDD/`、`Workspace/`、`.ai-config/` 迁入 `SlimeAI/` 后的 rules / skill / SDD template / DocsNew 语义收口。
-- **Next Action**: 从 SDD-0023 T1.1 readiness baseline 开始，随后重写 `.ai-config/rules/rules.md` 并运行 sync 生成框架仓规则副本。
+- **Last Conclusion**: SDD-0023 已完成。rules / skill / DocsNew / SDD template 已从旧工作区语义收口到框架仓语义。AI 从 `/home/slime/Code/SlimeAI/SlimeAI` 打开时，入口链正确指向 DocsNew → SDD/PRJ-0002 → Src/ECS → owner skill → 验证脚本。
+- **Next Action**: 创建 Entity Relationship Full Rewrite SDD。
 - **Open Blockers**: none
 
 ## Project Status Board

@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-05-30 21:03",
+  "generated_at": "2026-05-30 21:24",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -556,7 +556,7 @@
       "id": "SDD-0023",
       "slug": "systemagent-root-migration-rule-sync",
       "title": "SystemAgent Root Migration Rule Sync",
-      "status": "pending",
+      "status": "done",
       "type": "workflow",
       "updated_at": "2026-05-30",
       "scope": "SlimeAI",
@@ -570,7 +570,7 @@
       ],
       "project_id": "PRJ-0002",
       "project_order": 13,
-      "current_task": "T1.1",
+      "current_task": "done",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/013-SDD-0023-systemagent-root-migration-rule-sync"
     }
   ]
