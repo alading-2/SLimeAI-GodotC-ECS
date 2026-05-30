@@ -17,9 +17,11 @@ public partial class DataSnapshotApplyTestScene : DataSceneTestBase
         DataRuntimeBootstrap_ShouldBuildCatalogFindRecordAndCreateData();
         DataRuntimeBootstrap_ShouldBindExistingDataAndApplyRecord();
         RepositorySnapshot_RecordApply_ShouldUseGeneratedHandles();
-        RuntimeDataRecordQuery_ShouldQueryByTableIdAndName();
+        RuntimeDataRecordQuery_ShouldQueryByTableIdAndDebugDisplayName();
+        RuntimeDataRecordQuery_ShouldExposeDisplayNameOnlyAsDebugHelper();
         RuntimeDataRecordProjection_ShouldBuildTypedViews();
         RuntimeDataRecordProjection_ShouldReportMissingFields();
+        RuntimeDataRecordProjection_ShouldReportWrongFieldType();
     }
 
     private void RuntimeSnapshot_LoadFromJson_ShouldDeserializeDescriptorsAndRecords()
@@ -204,24 +206,38 @@ public partial class DataSnapshotApplyTestScene : DataSceneTestBase
 
     private void RepositorySnapshot_RecordApply_ShouldUseGeneratedHandles()
     {
+        var player = Bootstrap.FindRecord("unit.player", "player.deluyi");
+        var playerData = Bootstrap.CreateData(player);
         var enemy = Bootstrap.FindRecord("unit.enemy", "enemy.yuren");
         var data = Bootstrap.CreateData(enemy);
+        AssertEqual("snapshot player default move mode", MoveMode.PlayerInput, playerData.Get<MoveMode>(GeneratedDataKey.DefaultMoveMode));
         AssertEqual("snapshot name", "鱼人", data.Get<string>(GeneratedDataKey.Name));
         AssertEqual("snapshot team", Team.Enemy, data.Get<Team>(GeneratedDataKey.Team));
         AssertEqual("snapshot exp reward", 2, data.Get<int>(GeneratedDataKey.ExpReward));
+        AssertEqual("snapshot enemy default move mode", MoveMode.AIControlled, data.Get<MoveMode>(GeneratedDataKey.DefaultMoveMode));
     }
 
-    private void RuntimeDataRecordQuery_ShouldQueryByTableIdAndName()
+    private void RuntimeDataRecordQuery_ShouldQueryByTableIdAndDebugDisplayName()
     {
         var query = new RuntimeDataRecordQuery(Bootstrap.Snapshot);
 
         AssertEqual("query enemy count", 2, query.GetRecords("unit.enemy").Count);
         AssertEqual("query by id", "enemy.yuren", query.GetRequired("unit.enemy", "enemy.yuren").Id);
-        AssertEqual("query by name", "enemy.yuren", query.GetRequiredByName("unit.enemy", "鱼人").Id);
+        AssertEqual("query by debug display name", "enemy.yuren", query.GetRequiredByDisplayNameForDebug("unit.enemy", "鱼人").Id);
         AssertThrowsMessage<KeyNotFoundException>(
             "query missing fails fast",
             () => query.GetRequired("unit.enemy", "enemy.missing"),
             "unit.enemy/enemy.missing");
+    }
+
+    private void RuntimeDataRecordQuery_ShouldExposeDisplayNameOnlyAsDebugHelper()
+    {
+        AssertTrue(
+            "display name debug helper exists",
+            typeof(RuntimeDataRecordQuery).GetMethod("GetRequiredByDisplayNameForDebug") != null);
+        AssertTrue(
+            "old display name method removed",
+            typeof(RuntimeDataRecordQuery).GetMethod("GetRequiredByName") == null);
     }
 
     private void RuntimeDataRecordProjection_ShouldBuildTypedViews()
@@ -256,6 +272,22 @@ public partial class DataSnapshotApplyTestScene : DataSceneTestBase
             "projection missing field",
             () => RuntimeDataRecordProjection.ToUnitSpawnDefinition(record),
             "unit.enemy/enemy.invalid");
+    }
+
+    private void RuntimeDataRecordProjection_ShouldReportWrongFieldType()
+    {
+        var query = new RuntimeDataRecordQuery(Bootstrap.Snapshot);
+        var source = query.GetRequired("unit.enemy", "enemy.yuren");
+        var fields = new Dictionary<string, RuntimeDataFieldDto>(source.Fields, StringComparer.Ordinal)
+        {
+            [GeneratedDataKey.SpawnInterval.StableKey] = new() { Type = "string", Value = "2.0" }
+        };
+        var record = source with { Fields = fields };
+
+        AssertThrowsMessage<InvalidOperationException>(
+            "projection wrong field type",
+            () => RuntimeDataRecordProjection.ToUnitSpawnDefinition(record),
+            GeneratedDataKey.SpawnInterval.StableKey);
     }
 
 }

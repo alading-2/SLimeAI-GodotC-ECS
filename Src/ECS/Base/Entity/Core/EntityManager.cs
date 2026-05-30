@@ -19,7 +19,7 @@ public readonly record struct EntitySpawnConfig
         ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively;
     }
 
-    /// <summary>局部运行参数；只用于视觉覆盖等非事实源参数，不用于推断 snapshot record。</summary>
+    /// <summary>局部运行参数；不用于 Data stable key 反射或 snapshot record 推断。</summary>
     public required object Config { get; init; }
 
     /// <summary>descriptor-first Data runtime 启动器（可选；未设置时使用仓库默认 snapshot）</summary>
@@ -46,7 +46,7 @@ public readonly record struct EntitySpawnConfig
     /// <summary>初始旋转角度（度，可选，仅对 Node2D 生效；2D 下 0=右、90=下、180=左，正值顺时针）</summary>
     public float? Rotation { get; init; }
 
-    /// <summary>运行时视觉场景覆盖（可选；优先级高于 Config.VisualScenePath）</summary>
+    /// <summary>运行时视觉场景覆盖（可选；优先级高于 runtime snapshot record）</summary>
     public PackedScene? VisualSceneOverride { get; init; }
 
     /// <summary>父实体/归属者（可选；填写后可在 Spawn 阶段统一补关系）</summary>
@@ -213,7 +213,7 @@ public static partial class EntityManager
         string id = entity.GetInstanceId().ToString();
 
         // 2. 数据注入（必须显式使用 runtime snapshot record）
-        if (!ApplySpawnData(entity, config, id))
+        if (!ApplySpawnData(entity, config, id, out var runtimeDataRecord))
         {
             Destroy(entity);
             return null;
@@ -222,7 +222,7 @@ public static partial class EntityManager
         // 3. 自动加载 VisualScene (如有)
         InjectVisualScene(
             entity, // 实体节点
-            config.Config, // 配置资源
+            runtimeDataRecord, // snapshot record
             config.VisualSceneOverride // 运行时视觉覆盖
         );
 
@@ -274,12 +274,13 @@ public static partial class EntityManager
     private static bool ApplySpawnData<T>(
         T entity, // 实体节点
         EntitySpawnConfig config, // 生成配置
-        string entityId // 实体实例 id
+        string entityId, // 实体实例 id
+        out RuntimeDataRecordDto record // 已应用的 snapshot record
     ) where T : Node, IEntity
     {
+        record = null!;
         var bootstrap = config.RuntimeDataBootstrap ?? DataRuntimeBootstrap.Default;
 
-        RuntimeDataRecordDto record;
         if (config.RuntimeDataRecord != null)
         {
             record = config.RuntimeDataRecord;
@@ -340,34 +341,19 @@ public static partial class EntityManager
     /// <summary>
     /// 自动加载 VisualScene
     /// </summary>
-    private static void InjectVisualScene(Node entity, object config, PackedScene? visualSceneOverride = null)
+    private static void InjectVisualScene(Node entity, RuntimeDataRecordDto record, PackedScene? visualSceneOverride = null)
     {
         PackedScene? scene = visualSceneOverride;
 
-        // 显式覆盖优先，其次回退到配置对象上的 VisualScenePath 字符串路径。
+        // 显式覆盖优先，其次只读取 runtime snapshot record。
         if (scene == null)
         {
-            if (config is RuntimeDataRecordDto record
-                && TryReadRecordString(record, GeneratedDataKey.VisualScenePath.StableKey, out var recordPath)
+            if (TryReadRecordString(record, GeneratedDataKey.VisualScenePath.StableKey, out var recordPath)
                 && !string.IsNullOrWhiteSpace(recordPath))
             {
                 scene = CommonTool.LoadPackedScene(
                     recordPath, // res:// 场景路径
                     $"{entity.Name} 视觉"); // 日志用途名称
-            }
-            else
-            {
-                var prop = config.GetType().GetProperty(GeneratedDataKey.VisualScenePath.StableKey);
-                if (prop != null)
-                {
-                    var value = prop.GetValue(config);
-                    if (value is string path && !string.IsNullOrEmpty(path))
-                    {
-                        scene = CommonTool.LoadPackedScene(
-                            path, // res:// 场景路径
-                            $"{entity.Name} 视觉"); // 日志用途名称
-                    }
-                }
             }
         }
 

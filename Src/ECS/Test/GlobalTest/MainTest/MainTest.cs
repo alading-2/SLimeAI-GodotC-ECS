@@ -28,7 +28,7 @@ public partial class MainTest : Node
         // 1. 生成玩家
         _log.Info("步骤 1: 生成玩家");
         var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
-        var playerConfig = query.GetRequiredByName("unit.player", "德鲁伊");
+        var playerConfig = query.GetRequiredByDisplayNameForDebug("unit.player", "德鲁伊");
         _player = EntityManager.Spawn<PlayerEntity>(new EntitySpawnConfig
         {
             Config = playerConfig,
@@ -42,7 +42,7 @@ public partial class MainTest : Node
 
         // 1.5. 生成一个敌人用于测试单位目标选择
         _log.Info("步骤 1.5: 生成测试敌人");
-        var enemyConfig = query.GetRequiredByName("unit.enemy", "豺狼人");
+        var enemyConfig = query.GetRequiredByDisplayNameForDebug("unit.enemy", "豺狼人");
         var enemy = EntityManager.Spawn<EnemyEntity>(new EntitySpawnConfig
         {
             Config = enemyConfig,
@@ -140,7 +140,7 @@ public partial class MainTest : Node
         // 加载正式技能配置：默认使用 runtime snapshot ability record，旧 .tres 不再作为主流程。
         // 技能：冲刺 (Dash) - Charge 模式位移。
         var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
-        var dashConfig = RuntimeDataRecordProjection.ToAbilityDefinitionView(query.GetRequiredByName("ability", "冲刺"));
+        var dashConfig = RuntimeDataRecordProjection.ToAbilityDefinitionView(query.GetRequiredByDisplayNameForDebug("ability", "冲刺"));
         EntityManager.AddAbility(_player, dashConfig);
 
         _log.Info("已添加正式技能（含7种移动系新技能），等待UI自动更新");

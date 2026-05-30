@@ -259,6 +259,46 @@ for record in snapshot.get('records', []):
             errors.append(f'runtime_snapshot|{table}:{record_id}|{legacy_key}|legacy_field|deprecated snapshot field must not be emitted')
 
     fields = record.get('fields') or {}
+    required_by_table = {
+        'unit.player': (
+            'Name',
+            'Team',
+            'EntityType',
+            'DeathType',
+            'MoveSpeed',
+            'DefaultMoveMode',
+        ),
+        'unit.enemy': (
+            'Name',
+            'Team',
+            'EntityType',
+            'DeathType',
+            'MoveSpeed',
+            'DetectionRange',
+            'DefaultMoveMode',
+        ),
+        'ability': (
+            'Name',
+            'AbilityType',
+            'AbilityTriggerMode',
+            'AbilityFeatureGroup',
+            'FeatureHandlerId',
+        ),
+    }
+    expected_default_modes = {
+        'unit.player': 'PlayerInput',
+        'unit.enemy': 'AIControlled',
+    }
+    for required_key in required_by_table.get(table, ()):
+        if required_key not in fields:
+            errors.append(f'runtime_snapshot|{table}:{record_id}:{required_key}|field_key|required_missing|record completeness requires this field')
+
+    if table in expected_default_modes and 'DefaultMoveMode' in fields:
+        expected_mode = expected_default_modes[table]
+        actual_mode = str(fields['DefaultMoveMode'].get('value', ''))
+        if actual_mode != expected_mode:
+            errors.append(f'runtime_snapshot|{table}:{record_id}:DefaultMoveMode|value|expected_value|{actual_mode}!={expected_mode}')
+
     for field_key, field in fields.items():
         descriptor_type = descriptor_types.get(field_key)
         if descriptor_type is None:

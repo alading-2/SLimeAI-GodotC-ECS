@@ -42,7 +42,7 @@ namespace Slime.Test
         {
             // 默认从 runtime snapshot records 按名字获取敌人数据；旧 .tres 不再作为测试主流程。
             var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
-            _testEnemy = RuntimeDataRecordProjection.ToUnitSpawnDefinition(query.GetRequiredByName("unit.enemy", "豺狼人"));
+            _testEnemy = RuntimeDataRecordProjection.ToUnitSpawnDefinition(query.GetRequiredByDisplayNameForDebug("unit.enemy", "豺狼人"));
 
             if (_testEnemy == null) _log.Error("Failed to load test enemy data!");
 

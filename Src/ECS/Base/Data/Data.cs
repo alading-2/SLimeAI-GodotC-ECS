@@ -132,6 +132,23 @@ public class Data
     }
 
     /// <summary>
+    /// 通过类型安全句柄设置字段值，并输出结构化诊断。
+    /// </summary>
+    /// <typeparam name="T">字段值类型。</typeparam>
+    /// <param name="key">descriptor stable key 句柄。</param>
+    /// <param name="value">要设置的新值。</param>
+    /// <param name="report">写入诊断报告。</param>
+    public bool TrySet<T>(DataKey<T> key, T value, out DataWriteReport report)
+    {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.TrySet(key, value, out report);
+        }
+
+        throw CreateUnboundDataException(key.StableKey);
+    }
+
+    /// <summary>
     /// 通过类型安全句柄读取字段值。
     /// </summary>
     /// <typeparam name="T">字段值类型。</typeparam>
@@ -181,6 +198,23 @@ public class Data
     }
 
     /// <summary>
+    /// 内部入口：按 descriptor definition 写入未泛型化值，并输出结构化诊断。
+    /// </summary>
+    /// <param name="definition">字段 descriptor 定义。</param>
+    /// <param name="value">要写入的值。</param>
+    /// <param name="source">写入来源。</param>
+    /// <param name="report">写入诊断报告。</param>
+    public bool TrySetUntyped(DataDefinition definition, object? value, DataWriteSource source, out DataWriteReport report)
+    {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.TrySetUntyped(definition, value, source, out report);
+        }
+
+        throw CreateUnboundDataException(definition.StableKey);
+    }
+
+    /// <summary>
     /// 内部入口：按 stable key 写入未泛型化值。
     /// </summary>
     /// <param name="stableKey">字段 stable key。</param>
@@ -191,6 +225,23 @@ public class Data
         if (_runtimeStorage != null)
         {
             return _runtimeStorage.SetUntyped(stableKey, value, source);
+        }
+
+        throw CreateUnboundDataException(stableKey);
+    }
+
+    /// <summary>
+    /// 内部入口：按 stable key 写入未泛型化值，并输出结构化诊断。
+    /// </summary>
+    /// <param name="stableKey">字段 stable key。</param>
+    /// <param name="value">要写入的值。</param>
+    /// <param name="source">写入来源。</param>
+    /// <param name="report">写入诊断报告。</param>
+    internal bool TrySetUntyped(string stableKey, object? value, DataWriteSource source, out DataWriteReport report)
+    {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.TrySetUntyped(stableKey, value, source, out report);
         }
 
         throw CreateUnboundDataException(stableKey);
@@ -371,6 +422,19 @@ public class Data
         if (_runtimeStorage != null)
         {
             return _runtimeStorage.AddModifier(key.StableKey, modifier);
+        }
+
+        throw CreateUnboundDataException(key.StableKey);
+    }
+
+    /// <summary>
+    /// 通过类型安全句柄尝试添加字段修改器，并输出结构化诊断。
+    /// </summary>
+    public bool TryAddModifier<T>(DataKey<T> key, DataModifier modifier, out DataWriteReport report)
+    {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.TryAddModifier(key.StableKey, modifier, DataWriteSource.Runtime, out report);
         }
 
         throw CreateUnboundDataException(key.StableKey);

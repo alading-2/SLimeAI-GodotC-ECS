@@ -2,11 +2,11 @@
 
 ## 核心定位
 
-让实体按照指定轨迹稳定移动。策略只写 `DataKey.Velocity`，调度器统一执行位移、停止、碰撞筛选与生命周期收口。
+让实体按照指定轨迹稳定移动。策略只写 `GeneratedDataKey.Velocity`，调度器统一执行位移、停止、碰撞筛选与生命周期收口。
 
 ## 调用方式
 
-所有运动参数通过 `MovementParams` 一次性传入事件，不再分散写 DataKey：
+所有运动参数通过 `MovementParams` 一次性传入事件，不再分散写 generated handle：
 
 ```csharp
 entity.Events.Emit(
@@ -24,7 +24,7 @@ entity.Events.Emit(
 
 | MoveMode | 策略类 | 典型用途 | 关键 MovementParams 字段 |
 |----------|--------|----------|--------------------------|
-| `FixedDirection` | FixedDirectionStrategy | 直线飞行 | `ActionSpeed` / `MaxDistance`（先写 `DataKey.Velocity`） |
+| `FixedDirection` | FixedDirectionStrategy | 直线飞行 | `ActionSpeed` / `MaxDistance`（先写 `GeneratedDataKey.Velocity`） |
 | `TargetPoint` | TargetPointStrategy | 冲向指定坐标 | `TargetPoint`, `ReachDistance` |
 | `TargetEntity` | TargetEntityStrategy | 追踪实体 | `GeneratedDataKey.TargetNode`, `ReachDistance` |
 | `OrbitPoint` | OrbitPointStrategy | 围绕固定点环绕 | `OrbitCenter`, `OrbitRadius`, `OrbitAngularSpeed` |
@@ -35,14 +35,14 @@ entity.Events.Emit(
 | `Boomerang` | BoomerangStrategy | 双半椭圆回旋弹道 | `TargetPoint`, `GeneratedDataKey.TargetNode`, `ActionSpeed` 或 `MaxDuration`, `Boomerang*`, 可选 `Orientation` |
 | `Parabola` | ParabolaStrategy | 抛物线弹道 / 跳跃位移 | `TargetPoint` 或 `GeneratedDataKey.TargetNode`, `ParabolaApexHeight`, `ActionSpeed`, `ReachDistance` |
 | `CircularArc` | CircularArcStrategy | 单段圆弧弹道 / 侧切轨迹 | `TargetPoint` 或 `GeneratedDataKey.TargetNode`, `CircularArcRadius`, `CircularArcClockwise`, `ActionSpeed`, `ReachDistance` |
-| `AttachToHost` | AttachToHostStrategy | 附着特效 | `GeneratedDataKey.TargetNode`（+ `DataKey.EffectOffset`） |
-| `PlayerInput` | PlayerInputStrategy | 玩家常驻（DefaultMoveMode） | 无，读 `DataKey.MoveSpeed/Acceleration` |
-| `AIControlled` | AIControlledStrategy | AI 常驻（DefaultMoveMode） | 无，读 `DataKey.AIMoveDirection` 等 |
+| `AttachToHost` | AttachToHostStrategy | 附着特效 | `GeneratedDataKey.TargetNode`（+ `GeneratedDataKey.EffectOffset`） |
+| `PlayerInput` | PlayerInputStrategy | 玩家常驻（DefaultMoveMode） | 无，读 `GeneratedDataKey.MoveSpeed/Acceleration` |
+| `AIControlled` | AIControlledStrategy | AI 常驻（DefaultMoveMode） | 无，读 `GeneratedDataKey.AIMoveDirection` 等 |
 
 ## 职责分工
 
 - **业务层**：构建 `MovementParams`，触发 `MovementStarted`；命中逻辑优先写在 `MovementCollisionParams.OnCollision` / `MovementParams.OnStop`，只有旁路观察或调试时再监听 `MovementCollision` / `MovementCompleted`
-- **策略**：通过 `in MovementParams` 只读本次运动上下文，计算本帧意图写入 `DataKey.Velocity`，需要时通过 `MovementUpdateResult` 显式返回 `FacingDirection`
+- **策略**：通过 `in MovementParams` 只读本次运动上下文，计算本帧意图写入 `GeneratedDataKey.Velocity`，需要时通过 `MovementUpdateResult` 显式返回 `FacingDirection`
 - **组件**：`EntityMovementComponent` 持有 `_params` / `_elapsedTime` / `_traveledDistance`，切换策略，执行位移，消费碰撞候选，统一停止流程；`EntityOrientationComponent` 作为唯一朝向输出层，消费 `MovementFacingDirection` 并按 sink 输出到 `RootRotation` 或 `VisualFlipX`
 - **碰撞策略子模块**：`MovementCollisionPolicy` 负责过滤、去重、计数、生成 `MovementCollisionContext`
 - **停止协调子模块**：`MovementStopCoordinator` 统一决定是否发完成事件、是否销毁、切到哪个模式
@@ -62,13 +62,13 @@ entity.Events.Emit(
 - `OnStop`：统一停止回调，`MovementStopContext` 会携带 `Reason / Params / CollisionTarget / NextMode`
 - `MovementStopReason`：当前内置 `Completed / Collision / Requested / Interrupted / ComponentUnregistered`
 
-`MovementCompletedEventData` 直接携带 `ElapsedTime / TraveledDistance / Reason / CollisionTarget`，无需读 DataKey。
+`MovementCompletedEventData` 直接携带 `ElapsedTime / TraveledDistance / Reason / CollisionTarget`，无需读 generated handle。
 
 ## 朝向控制分层
 
 - `Velocity` = “本帧怎么移动”，服务于位移执行与速度分层合成
 - `FacingDirection` = “本帧朝哪看”，由策略显式返回，或退回到本帧移动意图
-- `DataKey.MovementFacingDirection` = `EntityMovementComponent` 对外发布的最终朝向意图，供 `EntityOrientationComponent` 等输出层读取
+- `GeneratedDataKey.MovementFacingDirection` = `EntityMovementComponent` 对外发布的最终朝向意图，供 `EntityOrientationComponent` 等输出层读取
 - `EntityMovementComponent` 不再直接写 `RotationDegrees/FlipH`
 - `EntityOrientationComponent.Sink = RootRotation`：最终写 root `RotationDegrees`
 - `EntityOrientationComponent.Sink = VisualFlipX`：最终写 `VisualRoot.FlipH`

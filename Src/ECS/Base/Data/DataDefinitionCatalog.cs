@@ -9,6 +9,7 @@ public sealed class DataDefinitionCatalog
     private readonly Dictionary<string, DataDefinition> _definitions = new(StringComparer.Ordinal);
     private readonly Dictionary<string, List<string>> _dependentComputedKeys = new(StringComparer.Ordinal);
     private DataComputeRegistry? _computeRegistry;
+    private bool _isFrozen;
 
     /// <summary>
     /// 绑定 computed resolver 注册表。
@@ -42,6 +43,11 @@ public sealed class DataDefinitionCatalog
     public int Count => _definitions.Count;
 
     /// <summary>
+    /// 是否已完成索引构建并冻结注册入口。
+    /// </summary>
+    public bool IsFrozen => _isFrozen;
+
+    /// <summary>
     /// 枚举已注册字段定义。
     /// </summary>
     public IReadOnlyCollection<DataDefinition> Definitions => _definitions.Values;
@@ -53,6 +59,11 @@ public sealed class DataDefinitionCatalog
     public void Register(DataDefinition definition)
     {
         ArgumentNullException.ThrowIfNull(definition);
+        if (_isFrozen)
+        {
+            throw new InvalidOperationException($"DataDefinitionCatalog 已 frozen，不能继续注册：{definition.StableKey}");
+        }
+
         if (string.IsNullOrWhiteSpace(definition.StableKey))
         {
             throw new InvalidOperationException("DataDefinition.StableKey 不能为空。");
@@ -143,6 +154,7 @@ public sealed class DataDefinitionCatalog
         }
 
         ValidateComputeCycles();
+        _isFrozen = true;
     }
 
     private void ValidateComputeCycles()

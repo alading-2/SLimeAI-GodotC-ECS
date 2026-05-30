@@ -1,4 +1,7 @@
+using Godot;
+using System;
 using System.Collections.Generic;
+using slime.data.Features;
 
 namespace Slime.Test.DataOS;
 
@@ -13,6 +16,8 @@ public partial class DataRuntimeTestScene : DataSceneTestBase
         Data_Set_ShouldWriteTypedValue();
         Data_Set_ShouldRejectUnknownKey();
         Data_Set_ShouldRejectWrongType();
+        Data_WriteDiagnostics_ShouldReportFailureCodes();
+        Data_ReferenceAndArrayContracts_ShouldNormalizeRuntimeTypes();
         Data_Set_ShouldRespectWritePolicy();
         Data_Set_ShouldApplyRangePolicy();
         Data_Set_ShouldRespectAllowedValues();
@@ -53,6 +58,86 @@ public partial class DataRuntimeTestScene : DataSceneTestBase
         var data = new Data(Bootstrap.Catalog);
         AssertFalse("wrong type rejected", data.SetUntyped("BaseHp", "not-float", DataWriteSource.Runtime));
         AssertEqual("default after wrong type", 10f, data.Get<float>(GeneratedDataKey.BaseHp));
+    }
+
+    private void Data_WriteDiagnostics_ShouldReportFailureCodes()
+    {
+        var storage = CreateRuntimeStorage(
+            Definition("Attribute.BaseHp", DataValueType.Float, 10f),
+            Definition("Attribute.LoaderOnly", DataValueType.Float, 0f, writePolicy: DataWritePolicy.LoaderOnly),
+            Definition("Attribute.RejectRange", DataValueType.Float, 0f, minValue: 0f, maxValue: 100f, rangePolicy: DataRangePolicy.RejectRuntime),
+            Definition("Attribute.Computed", DataValueType.Float, 0f, writePolicy: DataWritePolicy.ComputedReadonly),
+            Definition("Unit.Name", DataValueType.String, "Slime"));
+
+        AssertFalse("diagnostic unknown key rejected", storage.TrySetUntyped("Attribute.Missing", 1f, DataWriteSource.Runtime, out var unknown));
+        AssertEqual("diagnostic unknown code", "unknown_key", unknown.Errors[0].Code);
+        AssertEqual("diagnostic unknown key", "Attribute.Missing", unknown.Errors[0].StableKey);
+
+        AssertFalse("diagnostic wrong type rejected", storage.TrySetUntyped("Attribute.BaseHp", "not-float", DataWriteSource.Runtime, out var wrongType));
+        AssertEqual("diagnostic wrong type code", "wrong_clr_type", wrongType.Errors[0].Code);
+        AssertEqual("diagnostic wrong expected", "Float", wrongType.Errors[0].ExpectedType);
+        AssertEqual("diagnostic wrong actual", "String", wrongType.Errors[0].ActualType);
+
+        AssertFalse("diagnostic loader policy rejected", storage.TrySetUntyped("Attribute.LoaderOnly", 1f, DataWriteSource.Runtime, out var writePolicy));
+        AssertEqual("diagnostic write policy code", "write_policy_rejected", writePolicy.Errors[0].Code);
+        AssertEqual("diagnostic write policy", "LoaderOnly", writePolicy.Errors[0].Policy);
+
+        AssertFalse("diagnostic range rejected", storage.TrySetUntyped("Attribute.RejectRange", 120f, DataWriteSource.Runtime, out var rangePolicy));
+        AssertEqual("diagnostic range code", "range_policy_rejected", rangePolicy.Errors[0].Code);
+        AssertEqual("diagnostic range raw", "120", rangePolicy.Errors[0].RawValue);
+
+        AssertFalse("diagnostic computed rejected", storage.TrySetUntyped("Attribute.Computed", 1f, DataWriteSource.Runtime, out var computedPolicy));
+        AssertEqual("diagnostic computed policy code", "write_policy_rejected", computedPolicy.Errors[0].Code);
+        AssertEqual("diagnostic computed policy", "ComputedReadonly", computedPolicy.Errors[0].Policy);
+
+        AssertFalse("diagnostic modifier rejected", storage.TryAddModifier("Unit.Name", new DataModifier(ModifierType.Additive, 1f, id: "bad"), DataWriteSource.Runtime, out var modifierPolicy));
+        AssertEqual("diagnostic modifier code", "modifier_policy_rejected", modifierPolicy.Errors[0].Code);
+        AssertEqual("diagnostic modifier policy", "None", modifierPolicy.Errors[0].Policy);
+    }
+
+    private void Data_ReferenceAndArrayContracts_ShouldNormalizeRuntimeTypes()
+    {
+        var storage = CreateRuntimeStorage(
+            Definition("AvailableAnimations", DataValueType.StringArray, Array.Empty<string>()),
+            new DataDefinition
+            {
+                StableKey = "Feature.Modifiers",
+                ValueType = DataValueType.ModifierList,
+                RuntimeTypeId = "slime.data.Features.FeatureModifierEntryData[]",
+                DefaultValue = Array.Empty<FeatureModifierEntryData>(),
+                StoragePolicy = DataStoragePolicy.AuthoringBlob,
+                WritePolicy = DataWritePolicy.LoaderOnly
+            },
+            Definition("AbilityIcon", DataValueType.ObjectRef, null),
+            new DataDefinition
+            {
+                StableKey = "TargetNode",
+                ValueType = DataValueType.ObjectRef,
+                RuntimeTypeId = "Godot.Node2D",
+                DefaultValue = null,
+                StoragePolicy = DataStoragePolicy.RuntimeOnly,
+                WritePolicy = DataWritePolicy.SystemOnly
+            });
+
+        AssertTrue("json string_array accepted", storage.SetUntyped("AvailableAnimations", "[\"idle\",\"run\"]", DataWriteSource.Loader));
+        var animations = storage.Get<string[]>("AvailableAnimations");
+        AssertEqual("json string_array count", 2, animations.Length);
+        AssertEqual("json string_array value", "run", animations[1]);
+
+        AssertTrue("json modifier_list accepted", storage.SetUntyped("Feature.Modifiers", "[{\"DataKeyName\":\"BaseHp\",\"ModifierType\":0,\"Value\":5,\"Priority\":2}]", DataWriteSource.Loader));
+        var modifiers = storage.Get<FeatureModifierEntryData[]>("Feature.Modifiers");
+        AssertEqual("json modifier_list count", 1, modifiers.Length);
+        AssertEqual("json modifier key", "BaseHp", modifiers[0].DataKeyName);
+        AssertEqual("json modifier type", ModifierType.Additive, modifiers[0].ModifierType);
+
+        AssertTrue("resource ref string accepted", storage.SetUntyped("AbilityIcon", "res://icon.png", DataWriteSource.Loader));
+        AssertEqual("resource ref path", "res://icon.png", storage.Get<ResourceRef>("AbilityIcon").Path);
+
+        using var node = new Node2D();
+        AssertFalse("node ref rejects string", storage.TrySetUntyped("TargetNode", "res://bad.tscn", DataWriteSource.System, out var nodeString));
+        AssertEqual("node ref string code", "wrong_clr_type", nodeString.Errors[0].Code);
+        AssertTrue("node ref accepts node", storage.SetUntyped("TargetNode", node, DataWriteSource.System));
+        AssertEqual("node ref value", node, storage.Get<Node2D>("TargetNode"));
     }
 
     private void Data_Set_ShouldRespectWritePolicy()

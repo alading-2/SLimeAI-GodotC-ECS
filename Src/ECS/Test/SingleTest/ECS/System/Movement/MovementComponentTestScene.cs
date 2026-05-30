@@ -67,6 +67,8 @@ namespace Slime.Test
 
         private PlayerEntity? _player;
         private EnemyEntity? _enemy;
+        private bool _sddSmokeMode;
+        private double _sddSmokeElapsed;
 
         private OptionButton? _presetOption;
         private Label? _summaryLabel;
@@ -90,6 +92,7 @@ namespace Slime.Test
 
         public override void _Ready()
         {
+            _sddSmokeMode = HasCommandLineFlag("--sdd-smoke");
             GlobalEventBus.TriggerGameStart();
             _demoRoot = new Node2D();
             _demoRoot.Name = "DemoRoot";
@@ -135,6 +138,17 @@ namespace Slime.Test
 
         public override void _Process(double delta)
         {
+            if (_sddSmokeMode)
+            {
+                _sddSmokeElapsed += delta;
+                if (_sddSmokeElapsed >= 1.0d)
+                {
+                    GD.Print("PASS MovementComponentTestScene.sdd smoke");
+                    GetTree().Quit(0);
+                    return;
+                }
+            }
+
             float t = Time.GetTicksMsec() / 1000f;
 
             if (_chargeTargetMarker != null)
@@ -264,7 +278,7 @@ namespace Slime.Test
         private void SpawnUnits()
         {
             var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
-            var playerConfig = query.GetRequiredByName("unit.player", "德鲁伊");
+            var playerConfig = query.GetRequiredByDisplayNameForDebug("unit.player", "德鲁伊");
             if (playerConfig != null)
             {
                 var playerSpawn = new EntitySpawnConfig
@@ -282,7 +296,7 @@ namespace Slime.Test
                 }
             }
 
-            var enemyConfig = query.GetRequiredByName("unit.enemy", "豺狼人");
+            var enemyConfig = query.GetRequiredByDisplayNameForDebug("unit.enemy", "豺狼人");
             if (enemyConfig != null)
             {
                 var enemySpawn = new EntitySpawnConfig
@@ -334,6 +348,7 @@ namespace Slime.Test
             entity.DisplayName = demo.Name;
             entity.DrawColor = demo.Color;
             entity.GlobalPosition = GetSpawnPosition(id);
+            entity.Data.Set(GeneratedDataKey.DefaultMoveMode, BuildMode(id));
             _demoRoot.AddChild(entity);
             demo.Entity = entity;
 
@@ -662,6 +677,27 @@ namespace Slime.Test
             row.AddChild(spin);
             root.AddChild(row);
             return spin;
+        }
+
+        private static bool HasCommandLineFlag(string flag)
+        {
+            foreach (var argument in OS.GetCmdlineUserArgs())
+            {
+                if (argument == flag)
+                {
+                    return true;
+                }
+            }
+
+            foreach (var argument in OS.GetCmdlineArgs())
+            {
+                if (argument == flag)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void DrawGrid()

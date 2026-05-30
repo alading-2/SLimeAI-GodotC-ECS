@@ -1,9 +1,9 @@
 {
   "schemaVersion": 2,
-  "generatedAtUtc": "2026-05-29T23:49:48Z",
+  "generatedAtUtc": "2026-05-30T08:06:01Z",
   "manifest": {
     "schemaVersion": 2,
-    "generatedAtUtc": "2026-05-29T23:49:48Z",
+    "generatedAtUtc": "2026-05-30T08:06:01Z",
     "profile": "slimeainew",
     "catalogId": "slimeainew",
     "source": "DataOS/Authoring/slimeainew.authoring.db",
@@ -649,7 +649,7 @@
       "type": "float",
       "valueType": "float",
       "runtimeTypeId": "",
-      "defaultValue": 100.0,
+      "defaultValue": 0.0,
       "storagePolicy": "persisted",
       "writePolicy": "read_write",
       "rangePolicy": "validate",
@@ -659,8 +659,8 @@
       "dependencies": [],
       "computeParams": {},
       "allowedValues": [],
-      "displayName": "技能伤害百分比",
-      "description": "技能伤害百分比",
+      "displayName": "技能伤害加成",
+      "description": "技能伤害百分比加成",
       "uiGroup": "Ability",
       "resetGroup": "",
       "unit": "",
@@ -9117,6 +9117,10 @@
           "type": "float",
           "value": 500.0
         },
+        "DefaultMoveMode": {
+          "type": "enum",
+          "value": "AIControlled"
+        },
         "IsEnableSpawnRule": {
           "type": "bool",
           "value": true
@@ -9248,6 +9252,10 @@
           "type": "float",
           "value": 500.0
         },
+        "DefaultMoveMode": {
+          "type": "enum",
+          "value": "AIControlled"
+        },
         "IsEnableSpawnRule": {
           "type": "bool",
           "value": true
@@ -9366,6 +9374,10 @@
         "MoveSpeed": {
           "type": "float",
           "value": 200.0
+        },
+        "DefaultMoveMode": {
+          "type": "enum",
+          "value": "PlayerInput"
         },
         "DodgeChance": {
           "type": "float",

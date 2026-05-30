@@ -166,7 +166,7 @@ public partial class SpawnTestModule : TestModuleBase
     }
 
     /// <summary>
-    /// 解析敌人配置：按 runtime snapshot unit.enemy name/id 获取。
+    /// 解析敌人配置：按 runtime snapshot unit.enemy table/id 获取。
     /// </summary>
     /// <param name="entry">资源选择器条目。</param>
     /// <param name="definition">敌人生成配置。</param>
@@ -176,26 +176,16 @@ public partial class SpawnTestModule : TestModuleBase
         var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
         try
         {
-            var record = query.GetRequiredByName("unit.enemy", entry.DisplayName);
+            var record = query.GetRequired("unit.enemy", entry.ResourceKey);
             definition = RuntimeDataRecordProjection.ToUnitSpawnDefinition(record);
             error = string.Empty;
             return true;
         }
-        catch (Exception byNameError)
+        catch (Exception ex)
         {
-            try
-            {
-                var record = query.GetRequired("unit.enemy", entry.ResourceKey);
-                definition = RuntimeDataRecordProjection.ToUnitSpawnDefinition(record);
-                error = string.Empty;
-                return true;
-            }
-            catch (Exception byIdError)
-            {
-                definition = default!;
-                error = $"{entry.DisplayName}/{entry.ResourceKey}: {byNameError.Message}; {byIdError.Message}";
-                return false;
-            }
+            definition = default!;
+            error = $"{entry.DisplayName}/{entry.ResourceKey}: {ex.Message}";
+            return false;
         }
     }
 

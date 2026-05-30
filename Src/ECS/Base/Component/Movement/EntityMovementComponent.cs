@@ -95,6 +95,10 @@ public partial class EntityMovementComponent : Node, IComponent
         {
             SwitchStrategy(new MovementParams { Mode = defaultMode });
         }
+        else
+        {
+            _log.Error($"[{entity.Name}] 缺少注册期 DefaultMoveMode，Movement 不会创建默认策略。请检查 runtime snapshot record completeness。");
+        }
 
         _log.Debug($"[{entity.Name}] EntityMovementComponent 注册完成 (CharacterBody2D={_body != null}, 默认模式={defaultMode})");
     }

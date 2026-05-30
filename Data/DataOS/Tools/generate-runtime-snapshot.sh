@@ -33,115 +33,117 @@ enabled_capabilities AS (
 ),
 field_rows AS (
     SELECT 'PlayerData' AS legacy_table, 'unit.player' AS table_id, id AS record_id, name AS display_name,
-           'Name' AS field_key, 'string' AS value_type, name AS value_text, 'unit_player' AS source_table, id AS source_row_id, 'name' AS source_column
+           'Name' AS field_key,  name AS value_text, 'unit_player' AS source_table, id AS source_row_id, 'name' AS source_column
     FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'Team', 'enum', 'Player', 'unit_player', id, 'team' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'EntityType', 'enum', entity_type, 'unit_player', id, 'entity_type' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'DeathType', 'enum', death_type, 'unit_player', id, 'death_type' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'VisualScenePath', 'string', visual_scene_path, 'unit_player', id, 'visual_scene_path' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'HealthBarHeight', 'float', CAST(health_bar_height AS TEXT), 'unit_player', id, 'health_bar_height' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'BaseHp', 'float', CAST(max_hp AS TEXT), 'unit_player', id, 'max_hp' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'BaseHpRegen', 'float', CAST(base_hp_regen AS TEXT), 'unit_player', id, 'base_hp_regen' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'LifeSteal', 'float', CAST(life_steal AS TEXT), 'unit_player', id, 'life_steal' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'BaseAttack', 'float', CAST(base_attack AS TEXT), 'unit_player', id, 'base_attack' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'BaseAttackSpeed', 'float', CAST(base_attack_speed AS TEXT), 'unit_player', id, 'base_attack_speed' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'AttackRange', 'float', CAST(attack_range AS TEXT), 'unit_player', id, 'attack_range' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'CritRate', 'float', CAST(crit_rate AS TEXT), 'unit_player', id, 'crit_rate' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'CritDamage', 'float', CAST(crit_damage AS TEXT), 'unit_player', id, 'crit_damage' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'Penetration', 'float', CAST(penetration AS TEXT), 'unit_player', id, 'penetration' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'BaseDefense', 'float', CAST(base_defense AS TEXT), 'unit_player', id, 'base_defense' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'DamageReduction', 'float', CAST(damage_reduction AS TEXT), 'unit_player', id, 'damage_reduction' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'MoveSpeed', 'float', CAST(move_speed AS TEXT), 'unit_player', id, 'move_speed' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'DodgeChance', 'float', CAST(dodge_chance AS TEXT), 'unit_player', id, 'dodge_chance' FROM unit_player
-    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'PickupRange', 'float', CAST(pickup_range AS TEXT), 'unit_player', id, 'pickup_range' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'Team',  'Player', 'unit_player', id, 'team' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'EntityType',  entity_type, 'unit_player', id, 'entity_type' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'DeathType',  death_type, 'unit_player', id, 'death_type' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'VisualScenePath',  visual_scene_path, 'unit_player', id, 'visual_scene_path' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'HealthBarHeight',  CAST(health_bar_height AS TEXT), 'unit_player', id, 'health_bar_height' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'BaseHp',  CAST(max_hp AS TEXT), 'unit_player', id, 'max_hp' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'BaseHpRegen',  CAST(base_hp_regen AS TEXT), 'unit_player', id, 'base_hp_regen' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'LifeSteal',  CAST(life_steal AS TEXT), 'unit_player', id, 'life_steal' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'BaseAttack',  CAST(base_attack AS TEXT), 'unit_player', id, 'base_attack' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'BaseAttackSpeed',  CAST(base_attack_speed AS TEXT), 'unit_player', id, 'base_attack_speed' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'AttackRange',  CAST(attack_range AS TEXT), 'unit_player', id, 'attack_range' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'CritRate',  CAST(crit_rate AS TEXT), 'unit_player', id, 'crit_rate' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'CritDamage',  CAST(crit_damage AS TEXT), 'unit_player', id, 'crit_damage' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'Penetration',  CAST(penetration AS TEXT), 'unit_player', id, 'penetration' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'BaseDefense',  CAST(base_defense AS TEXT), 'unit_player', id, 'base_defense' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'DamageReduction',  CAST(damage_reduction AS TEXT), 'unit_player', id, 'damage_reduction' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'MoveSpeed',  CAST(move_speed AS TEXT), 'unit_player', id, 'move_speed' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'DefaultMoveMode',  'PlayerInput', 'unit_player', id, 'sdd0022_default_move_mode' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'DodgeChance',  CAST(dodge_chance AS TEXT), 'unit_player', id, 'dodge_chance' FROM unit_player
+    UNION ALL SELECT 'PlayerData', 'unit.player', id, name, 'PickupRange',  CAST(pickup_range AS TEXT), 'unit_player', id, 'pickup_range' FROM unit_player
 
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'Name', 'string', name, 'unit_enemy', id, 'name' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'Team', 'enum', 'Enemy', 'unit_enemy', id, 'team' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'EntityType', 'enum', entity_type, 'unit_enemy', id, 'entity_type' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'DeathType', 'enum', death_type, 'unit_enemy', id, 'death_type' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'VisualScenePath', 'string', visual_scene_path, 'unit_enemy', id, 'visual_scene_path' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'HealthBarHeight', 'float', CAST(health_bar_height AS TEXT), 'unit_enemy', id, 'health_bar_height' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'BaseHp', 'float', CAST(max_hp AS TEXT), 'unit_enemy', id, 'max_hp' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'BaseHpRegen', 'float', CAST(base_hp_regen AS TEXT), 'unit_enemy', id, 'base_hp_regen' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'LifeSteal', 'float', CAST(life_steal AS TEXT), 'unit_enemy', id, 'life_steal' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'BaseAttack', 'float', CAST(base_attack AS TEXT), 'unit_enemy', id, 'base_attack' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'BaseAttackSpeed', 'float', CAST(base_attack_speed AS TEXT), 'unit_enemy', id, 'base_attack_speed' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'AttackRange', 'float', CAST(attack_range AS TEXT), 'unit_enemy', id, 'attack_range' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'CritRate', 'float', CAST(crit_rate AS TEXT), 'unit_enemy', id, 'crit_rate' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'CritDamage', 'float', CAST(crit_damage AS TEXT), 'unit_enemy', id, 'crit_damage' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'Penetration', 'float', CAST(penetration AS TEXT), 'unit_enemy', id, 'penetration' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'BaseDefense', 'float', CAST(base_defense AS TEXT), 'unit_enemy', id, 'base_defense' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'DamageReduction', 'float', CAST(damage_reduction AS TEXT), 'unit_enemy', id, 'damage_reduction' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'MoveSpeed', 'float', CAST(move_speed AS TEXT), 'unit_enemy', id, 'move_speed' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'DodgeChance', 'float', CAST(dodge_chance AS TEXT), 'unit_enemy', id, 'dodge_chance' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'ExpReward', 'int', CAST(exp_reward AS TEXT), 'unit_enemy', id, 'exp_reward' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'DetectionRange', 'float', CAST(detection_range AS TEXT), 'unit_enemy', id, 'detection_range' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'IsEnableSpawnRule', 'bool', CASE spawn_is_enabled WHEN 1 THEN 'true' ELSE 'false' END, 'unit_enemy', id, 'spawn_is_enabled' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SpawnStrategy', 'enum', spawn_position_strategy, 'unit_enemy', id, 'spawn_position_strategy' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SpawnMinWave', 'int', CAST(spawn_min_wave AS TEXT), 'unit_enemy', id, 'spawn_min_wave' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SpawnMaxWave', 'int', CAST(spawn_max_wave AS TEXT), 'unit_enemy', id, 'spawn_max_wave' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SpawnInterval', 'float', CAST(spawn_interval AS TEXT), 'unit_enemy', id, 'spawn_interval' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SpawnMaxCountPerWave', 'int', CAST(spawn_max_count_per_wave AS TEXT), 'unit_enemy', id, 'spawn_max_count_per_wave' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SingleSpawnCount', 'int', CAST(spawn_single_count AS TEXT), 'unit_enemy', id, 'spawn_single_count' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SingleSpawnVariance', 'int', CAST(spawn_single_variance AS TEXT), 'unit_enemy', id, 'spawn_single_variance' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SpawnStartDelay', 'float', CAST(spawn_start_delay AS TEXT), 'unit_enemy', id, 'spawn_start_delay' FROM unit_enemy
-    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SpawnWeight', 'int', CAST(spawn_weight AS TEXT), 'unit_enemy', id, 'spawn_weight' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'Name',  name, 'unit_enemy', id, 'name' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'Team',  'Enemy', 'unit_enemy', id, 'team' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'EntityType',  entity_type, 'unit_enemy', id, 'entity_type' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'DeathType',  death_type, 'unit_enemy', id, 'death_type' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'VisualScenePath',  visual_scene_path, 'unit_enemy', id, 'visual_scene_path' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'HealthBarHeight',  CAST(health_bar_height AS TEXT), 'unit_enemy', id, 'health_bar_height' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'BaseHp',  CAST(max_hp AS TEXT), 'unit_enemy', id, 'max_hp' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'BaseHpRegen',  CAST(base_hp_regen AS TEXT), 'unit_enemy', id, 'base_hp_regen' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'LifeSteal',  CAST(life_steal AS TEXT), 'unit_enemy', id, 'life_steal' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'BaseAttack',  CAST(base_attack AS TEXT), 'unit_enemy', id, 'base_attack' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'BaseAttackSpeed',  CAST(base_attack_speed AS TEXT), 'unit_enemy', id, 'base_attack_speed' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'AttackRange',  CAST(attack_range AS TEXT), 'unit_enemy', id, 'attack_range' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'CritRate',  CAST(crit_rate AS TEXT), 'unit_enemy', id, 'crit_rate' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'CritDamage',  CAST(crit_damage AS TEXT), 'unit_enemy', id, 'crit_damage' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'Penetration',  CAST(penetration AS TEXT), 'unit_enemy', id, 'penetration' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'BaseDefense',  CAST(base_defense AS TEXT), 'unit_enemy', id, 'base_defense' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'DamageReduction',  CAST(damage_reduction AS TEXT), 'unit_enemy', id, 'damage_reduction' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'MoveSpeed',  CAST(move_speed AS TEXT), 'unit_enemy', id, 'move_speed' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'DodgeChance',  CAST(dodge_chance AS TEXT), 'unit_enemy', id, 'dodge_chance' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'ExpReward',  CAST(exp_reward AS TEXT), 'unit_enemy', id, 'exp_reward' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'DetectionRange',  CAST(detection_range AS TEXT), 'unit_enemy', id, 'detection_range' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'DefaultMoveMode',  'AIControlled', 'unit_enemy', id, 'sdd0022_default_move_mode' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'IsEnableSpawnRule',  CASE spawn_is_enabled WHEN 1 THEN 'true' ELSE 'false' END, 'unit_enemy', id, 'spawn_is_enabled' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SpawnStrategy',  spawn_position_strategy, 'unit_enemy', id, 'spawn_position_strategy' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SpawnMinWave',  CAST(spawn_min_wave AS TEXT), 'unit_enemy', id, 'spawn_min_wave' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SpawnMaxWave',  CAST(spawn_max_wave AS TEXT), 'unit_enemy', id, 'spawn_max_wave' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SpawnInterval',  CAST(spawn_interval AS TEXT), 'unit_enemy', id, 'spawn_interval' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SpawnMaxCountPerWave',  CAST(spawn_max_count_per_wave AS TEXT), 'unit_enemy', id, 'spawn_max_count_per_wave' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SingleSpawnCount',  CAST(spawn_single_count AS TEXT), 'unit_enemy', id, 'spawn_single_count' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SingleSpawnVariance',  CAST(spawn_single_variance AS TEXT), 'unit_enemy', id, 'spawn_single_variance' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SpawnStartDelay',  CAST(spawn_start_delay AS TEXT), 'unit_enemy', id, 'spawn_start_delay' FROM unit_enemy
+    UNION ALL SELECT 'EnemyData', 'unit.enemy', id, name, 'SpawnWeight',  CAST(spawn_weight AS TEXT), 'unit_enemy', id, 'spawn_weight' FROM unit_enemy
 
-    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'Name', 'string', name, 'unit_targeting_indicator', id, 'name' FROM unit_targeting_indicator
-    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'Team', 'enum', 'Neutral', 'unit_targeting_indicator', id, 'team' FROM unit_targeting_indicator
-    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'EntityType', 'enum', entity_type, 'unit_targeting_indicator', id, 'entity_type' FROM unit_targeting_indicator
-    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'VisualScenePath', 'string', visual_scene_path, 'unit_targeting_indicator', id, 'visual_scene_path' FROM unit_targeting_indicator
-    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'IsShowHealthBar', 'bool', CASE is_show_health_bar WHEN 1 THEN 'true' ELSE 'false' END, 'unit_targeting_indicator', id, 'is_show_health_bar' FROM unit_targeting_indicator
-    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'BaseHp', 'float', CAST(max_hp AS TEXT), 'unit_targeting_indicator', id, 'max_hp' FROM unit_targeting_indicator
-    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'IsInvulnerable', 'bool', CASE is_invulnerable WHEN 1 THEN 'true' ELSE 'false' END, 'unit_targeting_indicator', id, 'is_invulnerable' FROM unit_targeting_indicator
-    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'MoveSpeed', 'float', CAST(move_speed AS TEXT), 'unit_targeting_indicator', id, 'move_speed' FROM unit_targeting_indicator
-    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'BaseAttackSpeed', 'float', '0', 'unit_targeting_indicator', id, 'base_attack_speed' FROM unit_targeting_indicator
+    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'Name',  name, 'unit_targeting_indicator', id, 'name' FROM unit_targeting_indicator
+    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'Team',  'Neutral', 'unit_targeting_indicator', id, 'team' FROM unit_targeting_indicator
+    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'EntityType',  entity_type, 'unit_targeting_indicator', id, 'entity_type' FROM unit_targeting_indicator
+    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'VisualScenePath',  visual_scene_path, 'unit_targeting_indicator', id, 'visual_scene_path' FROM unit_targeting_indicator
+    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'IsShowHealthBar',  CASE is_show_health_bar WHEN 1 THEN 'true' ELSE 'false' END, 'unit_targeting_indicator', id, 'is_show_health_bar' FROM unit_targeting_indicator
+    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'BaseHp',  CAST(max_hp AS TEXT), 'unit_targeting_indicator', id, 'max_hp' FROM unit_targeting_indicator
+    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'IsInvulnerable',  CASE is_invulnerable WHEN 1 THEN 'true' ELSE 'false' END, 'unit_targeting_indicator', id, 'is_invulnerable' FROM unit_targeting_indicator
+    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'MoveSpeed',  CAST(move_speed AS TEXT), 'unit_targeting_indicator', id, 'move_speed' FROM unit_targeting_indicator
+    UNION ALL SELECT 'TargetingIndicatorData', 'unit.targeting_indicator', id, name, 'BaseAttackSpeed',  '0', 'unit_targeting_indicator', id, 'base_attack_speed' FROM unit_targeting_indicator
 
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'Name', 'string', name, 'ability', id, 'name' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityFeatureGroup', 'string', feature_group_id, 'ability', id, 'feature_group_id' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'FeatureHandlerId', 'string', feature_handler_id, 'ability', id, 'feature_handler_id' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'Description', 'string', description, 'ability', id, 'description' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityIcon', 'string', icon_path, 'ability', id, 'icon_path' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'EntityType', 'enum', entity_type, 'ability', id, 'entity_type' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityType', 'enum', ability_type, 'ability', id, 'ability_type' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityTriggerMode', 'enum', trigger_mode, 'ability', id, 'trigger_mode' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityCostType', 'enum', cost_type, 'ability', id, 'cost_type' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityCostAmount', 'float', CAST(cost_amount AS TEXT), 'ability', id, 'cost_amount' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityCooldown', 'float', CAST(cooldown AS TEXT), 'ability', id, 'cooldown' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityDamage', 'float', CAST(damage AS TEXT), 'ability', id, 'damage' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'IsAbilityUsesCharges', 'bool', CASE uses_charges WHEN 1 THEN 'true' ELSE 'false' END, 'ability', id, 'uses_charges' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityMaxCharges', 'int', CAST(max_charges AS TEXT), 'ability', id, 'max_charges' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityChargeTime', 'float', CAST(charge_time AS TEXT), 'ability', id, 'charge_time' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityTargetSelection', 'enum', target_selection, 'ability', id, 'target_selection' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityCastRange', 'float', CAST(cast_range AS TEXT), 'ability', id, 'cast_range' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityEffectRadius', 'float', CAST(effect_radius AS TEXT), 'ability', id, 'effect_radius' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'EffectScene', 'string', COALESCE(effect_scene_path, ''), 'ability', id, 'effect_scene_path' FROM ability
-    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'ProjectileScene', 'string', COALESCE(projectile_scene_path, ''), 'ability', id, 'projectile_scene_path' FROM ability
-    UNION ALL SELECT 'ChainAbilityData', 'ability', id, name, 'AbilityChainCount', 'int', CAST(chain_count AS TEXT), 'ability', id, 'chain_count' FROM ability WHERE chain_count IS NOT NULL
-    UNION ALL SELECT 'ChainAbilityData', 'ability', id, name, 'AbilityChainRange', 'float', CAST(chain_range AS TEXT), 'ability', id, 'chain_range' FROM ability WHERE chain_range IS NOT NULL
-    UNION ALL SELECT 'ChainAbilityData', 'ability', id, name, 'AbilityChainDelay', 'float', CAST(chain_delay AS TEXT), 'ability', id, 'chain_delay' FROM ability WHERE chain_delay IS NOT NULL
-    UNION ALL SELECT 'ChainAbilityData', 'ability', id, name, 'AbilityChainDamageDecay', 'float', CAST(chain_damage_decay AS TEXT), 'ability', id, 'chain_damage_decay' FROM ability WHERE chain_damage_decay IS NOT NULL
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'Name',  name, 'ability', id, 'name' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityFeatureGroup',  feature_group_id, 'ability', id, 'feature_group_id' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'FeatureHandlerId',  feature_handler_id, 'ability', id, 'feature_handler_id' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'Description',  description, 'ability', id, 'description' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityIcon',  icon_path, 'ability', id, 'icon_path' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'EntityType',  entity_type, 'ability', id, 'entity_type' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityType',  ability_type, 'ability', id, 'ability_type' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityTriggerMode',  trigger_mode, 'ability', id, 'trigger_mode' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityCostType',  cost_type, 'ability', id, 'cost_type' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityCostAmount',  CAST(cost_amount AS TEXT), 'ability', id, 'cost_amount' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityCooldown',  CAST(cooldown AS TEXT), 'ability', id, 'cooldown' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityDamage',  CAST(damage AS TEXT), 'ability', id, 'damage' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'IsAbilityUsesCharges',  CASE uses_charges WHEN 1 THEN 'true' ELSE 'false' END, 'ability', id, 'uses_charges' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityMaxCharges',  CAST(max_charges AS TEXT), 'ability', id, 'max_charges' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityChargeTime',  CAST(charge_time AS TEXT), 'ability', id, 'charge_time' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityTargetSelection',  target_selection, 'ability', id, 'target_selection' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityCastRange',  CAST(cast_range AS TEXT), 'ability', id, 'cast_range' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'AbilityEffectRadius',  CAST(effect_radius AS TEXT), 'ability', id, 'effect_radius' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'EffectScene',  COALESCE(effect_scene_path, ''), 'ability', id, 'effect_scene_path' FROM ability
+    UNION ALL SELECT CASE WHEN chain_count IS NULL THEN 'AbilityData' ELSE 'ChainAbilityData' END, 'ability', id, name, 'ProjectileScene',  COALESCE(projectile_scene_path, ''), 'ability', id, 'projectile_scene_path' FROM ability
+    UNION ALL SELECT 'ChainAbilityData', 'ability', id, name, 'AbilityChainCount',  CAST(chain_count AS TEXT), 'ability', id, 'chain_count' FROM ability WHERE chain_count IS NOT NULL
+    UNION ALL SELECT 'ChainAbilityData', 'ability', id, name, 'AbilityChainRange',  CAST(chain_range AS TEXT), 'ability', id, 'chain_range' FROM ability WHERE chain_range IS NOT NULL
+    UNION ALL SELECT 'ChainAbilityData', 'ability', id, name, 'AbilityChainDelay',  CAST(chain_delay AS TEXT), 'ability', id, 'chain_delay' FROM ability WHERE chain_delay IS NOT NULL
+    UNION ALL SELECT 'ChainAbilityData', 'ability', id, name, 'AbilityChainDamageDecay',  CAST(chain_damage_decay AS TEXT), 'ability', id, 'chain_damage_decay' FROM ability WHERE chain_damage_decay IS NOT NULL
 
-    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'SystemId', 'string', system_id, 'system_config', id, 'system_id' FROM system_config
-    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'MountGroup', 'string', mount_group, 'system_config', id, 'mount_group' FROM system_config
-    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'Tags', 'string', tags, 'system_config', id, 'tags' FROM system_config
-    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'Required', 'bool', CASE required WHEN 1 THEN 'true' ELSE 'false' END, 'system_config', id, 'required' FROM system_config
-    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'AutoLoad', 'bool', CASE auto_load WHEN 1 THEN 'true' ELSE 'false' END, 'system_config', id, 'auto_load' FROM system_config
-    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'StartEnabled', 'bool', CASE start_enabled WHEN 1 THEN 'true' ELSE 'false' END, 'system_config', id, 'start_enabled' FROM system_config
-    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'Priority', 'int', CAST(priority AS TEXT), 'system_config', id, 'priority' FROM system_config
-    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'AllowedFlowStates', 'string', allowed_flow_states, 'system_config', id, 'allowed_flow_states' FROM system_config
-    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'RequiredOverlays', 'string', required_overlays, 'system_config', id, 'required_overlays' FROM system_config
-    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'BlockedOverlays', 'string', blocked_overlays, 'system_config', id, 'blocked_overlays' FROM system_config
-    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'AllowedSimulationStates', 'string', allowed_simulation_states, 'system_config', id, 'allowed_simulation_states' FROM system_config
-    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'Dependencies', 'string_array', dependencies, 'system_config', id, 'dependencies' FROM system_config
-    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'Description', 'string', description, 'system_config', id, 'description' FROM system_config
+    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'SystemId',  system_id, 'system_config', id, 'system_id' FROM system_config
+    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'MountGroup',  mount_group, 'system_config', id, 'mount_group' FROM system_config
+    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'Tags',  tags, 'system_config', id, 'tags' FROM system_config
+    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'Required',  CASE required WHEN 1 THEN 'true' ELSE 'false' END, 'system_config', id, 'required' FROM system_config
+    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'AutoLoad',  CASE auto_load WHEN 1 THEN 'true' ELSE 'false' END, 'system_config', id, 'auto_load' FROM system_config
+    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'StartEnabled',  CASE start_enabled WHEN 1 THEN 'true' ELSE 'false' END, 'system_config', id, 'start_enabled' FROM system_config
+    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'Priority',  CAST(priority AS TEXT), 'system_config', id, 'priority' FROM system_config
+    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'AllowedFlowStates',  allowed_flow_states, 'system_config', id, 'allowed_flow_states' FROM system_config
+    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'RequiredOverlays',  required_overlays, 'system_config', id, 'required_overlays' FROM system_config
+    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'BlockedOverlays',  blocked_overlays, 'system_config', id, 'blocked_overlays' FROM system_config
+    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'AllowedSimulationStates',  allowed_simulation_states, 'system_config', id, 'allowed_simulation_states' FROM system_config
+    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'Dependencies',  dependencies, 'system_config', id, 'dependencies' FROM system_config
+    UNION ALL SELECT 'SystemData', 'system.config', id, system_id, 'Description',  description, 'system_config', id, 'description' FROM system_config
 
-    UNION ALL SELECT 'SystemPresetData', 'system.preset', id, preset_name, 'PresetName', 'string', preset_name, 'system_preset', id, 'preset_name' FROM system_preset
-    UNION ALL SELECT 'SystemPresetData', 'system.preset', id, preset_name, 'IsActive', 'bool', CASE is_active WHEN 1 THEN 'true' ELSE 'false' END, 'system_preset', id, 'is_active' FROM system_preset
-    UNION ALL SELECT 'SystemPresetData', 'system.preset', id, preset_name, 'EnabledTags', 'string', enabled_tags, 'system_preset', id, 'enabled_tags' FROM system_preset
-    UNION ALL SELECT 'SystemPresetData', 'system.preset', id, preset_name, 'EnabledSystemIds', 'string_array', enabled_system_ids, 'system_preset', id, 'enabled_system_ids' FROM system_preset
-    UNION ALL SELECT 'SystemPresetData', 'system.preset', id, preset_name, 'DisabledSystemIds', 'string_array', disabled_system_ids, 'system_preset', id, 'disabled_system_ids' FROM system_preset
-    UNION ALL SELECT 'SystemPresetData', 'system.preset', id, preset_name, 'Description', 'string', description, 'system_preset', id, 'description' FROM system_preset
+    UNION ALL SELECT 'SystemPresetData', 'system.preset', id, preset_name, 'PresetName',  preset_name, 'system_preset', id, 'preset_name' FROM system_preset
+    UNION ALL SELECT 'SystemPresetData', 'system.preset', id, preset_name, 'IsActive',  CASE is_active WHEN 1 THEN 'true' ELSE 'false' END, 'system_preset', id, 'is_active' FROM system_preset
+    UNION ALL SELECT 'SystemPresetData', 'system.preset', id, preset_name, 'EnabledTags',  enabled_tags, 'system_preset', id, 'enabled_tags' FROM system_preset
+    UNION ALL SELECT 'SystemPresetData', 'system.preset', id, preset_name, 'EnabledSystemIds',  enabled_system_ids, 'system_preset', id, 'enabled_system_ids' FROM system_preset
+    UNION ALL SELECT 'SystemPresetData', 'system.preset', id, preset_name, 'DisabledSystemIds',  disabled_system_ids, 'system_preset', id, 'disabled_system_ids' FROM system_preset
+    UNION ALL SELECT 'SystemPresetData', 'system.preset', id, preset_name, 'Description',  description, 'system_preset', id, 'description' FROM system_preset
 ),
 descriptor_source AS (
     SELECT

@@ -159,11 +159,11 @@ var migrated = EntityManager.Migrate<VisualPreviewEntity>(
         Profile = new EntityMigrationProfile
         {
             Name = "ProjectileToPreview", // 迁移 Profile 名称
-            ExcludeDataKeys = [DataKey.Name] // 显式排除的 DataKey
+            ExcludeDataKeys = [GeneratedDataKey.Name] // 显式排除的 DataKey
         },
         DataOverrides = new Dictionary<string, object>
         {
-            [DataKey.Team] = Team.Enemy // 迁移完成后覆写的数据
+            [GeneratedDataKey.Team] = Team.Enemy // 迁移完成后覆写的数据
         }
     }
 );
@@ -172,7 +172,7 @@ var migrated = EntityManager.Migrate<VisualPreviewEntity>(
 **v1 默认迁移内容**：
 - 迁移基础 `Data`
 - 默认继承直接 `PARENT` 归属链与其上的 `ParentDestroyPolicy`
-- 自动记录 `DataKey.SourceEntityId / DataKey.OriginEntityId`
+- 自动记录 `GeneratedDataKey.SourceEntityId / GeneratedDataKey.OriginEntityId`
 - 迁移成功后默认 `EntityManager.Destroy(source)`
 
 **明确不迁移的内容**：
@@ -180,10 +180,10 @@ var migrated = EntityManager.Migrate<VisualPreviewEntity>(
 - Component 私有字段和闭包状态
 - 视觉节点树 / `VisualRoot`
 - 整张关系图
-- `DataKey.Id`
+- `GeneratedDataKey.Id`
 
 **规则说明**：
-- `Data` 迁移默认遵循迁移 profile / descriptor allowlist，不再依赖旧的 `DataMeta` 迁移开关
+- `Data` 迁移默认遵循迁移 profile / descriptor allowlist，不再依赖旧的手写元数据迁移开关
 - `Node / IEntity / IComponent / Delegate / EventBus` 这类绑定旧实例生命周期的引用，默认一律不迁移
 - 如果某段状态必须跨迁移保留，先把它数据化，写进 `Data`
 - 只是换状态、换皮或启停能力时，不要滥用迁移；优先用 `Data + Component + Visual` 处理
@@ -228,7 +228,7 @@ public partial class MyEntity : CharacterBody2D, IEntity, IPoolable
 
     public MyEntity()
     {
-        Data = new Data(this, DataRuntimeBootstrap.Default.Catalog);
+        // Data 由实体模板绑定默认 catalog；spawn 时由 runtime snapshot record 写入初始值。
     }
 
     // ================= Godot 生命周期 =================

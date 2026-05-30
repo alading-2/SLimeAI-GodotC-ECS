@@ -141,7 +141,7 @@ _data.Add(GeneratedDataKey.Score, 10);
 ```csharp
 public static readonly DataKey<float> MyKey = new("MyKey");
 ```
-2. Node2D 引用等非注册类型也应优先使用 descriptor 生成的 typed handle，不再手写 `const string TargetNode`。
+2. Node2D 引用等非注册类型也应优先使用 descriptor 生成的 typed handle，不再手写目标节点 stable key 常量。
 3. 业务层只通过生成的 typed handle 访问，不再依赖旧的隐式字符串转换。
 
 ---
@@ -193,9 +193,9 @@ public partial class MyComponent : Node, IComponent
 Spawn 流程:
   ┌─ ObjectPool.Get() ─► OnPoolAcquire (Entity)
   │
-  ├─ RegisterComponents() ─► OnComponentRegistered (每个 Component)
+  ├─ Data.snapshot record apply() ─► 注入 runtime snapshot 数据
   │
-  └─ Data.snapshot record apply() ─► 注入 runtime snapshot 数据
+  └─ RegisterComponents() ─► OnComponentRegistered (每个 Component)
 
 Destroy 流程:
   ┌─ UnregisterEntity()
@@ -223,7 +223,7 @@ Destroy 流程:
 
 | 数据类型 | 来源 | 示例 | 在 OnComponentRegistered 中 | 正确处理方式 |
 |:---|:---|:---|:---:|:---|
-| **配置数据** | Spawn Config (.tres) | MaxHp, Speed | ✅ **可用** | 直接读取 `_data.Get()` |
+| **配置数据** | runtime snapshot record | MaxHp, Speed | ✅ **可用** | 通过 generated handle 读取 `_data.Get(...)` |
 | **初始数据** | Spawn 后代码设置 | SkillLevel, Target | ❌ **不可用** | 监听 `PropertyChanged` 事件 |
 
 **错误写法**:

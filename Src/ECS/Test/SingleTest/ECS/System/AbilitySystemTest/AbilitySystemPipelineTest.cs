@@ -162,7 +162,6 @@ public partial class AbilitySystemPipelineTest : Node
         owner.Data.Set(GeneratedDataKey.Id, ownerId);
         owner.Data.Set(GeneratedDataKey.Name, owner.Name.ToString());
         owner.Data.Set(GeneratedDataKey.CurrentMana, 30f);
-        owner.Data.Set(GeneratedDataKey.AbilityDamageBonus, 150f);
 
         var abilityId = ability.GetInstanceId().ToString();
         ability.Data.Set(GeneratedDataKey.Id, abilityId);
@@ -177,6 +176,7 @@ public partial class AbilitySystemPipelineTest : Node
         ability.Data.Set(GeneratedDataKey.AbilityCostAmount, 5f);
         ability.Data.Set(GeneratedDataKey.IsAbilityUsesCharges, false);
         ability.Data.Set(GeneratedDataKey.AbilityDamage, 20f);
+        ability.Data.Set(GeneratedDataKey.AbilityDamageBonus, 50f);
 
         EntityManager.Register(owner);
         EntityManager.Register(ability);

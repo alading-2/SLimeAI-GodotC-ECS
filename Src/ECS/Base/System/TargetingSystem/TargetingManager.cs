@@ -211,7 +211,7 @@ public static class TargetingManager
     {
         // 瞄准指示器配置统一来自 runtime snapshot。
         var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
-        var config = query.GetRequiredByName("unit.targeting_indicator", "TargetingIndicator");
+        var config = query.GetRequired("unit.targeting_indicator", "unit.targeting_indicator");
 
         var indicator = EntityManager.Spawn<TargetingIndicatorEntity>(new EntitySpawnConfig
         {

@@ -51,8 +51,8 @@ public partial class EnemyEntity : CharacterBody2D, IPoolable, IUnit
     /// </summary>
     public void OnPoolAcquire()
     {
-        Data.Set(GeneratedDataKey.DefaultMoveMode, MoveMode.AIControlled);
-        // 直接订阅即可（EntityManager 已自动清空事件）
+        // DefaultMoveMode 是组件注册期字段，必须来自 runtime snapshot record。
+        // OnPoolAcquire 发生在 RegisterComponents 之后，不能在这里补写默认运动模式。
     }
 
     /// <summary>

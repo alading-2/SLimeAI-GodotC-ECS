@@ -554,11 +554,11 @@ TestSystem UI 控件统一使用以下日志级别：
 资源选择扩展规则：
 
 - 可选资源来自 `ResourcePaths.Resources`
-- 选择器分类来自资源路径，`DataOS removed legacy Data/Unit/Enemy/Resource/x.tres` 会归到 `Unit.Enemy`
+- 选择器分类来自 runtime snapshot record 或资源路径，snapshot 敌人记录会归到 `Unit.Enemy`
 - 单位视觉 Asset 会按 `ResourceCategory.AssetUnitEnemy / AssetUnitPlayer` 推导到 `AssetUnit.Enemy / AssetUnit.Player`
 - 独立视觉预览场景不走 `ResourceCatalog` 前缀过滤，而是直接收集 `ResourcePaths.Resources` 中全部 `Asset*` 分类
 - 路径中的 `Resource` 目录只表示存放位置，不参与分类
-- 新 `.tres` / `.tscn` 必须运行 `Tools/ResourceGenerator`
+- 新增资产或场景资源后必须运行 `Tools/ResourceGenerator`
 - 不要让运行时测试面板全盘扫描目录作为主数据源
 - 具体模块只消费自己允许的目录前缀，例如敌人生成只消费 `Unit.Enemy`
 

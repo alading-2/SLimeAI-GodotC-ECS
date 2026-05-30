@@ -174,9 +174,9 @@ var migrated = EntityManager.Migrate<VisualPreviewEntity>(
 > [!IMPORTANT]
 > **理解 Entity 数据初始化的两个阶段至关重要**
 
-**阶段 1: 配置注入 (Spawn 内部)**
+**阶段 1: runtime snapshot record 注入 (Spawn 内部)**
 - **时间点**: `EntityManager.Spawn` 执行过程中
-- **数据源**: `EntitySpawnConfig.Config` (通常来自 .tres 或字典配置)
+- **数据源**: `EntitySpawnConfig.RuntimeDataRecord` 或 `RuntimeDataRecordTable/RuntimeDataRecordId`
 - **可用性**: 在 `OnComponentRegistered` 中**可以访问**
 - **典型数据**:MaxHp, MoveSpeed, BaseDamage
 
@@ -728,7 +728,7 @@ public partial class Enemy : CharacterBody2D, IEntity, IPoolable
 
     // ================= IEntity 实现 =================
 
-    public Data Data { get; private set; } = new Data(DataRuntimeBootstrap.Default.Catalog);
+public Data Data { get; private set; } // 构造时绑定默认 catalog，spawn 时写入 snapshot record
     public string EntityId { get; private set; } = string.Empty;
 
     // ================= Godot 生命周期 =================

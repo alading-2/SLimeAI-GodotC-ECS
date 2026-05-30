@@ -30,6 +30,7 @@ public partial class DataCatalogTestScene : DataSceneTestBase
         BuildCatalog_ShouldRejectComputedWithoutComputeId();
         BuildCatalog_ShouldRejectMissingComputeResolver();
         BuildCatalog_ShouldBuildIndexesIdempotently();
+        BuildCatalog_ShouldFreezeAfterIndexBuild();
         DataComputeRegistry_ShouldRejectInvalidRegistrations();
     }
 
@@ -259,6 +260,19 @@ public partial class DataCatalogTestScene : DataSceneTestBase
         catalog.ValidateAndBuildIndexes();
         catalog.ValidateAndBuildIndexes();
         AssertEqual("idempotent dependent count", 1, catalog.GetDependentComputedKeys("Attribute.BaseHp").Count);
+    }
+
+    private void BuildCatalog_ShouldFreezeAfterIndexBuild()
+    {
+        var catalog = CreateLoader().BuildCatalog(new[]
+        {
+            Descriptor("Attribute.BaseHp", "float", "100")
+        });
+
+        AssertThrowsMessage<InvalidOperationException>(
+            "catalog freezes after build",
+            () => catalog.Register(Definition("Attribute.Late", DataValueType.Float, 0f)),
+            "frozen");
     }
 
     private void DataComputeRegistry_ShouldRejectInvalidRegistrations()

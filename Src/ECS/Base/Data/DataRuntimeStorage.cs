@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using slime.data.Features;
 
 /// <summary>
@@ -21,6 +23,73 @@ public enum DataWriteSource
 /// <param name="OldValue">变更前有效值。</param>
 /// <param name="NewValue">变更后有效值。</param>
 public sealed record DataChangeRecord(string StableKey, object? OldValue, object? NewValue);
+
+/// <summary>
+/// Data 写入诊断报告。
+/// </summary>
+public sealed class DataWriteReport
+{
+    /// <summary>
+    /// 创建写入诊断报告。
+    /// </summary>
+    /// <param name="stableKey">写入目标 stable key。</param>
+    /// <param name="source">写入来源。</param>
+    public DataWriteReport(string stableKey, DataWriteSource source)
+    {
+        StableKey = stableKey;
+        Source = source;
+    }
+
+    /// <summary>
+    /// 写入目标 stable key。
+    /// </summary>
+    public string StableKey { get; }
+
+    /// <summary>
+    /// 写入来源。
+    /// </summary>
+    public DataWriteSource Source { get; }
+
+    /// <summary>
+    /// 结构化错误列表。
+    /// </summary>
+    public List<DataWriteError> Errors { get; } = new();
+
+    /// <summary>
+    /// 是否存在错误。
+    /// </summary>
+    public bool HasErrors => Errors.Count > 0;
+
+    /// <summary>
+    /// 追加结构化错误。
+    /// </summary>
+    /// <param name="error">写入错误。</param>
+    public void AddError(DataWriteError error)
+    {
+        Errors.Add(error);
+    }
+}
+
+/// <summary>
+/// Data 写入结构化错误。
+/// </summary>
+/// <param name="Code">错误码。</param>
+/// <param name="StableKey">字段 stable key。</param>
+/// <param name="Message">错误信息。</param>
+/// <param name="Source">写入来源。</param>
+/// <param name="ExpectedType">期望 descriptor 值类型。</param>
+/// <param name="ActualType">实际 CLR 类型。</param>
+/// <param name="Policy">拒绝写入的策略。</param>
+/// <param name="RawValue">原始值摘要。</param>
+public sealed record DataWriteError(
+    string Code,
+    string StableKey,
+    string Message,
+    DataWriteSource Source,
+    string ExpectedType,
+    string? ActualType,
+    string? Policy,
+    string? RawValue);
 
 /// <summary>
 /// 单个 descriptor 字段的运行时槽位。
@@ -262,6 +331,8 @@ public sealed class DataSlot
 /// </summary>
 public static class DataValueConverter
 {
+    private static readonly JsonSerializerOptions ModifierListJsonOptions = CreateModifierListJsonOptions();
+
     /// <summary>
     /// 检查泛型读取类型是否兼容 descriptor 值类型。
     /// </summary>
@@ -352,32 +423,124 @@ public static class DataValueConverter
         out object? finalValue,
         out string error)
     {
+        var success = TryApplyWritePoliciesWithReport(definition, rawValue, source, out finalValue, out var writeError);
+        error = writeError?.Message ?? string.Empty;
+        return success;
+    }
+
+    /// <summary>
+    /// 执行 write/range/allowed_values 策略，并输出结构化错误。
+    /// </summary>
+    /// <param name="definition">字段 descriptor 定义。</param>
+    /// <param name="rawValue">原始输入值。</param>
+    /// <param name="source">写入来源。</param>
+    /// <param name="finalValue">最终写入值。</param>
+    /// <param name="writeError">结构化错误。</param>
+    public static bool TryApplyWritePoliciesWithReport(
+        DataDefinition definition,
+        object? rawValue,
+        DataWriteSource source,
+        out object? finalValue,
+        out DataWriteError? writeError)
+    {
         ArgumentNullException.ThrowIfNull(definition);
         finalValue = null;
+        writeError = null;
         if (!CanWrite(definition.WritePolicy, source))
         {
-            error = $"Data write policy 拒绝写入：{definition.StableKey} ({definition.WritePolicy}, source={source})";
+            writeError = CreateWriteError(
+                definition,
+                "write_policy_rejected",
+                $"Data write policy 拒绝写入：{definition.StableKey} ({definition.WritePolicy}, source={source})",
+                source,
+                rawValue,
+                definition.WritePolicy.ToString());
             return false;
         }
 
-        if (!TryConvert(rawValue, definition.ValueType, out var convertedValue, out error))
+        if (RequiresRuntimeObjectReference(definition) && rawValue is string or ResourceRef)
         {
-            error = $"Data value type 不匹配：{definition.StableKey} ({definition.ValueType}) {error}";
+            writeError = CreateWriteError(
+                definition,
+                "wrong_clr_type",
+                $"Data object_ref 运行时对象字段拒绝资源引用：{definition.StableKey} expected={definition.RuntimeTypeId}",
+                source,
+                rawValue,
+                null,
+                definition.RuntimeTypeId);
+            return false;
+        }
+
+        if (!TryConvert(rawValue, definition.ValueType, out var convertedValue, out var error))
+        {
+            writeError = CreateWriteError(
+                definition,
+                "wrong_clr_type",
+                $"Data value type 不匹配：{definition.StableKey} ({definition.ValueType}) {error}",
+                source,
+                rawValue,
+                null);
+            return false;
+        }
+
+        if (RequiresRuntimeObjectReference(definition) && !MatchesRuntimeObjectReference(definition, convertedValue))
+        {
+            writeError = CreateWriteError(
+                definition,
+                "wrong_clr_type",
+                $"Data object_ref 运行时对象类型不匹配：{definition.StableKey} expected={definition.RuntimeTypeId}",
+                source,
+                rawValue,
+                null,
+                definition.RuntimeTypeId);
             return false;
         }
 
         if (!IsAllowedValue(definition, convertedValue))
         {
-            error = $"Data allowed_values 拒绝写入：{definition.StableKey} = {ToStableText(convertedValue)}";
+            writeError = CreateWriteError(
+                definition,
+                "allowed_values_rejected",
+                $"Data allowed_values 拒绝写入：{definition.StableKey} = {ToStableText(convertedValue)}",
+                source,
+                rawValue,
+                "allowed_values");
             return false;
         }
 
-        if (!TryApplyRangePolicy(definition, convertedValue, source, out finalValue, out error))
+        if (!TryApplyRangePolicy(definition, convertedValue, source, out finalValue, out var rangeError))
         {
+            writeError = CreateWriteError(
+                definition,
+                "range_policy_rejected",
+                rangeError,
+                source,
+                rawValue,
+                definition.RangePolicy.ToString());
             return false;
         }
 
         return true;
+    }
+
+    private static DataWriteError CreateWriteError(
+        DataDefinition definition,
+        string code,
+        string message,
+        DataWriteSource source,
+        object? rawValue,
+        string? policy,
+        string? expectedTypeOverride = null)
+    {
+        return new DataWriteError(
+            code,
+            definition.StableKey,
+            message,
+            source,
+            expectedTypeOverride ?? definition.ValueType.ToString(),
+            rawValue?.GetType().Name,
+            policy,
+            ToStableText(rawValue));
     }
 
     private static bool CanWrite(DataWritePolicy policy, DataWriteSource source)
@@ -483,12 +646,7 @@ public static class DataValueConverter
 
         if (rawValue is string textValue)
         {
-            if (string.IsNullOrWhiteSpace(textValue))
-            {
-                return Array.Empty<string>();
-            }
-
-            return textValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            return ParseStringArrayText(textValue);
         }
 
         throw new InvalidCastException($"期望 string_array，实际 {rawValue.GetType().Name}");
@@ -501,9 +659,9 @@ public static class DataValueConverter
             return arrayValue;
         }
 
-        if (rawValue is string textValue && (string.IsNullOrWhiteSpace(textValue) || textValue.Trim() == "[]"))
+        if (rawValue is string textValue)
         {
-            return Array.Empty<FeatureModifierEntryData>();
+            return ParseModifierListText(textValue);
         }
 
         throw new InvalidCastException($"期望 modifier_list，实际 {rawValue.GetType().Name}");
@@ -662,8 +820,7 @@ public static class DataValueConverter
             return rawValue switch
             {
                 string[] arrayValue => arrayValue,
-                string textValue when string.IsNullOrWhiteSpace(textValue) => Array.Empty<string>(),
-                string textValue => textValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+                string textValue => ParseStringArrayText(textValue),
                 _ => rawValue
             };
         }
@@ -673,7 +830,7 @@ public static class DataValueConverter
             return rawValue switch
             {
                 FeatureModifierEntryData[] arrayValue => arrayValue,
-                string textValue when string.IsNullOrWhiteSpace(textValue) || textValue.Trim() == "[]" => Array.Empty<FeatureModifierEntryData>(),
+                string textValue => ParseModifierListText(textValue),
                 _ => rawValue
             };
         }
@@ -736,6 +893,111 @@ public static class DataValueConverter
         }
 
         return Convert.ChangeType(rawValue, targetType, CultureInfo.InvariantCulture);
+    }
+
+    private static JsonSerializerOptions CreateModifierListJsonOptions()
+    {
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        options.Converters.Add(new JsonStringEnumConverter());
+        return options;
+    }
+
+    private static string[] ParseStringArrayText(string textValue)
+    {
+        if (string.IsNullOrWhiteSpace(textValue))
+        {
+            return Array.Empty<string>();
+        }
+
+        var trimmed = textValue.Trim();
+        if (trimmed.StartsWith("[", StringComparison.Ordinal))
+        {
+            try
+            {
+                return JsonSerializer.Deserialize<string[]>(trimmed) ?? Array.Empty<string>();
+            }
+            catch (JsonException ex)
+            {
+                throw new FormatException($"string_array JSON 解析失败：{textValue}", ex);
+            }
+        }
+
+        return textValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    }
+
+    private static FeatureModifierEntryData[] ParseModifierListText(string textValue)
+    {
+        if (string.IsNullOrWhiteSpace(textValue))
+        {
+            return Array.Empty<FeatureModifierEntryData>();
+        }
+
+        var trimmed = textValue.Trim();
+        if (trimmed == "[]")
+        {
+            return Array.Empty<FeatureModifierEntryData>();
+        }
+
+        if (!trimmed.StartsWith("[", StringComparison.Ordinal))
+        {
+            throw new InvalidCastException("modifier_list 必须是 JSON array。");
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<FeatureModifierEntryData[]>(trimmed, ModifierListJsonOptions)
+                   ?? Array.Empty<FeatureModifierEntryData>();
+        }
+        catch (JsonException ex)
+        {
+            throw new FormatException($"modifier_list JSON 解析失败：{textValue}", ex);
+        }
+    }
+
+    private static bool RequiresRuntimeObjectReference(DataDefinition definition)
+    {
+        return definition.ValueType == DataValueType.ObjectRef
+               && definition.StoragePolicy == DataStoragePolicy.RuntimeOnly
+               && !string.IsNullOrWhiteSpace(definition.RuntimeTypeId);
+    }
+
+    private static bool MatchesRuntimeObjectReference(DataDefinition definition, object? value)
+    {
+        if (value == null)
+        {
+            return true;
+        }
+
+        if (value is ResourceRef)
+        {
+            return false;
+        }
+
+        return MatchesRuntimeType(value.GetType(), definition.RuntimeTypeId);
+    }
+
+    private static bool MatchesRuntimeType(Type actualType, string runtimeTypeId)
+    {
+        var expected = runtimeTypeId.Trim();
+        for (var type = actualType; type != null; type = type.BaseType)
+        {
+            if (string.Equals(type.FullName, expected, StringComparison.Ordinal)
+                || string.Equals(type.Name, expected, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        foreach (var interfaceType in actualType.GetInterfaces())
+        {
+            if (string.Equals(interfaceType.FullName, expected, StringComparison.Ordinal)
+                || string.Equals(interfaceType.Name, expected, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool IsGodotVector2Type(Type type)
@@ -897,7 +1159,20 @@ public sealed class DataRuntimeStorage
     /// <param name="source">写入来源。</param>
     public bool Set<T>(DataKey<T> key, T value, DataWriteSource source = DataWriteSource.Runtime)
     {
-        return SetUntyped(key.StableKey, value, source);
+        return TrySet(key, value, out _, source);
+    }
+
+    /// <summary>
+    /// 写入类型安全字段值，并输出结构化诊断。
+    /// </summary>
+    /// <typeparam name="T">字段值类型。</typeparam>
+    /// <param name="key">字段 stable key 句柄。</param>
+    /// <param name="value">新值。</param>
+    /// <param name="report">写入诊断报告。</param>
+    /// <param name="source">写入来源。</param>
+    public bool TrySet<T>(DataKey<T> key, T value, out DataWriteReport report, DataWriteSource source = DataWriteSource.Runtime)
+    {
+        return TrySetUntyped(key.StableKey, value, source, out report);
     }
 
     /// <summary>
@@ -913,6 +1188,33 @@ public sealed class DataRuntimeStorage
     }
 
     /// <summary>
+    /// 写入字段值，并输出结构化诊断。
+    /// </summary>
+    /// <param name="stableKey">字段 stable key。</param>
+    /// <param name="value">新值。</param>
+    /// <param name="source">写入来源。</param>
+    /// <param name="report">写入诊断报告。</param>
+    public bool TrySetUntyped(string stableKey, object? value, DataWriteSource source, out DataWriteReport report)
+    {
+        report = new DataWriteReport(stableKey, source);
+        if (!_catalog.TryGet(stableKey, out var definition))
+        {
+            report.AddError(new DataWriteError(
+                "unknown_key",
+                stableKey,
+                $"未注册 DataDefinition：{stableKey}",
+                source,
+                string.Empty,
+                value?.GetType().Name,
+                null,
+                value?.ToString()));
+            return false;
+        }
+
+        return TrySetUntyped(definition, value, source, out report);
+    }
+
+    /// <summary>
     /// 使用已解析 definition 写入字段值。
     /// </summary>
     /// <param name="definition">字段 descriptor 定义。</param>
@@ -920,8 +1222,26 @@ public sealed class DataRuntimeStorage
     /// <param name="source">写入来源。</param>
     public bool SetUntyped(DataDefinition definition, object? value, DataWriteSource source = DataWriteSource.Runtime)
     {
-        if (!DataValueConverter.TryApplyWritePolicies(definition, value, source, out var finalValue, out _))
+        return TrySetUntyped(definition, value, source, out _);
+    }
+
+    /// <summary>
+    /// 使用已解析 definition 写入字段值，并输出结构化诊断。
+    /// </summary>
+    /// <param name="definition">字段 descriptor 定义。</param>
+    /// <param name="value">新值。</param>
+    /// <param name="source">写入来源。</param>
+    /// <param name="report">写入诊断报告。</param>
+    public bool TrySetUntyped(DataDefinition definition, object? value, DataWriteSource source, out DataWriteReport report)
+    {
+        report = new DataWriteReport(definition.StableKey, source);
+        if (!DataValueConverter.TryApplyWritePoliciesWithReport(definition, value, source, out var finalValue, out var error))
         {
+            if (error != null)
+            {
+                report.AddError(error);
+            }
+
             return false;
         }
 
@@ -946,8 +1266,55 @@ public sealed class DataRuntimeStorage
     public bool AddModifier(string stableKey, DataModifier modifier, DataWriteSource source = DataWriteSource.Runtime)
     {
         var definition = _catalog.GetRequired(stableKey);
+        return TryAddModifierResolved(definition, stableKey, modifier, source, out _);
+    }
+
+    /// <summary>
+    /// 添加字段修改器，并输出结构化诊断。
+    /// </summary>
+    /// <param name="stableKey">字段 stable key。</param>
+    /// <param name="modifier">修改器实例。</param>
+    /// <param name="source">写入来源。</param>
+    /// <param name="report">写入诊断报告。</param>
+    public bool TryAddModifier(string stableKey, DataModifier modifier, DataWriteSource source, out DataWriteReport report)
+    {
+        report = new DataWriteReport(stableKey, source);
+        if (!_catalog.TryGet(stableKey, out var definition))
+        {
+            report.AddError(new DataWriteError(
+                "unknown_key",
+                stableKey,
+                $"未注册 DataDefinition：{stableKey}",
+                source,
+                string.Empty,
+                modifier.GetType().Name,
+                null,
+                modifier.ToString()));
+            return false;
+        }
+
+        return TryAddModifierResolved(definition, stableKey, modifier, source, out report);
+    }
+
+    private bool TryAddModifierResolved(
+        DataDefinition definition,
+        string stableKey,
+        DataModifier modifier,
+        DataWriteSource source,
+        out DataWriteReport report)
+    {
+        report = new DataWriteReport(stableKey, source);
         if (!CanApplyModifier(definition, source))
         {
+            report.AddError(new DataWriteError(
+                "modifier_policy_rejected",
+                stableKey,
+                $"Data modifier policy 拒绝写入：{stableKey} ({definition.ModifierPolicy}, source={source})",
+                source,
+                definition.ValueType.ToString(),
+                modifier.GetType().Name,
+                definition.ModifierPolicy.ToString(),
+                modifier.Value.ToString(CultureInfo.InvariantCulture)));
             return false;
         }
 
@@ -955,6 +1322,15 @@ public sealed class DataRuntimeStorage
         var oldValue = slot.GetEffectiveValue();
         if (!slot.AddModifier(modifier))
         {
+            report.AddError(new DataWriteError(
+                "duplicate_modifier",
+                stableKey,
+                $"Data modifier id 重复：{stableKey} id={modifier.Id}",
+                source,
+                definition.ValueType.ToString(),
+                modifier.GetType().Name,
+                definition.ModifierPolicy.ToString(),
+                modifier.Value.ToString(CultureInfo.InvariantCulture)));
             return false;
         }
 

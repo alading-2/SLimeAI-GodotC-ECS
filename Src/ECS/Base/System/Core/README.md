@@ -88,7 +88,7 @@ public static void Initialize()
 }
 ```
 
-其余系统级设置统一写在 DataOS authoring，并通过 `system.config` snapshot records 投影；旧 `.tres` 系统配置不进入运行时。
+其余系统级设置统一写在 DataOS authoring，并通过 `system.config` snapshot records 投影；旧资源配置文件不进入运行时。
 
 | 字段 | 语义 |
 | --- | --- |
@@ -188,5 +188,5 @@ shouldRun = IsEnabled && IsStateAllowed
 - `MainTest` 这类测试入口不应再"等一帧"赌启动时序
 - 需要系统树时，显式等 `BootstrapCompleted`
 - 局内系统不能只依赖 `GameStart` 事件启动关键运行态；如果系统在 `FrontEnd` 被运行条件挡住，应该在 `OnStarted(SessionPlaying)` 中补齐进入局内后的启动逻辑
-- 老的 `TestDataRegister` 已删除，测试数据定义应直接走 descriptor 生成的 `DataKey_*` 体系，不再回到 `DataMeta`。
+- 老的 `TestDataRegister` 已删除，测试数据定义应直接走 descriptor 生成的 typed handle 体系，不再回到手写 C# 元数据。
 - `SystemRegistry` 遇到空描述符或重复 `SystemId` 时，当前约定是记录 `Log.Error` 并忽略本次注册，避免在模块初始化阶段滥用 `throw`

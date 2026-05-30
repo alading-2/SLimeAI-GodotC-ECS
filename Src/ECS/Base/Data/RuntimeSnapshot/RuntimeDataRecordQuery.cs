@@ -69,18 +69,19 @@ public sealed class RuntimeDataRecordQuery
     }
 
     /// <summary>
-    /// 按 table/name 获取 record，未找到时 fail-fast。
+    /// 按 table/display name 获取 record，未找到时 fail-fast。
+    /// 仅供 debug、editor 和测试入口使用；生产身份必须使用 table/id。
     /// </summary>
     /// <param name="table">record table。</param>
-    /// <param name="name">record name。</param>
-    public RuntimeDataRecordDto GetRequiredByName(string table, string name)
+    /// <param name="displayName">record display name。</param>
+    public RuntimeDataRecordDto GetRequiredByDisplayNameForDebug(string table, string displayName)
     {
-        if (_recordsByTableName.TryGetValue(MakeKey(table, name), out var record))
+        if (_recordsByTableName.TryGetValue(MakeKey(table, displayName), out var record))
         {
             return record;
         }
 
-        throw new KeyNotFoundException($"runtime snapshot record 不存在：{table}/name:{name}");
+        throw new KeyNotFoundException($"runtime snapshot record 不存在：{table}/displayName:{displayName}");
     }
 
     private void BuildIndexes(IEnumerable<RuntimeDataRecordDto> records)
@@ -218,18 +219,18 @@ public static class RuntimeDataRecordProjection
         return new UnitSpawnDefinition(
             record.Table,
             record.Id,
-            Read<string>(record, "Name"),
-            Read<string>(record, "VisualScenePath"),
-            Read<bool>(record, "IsEnableSpawnRule"),
-            ReadEnum<SpawnPositionStrategy>(record, "SpawnStrategy"),
-            Read<int>(record, "SpawnMinWave"),
-            Read<int>(record, "SpawnMaxWave"),
-            Read<float>(record, "SpawnInterval"),
-            Read<int>(record, "SpawnMaxCountPerWave"),
-            Read<int>(record, "SingleSpawnCount"),
-            Read<int>(record, "SingleSpawnVariance"),
-            Read<float>(record, "SpawnStartDelay"),
-            Read<int>(record, "SpawnWeight"));
+            Read(record, GeneratedDataKey.Name),
+            Read(record, GeneratedDataKey.VisualScenePath),
+            Read(record, GeneratedDataKey.IsEnableSpawnRule),
+            Read(record, GeneratedDataKey.SpawnStrategy),
+            Read(record, GeneratedDataKey.SpawnMinWave),
+            Read(record, GeneratedDataKey.SpawnMaxWave),
+            Read(record, GeneratedDataKey.SpawnInterval),
+            Read(record, GeneratedDataKey.SpawnMaxCountPerWave),
+            Read(record, GeneratedDataKey.SingleSpawnCount),
+            Read(record, GeneratedDataKey.SingleSpawnVariance),
+            Read(record, GeneratedDataKey.SpawnStartDelay),
+            Read(record, GeneratedDataKey.SpawnWeight));
     }
 
     /// <summary>
@@ -241,12 +242,12 @@ public static class RuntimeDataRecordProjection
         return new AbilityDefinitionView(
             record.Table,
             record.Id,
-            Read<string>(record, "Name"),
-            Read<string>(record, "AbilityFeatureGroup"),
-            Read<string>(record, "FeatureHandlerId"),
-            Read<string>(record, "Description"),
-            ReadEnum<AbilityType>(record, "AbilityType"),
-            ReadEnum<AbilityTriggerMode>(record, "AbilityTriggerMode"));
+            Read(record, GeneratedDataKey.Name),
+            Read(record, GeneratedDataKey.AbilityFeatureGroup),
+            Read(record, GeneratedDataKey.FeatureHandlerId),
+            Read(record, GeneratedDataKey.Description),
+            Read(record, GeneratedDataKey.AbilityType),
+            Read(record, GeneratedDataKey.AbilityTriggerMode));
     }
 
     /// <summary>
@@ -258,19 +259,19 @@ public static class RuntimeDataRecordProjection
         return new SystemConfigDefinition(
             record.Table,
             record.Id,
-            Read<string>(record, "SystemId"),
-            ReadEnum<SystemGroup>(record, "MountGroup"),
-            ReadFlags<SystemTag>(record, "Tags"),
-            Read<bool>(record, "Required"),
-            Read<bool>(record, "AutoLoad"),
-            Read<bool>(record, "StartEnabled"),
-            Read<int>(record, "Priority"),
-            ReadFlags<GameFlowState>(record, "AllowedFlowStates"),
-            ReadFlags<OverlayFlags>(record, "RequiredOverlays"),
-            ReadFlags<OverlayFlags>(record, "BlockedOverlays"),
-            ReadFlags<SimulationState>(record, "AllowedSimulationStates"),
-            ReadStringArray(record, "Dependencies"),
-            Read<string>(record, "Description"));
+            Read(record, GeneratedDataKey.SystemId),
+            ReadEnum<SystemGroup>(record, GeneratedDataKey.MountGroup),
+            ReadFlags<SystemTag>(record, GeneratedDataKey.Tags),
+            Read(record, GeneratedDataKey.Required),
+            Read(record, GeneratedDataKey.AutoLoad),
+            Read(record, GeneratedDataKey.StartEnabled),
+            Read(record, GeneratedDataKey.Priority),
+            ReadFlags<GameFlowState>(record, GeneratedDataKey.AllowedFlowStates),
+            ReadFlags<OverlayFlags>(record, GeneratedDataKey.RequiredOverlays),
+            ReadFlags<OverlayFlags>(record, GeneratedDataKey.BlockedOverlays),
+            ReadFlags<SimulationState>(record, GeneratedDataKey.AllowedSimulationStates),
+            ReadStringArray(record, GeneratedDataKey.Dependencies),
+            Read(record, GeneratedDataKey.Description));
     }
 
     /// <summary>
@@ -282,12 +283,12 @@ public static class RuntimeDataRecordProjection
         return new SystemPresetDefinition(
             record.Table,
             record.Id,
-            Read<string>(record, "PresetName"),
-            Read<bool>(record, "IsActive"),
-            ReadFlags<SystemTag>(record, "EnabledTags"),
-            ReadStringArray(record, "EnabledSystemIds"),
-            ReadStringArray(record, "DisabledSystemIds"),
-            Read<string>(record, "Description"));
+            Read(record, GeneratedDataKey.PresetName),
+            Read(record, GeneratedDataKey.IsActive),
+            ReadFlags<SystemTag>(record, GeneratedDataKey.EnabledTags),
+            ReadStringArray(record, GeneratedDataKey.EnabledSystemIds),
+            ReadStringArray(record, GeneratedDataKey.DisabledSystemIds),
+            Read(record, GeneratedDataKey.Description));
     }
 
     /// <summary>
@@ -312,17 +313,34 @@ public static class RuntimeDataRecordProjection
         return result;
     }
 
+    private static T Read<T>(RuntimeDataRecordDto record, DataKey<T> key)
+    {
+        return Read<T>(record, key.StableKey);
+    }
+
     private static T Read<T>(RuntimeDataRecordDto record, string fieldKey)
     {
         var field = GetRequiredField(record, fieldKey);
         var valueType = ParseValueType(field.Type, record, fieldKey);
+        if (!DataValueConverter.IsCompatible<T>(valueType))
+        {
+            throw new InvalidOperationException($"runtime snapshot projection 字段类型不匹配：{FormatRecord(record)} field={fieldKey}, snapshotType={field.Type}, expectedClr={typeof(T).Name}");
+        }
+
         var rawValue = NormalizeRecordValue(field.Value);
         if (!DataValueConverter.TryConvert(rawValue, valueType, out var convertedValue, out var error))
         {
             throw new InvalidOperationException($"runtime snapshot projection 转换失败：{FormatRecord(record)} field={fieldKey}, error={error}");
         }
 
-        return (T)DataValueConverter.ConvertForRead(convertedValue, typeof(T), valueType)!;
+        try
+        {
+            return (T)DataValueConverter.ConvertForRead(convertedValue, typeof(T), valueType)!;
+        }
+        catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException)
+        {
+            throw new InvalidOperationException($"runtime snapshot projection 读取失败：{FormatRecord(record)} field={fieldKey}, expectedClr={typeof(T).Name}, error={ex.Message}", ex);
+        }
     }
 
     private static T ReadEnum<T>(RuntimeDataRecordDto record, string fieldKey)
@@ -335,6 +353,12 @@ public static class RuntimeDataRecordProjection
         }
 
         return Enum.Parse<T>(text, ignoreCase: false);
+    }
+
+    private static T ReadEnum<T>(RuntimeDataRecordDto record, DataKey<string> key)
+        where T : struct, Enum
+    {
+        return ReadEnum<T>(record, key.StableKey);
     }
 
     private static T ReadFlags<T>(RuntimeDataRecordDto record, string fieldKey)
@@ -356,6 +380,17 @@ public static class RuntimeDataRecordProjection
         }
 
         return (T)Enum.ToObject(typeof(T), resultValue);
+    }
+
+    private static T ReadFlags<T>(RuntimeDataRecordDto record, DataKey<string> key)
+        where T : struct, Enum
+    {
+        return ReadFlags<T>(record, key.StableKey);
+    }
+
+    private static string[] ReadStringArray(RuntimeDataRecordDto record, DataKey<string[]> key)
+    {
+        return Read(record, key);
     }
 
     private static string[] ReadStringArray(RuntimeDataRecordDto record, string fieldKey)
