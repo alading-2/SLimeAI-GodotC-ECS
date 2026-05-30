@@ -42,7 +42,7 @@
 | `Attribute/AttributeTestModule.cs` | 属性测试模块，负责 Data 编辑与临时加成 UI 绑定 |
 | `Attribute/AttributeTestModule.tscn` | 属性测试固定布局骨架，提供分类列表与右侧滚动编辑区 |
 | `Attribute/AttributeEditorRow.tscn` 等 | 属性词条复用场景，负责词条骨架与具体编辑器结构 |
-| `Ability/AbilityTestService.cs` | 技能测试服务，负责目录缓存、按完整 `FeatureGroupId` 分组、视图模型与业务操作；内部通过 `DataKey.XXX.Key` 显式访问 Data 键名 |
+| `Ability/AbilityTestService.cs` | 技能测试服务，负责目录缓存、按完整 `FeatureGroupId` 分组、视图模型与业务操作；内部通过生成的 typed handle 显式访问 Data 键名 |
 | `Ability/AbilityTestViewModels.cs` | 技能测试共享视图模型，分组字段显式命名为 `FeatureGroupId` |
 | `Ability/AbilityTestModule.cs` | 技能测试 UI，负责左右双列列表、卡片交互与事件刷新 |
 | `Ability/AbilityTestModule.tscn` | 技能测试固定布局骨架，提供左右滚动区与卡片宿主节点 |
@@ -105,7 +105,7 @@
 2. `Attribute/AttributeEditorRow.tscn` 与各类 `Attribute*Editor.tscn`
 3. `Attribute/AttributeTestModule.cs`
 4. `FeatureDebugService.cs`
-5. 相关 `DataKey / DataMeta / DataCategory`
+5. 相关 `DataKey / descriptor / DataCategory`
 
 这样看的原因是：
 
@@ -113,7 +113,7 @@
 - `Attribute/AttributeEditorRow.tscn` 等复用场景先让你看懂每个词条的固定结构
 - `Attribute/AttributeTestModule.cs` 再看右侧属性编辑行如何根据元数据实例化这些场景
 - 然后看 `FeatureDebugService.cs`，理解“临时加成”为什么不直接硬改 Data
-- 最后再回到 `DataMeta`，确认哪些字段允许编辑、哪些字段支持 Modifier
+- 最后再回到 descriptor / generated handle，确认哪些字段允许编辑、哪些字段支持 Modifier
 
 你读属性测试时，重点抓住两条线：
 
@@ -476,17 +476,17 @@ public partial class MyTestModule : TestModuleBase
 
 ### 11.1 DataKey 访问规范
 
-在 TestSystem 内部访问 `Data.Get/Set` 时，**必须使用 `DataKey.XXX.Key` 显式取键名**，不要依赖 `DataMeta` 的隐式转换：
+在 TestSystem 内部访问 `Data.Get/Set` 时，**必须使用生成的 typed handle**，不要依赖旧的隐式字符串转换：
 
 ```csharp
-// ✅ 正确：显式 .Key
-ability.Data.Get<string>(DataKey.Name.Key);
+// ✅ 正确：显式 typed handle
+ability.Data.Get<string>(GeneratedDataKey.Name);
 
-// ❌ 错误：依赖隐式转换（某些工程上下文下编译兼容性差）
-ability.Data.Get<string>(DataKey.Name);
+// ❌ 错误：依赖旧字符串取键方式
+ability.Data.Get<string>("Name");
 ```
 
-原因：规避不同工程上下文下 `DataMeta` 到 `string` 的编译兼容差异。
+原因：规避旧字符串键名和旧隐式转换写法回流。
 
 ### 11.2 日志级别规范
 
@@ -520,7 +520,7 @@ TestSystem UI 控件统一使用以下日志级别：
 
 - `Attribute/AttributeTestModule.cs`
 - 必要时 `FeatureDebugService.cs`
-- 相关 `DataMeta / DataKey / DataCategory`
+- 相关 `descriptor / DataKey / DataCategory`
 - 正式说明文档与 skill
 
 属性模块当前推荐策略：
@@ -574,6 +574,6 @@ TestSystem UI 控件统一使用以下日志级别：
 - 资源目录测试是否切换分类后自动显示该分类资源
 - 独立视觉预览场景是否覆盖全部 `Asset*` 分类，且退出场景时会通过 `EntityManager.Destroy` 清空预览实体
 - 对象池信息是否仍保持只读观测
-- Data.Get/Set 调用是否使用 `DataKey.XXX.Key` 显式访问
+- Data.Get/Set 调用是否使用生成的 typed handle 显式访问
 - 日志是否仅使用 `Info / Warn / Error`，无 `Debug` 级别
 - 文档、项目索引、skill 是否同步更新

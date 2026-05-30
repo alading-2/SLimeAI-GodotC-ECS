@@ -26,16 +26,16 @@ entity.Events.Emit(
 |----------|--------|----------|--------------------------|
 | `FixedDirection` | FixedDirectionStrategy | 直线飞行 | `ActionSpeed` / `MaxDistance`（先写 `DataKey.Velocity`） |
 | `TargetPoint` | TargetPointStrategy | 冲向指定坐标 | `TargetPoint`, `ReachDistance` |
-| `TargetEntity` | TargetEntityStrategy | 追踪实体 | `TargetNode`, `ReachDistance` |
+| `TargetEntity` | TargetEntityStrategy | 追踪实体 | `GeneratedDataKey.TargetNode`, `ReachDistance` |
 | `OrbitPoint` | OrbitPointStrategy | 围绕固定点环绕 | `OrbitCenter`, `OrbitRadius`, `OrbitAngularSpeed` |
-| `OrbitEntity` | OrbitEntityStrategy | 围绕目标实体 | `TargetNode`, `OrbitRadius`, `OrbitAngularSpeed` |
+| `OrbitEntity` | OrbitEntityStrategy | 围绕目标实体 | `GeneratedDataKey.TargetNode`, `OrbitRadius`, `OrbitAngularSpeed` |
 | `Spiral` | SpiralStrategy | 螺旋收缩/扩张 | `OrbitCenter`, `OrbitRadius`, `OrbitTargetRadius`, `OrbitAngularSpeed` |
 | `SineWave` | SineWaveStrategy | 正弦波弹道 | `WaveAmplitude` / `WaveFrequency` + 可选 `Wave*ScalarDriver` |
 | `BezierCurve` | BezierCurveStrategy | 曲线弹道 | `BezierPoints`, `ActionSpeed` 或 `MaxDuration` |
-| `Boomerang` | BoomerangStrategy | 双半椭圆回旋弹道 | `TargetPoint`, `TargetNode`, `ActionSpeed` 或 `MaxDuration`, `Boomerang*`, 可选 `Orientation` |
-| `Parabola` | ParabolaStrategy | 抛物线弹道 / 跳跃位移 | `TargetPoint` 或 `TargetNode`, `ParabolaApexHeight`, `ActionSpeed`, `ReachDistance` |
-| `CircularArc` | CircularArcStrategy | 单段圆弧弹道 / 侧切轨迹 | `TargetPoint` 或 `TargetNode`, `CircularArcRadius`, `CircularArcClockwise`, `ActionSpeed`, `ReachDistance` |
-| `AttachToHost` | AttachToHostStrategy | 附着特效 | `TargetNode`（+ `DataKey.EffectOffset`） |
+| `Boomerang` | BoomerangStrategy | 双半椭圆回旋弹道 | `TargetPoint`, `GeneratedDataKey.TargetNode`, `ActionSpeed` 或 `MaxDuration`, `Boomerang*`, 可选 `Orientation` |
+| `Parabola` | ParabolaStrategy | 抛物线弹道 / 跳跃位移 | `TargetPoint` 或 `GeneratedDataKey.TargetNode`, `ParabolaApexHeight`, `ActionSpeed`, `ReachDistance` |
+| `CircularArc` | CircularArcStrategy | 单段圆弧弹道 / 侧切轨迹 | `TargetPoint` 或 `GeneratedDataKey.TargetNode`, `CircularArcRadius`, `CircularArcClockwise`, `ActionSpeed`, `ReachDistance` |
+| `AttachToHost` | AttachToHostStrategy | 附着特效 | `GeneratedDataKey.TargetNode`（+ `DataKey.EffectOffset`） |
 | `PlayerInput` | PlayerInputStrategy | 玩家常驻（DefaultMoveMode） | 无，读 `DataKey.MoveSpeed/Acceleration` |
 | `AIControlled` | AIControlledStrategy | AI 常驻（DefaultMoveMode） | 无，读 `DataKey.AIMoveDirection` 等 |
 

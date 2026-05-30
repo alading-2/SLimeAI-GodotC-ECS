@@ -1,8 +1,8 @@
 # ECS 框架与 AI-first 方向决策
 
-> 日期：2026-05-28  
-> 状态：方向决策记录，供后续 SDD / DocsAI / Skill / 代码优化参考。  
-> 范围：旧 Godot C# ECS 主线、历史 AI-first / GameOS 尝试、PRJ-0002 ECS 优化、Resources/Engine 外部框架分析、网上 ECS 资料。  
+> 日期：2026-05-28
+> 状态：方向决策记录，供后续 SDD / Src 旁文档 / DocsNew / Skill / 代码优化参考。
+> 范围：旧 Godot C# ECS 主线、历史 AI-first / GameOS 尝试、PRJ-0002 ECS 优化、Resources/Engine 外部框架分析、网上 ECS 资料。
 > 结论类型：架构方向，不是本次代码改造任务。
 
 ## 0. 一句话结论
@@ -25,12 +25,12 @@ AI-first 是框架的工程目标和使用方式，不是放弃 ECS 的理由。
 
 ### 1.1 本地历史资料
 
-- `../DocsAI/ProjectState.md`：当前已明确回到旧 Godot C# ECS 框架主线。
+- `./README.md`、本文和 `../Src/ECS/**` 旁文档：当前已明确回到旧 Godot C# ECS 框架主线。
 - `../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/00-旧ECS框架问题总览.md`：明确旧 ECS 不需要整体重构，应围绕真实问题优化。
 - `../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/`：承接 Data / Event / Entity / Relationship / 字符串键名等具体系统优化设计。
 - `../../SlimeAI-AiFirst/DocsAI/ArchitectureDecisionRecords/深度分析：AI-firstGameOS与ECS概念边界.md`：记录旧 AI-first GameOS / Capability Composition Runtime 的探索与判断。
 - `../../SlimeAI-AiFirst/DocsAI/Framework/Overview.md`、`../../SlimeAI-AiFirst/DocsAI/Framework/Principles.md`：记录旧纯 AI-first GameOS 的定位。
-- `../DocsAI/Modules/Data.md`、`../DocsAI/Modules/Event.md`、`../DocsAI/Modules/Entity.md`、`../DocsAI/Modules/SystemCore.md`：当前旧 ECS 模块契约。
+- `../Src/ECS/Base/**` 旁文档：当前旧 ECS 模块契约的临时落点；`../DocsAI/` 已删除，不再作为入口。
 
 ### 1.2 引擎与框架资料
 
@@ -67,7 +67,7 @@ AI-first 是框架的工程目标和使用方式，不是放弃 ECS 的理由。
 | Data | 运行时状态集中承载 | 具体优化方向待 PRJ-0002 Data 设计重新确认，本文不写死方案 |
 | Event | 组件和系统之间的解耦通信 | 具体事件键、payload、调用方式优化放 PRJ-0002 |
 | System / Service | Movement、Damage、Ability、AI 等行为入口 | 具体系统边界和调用方式放 PRJ-0002 或后续 SDD |
-| DocsAI / Skill | 已形成模块契约和开发入口 | 这是 AI-first 应继续强化的部分 |
+| Src 旁文档 / DocsNew / Skill | 已恢复为当前模块契约和开发入口 | 这是 AI-first 应继续强化的部分 |
 | Test / Scene Runner | 已有 Godot 场景测试和日志分析方向 | AI Debug 必须依赖可运行验证，而不是只写代码 |
 
 旧 ECS 真正的问题不是“不是 AI-first”，而是：
@@ -75,7 +75,7 @@ AI-first 是框架的工程目标和使用方式，不是放弃 ECS 的理由。
 - 字符串键名太多。
 - Data / Event / Entity / Relationship 等模块的优化方向曾经摇摆。
 - 具体模块设计散落在历史文档里，current / rejected 边界不够稳定。
-- DocsAI、旧计划、SDD、索引之间存在历史残留，AI 容易误路由。
+- 旧 DocsAI、旧计划、SDD、索引之间存在历史残留，AI 容易误路由；`SlimeAI/DocsAI/` 已删除，不再作为当前事实源。
 - 测试和观察面还不足，导致 AI 改完以后不能快速证明正确。
 
 这些问题应通过小步优化解决，而不是换掉框架。
@@ -153,7 +153,7 @@ Capability 是很好的 owner 边界，但不能替代 ECS 的基础层。
 
 - `DocsNew` 记录方向、边界和弯路。
 - `PRJ-0002` 承接 Data / Event / Entity / Relationship 等具体系统设计。
-- `DocsAI/Modules` 承接当前模块契约和任务入口。
+- `Src/ECS/**` 旁文档、DocsNew、owner skill 承接当前模块契约和任务入口。
 - 测试和日志负责证明每一步优化有效。
 
 这正是“AI-first ECS”的目标。
@@ -175,7 +175,7 @@ Godot C# ECS 主线
   保留 Entity / Component / Data / Event / System / Relationship / Test / Docs 等 ECS 基础概念
 
 AI-first 工程层
-  用 DocsAI / DocsNew / Skill / SDD / Test / Validation / Observation / Debug Workflow 降低 AI 理解和修改成本
+  用 Src 旁文档 / DocsNew / Skill / SDD / Test / Validation / Observation / Debug Workflow 降低 AI 理解和修改成本
 
 具体系统优化
   不在 DocsNew 直接定义，统一进入 PRJ-0002 和后续 SDD
@@ -197,9 +197,9 @@ AI-first 应该回答这些问题：
 
 | AI 需要做什么 | 框架应提供什么 |
 | ---- | ---- |
-| 快速知道任务属于哪个模块 | DocsAI / DocsNew / 项目索引 / Skill 路由 |
-| 知道某个系统有哪些数据 | 由 PRJ-0002 / DocsAI 模块契约定义，不在本文写死 |
-| 知道某个系统发什么事件 | 由 PRJ-0002 / DocsAI 模块契约定义，不在本文写死 |
+| 快速知道任务属于哪个模块 | Src 旁文档 / DocsNew / 项目索引 / Skill 路由 |
+| 知道某个系统有哪些数据 | 由 PRJ-0002 / Src 旁模块文档定义，不在本文写死 |
+| 知道某个系统发什么事件 | 由 PRJ-0002 / Src 旁模块文档定义，不在本文写死 |
 | 知道怎么改数据 | 由 Data 系统设计重新确认，不在本文写死 |
 | 知道怎么 Debug | 日志、Observation、场景测试、失败原因、artifact |
 | 知道哪些不能做 | Reject list、架构红线、测试门禁 |
@@ -246,9 +246,8 @@ AI 每次任务开始，应能快速定位：
 
 ```text
 DocsNew/README.md
-  -> DocsAI/ProjectState.md
-  -> DocsAI/INDEX.md
-  -> DocsAI/Modules/<模块>.md
+  -> SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/
+  -> Src/ECS/** 旁模块文档
   -> Skill / SDD / 测试命令
 ```
 
@@ -368,7 +367,7 @@ Agent 侧要做的，不是替代框架，而是围绕框架建立工作流：
 当前仍存在风险：
 
 - 某些 SDD 文档仍保留旧 Data / Event / Entity / Relationship 结论。
-- 某些旧 DocsAI / Plans 仍残留迁移到 GameOS 的说法。
+- 某些旧 Plans / 历史文档仍残留迁移到 GameOS 的说法。
 - Event 文档与当前代码/历史迁移状态可能不完全一致。
 - OpenSpec 历史资产可能继续影响 AI 路由。
 
@@ -388,7 +387,7 @@ Agent 侧要做的，不是替代框架，而是围绕框架建立工作流：
 | ---- | ---- |
 | `DocsNew` | 记录方向、弯路、定位、理念和非目标 |
 | `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/` | 承接 Data / Event / Entity / Relationship / 字符串键名等具体系统分析 |
-| `DocsAI/Modules/` | 承接当前可执行模块契约、入口和测试说明 |
+| `Src/ECS/**` 旁文档、DocsNew、owner skill | 承接当前可执行模块契约、入口和测试说明 |
 | 执行型 SDD | 承接具体代码修改计划和验证矩阵 |
 
 ### 8.2 每次优化都要有验证证据
@@ -447,7 +446,7 @@ ECS 主线:
   保留 Entity / Component / Data / Event / System / Relationship 等基础概念
 
 AI-first 工程层:
-  用 DocsAI / DocsNew / Skill / SDD / Workflow / Test / Observation 降低 AI 理解和修改成本
+  用 Src 旁文档 / DocsNew / Skill / SDD / Workflow / Test / Observation 降低 AI 理解和修改成本
 
 具体系统方案:
   进入 PRJ-0002 和后续执行型 SDD，而不是写在 DocsNew
@@ -494,12 +493,10 @@ AI-first 工程层:
 
 ### 本地
 
-- `../DocsAI/ProjectState.md`
-- `../DocsAI/INDEX.md`
-- `../DocsAI/Modules/Data.md`
-- `../DocsAI/Modules/Event.md`
-- `../DocsAI/Modules/Entity.md`
-- `../DocsAI/Modules/SystemCore.md`
+- `./README.md`
+- `./ECS/Data/Data系统说明.md`
+- `../Src/ECS/Base/`
+- `../Src/ECS/Test/`
 - `../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/00-旧ECS框架问题总览.md`
 - `../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/`
 - `../../Resources/Engine/Docs/FrameworkAnalysis/Reports/99-SlimeAI-引擎源码综合分析报告.md`

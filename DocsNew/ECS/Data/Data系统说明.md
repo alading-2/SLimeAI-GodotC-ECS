@@ -20,6 +20,13 @@ DataOS SQLite authoring
 
 核心原则是：字段定义给 DataOS 和 snapshot 管，运行时只消费生成结果；C# 业务代码通过 typed handle 读写稳定 key。
 
+如果你正在排查当前仍成立的 residual 问题，先读：
+
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/2.Data无兼容完全重构/03-对比AiFirst框架分析Data重构后剩余框架问题深度复查.md`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/2.Data无兼容完全重构/04-BUG:Data无兼容重构后移动与施法失败根因说明.md`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/2.Data无兼容完全重构/05-Data残余问题代码修复分解.md`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/2.Data无兼容完全重构/06-Data文档更新与门禁清单.md`
+
 ## 2. 核心概念
 
 ### 2.1 Stable Key

@@ -183,7 +183,7 @@ var migrated = EntityManager.Migrate<VisualPreviewEntity>(
 - `DataKey.Id`
 
 **规则说明**：
-- `Data` 迁移默认遵循 `DataMeta.CanMigrate`
+- `Data` 迁移默认遵循迁移 profile / descriptor allowlist，不再依赖旧的 `DataMeta` 迁移开关
 - `Node / IEntity / IComponent / Delegate / EventBus` 这类绑定旧实例生命周期的引用，默认一律不迁移
 - 如果某段状态必须跨迁移保留，先把它数据化，写进 `Data`
 - 只是换状态、换皮或启停能力时，不要滥用迁移；优先用 `Data + Component + Visual` 处理
@@ -228,7 +228,7 @@ public partial class MyEntity : CharacterBody2D, IEntity, IPoolable
 
     public MyEntity()
     {
-        Data = new Data(this);
+        Data = new Data(this, DataRuntimeBootstrap.Default.Catalog);
     }
 
     // ================= Godot 生命周期 =================

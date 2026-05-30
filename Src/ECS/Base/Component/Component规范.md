@@ -17,7 +17,7 @@
 | 优先级 | 方式 | 适用场景 | 示例 |
 |:---:|:---:|:---|:---|
 | 1️⃣ | **Event** | 解耦通信,发送者无需知道接收者 | `Entity.Events.Emit(HealRequest)` |
-| 2️⃣ | **Data** | 状态读写,无状态查询 | `_data.Get<float>(DataKey.CurrentHp)` |
+| 2️⃣ | **Data** | 状态读写,无状态查询 | `_data.Get<float>(GeneratedDataKey.CurrentHp)` |
 | 3️⃣ | **GetComponent** | 必须直接调用方法时 | 极少场景,尽量避免 |
 
 **Event 优先示例(治疗)**:
@@ -70,7 +70,7 @@ health?.ApplyHeal(new GameEventType.Unit.HealRequestEventData(amount, HealSource
 private float _currentHp;
 
 // ✅ 正确：业务状态存 Data（跨组件共享）
-public float CurrentHp => _data.Get<float>(DataKey.CurrentHp);
+public float CurrentHp => _data.Get<float>(GeneratedDataKey.CurrentHp);
 
 // ✅ 正确：组件内部缓存（仅本组件使用，性能优化）
 private AnimatedSprite2D? _sprite;
@@ -128,31 +128,21 @@ public void TakeDamage(float amount) { _hp -= amount; } // 逻辑
 public float CurrentHp => _data.Get<float>("CurrentHp");
 
 // ✅ 数据驱动 (状态归 Data，Component 只管逻辑)
-// 统一使用 DataKey / DataMeta 访问数据
-public float CurrentHp => _data.Get<float>(DataKey.CurrentHp);
-float hp = _data.Get<float>(DataKey.CurrentHp);
-_data.Set(DataKey.CurrentHp, 80f);
-_data.Add(DataKey.Score, 10);
+// 统一使用生成的 DataKey<T> 访问数据
+public float CurrentHp => _data.Get<float>(GeneratedDataKey.CurrentHp);
+float hp = _data.Get<float>(GeneratedDataKey.CurrentHp);
+_data.Set(GeneratedDataKey.CurrentHp, 80f);
+_data.Add(GeneratedDataKey.Score, 10);
 ```
 
-**新增 DataKey 的步骤**（2026-03 更新）：
+**新增 DataKey 的步骤**（2026-05 更新）：
 
-1. 在对应 `Data/DataKey/{模块}/DataKey_{模块}.cs` 中定义 `static readonly DataMeta`：
+1. 在对应 DataOS descriptor 里新增字段，再生成 typed DataKey<T>：
 ```csharp
-// 在 DataOS descriptor 中新增字段，再生成 typed DataKey<T> handle。
 public static readonly DataKey<float> MyKey = new("MyKey");
-        Key = nameof(MyKey),
-        DisplayName = "我的键",
-        Description = "用途说明",
-        Category = DataCategory_Unit.Basic,
-        Type = typeof(float),
-        DefaultValue = 0f,
-        MinValue = 0,
-        MaxValue = 100
-    });
 ```
-2. Node2D 引用等非注册类型仍使用 `const string`：`public const string TargetNode = "TargetNode";`
-3. DataMeta 通过隐式转换支持 `Data.Get/Set(DataKey.MyKey)`，无需 `.Key` 调用
+2. Node2D 引用等非注册类型也应优先使用 descriptor 生成的 typed handle，不再手写 `const string TargetNode`。
+3. 业务层只通过生成的 typed handle 访问，不再依赖旧的隐式字符串转换。
 
 ---
 

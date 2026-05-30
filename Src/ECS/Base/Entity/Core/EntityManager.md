@@ -154,7 +154,7 @@ var migrated = EntityManager.Migrate<VisualPreviewEntity>(
 - `Profile`：控制哪些 `DataKey` 允许迁移
 - `DataOverrides`：在迁移复制完成后再覆写到目标实体
 - `InheritDirectParent`：若目标未显式指定 `ParentEntity`，则自动继承源实体直接 `PARENT`
-- `DataMeta.CanMigrate`：Data 迁移的底层默认开关；`Id / SourceEntityId / OriginEntityId` 这类键默认不参与普通复制
+- 数据迁移默认遵循迁移 profile / descriptor allowlist；`Id / SourceEntityId / OriginEntityId` 这类键默认不参与普通复制
 - `SourceEntityId / OriginEntityId`：迁移成功后由框架自动写入，分别表示“最近一次来源”和“迁移链第一来源”
 
 **迁移边界**：
@@ -270,9 +270,9 @@ public partial class HealthComponent : Node, IComponent
     {
         if (_data == null) return;
 
-        float currentHp = _data.Get<float>(DataKey.CurrentHp);
+        float currentHp = _data.Get<float>(GeneratedDataKey.CurrentHp);
         currentHp -= amount;
-        _data.Set(DataKey.CurrentHp, currentHp);
+        _data.Set(GeneratedDataKey.CurrentHp, currentHp);
 
         Damaged?.Invoke(amount);
 
@@ -289,8 +289,8 @@ public partial class HealthComponent : Node, IComponent
     {
         if (_data == null) return;
 
-        float maxHp = _data.Get<float>(DataKey.MaxHp, 100f);
-        _data.Set(DataKey.CurrentHp, maxHp);
+        float maxHp = _data.Get<float>(GeneratedDataKey.MaxHp, 100f);
+        _data.Set(GeneratedDataKey.CurrentHp, maxHp);
     }
 }
 ```
@@ -728,7 +728,7 @@ public partial class Enemy : CharacterBody2D, IEntity, IPoolable
 
     // ================= IEntity 实现 =================
 
-    public Data Data { get; private set; } = new Data();
+    public Data Data { get; private set; } = new Data(DataRuntimeBootstrap.Default.Catalog);
     public string EntityId { get; private set; } = string.Empty;
 
     // ================= Godot 生命周期 =================

@@ -2,6 +2,7 @@
 
 > 状态：方向决策目录入口。
 > 范围：只记录旧 Godot C# ECS 主线与 AI-first 方向的定位、边界、弯路和参考来源；不承接具体系统实现方案。
+> 说明：`../DocsAI/` 已删除，不再作为当前入口；当前模块事实源临时回到 `../Src/ECS/` 旁文档和 SDD design。
 
 ## 当前事实源
 
@@ -14,25 +15,24 @@
 
 1. **方向定位**：读 [`01-ECS框架与AIFirst方向决策.md`](./01-ECS框架与AIFirst方向决策.md)。
 2. **Data 当前实现**：读 [`02-Data系统说明.md`](./02-Data系统说明.md)。
-3. **当前状态**：读 [`../DocsAI/ProjectState.md`](../DocsAI/ProjectState.md)。
-4. **具体系统设计**：进入 [`../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/`](../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/)。
-5. **执行前契约**：进入 [`../DocsAI/Modules/`](../DocsAI/Modules/) 查对应模块契约。
+3. **具体系统设计**：进入 [`../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/`](../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/)。
+4. **执行前契约**：先读对应 `../Src/ECS/**` 旁文档，再读 owner skill 和项目脚本。
 
 ## 边界
 
-DocsNew 优先回答“为什么是 AI-first ECS，以及哪些方向不要再走”。当前 Data 系统补充一份实现说明，用于降低跨 SDD 阅读成本；完整设计、任务和验证证据仍以 SDD / DocsAI 为准：
+DocsNew 优先回答“为什么是 AI-first ECS，以及哪些方向不要再走”。当前 Data 系统补充一份实现说明，用于降低跨 SDD 阅读成本；完整设计、任务和验证证据仍以 SDD / `Src/ECS` 旁文档为准：
 
 | 内容 | 事实源 |
 | ---- | ---- |
 | Data / Event / Entity / Relationship / 字符串键名等优化分析 | `../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/` |
-| 当前模块入口、规则、验证方式 | `../DocsAI/Modules/`、`../DocsAI/Tests/` |
+| 当前模块入口、规则、验证方式 | `../Src/ECS/**` 旁文档、owner skill、项目测试脚本 |
 | 代码实现计划、验证矩阵、阶段进度 | 后续执行型 SDD |
 
 ## 本方案参考来源
 
 DocsNew 当前方向不是凭空制定，主要参考了以下来源：
 
-- **旧 ECS 主线现状**：`../Src/ECS/`、`../DocsAI/Modules/`、`../Docs/框架/项目索引.md`，用于确认当前可工作的 ECS 基础概念、模块入口和验证现状。
+- **旧 ECS 主线现状**：`../Src/ECS/`、`../Docs/框架/项目索引.md`，用于确认当前可工作的 ECS 基础概念、模块入口和验证现状。
 - **PRJ-0002 优化分析**：`../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/`，用于承接 Data / Event / Entity / Relationship / 字符串键名等具体系统问题。
 - **AI-first 参考实现**：`../../SlimeAI-AiFirst/`，参考其 DataOS、typed DataKey、typed Event、Observation、Capability owner、验证 artifact 等思想，但不把当前旧 ECS 直接替换成新 GameOS。
 - **外部框架分析资料**：`../../Resources/Engine/Docs/`，参考 Bevy、Unity DOTS、Unreal GAS、DefaultEcs 等框架的 ECS 分层、数据驱动、验证和工具链经验，同时避免复制不适合 Godot C# 主线的 public API。
