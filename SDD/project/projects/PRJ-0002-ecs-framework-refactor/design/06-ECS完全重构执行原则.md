@@ -1,8 +1,8 @@
 # ECS 完全重构执行原则
 
-> 更新：2026-05-30  
+> 更新：2026-05-31  
 > 状态：current，PRJ-0002 后续 hard cutover / 无兼容重构的项目级原则。  
-> 来源：Data 系统 SDD-0012~SDD-0021 执行复盘、`2.Data系统优化/04~06`、`SlimeAI/DocsNew/ECS/Data/Data系统说明.md`、当前源码 grep gate。  
+> 来源：Data 系统 SDD-0012~SDD-0022 执行复盘、`2.Data系统优化/04~06`、`DocsAI/ECS/Data/Data系统说明.md`、当前源码 grep gate。  
 > 用途：后续 Entity / Relationship / Event / Data 补丁进入执行前必须先读本文，避免“口头完全重构，实际兼容迁移”。
 
 ## 1. 结论
@@ -26,7 +26,7 @@ DataOS SQLite authoring
 - `Data` public string-key API。
 - record field type 由 generator hardcode，和 descriptor 形成第二事实源。
 - validator 检查中间层，不检查最终 `runtime_snapshot.json`。
-- 旧 DocsAI / DocsNew / roadmap 中曾有“已完成旧路径退出”的过早结论或旧写法说明；`SlimeAI/DocsAI/` 已删除，不再作为当前修补目标。
+- 旧 DocsAI / DocsNew / roadmap 中曾有“已完成旧路径退出”的过早结论或旧写法说明；当前 `DocsAI/` 已重新作为 SlimeAI 框架统一文档入口，必须纳入 hard cutover 门禁。
 
 因此，后续所有标记为“完全重构 / hard cutover / 无兼容”的任务，完成标准必须从“新主链路可用”升级为：
 
@@ -109,7 +109,7 @@ DataOS SQLite authoring
 
 - `design/INDEX.md` 中 `01-Data系统问题分析.md` 标为 current，但 notes 写“历史入口”。
 - `06-无兼容完全重构总审计/README.md` 指出 roadmap / ProjectState / DocsNew 曾继续写旧路径已退出或兼容入口可见。
-- 旧 DocsAI 模块文档曾残留旧 `DataKey.TargetNode` / `DataMeta` / `DataKey.XXX.Key` 说法；该目录已删除。当前仍需防止 `DocsNew`、`Src/ECS/**` 旁文档和 SDD current 文档继续推荐旧写法。
+- 当前 `DocsAI/` 是框架统一文档入口；必须防止 `DocsAI/ECS/**`、SDD current 文档和 owner skill 继续推荐旧写法。`Src/ECS` 不再保存框架 Markdown 文档。
 
 推论：
 
@@ -179,8 +179,8 @@ Data 的 `DataKey<T> -> string` 隐式转换把本应编译失败的错误拖到
 current 文档必须和代码门禁一起验收。hard cutover 完成时，以下文档不能留旧入口推荐：
 
 - PRJ design index / roadmap / progress。
-- 当前系统 DocsNew 说明。
-- `Src/ECS/**` 旁模块文档、DocsNew 和 SDD current 文档。
+- 当前系统 `DocsAI/ECS/**` 说明。
+- SDD current 文档、owner skill 和 `DocsAI/ECS/**` 模块文档。
 - skill / rule / execution prompt。
 - 测试 README 和示例代码。
 
@@ -225,9 +225,10 @@ Entity / Relationship 已经裁决为 hard cutover，因此不能重复 Data 的
 推荐完成门禁示例：
 
 ```bash
-rg -n "EntityRelationshipManager|EntityRelationshipType|ParentRelationTypes|BindParentRelationships|RelationshipType|relationshipType" SlimeAI/Src SlimeAI/Data
-rg -n "GetRelation|GetChildren\\(|GetParent\\(|AddRelationship|RemoveRelationship" SlimeAI/Src SlimeAI/Data
-rg -n "兼容 facade|fallback|legacy relationship|旧 Relationship.*当前入口" SlimeAI/DocsNew SlimeAI/Src/ECS SDD/project/projects/PRJ-0002-ecs-framework-refactor -g "*.md"
+cd /home/slime/Code/SlimeAI/SlimeAI
+rg -n "EntityRelationshipManager|EntityRelationshipType|ParentRelationTypes|BindParentRelationships|RelationshipType|relationshipType" Src/ECS Data DocsAI
+rg -n "GetRelation|GetChildren\\(|GetParent\\(|AddRelationship|RemoveRelationship" Src/ECS Data
+rg -n "兼容 facade|fallback|legacy relationship|旧 Relationship.*当前入口" DocsAI SDD/project/projects/PRJ-0002-ecs-framework-refactor -g "*.md"
 ```
 
 允许命中只能是历史文档、审计文档、grep gate 本身或明确标记为不可执行入口的迁移说明。

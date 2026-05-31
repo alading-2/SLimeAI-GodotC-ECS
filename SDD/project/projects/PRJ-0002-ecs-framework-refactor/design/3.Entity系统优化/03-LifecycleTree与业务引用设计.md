@@ -1,7 +1,8 @@
 # LifecycleTree 与业务引用设计
 
-> 更新：2026-05-29
+> 更新：2026-05-31
 > 目标：把旧 Relationship 的所有语义拆开，逐项说明新系统中怎么表达。
+> 校准：执行前先读 `06-2026-05-31-DataEventDocsAI同步校准.md`；业务引用遵守当前 DataOS generated projection 与 Event typed payload 规则。
 
 ## 0. 旧 Relationship 语义拆分
 
@@ -11,10 +12,10 @@
 | --- | --- | --- |
 | `PARENT` | 生命周期 parent、递归销毁、detach | `LifecycleTree` |
 | `ENTITY_TO_COMPONENT` | Godot component owner 反查 | `ComponentRegistrar` 内部 index |
-| `ENTITY_TO_PROJECTILE` | source -> projectile owned list / debug | Projectile typed DataKey + owner list |
-| `ENTITY_TO_EFFECT` | source/host -> effect owned list / cleanup | Effect typed DataKey + owner list |
-| `ENTITY_TO_ABILITY` | owner -> ability owned list | Ability typed DataKey + owner list |
-| `ENTITY_TO_ITEM` | inventory / equipment ownership | Item / Inventory service typed DataKey |
+| `ENTITY_TO_PROJECTILE` | source -> projectile owned list / debug | Projectile typed runtime reference + generated Data projection + owner list |
+| `ENTITY_TO_EFFECT` | source/host -> effect owned list / cleanup | Effect typed runtime reference + generated Data projection + owner list |
+| `ENTITY_TO_ABILITY` | owner -> ability owned list | Ability typed runtime reference + generated Data projection + owner list |
+| `ENTITY_TO_ITEM` | inventory / equipment ownership | Item / Inventory service typed runtime reference |
 | `ENTITY_TO_UI` | UI control 绑定 entity | UI binding registry / GodotBridge |
 | `ABILITY_TO_EFFECT` | ability spawn/trigger effect | Ability / Effect DataKey |
 | `ITEM_TO_ABILITY` | item grants ability | Item / Ability service explicit grant record |
@@ -52,7 +53,7 @@
   -> AI 难判断哪个 parent 是主链
 ```
 
-多 owner、多 source、多 target 都不是 lifecycle parent，改用 typed DataKey 或 owner list。
+多 owner、多 source、多 target 都不是 lifecycle parent，改用 typed runtime reference、generated Data projection 或 owner list。
 
 ### 1.3 Destroy policy
 
@@ -101,18 +102,20 @@ Destroy(entityId)
 
 ```text
 single reference:
-  DataKey<EntityId?> 或旧 DataOS 暂用 DataKey<string> + EntityId 规则
+  public API 用 EntityId / EntityId.Empty
+  DataOS projection 默认用 generated DataKey<string>
 
 multi reference:
-  DataKey<EntityIdList> 或旧 DataOS 暂用 stable string list + typed wrapper
+  public API 用 EntityIdList
+  DataOS projection 默认用 generated DataKey<string[]> 或专用 value object
 ```
 
-如果当前 Data runtime 暂不支持 `EntityId` 作为 DataValueType，可以分两步：
+当前 Data runtime 暂不支持 `EntityId` / `EntityIdList` 作为 DataValueType，因此默认分两层：
 
 1. 运行时服务 API 使用 `EntityId`。
-2. DataOS 内存和 snapshot 序列化暂存 string，读写处显式 `EntityId.From(value)` / `.Value`。
+2. DataOS / snapshot 使用 generated string / string_array 投影；转换集中在 owner service / helper 内部。
 
-这不是兼容旧 Relationship，而是 DataOS 类型能力未完成前的序列化策略。
+这不是兼容旧 Relationship，而是当前 DataOS 类型能力下的投影策略。若执行 SDD 决定新增原生 `entity_id` / `entity_id_list`，必须同步改 DataOS schema、generator、validator、`DataValueConverter` 和 DataOS 场景测试，不能只手写 `DataKey<EntityId>`。
 
 ## 3. Projectile
 
@@ -339,19 +342,21 @@ if AbilityEntityId not empty:
 
 ```csharp
 public readonly record struct OwnedReferenceDescriptor(
-    DataKey<EntityId?> ChildToOwnerKey,
-    DataKey<EntityIdList> OwnerListKey);
+    DataKey<string> ChildToOwnerProjectionKey,
+    DataKey<string[]> OwnerListProjectionKey);
 ```
 
-旧 DataOS 暂存 string 时可以用专门 descriptor：
+如果 owner list 暂时不能生成 `DataKey<string[]>`，可以使用专门 value object 包装稳定字符串格式：
 
 ```csharp
-public readonly record struct StringOwnedReferenceDescriptor(
-    DataKey<string> ChildToOwnerKey,
-    DataKey<string> OwnerListKey);
+public readonly record struct ProjectedEntityIdList(string Raw)
+{
+    public EntityIdList ToEntityIdList();
+    public static ProjectedEntityIdList From(EntityIdList ids);
+}
 ```
 
-但执行目标应是 typed DataKey。
+但 public API 仍必须是 `EntityId` / `EntityIdList`，不能让 raw string list 扩散到业务系统。
 
 ### 10.3 生命周期
 

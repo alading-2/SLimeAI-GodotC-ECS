@@ -1,8 +1,8 @@
 # Entity 系统完整重构设计包
 
-> 更新：2026-05-29
+> 更新：2026-05-31
 > 状态：current design package
-> 入口：`00-研究证据与裁决.md`
+> 入口：`06-2026-05-31-DataEventDocsAI同步校准.md` -> `00-研究证据与裁决.md`
 > 裁决：Entity/Relationship 不做兼容 facade，不做旧 Relationship 双写，不保留 legacy parent-chain 归因；按 hard cutover 完整重构。
 
 ## 0. 本设计包回答什么
@@ -31,6 +31,7 @@ Entity 重构不是一个“把 `EntityRelationshipManager` 换成 `LifecycleTre
 | `03-LifecycleTree与业务引用设计.md` | relationship-design | 详细说明 lifecycle tree、typed business reference、owner cleanup、damage attribution、UI/Component binding。 |
 | `04-完全重构范围与TDD测试计划.md` | rewrite-test-plan | 删除清单、执行任务序、grep gate、单元/场景测试和验收标准。 |
 | `05-源码调用点迁移清单.md` | callsite-migration | 基于当前源码 grep 把旧 Relationship / EntityManager 调用点按模块拆成迁移表、测试重写矩阵和最终门禁。 |
+| `06-2026-05-31-DataEventDocsAI同步校准.md` | current-override | Data/Event/DocsAI 更新后的执行前校准；覆盖旧 `DocsNew`、旧 `DataKey.Id`、旧事件字符串和旧路径假设。 |
 
 ## 2. 总裁决
 
@@ -47,8 +48,9 @@ Entity 重构不是一个“把 `EntityRelationshipManager` 换成 `LifecycleTre
   -> LifecycleTree
   -> ComponentRegistrar
   -> OwnedReferenceRegistry
-  -> typed business reference
+  -> typed runtime business reference + generated Data projection
   -> explicit DamageAttribution
+  -> typed event payload
   -> Observation dumps
 ```
 
@@ -71,7 +73,8 @@ Entity 重构不是一个“把 `EntityRelationshipManager` 换成 `LifecycleTre
 | `string relationType` 看不出语义 | 每种实体引用必须有 typed 字段名和 owner 文档。 |
 | `ParentEntity` 既像销毁 parent 又像伤害 owner | Lifecycle parent 只负责生命周期；伤害归因走 `DamageAttribution`。 |
 | `EntityManager` partial 太多 | Entity core 不包含 Ability / Projectile / Effect / Item / UI 业务方法。 |
-| Data id / InstanceId 混用 | Runtime API 只接受 `EntityId`；序列化才转 string。 |
+| Data id / InstanceId 混用 | Runtime API 只接受 `EntityId`；`GeneratedDataKey.Id` 只作为 DataOS / snapshot / observation 字符串投影。 |
+| 旧事件字符串 / `XxxEventData` 双写 | Entity lifecycle 事件必须用 `readonly record struct` payload 类型作为 EventBus key。 |
 | Debug 靠关系图 | Debug 输出 Lifecycle dump、TypedReference dump、Component owner dump、DamageAttribution trace。 |
 | 旧调用点可以绕过新规则 | 完成标准包含 grep gate，旧 API 残留即失败。 |
 
@@ -83,7 +86,7 @@ Entity 重构不是一个“把 `EntityRelationshipManager` 换成 `LifecycleTre
 | `EntityRegistry` | 注册、反查、snapshot、销毁入口 | 不知道 Ability、Projectile、Effect、UI。 |
 | `EntitySpawnPipeline` | 编排 spawn 阶段，集中失败回滚 | 不直接处理业务 relationType。 |
 | `EntityNodeFactory` | 对象池/场景实例化和场景树 attach | 不写 Data，不发业务事件。 |
-| `EntityDataInitializer` | DataOS record apply 和 `GeneratedDataKey.Id` 一致性 | 不读 Relationship。 |
+| `EntityDataInitializer` | DataOS record apply、`GeneratedDataKey.Id` 投影和 EntityId 一致性 | 不读 Relationship，不恢复旧 `DataKey.Id`。 |
 | `EntityVisualInitializer` | VisualScene 注入和碰撞模板同步 | 不注册 Component。 |
 | `EntityTransformInitializer` | Position / Rotation / ForceUpdateTransform / 池化物理同步 | 不决定生命周期 parent。 |
 | `ComponentRegistrar` | Component 扫描、注册、注销、owner index | 不通过 public Relationship 表。 |
@@ -97,12 +100,13 @@ Entity 重构不是一个“把 `EntityRelationshipManager` 换成 `LifecycleTre
 
 必须同时满足：
 
-- `rg "EntityRelationshipManager|EntityRelationshipType|ParentRelationTypes|BindParentRelationships|EntityRelationshipTraversal" SlimeAI/Src` 对 runtime 调用无命中。
-- `rg "public static partial class EntityManager" SlimeAI/Src/ECS/Base/System` 对业务系统无命中。
+- `rg "EntityRelationshipManager|EntityRelationshipType|ParentRelationTypes|BindParentRelationships|EntityRelationshipTraversal" Src/ECS Data DocsAI` 对 runtime 调用和 current 文档推荐面无非法命中。
+- `rg "public static partial class EntityManager" Src/ECS/Base/System` 对业务系统无命中。
 - `EntitySpawnConfig` 不包含 `ParentEntity / AutoAddParentRelation / ParentRelationTypes`。
 - `DamageInfo` 或等价伤害上下文包含 explicit attribution。
-- Projectile / Effect / Ability 归属写 typed DataKey / owner list。
+- Projectile / Effect / Ability 归属通过 typed runtime API 和 generated Data projection 写 owner/source/list，不散落 raw string entity-id。
 - Component owner 反查走 `ComponentRegistrar` 内部 index。
+- Entity lifecycle 事件使用 typed payload，不使用字符串事件名或 `XxxEventData`。
 - Lifecycle attach/detach/destroy 有独立测试。
 - Spawn pipeline 阶段顺序有测试。
 - Godot headless 场景 smoke 通过。
@@ -110,15 +114,16 @@ Entity 重构不是一个“把 `EntityRelationshipManager` 换成 `LifecycleTre
 
 ## 6. 阅读顺序
 
-1. 先读 `00-研究证据与裁决.md`，确认为什么不保留旧 Relationship runtime。
-2. 再读 `01-目标架构与模块拆分.md`，确认重构后的模块边界。
-3. 再读 `02-代码实现说明.md`，看每个目标类怎么写。
-4. 再读 `03-LifecycleTree与业务引用设计.md`，确认旧 Relationship 的每一种语义怎么替换。
-5. 再读 `04-完全重构范围与TDD测试计划.md`，确认 hard cutover 的 T1~T10 任务序。
-6. 最后读 `05-源码调用点迁移清单.md`，按实际文件和旧 API 命中开始改测试和调用点。
+1. 先读 `06-2026-05-31-DataEventDocsAI同步校准.md`，确认 Data/Event/DocsAI 最新覆盖规则。
+2. 再读 `00-研究证据与裁决.md`，确认为什么不保留旧 Relationship runtime。
+3. 再读 `01-目标架构与模块拆分.md`，确认重构后的模块边界。
+4. 再读 `02-代码实现说明.md`，看每个目标类怎么写。
+5. 再读 `03-LifecycleTree与业务引用设计.md`，确认旧 Relationship 的每一种语义怎么替换。
+6. 再读 `04-完全重构范围与TDD测试计划.md`，确认 hard cutover 的 T1~T10 任务序。
+7. 最后读 `05-源码调用点迁移清单.md`，按实际文件和旧 API 命中开始改测试和调用点。
 
 执行会话入口使用项目根的 `../../entity-rewrite-execution-prompt.md`。
 
 ## 7. 事实源边界
 
-Entity / Relationship 的长期设计文档只保留在本目录。旧根目录 Entity 分析文档已迁入 `00-研究证据与裁决.md`，不再作为独立入口存在。
+本目录是 Entity / Relationship hard cutover 的 SDD 设计事实源。框架长期文档、使用说明和 current 示例必须同步到 `DocsAI/ECS/Entity/` 及对应 owner 文档；`Src/ECS` 不再保存框架 Markdown 文档，`DocsNew` 不再作为当前入口。

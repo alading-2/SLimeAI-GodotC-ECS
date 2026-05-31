@@ -1,7 +1,8 @@
 # 完全重构范围与 TDD 测试计划
 
-> 更新：2026-05-29
+> 更新：2026-05-31
 > 目标：把 Entity/Relationship hard cutover 拆成可执行任务，并定义每个任务的测试、grep gate 和完成标准。
+> 校准：执行前先读 `06-2026-05-31-DataEventDocsAI同步校准.md`；grep gate 从 `/home/slime/Code/SlimeAI/SlimeAI` 运行，DocsAI 是 current 文档入口。
 
 ## 0. 执行策略
 
@@ -22,7 +23,7 @@
 | 文件 | 处理 | 替代 |
 | --- | --- | --- |
 | `EntityRelationshipManager.cs` | 删除 | `LifecycleTree` + capability owner indexes |
-| `EntityRelationshipType.cs` | 删除 | typed DataKey / service API |
+| `EntityRelationshipType.cs` | 删除 | typed runtime reference / generated Data projection / service API |
 | `EntityRelationshipTraversal.cs` | 删除 gameplay 入口 | `LifecycleTree.GetParent/GetChildren`，Damage 用 attribution |
 | `EntityRelationshipLifecycle.cs` | 删除 | `LifecycleLink.DestroyPolicy` |
 | `EntityManager_Relationship.cs` | 删除 | `LifecycleTree.Attach` |
@@ -71,6 +72,7 @@ ProjectileSystem/ProjectileDataKeys.cs 或 DataOS descriptor
 EffectSystem/EffectDataKeys.cs 或 DataOS descriptor
 DamageSystem/DamageAttribution.cs
 UI/UiBindingRegistry.cs
+Data/EventType/Entity/GameEventType_Entity.cs
 ```
 
 测试：
@@ -109,7 +111,7 @@ Src/ECS/Test/SingleTest/ECS/Damage/DamageAttributionTest.cs
 验收 grep：
 
 ```bash
-rg "GetInstanceId\\(\\)\\.ToString\\(\\)" SlimeAI/Src/ECS/Base/Entity/Core
+rg "GetInstanceId\\(\\)\\.ToString\\(\\)" Src/ECS/Base/Entity/Core
 ```
 
 允许日志或 Godot 低层映射用 `GetInstanceId()`，不允许作为 entity id 对外返回。
@@ -138,7 +140,7 @@ rg "GetInstanceId\\(\\)\\.ToString\\(\\)" SlimeAI/Src/ECS/Base/Entity/Core
 验收 grep：
 
 ```bash
-rg "EntityRelationshipType\\.PARENT|ReadParentDestroyPolicy|CreateParentRelationshipData" SlimeAI/Src
+rg "EntityRelationshipType\\.PARENT|ReadParentDestroyPolicy|CreateParentRelationshipData" Src/ECS
 ```
 
 应无 runtime 调用命中。
@@ -179,7 +181,7 @@ rg "EntityRelationshipType\\.PARENT|ReadParentDestroyPolicy|CreateParentRelation
 验收 grep：
 
 ```bash
-rg "ENTITY_TO_COMPONENT|GetEntityByComponent\\(|GetChildEntitiesByParentAndType\\(.*COMPONENT" SlimeAI/Src
+rg "ENTITY_TO_COMPONENT|GetEntityByComponent\\(|GetChildEntitiesByParentAndType\\(.*COMPONENT" Src/ECS
 ```
 
 应无 runtime Relationship 调用命中。
@@ -207,7 +209,7 @@ rg "ENTITY_TO_COMPONENT|GetEntityByComponent\\(|GetChildEntitiesByParentAndType\
 验收 grep：
 
 ```bash
-rg "ParentRelationTypes|AutoAddParentRelation|ParentEntity =" SlimeAI/Src
+rg "ParentRelationTypes|AutoAddParentRelation|ParentEntity =" Src/ECS
 ```
 
 应无新 spawn request 调用命中。
@@ -230,7 +232,7 @@ rg "ParentRelationTypes|AutoAddParentRelation|ParentEntity =" SlimeAI/Src
 - 新增 `OwnedReferenceDescriptor`。
 - 新增 `OwnedReferenceRegistry`。
 - 各 capability 初始化注册 descriptor。
-- DataOS descriptor 补 `SourceEntityId / SpawnedProjectileIds / SpawnedEffectIds / OwnedAbilityIds` 等字段，类型能力不足时先以 string 序列化但 API 使用 EntityId。
+- DataOS descriptor 补 `SourceEntityId / SpawnedProjectileIds / SpawnedEffectIds / OwnedAbilityIds` 等字段。默认按当前 DataOS 能力生成 string / string_array projection，public API 使用 `EntityId` / `EntityIdList`；如果要生成 `DataKey<EntityId>`，必须先扩展 DataOS valueType、generator、validator 和 converter。
 
 ### T7：AbilityService 替换 `EntityManager_Ability`
 
@@ -252,8 +254,8 @@ rg "ParentRelationTypes|AutoAddParentRelation|ParentEntity =" SlimeAI/Src
 验收 grep：
 
 ```bash
-rg "AddAbility\\(|GetAbilities\\(|RemoveAbility\\(" SlimeAI/Src
-rg "public static partial class EntityManager" SlimeAI/Src/ECS/Base/System
+rg "AddAbility\\(|GetAbilities\\(|RemoveAbility\\(" Src/ECS
+rg "public static partial class EntityManager" Src/ECS/Base/System
 ```
 
 第一条用于检查调用点归属，第二条应无业务系统命中。
@@ -303,7 +305,7 @@ Effect 测试：
 验收 grep：
 
 ```bash
-rg "GetAncestorChain|FindAncestorOfType<IUnit>|EntityRelationshipTraversal" SlimeAI/Src/ECS/Base/System
+rg "GetAncestorChain|FindAncestorOfType<IUnit>|EntityRelationshipTraversal" Src/ECS/Base/System Src/ECS/Base/Component
 ```
 
 应无 runtime 归因调用命中。
@@ -328,11 +330,11 @@ rg "GetAncestorChain|FindAncestorOfType<IUnit>|EntityRelationshipTraversal" Slim
 建议新增或重建独立场景：
 
 ```text
-res://SlimeAI/Src/Validation/Entity/EntityIdRegistryValidation.tscn
-res://SlimeAI/Src/Validation/Entity/LifecycleTreeValidation.tscn
-res://SlimeAI/Src/Validation/Entity/EntitySpawnPipelineValidation.tscn
-res://SlimeAI/Src/Validation/Entity/BusinessReferenceValidation.tscn
-res://SlimeAI/Src/Validation/Damage/DamageAttributionValidation.tscn
+res://Src/Validation/Entity/EntityIdRegistryValidation.tscn
+res://Src/Validation/Entity/LifecycleTreeValidation.tscn
+res://Src/Validation/Entity/EntitySpawnPipelineValidation.tscn
+res://Src/Validation/Entity/BusinessReferenceValidation.tscn
+res://Src/Validation/Damage/DamageAttributionValidation.tscn
 ```
 
 每个场景必须输出：
@@ -369,13 +371,14 @@ Tools/analyze-godot-scene-logs.sh
 必须全部执行：
 
 ```bash
-cd /home/slime/Code/SlimeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 
-rg "EntityRelationshipManager|EntityRelationshipType|ParentRelationTypes|BindParentRelationships|EntityRelationshipTraversal" SlimeAI/Src
-rg "public static partial class EntityManager" SlimeAI/Src/ECS/Base/System
-rg "GetAncestorChain|FindAncestorOfType<IUnit>" SlimeAI/Src/ECS/Base/System
-rg "DataKey\\.Id" SlimeAI/Src/ECS/Base/Entity SlimeAI/Src/ECS/Base/System
-rg "GetInstanceId\\(\\)\\.ToString\\(\\)" SlimeAI/Src/ECS/Base/Entity SlimeAI/Src/ECS/Base/System
+rg "EntityRelationshipManager|EntityRelationshipType|ParentRelationTypes|BindParentRelationships|EntityRelationshipTraversal" Src/ECS Data DocsAI
+rg "public static partial class EntityManager" Src/ECS/Base/System
+rg "GetAncestorChain|FindAncestorOfType<IUnit>" Src/ECS/Base/System Src/ECS/Base/Component
+rg "DataKey\\.Id" Src/ECS/Base/Entity Src/ECS/Base/System Src/ECS/Test DocsAI/ECS
+rg "GetInstanceId\\(\\)\\.ToString\\(\\)" Src/ECS/Base/Entity Src/ECS/Base/System Src/ECS/Test
+rg "EventData|EventName|const string .*Event" Src/ECS Data/EventType DocsAI/ECS
 ```
 
 解释：
@@ -385,6 +388,7 @@ rg "GetInstanceId\\(\\)\\.ToString\\(\\)" SlimeAI/Src/ECS/Base/Entity SlimeAI/Sr
 - 第三条：伤害/阵营归因不走 parent chain。
 - 第四条：Entity identity 不读旧 DataKey alias。
 - 第五条：Godot InstanceId 不作为 runtime entity id。允许日志/底层 node map，但需要人工审计每个命中。
+- 第六条：Event 不恢复字符串事件名或 `XxxEventData` 双写。
 
 ## 7. BDD 验收
 
@@ -409,6 +413,12 @@ Feature: Business reference
     And S.SpawnedProjectileIds contains P
     And no ENTITY_TO_PROJECTILE relationship exists
 
+Feature: Entity lifecycle events
+  Scenario: Entity spawn publishes typed payload
+    Given an entity E is spawned successfully
+    Then GlobalEventBus receives GameEventType.Entity.Spawned with E.EntityId
+    And no string event name or EntitySpawnedEventData is used
+
 Feature: Damage attribution
   Scenario: Projectile damage credits player and weapon explicitly
     Given projectile P was fired by weapon W owned by player U
@@ -422,8 +432,8 @@ Feature: Damage attribution
 
 完成时必须更新：
 
-- `SlimeAI/Src/ECS/Base/Entity/**` 旁文档
-- `SlimeAI/DocsNew/` 中仍作为 current 的相关入口
+- `DocsAI/ECS/Entity/`
+- `DocsAI/ECS/Data/`、`DocsAI/ECS/Event/` 中被 Entity 引用的 current 规则
 - 对应 Ability / Projectile / Effect / Damage / Movement / UI 模块文档
 - owner skills 若有 Entity 规则引用
 - PRJ-0002 progress

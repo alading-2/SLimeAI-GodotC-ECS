@@ -20,8 +20,8 @@
 
 ## 工作区与项目
 
-- **Workspace**: `/home/slime/Code/SlimeAI`
-- **Framework Git Boundary**: `/home/slime/Code/SlimeAI/SlimeAI`
+- **Workspace / Framework Git Boundary**: `/home/slime/Code/SlimeAI/SlimeAI`
+- **Game Validation Git Boundary**: `/home/slime/Code/SlimeAI/Games/BrotatoLike`
 - **Project**: `SDD/project/projects/PRJ-0002-ecs-framework-refactor/`
 - **Design Package**: `design/3.Entity系统优化/`
 - **Suggested SDD Title**: `Entity Relationship Full Rewrite`
@@ -40,21 +40,25 @@
 再读 Entity 完整重构事实源：
 
 1. `design/3.Entity系统优化/README.md`
-2. `design/3.Entity系统优化/00-研究证据与裁决.md`
-3. `design/3.Entity系统优化/01-目标架构与模块拆分.md`
-4. `design/3.Entity系统优化/02-代码实现说明.md`
-5. `design/3.Entity系统优化/03-LifecycleTree与业务引用设计.md`
-6. `design/3.Entity系统优化/04-完全重构范围与TDD测试计划.md`
-7. `design/3.Entity系统优化/05-源码调用点迁移清单.md`
+2. `design/3.Entity系统优化/06-2026-05-31-DataEventDocsAI同步校准.md`
+3. `design/3.Entity系统优化/00-研究证据与裁决.md`
+4. `design/3.Entity系统优化/01-目标架构与模块拆分.md`
+5. `design/3.Entity系统优化/02-代码实现说明.md`
+6. `design/3.Entity系统优化/03-LifecycleTree与业务引用设计.md`
+7. `design/3.Entity系统优化/04-完全重构范围与TDD测试计划.md`
+8. `design/3.Entity系统优化/05-源码调用点迁移清单.md`
 
 再读当前框架事实源：
 
-1. `SlimeAI/DocsAI/INDEX.md`
-2. `SlimeAI/DocsAI/ProjectState.md`
-3. `SlimeAI/DocsAI/GameOS/Contracts.md`
-4. `SlimeAI/DocsAI/GameOS/ApiIndex.md`
-5. `SlimeAI/Src/ECS/Base/Entity/Core/`
-6. 相关 owner skill：`ecs-entity`、`ecs-data`、`damage-system`、`ability-system`、`projectile-effect-system`、`movement-system`、`test-system`
+1. `DocsAI/README.md`
+2. `DocsAI/ECS/README.md`
+3. `DocsAI/ECS/Entity/`
+4. `DocsAI/ECS/Data/Data系统说明.md`
+5. `DocsAI/ECS/Event/Event系统说明.md`
+6. `Src/ECS/Base/Entity/Core/`
+7. `Data/DataKey/Generated/DataKey_Generated.cs`
+8. `Data/EventType/`
+9. 相关 owner skill：`ecs-entity`、`ecs-data`、`ecs-event`、`damage-system`、`ability-system`、`projectile-effect-system`、`movement-system`、`test-system`
 
 最后读执行 SDD：
 
@@ -72,7 +76,9 @@
 - **Registry**：`EntityRegistry` 是唯一注册表；找不到 Node 时返回 `EntityId.Empty`，不 fallback Godot InstanceId。
 - **Spawn**：`EntitySpawnPipeline` 编排 spawn 阶段；`EntitySpawnRequest` 不包含业务 owner/source/target。
 - **Lifecycle**：`LifecycleTree` 是唯一保留的 Relationship 语义，只表达单 parent 生命周期树。
-- **Business reference**：Projectile / Effect / Ability / Item / UI / Component owner 全部迁到 typed DataKey、owner list 或 capability-owned index。
+- **Business reference**：Projectile / Effect / Ability / Item / UI / Component owner 全部迁到 typed runtime API、generated Data projection、owner list 或 capability-owned index。
+- **Data boundary**：`GeneratedDataKey.Id` 只作为 `EntityId.Value` 的 DataOS / snapshot / observation 字符串投影；不恢复旧 `DataKey.Id`。
+- **Event boundary**：Entity lifecycle 事件必须是 `readonly record struct` payload；不新增字符串事件名或 `XxxEventData`。
 - **Damage attribution**：统计归因只读 `DamageAttribution`；缺 attribution 是错误，不走 parent chain。
 - **Debug**：AI 调试看 observation dump，不查 runtime Relationship graph。
 - **删除旧入口**：`EntityRelationshipManager`、`EntityRelationshipType`、`EntityRelationshipTraversal`、`EntityRelationshipLifecycle`、`EntityManager_Relationship`、`EntityManager_Ability`、`ParentRelationTypes`、`BindParentRelationships` 必须退出 runtime。
@@ -106,21 +112,21 @@ subagent = 只读侦察 / gap report / 测试建议 / 局部迁移草案
 
 ### Git 边界
 
-改 SDD 文档在工作区根：
-
-```bash
-cd /home/slime/Code/SlimeAI
-git status --short
-```
-
-改框架源码在框架仓：
+改 SDD 文档和框架源码都在框架仓：
 
 ```bash
 cd /home/slime/Code/SlimeAI/SlimeAI
 git status --short
 ```
 
-不要把工作区根 SDD 改动和 `SlimeAI/` 子仓源码改动混到同一个 git 边界提交。
+游戏场景验证才进入游戏仓：
+
+```bash
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
+git status --short
+```
+
+不要在游戏仓 `SlimeAI/` submodule 内直接做框架业务改动。
 
 ## TDD 任务序
 
@@ -136,7 +142,9 @@ git status --short
 必须记录：
 
 ```bash
-rg -n "EntityRelationshipManager|EntityRelationshipType|ParentRelationTypes|BindParentRelationships|EntityRelationshipTraversal|AutoAddParentRelation|ParentEntity|EntityManager\.(AddAbility|GetAbilities|RemoveAbility)|GetAncestorChain|FindAncestorOfType<IUnit>|DataKey\.Id|GetInstanceId\(\)\.ToString\(\)" SlimeAI/Src/ECS/Base SlimeAI/Src/ECS/Test
+cd /home/slime/Code/SlimeAI/SlimeAI
+rg -n "EntityRelationshipManager|EntityRelationshipType|ParentRelationTypes|BindParentRelationships|EntityRelationshipTraversal|AutoAddParentRelation|ParentEntity|EntityManager\.(AddAbility|GetAbilities|RemoveAbility)|GetAncestorChain|FindAncestorOfType<IUnit>|DataKey\.Id|GetInstanceId\(\)\.ToString\(\)" Src/ECS/Base Src/ECS/Test DocsAI/ECS
+rg -n "EventData|EventName|const string .*Event|EntitySpawned|EntityDestroyed" Src/ECS Data/EventType DocsAI/ECS
 ```
 
 ### T1：EntityId 与 EntityRegistry
@@ -154,7 +162,8 @@ RED tests：
 - 新增 `EntityId`。
 - 新增 `EntityRegistry`。
 - 替换 Entity core 内部 raw string id。
-- `GeneratedDataKey.Id` 只作为 `EntityId.Value` 的 DataOS 投影。
+- `GeneratedDataKey.Id` 只作为 `EntityId.Value` 的 DataOS / snapshot / observation 投影。
+- 业务系统不散读 `GeneratedDataKey.Id`；需要身份时用 `IEntity.EntityId` 或 `EntityRegistry.GetEntityId(Node)`。
 
 禁止：
 
@@ -253,6 +262,7 @@ RED tests：
 - 新增 `OwnedReferenceDescriptor`。
 - 新增 `OwnedReferenceRegistry`。
 - 各 capability 初始化注册 descriptor。
+- 默认 DataOS 存储使用 generated string / string_array projection，转换集中在 owner service / helper 内；如果要 `DataKey<EntityId>`，必须先扩展 DataOS valueType / generator / validator / converter。
 
 ### T7：Ability owner service
 
@@ -268,7 +278,7 @@ RED tests：
 
 - 新增 `AbilityInventoryService` 或合入明确 Ability service。
 - 删除 `EntityManager_Ability.cs`。
-- Feature/TestSystem/Ability components 改为 service + typed DataKey。
+- Feature/TestSystem/Ability components 改为 service + typed runtime reference / generated Data projection helper。
 
 ### T8：Projectile / Effect typed reference
 
@@ -322,7 +332,7 @@ RED tests：
 
 - 新增 `EntityObservationDumper`。
 - 删除 `EntityRelationshipManager.GetDebugInfo` 依赖。
-- 更新 DocsAI、模块 README、owner skills。
+- 更新 `DocsAI/ECS/Entity/`、相关 owner 文档和 owner skills。
 - 删除旧 Relationship 文件和旧测试。
 
 ## 每个任务的固定循环
@@ -359,7 +369,7 @@ Tools/analyze-godot-scene-logs.sh
 SDD 校验：
 
 ```bash
-cd /home/slime/Code/SlimeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 python3 Workspace/SDD/sdd.py validate <当前SDD>
 python3 Workspace/SDD/sdd.py validate --all
 ```
@@ -367,14 +377,15 @@ python3 Workspace/SDD/sdd.py validate --all
 最终 grep gate：
 
 ```bash
-cd /home/slime/Code/SlimeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 
-rg "EntityRelationshipManager|EntityRelationshipType|ParentRelationTypes|BindParentRelationships|EntityRelationshipTraversal" SlimeAI/Src
-rg "public static partial class EntityManager" SlimeAI/Src/ECS/Base/System
-rg "EntityManager\.(AddAbility|GetAbilities|RemoveAbility)" SlimeAI/Src
-rg "GetAncestorChain|FindAncestorOfType<IUnit>" SlimeAI/Src/ECS/Base/System SlimeAI/Src/ECS/Base/Component
-rg "DataKey\.Id" SlimeAI/Src/ECS/Base/Entity SlimeAI/Src/ECS/Base/System SlimeAI/Src/ECS/Test
-rg "GetInstanceId\(\)\.ToString\(\)" SlimeAI/Src/ECS/Base/Entity SlimeAI/Src/ECS/Base/System SlimeAI/Src/ECS/Test
+rg "EntityRelationshipManager|EntityRelationshipType|ParentRelationTypes|BindParentRelationships|EntityRelationshipTraversal" Src/ECS Data DocsAI
+rg "public static partial class EntityManager" Src/ECS/Base/System
+rg "EntityManager\.(AddAbility|GetAbilities|RemoveAbility)" Src/ECS
+rg "GetAncestorChain|FindAncestorOfType<IUnit>" Src/ECS/Base/System Src/ECS/Base/Component
+rg "DataKey\.Id" Src/ECS/Base/Entity Src/ECS/Base/System Src/ECS/Test DocsAI/ECS
+rg "GetInstanceId\(\)\.ToString\(\)" Src/ECS/Base/Entity Src/ECS/Base/System Src/ECS/Test
+rg "EventData|EventName|const string .*Event" Src/ECS Data/EventType DocsAI/ECS
 ```
 
 ## 完成定义
@@ -400,3 +411,4 @@ rg "GetInstanceId\(\)\.ToString\(\)" SlimeAI/Src/ECS/Base/Entity SlimeAI/Src/ECS
 - parent-chain damage attribution fallback。
 - raw string entity id public API。
 - test fixture 用 `GetInstanceId().ToString()` 伪造 entity id。
+- string event name / `XxxEventData` lifecycle event。

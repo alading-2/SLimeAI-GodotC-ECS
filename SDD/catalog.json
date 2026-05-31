@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-05-30 21:24",
+  "generated_at": "2026-05-31 16:15",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -32,7 +32,7 @@
       "slug": "ecs-framework-optimization",
       "title": "ECS Framework Optimization",
       "status": "active",
-      "updated_at": "2026-05-30",
+      "updated_at": "2026-05-31",
       "scope": "SlimeAI",
       "tags": [
         "ecs",
@@ -42,7 +42,7 @@
         "entity",
         "relationship"
       ],
-      "current_sdd": "SDD-0023",
+      "current_sdd": "SDD-0024",
       "bucket": "projects",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor"
     }
@@ -572,6 +572,28 @@
       "project_order": 13,
       "current_task": "done",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/013-SDD-0023-systemagent-root-migration-rule-sync"
+    },
+    {
+      "id": "SDD-0024",
+      "slug": "entity-relationship-full-rewrite",
+      "title": "Entity Relationship Full Rewrite",
+      "status": "active",
+      "type": "refactor",
+      "updated_at": "2026-05-31",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "ecs/entity"
+      ],
+      "tags": [
+        "entity",
+        "relationship",
+        "hard-cutover",
+        "data-event-docsai-sync"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 14,
+      "current_task": "T1.5",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/014-SDD-0024-entity-relationship-full-rewrite"
     }
   ]
 }

@@ -3,7 +3,7 @@
 ## Summary
 
 - **pending**: 0
-- **active**: 0
+- **active**: 1
 - **blocked**: 0
 - **done**: 23
 - **projects**: 2
@@ -13,7 +13,7 @@
 | ID | Title | Status | Bucket | Current SDD | Path |
 | --- | --- | --- | --- | --- | --- |
 | PRJ-0001 | SystemAgent Optimization | active | projects | SDD-0008 | SDD/project/projects/PRJ-0001-systemagent-optimization |
-| PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0023 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
+| PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0024 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
 
 ## Pending
 
@@ -21,7 +21,9 @@
 
 ## Active
 
-无。
+| ID | Project | Title | Updated | Scope | Current Task |
+| --- | --- | --- | --- | --- | --- |
+| SDD-0024 | PRJ-0002 | Entity Relationship Full Rewrite | 2026-05-31 | SlimeAI | T1.5 |
 
 ## Blocked
 
@@ -72,6 +74,7 @@
 - SDD-0021 — Data No-Compatibility Hard Cutover
 - SDD-0022 — Data Projection Diagnostics Contract Hardening
 - SDD-0023 — SystemAgent Root Migration Rule Sync
+- SDD-0024 — Entity Relationship Full Rewrite
 
 ### Workspace/SDD
 
@@ -134,6 +137,10 @@
 - SDD-0021 — Data No-Compatibility Hard Cutover
 - SDD-0022 — Data Projection Diagnostics Contract Hardening
 
+### data-event-docsai-sync
+
+- SDD-0024 — Entity Relationship Full Rewrite
+
 ### data-rewrite
 
 - SDD-0012 — Data System Full Rewrite - Catalog TDD Slice
@@ -159,6 +166,10 @@
 
 - SDD-0020 — Data Snapshot-First Usage Cutover
 
+### entity
+
+- SDD-0024 — Entity Relationship Full Rewrite
+
 ### feature
 
 - SDD-0015 — Data Modifier Runtime and Feature Bridge
@@ -174,6 +185,10 @@
 ### godot-test
 
 - SDD-0019 — Data Legacy Path Removal and Test Scene Rebuild
+
+### hard-cutover
+
+- SDD-0024 — Entity Relationship Full Rewrite
 
 ### hook
 
@@ -213,6 +228,10 @@
 - SDD-0005 — SDD CLI Source Modularization
 - SDD-0020 — Data Snapshot-First Usage Cutover
 - SDD-0021 — Data No-Compatibility Hard Cutover
+
+### relationship
+
+- SDD-0024 — Entity Relationship Full Rewrite
 
 ### role
 

@@ -19,8 +19,8 @@
 | `design/2.Data系统优化/2.Data无兼容完全重构/04-BUG:Data无兼容重构后移动与施法失败根因说明.md` | done | SDD-0022 | `unit.player` / `unit.enemy` record completeness 和注册期 `DefaultMoveMode` 已前移到 final snapshot，不恢复 Entity/Pool fallback |
 | `design/2.Data系统优化/2.Data无兼容完全重构/05-Data残余问题代码修复分解.md` | done | SDD-0022 | Movement 字段前移、validator、projection、diagnostics、类型契约、spawn、catalog、query 已落地并验证 |
 | `design/2.Data系统优化/2.Data无兼容完全重构/06-Data文档更新与门禁清单.md` | done | SDD-0022 | current docs 已更新，旧 Data 路线 grep gate 清零 |
-| `design/4.SystemAgent目录更改到SlimeAI里面/README.md` | active | SDD-0023 | `SDD/`、`Workspace/`、`.ai-config/` 已迁入 `SlimeAI/` 后，执行 rules / skill / DocsNew / SDD template 的框架仓语义收口 |
-| `design/3.Entity系统优化/` | done | TBD | Entity 完整重构设计包：研究证据与裁决、typed EntityId、EntityRegistry、Spawn/Destroy pipeline、LifecycleTree、ComponentRegistrar、OwnedReferenceRegistry、DamageAttribution、Observation 和源码调用点迁移 |
+| `design/4.SystemAgent目录更改到SlimeAI里面/README.md` | active | SDD-0023 | `SDD/`、`Workspace/`、`.ai-config/` 已迁入 `SlimeAI/` 后，执行 rules / skill / DocsAI / SDD template 的框架仓语义收口；已生成 SDD-0024 后不再是当前恢复入口 |
+| `design/3.Entity系统优化/` | active | SDD-0024 | Entity 完整重构设计包已按 2026-05-31 Data/Event/DocsAI current 契约校准；SDD-0024 执行 typed EntityId、generated Data projection、typed lifecycle event、EntityRegistry、Spawn/Destroy pipeline、LifecycleTree、ComponentRegistrar、OwnedReferenceRegistry、DamageAttribution、Observation 和源码调用点迁移 |
 | `design/13-旧ECS框架Event系统问题分析与优化方向.md` | done | TBD | EventBus 保留，重点优化事件主键、Context、Global 边界和订阅生命周期 |
 | `design/03-字符串键名统一问题分析.md` | done | TBD | 跨 Data/Event/Relationship/Resource 的统一命名问题输入 |
 | `design/04-优化优先级与SDD拆分建议.md` | done | SDD-0012~SDD-0019 | 已按 Data Full Rewrite 拆成 8 个新切片 |
@@ -40,6 +40,6 @@
 | P0 | `design/2.Data系统优化/04-Data系统现状复查与兼任问题.md` | **SDD-0020 已完成**：Data 取用主链路已切到 runtime snapshot / query / projection；但无兼容审计发现类型契约和兼容入口仍未硬收口，进入 SDD-0021 |
 | P0 | `design/2.Data系统优化/06-无兼容完全重构总审计/README.md` | **SDD-0021 已完成**：按 no-compat hard cutover 删除 generator/validator/generated handle/Data API/旧 authoring/文档兼容残留，修复 `AbilityIcon` / `AvailableAnimations` 类型回归根因 |
 | P0 | `design/2.Data系统优化/2.Data无兼容完全重构/03-*`、`04-*`、`05-*`、`06-*` | **SDD-0022 已完成**：Data Projection Diagnostics Contract Hardening，按 record completeness、projection 单一事实源、diagnostics、object_ref、spawn boundary、catalog freeze、display name query 和 docs gate 收口 |
-| **P0 当前** | `design/4.SystemAgent目录更改到SlimeAI里面/README.md` | **SDD-0023**：SystemAgent / AI config 根迁移后的 rules、skill、SDD template、DocsNew 和验证门禁语义收口 |
-| **P0 当前** | `design/3.Entity系统优化/` + `entity-rewrite-execution-prompt.md` | 创建 `Entity Relationship Full Rewrite` 执行 SDD，按 hard cutover 完成 EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除 |
+| P0 | `design/4.SystemAgent目录更改到SlimeAI里面/README.md` | **SDD-0023**：SystemAgent / AI config 根迁移后的 rules、skill、SDD template、DocsAI 和验证门禁语义收口 |
+| **P0 当前** | `design/3.Entity系统优化/` + `entity-rewrite-execution-prompt.md` | **SDD-0024**：Entity Relationship Full Rewrite，按 hard cutover 完成 EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除 |
 | P1 | `design/13-旧ECS框架Event系统问题分析与优化方向.md` | Entity hard cutover 或 Data 当前优先级收口后，再处理 Event 定义事实源与主键优化 |
