@@ -1,0 +1,44 @@
+{
+  "scanned": 5,
+  "rules": {
+    "R001": {
+      "name": "frontmatter-required-fields",
+      "pass": 5,
+      "fail": 0,
+      "violations": []
+    },
+    "R002": {
+      "name": "references-exist",
+      "pass": 5,
+      "fail": 0,
+      "violations": []
+    },
+    "R003": {
+      "name": "source-of-truth-alignment",
+      "pass": 5,
+      "fail": 0,
+      "violations": []
+    },
+    "R004": {
+      "name": "sync-targets-up-to-date",
+      "pass": 5,
+      "fail": 0,
+      "violations": []
+    },
+    "R005": {
+      "name": "catalog-coverage",
+      "pass": 5,
+      "fail": 0,
+      "violations": []
+    },
+    "R006": {
+      "name": "no-direct-copy-edits",
+      "pass": 5,
+      "fail": 0,
+      "violations": []
+    }
+  },
+  "criticalFailures": 0,
+  "advisoryWarnings": 0,
+  "exitCode": 0
+}

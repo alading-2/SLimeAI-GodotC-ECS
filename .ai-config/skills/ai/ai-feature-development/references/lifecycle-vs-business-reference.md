@@ -1,6 +1,6 @@
 # Lifecycle vs Business Reference
 
-> Baseline 由当前 SDD design、相关 Capability contract 与 `Src/ECS/**` 旁文档管理。历史基线见 `openspec/specs/runtime-relationship-lifecycle/spec.md` 与 `openspec/specs/runtime-business-entity-references/spec.md`。
+> Baseline 由当前 SDD design、相关 Capability contract 与 `DocsAI/ECS/` 文档管理。历史基线见 `openspec/specs/runtime-relationship-lifecycle/spec.md` 与 `openspec/specs/runtime-business-entity-references/spec.md`。
 
 读取时机：需要表达 owner、source、target、equipped-by、spawned-by、affected-by、UI mapping、entity-to-component mapping 或父子生命周期时读取。
 

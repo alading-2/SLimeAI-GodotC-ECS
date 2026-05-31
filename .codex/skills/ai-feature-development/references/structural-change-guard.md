@@ -1,6 +1,6 @@
 # Structural Change Guard
 
-> Baseline 由当前 SDD design、Runtime CommandBuffer 文档与 `Src/ECS/**` 旁文档管理。CommandBuffer kind 或 guard 语义变化必须走独立 SDD。
+> Baseline 由当前 SDD design、Runtime CommandBuffer 文档与 `DocsAI/ECS/` 文档管理。CommandBuffer kind 或 guard 语义变化必须走独立 SDD。
 
 读取时机：在 event dispatch、lifecycle callback、GodotBridge callback、Capability tick 或测试中调用 `Spawn / Destroy / Attach / Detach`、queued event、resource request、Godot node deferred request 时读取。
 

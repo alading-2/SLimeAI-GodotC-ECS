@@ -11,7 +11,7 @@ trigger: always_on
 默认入口：
 
 ```text
-AGENTS.md -> DocsNew/README.md -> SDD/project/projects/PRJ-0002-ecs-framework-refactor/README.md -> SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/INDEX.md -> Src/ECS/** 旁文档 -> owner skill -> 验证脚本
+AGENTS.md -> DocsAI/README.md -> DocsAI/ECS/README.md -> SDD/project/projects/PRJ-0002-ecs-framework-refactor/README.md -> SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/INDEX.md -> DocsAI/ECS/<分类>/<owner>/完整文档 -> owner skill -> 验证脚本
 ```
 
 SystemAgent 不作为 ECS 业务事实源第一入口；它只作为流程工具（设计发现、SDD 管理、AI config 同步、验证发布、复盘）。
@@ -30,26 +30,28 @@ SystemAgent 不作为 ECS 业务事实源第一入口；它只作为流程工具
 
 ## 必读入口
 
-- 方向入口：`DocsNew/README.md`
+- 方向入口：`DocsAI/README.md`
+- 框架文档：`DocsAI/ECS/README.md`（按 Entity / Data / Event / Collision / Component / System / Tools / UI owner 聚合）
 - 当前项目设计：`SDD/project/projects/PRJ-0002-ecs-framework-refactor/README.md`
 - 设计索引：`SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/INDEX.md`
-- 模块事实源：`Src/ECS/**` 旁文档
-- Data 当前说明：`DocsNew/ECS/Data/Data系统说明.md`
+- 模块事实源：`DocsAI/ECS/<分类>/<owner>/` 下完整迁移文档；`Concept.md` / `Usage.md` 只是推荐命名，不是强制结构；Component 暂时按 `DocsAI/ECS/Component/**` 镜像 `Src/ECS/Base/Component/**`
+- Data 当前说明：`DocsAI/ECS/Data/Data系统说明.md`
+- 设计思考：`DocsAI/思考/`
 - 流程工具：`Workspace/SystemAgent/README.md`
-- Godot 场景测试：`Src/ECS/Test/**` 旁 README、`Games/BrotatoLike/Tools/run-godot-scene.sh`
+- Godot 场景测试：`DocsAI/ECS/System/TestSystem/Usage.md`、`Src/ECS/Test/**` 测试源码、`Games/BrotatoLike/Tools/run-godot-scene.sh`
 
 ## 事实源边界
 
-- `DocsNew/`：方向决策、临时总览、少量系统说明。
+- `DocsAI/`：框架文档统一入口，AI-first 设计。按 ECS 分类 + owner 聚合，优先无损保存原文；Concept / Usage / Tests 只是推荐分层。`Base/` 不作为 DocsAI 分类；Component 暂时按 `DocsAI/ECS/Component/**` 对齐 `Src/ECS/Base/Component/**`。
 - `SDD/`：中大型任务设计、进度、执行记忆。项目级 SDD 在 `SDD/project/projects/`。
-- `Src/ECS/**` 旁文档：当前模块契约与实现说明。
+- `Src/ECS/**`：源码入口；框架 Markdown 文档统一由 `DocsAI/ECS/` 管理，`Src/ECS` 不保留框架文档。
 - `.ai-config/skills/*`：唯一可维护 skill 源，保存 skill 路由、命令、reference 和脚本入口。
 - `.ai-config/rules/rules.md`：rule 源。
 - `.claude/.codex.windsurf/skills`、`AGENTS.md`、`CLAUDE.md`、`.windsurf/rules/windsurfrules.md`：同步副本，不直接维护。
 - `.claude/settings.json`、`.claude/agents/`、`.codex/hooks.json`、`.codex/agents/`、`.codex/config.toml`：hook/subagent 运行配置，直接维护，不走 `.ai-config` 同步。
 - `Workspace/SystemAgent/`：流程、角色、gate、hook、skill-test 工具。
 - `Workspace/SDD/`：SDD CLI、模板和校验规则。
-- `DocsAI/`：已删除旧入口，不恢复，不作为当前事实源。
+- `Workspace/DocsAI/`：工作区级文档（Git submodule、多游戏架构、AI 流程），与框架文档分离。
 - `openspec/`：仅保留历史资产和显式兼容维护入口，不作为默认计划或执行入口。
 
 ## 修改规则
@@ -75,7 +77,7 @@ SystemAgent 不作为 ECS 业务事实源第一入口；它只作为流程工具
 
 ## 工作区视野约束
 
-- 日常开发关注：当前仓（`Src/`、`SDD/`、`DocsNew/`、`.ai-config/`）、`Games/BrotatoLike/`
+- 日常开发关注：当前仓（`Src/`、`SDD/`、`DocsAI/`、`.ai-config/`）、`Games/BrotatoLike/`
 - `Resources/Engine/` —— 引擎源码与框架分析报告，研究参考时查阅
 - `Resources/Games/` —— 破解游戏逆向素材与分析文档，游戏机制参考时查阅
 - `Resources/Agent/` —— 外部 AI 项目分析，agent 工作流参考时查阅
@@ -108,7 +110,7 @@ SystemAgent 不作为 ECS 业务事实源第一入口；它只作为流程工具
 - 大型功能、架构变更、跨模块重构、长期设计决策、迁移账本和跨目录文档治理，优先进入 `SDD/project/projects/`。
 - 探索阶段可普通分析，只读代码和文档，不直接改实现；设计发现使用 `sdd-design-discovery`。
 - 创建和管理任务使用 `sdd-workflow` / `sdd-management`，并维护 `README.md`、`design/`、`tasks.md`、`progress.md`、`bdd.md`。
-- 执行中每完成一批任务，及时更新对应 `tasks.md` checkbox 和 `progress.md` Latest Resume，并同步必要的 `Src/ECS/**` 旁文档、`DocsNew/`、SDD design 或游戏侧状态文档。
+- 执行中每完成一批任务，及时更新对应 `tasks.md` checkbox 和 `progress.md` Latest Resume，并同步必要的 `DocsAI/ECS/`、SDD design 或游戏侧状态文档。
 - 完成后按影响面运行验证；文档类至少检查 `python3 Workspace/SDD/sdd.py validate <sdd-id>` 和目标文件清单，代码类按下方验证入口执行。
 - 极小修复、拼写、链接、注释、临时排查和一次性脚本不强制使用 SDD；必要时仍更新相关状态文档。
 

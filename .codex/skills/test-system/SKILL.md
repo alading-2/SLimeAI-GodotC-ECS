@@ -7,9 +7,9 @@ description: 修改 SlimeAI.GameOS 测试、Validation、Observation、日志分
 
 ## 必读入口
 
-- `DocsNew/README.md` — 方向决策入口
+- `DocsAI/README.md` — 方向决策入口
 - `Src/ECS/Test/**` 旁 README — 框架级验证场景说明
-- `DocsNew/ECS/Data/Data系统说明.md` — Data 测试场景说明
+- `DocsAI/ECS/Data/Data系统说明.md` — Data 测试场景说明
 
 ## 源码位置
 
@@ -25,7 +25,7 @@ description: 修改 SlimeAI.GameOS 测试、Validation、Observation、日志分
 - 框架纯逻辑优先补 Runtime tests。
 - **新 Runtime / Capability 测试 MUST 使用 `using var world = RuntimeWorld.CreateScoped();` 隔离状态，禁止直接 mutate `RuntimeWorld.Default` / `EntityManager.Clear()` / `WorldEvents.World.Clear()` 作为新测试 setup**。仅允许旧 backlog 用例在尚未支持显式 world 注入的 static Capability 工具中保留手工 Clear，并登记到 `DocsAI/GameOS/Migration.md`。
 - **Capability Service 测试必须用 `new XxxService()` 独立实例，禁用 `Default / Instance`**。例如 `new DamageService()`、`new DamageService(new HealService())`、`new AbilityService(timerManager)`。两个 scoped world 测试共享 `XxxService.Default` 会导致状态污染。
-- RuntimeWorld dispose 顺序以当前 SDD design 和 `Src/ECS/**` 旁文档为准。
+- RuntimeWorld dispose 顺序以当前 SDD design 和 `DocsAI/ECS/` 文档为准。
 - Godot 场景行为用 BrotatoLike 统一 runner 验证。
 - 日志和 artifacts 写到 `.ai-temp/scene-tests/runs/<date>/<time>/`，不要污染源码目录。
 - 新能力必须有最小 build / tests / smoke 验证路径。

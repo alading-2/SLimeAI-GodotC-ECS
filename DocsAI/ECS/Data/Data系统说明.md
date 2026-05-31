@@ -2,7 +2,7 @@
 
 > 状态：当前实现说明；SDD-0022 已把 DataOS snapshot -> generated typed handle -> catalog-bound Data 主链路继续硬化到 projection、diagnostics、catalog freeze 和 runtime record completeness。
 > 范围：`Src/ECS/Base/Data/`、`Data/DataOS/`、`Data/DataKey/Generated/`、`Data/EventType/`、`Data/Config/`、`Data/ResourceManagement/`、`Src/ECS/Test/SingleTest/ECS/DataOS/`。
-> 设计事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/`。
+> 设计事实源：`../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/`。
 
 ## 1. 一句话定位
 

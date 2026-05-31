@@ -23,6 +23,6 @@
 ## 相关文档
 
 - SystemAgent 正文：`Workspace/SystemAgent/README.md`
-- 框架文档：`SlimeAI/DocsAI/INDEX.md`
+- 框架文档：`DocsAI/README.md`（统一入口，按 ECS 分类 + owner 聚合）
+- 框架设计思考：`DocsAI/思考/`
 - 游戏文档：`Games/BrotatoLike/DocsAI/INDEX.md`
-- 人类可读文档：`../Docs/INDEX.md`

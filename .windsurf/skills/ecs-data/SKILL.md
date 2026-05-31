@@ -7,7 +7,7 @@ description: 修改 SlimeAI.GameOS Runtime Data、DataKey、DataCatalog、Runtim
 
 ## 必读入口
 
-- `DocsNew/ECS/Data/Data系统说明.md` — Data 系统当前实现说明
+- `DocsAI/ECS/Data/Data系统说明.md` — Data 系统当前实现说明
 - `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/` — Data 重构设计包
 - `Src/ECS/Base/Data/` — 当前 Data 实现源码
 - `Src/ECS/Test/SingleTest/ECS/DataOS/` — DataOS 场景测试

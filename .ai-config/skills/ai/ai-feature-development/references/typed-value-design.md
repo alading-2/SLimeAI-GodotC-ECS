@@ -1,6 +1,6 @@
 # Typed Value Design
 
-> Baseline 由当前 SDD design、owner capability contract 与 `Src/ECS/**` 旁文档管理。新增 weakly-typed Runtime API 前必须先更新对应设计或 contract。
+> Baseline 由当前 SDD design、owner capability contract 与 `DocsAI/ECS/` 文档管理。新增 weakly-typed Runtime API 前必须先更新对应设计或 contract。
 
 读取时机：新增 Runtime / Capability 数据结构、public payload、DataKey、命令、事件、identifier、配置 record 时读取。
 

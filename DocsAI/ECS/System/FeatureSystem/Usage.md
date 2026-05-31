@@ -1,0 +1,320 @@
+<!-- migrated-from: Src/ECS/Base/System/FeatureSystem/README.md -->
+
+> 迁移来源：`Src/ECS/Base/System/FeatureSystem/README.md`
+> 迁移说明：本文主体从原 `Src/ECS` 文档迁入 `DocsAI` 统一管理；原 `Src/ECS` Markdown 文件已删除。
+
+# FeatureSystem
+
+## 定位
+
+`FeatureSystem` 是项目里的通用能力生命周期系统。
+
+它不关心一个能力是不是“技能”，也不关心它是不是玩家主动释放。
+它只关心一件事：
+
+- 一个 Feature 被授予时做什么
+- 一个 Feature 被激活时做什么
+- 一个 Feature 被结束时做什么
+- 一个 Feature 被移除时如何回滚
+
+当前项目里，`AbilitySystem` 已经作为 `FeatureSystem` 的一个主动施法子域接入。
+
+---
+
+## 核心职责
+
+`FeatureSystem` 负责：
+
+- `OnFeatureGranted(feature, owner)`
+  - 初始化 Feature 基础状态
+  - 自动应用 `FeatureModifiers`
+  - 调用 `IFeatureHandler.OnGranted`
+  - 发出 `Feature.Granted`
+
+- `EnableFeature(feature, owner)`
+  - 切换 `FeatureEnabled = true`
+  - 调用 `IFeatureHandler.OnEnabled`
+  - 发出 `Feature.Enabled`
+
+- `DisableFeature(feature, owner)`
+  - 切换 `FeatureEnabled = false`
+  - 调用 `IFeatureHandler.OnDisabled`
+  - 发出 `Feature.Disabled`
+
+- `OnFeatureActivated(featureCtx)`
+  - 标记 `FeatureIsActive=true`
+  - 调用 `IFeatureHandler.OnActivated`（本次运行开始）
+  - 发出 `Feature.Activated`
+  - 调用 `IFeatureHandler.OnExecute` 并将返回值写入 `featureCtx.ExecuteResult`（执行阶段）
+  - 递增 `FeatureActivationCount`
+  - 发出 `Feature.Executed`
+
+- `OnFeatureEnded(featureCtx, reason)`
+  - 标记 `FeatureIsActive=false`
+  - 调用 `IFeatureHandler.OnEnded(context, reason)`
+  - 发出 `Feature.Ended`
+
+- `OnFeatureRemoved(feature, owner)`
+  - 调用 `IFeatureHandler.OnRemoved`
+  - 按 `source=feature` 回滚全部 Modifier
+  - 发出 `Feature.Removed`
+
+---
+
+## 关键对象
+
+### 1. FeatureDefinitionData
+
+路径：`Data/DataOS/RuntimeModels/Feature/FeatureDefinitionData.cs`
+
+作用：表达 runtime snapshot projection 后的 Feature DTO，不作为 authoring 源。
+
+常用字段：
+
+- `Name`
+- `FeatureHandlerId`
+- `Description`
+- `Category`
+- `EntityType`
+- `Enabled`
+- `Modifiers`
+
+适用场景：
+
+- 被动加成
+- 常驻光环
+- 装备词条
+- Buff / Debuff 模板
+- 任何需要“授予/移除/激活/结束”生命周期的通用能力
+
+### 2. FeatureModifierEntryData
+
+路径：`Data/DataOS/RuntimeModels/Feature/FeatureDefinitionData.cs`
+
+作用：定义一条授予即生效、移除即回滚的 `DataModifier`。
+
+字段：
+
+- `DataKeyName`
+- `ModifierType`
+- `Value`
+- `Priority`
+
+### 3. FeatureContext
+
+路径：`Src/ECS/Base/System/FeatureSystem/FeatureContext.cs`
+
+作用：贯穿生命周期回调的统一上下文。
+
+关键字段：
+
+- `Owner`
+- `Feature`
+- `Instance`
+- `ActivationData`
+- `ExecuteResult`
+- `SourceEventData`
+- `ExtraData`
+
+其中：
+
+- `ActivationData` 用来承载子系统专有上下文（object? 输入）
+- `ExecuteResult` 用来承载 OnExecute 的返回结果（object? 输出，由 FeatureSystem 自动写入）
+- `ExtraData` 用来承载执行阶段产物或跨步骤临时数据
+
+### 4. IFeatureHandler
+
+路径：`Src/ECS/Base/System/FeatureSystem/IFeatureHandler.cs`
+
+作用：承载复杂逻辑的代码钩子。
+
+生命周期：
+
+- `OnGranted`
+- `OnRemoved`
+- `OnEnabled`（可选，默认空实现）
+- `OnDisabled`（可选，默认空实现）
+- `OnActivated`（本次运行开始，适合前摇、激活态、锁重入、临时上下文）
+- `OnExecute`（执行阶段，返回 `object?`，默认 null）
+- `OnEnded(context, reason)`（本次运行结束，适合清理与按结束原因收尾）
+
+### 5. FeatureHandlerRegistry
+
+路径：`Src/ECS/Base/System/FeatureSystem/FeatureHandlerRegistry.cs`
+
+作用：维护 `完整 FeatureHandlerId -> IFeatureHandler` 的映射。
+
+通常通过 `[ModuleInitializer]` 自动注册。
+
+---
+
+## `Data/Feature/Definition` 怎么用
+
+`Data/Feature/Definition` 不是技能专用目录，而是通用 Feature 配置目录。
+
+推荐用法分两类：
+
+### 1. 纯数据 Feature
+
+适合：
+
+- 固定攻击加成
+- 固定移速加成
+- 常驻属性词条
+
+做法：
+
+1. 在 DataOS 中写入 Feature / Modifier authoring 数据
+2. 生成 runtime snapshot record
+3. record 中的 `Feature.Modifiers` 投影为 `FeatureModifierEntryData[]`
+4. 调用 `EntityManager.AddAbility(owner, abilityView)` 或运行时显式 record 授予
+5. 调用 `EntityManager.RemoveAbility(owner, featureName)` 移除
+
+效果：
+
+- 授予时自动把 Modifier 施加到 `owner.Data`
+- 移除时自动按 `source=feature` 整体回滚
+
+### 2. 数据 + 代码 Feature
+
+适合：
+
+- 需要订阅事件
+- 需要定时器
+- 需要主动生成投射物/特效
+- 需要复杂激活逻辑
+
+做法：
+
+1. 创建 DataOS Feature / Ability record
+2. 配置 `FeatureHandlerId`
+3. 实现对应 `IFeatureHandler`
+4. 在 `OnGranted/OnEnabled/OnDisabled/OnActivated/OnExecute/OnRemoved/OnEnded` 中写逻辑
+
+---
+
+## FeatureSystem 如何应用到 AbilitySystem
+
+当前项目里的 Ability 已经不是独立执行体系，而是 `FeatureSystem` 的主动施法子域。
+
+执行路径如下：
+
+```text
+TryTrigger
+→ AbilitySystem 做 CanUse / ConsumeCharge / StartCooldown / ConsumeCost
+→ AbilitySystem 构建 FeatureContext
+→ FeatureContext.ActivationData = CastContext
+→ FeatureSystem.OnFeatureActivated(featureCtx)
+→ handler.OnActivated(featureCtx)                      // 本次运行开始
+→ Feature.Activated
+→ ctx.ExecuteResult = handler.OnExecute(featureCtx)    // 执行阶段，返回结果
+→ Feature.Executed
+→ AbilitySystem 读取 featureCtx.ExecuteResult as AbilityExecutedResult
+→ FeatureSystem.OnFeatureEnded(featureCtx, Completed)
+```
+
+这条链说明：
+
+- `AbilitySystem` 负责施法编排
+- `FeatureSystem` 负责统一生命周期
+- `IFeatureHandler` 负责真正的技能效果逻辑
+- `AbilityData.FeatureHandlerId` 必须直接填写完整唯一 `FeatureId`，如 `技能.位移.冲刺`
+- `AbilityData.FeatureGroupId` 只描述技能展示分组，不参与运行时处理器查找
+
+---
+
+## Ability 子域里的两种持续行为
+
+在 Ability/Feature 混合模型里，常见的“持续效果”其实有两种来源：
+
+### 1. TriggerComponent 的周期触发
+
+适合：
+
+- 每隔 N 秒重新放一次技能
+- 每次都完整走一遍 `TryTrigger → ExecuteAbility`
+
+典型配置：
+
+- `AbilityTriggerMode = Periodic`
+- `AbilityCooldown = 间隔秒数`
+- 逻辑写在 `AbilityFeatureHandler.ExecuteAbility(CastContext)`；`AbilityFeatureHandler` 只负责从 `FeatureContext.ActivationData` 读取施法上下文
+
+这类模型下，重复执行来自 `TriggerComponent` 的周期计时器，而不是技能内部 DoT。
+
+### 2. FeatureHandler 自己持有的长期逻辑
+
+适合：
+
+- 能力一授予就持续存在的光环
+- 常驻监听器
+- 自己管理的长期计时器或持续特效
+
+典型写法：
+
+- 在 `OnGranted` 里创建 `GameTimer` / 订阅事件 / 生成常驻特效
+- 在 `OnRemoved` 里显式取消计时器、取消订阅、销毁特效
+
+如果漏掉 `OnRemoved` 清理，就会留下悬空计时器或残留效果。
+
+---
+
+## Ability 子域推荐写法
+
+Ability 子域有且只有一个专属中转层：`AbilityFeatureHandler`。具体技能不要直接实现 `IFeatureHandler`：
+
+1. 继承 `AbilityFeatureHandler`
+2. `override FeatureId`
+3. 在 `[ModuleInitializer]` 中注册到 `FeatureHandlerRegistry`
+4. 在 `ExecuteAbility(CastContext context)` 中实现技能逻辑
+5. `AbilityTool` 只保留不读取 `CastContext` 的薄工具（当前为阵营过滤）；目标查询、节点判断和伤害计算写在具体技能 Handler 中
+6. 返回 `AbilityExecutedResult`，由 FeatureSystem 写入 `FeatureContext.ExecuteResult`
+7. 在 `AbilityData.FeatureHandlerId` 中填写同名完整唯一 `FeatureId`
+
+Buff / Item 等非 Ability 子域仍直接实现 `IFeatureHandler`，并在 `ActivationData` 中放入各自子域上下文类型。
+
+---
+
+## 新增一个 Feature 的最小步骤
+
+### 通用 Feature
+
+1. 创建 DataOS Feature / Ability record
+2. 需要纯加成就配置 `Feature.Modifiers`
+3. 需要复杂逻辑就实现 `IFeatureHandler`
+4. 使用 `EntityManager.AddAbility` 授予
+
+### Ability 型 Feature
+
+1. 创建 `AbilityData`
+2. 填写 `FeatureHandlerId`
+3. 在 `DataOS removed legacy Data/Ability/Ability/` 下实现处理器
+4. 继承 `AbilityFeatureHandler`
+5. `[ModuleInitializer]` 中注册到 `FeatureHandlerRegistry`
+6. 通过 `TryTrigger` 统一触发
+
+---
+
+## 不要再这样做
+
+- 不要新增 `IAbilityExecutor`
+- 不要恢复 `AbilityExecutorRegistry`
+- 不要绕过 `TryTrigger` 直接调用技能逻辑
+- 不要在 Feature 核心里直接绑定 Ability 专有状态
+- 不要把持续数值效果手写成私有字段，优先使用 `FeatureModifierEntryData + DataModifier`
+
+---
+
+## 相关文件
+
+- `Src/ECS/Base/System/FeatureSystem/FeatureSystem.cs`
+- `Src/ECS/Base/System/FeatureSystem/FeatureContext.cs`
+- `Src/ECS/Base/System/FeatureSystem/FeatureContextExtensions.cs`
+- `Src/ECS/Base/System/FeatureSystem/FeatureHandlerRegistry.cs`
+- `Src/ECS/Base/System/FeatureSystem/IFeatureHandler.cs`
+- `Src/ECS/Base/System/AbilitySystem/AbilityFeatureHandler.cs`
+- `Src/ECS/Base/System/AbilitySystem/AbilityTool.cs`
+- `Src/ECS/Base/System/FeatureSystem/FeatureEndReason.cs`
+- `Src/ECS/Base/System/AbilitySystem/AbilitySystem.cs`
+- `Data/DataOS/RuntimeModels/Feature/FeatureDefinitionData.cs`
+- `DocsAI/ECS/System/FeatureSystem/Usage.md`

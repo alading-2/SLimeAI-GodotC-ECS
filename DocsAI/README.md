@@ -1,48 +1,54 @@
-# DocsNew
+# DocsAI — SlimeAI 框架统一文档
 
-> 状态：方向决策目录入口。
-> 范围：只记录旧 Godot C# ECS 主线与 AI-first 方向的定位、边界、弯路和参考来源；不承接具体系统实现方案。
-> 说明：`DocsAI/` 已删除，不再作为当前入口；当前模块事实源临时回到 `Src/ECS/` 旁文档和 SDD design。
+> 状态：current
+> 定位：SlimeAI 框架仓文档统一入口，AI-first 设计。
+> 更新：2026-05-31
 
-## 当前事实源
+## 快速导航
 
-| 文档 | 作用 |
+| 入口 | 说明 |
 | ---- | ---- |
-| [`ECS框架与AIFirst方向决策.md`](./ECS框架与AIFirst方向决策.md) | 当前方向事实源：确认 SlimeAI 继续走 AI-first ECS 游戏框架，而不是纯 AI/GameOS 替代旧 ECS |
-| [`ECS/Data/Data系统说明.md`](./ECS/Data/Data系统说明.md) | 当前旧 ECS Data 系统实现说明：概念、使用方式、测试场景和事件 |
+| [INDEX.md](./INDEX.md) | AI 路由索引 |
+| [管理/README.md](./管理/README.md) | DocsAI 治理、索引、迁移和维护规则 |
+| [ECS/README.md](./ECS/README.md) | 框架核心文档（Entity / Data / Event / Collision / Component / System / Tools / UI） |
+| [ECS框架与AIFirst方向决策.md](./ECS框架与AIFirst方向决策.md) | 方向决策事实源 |
+| [思考/README.md](./思考/README.md) | 设计思考与深度分析 |
+| [Archive/README.md](./Archive/README.md) | 历史归档 |
 
 ## 阅读顺序
 
-1. **方向定位**：读 [`ECS框架与AIFirst方向决策.md`](./ECS框架与AIFirst方向决策.md)。
-2. **Data 当前实现**：读 [`ECS/Data/Data系统说明.md`](./ECS/Data/Data系统说明.md)。
-3. **具体系统设计**：进入 [`../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/`](../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/)。
-4. **执行前契约**：先读对应 `Src/ECS/**` 旁文档，再读 owner skill 和项目脚本。
+1. **方向定位**：读 [ECS框架与AIFirst方向决策.md](./ECS框架与AIFirst方向决策.md)。
+2. **文档规则**：读 [管理/DocsAI统一管理与索引规则.md](./管理/DocsAI统一管理与索引规则.md)，确认事实源和索引规则。
+3. **ECS 文档**：进入 [ECS/README.md](./ECS/README.md)，Component 文档暂时按 `Src/ECS/Base/Component/` 对齐读取。
+4. **执行前**：读 `ECS/README.md` 中对应 owner 的完整文档入口，再进入 `Src/ECS/` 阅读源码。
+5. **设计思考**：需要理解背景时进入 [思考/](./思考/)。
+6. **中大型任务**：进入 `../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/`。
 
-## 边界
-
-DocsNew 优先回答“为什么是 AI-first ECS，以及哪些方向不要再走”。当前 Data 系统补充一份实现说明，用于降低跨 SDD 阅读成本；完整设计、任务和验证证据仍以 SDD / `Src/ECS` 旁文档为准：
+## 事实源边界
 
 | 内容 | 事实源 |
 | ---- | ---- |
-| Data / Event / Entity / Relationship / 字符串键名等优化分析 | `../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/` |
-| 当前模块入口、规则、验证方式 | `Src/ECS/**` 旁文档、owner skill、项目测试脚本 |
-| 代码实现计划、验证矩阵、阶段进度 | 后续执行型 SDD |
+| DocsAI 管理、索引、迁移规则 | `管理/` |
+| 框架方向决策 | `ECS框架与AIFirst方向决策.md` |
+| 模块概念、使用、测试 | `ECS/<分类>/<owner>/` 下的完整迁移文档；Component 暂时按 `ECS/Component/**` 镜像 `Src/ECS/Base/Component/**` |
+| 设计思考、深度分析 | `思考/<主题>/` |
+| 历史决策参考 | `Archive/<分类>/` |
+| Data / Entity / Event 等优化设计 | `../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/` |
+| 当前源码入口 | `../Src/ECS/**` 源码；框架 Markdown 文档不放在 `Src/ECS` |
+| 工作区文档 | `../Workspace/DocsAI/` |
 
-## 本方案参考来源
+## 工作区文档
 
-DocsNew 当前方向不是凭空制定，主要参考了以下来源：
-
-- **旧 ECS 主线现状**：`Src/ECS/`、`Docs/框架/项目索引.md`，用于确认当前可工作的 ECS 基础概念、模块入口和验证现状。
-- **PRJ-0002 优化分析**：`../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/`，用于承接 Data / Event / Entity / Relationship / 字符串键名等具体系统问题。
-- **AI-first 参考实现**：`../SlimeAI-AiFirst/`，参考其 DataOS、typed DataKey、typed Event、Observation、Capability owner、验证 artifact 等思想，但不把当前旧 ECS 直接替换成新 GameOS。
-- **外部框架分析资料**：`../Resources/Engine/Docs/`，参考 Bevy、Unity DOTS、Unreal GAS、DefaultEcs 等框架的 ECS 分层、数据驱动、验证和工具链经验，同时避免复制不适合 Godot C# 主线的 public API。
-- **工作区 AI 流程资产**：`Workspace/SystemAgent/`、`Workspace/SDD/`，参考 SDD、Skill、Workflow、Gate、Validation 的 AI 可执行流程。
-- **网上 ECS / 数据驱动资料**：用于辅助理解 authoring data、runtime data、baking / snapshot、schema validation 等通用设计，但最终以本仓旧 ECS 主线和 PRJ-0002 为准。
+工作区级文档（Git submodule、多游戏架构、AI 流程）见 `../Workspace/DocsAI/INDEX.md`，与框架文档分离。
 
 ## 非目标
 
 - 不把 `Src/ECS` 默认迁出到新 GameOS。
 - 不引入第三方 ECS 运行时依赖。
 - 不复制 Bevy / Unity DOTS / Unreal GAS / DefaultEcs 的 public API。
-- 不在 DocsNew 直接规定 Data / Event / Entity / Relationship / System 的具体改造方案。
+- 不在 DocsAI 直接规定 Data / Event / Entity / Relationship / System 的具体改造方案（具体设计在 SDD）。
 - 不让 AI 通过全局 query、裸字符串、隐式工作流随意修改框架。
+- `Archive/` 不作为执行依据。
+- `思考/` 不作为代码修改的直接依据。
+- `思考/` 不保存已经确定的 DocsAI 管理规则，规则统一放入 `管理/`。
+- 不恢复 `Plans/` 目录。

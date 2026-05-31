@@ -1,6 +1,6 @@
 # RuntimeWorld Facade
 
-> Baseline 由当前 SDD design 和 `Src/ECS/**` 旁文档管理。本文件只提供 AI 路由级摘要。
+> Baseline 由当前 SDD design 和 `DocsAI/ECS/` 文档管理。本文件只提供 AI 路由级摘要。
 
 读取时机：新增 Runtime / Capability service、测试 fixture、CommandBuffer / Schedule 相关逻辑、或准备使用 static facade 时读取。
 
@@ -38,6 +38,6 @@ Schedule -> Commands -> Pools -> Resources -> Lifecycle -> Entities -> Events
 
 ## 事实源
 
-- Contract / API：`Src/ECS/**` 旁文档、当前 SDD design
+- Contract / API：`DocsAI/ECS/` 文档、当前 SDD design
 - Historical specs：`openspec/specs/runtime-world-container/spec.md`、`openspec/specs/runtime-command-buffer/spec.md`
 - Tests：`Tests/SlimeAI.GameOS.Tests/World/RuntimeWorldTests.cs`

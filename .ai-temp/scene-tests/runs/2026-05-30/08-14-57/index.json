@@ -1,0 +1,73 @@
+{
+  "generatedAt": "2026-05-30T00:14:59.957Z",
+  "startedAt": "2026-05-30T00:14:57.404Z",
+  "durationMs": 2547,
+  "failed": true,
+  "runDir": ".ai-temp/scene-tests/runs/2026-05-30/08-14-57",
+  "removedLogDirs": [
+    ".ai-temp/scene-tests/runs/2026-05-29"
+  ],
+  "metadata": {
+    "command": "run-many",
+    "scenes": [
+      "res://Src/ECS/Test/SingleTest/ECS/DataOS/DataCatalogTestScene.tscn",
+      "res://Src/ECS/Test/SingleTest/ECS/DataOS/DataRuntimeTestScene.tscn",
+      "res://Src/ECS/Test/SingleTest/ECS/DataOS/DataSnapshotApplyTestScene.tscn",
+      "res://Src/ECS/Test/SingleTest/ECS/DataOS/DataFeatureBridgeTestScene.tscn"
+    ],
+    "build": true,
+    "continueOnFail": false,
+    "includeAll": false,
+    "filter": null,
+    "timeoutMs": 60000,
+    "maxLogLines": 80,
+    "fullLogs": false,
+    "errorsOnly": false,
+    "attempts": 1,
+    "logRetentionDays": 1,
+    "godot": null,
+    "manifest": null
+  },
+  "summary": {
+    "totalScenes": 4,
+    "executedScenes": 1,
+    "skippedScenes": 3,
+    "passedScenes": 0,
+    "failedScenes": 1,
+    "timedOutScenes": 0,
+    "attemptsUsed": 1
+  },
+  "skippedScenes": [
+    "res://Src/ECS/Test/SingleTest/ECS/DataOS/DataRuntimeTestScene.tscn",
+    "res://Src/ECS/Test/SingleTest/ECS/DataOS/DataSnapshotApplyTestScene.tscn",
+    "res://Src/ECS/Test/SingleTest/ECS/DataOS/DataFeatureBridgeTestScene.tscn"
+  ],
+  "entries": [
+    {
+      "scene": "res://Src/ECS/Test/SingleTest/ECS/DataOS/DataCatalogTestScene.tscn",
+      "attempt": 1,
+      "status": "failed",
+      "failed": true,
+      "failureReason": "ExitCodeNonZero:1",
+      "exitCode": 1,
+      "timedOut": false,
+      "firstError": "ERROR: FAIL DataCatalogTestScene: 测试过程中发生异常: System.InvalidCastException: Unable to cast object of type 'System.String[]' to type 'System.String'.",
+      "stdoutLineCount": 145,
+      "stderrLineCount": 71,
+      "logFiles": {
+        "stdout": ".ai-temp/scene-tests/runs/2026-05-30/08-14-57/001_Src_ECS_Test_SingleTest_ECS_DataOS_DataCatalogTestScene.tscn_attempt1/stdout.log",
+        "stderr": ".ai-temp/scene-tests/runs/2026-05-30/08-14-57/001_Src_ECS_Test_SingleTest_ECS_DataOS_DataCatalogTestScene.tscn_attempt1/stderr.log",
+        "combined": ".ai-temp/scene-tests/runs/2026-05-30/08-14-57/001_Src_ECS_Test_SingleTest_ECS_DataOS_DataCatalogTestScene.tscn_attempt1/combined.log",
+        "result": ".ai-temp/scene-tests/runs/2026-05-30/08-14-57/001_Src_ECS_Test_SingleTest_ECS_DataOS_DataCatalogTestScene.tscn_attempt1/result.json"
+      },
+      "artifactDirs": {
+        "screenshots": ".ai-temp/scene-tests/runs/2026-05-30/08-14-57/001_Src_ECS_Test_SingleTest_ECS_DataOS_DataCatalogTestScene.tscn_attempt1/screenshots",
+        "artifacts": ".ai-temp/scene-tests/runs/2026-05-30/08-14-57/001_Src_ECS_Test_SingleTest_ECS_DataOS_DataCatalogTestScene.tscn_attempt1/artifacts"
+      },
+      "artifacts": {
+        "screenshots": [],
+        "files": []
+      }
+    }
+  ]
+}

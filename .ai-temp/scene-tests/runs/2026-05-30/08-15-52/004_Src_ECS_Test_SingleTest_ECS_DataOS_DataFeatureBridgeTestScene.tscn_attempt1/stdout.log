@@ -1,0 +1,148 @@
+[08:15:56][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.主动.连锁闪电
+[08:15:56][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.被动.圆环伤害
+[08:15:56][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.投射物.圆弧射击
+[08:15:56][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.投射物.贝塞尔射击
+[08:15:56][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.投射物.回旋镖投掷
+[08:15:56][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.位移.冲刺
+[08:15:56][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.被动.环绕技能
+[08:15:56][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.投射物.定点抛炸弹
+[08:15:56][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.投射物.正弦波射击
+[08:15:56][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.主动.猛击
+[08:15:56][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 测试.技能.流水线.HandlerManagedEntityAbility
+[08:15:56][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 测试.技能.流水线.AbilityToolBridgeAbility
+[08:15:56][INFO][HealthBarUI] [ModuleInitializer] HealthBarUI.Initialize() 开始执行
+[08:15:56][INFO][HealthBarUI] [ModuleInitializer] HealthBarUI 全局事件监听已初始化完成
+[08:15:56][INFO][ParentManager] ParentManager 已初始化
+[08:15:56][INFO][SystemManager] SystemManager _Ready 开始启动系统框架
+[08:15:56][DEBUG][SystemConfigService] 加载系统配置: DamageNumberRuntimeBridge
+[08:15:56][DEBUG][SystemConfigService] 加载系统配置: DamageService
+[08:15:56][DEBUG][SystemConfigService] 加载系统配置: DamageStatisticsSystem
+[08:15:56][DEBUG][SystemConfigService] 加载系统配置: EntityManager
+[08:15:56][DEBUG][SystemConfigService] 加载系统配置: MouseSelectionSystem
+[08:15:56][DEBUG][SystemConfigService] 加载系统配置: ObjectPoolInit
+[08:15:56][DEBUG][SystemConfigService] 加载系统配置: PauseMenuSystem
+[08:15:56][DEBUG][SystemConfigService] 加载系统配置: ProjectStateBridge
+[08:15:56][DEBUG][SystemConfigService] 加载系统配置: RecoverySystem
+[08:15:56][DEBUG][SystemConfigService] 加载系统配置: SpawnSystem
+[08:15:56][DEBUG][SystemConfigService] 加载系统配置: TargetingManagerRuntime
+[08:15:56][DEBUG][SystemConfigService] 加载系统配置: TestSystem
+[08:15:56][DEBUG][SystemConfigService] 加载系统配置: TimerManager
+[08:15:56][DEBUG][SystemConfigService] 加载系统配置: UIManager
+[08:15:56][INFO][SystemConfigService] SystemConfigService 初始化完成，共加载 14 个系统配置
+[08:15:56][DEBUG][SystemPresetService] 加载系统预设: Default (Active=True)
+[08:15:56][INFO][SystemPresetService] SystemPresetService 初始化完成，共加载 1 个预设，激活预设: Default
+[08:15:56][INFO][SystemManager] 根据预设计算，应加载 14 个系统
+[08:15:56][INFO][SystemManager] 当前已注册系统描述符数量: 14
+[08:15:56][DEBUG][ParentManager] 已注册父节点: TimerPool -> Tool/GameTimer
+[08:15:56][INFO][ObjectPool] 创建对象池: TimerPool, 初始大小: 50, 最大大小: 300, 父节点路径: Tool/GameTimer
+[08:15:56][DEBUG][ParentManager] 已注册父节点: EnemyPool -> ECS/Entity/Unit/EnemyPool
+[08:15:56][INFO][ObjectPool] 创建对象池: EnemyPool, 初始大小: 100, 最大大小: 500, 父节点路径: ECS/Entity/Unit/EnemyPool
+[08:15:56][DEBUG][ParentManager] 已注册父节点: AbilityPool -> ECS/Entity/Ability/AbilityPool
+[08:15:56][INFO][ObjectPool] 创建对象池: AbilityPool, 初始大小: 50, 最大大小: 300, 父节点路径: ECS/Entity/Ability/AbilityPool
+[08:15:56][DEBUG][ParentManager] 已注册父节点: EffectPool -> ECS/Entity/EffectPool
+[08:15:56][INFO][ObjectPool] 创建对象池: EffectPool, 初始大小: 100, 最大大小: 500, 父节点路径: ECS/Entity/EffectPool
+[08:15:56][DEBUG][ParentManager] 已注册父节点: HealthBarPool -> UI/UI/HealthBarUIPool
+[08:15:56][INFO][ObjectPool] 创建对象池: HealthBarPool, 初始大小: 50, 最大大小: 200, 父节点路径: UI/UI/HealthBarUIPool
+[08:15:56][DEBUG][ParentManager] 已注册父节点: DamageNumberUIPool -> UI/UI/DamageNumberUIPool
+[08:15:56][INFO][ObjectPool] 创建对象池: DamageNumberUIPool, 初始大小: 100, 最大大小: 500, 父节点路径: UI/UI/DamageNumberUIPool
+[08:15:56][DEBUG][ParentManager] 已注册父节点: ProjectilePool -> ECS/Entity/ProjectileEntityPool
+[08:15:56][INFO][ObjectPool] 创建对象池: ProjectilePool, 初始大小: 30, 最大大小: 200, 父节点路径: ECS/Entity/ProjectileEntityPool
+[08:15:56][DEBUG][ParentManager] 已注册父节点: LightningLinePool -> ECS/Entity/Ability/LightningLinePool
+[08:15:56][INFO][ObjectPool] 创建对象池: LightningLinePool, 初始大小: 10, 最大大小: 50, 父节点路径: ECS/Entity/Ability/LightningLinePool
+[08:15:56][SUCCESS][ObjectPoolInit] ObjectPoolInit 初始化完成
+[08:15:56][INFO][SystemManager] 系统 ObjectPoolInit 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[08:15:56][INFO][SystemManager] 系统 TimerManager 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[08:15:56][INFO][SystemManager] 项目状态切换: Boot/None/Running -> FrontEnd/None/Running
+[08:15:56][INFO][SystemManager] 系统 ProjectStateBridge 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[08:15:56][INFO][EntityManager_Component] 🔥 开始预热 Entity Component 缓存...
+[08:15:56][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Base/Entity/Ability/AbilityEntity.tscn: 4 components
+[08:15:56][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Base/Entity/Effect/EffectEntity.tscn: 3 components
+[08:15:56][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Base/Entity/Unit/Enemy/EnemyEntity.tscn: 10 components
+[08:15:56][WARNING][EntityManager_Component]   - 预热警告: res://Src/ECS/Base/Entity/Effect/LightningLineEffect/LightningLineEffect.tscn 未找到任何 Component (可能结构特殊)
+[08:15:56][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Base/Entity/Unit/Player/PlayerEntity.tscn: 12 components
+[08:15:56][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Base/Entity/Projectile/ProjectileEntity.tscn: 3 components
+[08:15:56][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Base/Entity/Unit/TargetingIndicator/TargetingIndicatorEntity.tscn: 10 components
+[08:15:56][WARNING][EntityManager_Component]   - 预热警告: res://Src/ECS/Base/Entity/Preview/VisualPreviewEntity.tscn 未找到任何 Component (可能结构特殊)
+[08:15:56][INFO][EntityManager_Component] ✅ 缓存预热完成: 6 个 Entity, 共 42 个 Component 路径已缓存。
+[08:15:56][INFO][SystemManager] 系统 EntityManager 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[08:15:56][INFO][SystemManager] 系统 DamageService 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[08:15:56][DEBUG][DamageStatisticsSystem] 伤害统计系统初始化完成
+[08:15:56][INFO][SystemManager] 系统 DamageStatisticsSystem 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[08:15:56][DEBUG][RecoverySystem] 恢复计时器已启动，配置间隔: 1s
+[08:15:56][INFO][RecoverySystem] RecoverySystem 已启动，恢复间隔: 1s
+[08:15:56][INFO][SystemManager] 系统 RecoverySystem 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[08:15:56][INFO][SpawnSystem] SpawnSystem (TimerManager Architecture) 初始化完成
+[08:15:56][INFO][SystemManager] 系统 SpawnSystem 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[08:15:56][INFO][SystemManager] 系统 TargetingManagerRuntime 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[08:15:56][INFO][PauseMenuSystem] PauseMenuSystem 初始化完成
+[08:15:56][INFO][SystemManager] 系统 PauseMenuSystem 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[08:15:56][SUCCESS][UIManager] UIManager 初始化完成
+[08:15:56][INFO][SystemManager] 系统 UIManager 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[08:15:56][INFO][SystemManager] 系统 DamageNumberRuntimeBridge 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[08:15:56][INFO][TestSystem] TestSystem 初始化完成
+[08:15:56][INFO][SystemManager] 系统 TestSystem 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[08:15:56][INFO][SystemManager] 系统 MouseSelectionSystem 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[08:15:56][INFO][SystemManager] ========== 系统状态报告 ==========
+[08:15:56][INFO][SystemManager] 项目状态: FlowState=FrontEnd, Overlays=None, SimulationState=Running
+[08:15:56][INFO][SystemManager] 已加载系统总数: 14
+[08:15:56][INFO][SystemManager]   [Running] ObjectPoolInit
+[08:15:56][INFO][SystemManager]       MountGroup: Base, Tags: Core, Runtime
+[08:15:56][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[08:15:56][INFO][SystemManager]   [Running] TimerManager
+[08:15:56][INFO][SystemManager]       MountGroup: Base, Tags: Core, Runtime
+[08:15:56][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[08:15:56][INFO][SystemManager]   [Running] ProjectStateBridge
+[08:15:56][INFO][SystemManager]       MountGroup: Base, Tags: Core, Runtime
+[08:15:56][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[08:15:56][INFO][SystemManager]   [Running] EntityManager
+[08:15:56][INFO][SystemManager]       MountGroup: Base, Tags: Core, Runtime
+[08:15:56][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[08:15:56][INFO][SystemManager]   [EnabledBlocked] DamageService
+[08:15:56][INFO][SystemManager]       MountGroup: Combat, Tags: Core, Combat, Runtime
+[08:15:56][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[08:15:56][INFO][SystemManager]   [EnabledBlocked] DamageStatisticsSystem
+[08:15:56][INFO][SystemManager]       MountGroup: Combat, Tags: Core, Combat, Runtime
+[08:15:56][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[08:15:56][INFO][SystemManager]   [EnabledBlocked] RecoverySystem
+[08:15:56][INFO][SystemManager]       MountGroup: Combat, Tags: Core, Combat, Runtime
+[08:15:56][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[08:15:56][INFO][SystemManager]   [EnabledBlocked] SpawnSystem
+[08:15:56][INFO][SystemManager]       MountGroup: Gameplay, Tags: Gameplay, Runtime
+[08:15:56][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[08:15:56][INFO][SystemManager]   [EnabledBlocked] TargetingManagerRuntime
+[08:15:56][INFO][SystemManager]       MountGroup: Combat, Tags: Core, Combat, Runtime
+[08:15:56][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[08:15:56][INFO][SystemManager]   [EnabledBlocked] PauseMenuSystem
+[08:15:56][INFO][SystemManager]       MountGroup: UI, Tags: UI, Runtime
+[08:15:56][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[08:15:56][INFO][SystemManager]   [Running] UIManager
+[08:15:56][INFO][SystemManager]       MountGroup: UI, Tags: Core, UI, Runtime
+[08:15:56][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[08:15:56][INFO][SystemManager]   [EnabledBlocked] DamageNumberRuntimeBridge
+[08:15:56][INFO][SystemManager]       MountGroup: UI, Tags: Combat, UI, Runtime
+[08:15:56][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[08:15:56][INFO][SystemManager]   [Running] TestSystem
+[08:15:56][INFO][SystemManager]       MountGroup: Test, Tags: Debug, Test
+[08:15:56][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[08:15:56][INFO][SystemManager]   [Running] MouseSelectionSystem
+[08:15:56][INFO][SystemManager]       MountGroup: Debug, Tags: Debug, Test
+[08:15:56][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[08:15:56][INFO][SystemManager] 统计: 运行中=7, 已启用=14, 已禁用=0
+[08:15:56][INFO][SystemManager] ==================================
+[08:15:56][INFO][SystemManager] SystemManager 启动完成
+PASS DataFeatureBridgeTestScene.feature modifiers value type
+PASS DataFeatureBridgeTestScene.feature modifiers storage
+PASS DataFeatureBridgeTestScene.feature modifiers write policy
+PASS DataFeatureBridgeTestScene.feature modifiers modifier policy
+PASS DataFeatureBridgeTestScene.attribute bonus resolver
+PASS DataFeatureBridgeTestScene.percent resolver
+PASS DataFeatureBridgeTestScene.attack interval resolver
+PASS DataFeatureBridgeTestScene.computed before modifier
+PASS DataFeatureBridgeTestScene.modifier accepted
+PASS DataFeatureBridgeTestScene.modifier dirties computed value
+PASS DataFeatureBridgeTestScene.computed attack bonus
+PASS DataFeatureBridgeTestScene.feature grants modifier
+PASS DataFeatureBridgeTestScene.feature modifier changes computed
+PASS DataFeatureBridgeTestScene.feature removal rolls back computed
+[08:15:56][INFO][UIManager] UIManager 已清空，共清理 0 个 UI
+[08:15:56][DEBUG][SpawnSystem] SpawnSystem 已清理

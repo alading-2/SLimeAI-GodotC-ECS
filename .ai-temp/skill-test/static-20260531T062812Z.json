@@ -1,0 +1,81 @@
+{
+  "scanned": 39,
+  "rules": {
+    "R001": {
+      "name": "frontmatter-required-fields",
+      "pass": 39,
+      "fail": 0,
+      "violations": []
+    },
+    "R002": {
+      "name": "references-exist",
+      "pass": 33,
+      "fail": 6,
+      "violations": [
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/ai-config-management/SKILL.md",
+          "kind": "missing-reference",
+          "detail": "引用不存在: .claude/settings.json",
+          "severity": "critical"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/ai-config-management/SKILL.md",
+          "kind": "missing-reference",
+          "detail": "引用不存在: .codex/hooks.json",
+          "severity": "critical"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/ai-config-management/SKILL.md",
+          "kind": "missing-reference",
+          "detail": "引用不存在: .codex/config.toml",
+          "severity": "critical"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/ai-config-management/SKILL.md",
+          "kind": "missing-reference",
+          "detail": "引用不存在: .claude/settings.json",
+          "severity": "critical"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/ai-config-management/SKILL.md",
+          "kind": "missing-reference",
+          "detail": "引用不存在: .codex/hooks.json",
+          "severity": "critical"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/ai-config-management/SKILL.md",
+          "kind": "missing-reference",
+          "detail": "引用不存在: .codex/config.toml",
+          "severity": "critical"
+        }
+      ]
+    },
+    "R003": {
+      "name": "source-of-truth-alignment",
+      "pass": 39,
+      "fail": 0,
+      "violations": []
+    },
+    "R004": {
+      "name": "sync-targets-up-to-date",
+      "pass": 39,
+      "fail": 0,
+      "violations": []
+    },
+    "R005": {
+      "name": "catalog-coverage",
+      "pass": 39,
+      "fail": 0,
+      "violations": []
+    },
+    "R006": {
+      "name": "no-direct-copy-edits",
+      "pass": 39,
+      "fail": 0,
+      "violations": []
+    }
+  },
+  "criticalFailures": 6,
+  "advisoryWarnings": 0,
+  "exitCode": 1
+}

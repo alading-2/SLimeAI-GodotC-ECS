@@ -1,0 +1,227 @@
+scene: res://Src/ECS/Test/SingleTest/ECS/DataOS/DataCatalogTestScene.tscn
+failed: true
+failureReason: ExitCodeNonZero:1
+exitCode: 1
+timedOut: false
+attempt: 1
+
+[stdout]
+[08:14:59][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.主动.连锁闪电
+[08:14:59][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.被动.圆环伤害
+[08:14:59][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.投射物.圆弧射击
+[08:14:59][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.投射物.贝塞尔射击
+[08:14:59][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.投射物.回旋镖投掷
+[08:14:59][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.位移.冲刺
+[08:14:59][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.被动.环绕技能
+[08:14:59][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.投射物.定点抛炸弹
+[08:14:59][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.投射物.正弦波射击
+[08:14:59][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.主动.猛击
+[08:14:59][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 测试.技能.流水线.HandlerManagedEntityAbility
+[08:14:59][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 测试.技能.流水线.AbilityToolBridgeAbility
+[08:14:59][INFO][HealthBarUI] [ModuleInitializer] HealthBarUI.Initialize() 开始执行
+[08:14:59][INFO][HealthBarUI] [ModuleInitializer] HealthBarUI 全局事件监听已初始化完成
+[08:14:59][INFO][ParentManager] ParentManager 已初始化
+[08:14:59][INFO][SystemManager] SystemManager _Ready 开始启动系统框架
+[08:14:59][DEBUG][SystemConfigService] 加载系统配置: DamageNumberRuntimeBridge
+[08:14:59][DEBUG][SystemConfigService] 加载系统配置: DamageService
+[08:14:59][DEBUG][SystemConfigService] 加载系统配置: DamageStatisticsSystem
+[08:14:59][DEBUG][SystemConfigService] 加载系统配置: EntityManager
+[08:14:59][DEBUG][SystemConfigService] 加载系统配置: MouseSelectionSystem
+[08:14:59][DEBUG][SystemConfigService] 加载系统配置: ObjectPoolInit
+[08:14:59][DEBUG][SystemConfigService] 加载系统配置: PauseMenuSystem
+[08:14:59][DEBUG][SystemConfigService] 加载系统配置: ProjectStateBridge
+[08:14:59][DEBUG][SystemConfigService] 加载系统配置: RecoverySystem
+[08:14:59][DEBUG][SystemConfigService] 加载系统配置: SpawnSystem
+[08:14:59][DEBUG][SystemConfigService] 加载系统配置: TargetingManagerRuntime
+[08:14:59][DEBUG][SystemConfigService] 加载系统配置: TestSystem
+[08:14:59][DEBUG][SystemConfigService] 加载系统配置: TimerManager
+[08:14:59][DEBUG][SystemConfigService] 加载系统配置: UIManager
+[08:14:59][INFO][SystemConfigService] SystemConfigService 初始化完成，共加载 14 个系统配置
+[08:14:59][DEBUG][SystemPresetService] 加载系统预设: Default (Active=True)
+[08:14:59][INFO][SystemPresetService] SystemPresetService 初始化完成，共加载 1 个预设，激活预设: Default
+[08:14:59][INFO][SystemManager] 根据预设计算，应加载 14 个系统
+[08:14:59][INFO][SystemManager] 当前已注册系统描述符数量: 14
+[08:14:59][DEBUG][ParentManager] 已注册父节点: TimerPool -> Tool/GameTimer
+[08:14:59][INFO][ObjectPool] 创建对象池: TimerPool, 初始大小: 50, 最大大小: 300, 父节点路径: Tool/GameTimer
+[08:14:59][DEBUG][ParentManager] 已注册父节点: EnemyPool -> ECS/Entity/Unit/EnemyPool
+[08:14:59][INFO][ObjectPool] 创建对象池: EnemyPool, 初始大小: 100, 最大大小: 500, 父节点路径: ECS/Entity/Unit/EnemyPool
+[08:14:59][DEBUG][ParentManager] 已注册父节点: AbilityPool -> ECS/Entity/Ability/AbilityPool
+[08:14:59][INFO][ObjectPool] 创建对象池: AbilityPool, 初始大小: 50, 最大大小: 300, 父节点路径: ECS/Entity/Ability/AbilityPool
+[08:14:59][DEBUG][ParentManager] 已注册父节点: EffectPool -> ECS/Entity/EffectPool
+[08:14:59][INFO][ObjectPool] 创建对象池: EffectPool, 初始大小: 100, 最大大小: 500, 父节点路径: ECS/Entity/EffectPool
+[08:14:59][DEBUG][ParentManager] 已注册父节点: HealthBarPool -> UI/UI/HealthBarUIPool
+[08:14:59][INFO][ObjectPool] 创建对象池: HealthBarPool, 初始大小: 50, 最大大小: 200, 父节点路径: UI/UI/HealthBarUIPool
+[08:14:59][DEBUG][ParentManager] 已注册父节点: DamageNumberUIPool -> UI/UI/DamageNumberUIPool
+[08:14:59][INFO][ObjectPool] 创建对象池: DamageNumberUIPool, 初始大小: 100, 最大大小: 500, 父节点路径: UI/UI/DamageNumberUIPool
+[08:14:59][DEBUG][ParentManager] 已注册父节点: ProjectilePool -> ECS/Entity/ProjectileEntityPool
+[08:14:59][INFO][ObjectPool] 创建对象池: ProjectilePool, 初始大小: 30, 最大大小: 200, 父节点路径: ECS/Entity/ProjectileEntityPool
+[08:14:59][DEBUG][ParentManager] 已注册父节点: LightningLinePool -> ECS/Entity/Ability/LightningLinePool
+[08:14:59][INFO][ObjectPool] 创建对象池: LightningLinePool, 初始大小: 10, 最大大小: 50, 父节点路径: ECS/Entity/Ability/LightningLinePool
+[08:14:59][SUCCESS][ObjectPoolInit] ObjectPoolInit 初始化完成
+[08:14:59][INFO][SystemManager] 系统 ObjectPoolInit 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[08:14:59][INFO][SystemManager] 系统 TimerManager 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[08:14:59][INFO][SystemManager] 项目状态切换: Boot/None/Running -> FrontEnd/None/Running
+[08:14:59][INFO][SystemManager] 系统 ProjectStateBridge 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[08:14:59][INFO][EntityManager_Component] 🔥 开始预热 Entity Component 缓存...
+[08:14:59][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Base/Entity/Ability/AbilityEntity.tscn: 4 components
+[08:14:59][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Base/Entity/Effect/EffectEntity.tscn: 3 components
+[08:14:59][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Base/Entity/Unit/Enemy/EnemyEntity.tscn: 10 components
+[08:14:59][WARNING][EntityManager_Component]   - 预热警告: res://Src/ECS/Base/Entity/Effect/LightningLineEffect/LightningLineEffect.tscn 未找到任何 Component (可能结构特殊)
+[08:14:59][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Base/Entity/Unit/Player/PlayerEntity.tscn: 12 components
+[08:14:59][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Base/Entity/Projectile/ProjectileEntity.tscn: 3 components
+[08:14:59][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Base/Entity/Unit/TargetingIndicator/TargetingIndicatorEntity.tscn: 10 components
+[08:14:59][WARNING][EntityManager_Component]   - 预热警告: res://Src/ECS/Base/Entity/Preview/VisualPreviewEntity.tscn 未找到任何 Component (可能结构特殊)
+[08:14:59][INFO][EntityManager_Component] ✅ 缓存预热完成: 6 个 Entity, 共 42 个 Component 路径已缓存。
+[08:14:59][INFO][SystemManager] 系统 EntityManager 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[08:14:59][INFO][SystemManager] 系统 DamageService 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[08:14:59][DEBUG][DamageStatisticsSystem] 伤害统计系统初始化完成
+[08:14:59][INFO][SystemManager] 系统 DamageStatisticsSystem 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[08:14:59][DEBUG][RecoverySystem] 恢复计时器已启动，配置间隔: 1s
+[08:14:59][INFO][RecoverySystem] RecoverySystem 已启动，恢复间隔: 1s
+[08:14:59][INFO][SystemManager] 系统 RecoverySystem 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[08:14:59][INFO][SpawnSystem] SpawnSystem (TimerManager Architecture) 初始化完成
+[08:14:59][INFO][SystemManager] 系统 SpawnSystem 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[08:14:59][INFO][SystemManager] 系统 TargetingManagerRuntime 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[08:14:59][INFO][PauseMenuSystem] PauseMenuSystem 初始化完成
+[08:14:59][INFO][SystemManager] 系统 PauseMenuSystem 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[08:14:59][SUCCESS][UIManager] UIManager 初始化完成
+[08:14:59][INFO][SystemManager] 系统 UIManager 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[08:14:59][INFO][SystemManager] 系统 DamageNumberRuntimeBridge 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[08:14:59][INFO][TestSystem] TestSystem 初始化完成
+[08:14:59][INFO][SystemManager] 系统 TestSystem 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[08:14:59][INFO][SystemManager] 系统 MouseSelectionSystem 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[08:14:59][INFO][SystemManager] ========== 系统状态报告 ==========
+[08:14:59][INFO][SystemManager] 项目状态: FlowState=FrontEnd, Overlays=None, SimulationState=Running
+[08:14:59][INFO][SystemManager] 已加载系统总数: 14
+[08:14:59][INFO][SystemManager]   [Running] ObjectPoolInit
+[08:14:59][INFO][SystemManager]       MountGroup: Base, Tags: Core, Runtime
+[08:14:59][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[08:14:59][INFO][SystemManager]   [Running] TimerManager
+[08:14:59][INFO][SystemManager]       MountGroup: Base, Tags: Core, Runtime
+[08:14:59][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[08:14:59][INFO][SystemManager]   [Running] ProjectStateBridge
+[08:14:59][INFO][SystemManager]       MountGroup: Base, Tags: Core, Runtime
+[08:14:59][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[08:14:59][INFO][SystemManager]   [Running] EntityManager
+[08:14:59][INFO][SystemManager]       MountGroup: Base, Tags: Core, Runtime
+[08:14:59][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[08:14:59][INFO][SystemManager]   [EnabledBlocked] DamageService
+[08:14:59][INFO][SystemManager]       MountGroup: Combat, Tags: Core, Combat, Runtime
+[08:14:59][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[08:14:59][INFO][SystemManager]   [EnabledBlocked] DamageStatisticsSystem
+[08:14:59][INFO][SystemManager]       MountGroup: Combat, Tags: Core, Combat, Runtime
+[08:14:59][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[08:14:59][INFO][SystemManager]   [EnabledBlocked] RecoverySystem
+[08:14:59][INFO][SystemManager]       MountGroup: Combat, Tags: Core, Combat, Runtime
+[08:14:59][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[08:14:59][INFO][SystemManager]   [EnabledBlocked] SpawnSystem
+[08:14:59][INFO][SystemManager]       MountGroup: Gameplay, Tags: Gameplay, Runtime
+[08:14:59][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[08:14:59][INFO][SystemManager]   [EnabledBlocked] TargetingManagerRuntime
+[08:14:59][INFO][SystemManager]       MountGroup: Combat, Tags: Core, Combat, Runtime
+[08:14:59][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[08:14:59][INFO][SystemManager]   [EnabledBlocked] PauseMenuSystem
+[08:14:59][INFO][SystemManager]       MountGroup: UI, Tags: UI, Runtime
+[08:14:59][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[08:14:59][INFO][SystemManager]   [Running] UIManager
+[08:14:59][INFO][SystemManager]       MountGroup: UI, Tags: Core, UI, Runtime
+[08:14:59][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[08:14:59][INFO][SystemManager]   [EnabledBlocked] DamageNumberRuntimeBridge
+[08:14:59][INFO][SystemManager]       MountGroup: UI, Tags: Combat, UI, Runtime
+[08:14:59][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[08:14:59][INFO][SystemManager]   [Running] TestSystem
+[08:14:59][INFO][SystemManager]       MountGroup: Test, Tags: Debug, Test
+[08:14:59][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[08:14:59][INFO][SystemManager]   [Running] MouseSelectionSystem
+[08:14:59][INFO][SystemManager]       MountGroup: Debug, Tags: Debug, Test
+[08:14:59][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[08:14:59][INFO][SystemManager] 统计: 运行中=7, 已启用=14, 已禁用=0
+[08:14:59][INFO][SystemManager] ==================================
+[08:14:59][INFO][SystemManager] SystemManager 启动完成
+PASS DataCatalogTestScene.reject duplicate stable key
+PASS DataCatalogTestScene.reject empty stable key
+PASS DataCatalogTestScene.reject unknown value type
+PASS DataCatalogTestScene.float default
+PASS DataCatalogTestScene.int default
+PASS DataCatalogTestScene.bool default
+PASS DataCatalogTestScene.string default
+PASS DataCatalogTestScene.typed float default
+PASS DataCatalogTestScene.typed int default
+PASS DataCatalogTestScene.typed bool default
+PASS DataCatalogTestScene.json float default
+[08:14:59][INFO][UIManager] UIManager 已清空，共清理 0 个 UI
+[08:14:59][DEBUG][SpawnSystem] SpawnSystem 已清理
+
+
+[stderr]
+WARNING: res://Src/ECS/Base/Entity/Effect/LightningLineEffect/LightningLineEffect.tscn:3 - ext_resource, invalid UID: uid://cqrgw2mrtn6sv - using text path instead: res://Src/ECS/Base/Entity/Effect/LightningLineEffect/LightningLineEffect.cs
+     at: load (scene/resources/resource_format_text.cpp:500)
+     C# backtrace (most recent call first):
+         [0] Godot.GodotObject Godot.NativeCalls.godot_icall_3_1224(nint, nint, string, string, int) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/NativeCalls.cs:11254)
+         [1] Godot.Resource Godot.ResourceLoader.Load(string, string, Godot.ResourceLoader+CacheMode) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/ResourceLoader.cs:120)
+         [2] T Godot.ResourceLoader.Load<T>(string, string, Godot.ResourceLoader+CacheMode) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Extensions/ResourceLoaderExtensions.cs:27)
+         [3] T Godot.GD.Load<T>(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:129)
+         [4] T ResourceManagement.Load<T>(string, ResourceCategory) (/home/slime/Code/SlimeAI/SlimeAI/Data/ResourceManagement/ResourceManagement.cs:36)
+         [5] LightningLineEffect ObjectPoolInit+<>c.<InitPools>b__2_7() (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Tools/ObjectPool/ObjectPoolInit.cs:152)
+         [6] T ObjectPool`1.CreateNew() (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Tools/ObjectPool/ObjectPool.cs:179)
+         [7] void ObjectPool`1.Warmup(int) (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Tools/ObjectPool/ObjectPool.cs:171)
+         [8] ObjectPool`1..ctor(System.Func`1[T], ObjectPoolConfig, System.Action`1[T]) (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Tools/ObjectPool/ObjectPool.cs:154)
+         [9] void ObjectPoolInit.InitPools() (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Tools/ObjectPool/ObjectPoolInit.cs:151)
+         [10] void ObjectPoolInit+ObjectPoolInitRuntime.OnRegistered(SystemRegistrationContext) (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Tools/ObjectPool/ObjectPoolInit.cs:170)
+         [11] void SystemManager.EnsureSystem(SystemDescriptor, slime.data.Systems.SystemData) (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/System/Core/SystemManager.cs:307)
+         [12] void SystemManager.BootstrapRegisteredSystems() (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/System/Core/SystemManager.cs:178)
+         [13] void SystemManager.EnsureBootstrapped() (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/System/Core/SystemManager.cs:95)
+         [14] void SystemManager._Ready() (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/System/Core/SystemManager.cs:60)
+         [15] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2646)
+         [16] bool SystemManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/home/slime/Code/SlimeAI/SlimeAI/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/SystemManager_ScriptMethods.generated.cs:158)
+         [17] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [WARNING][EntityManager_Component]   - 预热警告: res://Src/ECS/Base/Entity/Effect/LightningLineEffect/LightningLineEffect.tscn 未找到任何 Component (可能结构特殊)
+     at: void Log.Warn(object) (res://Src/ECS/Tools/Logger/Log.cs:152)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Log.Warn(object) (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Tools/Logger/Log.cs:152)
+         [2] void EntityManager.PrewarmComponentCache() (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/Entity/Core/EntityManager_Component.cs:104)
+         [3] void EntityManager+Init+EntityManagerComponentWarmupRuntime.OnRegistered(SystemRegistrationContext) (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/Entity/Core/EntityManager_Component_Init.cs:26)
+         [4] void SystemManager.EnsureSystem(SystemDescriptor, slime.data.Systems.SystemData) (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/System/Core/SystemManager.cs:307)
+         [5] void SystemManager.BootstrapRegisteredSystems() (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/System/Core/SystemManager.cs:178)
+         [6] void SystemManager.EnsureBootstrapped() (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/System/Core/SystemManager.cs:95)
+         [7] void SystemManager._Ready() (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/System/Core/SystemManager.cs:60)
+         [8] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2646)
+         [9] bool SystemManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/home/slime/Code/SlimeAI/SlimeAI/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/SystemManager_ScriptMethods.generated.cs:158)
+         [10] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [WARNING][EntityManager_Component]   - 预热警告: res://Src/ECS/Base/Entity/Preview/VisualPreviewEntity.tscn 未找到任何 Component (可能结构特殊)
+     at: void Log.Warn(object) (res://Src/ECS/Tools/Logger/Log.cs:152)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Log.Warn(object) (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Tools/Logger/Log.cs:152)
+         [2] void EntityManager.PrewarmComponentCache() (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/Entity/Core/EntityManager_Component.cs:104)
+         [3] void EntityManager+Init+EntityManagerComponentWarmupRuntime.OnRegistered(SystemRegistrationContext) (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/Entity/Core/EntityManager_Component_Init.cs:26)
+         [4] void SystemManager.EnsureSystem(SystemDescriptor, slime.data.Systems.SystemData) (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/System/Core/SystemManager.cs:307)
+         [5] void SystemManager.BootstrapRegisteredSystems() (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/System/Core/SystemManager.cs:178)
+         [6] void SystemManager.EnsureBootstrapped() (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/System/Core/SystemManager.cs:95)
+         [7] void SystemManager._Ready() (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Base/System/Core/SystemManager.cs:60)
+         [8] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2646)
+         [9] bool SystemManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/home/slime/Code/SlimeAI/SlimeAI/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/SystemManager_ScriptMethods.generated.cs:158)
+         [10] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+ERROR: FAIL DataCatalogTestScene: 测试过程中发生异常: System.InvalidCastException: Unable to cast object of type 'System.String[]' to type 'System.String'.
+   at Slime.Test.DataOS.DataCatalogTestScene.BuildCatalog_ShouldConvertStringArrayDefaultValue() in /home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Test/SingleTest/ECS/DataOS/DataCatalogTestScene.cs:line 102
+   at Slime.Test.DataOS.DataCatalogTestScene.RunTests() in /home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Test/SingleTest/ECS/DataOS/DataCatalogTestScene.cs:line 20
+   at Slime.Test.DataOS.DataSceneTestBase._Ready() in /home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Test/SingleTest/ECS/DataOS/DataSceneTestBase.cs:line 28
+   at: void Slime.Test.DataOS.DataSceneTestBase.Fail(string) (res://Src/ECS/Test/SingleTest/ECS/DataOS/DataSceneTestBase.cs:259)
+   C# backtrace (most recent call first):
+       [0] void Godot.GD.PushError(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:366)
+       [1] void Slime.Test.DataOS.DataSceneTestBase.Fail(string) (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Test/SingleTest/ECS/DataOS/DataSceneTestBase.cs:259)
+       [2] void Slime.Test.DataOS.DataSceneTestBase._Ready() (/home/slime/Code/SlimeAI/SlimeAI/Src/ECS/Test/SingleTest/ECS/DataOS/DataSceneTestBase.cs:28)
+       [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2646)
+       [4] bool Slime.Test.DataOS.DataSceneTestBase.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/home/slime/Code/SlimeAI/SlimeAI/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Slime.Test.DataOS.DataSceneTestBase_ScriptMethods.generated.cs:120)
+       [5] bool Slime.Test.DataOS.DataCatalogTestScene.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/home/slime/Code/SlimeAI/SlimeAI/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Slime.Test.DataOS.DataCatalogTestScene_ScriptMethods.generated.cs:230)
+       [6] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+ERROR: 100 RID allocations of type 'P11GodotBody2D' were leaked at exit.
+ERROR: 130 RID allocations of type 'P11GodotArea2D' were leaked at exit.
+ERROR: 3 RID allocations of type 'P12GodotShape2D' were leaked at exit.
+WARNING: 860 RIDs of type "CanvasItem" were leaked.
+     at: _free_rids (servers/rendering/renderer_canvas_cull.cpp:2692)
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2641)
+ERROR: 3 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)

@@ -7,8 +7,8 @@ description: 修改 SlimeAI.GameOS FeatureService、FeatureDefinition、FeatureM
 
 ## 必读入口
 
-- `DocsNew/README.md` — 方向决策入口
-- `Src/ECS/**` 旁文档 — 模块事实源
+- `DocsAI/README.md` — 方向决策入口
+- `DocsAI/ECS/` — 模块事实源
 - `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/` — 设计文档
 
 ## 源码位置

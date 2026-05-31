@@ -25,7 +25,7 @@ python3 Workspace/SDD/sdd.py show <sdd-id>
 rg -n "<SymbolName>" SlimeAI Games/BrotatoLike Resources/Else/brotato-my openspec -S
 ```
 
-5. 对照 SDD、历史 `openspec/specs/<capability>/spec.md`、当前 SDD progress、`Src/ECS/**` 旁文档、tests。
+5. 对照 SDD、历史 `openspec/specs/<capability>/spec.md`、当前 SDD progress、`DocsAI/ECS/` 文档、tests。
 
 ## 判断
 

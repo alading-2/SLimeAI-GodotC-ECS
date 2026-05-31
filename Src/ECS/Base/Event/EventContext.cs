@@ -6,7 +6,7 @@
 /// - 订阅者修改 Context（填写结果、设置阻止等）
 /// - 发布者读取 Context 获取处理结果
 /// 
-/// 详细设计文档：Docs/框架/ECS/Event/Context模式设计.md
+/// 详细设计文档：DocsAI/ECS/Event/Event系统说明.md
 /// </summary>
 public class EventContext
 {
