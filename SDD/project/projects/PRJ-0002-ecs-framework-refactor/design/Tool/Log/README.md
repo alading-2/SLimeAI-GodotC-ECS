@@ -52,11 +52,29 @@
 
 | 旧问题 | AI-first 规则 |
 | --- | --- |
-| 一条日志只是一句话 | 一条日志必须是结构化事件，至少包含 `timestamp / level / channel / owner / context / operation / message / fields`。 |
+| 一条日志只是一句话 | 一条日志必须是结构化事件，至少包含 `runElapsedMs / frame / level / channel / owner / context / operation / message / fields`。 |
 | `Info` / `Debug` 只是打印级别 | 级别只是筛选维度，真正决定价值的是 `eventId`、`operation`、`entityId`、`correlationId` 和字段完整性。 |
 | 测试靠 `PASS` 文本 | 测试结果必须进入统一 `Validation` 语义和 artifact。 |
 | 运行时日志和 scene runner 分开 | runner 只负责收集、筛选、落盘和分析，不负责定义业务日志语义。 |
 | 只靠手动开关 | 默认 profile + CLI 临时覆盖 + AI 建议回写三层控制。 |
+
+### 3.1 时间语义裁决
+
+Log 默认不应打印墙钟时间。`[HH:mm:ss]` 对 AI 排查单次运行内的因果顺序价值很低，也无法回答“第几秒、第几帧、哪个物理 tick 出问题”。
+
+默认显示和默认结构化字段应改为：
+
+- `runElapsedMs`：从本次进程 / scene / log session 开始的单调运行时长，默认 console 显示为 `t=12.384s`。
+- `frame`：Godot process frame，用来定位渲染帧顺序。
+- `physicsFrame`：Godot physics frame，用来定位物理 tick 顺序。
+- `gameElapsedMs`：游戏模拟时间；如果受 pause / timeScale 影响，必须明确。
+- `wallClockUtc`：可选字段，只用于跨进程、跨 artifact、跨机器对齐，不作为 console 默认字段。
+
+console 推荐前缀：
+
+```text
+t=12.384s f=742 pf=246 [WARN][Movement][EntityMovementComponent] operation=SwitchMode reason=ModeMissing entity=enemy_001
+```
 
 ## 4. 目标边界
 

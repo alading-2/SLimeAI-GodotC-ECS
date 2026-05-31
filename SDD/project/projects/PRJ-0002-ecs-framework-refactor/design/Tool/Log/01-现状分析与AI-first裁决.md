@@ -79,7 +79,8 @@ source -> formatted string -> console -> 事后猜语义
 
 至少要有：
 
-- `timestamp`
+- `runElapsedMs`
+- `frame`
 - `level`
 - `channel`
 - `owner`
@@ -92,9 +93,14 @@ source -> formatted string -> console -> 事后猜语义
 
 - `entityId`
 - `correlationId`
+- `physicsFrame`
+- `gameElapsedMs`
+- `wallClockUtc`
 - `phase`
 - `source`
 - `tags`
+
+其中 `runElapsedMs / frame / physicsFrame` 比墙钟时间更重要。墙钟时间只能回答“真实世界几点”，不能回答“游戏运行到第几秒、第几帧出现问题”。AI 调试更需要运行内因果顺序，所以 `wallClockUtc` 只能作为跨 artifact 对齐字段，不应作为 console 默认前缀。
 
 ### 3.3 日志不是越多越好
 
