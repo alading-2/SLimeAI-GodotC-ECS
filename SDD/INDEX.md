@@ -2,7 +2,7 @@
 
 ## Summary
 
-- **pending**: 0
+- **pending**: 1
 - **active**: 0
 - **blocked**: 0
 - **done**: 24
@@ -13,11 +13,13 @@
 | ID | Title | Status | Bucket | Current SDD | Path |
 | --- | --- | --- | --- | --- | --- |
 | PRJ-0001 | SystemAgent Optimization | active | projects | SDD-0008 | SDD/project/projects/PRJ-0001-systemagent-optimization |
-| PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0024 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
+| PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0025 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
 
 ## Pending
 
-无。
+| ID | Project | Title | Updated | Scope | Current Task |
+| --- | --- | --- | --- | --- | --- |
+| SDD-0025 | PRJ-0002 | ECS Framework Directory Architecture Restructure | 2026-06-01 | SlimeAI | T1.1 |
 
 ## Active
 
@@ -54,7 +56,7 @@
 | SDD-0021 | PRJ-0002 | Data No-Compatibility Hard Cutover | 2026-05-30 | SlimeAI | done |
 | SDD-0022 | PRJ-0002 | Data Projection Diagnostics Contract Hardening | 2026-05-30 | SlimeAI | done |
 | SDD-0023 | PRJ-0002 | SystemAgent Root Migration Rule Sync | 2026-05-30 | SlimeAI | done |
-| SDD-0024 | PRJ-0002 | Entity Relationship Full Rewrite | 2026-05-31 | SlimeAI | done |
+| SDD-0024 | PRJ-0002 | Entity Relationship Full Rewrite | 2026-06-01 | SlimeAI | done |
 
 ## By Scope
 
@@ -74,6 +76,7 @@
 - SDD-0022 — Data Projection Diagnostics Contract Hardening
 - SDD-0023 — SystemAgent Root Migration Rule Sync
 - SDD-0024 — Entity Relationship Full Rewrite
+- SDD-0025 — ECS Framework Directory Architecture Restructure
 
 ### Workspace/SDD
 
@@ -100,6 +103,10 @@
 ### bootstrap
 
 - SDD-0017 — Runtime Snapshot Record Apply and Entity Bootstrap
+
+### capability
+
+- SDD-0025 — ECS Framework Directory Architecture Restructure
 
 ### cleanup
 
@@ -161,9 +168,18 @@
 
 - SDD-0022 — Data Projection Diagnostics Contract Hardening
 
+### directory-architecture
+
+- SDD-0025 — ECS Framework Directory Architecture Restructure
+
+### docsai
+
+- SDD-0025 — ECS Framework Directory Architecture Restructure
+
 ### ecs
 
 - SDD-0020 — Data Snapshot-First Usage Cutover
+- SDD-0025 — ECS Framework Directory Architecture Restructure
 
 ### entity
 

@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-05-31 20:03",
+  "generated_at": "2026-06-01 16:03",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -32,7 +32,7 @@
       "slug": "ecs-framework-optimization",
       "title": "ECS Framework Optimization",
       "status": "active",
-      "updated_at": "2026-05-31",
+      "updated_at": "2026-06-01",
       "scope": "SlimeAI",
       "tags": [
         "ecs",
@@ -40,9 +40,12 @@
         "data",
         "event",
         "entity",
-        "relationship"
+        "relationship",
+        "directory-architecture",
+        "capability",
+        "docsai"
       ],
-      "current_sdd": "SDD-0024",
+      "current_sdd": "SDD-0025",
       "bucket": "projects",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor"
     }
@@ -579,7 +582,7 @@
       "title": "Entity Relationship Full Rewrite",
       "status": "done",
       "type": "refactor",
-      "updated_at": "2026-05-31",
+      "updated_at": "2026-06-01",
       "scope": "SlimeAI",
       "affected_areas": [
         "ecs/entity"
@@ -594,6 +597,32 @@
       "project_order": 14,
       "current_task": "done",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/014-SDD-0024-entity-relationship-full-rewrite"
+    },
+    {
+      "id": "SDD-0025",
+      "slug": "ecs-framework-directory-architecture-restructure",
+      "title": "ECS Framework Directory Architecture Restructure",
+      "status": "pending",
+      "type": "refactor",
+      "updated_at": "2026-06-01",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "Src/ECS",
+        "DocsAI/ECS",
+        "Data",
+        "DocsOld",
+        "SDD/project/projects/PRJ-0002-ecs-framework-refactor"
+      ],
+      "tags": [
+        "ecs",
+        "directory-architecture",
+        "capability",
+        "docsai"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 15,
+      "current_task": "T1.1",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/015-SDD-0025-ecs-framework-directory-architecture-restructure"
     }
   ]
 }

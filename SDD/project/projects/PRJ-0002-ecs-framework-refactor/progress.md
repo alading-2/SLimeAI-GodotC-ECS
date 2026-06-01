@@ -6,10 +6,10 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-05-31
-- **Current SDD**: SDD-0024
-- **Last Conclusion**: 已创建并启动 `SDD-0024 Entity Relationship Full Rewrite`，作为 Entity / Relationship hard cutover 的执行型 SDD；当前只生成执行胶囊，尚未修改 runtime 代码。
-- **Next Action**: 进入 `sdds/014-SDD-0024-entity-relationship-full-rewrite/` 执行 T1.1 readiness baseline，重跑 Entity/Data/Event/DocsAI grep gate 后再写 RED tests。
+- **Updated**: 2026-06-01
+- **Current SDD**: SDD-0025
+- **Last Conclusion**: 已完成 SDD-0025 设计胶囊：ECS 目录架构重构裁决为 `Runtime + Capabilities`，DocsAI 同步对齐为 `Runtime + Capabilities + Foundations`，并保留 ECS 概念；本轮只生成设计、SDD 和提示词，尚未移动源码或 DocsAI 目录。
+- **Next Action**: 进入 `sdds/015-SDD-0025-ecs-framework-directory-architecture-restructure/` 执行 T1.1 readiness baseline，先记录 dirty 范围和旧路径引用，再按 DocsAI 先行、Runtime、Capability、Foundations 的顺序迁移。
 - **Open Blockers**: none
 
 ## Project Status Board
@@ -28,8 +28,9 @@
 | SDD-0020 | done | `design/2.Data系统优化/04-Data系统现状复查与兼任问题.md` | 已完成 Data snapshot-first usage 主链路：取用点切到 runtime snapshot / query / projection；但 06 审计发现类型契约和兼容入口仍未硬收口 |
 | SDD-0021 | done | `design/2.Data系统优化/06-无兼容完全重构总审计/README.md` | 已完成 Data no-compat hard cutover：record type 来自 descriptor，validator 检查最终 snapshot，非标量 generated handle typed 化，DataKey 隐式 string 和 alias 删除，业务调用点、RuntimeModels、旧 Resource authoring 和文档事实源收口 |
 | SDD-0022 | done | `design/2.Data系统优化/2.Data无兼容完全重构/03-*`、`04-*`、`05-*`、`06-*` | 已完成 Data residual contract hardening：record completeness、Movement/Ability 行为启动契约、projection 单一事实源、write diagnostics、object_ref 语义、spawn boundary、catalog freeze、display name query 和 docs gate |
-| SDD-0023 | pending | `design/4.SystemAgent目录更改到SlimeAI里面/README.md` | `SDD/`、`Workspace/`、`.ai-config` 迁入 `SlimeAI/` 后的 rules、skill、DocsAI、SDD template 和验证门禁语义收口；不再作为当前恢复入口 |
-| SDD-0024 | active | `design/3.Entity系统优化/` | 当前：Entity Relationship Full Rewrite，按 hard cutover 完成 typed EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除 |
+| SDD-0023 | done | `design/4.SystemAgent目录更改到SlimeAI里面/README.md` | `SDD/`、`Workspace/`、`.ai-config` 迁入 `SlimeAI/` 后的 rules、skill、DocsAI、SDD template 和验证门禁语义收口已完成 |
+| SDD-0024 | done | `design/3.Entity系统优化/` | Entity Relationship Full Rewrite 已完成：typed EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除已收口 |
+| SDD-0025 | pending | `design/6.ECS框架目录架构大重构/` | 当前：目录架构大重构设计胶囊已生成；目标为 `Src/ECS/Runtime + Src/ECS/Capabilities` 和 `DocsAI/ECS/Runtime + DocsAI/ECS/Capabilities + DocsAI/ECS/Foundations` |
 | TBD | proposed | `design/13-旧ECS框架Event系统问题分析与优化方向.md` | P1：保留 EventBus，优化事件主键、事件定义和请求-响应边界 |
 
 ## Timeline
@@ -242,3 +243,11 @@
 - **Evidence**: `sdds/014-SDD-0024-entity-relationship-full-rewrite/README.md`、`design/main.md`、`tasks.md`、`bdd.md`、`progress.md`；`project.json`、`README.md`、`roadmap.md`、本 `progress.md` 已同步 current SDD。
 - **Impact**: PRJ-0002 默认恢复点现在进入 Entity / Relationship hard cutover，不再停留在“创建 SDD”的前置状态。
 - **Resume**: 从 `sdds/014-SDD-0024-entity-relationship-full-rewrite/tasks.md` 的 T1.1 开始：先跑 baseline grep 和记录 dirty 范围，再写 EntityId / EntityRegistry RED tests。
+
+### P030 — 2026-06-01 — directory-architecture-design-package
+
+- **Context**: 用户确认 Runtime 以外的功能统一放入 `Capabilities/`，DocsAI 使用相同结构，并要求在 `design/6.ECS框架目录架构大重构` 下生成深度设计文档、SDD 和提示词。
+- **Conclusion**: 已创建 SDD-0025 `ECS Framework Directory Architecture Restructure`，并生成项目级设计包和总执行提示词。当前裁决是保留 `Src/ECS` 主线，不迁到 `GameOS`；物理目录采用 `Runtime + Capabilities`，DocsAI 对齐 `Runtime + Capabilities + Foundations`，DocsOld 原文迁入目标为 `DocsAI/ECS/Foundations/`。
+- **Evidence**: `design/6.ECS框架目录架构大重构/README.md`、`01-现状证据与AI-first裁决.md`、`02-目标目录架构与归属规则.md`、`03-迁移切片与验证门禁.md`、`directory-architecture-restructure-execution-prompt.md`、`sdds/015-SDD-0025-ecs-framework-directory-architecture-restructure/`。
+- **Impact**: PRJ-0002 当前恢复入口切到 SDD-0025；后续真正迁目录必须先执行 readiness baseline，不能直接移动所有文件。
+- **Resume**: 从 `sdds/015-SDD-0025-ecs-framework-directory-architecture-restructure/tasks.md` 的 T1.1 开始；先 `git status --short` 和 `rg` 旧路径引用，记录当前未提交 `.uid` / `__pycache__` 改动为既有工作区状态。
