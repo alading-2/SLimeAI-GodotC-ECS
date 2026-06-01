@@ -43,27 +43,14 @@ public partial class DamageStatisticsSystem : Node, ISystem
     {
         _log.Debug($"波次 {data.WaveIndex} 开始，执行统计数据重置");
 
-        // 核心机制：重置玩家实体及其装备的武器/物品的波次数据
+        // 核心机制：重置玩家实体的波次数据。
+        // 武器/物品统计应由后续 Item owner service 接管；此处不再依赖旧物品关系图。
         // 敌人实体通常在波次结束或死亡时销毁，因此无需显式重置波次数据
         var players = EntityManager.GetEntitiesByType<PlayerEntity>();
         foreach (var player in players)
         {
             // 1. 重置玩家自身的波次统计
             ResetWaveStats(player.Data);
-
-            // 2. 重置玩家装备的所有武器/物品的波次统计
-            var playerId = player.Data.Get<string>(GeneratedDataKey.Id) ?? string.Empty;
-            var itemIds = EntityRelationshipManager.GetChildEntitiesByParentAndType(
-                playerId, EntityRelationshipType.ENTITY_TO_ITEM);
-
-            foreach (var itemId in itemIds)
-            {
-                var item = EntityManager.GetEntityById(itemId);
-                if (item is IWeapon weapon)
-                {
-                    ResetWaveStats(weapon.Data);
-                }
-            }
         }
     }
 
@@ -88,8 +75,8 @@ public partial class DamageStatisticsSystem : Node, ISystem
     {
         if (data.Killer is not Godot.Node killerNode) return;
 
-        // 遍历攻击链，为 IUnit 和 IWeapon 记录击杀
-        var ancestorChain = EntityRelationshipTraversal.GetAncestorChain(killerNode);
+        // 遍历 typed 归因链，为 IUnit 和 IWeapon 记录击杀
+        var ancestorChain = EntityAttributionResolver.ResolveChain(killerNode);
         bool foundAnyTarget = false;
 
         foreach (var entity in ancestorChain)

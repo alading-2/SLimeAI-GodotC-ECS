@@ -69,7 +69,7 @@ internal sealed class FeatureDebugService
         var existingFeature = FindTemporaryModifierFeature(owner, dataKey);
         if (existingFeature != null)
         {
-            EntityManager.RemoveAbility(owner, existingFeature);
+            AbilityInventoryService.Runtime.RemoveAbility(owner, existingFeature);
         }
 
         var featureName = BuildModifierFeatureName(dataKey);
@@ -105,7 +105,7 @@ internal sealed class FeatureDebugService
         var existingFeature = FindTemporaryModifierFeature(owner, dataKey);
         if (existingFeature != null)
         {
-            EntityManager.RemoveAbility(owner, existingFeature);
+            AbilityInventoryService.Runtime.RemoveAbility(owner, existingFeature);
         }
 
         return SuccessResult($"已清除临时加成: {displayName}");
@@ -130,7 +130,7 @@ internal sealed class FeatureDebugService
             return Fail($"未找到技能配置: {resourceKey}");
         }
 
-        var ability = EntityManager.AddAbility(owner, config);
+        var ability = AbilityInventoryService.Runtime.AddAbility(owner, config);
         if (ability == null)
         {
             return Fail($"添加失败: {config.Name}");
@@ -163,7 +163,7 @@ internal sealed class FeatureDebugService
             return Fail($"未找到Feature定义: {featureSource}");
         }
 
-        var feature = EntityManager.AddRuntimeFeature(owner, record);
+        var feature = AbilityInventoryService.Runtime.AddRuntimeFeature(owner, record);
         if (feature == null)
         {
             return Fail($"添加Feature失败: {record.Name}");
@@ -197,7 +197,7 @@ internal sealed class FeatureDebugService
 
         var abilityName = ability.Data.Get<string>(GeneratedDataKey.Name.StableKey);
         var abilityId = ability.Data.Get<string>(GeneratedDataKey.Id.StableKey);
-        var removed = EntityManager.RemoveAbility(owner, ability);
+        var removed = AbilityInventoryService.Runtime.RemoveAbility(owner, ability);
         if (!removed)
         {
             _log.Warn($"[Feature调试] 移除技能Feature失败: owner={owner.Data.Get<string>(GeneratedDataKey.Name.StableKey)} feature={abilityName} featureId={abilityId}");
@@ -316,7 +316,7 @@ internal sealed class FeatureDebugService
     private static AbilityEntity? FindTemporaryModifierFeature(IEntity owner, string dataKey)
     {
         var featureName = BuildModifierFeatureName(dataKey);
-        return EntityManager.GetAbilityByName(owner, featureName);
+        return AbilityInventoryService.Runtime.GetAbilityByName(owner, featureName);
     }
 
     /// <summary>

@@ -168,6 +168,6 @@ public partial class ActiveSkillBarUI : UIBase
     private List<AbilityEntity> GetActiveAbilities()
     {
         if (_entity == null) return new List<AbilityEntity>();
-        return EntityManager.GetManualAbilities(_entity);
+        return AbilityInventoryService.Runtime.GetManualAbilities(_entity);
     }
 }

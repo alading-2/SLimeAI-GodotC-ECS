@@ -45,7 +45,7 @@ public class DamageInfo
     /// <summary>
     /// 伤害的直接来源（可能是子弹 Area2D、陷阱 Area2D、或者近战武器 Area2D）
     /// <para>注意：此为直接攻击来源，不一定是最终归属的角色。</para>
-    /// <para>统计归属查找：使用 EntityRelationshipTraversal.FindAncestorOfType&lt;IUnit&gt;(Attacker) 沿 PARENT 关系向上查找角色。</para>
+    /// <para>统计归属查找：使用 EntityAttributionResolver 按 typed owner/source projection 解析归属角色。</para>
     /// <para>例如：子弹 → 武器 → 角色，最终归属到角色进行统计。</para>
     /// </summary>
     public Node Attacker { get; set; }

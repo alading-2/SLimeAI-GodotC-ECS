@@ -1,4 +1,3 @@
-using System.Linq;
 using Godot;
 
 /// <summary>
@@ -142,21 +141,13 @@ public partial class CostComponent : Node, IComponent
     // ================= 辅助方法 =================
 
     /// <summary>
-    /// 获取施法者 (通过关系管理器)
+    /// 获取施法者。
     /// </summary>
     private IEntity? GetCaster()
     {
-        if (_entity == null) return null;
-
-        var abilityId = _entity.Data.Get<string>(GeneratedDataKey.Id);
-        var ownerId = EntityRelationshipManager.GetParentEntitiesByChildAndType(
-            abilityId,
-            EntityRelationshipType.ENTITY_TO_ABILITY
-        ).FirstOrDefault();
-
-        if (string.IsNullOrEmpty(ownerId)) return null;
-
-        return EntityManager.GetEntityById(ownerId) as IEntity;
+        return _entity is AbilityEntity ability
+            ? AbilityInventoryService.Runtime.GetOwner(ability)
+            : null;
     }
 
     /// <summary>

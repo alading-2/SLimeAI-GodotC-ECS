@@ -91,11 +91,7 @@ public partial class AbilitySystemPipelineTest : Node
 
         EntityManager.Register(owner);
         EntityManager.Register(ability);
-        EntityRelationshipManager.AddRelationship(
-            ownerId, //父实体ID
-            abilityId, //子实体ID
-            EntityRelationshipType.ENTITY_TO_ABILITY //关系类型
-        );
+        AbilityInventoryService.Runtime.Attach(owner, ability);
 
         var costComponent = new CostComponent();
         EntityManager.AddComponent(ability, costComponent);
@@ -180,11 +176,7 @@ public partial class AbilitySystemPipelineTest : Node
 
         EntityManager.Register(owner);
         EntityManager.Register(ability);
-        EntityRelationshipManager.AddRelationship(
-            ownerId, //父实体ID
-            abilityId, //子实体ID
-            EntityRelationshipType.ENTITY_TO_ABILITY //关系类型
-        );
+        AbilityInventoryService.Runtime.Attach(owner, ability);
 
         var costComponent = new CostComponent();
         EntityManager.AddComponent(ability, costComponent);

@@ -3,7 +3,7 @@ using Godot;
 internal static partial class ProjectileTool
 {
     /// <summary>
-    /// 生成投射物实体，并自动建立“拥有者 → 投射物”的关系链。
+    /// 生成投射物实体，并自动建立 owner projection。
     /// </summary>
     public static ProjectileEntity? Spawn(
         IEntity owner, // 投射物归属者
@@ -32,10 +32,8 @@ internal static partial class ProjectileTool
             UsingObjectPool = true, // 投射物统一走对象池
             PoolName = ObjectPoolNames.ProjectilePool, // 投射物对象池名
             Position = position, // 初始位置
-            ParentEntity = owner, // 父实体/归属者
-            AutoAddParentRelation = true, // 自动补 PARENT，供归属链统一溯源
-            ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively, // 归属者销毁时递归销毁投射物
-            ParentRelationTypes = [EntityRelationshipType.ENTITY_TO_PROJECTILE] // 业务关系：拥有者 -> 投射物
+            LifecycleParentId = ResolveEntityId(owner), // 生命周期父实体，不表达伤害归因或业务 owner
+            ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively // 归属者销毁时递归销毁投射物
         });
 
         if (projectile == null)
@@ -44,7 +42,17 @@ internal static partial class ProjectileTool
         }
 
         projectile.Data.Set(GeneratedDataKey.EntityType, EntityType.Projectile); // 标记实体类型为投射物
+        ProjectileOwnershipService.Runtime.Attach(owner, projectile);
 
         return projectile;
+    }
+
+    private static EntityId ResolveEntityId(IEntity entity)
+    {
+        var id = EntityId.From(entity.Data.Get<string>(GeneratedDataKey.Id));
+        if (!id.IsEmpty || entity is not Node node)
+            return id;
+
+        return EntityId.From(node.GetInstanceId().ToString());
     }
 }

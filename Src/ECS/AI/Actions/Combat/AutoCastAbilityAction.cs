@@ -1,7 +1,7 @@
 /// <summary>
 /// 动作节点：AI 自动施放指定技能
 /// <para>
-/// 通过 EntityManager 查找技能实体，走标准 TryTrigger 流水线施放。
+/// 通过 AbilityInventoryService 查找技能实体，走标准 TryTrigger 流水线施放。
 /// 施法前会自动面向目标（如有）并停止移动。
 /// </para>
 /// <para>
@@ -26,7 +26,7 @@ public class AutoCastAbilityAction : BehaviorNode
     /// <inheritdoc/>
     public override NodeState Evaluate(AIContext ctx)
     {
-        var ability = EntityManager.GetAbilityByName(ctx.Entity, _abilityName);
+        var ability = AbilityInventoryService.Runtime.GetAbilityByName(ctx.Entity, _abilityName);
         if (ability == null) return NodeState.Failure;
 
         // 施法前停止移动

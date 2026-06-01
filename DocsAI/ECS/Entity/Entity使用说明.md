@@ -9,6 +9,8 @@
 
 - `Src/ECS/Base/Entity/IEntity.cs`：Entity 纯容器接口，当前只暴露 `Data` 和 `Events`。
 - `Src/ECS/Base/Entity/Core/EntityManager.cs`：当前旧 ECS 统一 spawn / register / destroy 入口。
+- `Src/ECS/Base/Entity/Core/EntityId.cs`、`EntityIdList.cs`：runtime typed identity 和不可变多引用列表。
+- `Src/ECS/Base/Entity/Core/OwnedReferenceRegistry.cs`：业务 owner 引用 Data projection 与 destroy cleanup hook。
 - `Src/ECS/Base/Entity/TemplateEntity.cs`：当前模板；后续 Entity hard cutover 需要按 `3.Entity系统优化/` 更新。
 - `Data/DataKey/Generated/DataKey_Generated.cs`：当前 Data 访问唯一 generated handle。
 - `Data/EventType/`：当前 Event payload contract。
@@ -29,7 +31,30 @@ var enemy = EntityManager.Spawn<EnemyEntity>(new EntitySpawnConfig
 });
 ```
 
-`EntityManager.Spawn` 当前仍负责对象池 / 场景实例化、runtime snapshot record apply、视觉注入、位置旋转、Component 注册和旧关系绑定。Entity hard cutover 会把这些阶段拆成 `EntitySpawnPipeline / EntityRegistry / ComponentRegistrar / LifecycleTree`，但创建入口仍必须由 framework 管理，不能直接 `new` 后挂树。
+`EntityManager.Spawn` 当前仍负责对象池 / 场景实例化、runtime snapshot record apply、视觉注入、位置旋转、Component 注册和旧关系绑定。Component 注册/反查已由 `ComponentRegistrar` 内部索引接管，不再通过 `ENTITY_TO_COMPONENT` 关系表达。Entity hard cutover 会继续把 spawn 阶段拆成 `EntitySpawnPipeline / EntityRegistry / ComponentRegistrar / LifecycleTree`，但创建入口仍必须由 framework 管理，不能直接 `new` 后挂树。
+
+当前 `EntityManager.Spawn<T>` 已是 `EntitySpawnPipeline` 的薄 facade，底层阶段顺序是：
+
+```text
+create -> data -> visual -> transform -> registry -> component -> lifecycle -> activate -> spawned event
+```
+
+如果需要生命周期父级，只能使用 `LifecycleParentId / ParentDestroyPolicy`：
+
+```csharp
+var projectile = EntityManager.Spawn<ProjectileEntity>(new EntitySpawnConfig
+{
+    Config = projectileConfig,
+    RuntimeDataRecord = projectileRecord,
+    UsingObjectPool = true,
+    PoolName = ObjectPoolNames.ProjectilePool,
+    Position = spawnPosition,
+    LifecycleParentId = ownerId,
+    ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively
+});
+```
+
+`LifecycleParentId` 只表示销毁树，不表示 source、damage credit、owner list 或 UI binding。
 
 ### Destroy
 
@@ -69,11 +94,23 @@ Entity identity 的当前边界：
 
 ```text
 public API: EntityId / EntityIdList
-DataOS projection: GeneratedDataKey.SourceEntityId / string_array owner list
-转换位置: owner service / helper
+DataOS projection: DataKey<string> child owner id / DataKey<string[]> owner child ids
+转换位置: EntityManager.RegisterOwnedReference / AddOwnedReference / RemoveOwnedReference 或 capability helper
 ```
 
 这不是恢复旧 Relationship，而是在当前 DataOS 类型能力下避免手写第二套 DataKey 事实源。
+
+owner 引用示例：
+
+```csharp
+ProjectileOwnershipService.Runtime.Attach(owner, projectile);
+var ownerProjectiles = ProjectileOwnershipService.Runtime.GetProjectiles(owner);
+
+EffectOwnershipService.Runtime.Attach(hostOrOwner, effect);
+var hostEffects = EffectOwnershipService.Runtime.GetEffects(hostOrOwner);
+```
+
+`ProjectileOwnershipService / EffectOwnershipService / AbilityInventoryService` 是业务可用入口；`OwnedReferenceRegistry` 只是它们内部的 projection + cleanup helper。owner list 不决定 child 是否跟随 owner 销毁，销毁语义仍只看 `LifecycleTree`。
 
 ## 4. Event 使用
 
@@ -109,10 +146,14 @@ private void OnDamaged(GameEventType.Unit.Damaged evt)
 旧 `EntityRelationshipManager` 只作为待删除旧实现理解对象。新设计只保留 lifecycle parent 语义：
 
 - lifecycle parent：进入 `LifecycleTree`，表达单 parent、销毁策略和层级遍历。
-- projectile / effect / ability / item / UI / component owner：进入对应 capability service、typed Data projection 或 owner index。
-- damage attribution：进入明确的 `DamageAttribution`，不沿 parent chain 猜。
+- component owner：进入 `ComponentRegistrar` 内部索引，不进入通用 Relationship 图。
+- projectile owner：进入 `ProjectileOwnershipService.Runtime`，projection 是 `ProjectileOwnerEntityId` + `OwnedProjectileIds`。
+- effect host/owner：进入 `EffectOwnershipService.Runtime`，projection 是 `EffectHostEntityId` + `OwnedEffectIds`。
+- ability owner：进入 `AbilityInventoryService.Runtime`，projection 是 `AbilityOwnerEntityId` + `OwnedAbilityIds`。
+- item / UI owner：进入对应 capability service、typed Data projection、`EntityIdList` owner list 或 owner index。
+- damage / movement attribution：进入 `EntityAttributionResolver`，读取 Projectile / Effect / Source / Origin projection，不沿 parent chain 猜。
 
-当前代码中的 `ParentEntity / ParentRelationTypes / EntityRelationshipType` 不能作为新功能模板继续复制。
+当前代码中的旧 `ParentEntity / AutoAddParentRelation / ParentRelationTypes / EntityRelationshipType` 不能作为新功能模板继续复制。
 
 ## 6. Entity 模板边界
 

@@ -118,15 +118,8 @@ public partial class TriggerComponent : Node, IComponent
             return;
         }
 
-        // 查找技能的拥有者 (例如：玩家实体)
-        // 绝大多数事件触发技能是监听其拥有者的事件（如玩家受伤）
-        var abilityId = ability.Data.Get<string>(GeneratedDataKey.Id) ?? string.Empty;
-        var ownerId = EntityRelationshipManager.GetParentEntitiesByChildAndType(
-            abilityId, EntityRelationshipType.ENTITY_TO_ABILITY).FirstOrDefault();
-
-        var owner = !string.IsNullOrEmpty(ownerId)
-            ? EntityManager.GetEntityById(ownerId) as IEntity
-            : null;
+        // 绝大多数事件触发技能监听其拥有者事件（如玩家受伤）。
+        var owner = AbilityInventoryService.Runtime.GetOwner(ability);
 
         if (owner == null)
         {
@@ -226,12 +219,7 @@ public partial class TriggerComponent : Node, IComponent
         if (_entity is not AbilityEntity ability) return;
 
         // 查找施法者
-        var abilityId = ability.Data.Get<string>(GeneratedDataKey.Id) ?? string.Empty;
-        var ownerId = EntityRelationshipManager.GetParentEntitiesByChildAndType(
-            abilityId, EntityRelationshipType.ENTITY_TO_ABILITY).FirstOrDefault();
-        var caster = !string.IsNullOrEmpty(ownerId)
-            ? EntityManager.GetEntityById(ownerId) as IEntity
-            : null;
+        var caster = AbilityInventoryService.Runtime.GetOwner(ability);
 
         // 创建施法上下文
         var context = new CastContext

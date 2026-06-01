@@ -122,8 +122,8 @@ public sealed class MovementCollisionPolicy
     }
 
     /// <summary>
-    /// 阵营判断统一优先回溯到最近的 IUnit 祖先。
-    /// <para>投射物 / 特效等派生实体通过 PARENT 关系回溯归属单位；找不到时再回退到自身。</para>
+    /// 阵营判断统一优先解析最近的归属 IUnit。
+    /// <para>投射物 / 特效等派生实体通过 typed owner/source projection 回溯归属单位；找不到时再回退到自身。</para>
     /// </summary>
     private static IEntity ResolveTeamFilterSourceEntity(IEntity sourceEntity)
     {
@@ -132,7 +132,7 @@ public sealed class MovementCollisionPolicy
             return sourceEntity;
         }
 
-        var ownerUnit = EntityRelationshipTraversal.FindAncestorOfType<IUnit>(sourceNode); // 沿 PARENT 关系回溯归属单位
+        var ownerUnit = EntityAttributionResolver.ResolveUnit(sourceNode); // 沿 typed owner/source projection 回溯归属单位
         return ownerUnit ?? sourceEntity;
     }
 

@@ -147,7 +147,7 @@ public void Process(DamageInfo info)
 - **关键属性**:
   - `Id`: 唯一标识，用于日志追踪。
   - `Attacker`: 伤害来源节点（如子弹、陷阱 Area2D）。
-    - 注意：这是**直接来源**，统计归属需通过 `EntityRelationshipTraversal.FindAncestorOfType<IUnit>(Attacker)` 向上查找。
+    - 注意：这是**直接来源**；统计、暴击、吸血等归属解析统一通过 `EntityAttributionResolver.ResolveUnit/ResolveChain(Attacker)`，读取 Projectile / Effect / Source / Origin projection，不再沿旧 parent-chain 查找。
   - `Victim`: 受害者实体（必须实现 IUnit）。
   - `FinalDamage`: 流转过程中的最终结算伤害值。
   - `IsEnd`: 标记伤害流程是否应提前终止（由主循环检查）。
@@ -177,7 +177,7 @@ public void Process(DamageInfo info)
 *   **职责整合**: 合并了原 `PreDamageCheckProcessor` 的功能。
 
 #### [CritProcessor](../../../../Src/ECS/Base/System/DamageSystem/Processors/CritProcessor.cs) (P:300)
-*   **逻辑**: 查找攻击者 IUnit（通过 `FindAncestorOfType`），读取 `CritRate` 进行概率判定。
+*   **逻辑**: 通过 `EntityAttributionResolver.ResolveUnit(info.Attacker)` 查找攻击者归属 IUnit，读取 `CritRate` 进行概率判定。
 *   **效果**: 若暴击，`IsCritical = true`, `FinalDamage *= (CritDamage / 100)`。
 *   **数据来源**: `DataKey.CritRate`（暴击率）, `DataKey.CritDamage`（暴击倍率，如 150）。
 

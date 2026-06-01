@@ -28,6 +28,23 @@ namespace Slime.Test
             }
         }
 
+        private sealed partial class MockUnit : Node2D, IUnit
+        {
+            public Data Data { get; } = new Data();
+            public EventBus Events { get; } = new EventBus();
+
+            public MockUnit(string name, Team team)
+            {
+                Name = name;
+                Data.Set(GeneratedDataKey.Team, team);
+                Data.Set(GeneratedDataKey.EntityType, EntityType.Unit);
+                Data.Set(GeneratedDataKey.Id, GetInstanceId().ToString());
+                Data.Set(GeneratedDataKey.DefaultMoveMode, MoveMode.None);
+                Data.Set(GeneratedDataKey.MoveMode, MoveMode.None);
+                Data.Set(GeneratedDataKey.IsDead, false);
+            }
+        }
+
         private int _passedCount;
         private int _failedCount;
 
@@ -46,11 +63,11 @@ namespace Slime.Test
                 TestOrientationStoppedDefaults();
                 TestMovementCompletedEventCarriesReason();
                 TestStopCoordinatorResolution();
-                TestBindParentRelationshipsCreatesOwnershipChain();
-                TestBindParentRelationshipsRejectsSecondParent();
+                TestProjectileOwnershipServiceCreatesAttributionProjection();
+                TestProjectileOwnershipServiceRejectsSecondOwner();
                 TestDestroyRecursivelyDestroysOwnedChildren();
                 TestDestroyDetachKeepsOwnedChildrenAlive();
-                TestMigrateReplacesSourceAndInheritsDirectParent();
+                TestMigrateReplacesSourceAndInheritsLifecycleParent();
                 TestMigrateProfileFiltersDataAndDoesNotCopyEvents();
                 TestCollisionPolicyCountsAndFilters();
                 TestCollisionPolicyUsesOwnerUnitForTeamFilter();
@@ -292,11 +309,11 @@ namespace Slime.Test
         }
 
         /// <summary>
-        /// 验证统一绑定入口会同时建立业务关系和 PARENT 关系，并且可通过统一追溯入口回到归属单位。
+        /// 验证 Projectile owner service 会建立 typed projection，并且可通过归因解析器回到归属单位。
         /// </summary>
-        private void TestBindParentRelationshipsCreatesOwnershipChain()
+        private void TestProjectileOwnershipServiceCreatesAttributionProjection()
         {
-            var owner = new MockEntity("Owner", Team.Player, EntityType.Unit);
+            var owner = new MockUnit("Owner", Team.Player);
             var projectile = new MockEntity("Projectile", Team.Neutral, EntityType.Projectile);
 
             AddChild(owner);
@@ -307,29 +324,20 @@ namespace Slime.Test
 
             try
             {
-                bool bound = EntityManager.BindParentRelationships(
-                    projectile, // 子实体：投射物
-                    owner, // 父实体：归属单位
-                    autoAddParentRelation: true, // 自动补 PARENT，供统一溯源
-                    relationTypes: EntityRelationshipType.ENTITY_TO_PROJECTILE // 业务关系：拥有者 -> 投射物
-                );
+                bool attached = ProjectileOwnershipService.Runtime.Attach(owner, projectile);
+                var ownerList = EntityIdList.FromStringArray(owner.Data.Get(GeneratedDataKey.OwnedProjectileIds));
+                var resolvedOwner = ProjectileOwnershipService.Runtime.GetOwner(projectile);
+                var resolvedUnit = EntityAttributionResolver.ResolveUnit(projectile);
 
-                bool hasBusinessRelation = EntityRelationshipManager.HasRelationship(
-                    owner.Data.Get<string>(GeneratedDataKey.Id), // 父实体 Id
-                    projectile.Data.Get<string>(GeneratedDataKey.Id), // 子实体 Id
-                    EntityRelationshipType.ENTITY_TO_PROJECTILE // 投射物业务关系
-                );
-                bool hasParentRelation = EntityRelationshipManager.HasRelationship(
-                    owner.Data.Get<string>(GeneratedDataKey.Id), // 父实体 Id
-                    projectile.Data.Get<string>(GeneratedDataKey.Id), // 子实体 Id
-                    EntityRelationshipType.PARENT // 统一父子关系
-                );
-                var ownerEntity = EntityRelationshipTraversal.FindAncestorOfType<IEntity>(projectile); // 统一沿 PARENT 追溯归属实体
-
-                AssertEqual("统一绑定入口应返回成功", true, bound);
-                AssertEqual("统一绑定入口应建立业务关系", true, hasBusinessRelation);
-                AssertEqual("统一绑定入口应自动建立 PARENT 关系", true, hasParentRelation);
-                AssertEqual("统一追溯入口应能回溯到归属实体", owner, ownerEntity);
+                AssertEqual("Projectile owner attach 应返回成功", true, attached);
+                AssertEqual("child -> owner projection 应写入 owner Id", owner.Data.Get<string>(GeneratedDataKey.Id), projectile.Data.Get(GeneratedDataKey.ProjectileOwnerEntityId));
+                AssertEqual("owner -> projectile list 应记录 child", true, ownerList.Contains(EntityId.From(projectile.Data.Get<string>(GeneratedDataKey.Id))));
+                AssertEqual("ProjectileOwnershipService 应能反查 owner", owner, resolvedOwner);
+                AssertEqual<IUnit?>("归因解析器应通过 projection 回到归属单位", owner, resolvedUnit);
+                AssertEqual("旧 projectile relationship 不应被写入", false, EntityRelationshipManager.HasRelationship(
+                    owner.Data.Get<string>(GeneratedDataKey.Id),
+                    projectile.Data.Get<string>(GeneratedDataKey.Id),
+                    "relationship.entity.projectile"));
             }
             finally
             {
@@ -338,12 +346,12 @@ namespace Slime.Test
         }
 
         /// <summary>
-        /// 验证 PARENT 链是单父契约，同一个子实体不能再绑定第二个直接父级。
+        /// 验证 Projectile owner projection 是单 owner 契约，同一个子实体不能再绑定第二个 owner。
         /// </summary>
-        private void TestBindParentRelationshipsRejectsSecondParent()
+        private void TestProjectileOwnershipServiceRejectsSecondOwner()
         {
-            var ownerA = new MockEntity("OwnerA", Team.Player, EntityType.Unit);
-            var ownerB = new MockEntity("OwnerB", Team.Player, EntityType.Unit);
+            var ownerA = new MockUnit("OwnerA", Team.Player);
+            var ownerB = new MockUnit("OwnerB", Team.Player);
             var projectile = new MockEntity("Projectile", Team.Neutral, EntityType.Projectile);
 
             AddChild(ownerA);
@@ -356,23 +364,17 @@ namespace Slime.Test
 
             try
             {
-                bool firstBound = EntityManager.BindParentRelationships(
-                    projectile, // 子实体：投射物
-                    ownerA, // 第一个父实体
-                    autoAddParentRelation: true, // 自动补 PARENT
-                    relationTypes: EntityRelationshipType.ENTITY_TO_PROJECTILE // 业务关系
-                );
-                bool secondBound = EntityManager.BindParentRelationships(
-                    projectile, // 同一个子实体
-                    ownerB, // 第二个父实体，理论上应被拒绝
-                    autoAddParentRelation: true, // 仍尝试补 PARENT
-                    relationTypes: EntityRelationshipType.ENTITY_TO_PROJECTILE // 同一业务关系也应拒绝二次归属
-                );
-                var directParent = EntityRelationshipTraversal.GetDirectParent(projectile); // 统一获取直接父级
+                bool firstAttached = ProjectileOwnershipService.Runtime.Attach(ownerA, projectile);
+                bool secondAttached = ProjectileOwnershipService.Runtime.Attach(ownerB, projectile);
+                var currentOwner = ProjectileOwnershipService.Runtime.GetOwner(projectile);
+                var ownerAList = EntityIdList.FromStringArray(ownerA.Data.Get(GeneratedDataKey.OwnedProjectileIds));
+                var ownerBList = EntityIdList.FromStringArray(ownerB.Data.Get(GeneratedDataKey.OwnedProjectileIds));
 
-                AssertEqual("首次绑定应成功", true, firstBound);
-                AssertEqual("第二次绑定直接父级应被拒绝", false, secondBound);
-                AssertEqual("子实体直接父级应保持第一次绑定结果", ownerA, directParent);
+                AssertEqual("首次 owner attach 应成功", true, firstAttached);
+                AssertEqual("第二次 owner attach 应被拒绝", false, secondAttached);
+                AssertEqual("子实体 owner 应保持第一次绑定结果", ownerA, currentOwner);
+                AssertEqual("第一个 owner list 应包含 projectile", true, ownerAList.Contains(EntityId.From(projectile.Data.Get<string>(GeneratedDataKey.Id))));
+                AssertEqual("第二个 owner list 不应包含 projectile", false, ownerBList.Contains(EntityId.From(projectile.Data.Get<string>(GeneratedDataKey.Id))));
             }
             finally
             {
@@ -397,15 +399,13 @@ namespace Slime.Test
             string ownerId = owner.Data.Get<string>(GeneratedDataKey.Id);
             string projectileId = projectile.Data.Get<string>(GeneratedDataKey.Id);
 
-            bool bound = EntityManager.BindParentRelationships(
-                projectile, // 子实体：投射物
-                owner, // 父实体：拥有者
-                autoAddParentRelation: true, // 自动补 PARENT
-                parentDestroyPolicy: ParentDestroyPolicy.DestroyRecursively, // 父死子死
-                relationTypes: EntityRelationshipType.ENTITY_TO_PROJECTILE // 业务关系
+            bool bound = EntityManager.AttachLifecycleParent(
+                owner, // 生命周期父实体
+                projectile, // 生命周期子实体
+                ParentDestroyPolicy.DestroyRecursively // 父死子死
             );
 
-            AssertEqual("级联销毁测试前置绑定应成功", true, bound);
+            AssertEqual("级联销毁测试前置 lifecycle 绑定应成功", true, bound);
 
             EntityManager.Destroy(owner);
 
@@ -430,33 +430,31 @@ namespace Slime.Test
             string ownerId = owner.Data.Get<string>(GeneratedDataKey.Id);
             string projectileId = projectile.Data.Get<string>(GeneratedDataKey.Id);
 
-            bool bound = EntityManager.BindParentRelationships(
-                projectile, // 子实体：投射物
-                owner, // 父实体：拥有者
-                autoAddParentRelation: true, // 自动补 PARENT
-                parentDestroyPolicy: ParentDestroyPolicy.Detach, // 父死仅断开关系
-                relationTypes: EntityRelationshipType.ENTITY_TO_PROJECTILE // 业务关系
+            bool bound = EntityManager.AttachLifecycleParent(
+                owner, // 生命周期父实体
+                projectile, // 生命周期子实体
+                ParentDestroyPolicy.Detach // 父死仅断开关系
             );
 
-            AssertEqual("Detach 测试前置绑定应成功", true, bound);
+            AssertEqual("Detach 测试前置 lifecycle 绑定应成功", true, bound);
 
             EntityManager.Destroy(owner);
 
-            var directParent = EntityRelationshipTraversal.GetDirectParent(projectile); // Detach 后不应再有直接父级
+            var directParentId = EntityManager.GetLifecycleParentId(projectile); // Detach 后不应再有直接生命周期父级
             bool projectileStillRegistered = NodeLifecycleManager.IsRegistered(projectileId);
             bool ownerStillRegistered = NodeLifecycleManager.IsRegistered(ownerId);
 
             AssertEqual("Detach 后父实体应注销", false, ownerStillRegistered);
             AssertEqual("Detach 后子实体应继续存活", true, projectileStillRegistered);
-            AssertEqual("Detach 后子实体不应再保留直接父级", null, directParent);
+            AssertEqual("Detach 后子实体不应再保留直接父级", EntityId.Empty, directParentId);
 
             CleanupEntities(projectile);
         }
 
         /// <summary>
-        /// 验证迁移会生成新的目标实体、继承直接父级归属，并销毁旧实体。
+        /// 验证迁移会生成新的目标实体、继承直接 lifecycle parent，并销毁旧实体。
         /// </summary>
-        private void TestMigrateReplacesSourceAndInheritsDirectParent()
+        private void TestMigrateReplacesSourceAndInheritsLifecycleParent()
         {
             var owner = new MockEntity("MigrationOwner", Team.Player, EntityType.Unit);
             var source = new MockEntity("MigrationSource", Team.Neutral, EntityType.Projectile);
@@ -471,12 +469,10 @@ namespace Slime.Test
             source.Data.Set(GeneratedDataKey.Description, "payload");
             source.Data.Set("CustomCount", 7);
 
-            EntityManager.BindParentRelationships(
-                source, // 子实体：待迁移源实体
-                owner, // 父实体：归属者
-                autoAddParentRelation: true, // 自动补 PARENT
-                parentDestroyPolicy: ParentDestroyPolicy.Detach, // 验证父销毁策略会被继承
-                relationTypes: EntityRelationshipType.ENTITY_TO_PROJECTILE // 业务关系
+            EntityManager.AttachLifecycleParent(
+                owner, // 生命周期父实体
+                source, // 待迁移源实体
+                ParentDestroyPolicy.Detach // 验证父销毁策略会被继承
             );
 
             string sourceId = source.Data.Get<string>(GeneratedDataKey.Id);
@@ -504,12 +500,9 @@ namespace Slime.Test
                 AssertEqual("迁移后应复制自定义基础数据", 7, target.Data.Get<int>("CustomCount"));
                 AssertEqual("迁移后应记录直接来源实体 Id", sourceId, target.Data.Get<string>(GeneratedDataKey.SourceEntityId));
                 AssertEqual("迁移后应沿用第一来源实体 Id 作为 Origin", sourceId, target.Data.Get<string>(GeneratedDataKey.OriginEntityId));
-                AssertEqual("迁移后应继承直接父级", owner, EntityRelationshipTraversal.GetDirectParent(target));
+                AssertEqual("迁移后应继承 lifecycle parent", EntityId.From(owner.Data.Get<string>(GeneratedDataKey.Id)), EntityManager.GetLifecycleParentId(target));
 
-                ParentDestroyPolicy destroyPolicy = EntityRelationshipLifecycle.ReadParentDestroyPolicy(
-                    owner.Data.Get<string>(GeneratedDataKey.Id), // 父实体 Id
-                    target.Data.Get<string>(GeneratedDataKey.Id) // 目标实体 Id
-                );
+                ParentDestroyPolicy destroyPolicy = EntityManager.GetLifecycleLink(target)!.Value.DestroyPolicy;
                 AssertEqual("迁移后应继承直接父级上的销毁策略", ParentDestroyPolicy.Detach, destroyPolicy);
             }
             finally
@@ -586,11 +579,11 @@ namespace Slime.Test
         }
 
         /// <summary>
-        /// 验证投射物会沿 PARENT 关系回溯到归属单位判敌我，而不是直接拿自身 Team（通常为 Neutral）判断。
+        /// 验证投射物会通过 owner projection 回溯到归属单位判敌我，而不是直接拿自身 Team（通常为 Neutral）判断。
         /// </summary>
         private void TestCollisionPolicyUsesOwnerUnitForTeamFilter()
         {
-            var owner = new MockEntity("Owner", Team.Player, EntityType.Unit);
+            var owner = new MockUnit("Owner", Team.Player);
             var projectile = new MockEntity("Projectile", Team.Neutral, EntityType.Projectile);
             var friendly = new MockEntity("Friendly", Team.Player, EntityType.Unit);
             var enemy = new MockEntity("Enemy", Team.Enemy, EntityType.Unit);
@@ -605,14 +598,10 @@ namespace Slime.Test
             EntityManager.Register(friendly);
             EntityManager.Register(enemy);
 
-            EntityRelationshipManager.AddRelationship(
-                owner.Data.Get<string>(GeneratedDataKey.Id), // 父实体：归属单位
-                projectile.Data.Get<string>(GeneratedDataKey.Id), // 子实体：投射物
-                EntityRelationshipType.PARENT // 统一溯源关系
-            );
-
             try
             {
+                ProjectileOwnershipService.Runtime.Attach(owner, projectile);
+
                 var policy = new MovementCollisionPolicy();
                 var @params = new MovementParams
                 {

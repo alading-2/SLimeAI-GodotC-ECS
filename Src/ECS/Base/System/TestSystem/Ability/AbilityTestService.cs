@@ -141,7 +141,7 @@ internal sealed class AbilityTestService
         var ownedNames = new HashSet<string>(StringComparer.Ordinal);
         if (owner != null)
         {
-            foreach (var ability in EntityManager.GetAbilities(owner))
+            foreach (var ability in AbilityInventoryService.Runtime.GetAbilities(owner))
             {
                 var abilityName = ability.Data.Get<string>(GeneratedDataKey.Name.StableKey); // 解析 GeneratedDataKey.Name 键名
                 if (!string.IsNullOrWhiteSpace(abilityName))
@@ -185,7 +185,7 @@ internal sealed class AbilityTestService
             return Array.Empty<AbilityFeatureGroup<AbilityOwnedItemView>>();
         }
 
-        foreach (var ability in EntityManager.GetAbilities(owner))
+        foreach (var ability in AbilityInventoryService.Runtime.GetAbilities(owner))
         {
             views.Add(CreateOwnedItemView(ability));
         }
@@ -298,7 +298,7 @@ internal sealed class AbilityTestService
             return null;
         }
 
-        foreach (var ability in EntityManager.GetAbilities(owner))
+        foreach (var ability in AbilityInventoryService.Runtime.GetAbilities(owner))
         {
             var currentAbilityId = ability.Data.Get<string>(GeneratedDataKey.Id.StableKey);
             if (string.Equals(currentAbilityId, abilityId, StringComparison.Ordinal))

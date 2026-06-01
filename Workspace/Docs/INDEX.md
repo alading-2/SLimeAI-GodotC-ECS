@@ -7,6 +7,7 @@
 | 文档 | 说明 |
 |------|------|
 | [WorkspaceSetup.md](WorkspaceSetup.md) | 工作区克隆、submodule 初始化、日常更新步骤 |
+| [Commands.md](Commands.md) | 常用命令参考（DataOS、构建、测试、验证等） |
 
 ## AI 文档
 

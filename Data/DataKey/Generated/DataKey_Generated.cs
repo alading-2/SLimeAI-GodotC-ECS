@@ -162,6 +162,11 @@ public static class GeneratedDataKey
     public static readonly DataKey<int> AbilityMaxTargets = new("AbilityMaxTargets");
 
     /// <summary>
+    /// AbilityOwnerEntityId
+    /// </summary>
+    public static readonly DataKey<string> AbilityOwnerEntityId = new("AbilityOwnerEntityId");
+
+    /// <summary>
     /// AbilityRepeatHitSameTarget
     /// </summary>
     public static readonly DataKey<bool> AbilityRepeatHitSameTarget = new("AbilityRepeatHitSameTarget");
@@ -415,6 +420,11 @@ public static class GeneratedDataKey
     /// EffectAnimationName
     /// </summary>
     public static readonly DataKey<string> EffectAnimationName = new("EffectAnimationName");
+
+    /// <summary>
+    /// EffectHostEntityId
+    /// </summary>
+    public static readonly DataKey<string> EffectHostEntityId = new("EffectHostEntityId");
 
     /// <summary>
     /// EffectIsAttached
@@ -762,6 +772,21 @@ public static class GeneratedDataKey
     public static readonly DataKey<string> OriginEntityId = new("OriginEntityId");
 
     /// <summary>
+    /// OwnedAbilityIds
+    /// </summary>
+    public static readonly DataKey<string[]> OwnedAbilityIds = new("OwnedAbilityIds");
+
+    /// <summary>
+    /// OwnedEffectIds
+    /// </summary>
+    public static readonly DataKey<string[]> OwnedEffectIds = new("OwnedEffectIds");
+
+    /// <summary>
+    /// OwnedProjectileIds
+    /// </summary>
+    public static readonly DataKey<string[]> OwnedProjectileIds = new("OwnedProjectileIds");
+
+    /// <summary>
     /// PatrolRadius
     /// </summary>
     public static readonly DataKey<float> PatrolRadius = new("PatrolRadius");
@@ -840,6 +865,11 @@ public static class GeneratedDataKey
     /// Priority
     /// </summary>
     public static readonly DataKey<int> Priority = new("Priority");
+
+    /// <summary>
+    /// ProjectileOwnerEntityId
+    /// </summary>
+    public static readonly DataKey<string> ProjectileOwnerEntityId = new("ProjectileOwnerEntityId");
 
     /// <summary>
     /// ProjectileScene

@@ -224,7 +224,7 @@ public partial class ActiveSkillInputComponent : Node, IComponent
 
         if (_abilitiesDirty)
         {
-            _cachedActiveAbilities = EntityManager.GetManualAbilities(_entity);
+            _cachedActiveAbilities = AbilityInventoryService.Runtime.GetManualAbilities(_entity);
             _abilitiesDirty = false;
         }
         return _cachedActiveAbilities;

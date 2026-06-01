@@ -2,7 +2,7 @@
   "id": "SDD-0024",
   "slug": "entity-relationship-full-rewrite",
   "title": "Entity Relationship Full Rewrite",
-  "status": "active",
+  "status": "done",
   "type": "refactor",
   "created_at": "2026-05-31",
   "updated_at": "2026-05-31",
@@ -20,10 +20,10 @@
     "data-event-docsai-sync"
   ],
   "progress": {
-    "current_task": "T1.5",
-    "completed_tasks": 4,
+    "current_task": "done",
+    "completed_tasks": 11,
     "total_tasks": 11,
-    "percent": 36
+    "percent": 100
   },
   "bdd": {
     "required": true,
@@ -41,5 +41,11 @@
   "project_order": 14,
   "shared_design_refs": [
     "../../design/INDEX.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-05-31 20:03",
+      "summary": "dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly passed; DataOS validate passed; SDD validate --all passed; runtime grep gate for old parent-chain attribution returned no matches."
+    }
   ]
 }

@@ -16,7 +16,7 @@ public static partial class EntityManager
     private readonly record struct EntityMigrationSnapshot(
         string SourceEntityId, //源实体ID
         Dictionary<string, object> BaseData, //安全可迁移的Data快照
-        IEntity? DirectParent, //直接父实体
+        EntityId LifecycleParentId, //直接生命周期父实体 Id
         ParentDestroyPolicy ParentDestroyPolicy, //父实体销毁策略
         Vector2? Position, //源实体位置
         float? Rotation //源实体旋转角度（度）
@@ -41,8 +41,8 @@ public static partial class EntityManager
             return null;
         }
 
-        string sourceEntityId = EntityRelationshipTraversal.ResolveEntityId(sourceEntity); // 源实体 Id
-        if (string.IsNullOrEmpty(sourceEntityId) || !NodeLifecycleManager.IsRegistered(sourceEntityId))
+        var sourceEntityId = ResolveRuntimeEntityId(sourceEntity); // 源实体 Id
+        if (sourceEntityId.IsEmpty || !NodeLifecycleManager.IsRegistered(sourceEntityId.Value))
         {
             _log.Error($"迁移失败：源实体未注册或无法解析 Id，node={sourceEntity.Name}");
             return null;
@@ -121,19 +121,18 @@ public static partial class EntityManager
         EntityMigrationConfig config // 迁移配置
     )
     {
-        IEntity? directParent = null;
+        EntityId lifecycleParentId = EntityId.Empty;
         ParentDestroyPolicy parentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively;
+        var sourceEntityId = ResolveRuntimeEntityId(sourceEntity);
 
         if (config.InheritDirectParent)
         {
-            // 仅继承直接父实体，避免把整条关系链在迁移阶段一并重建。
-            directParent = EntityRelationshipTraversal.GetDirectParentOfType<IEntity>(sourceEntity);
-            if (directParent is Node directParentNode)
+            // 仅继承 LifecycleTree 中的直接生命周期父级，不再从旧 PARENT 关系链猜业务归属。
+            lifecycleParentId = GetLifecycleParentId(sourceEntity);
+            var lifecycleLink = GetLifecycleLink(sourceEntity);
+            if (lifecycleLink.HasValue)
             {
-                parentDestroyPolicy = EntityRelationshipLifecycle.ReadParentDestroyPolicy(
-                    EntityRelationshipTraversal.ResolveEntityId(directParentNode), // 父实体 Id
-                    EntityRelationshipTraversal.ResolveEntityId(sourceEntity) // 源实体 Id
-                );
+                parentDestroyPolicy = lifecycleLink.Value.DestroyPolicy;
             }
         }
 
@@ -147,9 +146,9 @@ public static partial class EntityManager
         }
 
         return new EntityMigrationSnapshot(
-            EntityRelationshipTraversal.ResolveEntityId(sourceEntity), // 源实体 Id
+            sourceEntityId.Value, // 源实体 Id
             sourceIEntity.Data.GetAll(), // 基础数据快照；不包含修改器与局部事件
-            directParent, // 直接父实体
+            lifecycleParentId, // 直接生命周期父实体 Id
             parentDestroyPolicy, // 父销毁策略
             position, // 位置快照
             rotation // 旋转快照
@@ -181,13 +180,12 @@ public static partial class EntityManager
             }
         }
 
-        if (config.InheritDirectParent && targetSpawn.ParentEntity == null && snapshot.DirectParent != null)
+        if (config.InheritDirectParent && targetSpawn.LifecycleParentId.IsEmpty && !snapshot.LifecycleParentId.IsEmpty)
         {
             // 仅在调用方未显式指定父实体时继承，避免覆盖外部组装的目标关系。
             targetSpawn = targetSpawn with
             {
-                ParentEntity = snapshot.DirectParent,
-                AutoAddParentRelation = true,
+                LifecycleParentId = snapshot.LifecycleParentId,
                 ParentDestroyPolicy = snapshot.ParentDestroyPolicy
             };
         }

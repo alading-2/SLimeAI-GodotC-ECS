@@ -91,12 +91,8 @@ namespace Slime.Test.ActiveSkillInputTest
             });
             AddChild(dashAbility);
 
-            // 手动注册技能关系
-            EntityRelationshipManager.AddRelationship(
-                _player.Data.Get<string>(GeneratedDataKey.Id),
-                dashAbility.Data.Get<string>(GeneratedDataKey.Id),
-                EntityRelationshipType.ENTITY_TO_ABILITY
-            );
+            // 测试手工创建 Ability 时仍走统一 owner 清单服务。
+            AbilityInventoryService.Runtime.Attach(_player, dashAbility);
 
             // 技能2: Slam (消耗魔法)
             var slamAbility = CreateAbility("Slam", new Dictionary<string, object>
@@ -114,12 +110,8 @@ namespace Slime.Test.ActiveSkillInputTest
             });
             AddChild(slamAbility);
 
-            // 手动注册技能关系
-            EntityRelationshipManager.AddRelationship(
-                _player.Data.Get<string>(GeneratedDataKey.Id),
-                slamAbility.Data.Get<string>(GeneratedDataKey.Id),
-                EntityRelationshipType.ENTITY_TO_ABILITY
-            );
+            // 测试手工创建 Ability 时仍走统一 owner 清单服务。
+            AbilityInventoryService.Runtime.Attach(_player, slamAbility);
 
             // 技能3: ChainLightning (消耗魔法+冷却)
             var lightningAbility = CreateAbility("ChainLightning", new Dictionary<string, object>
@@ -137,12 +129,8 @@ namespace Slime.Test.ActiveSkillInputTest
             });
             AddChild(lightningAbility);
 
-            // 手动注册技能关系
-            EntityRelationshipManager.AddRelationship(
-                _player.Data.Get<string>(GeneratedDataKey.Id),
-                lightningAbility.Data.Get<string>(GeneratedDataKey.Id),
-                EntityRelationshipType.ENTITY_TO_ABILITY
-            );
+            // 测试手工创建 Ability 时仍走统一 owner 清单服务。
+            AbilityInventoryService.Runtime.Attach(_player, lightningAbility);
 
             _log.Info($"添加了 3 个主动技能: Dash, Slam, ChainLightning");
         }
@@ -161,6 +149,7 @@ namespace Slime.Test.ActiveSkillInputTest
             // 生成唯一ID - 使用节点实例ID确保与 NodeLifecycleManager 一致
             var instanceId = ability.GetInstanceId().ToString();
             ability.Data.Set(GeneratedDataKey.Id, instanceId);
+            ability.Data.Set(GeneratedDataKey.AbilityOwnerEntityId, string.Empty);
 
             // 注册到 EntityManager，使 GetEntityById 能找到
             EntityManager.Register(ability);
@@ -220,7 +209,7 @@ namespace Slime.Test.ActiveSkillInputTest
             _log.Info($"当前魔法: {_player.Data.Get<float>(GeneratedDataKey.CurrentMana):F1}");
             _log.Info($"当前技能索引: {_player.Data.Get<int>(GeneratedDataKey.CurrentActiveAbilityIndex)}");
 
-            var abilities = EntityManager.GetAbilities(_player);
+            var abilities = AbilityInventoryService.Runtime.GetAbilities(_player);
             foreach (var ability in abilities)
             {
                 var name = ability.Data.Get<string>(GeneratedDataKey.Name);

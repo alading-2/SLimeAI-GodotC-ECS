@@ -89,28 +89,6 @@ public static partial class EntityManager
     }
 
     /// <summary>
-    /// 按生成配置自动绑定父级关系。
-    /// </summary>
-    /// <param name="childEntity">刚生成的子实体</param>
-    /// <param name="config">生成配置</param>
-    /// <returns>未配置父实体时直接成功；配置了父实体则返回实际绑定结果</returns>
-    private static bool BindSpawnRelationships(IEntity childEntity, in EntitySpawnConfig config)
-    {
-        if (config.ParentEntity == null)
-        {
-            return true;
-        }
-
-        return BindParentRelationships(
-            childEntity, // 子实体
-            config.ParentEntity, // 父实体/归属者
-            config.AutoAddParentRelation, // 是否自动补 PARENT
-            config.ParentDestroyPolicy, // 父销毁策略
-            config.ParentRelationTypes ?? [] // 业务关系类型
-        );
-    }
-
-    /// <summary>
     /// 规范化拥有型关系列表，自动去重并补齐 PARENT。
     /// </summary>
     private static List<string> NormalizeOwnedRelationTypes(bool autoAddParentRelation, IEnumerable<string>? relationTypes)

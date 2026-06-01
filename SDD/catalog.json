@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-05-31 16:15",
+  "generated_at": "2026-05-31 20:03",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -577,7 +577,7 @@
       "id": "SDD-0024",
       "slug": "entity-relationship-full-rewrite",
       "title": "Entity Relationship Full Rewrite",
-      "status": "active",
+      "status": "done",
       "type": "refactor",
       "updated_at": "2026-05-31",
       "scope": "SlimeAI",
@@ -592,7 +592,7 @@
       ],
       "project_id": "PRJ-0002",
       "project_order": 14,
-      "current_task": "T1.5",
+      "current_task": "done",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/014-SDD-0024-entity-relationship-full-rewrite"
     }
   ]

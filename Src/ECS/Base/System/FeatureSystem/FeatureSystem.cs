@@ -20,8 +20,8 @@ using slime.data.Features;
 /// 从 ExecuteResult 读取执行结果。
 ///
 /// 挂载点（调用方）：
-/// - EntityManager.AddAbility → OnFeatureGranted
-/// - EntityManager.RemoveAbility → OnFeatureRemoved（Destroy 之前）
+/// - AbilityInventoryService.AddAbility → OnFeatureGranted
+/// - AbilityInventoryService.RemoveAbility → OnFeatureRemoved（Destroy 之前）
 /// - AbilitySystem（或其他激活方）→ 自建 FeatureContext → OnFeatureActivated / OnFeatureEnded
 /// </summary>
 public static class FeatureSystem
@@ -30,7 +30,7 @@ public static class FeatureSystem
 
     // ==================== Granted ====================
 
-    /// <summary>Feature 被授予时调用（由 EntityManager.AddAbility 触发）</summary>
+    /// <summary>Feature 被授予时调用（由 AbilityInventoryService.AddAbility 触发）</summary>
     public static void OnFeatureGranted(IEntity feature, IEntity owner)
     {
         if (feature == null || owner == null) return;
@@ -57,7 +57,7 @@ public static class FeatureSystem
 
     // ==================== Removed ====================
 
-    /// <summary>Feature 被移除时调用（由 EntityManager.RemoveAbility 触发，在 Destroy 之前）</summary>
+    /// <summary>Feature 被移除时调用（由 AbilityInventoryService.RemoveAbility 触发，在 Destroy 之前）</summary>
     public static void OnFeatureRemoved(IEntity feature, IEntity owner)
     {
         if (feature == null || owner == null) return;

@@ -167,8 +167,8 @@
 1. 在 DataOS 中写入 Feature / Modifier authoring 数据
 2. 生成 runtime snapshot record
 3. record 中的 `Feature.Modifiers` 投影为 `FeatureModifierEntryData[]`
-4. 调用 `EntityManager.AddAbility(owner, abilityView)` 或运行时显式 record 授予
-5. 调用 `EntityManager.RemoveAbility(owner, featureName)` 移除
+4. 调用 `AbilityInventoryService.Runtime.AddAbility(owner, abilityView)` 或运行时显式 record 授予
+5. 调用 `AbilityInventoryService.Runtime.RemoveAbility(owner, featureName)` 移除
 
 效果：
 
@@ -282,7 +282,7 @@ Buff / Item 等非 Ability 子域仍直接实现 `IFeatureHandler`，并在 `Act
 1. 创建 DataOS Feature / Ability record
 2. 需要纯加成就配置 `Feature.Modifiers`
 3. 需要复杂逻辑就实现 `IFeatureHandler`
-4. 使用 `EntityManager.AddAbility` 授予
+4. 使用 `AbilityInventoryService.Runtime.AddAbility` 授予
 
 ### Ability 型 Feature
 

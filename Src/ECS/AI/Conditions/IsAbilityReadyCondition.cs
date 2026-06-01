@@ -26,7 +26,7 @@ public class IsAbilityReadyCondition : BehaviorNode
     /// <inheritdoc/>
     public override NodeState Evaluate(AIContext ctx)
     {
-        var ability = EntityManager.GetAbilityByName(ctx.Entity, _abilityName);
+        var ability = AbilityInventoryService.Runtime.GetAbilityByName(ctx.Entity, _abilityName);
         if (ability == null) return NodeState.Failure;
 
         if (!ability.Data.Get<bool>(GeneratedDataKey.FeatureEnabled)) return NodeState.Failure;

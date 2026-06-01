@@ -16,6 +16,7 @@ public static partial class EntityManager
     // ==================== Component 缓存 ====================
 
     private static readonly Log _componentLog = new("EntityManager_Component", LogLevel.Debug);
+    private static readonly ComponentRegistrar _componentRegistrar = new();
 
     /// <summary>
     /// Component 结构缓存
@@ -124,14 +125,13 @@ public static partial class EntityManager
     /// 1. 实现了 IComponent 接口（最高优先级）
     /// 2. 类名以 "Component" 结尾（命名约定）
     /// 
-    /// 自动建立 Entity-Component 关系（通过 EntityRelationshipManager）
+    /// 自动建立 Entity-Component 内部 owner 索引（通过 ComponentRegistrar）
     /// 
     /// 注意：优先使用预热缓存(_componentPathCache)，命中失败则回退到 FindChildren()
     /// </summary>
     public static void RegisterComponents(Node entity)
     {
         int registeredCount = 0;
-        string entityId = entity.GetInstanceId().ToString();
 
         // 尝试从缓存获取
         string cacheKey = entity.SceneFilePath;
@@ -180,39 +180,8 @@ public static partial class EntityManager
             }
         }
 
-        // 统一处理注册
-        foreach (var child in componentsToRegister)
-        {
-            string componentType = child.GetType().Name;
-
-            // 1. 注册 Component
-            Register(child);
-
-            // 2. 建立 Entity-Component 关系（必须在回调之前）
-            string componentId = child.GetInstanceId().ToString();
-            EntityRelationshipManager.AddRelationship(
-                entityId,
-                componentId,
-                EntityRelationshipType.ENTITY_TO_COMPONENT
-            );
-
-            // 3. 触发 IComponent 回调（此时关系已建立，可安全查询）
-            if (child is IComponent component)
-            {
-                try
-                {
-                    component.OnComponentRegistered(entity);
-                    _componentLog.Debug($"触发 IComponent 回调: {componentType}");
-                }
-                catch (Exception ex)
-                {
-                    _componentLog.Error($"Component 回调失败: {componentType}, 错误: {ex.Message}");
-                }
-            }
-
-            registeredCount++;
-            _componentLog.Info($"已注册 Component: {componentType} 到 Entity: {entity.Name}");
-        }
+        // 统一处理注册；Component owner 索引由 ComponentRegistrar 维护，不再进入 Relationship 图。
+        registeredCount = _componentRegistrar.RegisterComponents(entity, componentsToRegister);
 
         if (registeredCount > 0)
         {
@@ -221,58 +190,14 @@ public static partial class EntityManager
     }
 
     /// <summary>
-    /// 注销 Entity 的所有 Component（包括清理 Entity-Component 关系）
-    /// 通过 EntityRelationshipManager 查询关系，而非依赖节点树结构
-    /// 优势：支持任意层级、数据源唯一、与注册逻辑一致
+    /// 注销 Entity 的所有 Component（包括清理 ComponentRegistrar owner 索引）
+    /// 通过 ComponentRegistrar 内部索引查询，不再公开 Entity-Component 关系
     /// 
     /// 注意：此方法为 internal，由 UnregisterEntity 调用
     /// </summary>
     internal static void UnregisterComponents(Node entity)
     {
-        int unregisteredCount = 0;
-        string entityId = entity.GetInstanceId().ToString();
-
-        // 通过关系管理器获取所有 Component ID（而非 GetChildren）
-        var componentIds = EntityRelationshipManager
-            .GetChildEntitiesByParentAndType(entityId, EntityRelationshipType.ENTITY_TO_COMPONENT)
-            .ToList(); // 转为 List 避免迭代时修改集合
-
-        foreach (var componentId in componentIds)
-        {
-            // 通过 ID 获取 Component 节点
-            var component = GetEntityById(componentId);
-            if (component == null)
-            {
-                _componentLog.Warn($"Component {componentId} 已不存在，跳过注销");
-                continue;
-            }
-
-            // 从 NodeLifecycleManager 注销
-            NodeLifecycleManager.Unregister(component);
-
-            // 移除 Entity-Component 关系
-            EntityRelationshipManager.RemoveRelationship(
-                entityId,
-                componentId,
-                EntityRelationshipType.ENTITY_TO_COMPONENT
-            );
-
-            // 触发 IComponent 回调
-            if (component is IComponent icomp)
-            {
-                try
-                {
-                    icomp.OnComponentUnregistered();
-                    _componentLog.Debug($"触发 IComponent 回调: {component.GetType().Name}");
-                }
-                catch (Exception ex)
-                {
-                    _componentLog.Error($"Component 回调失败: {component.GetType().Name}, 错误: {ex.Message}");
-                }
-            }
-
-            unregisteredCount++;
-        }
+        int unregisteredCount = _componentRegistrar.UnregisterComponents(entity);
 
         if (unregisteredCount > 0)
         {
@@ -288,19 +213,20 @@ public static partial class EntityManager
     /// </summary>
     public static IEnumerable<T> GetComponentsByType<T>() where T : Node
     {
-        return GetEntitiesByType<T>();
+        return _componentRegistrar.GetComponentsByType<T>();
     }
 
     /// <summary>
     /// 获取所有指定类型 Component 的 ID 列表
-    /// 常用场景：配合 EntityRelationshipManager 进行反向查询
+    /// 常用场景：调试或迁移期兼容旧 ID 查询
     /// </summary>
     /// <returns>Component 的 ID 列表</returns>
     public static IEnumerable<string> GetComponentIdsByType<T>()
     {
-        // 委托给 NodeLifecycleManager
-        return NodeLifecycleManager.GetNodesByType<Node>()
-            .Select(c => c.GetInstanceId().ToString());
+        return _componentRegistrar
+            .GetComponentsByType<Node>()
+            .Where(component => component is T || component.GetType().Name == typeof(T).Name)
+            .Select(component => component.GetInstanceId().ToString());
     }
 
     /// <summary>
@@ -309,12 +235,7 @@ public static partial class EntityManager
     /// </summary>
     public static Node? GetEntityByComponent(Node component)
     {
-        string componentId = component.GetInstanceId().ToString();
-        var entityId = EntityRelationshipManager
-            .GetParentEntitiesByChildAndType(componentId, EntityRelationshipType.ENTITY_TO_COMPONENT)
-            .FirstOrDefault();
-
-        return entityId != null ? GetEntityById(entityId) : null;
+        return _componentRegistrar.GetEntityByComponent(component);
     }
 
     /// <summary>
@@ -335,7 +256,7 @@ public static partial class EntityManager
 
     /// <summary>
     /// 动态添加 Component 到 Entity
-    /// 自动处理：挂载节点 → 注册 → 建立关系 → 触发回调
+    /// 自动处理：挂载节点 → 注册 → 建立内部 owner 索引 → 触发回调
     /// 常用场景：运行时添加 Buff、技能等
     /// 
     /// 注意：Component 会被添加到 Entity/Component 路径下，如果 Component 节点不存在会自动创建
@@ -358,32 +279,9 @@ public static partial class EntityManager
         // 2. 挂载到 Component 容器下
         componentContainer.AddChild(component);
 
-        // 3. 注册 Component
+        // 3. 注册 Component，并建立内部 owner 索引。
         string componentType = typeof(T).Name;
-        Register(component);
-
-        // 4. 建立关系
-        string entityId = entity.GetInstanceId().ToString();
-        string componentId = component.GetInstanceId().ToString();
-        EntityRelationshipManager.AddRelationship(
-            entityId,
-            componentId,
-            EntityRelationshipType.ENTITY_TO_COMPONENT
-        );
-
-        // 5. 触发 IComponent 回调
-        if (component is IComponent icomp)
-        {
-            try
-            {
-                icomp.OnComponentRegistered(entity);
-                _componentLog.Debug($"触发 IComponent 回调: {componentType}");
-            }
-            catch (Exception ex)
-            {
-                _componentLog.Error($"Component 回调失败: {componentType}, 错误: {ex.Message}");
-            }
-        }
+        _componentRegistrar.RegisterComponent(entity, component);
 
         _componentLog.Info($"已动态添加 Component: {componentType} 到 Entity: {entity.Name}/Component");
     }
@@ -397,23 +295,9 @@ public static partial class EntityManager
     /// <returns>找到的 Component，如果不存在则返回 null</returns>
     public static T? GetComponent<T>(Node entity) where T : Node
     {
-        string entityId = entity.GetInstanceId().ToString();
-
-        // 通过关系管理器获取所有 Component ID
-        var componentIds = EntityRelationshipManager
-            .GetChildEntitiesByParentAndType(entityId, EntityRelationshipType.ENTITY_TO_COMPONENT);
-
-        foreach (var componentId in componentIds)
-        {
-            var component = GetEntityById(componentId);
-            if (component == null) continue;
-
-            // 检查类型是否匹配
-            if (component.GetType().Name == typeof(T).Name && component is T typedComponent)
-            {
-                return typedComponent;
-            }
-        }
+        var component = _componentRegistrar.GetComponent<T>(entity);
+        if (component != null)
+            return component;
 
         _componentLog.Warn($"Entity {entity.Name} 未找到 Component: {typeof(T).Name}");
         return null;
@@ -421,7 +305,7 @@ public static partial class EntityManager
 
     /// <summary>
     /// 从 Entity 移除 Component（通过类型字符串）
-    /// 自动处理：查找 Component → 触发回调 → 移除关系 → 注销 → 销毁节点
+    /// 自动处理：查找 Component → 触发回调 → 移除内部 owner 索引 → 注销 → 销毁节点
     /// 常用场景：通过组件类型名称移除组件（如 "HealthComponent"）
     /// </summary>
     /// <param name="entity">目标 Entity</param>
@@ -429,25 +313,13 @@ public static partial class EntityManager
     /// <returns>是否成功移除</returns>
     public static bool RemoveComponent(Node entity, string componentType)
     {
-        string entityId = entity.GetInstanceId().ToString();
-
-        // 通过关系管理器获取所有 Component ID
-        var componentIds = EntityRelationshipManager
-            .GetChildEntitiesByParentAndType(entityId, EntityRelationshipType.ENTITY_TO_COMPONENT)
-            .ToList();
-
-        foreach (var componentId in componentIds)
+        foreach (var component in _componentRegistrar.GetComponents(entity))
         {
-            var component = GetEntityById(componentId);
-            if (component == null) continue;
+            if (component.GetType().Name != componentType)
+                continue;
 
-            // 检查类型是否匹配
-            if (component.GetType().Name == componentType)
-            {
-                // 调用重载方法执行实际移除逻辑
-                RemoveComponent(entity, component);
-                return true;
-            }
+            RemoveComponent(entity, component);
+            return true;
         }
 
         _componentLog.Warn($"Entity {entity.Name} 未找到 Component: {componentType}，无法移除");
@@ -456,7 +328,7 @@ public static partial class EntityManager
 
     /// <summary>
     /// 从 Entity 移除 Component（通过 Component 实例）
-    /// 自动处理：触发回调 → 移除关系 → 注销 → 销毁节点
+    /// 自动处理：触发回调 → 移除内部 owner 索引 → 注销 → 销毁节点
     /// </summary>
     /// <param name="entity">目标 Entity</param>
     /// <param name="component">要移除的 Component 实例</param>
@@ -464,34 +336,7 @@ public static partial class EntityManager
     {
         string componentType = component.GetType().Name;
 
-        // 1. 触发 IComponent 回调
-        if (component is IComponent icomp)
-        {
-            try
-            {
-                icomp.OnComponentUnregistered();
-                _componentLog.Debug($"触发 IComponent 注销回调: {componentType}");
-            }
-            catch (Exception ex)
-            {
-                _componentLog.Error($"Component 注销回调失败: {componentType}, 错误: {ex.Message}");
-            }
-        }
-
-        // 2. 移除关系
-        string entityId = entity.GetInstanceId().ToString();
-        string componentId = component.GetInstanceId().ToString();
-        EntityRelationshipManager.RemoveRelationship(
-            entityId,
-            componentId,
-            EntityRelationshipType.ENTITY_TO_COMPONENT
-        );
-
-        // 3. 从 NodeLifecycleManager 注销
-        NodeLifecycleManager.Unregister(component);
-
-        // 4. 从节点树移除
-        component.QueueFree();
+        _componentRegistrar.RemoveComponent(entity, component);
 
         _componentLog.Info($"已移除 Component: {componentType} 从 Entity: {entity.Name}");
     }

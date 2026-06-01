@@ -1,8 +1,6 @@
 using Godot;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 
 /// <summary>
 /// Entity 生成配置参数
@@ -15,7 +13,6 @@ public readonly record struct EntitySpawnConfig
     /// </summary>
     public EntitySpawnConfig()
     {
-        AutoAddParentRelation = true;
         ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively;
     }
 
@@ -49,14 +46,8 @@ public readonly record struct EntitySpawnConfig
     /// <summary>运行时视觉场景覆盖（可选；优先级高于 runtime snapshot record）</summary>
     public PackedScene? VisualSceneOverride { get; init; }
 
-    /// <summary>父实体/归属者（可选；填写后可在 Spawn 阶段统一补关系）</summary>
-    public IEntity? ParentEntity { get; init; }
-
-    /// <summary>是否自动补一条 PARENT 关系（默认 true，供归属链统一溯源）</summary>
-    public bool AutoAddParentRelation { get; init; }
-
-    /// <summary>额外业务关系类型（可选；如 ENTITY_TO_PROJECTILE / ENTITY_TO_ABILITY）</summary>
-    public string[]? ParentRelationTypes { get; init; }
+    /// <summary>生命周期父实体 id；只表达销毁树，不表达 owner/source/target 等业务引用。</summary>
+    public EntityId LifecycleParentId { get; init; }
 
     /// <summary>父实体销毁时对子实体的处理策略（默认级联销毁）</summary>
     public ParentDestroyPolicy ParentDestroyPolicy { get; init; }
@@ -134,6 +125,9 @@ public readonly record struct EntitySpawnConfig
 public static partial class EntityManager
 {
     private static readonly Log _log = new(nameof(EntityManager), LogLevel.Debug);
+    private static readonly EntityRegistry _entityRegistry = new();
+    private static readonly LifecycleTree _lifecycleTree = new();
+    private static readonly OwnedReferenceRegistry _ownedReferenceRegistry = new(_entityRegistry.GetNode);
 
     // ==================== 实体生成（核心功能）====================
 
@@ -167,13 +161,61 @@ public static partial class EntityManager
     /// <returns>已配置好的 Entity 实例</returns>
     public static T? Spawn<T>(EntitySpawnConfig config) where T : Node, IEntity
     {
-        T? entity;
         ObjectPool<T>? pool = null;
+        var spawnPipeline = new EntitySpawnPipeline(_entityRegistry, _lifecycleTree, _componentRegistrar);
+        var result = spawnPipeline.Spawn(new EntitySpawnRequest<T>
+        {
+            CreateNode = () => CreateNode(config, out pool),
+            Config = config.Config,
+            RuntimeDataBootstrap = config.RuntimeDataBootstrap,
+            RuntimeDataRecord = config.RuntimeDataRecord,
+            RuntimeDataRecordTable = config.RuntimeDataRecordTable,
+            RuntimeDataRecordId = config.RuntimeDataRecordId,
+            LifecycleParentId = config.LifecycleParentId,
+            ParentDestroyPolicy = config.ParentDestroyPolicy,
+            Position = config.Position,
+            Rotation = config.Rotation,
+            VisualSceneOverride = config.VisualSceneOverride,
+            AddToSceneTree = node =>
+            {
+                if (!config.UsingObjectPool)
+                    AddToSceneTree(node);
+            },
+            ActivateNode = node =>
+            {
+                if (pool == null)
+                    return;
 
-        // 1. 根据模式创建 Entity
+                pool.Activate(node);
+
+                // 对象池 CharacterBody2D 必须在 Activate 后再延迟执行一次零速度 MoveAndSlide。
+                if (node is CharacterBody2D pooledBody)
+                {
+                    pooledBody.Velocity = Vector2.Zero;
+                    pooledBody.CallDeferred(CharacterBody2D.MethodName.MoveAndSlide);
+                }
+            },
+            RollbackNode = node =>
+            {
+                if (pool != null && GodotObject.IsInstanceValid(node))
+                    ObjectPoolManager.ReturnToPool(node);
+            }
+        });
+
+        if (!result.Success)
+        {
+            _log.Error($"Entity spawn failed: {typeof(T).Name}, error={result.Error}");
+            return null;
+        }
+
+        return result.Node;
+    }
+
+    private static T? CreateNode<T>(EntitySpawnConfig config, out ObjectPool<T>? pool) where T : Node, IEntity
+    {
+        pool = null;
         if (config.UsingObjectPool)
         {
-            // 路径 1: 对象池 Entity
             if (string.IsNullOrEmpty(config.PoolName))
             {
                 _log.Error($"使用对象池模式但未提供 PoolName: {typeof(T).Name}");
@@ -187,134 +229,21 @@ public static partial class EntityManager
                 return null;
             }
 
-            entity = pool.Get(false);
+            var pooledEntity = pool.Get(false);
             _log.Debug($"从对象池获取 Entity: {typeof(T).Name} (池名: {config.PoolName})");
-        }
-        else
-        {
-            // 路径 2: 场景 Entity（通过 ResourceManagement 加载）
-            // 强制使用类型名作为资源名称
-            // 使用 ResourceManagement.Load 直接加载 PackedScene
-            var scene = ResourceManagement.Load<PackedScene>(typeof(T).Name, ResourceCategory.Entity);
-            if (scene == null)
-            {
-                _log.Error($"场景加载失败: {typeof(T).Name} (请检查 ResourceGenerator 是否运行)");
-                return null;
-            }
-
-            entity = scene.Instantiate<T>();
-            _log.Debug($"从场景实例化 Entity: {typeof(T).Name}");
-
-            // 自动添加到场景树
-            AddToSceneTree(entity);
+            return pooledEntity;
         }
 
-        string entityType = typeof(T).Name;
-        string id = entity.GetInstanceId().ToString();
-
-        // 2. 数据注入（必须显式使用 runtime snapshot record）
-        if (!ApplySpawnData(entity, config, id, out var runtimeDataRecord))
+        var scene = ResourceManagement.Load<PackedScene>(typeof(T).Name, ResourceCategory.Entity);
+        if (scene == null)
         {
-            Destroy(entity);
+            _log.Error($"场景加载失败: {typeof(T).Name} (请检查 ResourceGenerator 是否运行)");
             return null;
         }
 
-        // 3. 自动加载 VisualScene (如有)
-        InjectVisualScene(
-            entity, // 实体节点
-            runtimeDataRecord, // snapshot record
-            config.VisualSceneOverride // 运行时视觉覆盖
-        );
-
-        // 4. 设置位置和旋转（仅对 Node2D 生效）
-        // 关键时序：必须先设置变换，再做组件注册。
-        // 对碰撞型对象池实体来说，这一步发生在“挂回场景树但碰撞仍关闭”之后、最终 Activate 之前，
-        // 用来确保复用对象不会以旧死亡坐标参与新一轮物理宽相计算。
-        if (entity is Node2D entity2D)
-        {
-            if (config.Position.HasValue) entity2D.GlobalPosition = config.Position.Value;
-            if (config.Rotation.HasValue) entity2D.GlobalRotationDegrees = config.Rotation.Value;
-
-            // 关键：强制同步 Transform，避免物理 server 在启用碰撞时仍使用旧物理位置
-            if (entity2D.IsInsideTree())
-                entity2D.ForceUpdateTransform();
-        }
-
-        if (!BindSpawnRelationships(entity, config))
-        {
-            _log.Warn($"Entity 关系绑定失败: {typeof(T).Name} -> Parent={config.ParentEntity?.GetType().Name ?? "null"}");
-        }
-
-        // 5. 防止重复注册（对象池复用场景）
-        if (!NodeLifecycleManager.IsRegistered(id))
-        {
-            Register(entity);
-            RegisterComponents(entity);
-        }
-
-        if (pool != null)
-        {
-            pool.Activate(entity);
-
-            // 对象池 CharacterBody2D 必须在 Activate 后再延迟执行一次零速度 MoveAndSlide。
-            // 原因：最终方案中，碰撞恢复由 Activate 统一提交；若在此前同步物理代理，
-            // 物理服务器仍可能基于未完全恢复的碰撞状态或旧宽相缓存工作。
-            if (entity is CharacterBody2D pooledBody)
-            {
-                pooledBody.Velocity = Vector2.Zero;
-                pooledBody.CallDeferred(CharacterBody2D.MethodName.MoveAndSlide);
-            }
-        }
-
-        GlobalEventBus.Global.Emit(new GameEventType.Global.EntitySpawned(entity));
-
+        var entity = scene.Instantiate<T>();
+        _log.Debug($"从场景实例化 Entity: {typeof(T).Name}");
         return entity;
-    }
-
-    private static bool ApplySpawnData<T>(
-        T entity, // 实体节点
-        EntitySpawnConfig config, // 生成配置
-        string entityId, // 实体实例 id
-        out RuntimeDataRecordDto record // 已应用的 snapshot record
-    ) where T : Node, IEntity
-    {
-        record = null!;
-        var bootstrap = config.RuntimeDataBootstrap ?? DataRuntimeBootstrap.Default;
-
-        if (config.RuntimeDataRecord != null)
-        {
-            record = config.RuntimeDataRecord;
-        }
-        else
-        {
-            if (!string.IsNullOrWhiteSpace(config.RuntimeDataRecordTable) && !string.IsNullOrWhiteSpace(config.RuntimeDataRecordId))
-            {
-                try
-                {
-                    record = bootstrap.FindRecord(config.RuntimeDataRecordTable, config.RuntimeDataRecordId);
-                }
-                catch (Exception ex)
-                {
-                    _log.Error($"runtime snapshot record 查找失败: {typeof(T).Name}, {config.RuntimeDataRecordTable}/{config.RuntimeDataRecordId}, error={ex.Message}");
-                    return false;
-                }
-            }
-            else
-            {
-                _log.Error($"runtime snapshot record 未显式指定: {typeof(T).Name}");
-                return false;
-            }
-        }
-
-        var report = bootstrap.ApplyToData(entity.Data, record);
-        if (report.HasErrors)
-        {
-            _log.Error(report.ToSummary());
-            return false;
-        }
-
-        entity.Data.Set(GeneratedDataKey.Id, entityId);
-        return true;
     }
 
     /// <summary>
@@ -322,91 +251,15 @@ public static partial class EntityManager
     /// </summary>
     private static void AddToSceneTree<T>(T entity) where T : Node, IEntity
     {
-        // 如果已有父节点，则跳过
         if (entity.GetParent() != null) return;
 
-        // 使用类型名称作为容器名称和路径
-        // 例如：PlayerEntity -> ECS/Entity/PlayerEntity
         string typeName = typeof(T).Name;
         string path = $"ECS/Entity/{typeName}";
-
-        // 自动创建并获取父节点
         var parent = ParentManager.GetOrRegister(typeName, path);
 
-        // 添加到场景树
         parent.AddChild(entity);
         _log.Debug($"已将 Entity 添加到场景树: {typeName} -> {path}");
     }
-
-    /// <summary>
-    /// 自动加载 VisualScene
-    /// </summary>
-    private static void InjectVisualScene(Node entity, RuntimeDataRecordDto record, PackedScene? visualSceneOverride = null)
-    {
-        PackedScene? scene = visualSceneOverride;
-
-        // 显式覆盖优先，其次只读取 runtime snapshot record。
-        if (scene == null)
-        {
-            if (TryReadRecordString(record, GeneratedDataKey.VisualScenePath.StableKey, out var recordPath)
-                && !string.IsNullOrWhiteSpace(recordPath))
-            {
-                scene = CommonTool.LoadPackedScene(
-                    recordPath, // res:// 场景路径
-                    $"{entity.Name} 视觉"); // 日志用途名称
-            }
-        }
-
-
-        // 清理旧的
-        var existingVisual = entity.GetNodeOrNull("VisualRoot");
-        if (existingVisual != null) existingVisual.Free();
-
-        // 并非所有 Entity 都要求视觉场景。
-        // AbilityEntity / 纯逻辑测试实体等配置可能完全没有 VisualScenePath，此时直接跳过即可。
-        if (scene == null)
-        {
-            _log.Debug($"[{entity.Name}] 未配置 VisualScene，跳过视觉注入");
-            return;
-        }
-
-        // 实例化
-        var visual = scene.Instantiate();
-        visual.Name = "VisualRoot";
-        entity.AddChild(visual);
-
-        // 3. 统一设置 ZIndex (如果是 Node2D)
-        // 提高层级，确保显示在阴影或背景之上
-        if (visual is Node2D visual2D)
-        {
-            visual2D.ZIndex = 10;
-        }
-
-        // 4. 同步碰撞模板数据到 Entity 并删除模板
-        SyncAndRemoveCollisionTemplate(entity, visual);
-
-        _log.Debug($"已加载 VisualScene: {scene.ResourcePath}");
-    }
-
-    private static bool TryReadRecordString(RuntimeDataRecordDto record, string fieldKey, out string value)
-    {
-        value = string.Empty;
-        if (!record.Fields.TryGetValue(fieldKey, out var field))
-        {
-            return false;
-        }
-
-        value = field.Value switch
-        {
-            string text => text,
-            JsonElement element when element.ValueKind == JsonValueKind.String => element.GetString() ?? string.Empty,
-            JsonElement element => element.GetRawText(),
-            null => string.Empty,
-            _ => Convert.ToString(field.Value) ?? string.Empty
-        };
-        return true;
-    }
-
 
     // ==================== 注册与注销 ====================
 
@@ -418,6 +271,10 @@ public static partial class EntityManager
     {
         // 委托给 NodeLifecycleManager
         NodeLifecycleManager.Register(node);
+
+        // 新 Entity runtime 的 typed registry 与旧 NodeLifecycleManager 并行维护。
+        // 未完成 hard cutover 前，直接 Register 的测试/系统也需要能被 LifecycleTree 查询到。
+        _entityRegistry.Register(ResolveRuntimeEntityId(node), node);
     }
 
     /// <summary>
@@ -435,8 +292,9 @@ public static partial class EntityManager
             return;
         }
 
-        // 1. 注销所有 Component（包括清理关系）
-        // 必须先于 Data/Events 清理，以便 Component 在 OnComponentUnregistered 中仍能访问 Entity 数据
+        // 1. 清理业务 owner 引用，再注销所有 Component。
+        // 必须先于 Data/Events 清理，以便 cleanup / Component 仍能访问 Entity 数据。
+        _ownedReferenceRegistry.CleanupDestroyedChild(ResolveRuntimeEntityId(entity));
         UnregisterComponents(entity);
 
         // 2. 统一清理 IEntity 资源
@@ -450,6 +308,7 @@ public static partial class EntityManager
 
         // 3. 从 NodeLifecycleManager 注销
         NodeLifecycleManager.Unregister(entity);
+        _entityRegistry.Unregister(entity);
 
         // 4. 清理 Entity 自身的所有关系（作为父或子）
         EntityRelationshipManager.RemoveAllRelationships(id);
@@ -464,6 +323,54 @@ public static partial class EntityManager
     {
         // 委托给 NodeLifecycleManager
         return NodeLifecycleManager.GetNodeById(id);
+    }
+
+    /// <summary>
+    /// 通过 typed EntityId 查询 runtime entity node。
+    /// </summary>
+    public static Node? ResolveEntityNode(EntityId id)
+    {
+        return _entityRegistry.GetNode(id);
+    }
+
+    /// <summary>
+    /// 建立生命周期父子关系。
+    /// <para>新生成实体优先通过 EntitySpawnConfig.LifecycleParentId 进入；该入口用于手工注册实体、迁移和旧路径收敛。</para>
+    /// </summary>
+    public static bool AttachLifecycleParent(
+        IEntity? parent,
+        IEntity? child,
+        ParentDestroyPolicy parentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively)
+    {
+        if (parent is not Node parentNode || child is not Node childNode)
+            return false;
+
+        return _lifecycleTree.Attach(
+            ResolveRuntimeEntityId(parentNode),
+            ResolveRuntimeEntityId(childNode),
+            parentDestroyPolicy);
+    }
+
+    /// <summary>
+    /// 读取实体在 LifecycleTree 中的直接生命周期父级 Id。
+    /// </summary>
+    public static EntityId GetLifecycleParentId(Node? child)
+    {
+        if (child == null)
+            return EntityId.Empty;
+
+        return _lifecycleTree.GetParent(ResolveRuntimeEntityId(child));
+    }
+
+    /// <summary>
+    /// 读取实体在 LifecycleTree 中的直接生命周期链接。
+    /// </summary>
+    public static LifecycleLink? GetLifecycleLink(Node? child)
+    {
+        if (child == null)
+            return null;
+
+        return _lifecycleTree.GetLink(ResolveRuntimeEntityId(child));
     }
 
     // ==================== 查询接口 ====================
@@ -529,6 +436,10 @@ public static partial class EntityManager
             entity, // 父实体
             visitedEntityIds // 当前递归访问集合
         );
+        HandleLifecycleChildrenOnDestroy(
+            entity, // 父实体
+            visitedEntityIds // 当前递归访问集合
+        );
 
         // 发送销毁事件（在注销前发送，以便监听者仍能访问实体的 Data/Id）
         if (entity is IEntity iEntity)
@@ -551,6 +462,30 @@ public static partial class EntityManager
             // 非对象池 Entity：直接销毁
             entity.QueueFree();
         }
+    }
+
+    /// <summary>
+    /// 注册业务 owner 引用 descriptor。
+    /// </summary>
+    public static bool RegisterOwnedReference(OwnedReferenceDescriptor descriptor)
+    {
+        return _ownedReferenceRegistry.Register(descriptor);
+    }
+
+    /// <summary>
+    /// 建立 owner -> child 业务引用；只同步 Data projection，不参与生命周期销毁。
+    /// </summary>
+    public static bool AddOwnedReference(IEntity owner, IEntity child, OwnedReferenceDescriptor descriptor)
+    {
+        return _ownedReferenceRegistry.AddReference(owner, child, descriptor);
+    }
+
+    /// <summary>
+    /// 移除 child 当前 owner 业务引用；只同步 Data projection。
+    /// </summary>
+    public static bool RemoveOwnedReference(IEntity child, OwnedReferenceDescriptor descriptor)
+    {
+        return _ownedReferenceRegistry.RemoveReference(child, descriptor);
     }
 
     /// <summary>
@@ -585,6 +520,50 @@ public static partial class EntityManager
                 visitedEntityIds // 复用同一递归保护集合
             );
         }
+    }
+
+    /// <summary>
+    /// 处理新 LifecycleTree 中的直接生命周期子实体。
+    /// <para>这是 T1.7 后的兼容接线：spawn 已写 LifecycleTree，旧 Destroy 仍在本文件中。</para>
+    /// </summary>
+    private static void HandleLifecycleChildrenOnDestroy(
+        Node entity, // 父实体
+        HashSet<string> visitedEntityIds // 当前递归访问集合
+    )
+    {
+        var entityId = ResolveRuntimeEntityId(entity);
+        if (entityId.IsEmpty)
+            return;
+
+        var childSnapshot = _lifecycleTree.GetChildren(entityId).ToArray();
+        foreach (var childLink in childSnapshot)
+        {
+            if (childLink.DestroyPolicy != ParentDestroyPolicy.DestroyRecursively)
+                continue;
+
+            var childNode = _entityRegistry.GetNode(childLink.ChildId);
+            if (childNode != null && GodotObject.IsInstanceValid(childNode))
+                Destroy(childNode, visitedEntityIds);
+        }
+
+        foreach (var childLink in childSnapshot)
+        {
+            _lifecycleTree.Detach(childLink.ChildId);
+        }
+
+        _lifecycleTree.DetachAll(entityId);
+    }
+
+    private static EntityId ResolveRuntimeEntityId(Node node)
+    {
+        if (node is IEntity entity)
+        {
+            var dataId = EntityId.From(entity.Data.Get<string>(GeneratedDataKey.Id));
+            if (!dataId.IsEmpty)
+                return dataId;
+        }
+
+        return EntityId.From(node.GetInstanceId().ToString());
     }
 
     /// <summary>

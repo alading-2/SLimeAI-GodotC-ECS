@@ -276,7 +276,7 @@ var tree = new SelectorNode("Boss")
 
 ### 6.1 带自动施法的敌人
 
-前提：已通过 `EntityManager.AddAbility(enemy, config)` 给敌人添加了名为 "火球术" 的技能。
+前提：已通过 `AbilityInventoryService.Runtime.AddAbility(enemy, config)` 给敌人添加了名为 "火球术" 的技能。
 
 ```csharp
 // 方式一：直接用预制树

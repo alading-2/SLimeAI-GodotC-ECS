@@ -8,7 +8,7 @@ using Godot;
 /// - 激活技能（就绪检查 → 消耗 → 冷却 → 执行）
 /// - 通过 FeatureSystem / IFeatureHandler.OnExecute 执行具体技能逻辑并回传 AbilityExecutedResult
 /// 
-/// 注意：技能的增删查由 EntityManager.AddAbility/RemoveAbility/GetAbilities 负责
+/// 注意：技能 owner 清单由 AbilityInventoryService 负责，EntityManager_Ability 仅保留兼容转发。
 /// </summary>
 public static class AbilitySystem
 {

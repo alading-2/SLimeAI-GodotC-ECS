@@ -106,7 +106,7 @@ public partial class EffectComponent : Node, IComponent
         if (!IsAttached) return;
         if (_entity is not Node effectNode) return;
 
-        var hostNode = EntityRelationshipTraversal.GetDirectParent(effectNode); // 统一通过 PARENT 追溯直接宿主
+        var hostNode = EffectOwnershipService.Runtime.GetHost(_entity as EffectEntity) as Node2D; // 通过 Effect owner projection 解析宿主
         if (hostNode is Node2D host2D)
         {
             _hostNode = host2D;

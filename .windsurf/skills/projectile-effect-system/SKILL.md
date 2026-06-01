@@ -26,9 +26,11 @@ description: 修改 SlimeAI.GameOS ProjectileTool、EffectTool、投射物命中
 - 投射物命中通过 MovementCollision 转 `DamageService` 请求。
 - 穿透、最大命中数、生命周期统一读 `ProjectileDataKeys` / `ProjectileMovementOptions`。
 - 视觉实例化和动画播放放 GodotBridge 或游戏侧，不写进纯 Runtime。
-- **Source / target / spawned-id 引用走 typed DataKey**：单引用 `DataKey<EntityId?>`（`ProjectileDataKeys.SourceEntity / TargetEntity / AbilityEntity`、`EffectDataKeys.SourceEntity / TargetEntity / AbilityEntity`），多引用 `DataKey<EntityIdList>`（`ProjectileDataKeys.SpawnedProjectileIds`、`EffectDataKeys.SpawnedEffectIds`）。不再使用 `RelationshipManager` 或 `RelationshipType.EntityToProjectile / EntityToEffect / Source / Target`。
-- **`ProjectileTool.Spawn / EffectTool.Spawn` 自带 lifecycle parent**：`EntitySpawnConfig.ParentEntityId = source.EntityId`，默认 `ParentDestroyPolicy.DestroyRecursively`；spawn 后还会同步 source 的 `SpawnedProjectileIds / SpawnedEffectIds`。
-- **Owner cleanup hook**：`ProjectileTool.Initialize` / `EffectTool.Initialize` 在 capability 启动处调用 `RuntimeOwnedReferenceRegistry.Register(new OwnedReferenceDescriptor(SourceEntity, SpawnedProjectileIds/SpawnedEffectIds))`；spawn / 销毁时 framework 自动同步 owner-list，不要手动改。
+- **Source / target / spawned-id 引用 public API 走 typed `EntityId / EntityIdList`**。当前 DataOS 尚未原生生成 `DataKey<EntityId?> / DataKey<EntityIdList>`，因此 owner projection 暂通过 ownership service 封装 generated `DataKey<string>` / `DataKey<string[]>`；不要在业务 API 暴露 raw string。
+- **Projectile owner**：`ProjectileTool.Spawn` 生成后调用 `ProjectileOwnershipService.Runtime.Attach(owner, projectile)`，projection 是 `ProjectileOwnerEntityId` + `OwnedProjectileIds`。
+- **Effect host/owner**：`EffectTool.Spawn` 当前仍是领域 facade，使用 `EntityManager.AttachLifecycleParent` 接入 lifecycle，使用 `EffectOwnershipService.Runtime.Attach(hostOrOwner, effect)` 接入 `EffectHostEntityId` + `OwnedEffectIds`。
+- **Damage / Movement attribution**：统一通过 `EntityAttributionResolver.ResolveUnit/ResolveChain` 读取 Projectile / Effect / Source / Origin projection；不要恢复 `EntityRelationshipTraversal.FindAncestorOfType` 或旧 parent-chain 推断。
+- **Owner cleanup hook**：`ProjectileOwnershipService / EffectOwnershipService` 内部通过 `OwnedReferenceRegistry` 同步 owner-list；销毁 child 时 framework 自动同步 owner-list，不要手动改。
 
 ## 验证
 

@@ -101,14 +101,14 @@ public class BoomerangStrategy : IMovementStrategy
             _launchPoint = node.GlobalPosition;
             _phaseStartPoint = _launchPoint;
 
-            // 优先使用显式指定的 TargetNode（需满足 IUnit 接口）作为返程目标；若未指定提供，则自动回溯查找层级宿主。
+            // 优先使用显式指定的 TargetNode 作为返程目标；若未指定，则从 typed owner/source projection 解析归属单位。
             if (@params.TargetNode != null)
             {
                 _ownerEntity = @params.TargetNode;
             }
             else
             {
-                _ownerEntity = EntityRelationshipTraversal.FindAncestorOfType<Node2D>(node);
+                _ownerEntity = EntityAttributionResolver.ResolveUnit(node) as Node2D;
             }
         }
 

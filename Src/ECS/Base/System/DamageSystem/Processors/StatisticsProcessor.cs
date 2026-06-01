@@ -4,10 +4,10 @@ using Godot;
 /// 统计处理器 - 在伤害管道末端记录统计数据
 /// <para>核心职责：</para>
 /// <list type="bullet">
-/// <item>遍历攻击链（Attacker → 武器 → 角色），为 IUnit 和 IWeapon 累加统计</item>
+/// <item>遍历攻击链（Attacker → source/owner → 角色），为 IUnit 和 IWeapon 累加统计</item>
 /// <item>记录受害者（Victim）的波次受伤数据</item>
 /// </list>
-/// <para>核心机制：沿 PARENT 关系遍历攻击链，只统计 IUnit 或 IWeapon 类型的实体。</para>
+/// <para>核心机制：沿 typed owner/source projection 遍历攻击链，只统计 IUnit 或 IWeapon 类型的实体。</para>
 /// </summary>
 public class StatisticsProcessor : IDamageProcessor
 {
@@ -29,7 +29,7 @@ public class StatisticsProcessor : IDamageProcessor
         DamageService.Instance?.RecordDamageEvent(info);
 
         // ===== 攻击链统计（遍历 IUnit 和 IWeapon）=====
-        var ancestorChain = EntityRelationshipTraversal.GetAncestorChain(info.Attacker);
+        var ancestorChain = EntityAttributionResolver.ResolveChain(info.Attacker);
         bool foundAnyTarget = false;
 
         foreach (var entity in ancestorChain)

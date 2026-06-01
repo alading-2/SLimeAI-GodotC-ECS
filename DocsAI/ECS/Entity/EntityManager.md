@@ -7,15 +7,16 @@
 
 ## 1. 定位
 
-`EntityManager` 当前仍是旧 ECS 的统一 Node 生命周期入口。它负责：
+`EntityManager` 当前仍是旧 ECS 的统一 Node 生命周期入口。Spawn 已改为 `EntitySpawnPipeline` 的薄 facade；Ability owner 已迁到 `AbilityInventoryService`，Projectile / Effect owner 已迁到对应 ownership service。
+
+它目前负责：
 
 - Entity spawn / register / destroy。
-- 对象池获取、激活、归还。
-- runtime snapshot record apply。
-- 视觉场景注入。
-- Transform 初始化。
-- Component 扫描、注册、反查和卸载。
-- 旧 Relationship 绑定。
+- 通过 `EntitySpawnPipeline` 调度对象池 / 场景实例化、runtime snapshot record apply、视觉场景注入、Transform 初始化、registry、Component、LifecycleTree 和 activate。
+- Component 扫描、注册、反查和卸载；当前已委托给 `ComponentRegistrar` 内部 owner 索引。
+- 业务 owner 引用的 descriptor 注册、添加、移除和 destroy cleanup；当前由 `OwnedReferenceRegistry` 同步 `EntityId / EntityIdList` 与 `string / string_array` Data projection。
+- typed lifecycle parent 查询/绑定；手工注册实体或迁移路径使用 `AttachLifecycleParent / GetLifecycleParentId / GetLifecycleLink`，不再通过旧 PARENT relationship 读取生命周期父级。
+- 迁移期仍保留旧 Relationship 清理代码；新业务 owner 清单已迁到 `AbilityInventoryService`、`ProjectileOwnershipService`、`EffectOwnershipService`，`EntityManager_Ability` 只保留旧调用点转发。
 
 这就是本轮 Entity hard cutover 要拆的核心问题：`EntityManager` 同时承担了太多生命周期细节和业务 owner 逻辑。后续实现不应继续往 `EntityManager` partial 里加 Ability、Projectile、Effect、Damage 或 UI 专属入口。
 
@@ -34,6 +35,32 @@ var enemy = EntityManager.Spawn<EnemyEntity>(new EntitySpawnConfig
     Position = spawnPosition
 });
 ```
+
+生命周期父级只用 `LifecycleParentId / ParentDestroyPolicy`：
+
+```csharp
+var child = EntityManager.Spawn<ProjectileEntity>(new EntitySpawnConfig
+{
+    Config = projectileConfig,
+    RuntimeDataRecord = projectileRecord,
+    UsingObjectPool = true,
+    PoolName = ObjectPoolNames.ProjectilePool,
+    LifecycleParentId = ownerId,
+    ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively
+});
+```
+
+不要在 spawn config 中恢复 `ParentEntity / AutoAddParentRelation / ParentRelationTypes`。业务 owner/source/target 放到对应 service 或 typed Data projection。
+
+业务 owner list 只用 owned-reference helper：
+
+```csharp
+ProjectileOwnershipService.Runtime.Attach(owner, projectile);
+EffectOwnershipService.Runtime.Attach(hostOrOwner, effect);
+AbilityInventoryService.Runtime.AddAbility(owner, ability);
+```
+
+这些 service 内部使用 `OwnedReferenceRegistry` 同步 Data projection 和 destroy cleanup，不创建 lifecycle child，也不会在 owner destroy 时通过 owner list 销毁 child。
 
 销毁 Entity：
 
@@ -141,7 +168,7 @@ LifecycleTree
 | --- | --- |
 | Projectile source / owner list | Projectile service + typed runtime reference + generated Data projection |
 | Effect source / host | Effect service + typed runtime reference + generated Data projection |
-| Ability owner / owner ability list | Ability service |
+| Ability owner / owner ability list | `AbilityInventoryService` + `AbilityOwnerEntityId` / `OwnedAbilityIds` projection |
 | Component owner 反查 | ComponentRegistrar 内部 index |
 | UI binding | UI / GodotBridge registry |
 | Damage attribution | `DamageAttribution` |
@@ -162,6 +189,8 @@ LifecycleTree
 | `EntityVisualInitializer` | 视觉场景注入 |
 | `EntityTransformInitializer` | 位置和旋转初始化 |
 | `ComponentRegistrar` | Component 注册、反查和卸载 |
+| `EntityIdList` | typed 多实体引用，不可变 add/remove/dedup |
+| `OwnedReferenceRegistry` | owner-list Data projection 与 child destroy cleanup |
 | `LifecycleTree` | 单 parent 生命周期树 |
 | `EntityDestroyPipeline` | lifecycle destroy、owner cleanup、component unregister、data/events clear、pool/queue free |
 | `EntityObservationDumper` | AI / debug 可读事实导出 |

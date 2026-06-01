@@ -47,7 +47,7 @@ public static class EnemyBehaviorBlocks
     /// 优先级通常高于 AttackBranch()，放在 Selector 更靠前的位置。
     /// </para>
     /// </summary>
-    /// <param name="abilityName">技能名称（需与 EntityManager.AddAbility 中的名称一致）</param>
+    /// <param name="abilityName">技能名称（需与 AbilityInventoryService.AddAbility 中的名称一致）</param>
     /// <param name="rangeKey">技能射程 DataKey（默认 AttackRange，可改为 AbilityRange 等）</param>
     public static BehaviorNode SkillBranch(string abilityName, DataKey<float>? rangeKey = null)
     {

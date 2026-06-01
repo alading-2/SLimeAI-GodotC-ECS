@@ -110,7 +110,7 @@ var fireballConfig = new Dictionary<string, object>
     [DataKey.AbilityCooldown] = 3f
 };
 
-EntityManager.AddAbility(player, fireballConfig);
+AbilityInventoryService.Runtime.AddAbility(player, fireballConfig);
 ```
 
 **行为**:
@@ -164,12 +164,8 @@ var dashConfig = new Dictionary<string, object>
 `CostComponent` 的关键设计是访问 **施法者 (Caster)** 的资源,而非技能自身数据:
 
 ```csharp
-// 通过关系管理器获取施法者
-var abilityId = _entity.Data.Get<string>(DataKey.Id);
-var ownerId = EntityRelationshipManager.GetParentEntitiesByChildAndType(
-    abilityId, EntityRelationshipType.ENTITY_TO_ABILITY
-).FirstOrDefault();
-var caster = EntityManager.GetEntityById(ownerId) as IEntity;
+// 通过 Ability owner 清单服务获取施法者
+var caster = AbilityInventoryService.Runtime.GetOwner(_entity as AbilityEntity);
 
 // 读取施法者的资源
 var currentMana = caster.Data.Get<float>(DataKey.CurrentMana);

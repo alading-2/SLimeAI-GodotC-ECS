@@ -32,9 +32,10 @@ EffectEntity（Node2D + IEntity + IPoolable）
 
 ### 关键边界
 
-- 特效不通过 EntityManager.Spawn 创建，EffectTool 处理自定义编排
-- 特效 Entity 可以进入对象池
-- 特效跟随目标 Entity 的位置
+- `EffectTool` 是特效领域 facade；当前仍处理对象池和视觉注入，但生命周期只接入 `EntityManager.AttachLifecycleParent / LifecycleTree`，host/owner 业务引用只接入 `EffectOwnershipService`。
+- 特效 Entity 可以进入对象池。
+- 特效跟随目标 Entity 的位置。
+- 不用 `EntityRelationshipManager` 表达 effect host、owner 或 damage attribution。
 
 ## 3. 职责边界
 
@@ -47,6 +48,7 @@ EffectEntity（Node2D + IEntity + IPoolable）
 ## 4. 依赖关系
 
 - **EffectTool**：特效编排入口
+- **EffectOwnershipService**：Effect host/owner projection 和 owner list 查询入口
 - **EffectComponent**：特效组件
 - **EffectEntity**：特效实体
 - **ObjectPool**：特效对象池

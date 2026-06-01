@@ -3,9 +3,9 @@
 ## Summary
 
 - **pending**: 0
-- **active**: 1
+- **active**: 0
 - **blocked**: 0
-- **done**: 23
+- **done**: 24
 - **projects**: 2
 
 ## Projects
@@ -21,9 +21,7 @@
 
 ## Active
 
-| ID | Project | Title | Updated | Scope | Current Task |
-| --- | --- | --- | --- | --- | --- |
-| SDD-0024 | PRJ-0002 | Entity Relationship Full Rewrite | 2026-05-31 | SlimeAI | T1.5 |
+无。
 
 ## Blocked
 
@@ -56,6 +54,7 @@
 | SDD-0021 | PRJ-0002 | Data No-Compatibility Hard Cutover | 2026-05-30 | SlimeAI | done |
 | SDD-0022 | PRJ-0002 | Data Projection Diagnostics Contract Hardening | 2026-05-30 | SlimeAI | done |
 | SDD-0023 | PRJ-0002 | SystemAgent Root Migration Rule Sync | 2026-05-30 | SlimeAI | done |
+| SDD-0024 | PRJ-0002 | Entity Relationship Full Rewrite | 2026-05-31 | SlimeAI | done |
 
 ## By Scope
 

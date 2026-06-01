@@ -141,7 +141,7 @@ public partial class MainTest : Node
         // 技能：冲刺 (Dash) - Charge 模式位移。
         var query = new RuntimeDataRecordQuery(DataRuntimeBootstrap.Default);
         var dashConfig = RuntimeDataRecordProjection.ToAbilityDefinitionView(query.GetRequiredByDisplayNameForDebug("ability", "冲刺"));
-        EntityManager.AddAbility(_player, dashConfig);
+        AbilityInventoryService.Runtime.AddAbility(_player, dashConfig);
 
         _log.Info("已添加正式技能（含7种移动系新技能），等待UI自动更新");
     }
@@ -163,7 +163,7 @@ public partial class MainTest : Node
         _log.Info($"当前魔法: {_player.Data.Get<float>(GeneratedDataKey.CurrentMana):F1}");
         _log.Info($"当前技能索引: {_player.Data.Get<int>(GeneratedDataKey.CurrentActiveAbilityIndex)}");
 
-        var abilities = EntityManager.GetAbilities(_player);
+        var abilities = AbilityInventoryService.Runtime.GetAbilities(_player);
         foreach (var ability in abilities)
         {
             var name = ability.Data.Get<string>(GeneratedDataKey.Name);

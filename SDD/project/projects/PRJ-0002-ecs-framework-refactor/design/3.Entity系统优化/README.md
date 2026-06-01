@@ -2,7 +2,7 @@
 
 > 更新：2026-05-31
 > 状态：current design package
-> 入口：`06-2026-05-31-DataEventDocsAI同步校准.md` -> `00-研究证据与裁决.md`
+> 入口：`1.初级修改/06-2026-05-31-DataEventDocsAI同步校准.md` -> `2.重构/main.md`
 > 裁决：Entity/Relationship 不做兼容 facade，不做旧 Relationship 双写，不保留 legacy parent-chain 归因；按 hard cutover 完整重构。
 
 ## 0. 本设计包回答什么
@@ -24,14 +24,16 @@ Entity 重构不是一个“把 `EntityRelationshipManager` 换成 `LifecycleTre
 
 | File | Role | 说明 |
 | --- | --- | --- |
-| `00-研究证据与裁决.md` | research-decision | 当前代码事实、外部 ECS / 引擎对照、AiFirst 参考采纳、hard cutover 裁决和 Design Discovery 记录。 |
 | `README.md` | design-index | 本文件。给出总裁决、阅读顺序、模块边界和完成定义。 |
-| `01-目标架构与模块拆分.md` | architecture | 从 AI-first 角度定义新 Entity runtime 的职责、非职责和模块边界。 |
-| `02-代码实现说明.md` | code-shape | 按目标文件和类说明怎么改，包括新类型、删除旧文件、核心 API 和伪代码。 |
-| `03-LifecycleTree与业务引用设计.md` | relationship-design | 详细说明 lifecycle tree、typed business reference、owner cleanup、damage attribution、UI/Component binding。 |
-| `04-完全重构范围与TDD测试计划.md` | rewrite-test-plan | 删除清单、执行任务序、grep gate、单元/场景测试和验收标准。 |
-| `05-源码调用点迁移清单.md` | callsite-migration | 基于当前源码 grep 把旧 Relationship / EntityManager 调用点按模块拆成迁移表、测试重写矩阵和最终门禁。 |
-| `06-2026-05-31-DataEventDocsAI同步校准.md` | current-override | Data/Event/DocsAI 更新后的执行前校准；覆盖旧 `DocsNew`、旧 `DataKey.Id`、旧事件字符串和旧路径假设。 |
+| `1.初级修改/00-研究证据与裁决.md` | research-decision | 当前代码事实、外部 ECS / 引擎对照、AiFirst 参考采纳、hard cutover 裁决和 Design Discovery 记录。 |
+| `1.初级修改/01-目标架构与模块拆分.md` | architecture | 从 AI-first 角度定义新 Entity runtime 的职责、非职责和模块边界。 |
+| `1.初级修改/02-代码实现说明.md` | code-shape | 按目标文件和类说明怎么改，包括新类型、删除旧文件、核心 API 和伪代码。 |
+| `1.初级修改/03-LifecycleTree与业务引用设计.md` | relationship-design | 详细说明 lifecycle tree、typed business reference、owner cleanup、damage attribution、UI/Component binding。 |
+| `1.初级修改/04-完全重构范围与TDD测试计划.md` | rewrite-test-plan | 删除清单、执行任务序、grep gate、单元/场景测试和验收标准。 |
+| `1.初级修改/05-源码调用点迁移清单.md` | callsite-migration | 基于当前源码 grep 把旧 Relationship / EntityManager 调用点按模块拆成迁移表、测试重写矩阵和最终门禁。 |
+| `1.初级修改/06-2026-05-31-DataEventDocsAI同步校准.md` | current-override | Data/Event/DocsAI 更新后的执行前校准；覆盖旧 `DocsNew`、旧 `DataKey.Id`、旧事件字符串和旧路径假设。 |
+| `2.重构/README.md` | spawn-refactor-index | Entity Spawn 统一与业务 facade 重构入口。 |
+| `2.重构/main.md` | spawn-refactor-design | 当前 spawn 散点、统一底层管线、薄 `EntityManager.Spawn` 和业务 facade 边界。 |
 
 ## 2. 总裁决
 
@@ -114,13 +116,14 @@ Entity 重构不是一个“把 `EntityRelationshipManager` 换成 `LifecycleTre
 
 ## 6. 阅读顺序
 
-1. 先读 `06-2026-05-31-DataEventDocsAI同步校准.md`，确认 Data/Event/DocsAI 最新覆盖规则。
-2. 再读 `00-研究证据与裁决.md`，确认为什么不保留旧 Relationship runtime。
-3. 再读 `01-目标架构与模块拆分.md`，确认重构后的模块边界。
-4. 再读 `02-代码实现说明.md`，看每个目标类怎么写。
-5. 再读 `03-LifecycleTree与业务引用设计.md`，确认旧 Relationship 的每一种语义怎么替换。
-6. 再读 `04-完全重构范围与TDD测试计划.md`，确认 hard cutover 的 T1~T10 任务序。
-7. 最后读 `05-源码调用点迁移清单.md`，按实际文件和旧 API 命中开始改测试和调用点。
+1. 先读 `1.初级修改/06-2026-05-31-DataEventDocsAI同步校准.md`，确认 Data/Event/DocsAI 最新覆盖规则。
+2. 再读 `1.初级修改/00-研究证据与裁决.md`，确认为什么不保留旧 Relationship runtime。
+3. 再读 `1.初级修改/01-目标架构与模块拆分.md`，确认重构后的模块边界。
+4. 再读 `1.初级修改/02-代码实现说明.md`，看每个目标类怎么写。
+5. 再读 `1.初级修改/03-LifecycleTree与业务引用设计.md`，确认旧 Relationship 的每一种语义怎么替换。
+6. 再读 `1.初级修改/04-完全重构范围与TDD测试计划.md`，确认 hard cutover 的 T1~T10 任务序。
+7. 再读 `1.初级修改/05-源码调用点迁移清单.md`，按实际文件和旧 API 命中开始改测试和调用点。
+8. 需要处理 Entity spawn 散点时，读 `2.重构/main.md`，以“统一底层管线 + 保留业务 facade”为当前裁决。
 
 执行会话入口使用项目根的 `../../entity-rewrite-execution-prompt.md`。
 

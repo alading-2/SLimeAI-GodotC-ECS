@@ -10,6 +10,14 @@ using Godot;
 public static partial class EntityManager
 {
     /// <summary>
+    /// 供 EntitySpawnPipeline 复用的视觉碰撞模板同步入口。
+    /// </summary>
+    internal static void SyncVisualCollisionTemplate(Node entity, Node visualRoot)
+    {
+        SyncAndRemoveCollisionTemplate(entity, visualRoot);
+    }
+
+    /// <summary>
     /// 同步 VisualRoot 下的碰撞形状模板到 Entity 根节点，然后删除模板
     /// <para>
     /// 碰撞模板可为 VisualRoot 下名为 "CollisionShape2D" 或 "CollisionPolygon2D" 的纯碰撞节点。

@@ -125,7 +125,7 @@ public partial class ActiveSkillSlotUI : UIBase
         if (_entity == null) return;
 
         // 查找技能实体
-        _currentAbility = EntityManager.GetAbilityByName(_entity, abilityName);
+        _currentAbility = AbilityInventoryService.Runtime.GetAbilityByName(_entity, abilityName);
         if (_currentAbility == null)
         {
             _log.Warn($"找不到技能: {abilityName}");

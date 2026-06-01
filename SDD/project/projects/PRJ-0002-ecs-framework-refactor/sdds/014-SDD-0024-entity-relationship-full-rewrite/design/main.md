@@ -22,17 +22,18 @@
 
 1. `../../design/06-ECS完全重构执行原则.md`
 2. `../../design/3.Entity系统优化/README.md`
-3. `../../design/3.Entity系统优化/06-2026-05-31-DataEventDocsAI同步校准.md`
-4. `../../design/3.Entity系统优化/00-研究证据与裁决.md`
-5. `../../design/3.Entity系统优化/01-目标架构与模块拆分.md`
-6. `../../design/3.Entity系统优化/02-代码实现说明.md`
-7. `../../design/3.Entity系统优化/03-LifecycleTree与业务引用设计.md`
-8. `../../design/3.Entity系统优化/04-完全重构范围与TDD测试计划.md`
-9. `../../design/3.Entity系统优化/05-源码调用点迁移清单.md`
-10. `../../entity-rewrite-execution-prompt.md`
-11. `../../../../../DocsAI/ECS/Entity/README.md`
-12. `../../../../../DocsAI/ECS/Data/Data系统说明.md`
-13. `../../../../../DocsAI/ECS/Event/Event系统说明.md`
+3. `../../design/3.Entity系统优化/1.初级修改/06-2026-05-31-DataEventDocsAI同步校准.md`
+4. `../../design/3.Entity系统优化/1.初级修改/00-研究证据与裁决.md`
+5. `../../design/3.Entity系统优化/1.初级修改/01-目标架构与模块拆分.md`
+6. `../../design/3.Entity系统优化/1.初级修改/02-代码实现说明.md`
+7. `../../design/3.Entity系统优化/1.初级修改/03-LifecycleTree与业务引用设计.md`
+8. `../../design/3.Entity系统优化/1.初级修改/04-完全重构范围与TDD测试计划.md`
+9. `../../design/3.Entity系统优化/1.初级修改/05-源码调用点迁移清单.md`
+10. `../../design/3.Entity系统优化/2.重构/main.md`
+11. `../../entity-rewrite-execution-prompt.md`
+12. `../../../../../DocsAI/ECS/Entity/README.md`
+13. `../../../../../DocsAI/ECS/Data/Data系统说明.md`
+14. `../../../../../DocsAI/ECS/Event/Event系统说明.md`
 
 ### 当前约束
 
@@ -75,7 +76,7 @@
 - `ParentRelationTypes`
 - `AutoAddParentRelation`
 - `BindParentRelationships`
-- `EntityManager.AddAbility/GetAbilities/RemoveAbility`
+- `EntityManager.AddAbility/GetAbilities/RemoveAbility`（T1.9 后仅保留兼容 facade；新事实源为 `AbilityInventoryService.Runtime`）
 - parent-chain damage attribution
 - raw string entity id public API
 

@@ -35,7 +35,7 @@ public readonly record struct EffectSpawnOptions(
 /// 设计理念：
 /// - 独立静态工具类，消费 EntityManager 的基础生命周期 API
 /// - 类似 DamageService 的领域服务模式
-/// - Effect 不走 EntityManager.Spawn 的通用装配流程，而是由 EffectTool 自行编排生成顺序
+/// - Effect 当前仍自行编排对象池取出和视觉注入，owner/host 引用通过 EffectOwnershipService 收口
 /// - 视觉加载由 EffectTool 完成
 /// - 动画播放命令由 EffectComponent 通过事件驱动
 /// - 附着跟随、生命周期、动画结束销毁由 EffectComponent 负责
@@ -61,8 +61,7 @@ public static partial class EffectTool
     /// <summary>
     /// 生成特效（统一入口）
     /// - Host 为 null：独立特效，在 EffectPosition 指定的位置播放
-    /// - Host 非 null：附着特效，跟随宿主位置，自动建立关系
-    /// - 关系溯源统一补一条 PARENT，供 FindAncestorOfType 使用
+    /// - Host 非 null：附着特效，跟随宿主位置，自动建立 lifecycle 和 owner projection
     /// </summary>
     /// <param name="options">特效参数</param>
     /// <returns>生成的 EffectEntity，失败返回 null</returns>
@@ -108,34 +107,21 @@ public static partial class EffectTool
         // 应用初始变换
         ApplyInitialTransform(entity, position, options, isAttached);
 
-        // 必须先建立关系，再注册组件，避免 EffectComponent.OnComponentRegistered 取不到宿主。
-        if (isAttached && options.Host is IEntity hostEntity)
-        {
-            EntityManager.BindParentRelationships(
-                entity, // 子实体：特效
-                hostEntity, // 父实体：宿主
-                autoAddParentRelation: true, // 自动补 PARENT，供统一溯源
-                parentDestroyPolicy: ParentDestroyPolicy.DestroyRecursively, // 宿主销毁时递归销毁附着特效
-                EntityRelationshipType.ENTITY_TO_EFFECT // 业务关系：宿主 -> 特效
-            );
-        }
-        else if (options.Owner != null)
-        {
-            EntityManager.BindParentRelationships(
-                entity, // 子实体：特效
-                options.Owner, // 父实体：归属者
-                autoAddParentRelation: true, // 自动补 PARENT，供统一溯源
-                parentDestroyPolicy: ParentDestroyPolicy.DestroyRecursively, // 归属者销毁时默认递归销毁该特效
-                EntityRelationshipType.ENTITY_TO_EFFECT // 业务关系：归属者 -> 特效
-            );
-        }
-
         // 注册 Entity / Component（对象池复用后需要重新注册）
         if (!NodeLifecycleManager.IsRegistered(effectId))
         {
             EntityManager.Register(entity);
-            EntityManager.RegisterComponents(entity);
         }
+
+        // 必须先建立 lifecycle/owner projection，再注册组件，避免 EffectComponent 取不到宿主。
+        var hostOrOwner = ResolveHostOrOwner(options, isAttached);
+        if (hostOrOwner != null)
+        {
+            AttachLifecycle(hostOrOwner, entity);
+            EffectOwnershipService.Runtime.Attach(hostOrOwner, entity);
+        }
+
+        EntityManager.RegisterComponents(entity);
 
         // GlobalEventBus.Global.Emit(
         //     GameEventType.Global.EntitySpawned,
@@ -185,21 +171,18 @@ public static partial class EffectTool
     /// <param name="host">宿主 Entity 节点</param>
     public static void DestroyByHost(Node host)
     {
-        string hostId = host.GetInstanceId().ToString();
+        if (host is not IEntity hostEntity)
+            return;
 
-        var effectIds = EntityRelationshipManager.GetChildEntitiesByParentAndType(
-            hostId, EntityRelationshipType.ENTITY_TO_EFFECT);
-
-        var idsCopy = effectIds.ToList();
-        if (idsCopy.Count == 0) return;
+        var effects = EffectOwnershipService.Runtime.GetEffects(hostEntity).ToList();
+        if (effects.Count == 0) return;
         int count = 0;
 
-        foreach (var effectId in idsCopy)
+        foreach (var effect in effects)
         {
-            var effectNode = EntityManager.GetEntityById(effectId);
-            if (effectNode != null)
+            if (effect != null)
             {
-                EntityManager.Destroy(effectNode);
+                EntityManager.Destroy(effect);
                 count++;
             }
         }
@@ -232,6 +215,23 @@ public static partial class EffectTool
         entity.Data.Set(GeneratedDataKey.EffectOffset, options.Offset ?? Vector2.Zero);
         entity.Data.Set(GeneratedDataKey.EffectIsLooping, options.IsLooping);
         entity.Data.Set(GeneratedDataKey.EffectIsAttached, isAttached);
+    }
+
+    private static IEntity? ResolveHostOrOwner(EffectSpawnOptions options, bool isAttached)
+    {
+        if (isAttached && options.Host is IEntity hostEntity)
+            return hostEntity;
+
+        return options.Owner;
+    }
+
+    private static void AttachLifecycle(IEntity hostOrOwner, EffectEntity effect)
+    {
+        if (hostOrOwner is not Node)
+            return;
+
+        // EffectTool 仍在对象池路径中手工构造 EffectEntity；生命周期只接入 typed LifecycleTree。
+        EntityManager.AttachLifecycleParent(hostOrOwner, effect, ParentDestroyPolicy.DestroyRecursively);
     }
 
     /// <summary>
