@@ -1,0 +1,134 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Src/ECS/Capabilities/TestSystem/System/System/SystemInfoTestModule.cs" id="1_system_info_script"]
+
+[node name="SystemInfoTestModule" type="VBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_system_info_script")
+
+[node name="InstructionLabel" type="Label" parent="."]
+layout_mode = 2
+text = "查看系统配置、运行状态，并对非必需系统执行调试管理操作"
+autowrap_mode = 3
+
+[node name="SummaryLabel" type="Label" parent="."]
+layout_mode = 2
+text = "系统 0 个，当前显示 0 个"
+autowrap_mode = 3
+
+[node name="Filters" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="GroupOption" type="OptionButton" parent="Filters"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+
+[node name="TagOption" type="OptionButton" parent="Filters"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+
+[node name="StatusOption" type="OptionButton" parent="Filters"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+
+[node name="SearchEdit" type="LineEdit" parent="Filters"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "搜索 SystemId / 标签 / 说明"
+
+[node name="RefreshButton" type="Button" parent="Filters"]
+layout_mode = 2
+text = "刷新"
+
+[node name="Content" type="HSplitContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+split_offset = 220
+
+[node name="SystemListPanel" type="PanelContainer" parent="Content"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SystemListMargin" type="MarginContainer" parent="Content/SystemListPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="SystemList" type="ItemList" parent="Content/SystemListPanel/SystemListMargin"]
+custom_minimum_size = Vector2(200, 320)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="DetailsLayout" type="VBoxContainer" parent="Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="OverviewPanel" type="PanelContainer" parent="Content/DetailsLayout"]
+layout_mode = 2
+
+[node name="OverviewMargin" type="MarginContainer" parent="Content/DetailsLayout/OverviewPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="OverviewLabel" type="Label" parent="Content/DetailsLayout/OverviewPanel/OverviewMargin"]
+layout_mode = 2
+text = "请选择一个系统"
+autowrap_mode = 3
+
+[node name="DetailsPanel" type="PanelContainer" parent="Content/DetailsLayout"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="DetailsMargin" type="MarginContainer" parent="Content/DetailsLayout/DetailsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="DetailsScroll" type="ScrollContainer" parent="Content/DetailsLayout/DetailsPanel/DetailsMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="DetailsLabel" type="Label" parent="Content/DetailsLayout/DetailsPanel/DetailsMargin/DetailsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+text = "请选择一个系统"
+autowrap_mode = 3
+
+[node name="Actions" type="HBoxContainer" parent="Content/DetailsLayout"]
+layout_mode = 2
+
+[node name="AddButton" type="Button" parent="Content/DetailsLayout/Actions"]
+layout_mode = 2
+text = "添加"
+
+[node name="EnableButton" type="Button" parent="Content/DetailsLayout/Actions"]
+layout_mode = 2
+text = "启用"
+
+[node name="DisableButton" type="Button" parent="Content/DetailsLayout/Actions"]
+layout_mode = 2
+text = "禁用"
+
+[node name="RemoveButton" type="Button" parent="Content/DetailsLayout/Actions"]
+layout_mode = 2
+text = "移除"
+
+[node name="StatusLabel" type="Label" parent="."]
+layout_mode = 2
+text = ""
+autowrap_mode = 3

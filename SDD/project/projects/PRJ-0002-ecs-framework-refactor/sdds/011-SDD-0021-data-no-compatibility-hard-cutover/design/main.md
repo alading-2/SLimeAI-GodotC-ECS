@@ -126,10 +126,10 @@ dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
 
 ```bash
 cd /home/slime/Code/SlimeAI/SlimeAI
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/DataOS/DataCatalogTestScene.tscn --build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/DataOS/DataRuntimeTestScene.tscn --build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/DataOS/DataSnapshotApplyTestScene.tscn --build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/DataOS/DataFeatureBridgeTestScene.tscn --build
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Runtime/Data/Tests/DataOS/DataCatalogTestScene.tscn --build
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Runtime/Data/Tests/DataOS/DataRuntimeTestScene.tscn --build
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Runtime/Data/Tests/DataOS/DataSnapshotApplyTestScene.tscn --build
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Runtime/Data/Tests/DataOS/DataFeatureBridgeTestScene.tscn --build
 ```
 
 ### 无兼容 grep gate

@@ -1,24 +1,26 @@
 ---
 name: projectile-effect-system
-description: 修改 SlimeAI.GameOS ProjectileTool、EffectTool、投射物命中生命周期、穿透、视觉实例化或 Effect 动画播放时使用。
+description: 修改 SlimeAI ECS Projectile / Effect Capability、投射物命中生命周期、穿透、视觉实例化或 Effect 动画播放时使用。
 ---
 
 # Projectile / Effect 入口
 
 ## 必读入口
 
-- `DocsAI/GameOS/Contracts.md`
-- `DocsAI/GameOS/ApiIndex.md`
-- `DocsAI/ProjectState.md`
+- `DocsAI/README.md`
+- `DocsAI/ECS/Capabilities/Projectile/README.md`
+- `DocsAI/ECS/Capabilities/Effect/README.md`
+- `DocsAI/ECS/Capabilities/Movement/README.md`
+- `DocsAI/ECS/Capabilities/Damage/README.md`
+- `DocsAI/ECS/Runtime/Data/Data系统说明.md`
 
 ## 源码位置
 
-- `GameOS/Capabilities/Projectile/`
-- `GameOS/Capabilities/Effect/`
-- `GameOS/Capabilities/Movement/`
-- `GameOS/Capabilities/Damage/`
-- `GameOS/GodotBridge/GodotProjectileEffectSpawner.cs`
-- `Tests/SlimeAI.GameOS.Tests/`
+- `Src/ECS/Capabilities/Projectile/`
+- `Src/ECS/Capabilities/Effect/`
+- `Src/ECS/Capabilities/Movement/`
+- `Src/ECS/Capabilities/Damage/`
+- `Data/DataKey/Effect/`
 
 ## 规则
 
@@ -35,11 +37,8 @@ description: 修改 SlimeAI.GameOS ProjectileTool、EffectTool、投射物命中
 ## 验证
 
 ```bash
-Tools/run-build.sh
-Tools/run-tests.sh
-cd /home/slime/Code/SlimeAI/Games/BrotatoLike
-Tools/run-build.sh
-Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/Projectile/ProjectileCapabilityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/Effect/EffectCapabilityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
+dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
+# 如果承载游戏提供 runner，再执行 Godot smoke:
+# cd /home/slime/Code/SlimeAI/Games/<GameWithRunner>
+# Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 ```

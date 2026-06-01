@@ -7,7 +7,7 @@
 默认入口：
 
 ```text
-AGENTS.md -> DocsAI/README.md -> DocsAI/ECS/README.md -> SDD/project/projects/PRJ-0002-ecs-framework-refactor/README.md -> SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/INDEX.md -> DocsAI/ECS/<分类>/<owner>/完整文档 -> owner skill -> 验证脚本
+AGENTS.md -> DocsAI/README.md -> DocsAI/ECS/README.md -> SDD/project/projects/PRJ-0002-ecs-framework-refactor/README.md -> SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/INDEX.md -> DocsAI/ECS/<Runtime|Capabilities|Tools|UI>/<owner>/完整文档 -> owner skill -> 验证脚本
 ```
 
 SystemAgent 不作为 ECS 业务事实源第一入口；它只作为流程工具（设计发现、SDD 管理、AI config 同步、验证发布、复盘）。
@@ -27,18 +27,18 @@ SystemAgent 不作为 ECS 业务事实源第一入口；它只作为流程工具
 ## 必读入口
 
 - 方向入口：`DocsAI/README.md`
-- 框架文档：`DocsAI/ECS/README.md`（按 Entity / Data / Event / Collision / Component / System / Tools / UI owner 聚合）
+- 框架文档：`DocsAI/ECS/README.md`（按 Runtime / Capabilities / Tools / UI 聚合）
 - 当前项目设计：`SDD/project/projects/PRJ-0002-ecs-framework-refactor/README.md`
 - 设计索引：`SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/INDEX.md`
-- 模块事实源：`DocsAI/ECS/<分类>/<owner>/` 下完整迁移文档；`Concept.md` / `Usage.md` 只是推荐命名，不是强制结构；Component 暂时按 `DocsAI/ECS/Component/**` 镜像 `Src/ECS/Base/Component/**`
-- Data 当前说明：`DocsAI/ECS/Data/Data系统说明.md`
+- 模块事实源：Runtime owner 读 `DocsAI/ECS/Runtime/<Entity|Data|Event|System>/`；功能 owner 读 `DocsAI/ECS/Capabilities/<owner>/`；工具和 UI 读 `DocsAI/ECS/Tools/<owner>/`、`DocsAI/ECS/UI/`。
+- Data 当前说明：`DocsAI/ECS/Runtime/Data/Data系统说明.md`
 - 设计思考：`DocsAI/思考/`
 - 流程工具：`Workspace/SystemAgent/README.md`
-- Godot 场景测试：`DocsAI/ECS/System/TestSystem/Usage.md`、`Src/ECS/Test/**` 测试源码、`Games/BrotatoLike/Tools/run-godot-scene.sh`
+- Godot 场景测试：`Src/ECS/Test/**` 测试源码、`Games/BrotatoLike/Tools/run-godot-scene.sh`
 
 ## 事实源边界
 
-- `DocsAI/`：框架文档统一入口，AI-first 设计。按 ECS 分类 + owner 聚合，优先无损保存原文；Concept / Usage / Tests 只是推荐分层。`Base/` 不作为 DocsAI 分类；Component 暂时按 `DocsAI/ECS/Component/**` 对齐 `Src/ECS/Base/Component/**`。
+- `DocsAI/`：框架文档统一入口，AI-first 设计。默认按 `Runtime / Capabilities / Tools / UI` 聚合；Concept / Usage / Tests 只是推荐分层。旧 `System/`、`Component/`、`Entity/`、`Data/`、`Event/` 只作为迁移追溯，不作为新任务入口。
 - `SDD/`：中大型任务设计、进度、执行记忆。项目级 SDD 在 `SDD/project/projects/`。
 - `Src/ECS/**`：源码入口；框架 Markdown 文档统一由 `DocsAI/ECS/` 管理，`Src/ECS` 不保留框架文档。
 - `.ai-config/skills/*`：唯一可维护 skill 源，保存 skill 路由、命令、reference 和脚本入口。
@@ -157,8 +157,8 @@ SystemAgent 不作为 ECS 业务事实源第一入口；它只作为流程工具
 
 ```bash
 cd /home/slime/Code/SlimeAI/SlimeAI
-Tools/run-build.sh
-Tools/run-tests.sh
+dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
+bash Data/DataOS/Tools/validate-dataos.sh Data/DataOS/Authoring/slimeainew.authoring.db
 ```
 
 SDD / AI 配置验证：
@@ -173,7 +173,7 @@ bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summa
 Godot 场景验证仍需要进入承载游戏仓：
 
 ```bash
-cd /home/slime/Code/SlimeAI/Games/BrotatoLike
+cd /home/slime/Code/SlimeAI/Games/<GameWithRunner>
 Tools/run-godot-scene.sh run res://Scenes/Main.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
 ```

@@ -1,27 +1,31 @@
 # ECS 框架文档
 
 > 状态：current
-> 定位：SlimeAI ECS 框架核心文档，按分类 + owner 聚合。
-> 更新：2026-05-31
+> 定位：SlimeAI ECS 框架核心文档，按 Runtime / Capabilities / Tools / UI 聚合。
+> 更新：2026-06-01
 
 ## 阅读顺序
 
 1. **方向定位**：读 [`../ECS框架与AIFirst方向决策.md`](../ECS框架与AIFirst方向决策.md)。
-2. **核心 owner**：按需读 `Entity/`、`Data/`、`Event/`、`Collision/`、`Component/`。
-3. **系统层**：按需读 `System/` 下对应 owner 文档。
-4. **工具层和 UI 层**：按需读 `Tools/`、`UI/` 下对应 owner 文档。
-5. **具体组件**：按 `Component/` 下与 `Src/ECS/Base/Component/` 对齐的目录读取迁移全文。
-6. **执行前**：先读对应 owner 的完整迁移文档，再进入 `Src/ECS/` 阅读源码。
+2. **共享内核**：改 Entity / Data / Event / System lifecycle 时读 [Runtime/](Runtime/)。
+3. **功能 owner**：改 Ability / Damage / Movement 等功能时读 [Capabilities/](Capabilities/) 下对应 owner。
+4. **通用工具和 UI**：改 Timer、ObjectPool、Input、UI binding 时读 [Tools/](Tools/) 或 [UI/](UI/)。
+5. **迁移追溯**：需要旧路径来源时读 [`../管理/目录架构迁移清单.md`](../管理/目录架构迁移清单.md) 和具体文档的 `migrated-from` 标记；不要把旧 `System/`、`Component/`、`Base/` 当入口。
 
 ## 分层规则
 
 `DocsAI/ECS` 是 ECS 功能文档事实源。原 `Src/ECS/**.md` 长文档已迁入这里；`Src/ECS` 不再保留框架 Markdown 文档。
 
-`DocsAI/ECS` 当前按功能 owner 管理，但 Component 文档暂时例外：`DocsAI/ECS/Component/` 与 `Src/ECS/Base/Component/` 保持目录对齐，方便迁移审计和源码就近查找。
+目录重构后的默认 AI 路由是：
 
-- `Base/` 不作为 DocsAI 分类；`Src/ECS/Base/Component/**` 映射为 `DocsAI/ECS/Component/**`。
-- Component 文档先保持原目录和原文件名；后续如果要按功能 owner 拆分，必须先更新 `DocsAI/管理/` 规则。
-- `Src/ECS/` 仍不保留 Markdown 文档，迁移来源只用于追溯。
+```text
+DocsAI/ECS/Runtime/<Entity|Data|Event|System>
+DocsAI/ECS/Capabilities/<Ability|Damage|Movement|Collision|Feature|Effect|Projectile|AI|Spawn|Unit>
+DocsAI/ECS/Tools/<owner>
+DocsAI/ECS/UI
+```
+
+旧 `DocsAI/ECS/System`、`DocsAI/ECS/Component`、`DocsAI/ECS/Entity`、`DocsAI/ECS/Data`、`DocsAI/ECS/Event` 不再作为当前入口；若历史文档需要保留，必须迁入对应 Runtime / Capability / Tools / UI owner 的 `Concepts/` 或原文件名下。
 
 | 文件 | 用途 |
 | ---- | ---- |
@@ -35,34 +39,34 @@
 
 ## 目录
 
-### 核心 owner
+### Runtime/ — 共享 ECS 内核
 
 | Owner | 文档 | 一句话说明 |
 | ----- | ---- | ---- |
-| Entity | [Entity/](Entity/) | 实体身份容器、生命周期、EntityManager、IComponent 规范 |
-| Data | [Data/](Data/) | DataOS 管道、DataKey、运行时存储 |
-| Event | [Event/](Event/) | EventBus 架构、Context 模式 |
-| Collision | [Collision/](Collision/) | 碰撞桥接层、碰撞层级、对象池碰撞兼容 |
-| Component | [Component/](Component/) | 与 `Src/ECS/Base/Component/` 对齐的组件迁移文档 |
+| Runtime 总览 | [Runtime/](Runtime/) | Entity / Data / Event / System Core 的共享内核入口 |
+| Entity | [Runtime/Entity/](Runtime/Entity/) | 实体身份、生命周期、Spawn/Destroy、LifecycleTree、引用注册 |
+| Component | [Runtime/Component/](Runtime/Component/) | `IComponent`、`TemplateComponent`、ComponentRegistrar 接入规则 |
+| Data | [Runtime/Data/](Runtime/Data/) | DataOS 管道、typed DataKey、runtime snapshot、运行时存储 |
+| Event | [Runtime/Event/](Runtime/Event/) | EventBus、EventContext、GlobalEventBus 和事件协议边界 |
+| System | [Runtime/System/](Runtime/System/) | System lifecycle、registration、state 和 Godot system wrapper |
 
-### System/ — 系统层
+### Capabilities/ — 功能 owner
 
 | Owner | 文档 | 一句话说明 |
 | ----- | ---- | ---- |
-| Core | [System/Core/](System/Core/) | 系统注册、生命周期、分层总览 |
-| AbilitySystem | [System/AbilitySystem/](System/AbilitySystem/) | 技能系统三层架构 |
-| FeatureSystem | [System/FeatureSystem/](System/FeatureSystem/) | 通用能力层（Grant/Enable/Disable/Remove） |
-| DamageSystem | [System/DamageSystem/](System/DamageSystem/) | 10 阶段伤害管线 |
-| Movement | [System/Movement/](System/Movement/) | 策略模式移动系统 |
-| Movement/ScalarDriver | [System/Movement/ScalarDriver.md](System/Movement/ScalarDriver.md) | 标量参数驱动 |
-| Movement/Strategies | [System/Movement/Strategies.md](System/Movement/Strategies.md) | 运动策略扩展说明 |
-| AI | [System/AI/](System/AI/) | 行为树框架 |
-| Status | [System/Status/](System/Status/) | 实体状态效果系统 |
-| Effect | [System/Effect/](System/Effect/) | 特效系统 |
-| Spawn | [System/Spawn/](System/Spawn/) | 程序化敌人生成 |
-| TargetingSystem | [System/TargetingSystem/](System/TargetingSystem/) | 异步目标选择会话 |
-| MouseSelection | [System/MouseSelection/](System/MouseSelection/) | 鼠标点击/框选目标系统 |
-| TestSystem | [System/TestSystem/](System/TestSystem/) | 运行时调试系统 |
+| Capabilities 总览 | [Capabilities/](Capabilities/) | 功能 owner 路由和 Capability 内部 ECS 子结构规则 |
+| Ability | [Capabilities/Ability/](Capabilities/Ability/) | 技能触发、冷却、充能、消耗、Feature handler 接入 |
+| Damage | [Capabilities/Damage/](Capabilities/Damage/) | 伤害处理管线、DamageTool、统计和归属 |
+| Movement | [Capabilities/Movement/](Capabilities/Movement/) | 移动策略、速度投影、碰撞移动、方向组件 |
+| Collision | [Capabilities/Collision/](Capabilities/Collision/) | Godot 碰撞桥、Hurtbox、ContactDamage、Pickup |
+| Feature | [Capabilities/Feature/](Capabilities/Feature/) | Feature 授予、启用、禁用、modifier/action |
+| Effect | [Capabilities/Effect/](Capabilities/Effect/) | 视觉/逻辑效果实体与 EffectTool |
+| Projectile | [Capabilities/Projectile/](Capabilities/Projectile/) | 投射物生命周期、source attribution、命中控制 |
+| AI | [Capabilities/AI/](Capabilities/AI/) | 行为树、AIComponent、AI 数据与动作节点 |
+| Spawn | [Capabilities/Spawn/](Capabilities/Spawn/) | 程序化生成和 spawn config |
+| StatusSystem | [Capabilities/StatusSystem/](Capabilities/StatusSystem/) | 状态效果定义、实例、集合与快照 |
+| TestSystem | [Capabilities/TestSystem/](Capabilities/TestSystem/) | 运行时调试面板、模块和资源目录测试 |
+| Unit | [Capabilities/Unit/](Capabilities/Unit/) | 单位实体、Health/Lifecycle/State/Animation、阵营/归属基础能力 |
 
 ### Tools/ — 工具层
 
@@ -82,21 +86,3 @@
 | Owner | 文档 | 一句话说明 |
 | ----- | ---- | ---- |
 | UI | [UI/](UI/) | Binding Pattern，UI 不是 Entity Component |
-
-### Component/ — 组件层
-
-`Component/` 暂时与 `Src/ECS/Base/Component/` 保持一致，避免迁移阶段丢失源码上下文。
-
-| Src 对齐目录 | DocsAI 文档 |
-| ---- | ---- |
-| `Component规范.md` | [Component/Component规范.md](Component/Component规范.md) |
-| `Ability/ChargeComponent/README.md` | [Component/Ability/ChargeComponent/README.md](Component/Ability/ChargeComponent/README.md) |
-| `Ability/CooldownComponent/README.md` | [Component/Ability/CooldownComponent/README.md](Component/Ability/CooldownComponent/README.md) |
-| `Ability/CostComponent/README.md` | [Component/Ability/CostComponent/README.md](Component/Ability/CostComponent/README.md) |
-| `Ability/TriggerComponent/README.md` | [Component/Ability/TriggerComponent/README.md](Component/Ability/TriggerComponent/README.md) |
-| `Collision/CollisionComponent/CollisionComponent.md` | [Component/Collision/CollisionComponent/CollisionComponent.md](Component/Collision/CollisionComponent/CollisionComponent.md) |
-| `Collision/ContactDamageComponent/ContactDamageComponent.md` | [Component/Collision/ContactDamageComponent/ContactDamageComponent.md](Component/Collision/ContactDamageComponent/ContactDamageComponent.md) |
-| `Collision/PickupComponent/PickupComponent.md` | [Component/Collision/PickupComponent/PickupComponent.md](Component/Collision/PickupComponent/PickupComponent.md) |
-| `Movement/EntityMovementComponent说明.md` | [Component/Movement/EntityMovementComponent说明.md](Component/Movement/EntityMovementComponent说明.md) |
-| `Unit/Common/AttackComponent/AttackComponent.md` | [Component/Unit/Common/AttackComponent/AttackComponent.md](Component/Unit/Common/AttackComponent/AttackComponent.md) |
-| `Unit/Common/DataInitComponent/DataInitComponent.md` | [Component/Unit/Common/DataInitComponent/DataInitComponent.md](Component/Unit/Common/DataInitComponent/DataInitComponent.md) |

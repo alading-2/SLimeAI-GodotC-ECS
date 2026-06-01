@@ -2,7 +2,7 @@
   "id": "SDD-0025",
   "slug": "ecs-framework-directory-architecture-restructure",
   "title": "ECS Framework Directory Architecture Restructure",
-  "status": "pending",
+  "status": "done",
   "type": "refactor",
   "created_at": "2026-06-01",
   "updated_at": "2026-06-01",
@@ -24,10 +24,10 @@
     "docsai"
   ],
   "progress": {
-    "current_task": "T1.1",
-    "completed_tasks": 0,
+    "current_task": "done",
+    "completed_tasks": 8,
     "total_tasks": 8,
-    "percent": 0
+    "percent": 100
   },
   "bdd": {
     "required": true,
@@ -48,5 +48,15 @@
     "../../design/INDEX.md",
     "../../design/6.ECS框架目录架构大重构/README.md",
     "../../directory-architecture-restructure-execution-prompt.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-06-01 17:35",
+      "summary": "dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly: passed 0 warnings / 0 errors; bash Data/DataOS/Tools/validate-dataos.sh Data/DataOS/Authoring/slimeainew.authoring.db: passed; python3 Workspace/SDD/sdd.py validate --all: 0 errors / 0 warnings; bash Workspace/Tools/ai-config-sync/sync-ai-config.sh: completed and embedded skill-test Critical 0 / Advisory 0; bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only: exit 0, 39 skills Critical 6 / Advisory 0, all existing R002 missing-reference entries for absent .claude/settings.json, .codex/hooks.json and .codex/config.toml; migrated owner res:// old-path gate: no matches; Godot smoke not run because current Games/BrotatoLike has no Tools runner."
+    },
+    {
+      "at": "2026-06-01",
+      "summary": "Closeout adjusted after user removed Foundation/Foundations current layer. Validation rerun: dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly passed with 0 errors, final rerun after comment/doc closeout reported 800 warnings / 0 errors; bash Data/DataOS/Tools/validate-dataos.sh Data/DataOS/Authoring/slimeainew.authoring.db passed; python3 Workspace/SDD/sdd.py validate SDD-0025 && python3 Workspace/SDD/sdd.py validate --all passed with 0 errors / 0 warnings; bash Workspace/Tools/ai-config-sync/sync-ai-config.sh completed and embedded skill-lint reported Critical 0 / Advisory 0; bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only exited 0 and reported 39 skills Critical 6 / Advisory 0, all existing R002 missing-reference entries for absent .claude/settings.json, .codex/hooks.json and .codex/config.toml; dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj passed, generated 106 resources and skipped 5 duplicate .tres in favor of .tscn; Src/ECS/Base file gate returned no files; DocsAI top-level old System/Component/Foundations gate returned only Runtime/System and Runtime/Component, which are expected current routes; rg \"\\bIWeapon\\b\" Src Data DocsAI returned no current implementation/doc entry."
+    }
   ]
 }

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Src/ECS/Test/GlobalTest/VisualPreview/Entity/VisualPreviewEntity.cs" id="1_preview_entity"]
+
+[node name="VisualPreviewEntity" type="Node2D"]
+script = ExtResource("1_preview_entity")
+
+[node name="Component" type="Node2D" parent="."]

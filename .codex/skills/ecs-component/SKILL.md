@@ -1,31 +1,40 @@
 ---
 name: ecs-component
-description: 修改 SlimeAI.GameOS GodotBridge Adapter 协议、legacy IGodotComponent 或可挂节点桥接脚本时使用；skill ID 暂保留 ecs-component 只为兼容搜索，不表示传统 ECS component。
+description: 修改 SlimeAI ECS Runtime Component 契约、IComponent、TemplateComponent、ComponentRegistrar 或 GodotBridge Adapter 时使用；skill ID 暂保留 ecs-component 以覆盖旧查询。
 ---
 
-# GodotBridge Adapter 入口
+# Runtime Component / GodotBridge Adapter 入口
 
 ## 必读入口
 
-- `DocsAI/GameOS/Contracts.md`
-- `DocsAI/GameOS/ApiIndex.md`
-- `DocsAI/GameOS/DebugGuide.md`
-- `DocsAI/ProjectState.md`
+- `DocsAI/README.md`
+- `DocsAI/ECS/Runtime/Component/README.md`
+- `DocsAI/ECS/Runtime/Entity/`
+- `DocsAI/ECS/Runtime/Event/`
+- `DocsAI/ECS/Capabilities/Unit/README.md`
+- `DocsAI/ECS/Capabilities/Movement/README.md`
 
 ## 源码位置
 
-- `GameOS/GodotBridge/`
-- `GameOS/Runtime/World/`
-- `GameOS/Runtime/CommandBuffer/`
-- `GameOS/Capabilities/*/`
+- `Src/ECS/Runtime/Component/`（`IComponent` / `TemplateComponent`）
+- `Src/ECS/Runtime/Entity/Components/`（`ComponentRegistrar` / EntityManager component partial）
+- `Src/ECS/Runtime/Entity/`
+- `Src/ECS/Runtime/Event/`
+- `Src/ECS/Runtime/System/`
+- `Src/ECS/Capabilities/*/Component/`
+- `Src/ECS/Capabilities/*/Presets/`
+- `Src/ECS/UI/`
 - `/home/slime/Code/SlimeAI/Games/BrotatoLike/Src/Game/`
-- `/home/slime/Code/SlimeAI/SlimeAI/Src/Validation/GameOS/GodotBridge/`
 - `/home/slime/Code/SlimeAI/Games/BrotatoLike/Src/Validation/Game/`
 
 ## 规则
 
+- `IComponent` 是 Godot 可挂节点接入 Runtime Entity 的生命周期契约；新组件优先实现它，旧命名兼容只作为过渡。
+- Component owner 反查走 `EntityManager.GetEntityByComponent` / `ComponentRegistrar`，不要恢复 `EntityRelationshipType.ENTITY_TO_COMPONENT`。
+- 具体业务组件放 `Src/ECS/Capabilities/<owner>/Component/`；Runtime/Component 只放接口、模板和通用规则。
+- Preset 是组件组合场景，放 `Src/ECS/Capabilities/<owner>/Presets/`，资源分类为 `ResourceCategory.Preset`，不是 Runtime Component。
 - 新文档和新 API 优先称为 GodotBridge Adapter；`IGodotComponent` / `Godot*Component` 是 legacy compatibility name。
-- 框架 bridge adapter 当前仍实现 `IGodotComponent`，注册时通过 `GodotBridgeContext.RegisterComponents` 或默认 `GameOSGodotBridge` facade 接入 Runtime Entity。
+- 框架 bridge adapter 当前仍实现 `IGodotComponent`，注册时接入 Runtime Entity。
 - scoped bridge 修改必须使用 `GodotBridgeContext` 和 context-owned `GodotBridgeNodeRegistry`；static `GodotNodeRegistry` 只代表默认 context。
 - adapter callback guard 必须来自目标 context 的 `RuntimeWorld.Commands.EnterGuard("godot-bridge-callback")`。
 - Adapter 业务状态写入 `Entity.Data` / DataKey，不要用私有字段作为长期状态真相。
@@ -39,12 +48,10 @@ description: 修改 SlimeAI.GameOS GodotBridge Adapter 协议、legacy IGodotCom
 ## 验证
 
 ```bash
-Tools/run-build.sh
-Tools/run-tests.sh
-cd /home/slime/Code/SlimeAI/Games/BrotatoLike
-Tools/run-build.sh
-Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/GodotBridge/UnitComposition/UnitCompositionValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run res://Src/Validation/Game/UnitComposition/BrotatoLikeUnitCompositionValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
-Tools/analyze-godot-scene-logs.sh
+dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
+# 如果承载游戏提供 runner，再执行专项场景和 smoke：
+# cd /home/slime/Code/SlimeAI/Games/<GameWithRunner>
+# Tools/run-godot-scene.sh run res://Src/Validation/Game/UnitComposition/BrotatoLikeUnitCompositionValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+# Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
+# Tools/analyze-godot-scene-logs.sh
 ```

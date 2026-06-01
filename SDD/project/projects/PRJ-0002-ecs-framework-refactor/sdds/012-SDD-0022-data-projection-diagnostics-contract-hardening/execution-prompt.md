@@ -153,7 +153,7 @@ dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
 
 行为验证建议：
 cd /home/slime/Code/SlimeAI/SlimeAI
-Tools/run-godot-scene.sh run res://Src/ECS/Test/SingleTest/ECS/DataOS/DataSnapshotApplyTestScene.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://Src/ECS/Runtime/Data/Tests/DataOS/DataSnapshotApplyTestScene.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://Scenes/Main.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 
 最终 grep gate：

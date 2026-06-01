@@ -2,7 +2,7 @@
 
 ## Index Card
 
-- **Status**: pending
+- **Status**: done
 - **Created**: 2026-06-01
 - **Updated**: 2026-06-01
 - **Type**: refactor
@@ -22,7 +22,7 @@
 
 ```text
 Src/ECS/Runtime + Src/ECS/Capabilities
-DocsAI/ECS/Runtime + DocsAI/ECS/Capabilities + DocsAI/ECS/Foundations
+DocsAI/ECS/Runtime + DocsAI/ECS/Capabilities + DocsAI/ECS/Tools + DocsAI/ECS/UI
 ```
 
 其中：
@@ -30,13 +30,13 @@ DocsAI/ECS/Runtime + DocsAI/ECS/Capabilities + DocsAI/ECS/Foundations
 - `Runtime` 承载 Entity / Data / Event / System Core 等跨域 ECS 基础设施。
 - `Capabilities` 承载 Ability / Damage / Movement / Collision / Feature / Effect / Projectile / AI / Spawn / Unit 等功能 owner。
 - Capability 内部继续保留 Component / System / Events / Tests / DataKeys 等 ECS 语义。
-- DocsOld 重要概念文档直接复制到 `DocsAI/ECS/Foundations/`，保留原文，不作为当前执行入口。
+- `Foundation/Foundations` 已从当前路由层移除；历史概念材料按 owner 分散到 `Concepts/`，或进入 `DocsAI/Archive/` / `DocsAI/思考/`。
 
 ## Reading Order
 
 1. `../../design/6.ECS框架目录架构大重构/README.md` — 项目级目录架构设计包入口
 2. `../../design/6.ECS框架目录架构大重构/01-现状证据与AI-first裁决.md` — 当前问题、AiFirst 参考和裁决
-3. `../../design/6.ECS框架目录架构大重构/02-目标目录架构与归属规则.md` — Runtime / Capabilities / Foundations 归属规则
+3. `../../design/6.ECS框架目录架构大重构/02-目标目录架构与归属规则.md` — Runtime / Capabilities / Tools / UI 归属规则
 4. `../../design/6.ECS框架目录架构大重构/03-迁移切片与验证门禁.md` — 分阶段迁移计划和验证门禁
 5. `../../directory-architecture-restructure-execution-prompt.md` — 可交给新执行会话的总提示词
 6. `execution-prompt.md` — 本 SDD 局部执行提示词
@@ -49,7 +49,7 @@ DocsAI/ECS/Runtime + DocsAI/ECS/Capabilities + DocsAI/ECS/Foundations
 
 ## Current Resume
 
-- **Current Task**: T1.1
-- **Last Conclusion**: 目录架构方向已裁决为 `Runtime + Capabilities`，并保留 ECS 语义；本 SDD 当前已生成设计包、任务拆分和执行提示词，尚未移动源码或 DocsAI 目录。
-- **Next Action**: 从 T1.1 readiness baseline 开始，只读记录当前 dirty 范围和旧路径引用；再执行 DocsAI 规则先行，最后按 Runtime 与 Capability 切片迁移。
+- **Current Task**: done
+- **Last Conclusion**: SDD-0025 已完成并追加测试目录收口：`Src/ECS/Test/SingleTest` 已清空；DataOS 测试迁到 `Src/ECS/Runtime/Data/Tests/DataOS/`，Runtime/Entity/System/ECS smoke 和各 Capability/Tools 测试迁到对应 owner `Tests/`；ResourceGenerator 已重新生成资源 manifest。
+- **Next Action**: 后续任务按 `DocsAI/ECS/README.md` 进入对应 owner；如果继续 PRJ-0002，优先处理新的 active SDD 或归档项目状态。
 - **Open Blockers**: none

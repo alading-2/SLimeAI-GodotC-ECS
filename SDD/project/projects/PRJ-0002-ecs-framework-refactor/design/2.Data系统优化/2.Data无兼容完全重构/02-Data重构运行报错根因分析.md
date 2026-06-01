@@ -442,7 +442,7 @@ bash Data/DataOS/Tools/build-authoring-db.sh
 bash Data/DataOS/Tools/generate-runtime-snapshot.sh Data/DataOS/Authoring/slimeainew.authoring.db Data/DataOS/Snapshots/runtime_snapshot.json
 python3 Data/DataOS/Tools/generate-data-key-handles.py Data/DataOS/Snapshots/runtime_snapshot.json Data/DataKey/Generated/DataKey_Generated.cs
 dotnet build Brotato_my.csproj --no-restore
-godot --headless --path . --scene res://Src/ECS/Test/SingleTest/ECS/DataOS/DataSnapshotApplyTestScene.tscn
+godot --headless --path . --scene res://Src/ECS/Runtime/Data/Tests/DataOS/DataSnapshotApplyTestScene.tscn
 godot --headless --path . --scene res://Src/ECS/Test/GlobalTest/MainTest/MainTest.tscn
 ```
 

@@ -160,14 +160,10 @@ DataKeys/
 
 ```text
 Src/ECS/Runtime + Src/ECS/Capabilities
-DocsAI/ECS/Runtime + DocsAI/ECS/Capabilities
+DocsAI/ECS/Runtime + DocsAI/ECS/Capabilities + DocsAI/ECS/Tools + DocsAI/ECS/UI
 ```
 
-并把 DocsOld 原始理念文档移动到：
-
-```text
-DocsAI/ECS/Foundations/
-```
+`Foundation/Foundations` 不再作为当前路由层；历史概念材料按 owner 分散到 `Concepts/`，或进入 `DocsAI/Archive/` / `DocsAI/思考/` 并标注非执行入口。
 
 这样 AI 的默认路径变成：
 
@@ -180,4 +176,3 @@ AGENTS.md
 -> Src/ECS/Capabilities/<owner>/
 -> Tests / validation
 ```
-

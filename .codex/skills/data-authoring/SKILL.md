@@ -8,9 +8,11 @@ description: 修改 SlimeAI DataOS schema、migration、snapshot generator、val
 ## 必读入口
 
 - `DocsAI/DataOS/Overview.md`
-- `DocsAI/GameOS/Contracts.md`
-- `DocsAI/GameOS/ApiIndex.md`
-- `DocsAI/ProjectState.md`
+- `DocsAI/README.md`
+- `DocsAI/ECS/Runtime/Data/Data系统说明.md`
+- `DocsAI/ECS/Capabilities/Ability/README.md`
+- `DocsAI/ECS/Capabilities/Feature/README.md`
+- `DocsAI/ECS/Capabilities/Unit/README.md`
 - `/home/slime/Code/SlimeAI/Games/BrotatoLike/DocsAI/GameProjectState.md`
 
 ## 源码位置
@@ -20,8 +22,10 @@ description: 修改 SlimeAI DataOS schema、migration、snapshot generator、val
 - `DataOS/Generators/`
 - `DataOS/Validation/`
 - 旧 ECS PRJ-0002 DataOS: `/home/slime/Code/SlimeAI/SlimeAI/Data/DataOS/`
-- `GameOS/Runtime/Data/`
-- `GameOS/Capabilities/*/*DataKeys.cs`
+- `Src/ECS/Runtime/Data/`
+- `Data/DataKey/`
+- `Src/ECS/Capabilities/*/Events/`
+- `Src/ECS/Capabilities/*/`
 - `/home/slime/Code/SlimeAI/Games/BrotatoLike/DataOS/Authoring/BrotatoLike.seed.sql`
 
 ## 规则
@@ -43,12 +47,7 @@ description: 修改 SlimeAI DataOS schema、migration、snapshot generator、val
 ## 验证
 
 ```bash
-Tools/run-build.sh
-Tools/run-tests.sh
-Tools/run-dataos-validate.sh
-cd /home/slime/Code/SlimeAI/Games/BrotatoLike
-Tools/run-dataos-snapshot.sh
-Tools/run-build.sh
-Tools/run-godot-scene.sh run res://Src/Validation/Game/UnitComposition/BrotatoLikeUnitCompositionValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
+dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
+bash Data/DataOS/Tools/validate-dataos.sh Data/DataOS/Authoring/slimeainew.authoring.db
+# 如果承载游戏提供 runner，再执行游戏 DataOS snapshot 与 Godot smoke。
 ```

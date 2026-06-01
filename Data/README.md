@@ -54,15 +54,15 @@
 - **说明**：这是资源索引系统，不等同于 `Data` 容器数据。
 - **详细文档**：见 [`Data/ResourceManagement/README.md`](ResourceManagement/README.md)
 
-## 与 `Src/ECS/Data` 的关系
+## 与 `Src/ECS/Runtime/Data` 的关系
 
 - **`Data/` 目录**：定义“配置写什么、键叫什么、事件怎么约定”。
-- **`Src/ECS/Base/Data/`**：定义“运行时怎么加载、怎么存、怎么约束、怎么计算”。
+- **`Src/ECS/Runtime/Data/`**：定义“运行时怎么加载、怎么存、怎么约束、怎么计算”。
 
 可理解为：
 
 - `Data/` 决定**数据内容与协议**。
-- `Src/ECS/Base/Data/` 决定**数据容器与运行时行为**。
+- `Src/ECS/Runtime/Data/` 决定**数据容器与运行时行为**。
 
 ## 常见工作流
 

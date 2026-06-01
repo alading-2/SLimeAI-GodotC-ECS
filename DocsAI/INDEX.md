@@ -2,7 +2,7 @@
 
 > 状态：current
 > 定位：SlimeAI 框架仓统一文档入口，AI-first 设计。
-> 更新：2026-05-31
+> 更新：2026-06-01
 
 ## 入口
 
@@ -11,7 +11,7 @@
 | [管理/README.md](./管理/README.md) | DocsAI 管理规则入口 |
 | [管理/DocsAI统一管理与索引规则.md](./管理/DocsAI统一管理与索引规则.md) | 统一事实源、文档分层、索引维护、迁移规则 |
 | [ECS框架与AIFirst方向决策.md](./ECS框架与AIFirst方向决策.md) | 方向决策事实源 |
-| [ECS/README.md](./ECS/README.md) | 框架核心文档总览 + 阅读顺序 |
+| [ECS/README.md](./ECS/README.md) | 框架核心文档总览 + Runtime / Capabilities 阅读顺序 |
 | [思考/README.md](./思考/README.md) | 设计思考与深度分析 |
 | [Archive/README.md](./Archive/README.md) | 历史归档（不作为执行依据） |
 
@@ -24,8 +24,8 @@
 | 场景 | 读取目标 |
 | ---- | ---- |
 | 要维护 DocsAI 结构、索引或迁移规则 | `管理/DocsAI统一管理与索引规则.md` |
-| 不懂概念或边界 | `ECS/README.md` 中对应 owner 的完整文档入口 |
-| 要改代码或接入功能 | 对应 owner 的完整迁移文档和 `../Src/ECS/**` 源码 |
+| 不懂概念或边界 | `ECS/README.md` 中对应 Runtime、Capability、Tools 或 UI owner 的完整文档入口 |
+| 要改代码或接入功能 | 优先读 `ECS/Capabilities/<owner>/` 或 `ECS/Runtime/<owner>/`，再进入 `../Src/ECS/Capabilities/<owner>/` 或 `../Src/ECS/Runtime/<owner>/`；迁移未完成时查 `管理/目录架构迁移清单.md` |
 | 要验证或 Debug | 对应 owner 的测试章节、`Tests.md` 或验证脚本 |
 | 需要理解设计思考 | `思考/<主题>/` |
 | 需要理解历史决策 | `Archive/` 或 Concept.md 的"历史备注"节 |

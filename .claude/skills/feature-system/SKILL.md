@@ -1,6 +1,6 @@
 ---
 name: feature-system
-description: 修改 SlimeAI.GameOS FeatureService、FeatureDefinition、FeatureModifierEntry、IFeatureHandler、IFeatureAction、FeatureAutoTriggerService 或 Feature 与 Ability 接入时使用。
+description: 修改 SlimeAI ECS Feature Capability、FeatureDefinition、FeatureModifierEntry、IFeatureHandler、IFeatureAction、FeatureAutoTriggerService 或 Feature 与 Ability 接入时使用。
 ---
 
 # Feature Capability 入口
@@ -8,17 +8,21 @@ description: 修改 SlimeAI.GameOS FeatureService、FeatureDefinition、FeatureM
 ## 必读入口
 
 - `DocsAI/README.md` — 方向决策入口
-- `DocsAI/ECS/` — 模块事实源
+- `DocsAI/ECS/Capabilities/Feature/README.md`
+- `DocsAI/ECS/Capabilities/Ability/README.md`
+- `DocsAI/ECS/Capabilities/Damage/README.md`
+- `DocsAI/ECS/Runtime/Data/Data系统说明.md`
 - `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/` — 设计文档
 
 ## 源码位置
 
-- `GameOS/Capabilities/Feature/`
-- `GameOS/Capabilities/Ability/`
-- `GameOS/Capabilities/Damage/`
+- `Src/ECS/Capabilities/Feature/`
+- `Src/ECS/Capabilities/Ability/`
+- `Src/ECS/Capabilities/Damage/`
+- `Data/Data/Feature/`
+- `Data/DataKey/Feature/`
 - `/home/slime/Code/SlimeAI/Games/BrotatoLike/Src/Game/BrotatoLikeAbilityHandlers.cs`
-- `Tests/SlimeAI.GameOS.Tests/`
-- 旧 ECS Feature bridge (historical): `Src/ECS/Base/System/FeatureSystem/`
+- historical migrated-from: `Src/ECS/Base/System/FeatureSystem/`
 
 ## 规则
 
@@ -34,10 +38,8 @@ description: 修改 SlimeAI.GameOS FeatureService、FeatureDefinition、FeatureM
 ## 验证
 
 ```bash
-Tools/run-build.sh
-Tools/run-tests.sh
-cd /home/slime/Code/SlimeAI/Games/BrotatoLike
-Tools/run-build.sh
-Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/Feature/FeatureCapabilityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
+dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
+# 如果承载游戏提供 runner，再执行 Godot smoke:
+# cd /home/slime/Code/SlimeAI/Games/<GameWithRunner>
+# Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 ```

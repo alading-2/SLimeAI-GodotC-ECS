@@ -78,11 +78,11 @@ Data/EventType/Entity/GameEventType_Entity.cs
 测试：
 
 ```text
-Src/ECS/Test/SingleTest/ECS/Entity/EntityIdRuntimeTest.cs
-Src/ECS/Test/SingleTest/ECS/Entity/LifecycleTreeTest.cs
-Src/ECS/Test/SingleTest/ECS/Entity/EntitySpawnPipelineTest.cs
-Src/ECS/Test/SingleTest/ECS/Entity/ComponentRegistrarTest.cs
-Src/ECS/Test/SingleTest/ECS/Entity/OwnedReferenceRegistryTest.cs
+Src/ECS/Runtime/Entity/Tests/EntityIdRuntimeTest.cs
+Src/ECS/Runtime/Entity/Tests/LifecycleTreeTest.cs
+Src/ECS/Runtime/Entity/Tests/EntitySpawnPipelineTest.cs
+Src/ECS/Runtime/Entity/Tests/ComponentRegistrarTest.cs
+Src/ECS/Runtime/Entity/Tests/OwnedReferenceRegistryTest.cs
 Src/ECS/Test/SingleTest/ECS/Damage/DamageAttributionTest.cs
 ```
 

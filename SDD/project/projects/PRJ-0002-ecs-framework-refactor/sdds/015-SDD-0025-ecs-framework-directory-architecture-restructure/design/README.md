@@ -43,8 +43,7 @@ DocsAI/ECS/
 ├── Runtime/
 ├── Capabilities/
 ├── Tools/
-├── UI/
-└── Foundations/
+└── UI/
 ```
 
 ## 核心裁决
@@ -53,7 +52,7 @@ DocsAI/ECS/
 2. **物理入口按 Capability 聚合**：AI 修改 Ability、Damage、Movement 等功能时，优先进入同一个 owner 目录，而不是跨 Component/System/Event/Test 多处搜索。
 3. **Runtime 只放跨域基础设施**：Entity identity/lifecycle、Data runtime、EventBus、System lifecycle 进入 Runtime；业务能力不得塞回 Runtime。
 4. **Capability 内部保留 ECS 子结构**：每个功能域允许 `Component/`、`System/`、`Events/`、`Tests/`、`DataKeys/`、`Docs` 索引，但这些只是 owner 内部结构，不再作为顶层路由。
-5. **DocsOld 原文迁入 `DocsAI/ECS/Foundations/`**：原文直接复制，不重写，不作为当前执行入口；用于保存历史理念、设计根基和追溯上下文。
+5. **不保留 `Foundation/Foundations` 当前路由层**：历史概念材料按 owner 分散到 `Concepts/`，或进入 `DocsAI/Archive/` / `DocsAI/思考/` 并显式标注非执行入口。
 
 ## 阅读顺序
 
@@ -68,7 +67,7 @@ DocsAI/ECS/
 
 - 承接 `DocsAI/ECS框架与AIFirst方向决策.md`：AI-first 是工程方式，不是放弃 ECS。
 - 承接 AiFirst 参考项目的 `GameOS/Capabilities` 优点：功能 owner 自包含、依赖显式、测试和事件就近。
-- 覆盖早期 `DocsAI/ECS` 按 Entity/Data/Event/Component/System 分类的文档组织方式，但不立即删除旧文档；具体迁移由 SDD-0025 分阶段执行。
+- 覆盖早期 `DocsAI/ECS` 按 Entity/Data/Event/Component/System 分类的文档组织方式；当前入口是 Runtime / Capabilities / Tools / UI。
 - 不改变 DataOS descriptor-first / generated handle / runtime snapshot 当前事实源。
 - 不改变 Entity hard cutover 的裁决；目录重构必须在 SDD-0024 已完成结果上执行，不恢复旧 Relationship。
 
@@ -79,4 +78,3 @@ DocsAI/ECS/
 - 不一次性重写系统逻辑。
 - 不把 BrotatoLike 专属玩法、UI 或资产路径上提为框架默认。
 - 不在本设计中定义每个文件的最终命名空间重构细节；命名空间和 Godot `.tscn` 路径修正属于 SDD-0025 执行任务。
-

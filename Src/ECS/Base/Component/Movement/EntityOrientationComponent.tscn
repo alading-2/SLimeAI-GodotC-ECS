@@ -1,6 +1,0 @@
-[gd_scene format=3]
-
-[ext_resource type="Script" path="res://Src/ECS/Base/Component/Movement/EntityOrientationComponent.cs" id="1_orientation"]
-
-[node name="EntityOrientationComponent" type="Node"]
-script = ExtResource("1_orientation")

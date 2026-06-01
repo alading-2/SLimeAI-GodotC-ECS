@@ -8,6 +8,8 @@ public enum ResourceCategory
     Entity,
     /// <summary>Component</summary>
     Component,
+    /// <summary>Preset 场景预设（组合若干组件或 owner 默认结构，不是运行时 Component 类型）</summary>
+    Preset,
     /// <summary>UI</summary>
     UI,
     /// <summary>Asset 资源（未匹配子分类时的兜底）</summary>

@@ -7,14 +7,16 @@ description: 迁移或设计 SlimeAI / BrotatoLike UI、HUD、响应式绑定、
 
 ## 当前边界
 
-- 通用 UI 绑定协议尚未作为 GameOS 稳定 Capability 完成。
+- 通用 UI 绑定协议尚未作为 ECS 稳定 UI/Capability 完成。
 - BrotatoLike 真实 UI / 输入 / 场景内容后续从 `MigrationInput/` 迁入游戏仓库。
 - 框架层只沉淀可复用协议；游戏视觉、布局和具体 HUD 放 `Games/BrotatoLike`。
 
 ## 必读入口
 
 - `DocsAI/ProjectState.md`
-- `DocsAI/GameOS/Contracts.md`
+- `DocsAI/ECS/README.md`
+- `DocsAI/ECS/UI/`
+- `Src/ECS/UI/`
 - `/home/slime/Code/SlimeAI/Games/BrotatoLike/DocsAI/GameProjectState.md`
 - `/home/slime/Code/SlimeAI/Games/BrotatoLike/MigrationInput/`
 
@@ -27,8 +29,8 @@ description: 迁移或设计 SlimeAI / BrotatoLike UI、HUD、响应式绑定、
 ## 验证
 
 ```bash
-cd /home/slime/Code/SlimeAI/Games/BrotatoLike
-Tools/run-build.sh
-Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
-Tools/analyze-godot-scene-logs.sh
+# 如果承载游戏提供 runner，再执行 UI smoke：
+# cd /home/slime/Code/SlimeAI/Games/<GameWithRunner>
+# Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
+# Tools/analyze-godot-scene-logs.sh
 ```

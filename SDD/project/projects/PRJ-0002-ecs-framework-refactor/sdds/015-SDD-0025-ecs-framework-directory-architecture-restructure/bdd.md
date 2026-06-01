@@ -31,8 +31,8 @@ Given `.tscn` files reference scripts or PackedScenes under old `res://Src/ECS/B
 When a migration slice moves those files
 Then the same slice updates scene paths and verifies the affected build or scene smoke
 
-### Scenario: DocsOld concepts are preserved without becoming current execution docs
+### Scenario: Historical concepts do not become current execution docs
 
 Given DocsOld contains historical concept and design documents
-When they are migrated into `DocsAI/ECS/Foundations/`
-Then their original text remains intact and a new index explains source and current status without making Foundations the default execution入口
+When the directory restructure is complete
+Then current routing does not include `DocsAI/ECS/Foundations/`, and any preserved historical material is either placed under an owner `Concepts/` directory or marked as non-execution context in Archive/Thinking

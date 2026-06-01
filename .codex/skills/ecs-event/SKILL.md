@@ -1,29 +1,29 @@
 ---
 name: ecs-event
-description: 修改 SlimeAI.GameOS EventBus、WorldEvents、Capability 事件或事件通信协议时使用；skill ID 暂保留 ecs-event 只为兼容搜索，不表示传统 ECS event layer。
+description: 修改 SlimeAI ECS EventBus、GlobalEventBus、Capability 事件或事件通信协议时使用；skill ID 暂保留 ecs-event 只为兼容搜索，不表示传统 ECS event layer。
 ---
 
 # Runtime Event 入口
 
 ## 必读入口
 
-- `DocsAI/GameOS/Contracts.md`
-- `DocsAI/GameOS/ApiIndex.md`
-- `DocsAI/ProjectState.md`
+- `DocsAI/ECS/Runtime/Event/Event系统说明.md`
+- `DocsAI/ECS/Runtime/README.md`
+- `DocsAI/ECS/Capabilities/README.md`
 
 ## 源码位置
 
-- `GameOS/Runtime/Event/`
-- `GameOS/Runtime/Data/EventDataChangeSink.cs`
-- `Tests/SlimeAI.GameOS.Tests/`
+- `Src/ECS/Runtime/Event/`
+- `Src/ECS/Capabilities/*/Events/`
+- `Src/ECS/Runtime/Event/Global/`
+- `Src/ECS/Capabilities/*/`
 
 ## 规则
 
-- 实体内通信优先 `RuntimeEntity.Events`。
-- 全局低频广播才用 `WorldEvents.World` / world bus。
-- World event handler 派发期间会进入 `RuntimeWorld.Commands.EnterGuard("event-dispatch:" + typeof(TEvent).Name)`；handler 内调用 `Spawn / Destroy / Attach / Detach` 会进入 Runtime CommandBuffer，并在目标 `SchedulePhase` playback。
-- `QueuedEvent` deferred replay 第一阶段只支持 framework-known `IGlobalEvent` record；不要把 game-specific dynamic event、输入事件或 UI 事件塞进 `QueuedEventCommandPayload`。
-- 新事件 payload 优先放到对应 Capability 的 `Events/` 目录；不要恢复旧 `GameEventType` 作为新入口。
+- 实体内通信优先 `Entity.Events`。
+- 全局低频广播才用 `GlobalEventBus.Global`。
+- 当前仓尚未落地 `RuntimeWorld / CommandBuffer / WorldEvents`；不要按旧 GameOS 路线新增 deferred event queue。
+- 新事件 payload 放到对应 Capability 的 `Events/` 目录；全局事件放 `Src/ECS/Runtime/Event/Global/`。`Data/EventType/` 已迁移完毕，不再使用旧路径。
 - 框架不持有 game-specific 玩法事件：名称或 payload 依赖波次、主动技能、鼠标选择、卡牌、天赋、具体输入动作、具体游戏 UI / 资产时，放到 `Games/<Game>/Src/Game/Event/`。
 - 框架 Runtime event payload 不直接持有 Godot `Vector2 / Rect2 / Node` 等引擎类型；需要这些类型时默认是游戏侧事件。
 - 框架仓 `SlimeAI/` 禁止 `using BrotatoLike`、`BrotatoLike.Game.*` 或其它游戏 namespace 反向依赖。
@@ -47,12 +47,11 @@ description: 修改 SlimeAI.GameOS EventBus、WorldEvents、Capability 事件或
 ## 验证
 
 ```bash
-Tools/run-build.sh
-Tools/run-tests.sh
+dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
 ```
 
 ## Phase tick 与 event dispatch guard
 
 - 事件 handler 内需要结构变更时，继续调用正式入口（`EntityManager.Spawn / Destroy`、`LifecycleTree.Attach / Detach`），不要新增事件专属 deferred queue。
 - Guard 内 `Spawn` 返回 reserved `RuntimeEntity`，可立即写 `Data.Set`，但同 guard 内 `world.Entities.Get(id)` 返回 `null`。
-- 需要验证 deferred 语义时，用 scoped world：`using var world = RuntimeWorld.CreateScoped(); using var guard = world.Commands.EnterGuard("test"); ...; world.Schedule.RunPhase(SchedulePhase.Manual);`。
+- 如需引入 deferred event / command buffer 语义，先创建 SDD 设计并明确 Runtime 目录、验证场景和迁移范围。

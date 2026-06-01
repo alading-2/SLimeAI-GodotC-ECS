@@ -2,8 +2,8 @@
 
 > status: current
 > sourcePaths: Src/ECS/Tools/Math/
-> relatedDocs: DocsAI/ECS/Tools/Math/Usage.md
-> lastReviewed: 2026-05-30
+> relatedDocs: DocsAI/ECS/Tools/Math/Usage.md, DocsAI/ECS/Tools/Math/Concepts/通用数学工具重构执行方案.md
+> lastReviewed: 2026-06-01
 
 ## 1. 一句话定位
 

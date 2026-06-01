@@ -118,7 +118,7 @@ TryResolveRecordByConfig(config.Config)
 
 - `SlimeAI/Src/ECS/Base/Data/DataRegistry.cs`
 - `SlimeAI/Src/ECS/Base/Data/DataMeta.cs`
-- `SlimeAI/Src/ECS/Test/SingleTest/ECS/DataOS/DataSceneTestBase.cs` 的 `Meta(...)` 测试辅助仍构造 `new DataMeta`
+- `SlimeAI/Src/ECS/Runtime/Data/Tests/DataOS/DataSceneTestBase.cs` 的 `Meta(...)` 测试辅助仍构造 `new DataMeta`
 
 这不等同于旧字段注册仍大量存在，但它说明旧类型还没有从运行时模型中彻底退出。
 

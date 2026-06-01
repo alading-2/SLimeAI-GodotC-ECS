@@ -1,0 +1,91 @@
+/// <summary>
+/// 事件上下文基类
+/// 
+/// Context Object Pattern 用于事件系统中的"请求-响应"模式：
+/// - 发布者创建 Context 对象并通过事件传递
+/// - 订阅者修改 Context（填写结果、设置阻止等）
+/// - 发布者读取 Context 获取处理结果
+/// 
+/// 详细设计文档：DocsAI/ECS/Runtime/Event/Event系统说明.md
+/// </summary>
+public class EventContext
+{
+    // ================= 流程控制 =================
+
+    /// <summary>
+    /// 是否已处理（任一订阅者标记后保持）
+    /// </summary>
+    public bool IsHandled { get; protected set; }
+
+    /// <summary>
+    /// 是否阻止后续订阅者执行
+    /// 类似 DOM Event 的 stopPropagation()
+    /// </summary>
+    public bool IsPropagationStopped { get; private set; }
+
+    /// <summary>
+    /// 阻止事件继续传播给后续订阅者
+    /// </summary>
+    public void StopPropagation() => IsPropagationStopped = true;
+
+    // ================= 结果状态 =================
+
+    /// <summary>
+    /// 操作/检查是否成功（默认 true）
+    /// - 对于检查型事件：true 表示允许，false 表示阻止
+    /// - 对于操作型事件：true 表示成功，false 表示失败
+    /// </summary>
+    public bool Success { get; protected set; } = true;
+
+    /// <summary>
+    /// 失败/阻止原因
+    /// </summary>
+    public string? FailReason { get; protected set; }
+
+    /// <summary>
+    /// 标记为失败或阻止
+    /// </summary>
+    /// <param name="reason">原因</param>
+    public void SetFailed(string reason)
+    {
+        Success = false;
+        IsHandled = true;
+        // 记录第一个失败原因
+        FailReason ??= reason;
+    }
+
+    // ================= 通用结果返回 =================
+
+    /// <summary>
+    /// 通用结果存储（用于事件处理器返回强类型结果）
+    /// 使用示例：
+    /// <code>
+    /// var ctx = new EventContext();
+    /// Events.Emit(new GameEventType.Ability.TryTrigger(ctx));
+    /// var result = ctx.GetResult&lt;TriggerResult&gt;();
+    /// </code>
+    /// </summary>
+    private object? _result;
+
+    /// <summary>
+    /// 设置强类型结果
+    /// </summary>
+    public void SetResult<T>(T result)
+    {
+        _result = result;
+        IsHandled = true;
+    }
+
+    /// <summary>
+    /// 获取强类型结果
+    /// </summary>
+    public T? GetResult<T>()
+    {
+        return _result is T typedResult ? typedResult : default;
+    }
+
+    /// <summary>
+    /// 检查是否有结果
+    /// </summary>
+    public bool HasResult => _result != null;
+}

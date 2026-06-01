@@ -17,7 +17,7 @@
     "capability",
     "docsai"
   ],
-  "current_sdd": "SDD-0025",
+  "current_sdd": "SDD-0026",
   "sdds": [
     {
       "id": "SDD-0011",
@@ -122,7 +122,14 @@
       "slug": "ecs-framework-directory-architecture-restructure",
       "title": "ECS Framework Directory Architecture Restructure",
       "order": 15,
-      "status": "pending"
+      "status": "done"
+    },
+    {
+      "id": "SDD-0026",
+      "slug": "input-contract-manifest-and-facade-hardening",
+      "title": "Input Contract Manifest And Facade Hardening",
+      "order": 16,
+      "status": "active"
     }
   ],
   "links": {

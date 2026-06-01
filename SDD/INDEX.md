@@ -2,10 +2,10 @@
 
 ## Summary
 
-- **pending**: 1
-- **active**: 0
+- **pending**: 0
+- **active**: 1
 - **blocked**: 0
-- **done**: 24
+- **done**: 25
 - **projects**: 2
 
 ## Projects
@@ -13,17 +13,17 @@
 | ID | Title | Status | Bucket | Current SDD | Path |
 | --- | --- | --- | --- | --- | --- |
 | PRJ-0001 | SystemAgent Optimization | active | projects | SDD-0008 | SDD/project/projects/PRJ-0001-systemagent-optimization |
-| PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0025 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
+| PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0026 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
 
 ## Pending
 
-| ID | Project | Title | Updated | Scope | Current Task |
-| --- | --- | --- | --- | --- | --- |
-| SDD-0025 | PRJ-0002 | ECS Framework Directory Architecture Restructure | 2026-06-01 | SlimeAI | T1.1 |
+无。
 
 ## Active
 
-无。
+| ID | Project | Title | Updated | Scope | Current Task |
+| --- | --- | --- | --- | --- | --- |
+| SDD-0026 | PRJ-0002 | Input Contract Manifest And Facade Hardening | 2026-06-01 | SlimeAI | T1.1 |
 
 ## Blocked
 
@@ -57,6 +57,7 @@
 | SDD-0022 | PRJ-0002 | Data Projection Diagnostics Contract Hardening | 2026-05-30 | SlimeAI | done |
 | SDD-0023 | PRJ-0002 | SystemAgent Root Migration Rule Sync | 2026-05-30 | SlimeAI | done |
 | SDD-0024 | PRJ-0002 | Entity Relationship Full Rewrite | 2026-06-01 | SlimeAI | done |
+| SDD-0025 | PRJ-0002 | ECS Framework Directory Architecture Restructure | 2026-06-01 | SlimeAI | done |
 
 ## By Scope
 
@@ -77,6 +78,7 @@
 - SDD-0023 — SystemAgent Root Migration Rule Sync
 - SDD-0024 — Entity Relationship Full Rewrite
 - SDD-0025 — ECS Framework Directory Architecture Restructure
+- SDD-0026 — Input Contract Manifest And Facade Hardening
 
 ### Workspace/SDD
 
@@ -99,6 +101,10 @@
 ### ai-config
 
 - SDD-0023 — SystemAgent Root Migration Rule Sync
+
+### ai-first
+
+- SDD-0026 — Input Contract Manifest And Facade Hardening
 
 ### bootstrap
 
@@ -127,6 +133,10 @@
 ### compute
 
 - SDD-0016 — Data Compute Resolver Runtime
+
+### controller
+
+- SDD-0026 — Input Contract Manifest And Facade Hardening
 
 ### data
 
@@ -208,6 +218,10 @@
 ### hook
 
 - SDD-0007 — Hook and Gate P0 Stability
+
+### input
+
+- SDD-0026 — Input Contract Manifest And Facade Hardening
 
 ### migration
 
@@ -298,6 +312,10 @@
 ### tdd
 
 - SDD-0012 — Data System Full Rewrite - Catalog TDD Slice
+
+### tools
+
+- SDD-0026 — Input Contract Manifest And Facade Hardening
 
 ### workflow
 

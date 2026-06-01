@@ -2,7 +2,7 @@
 
 > 状态：current
 > 定位：DocsAI 文档治理、索引、迁移和维护规则。
-> 更新：2026-05-31
+> 更新：2026-06-01
 
 ## 定位
 
@@ -21,6 +21,7 @@
 | ---- | ---- |
 | [DocsAI统一管理与索引规则.md](./DocsAI统一管理与索引规则.md) | DocsAI 统一事实源、文档分层、索引维护和迁移规则 |
 | [Src文档迁移清单.md](./Src文档迁移清单.md) | `Src/ECS` Markdown 文档迁入 `DocsAI/ECS` 的追溯清单 |
+| [目录架构迁移清单.md](./目录架构迁移清单.md) | SDD-0025 `Runtime + Capabilities` 目录重构的源码、DocsAI 和 Data/EventType/DataKey 迁移清单 |
 
 ## 维护要求
 

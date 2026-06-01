@@ -439,10 +439,10 @@ LegacyDataAuditReport 若保留，不能引用运行时 DataMeta。
 
 位置示例：
 
-- `SlimeAI/Src/ECS/Test/SingleTest/ECS/System/ActiveSkillInputTest/ActiveSkillInputTest.cs`
+- `SlimeAI/Src/ECS/Capabilities/Ability/Tests/ActiveSkillInputTest/ActiveSkillInputTest.cs`
 - `SlimeAI/Src/ECS/Test/SingleTest/ECS/System/AbilitySystemTest/AbilitySystemPipelineTest.cs`
 - `SlimeAI/Src/ECS/Test/SingleTest/ECS/System/Movement/MovementCollisionRuntimeTest.cs`
-- `SlimeAI/Src/ECS/Test/SingleTest/Tools/TargetSelector/TargetSelectorTest.cs`
+- `SlimeAI/Src/ECS/Tools/TargetSelector/Tests/TargetSelectorTest.cs`
 - 多个 `README.md` 示例
 
 问题：
@@ -555,10 +555,10 @@ Tools/run-dataos-validate.sh
 
 ```bash
 GODOT=/home/slime/Code/Godot/GodotEngine/4.x/Godot_v4.6.2-stable_mono_linux_x86_64/Godot_v4.6.2-stable_mono_linux.x86_64
-$GODOT --headless --path /home/slime/Code/SlimeAI/SlimeAI --scene res://Src/ECS/Test/SingleTest/ECS/DataOS/DataCatalogTestScene.tscn
-$GODOT --headless --path /home/slime/Code/SlimeAI/SlimeAI --scene res://Src/ECS/Test/SingleTest/ECS/DataOS/DataRuntimeTestScene.tscn
-$GODOT --headless --path /home/slime/Code/SlimeAI/SlimeAI --scene res://Src/ECS/Test/SingleTest/ECS/DataOS/DataSnapshotApplyTestScene.tscn
-$GODOT --headless --path /home/slime/Code/SlimeAI/SlimeAI --scene res://Src/ECS/Test/SingleTest/ECS/DataOS/DataFeatureBridgeTestScene.tscn
+$GODOT --headless --path /home/slime/Code/SlimeAI/SlimeAI --scene res://Src/ECS/Runtime/Data/Tests/DataOS/DataCatalogTestScene.tscn
+$GODOT --headless --path /home/slime/Code/SlimeAI/SlimeAI --scene res://Src/ECS/Runtime/Data/Tests/DataOS/DataRuntimeTestScene.tscn
+$GODOT --headless --path /home/slime/Code/SlimeAI/SlimeAI --scene res://Src/ECS/Runtime/Data/Tests/DataOS/DataSnapshotApplyTestScene.tscn
+$GODOT --headless --path /home/slime/Code/SlimeAI/SlimeAI --scene res://Src/ECS/Runtime/Data/Tests/DataOS/DataFeatureBridgeTestScene.tscn
 ```
 
 ## 8. 推荐执行顺序

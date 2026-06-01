@@ -47,13 +47,14 @@ sdds/015-SDD-0025-ecs-framework-directory-architecture-restructure/
 
 ```text
 Src/ECS/Runtime + Src/ECS/Capabilities
-DocsAI/ECS/Runtime + DocsAI/ECS/Capabilities + DocsAI/ECS/Foundations
+DocsAI/ECS/Runtime + DocsAI/ECS/Capabilities + DocsAI/ECS/Tools + DocsAI/ECS/UI
 ```
 
 不要把当前仓迁到 `GameOS/`。  
 不要删除 ECS 概念。  
 不要恢复旧 Relationship / DataMeta / DataRegistry 兼容路线。  
 不要把 Tools/UI 强行塞进 Capabilities；本 SDD 默认保留顶层，后续单独裁决。  
+不要创建或恢复 `DocsAI/ECS/Foundations` 作为 current 路由层；历史概念材料按 owner `Concepts/`、Archive 或 Thinking 收口。
 不要在 `Src/ECS` 新增框架 Markdown 文档。
 
 ## 执行循环
@@ -81,8 +82,8 @@ python3 Workspace/SDD/sdd.py validate SDD-0025
 跨多个 owner 或最终收口时跑：
 
 ```bash
-Tools/run-build.sh
-Tools/run-tests.sh
+dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
+bash Data/DataOS/Tools/validate-dataos.sh Data/DataOS/Authoring/slimeainew.authoring.db
 python3 Workspace/SDD/sdd.py validate --all
 bash Workspace/Tools/ai-config-sync/sync-ai-config.sh
 bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only
@@ -94,8 +95,7 @@ bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summa
 
 - `Src/ECS/Runtime` 承载 Runtime 内核。
 - `Src/ECS/Capabilities/<Owner>` 承载 Runtime 之外功能 owner。
-- `DocsAI/ECS/Runtime` 和 `DocsAI/ECS/Capabilities` 是 AI 默认文档入口。
-- `DocsAI/ECS/Foundations` 保存 DocsOld 原文迁入和来源索引。
+- `DocsAI/ECS/Runtime`、`DocsAI/ECS/Capabilities`、`DocsAI/ECS/Tools`、`DocsAI/ECS/UI` 是 AI 默认文档入口。
+- `Foundation/Foundations` 不作为 current 路由层。
 - 旧 `Base/` 和旧 DocsAI 分类不再作为默认入口。
-- 所有路径变更都有构建、测试、SDD 和必要 Godot 验证证据。
-
+- 所有路径变更都有构建、DataOS、SDD 和必要 Godot 验证证据。

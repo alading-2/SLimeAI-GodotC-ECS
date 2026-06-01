@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://cgixcuwqqfvep"]
+
+[ext_resource type="PackedScene" path="res://Src/ECS/Capabilities/AI/Component/AIComponent/AIComponent.tscn" id="2_2bh15"]
+[ext_resource type="PackedScene" uid="uid://b4x3w1y81aa2b" path="res://Src/ECS/Capabilities/Unit/Component/Common/AttackComponent/AttackComponent.tscn" id="2_sy2xn"]
+
+[node name="EnemyPreset" type="Node2D" unique_id=447881530]
+
+[node name="AIComponent" parent="." unique_id=915672749 instance=ExtResource("2_2bh15")]
+
+[node name="AttackComponent" parent="." unique_id=1365052583 instance=ExtResource("2_sy2xn")]

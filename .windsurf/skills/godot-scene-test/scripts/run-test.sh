@@ -51,7 +51,7 @@ if [[ -z "$SCENE" ]]; then
     echo ""
     echo "示例:"
     echo "  $0 --build res://Src/ECS/Test/GlobalTest/MainTest/MainTest.tscn"
-    echo "  $0 --no-retry res://Src/ECS/Test/SingleTest/ECS/System/Data/DataTestScene.tscn"
+    echo "  $0 --no-retry res://Src/ECS/Runtime/Data/Tests/DataOS/DataRuntimeTestScene.tscn"
     exit 1
 fi
 

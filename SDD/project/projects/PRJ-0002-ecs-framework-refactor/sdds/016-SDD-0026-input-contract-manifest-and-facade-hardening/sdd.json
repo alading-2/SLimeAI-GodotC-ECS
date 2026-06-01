@@ -1,0 +1,45 @@
+{
+  "id": "SDD-0026",
+  "slug": "input-contract-manifest-and-facade-hardening",
+  "title": "Input Contract Manifest And Facade Hardening",
+  "status": "active",
+  "type": "refactor",
+  "created_at": "2026-06-01",
+  "updated_at": "2026-06-01",
+  "scope": "SlimeAI",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI/SlimeAI"
+  ],
+  "affected_areas": [
+    "ecs/tools/input"
+  ],
+  "tags": [
+    "input",
+    "tools",
+    "ai-first",
+    "controller"
+  ],
+  "progress": {
+    "current_task": "T1.1",
+    "completed_tasks": 0,
+    "total_tasks": 7,
+    "percent": 0
+  },
+  "bdd": {
+    "required": true,
+    "reason": "本 SDD 改变 Input 业务语义 facade、DocsAI manifest 和 AI 改键工作流，需要行为验收。"
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0002",
+  "project_order": 16,
+  "shared_design_refs": [
+    "../../design/INDEX.md"
+  ]
+}

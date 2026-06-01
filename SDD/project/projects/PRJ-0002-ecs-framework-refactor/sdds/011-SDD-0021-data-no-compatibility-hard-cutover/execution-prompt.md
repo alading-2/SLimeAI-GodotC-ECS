@@ -150,10 +150,10 @@ jq -r '[.descriptors[] | {key: .stableKey, type: .valueType}] as $defs | .record
 
 Godot DataOS 场景验证：
 cd /home/slime/Code/SlimeAI/SlimeAI
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/DataOS/DataCatalogTestScene.tscn --build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/DataOS/DataRuntimeTestScene.tscn --build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/DataOS/DataSnapshotApplyTestScene.tscn --build
-node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Test/SingleTest/ECS/DataOS/DataFeatureBridgeTestScene.tscn --build
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Runtime/Data/Tests/DataOS/DataCatalogTestScene.tscn --build
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Runtime/Data/Tests/DataOS/DataRuntimeTestScene.tscn --build
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Runtime/Data/Tests/DataOS/DataSnapshotApplyTestScene.tscn --build
+node .codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs run res://Src/ECS/Runtime/Data/Tests/DataOS/DataFeatureBridgeTestScene.tscn --build
 
 最终 grep gate：
 cd /home/slime/Code/SlimeAI

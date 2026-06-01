@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-01 16:03",
+  "generated_at": "2026-06-01 21:51",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -45,7 +45,7 @@
         "capability",
         "docsai"
       ],
-      "current_sdd": "SDD-0025",
+      "current_sdd": "SDD-0026",
       "bucket": "projects",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor"
     }
@@ -602,7 +602,7 @@
       "id": "SDD-0025",
       "slug": "ecs-framework-directory-architecture-restructure",
       "title": "ECS Framework Directory Architecture Restructure",
-      "status": "pending",
+      "status": "done",
       "type": "refactor",
       "updated_at": "2026-06-01",
       "scope": "SlimeAI",
@@ -621,8 +621,30 @@
       ],
       "project_id": "PRJ-0002",
       "project_order": 15,
-      "current_task": "T1.1",
+      "current_task": "done",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/015-SDD-0025-ecs-framework-directory-architecture-restructure"
+    },
+    {
+      "id": "SDD-0026",
+      "slug": "input-contract-manifest-and-facade-hardening",
+      "title": "Input Contract Manifest And Facade Hardening",
+      "status": "active",
+      "type": "refactor",
+      "updated_at": "2026-06-01",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "ecs/tools/input"
+      ],
+      "tags": [
+        "input",
+        "tools",
+        "ai-first",
+        "controller"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 16,
+      "current_task": "T1.1",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/016-SDD-0026-input-contract-manifest-and-facade-hardening"
     }
   ]
 }

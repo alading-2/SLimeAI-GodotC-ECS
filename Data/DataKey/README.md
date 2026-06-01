@@ -23,7 +23,7 @@ Data/DataKey/
 2. 重新生成 `Data/DataOS/Snapshots/runtime_snapshot.json`。
 3. 运行 `Data/DataOS/Tools/generate-data-key-handles.py` 生成 handle。
 4. 更新 Component / System 调用点，直接使用 typed handle 或 snapshot projection。
-5. 运行 `Src/ECS/Test/SingleTest/ECS/DataOS/` 下的 DataOS 场景测试。
+5. 运行 `Src/ECS/Runtime/Data/Tests/DataOS/` 下的 DataOS 场景测试。
 
 ## 禁止
 

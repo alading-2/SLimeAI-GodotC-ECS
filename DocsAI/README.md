@@ -2,7 +2,7 @@
 
 > 状态：current
 > 定位：SlimeAI 框架仓文档统一入口，AI-first 设计。
-> 更新：2026-05-31
+> 更新：2026-06-01
 
 ## 快速导航
 
@@ -10,7 +10,7 @@
 | ---- | ---- |
 | [INDEX.md](./INDEX.md) | AI 路由索引 |
 | [管理/README.md](./管理/README.md) | DocsAI 治理、索引、迁移和维护规则 |
-| [ECS/README.md](./ECS/README.md) | 框架核心文档（Entity / Data / Event / Collision / Component / System / Tools / UI） |
+| [ECS/README.md](./ECS/README.md) | 框架核心文档（Runtime / Capabilities / Tools / UI） |
 | [ECS框架与AIFirst方向决策.md](./ECS框架与AIFirst方向决策.md) | 方向决策事实源 |
 | [思考/README.md](./思考/README.md) | 设计思考与深度分析 |
 | [Archive/README.md](./Archive/README.md) | 历史归档 |
@@ -19,8 +19,8 @@
 
 1. **方向定位**：读 [ECS框架与AIFirst方向决策.md](./ECS框架与AIFirst方向决策.md)。
 2. **文档规则**：读 [管理/DocsAI统一管理与索引规则.md](./管理/DocsAI统一管理与索引规则.md)，确认事实源和索引规则。
-3. **ECS 文档**：进入 [ECS/README.md](./ECS/README.md)，Component 文档暂时按 `Src/ECS/Base/Component/` 对齐读取。
-4. **执行前**：读 `ECS/README.md` 中对应 owner 的完整文档入口，再进入 `Src/ECS/` 阅读源码。
+3. **ECS 文档**：进入 [ECS/README.md](./ECS/README.md)，按 `Runtime/` 或 `Capabilities/` 找 owner。
+4. **执行前**：读 `ECS/README.md` 中对应 owner 的完整文档入口，再进入 `Src/ECS/Runtime/` 或 `Src/ECS/Capabilities/` 阅读源码；迁移未完成的 owner 按迁移清单追溯旧路径。
 5. **设计思考**：需要理解背景时进入 [思考/](./思考/)。
 6. **中大型任务**：进入 `../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/`。
 
@@ -30,11 +30,11 @@
 | ---- | ---- |
 | DocsAI 管理、索引、迁移规则 | `管理/` |
 | 框架方向决策 | `ECS框架与AIFirst方向决策.md` |
-| 模块概念、使用、测试 | `ECS/<分类>/<owner>/` 下的完整迁移文档；Component 暂时按 `ECS/Component/**` 镜像 `Src/ECS/Base/Component/**` |
+| 模块概念、使用、测试 | `ECS/Runtime/<owner>/`、`ECS/Capabilities/<owner>/`、`ECS/Tools/<owner>/`、`ECS/UI/`；迁移过渡期旧分类只作追溯 |
 | 设计思考、深度分析 | `思考/<主题>/` |
 | 历史决策参考 | `Archive/<分类>/` |
 | Data / Entity / Event 等优化设计 | `../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/` |
-| 当前源码入口 | `../Src/ECS/**` 源码；框架 Markdown 文档不放在 `Src/ECS` |
+| 当前源码入口 | `../Src/ECS/Runtime/**`、`../Src/ECS/Capabilities/**`、`../Src/ECS/Tools/**`、`../Src/ECS/UI/**` |
 | 工作区文档 | `../Workspace/DocsAI/` |
 
 ## 工作区文档
@@ -52,3 +52,4 @@
 - `思考/` 不作为代码修改的直接依据。
 - `思考/` 不保存已经确定的 DocsAI 管理规则，规则统一放入 `管理/`。
 - 不恢复 `Plans/` 目录。
+- 不把旧 `DocsAI/ECS/System`、`DocsAI/ECS/Component`、`Src/ECS/Base` 当作当前入口。

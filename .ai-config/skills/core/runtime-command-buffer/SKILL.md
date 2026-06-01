@@ -1,33 +1,33 @@
 ---
 name: runtime-command-buffer
-description: 修改 SlimeAI.GameOS RuntimeCommandBuffer、SchedulePhase、结构变更 guard、phase playback 或 deferred command payload 时使用。
+description: 设计或落地 SlimeAI ECS RuntimeCommandBuffer、SchedulePhase、结构变更 guard、phase playback 或 deferred command payload 时使用。
 ---
 
-# Runtime CommandBuffer 入口
+# Runtime CommandBuffer 设计入口
+
+> 当前仓尚未落地独立 `RuntimeWorld / RuntimeCommandBuffer` 源码目录；本 skill 保留为后续 Runtime 结构变更设计入口。实现前必须先创建或更新 SDD，不要把历史 GameOS 路径当作当前事实源。
 
 ## 必读入口
 
-- `DocsAI/GameOS/Contracts.md`
-- `DocsAI/GameOS/ApiIndex.md`
-- `DocsAI/GameOS/Observation.md`
-- `DocsAI/GameOS/Migration.md`
-- `DocsAI/ProjectState.md`
-- `Tests/SlimeAI.GameOS.Tests/CommandBuffer/`
+- `DocsAI/README.md`
+- `DocsAI/ECS/Runtime/README.md`
+- `DocsAI/ECS/Runtime/Entity/`
+- `DocsAI/ECS/Runtime/Event/`
+- `DocsAI/ECS/Runtime/System/`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/`
 
 ## 源码位置
 
-- `GameOS/Runtime/CommandBuffer/`
-- `GameOS/Runtime/Schedule/SchedulePhase.cs`
-- `GameOS/Runtime/Schedule/RuntimeSchedule.cs`
-- `GameOS/Runtime/World/RuntimeWorld.cs`
-- `GameOS/Runtime/World/EntityRegistry.cs`
-- `GameOS/Runtime/World/LifecycleTreeImpl.cs`
-- `GameOS/Runtime/World/WorldEventBus.cs`
-- `GameOS/Runtime/World/WorldEventBusImpl.cs`
-- `GameOS/GodotBridge/GameOSGodotBridge.cs`
+- 当前已落地 Runtime：`Src/ECS/Runtime/`
+- 当前 Entity runtime：`Src/ECS/Runtime/Entity/`
+- 当前 Event runtime：`Src/ECS/Runtime/Event/`
+- 当前 System runtime：`Src/ECS/Runtime/System/`
+- Runtime 测试入口：`Src/ECS/Runtime/**/Tests/`
+- Capability 测试入口：`Src/ECS/Capabilities/<owner>/Tests/`
 
 ## 设计规则
 
+- 以下规则来自待落地设计约束；若当前代码尚无对应类型，先补 SDD 设计和测试计划。
 - Deferred command 第一阶段固定为 8 种：`Spawn / Destroy / Attach / Detach / QueuedEvent / ResourceRequest / GodotNodeInstantiate / GodotNodeFree`。新增 kind 必须先建 SDD。
 - `DeferredRuntimeCommand` 使用 typed nullable payload fields；不要改成 `object Payload`、`Dictionary<string, object>`、`string PayloadKey / PayloadValue`。
 - 每种 command 必须通过 `DeferredRuntimeCommand.ForSpawn / ForDestroy / ForAttach / ForDetach / ForQueuedEvent / ForResourceRequest / ForGodotInstantiate / ForGodotFree` 构造，保持 `Kind` 与唯一 payload 字段一致。
@@ -39,8 +39,8 @@ description: 修改 SlimeAI.GameOS RuntimeCommandBuffer、SchedulePhase、结构
 
 - World event handler dispatch 会进入 `event-dispatch:<EventName>` guard。
 - Lifecycle attach/detach callback publish 会进入 `lifecycle-callback` guard。
-- `GameOSGodotBridge.RegisterComponent` 调用 `OnComponentRegistered`、`UnregisterComponents` 调用 `OnComponentUnregistered` 时进入 `godot-bridge-callback` guard。
-- 不要在 static `GameOSGodotBridge` 上新增 `_Process / _EnterTree / _ExitTree`；phase tick 由承载游戏节点显式编排。
+- GodotBridge adapter 注册 / 反注册 callback 需要进入 `godot-bridge-callback` guard。
+- 不要在 static bridge facade 上新增 `_Process / _EnterTree / _ExitTree`；phase tick 由承载游戏节点显式编排。
 
 ## Captured Entity 语义
 
@@ -72,6 +72,6 @@ description: 修改 SlimeAI.GameOS RuntimeCommandBuffer、SchedulePhase、结构
 ## 验证
 
 ```bash
-Tools/run-build.sh
-Tools/run-tests.sh
+dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
+python3 Workspace/SDD/sdd.py validate --all
 ```

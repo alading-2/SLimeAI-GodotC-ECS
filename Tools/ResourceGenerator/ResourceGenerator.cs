@@ -8,21 +8,40 @@ using System;
 class ResourceGenerator
 {
     // ============================================================
-    // 配置部分：key=扫描路径（相对项目根，正斜杠），value=资源分类
-    // 分类按最长前缀匹配，因此子路径可覆盖父路径
+    // 扫描根：只表达“去哪里找资源”，不再顺便表达分类。
+    // 分类由 CategoryRules + Capability 层规则决定，避免 Capabilities 被整体误归为 Component。
     // ============================================================
-    private static readonly Dictionary<string, ResourceCategory> ScanConfig = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly string[] ScanRoots =
+    {
+        "assets/Effect",
+        "assets/Unit",
+        "assets/Unit/Player",
+        "assets/Unit/Enemy",
+        "assets/Projectile",
+        "Src/ECS/Runtime",
+        "Src/ECS/Capabilities",
+        "Src/ECS/Tools",
+        "Src/ECS/UI",
+        "Src/ECS/Test",
+    };
+
+    // 显式分类规则按最长前缀匹配，用于资产根和少量非标准 runtime 资源。
+    private static readonly Dictionary<string, ResourceCategory> CategoryRules = new(StringComparer.OrdinalIgnoreCase)
     {
         { "assets/Effect", ResourceCategory.AssetEffect },
-        { "assets/Unit", ResourceCategory.AssetUnit },       // 长度 10 — 兜底
-        { "assets/Unit/Player", ResourceCategory.AssetUnitPlayer }, // 长度 18 — 自动更优先
-        { "assets/Unit/Enemy", ResourceCategory.AssetUnitEnemy },  // 长度 16 — 自动更优先
+        { "assets/Unit", ResourceCategory.AssetUnit },
+        { "assets/Unit/Player", ResourceCategory.AssetUnitPlayer },
+        { "assets/Unit/Enemy", ResourceCategory.AssetUnitEnemy },
         { "assets/Projectile", ResourceCategory.AssetProjectile },
-        { "Src/ECS/UI", ResourceCategory.UI },
-        { "Src/ECS/Base/Entity", ResourceCategory.Entity },
-        { "Src/ECS/Base/Component", ResourceCategory.Component },
-        { "Src/ECS/Base/System", ResourceCategory.System },
+        { "Src/ECS/Test/GlobalTest/VisualPreview/Entity", ResourceCategory.Entity },
+        { "Src/ECS/Test/SingleTest/ECS/ECSTest/Entity", ResourceCategory.Entity },
+        { "Src/ECS/Tools/Input/MouseSelection", ResourceCategory.System },
+        { "Src/ECS/UI/PauseMenu", ResourceCategory.System },
+        { "Src/ECS/Runtime/Entity", ResourceCategory.Entity },
+        { "Src/ECS/Runtime/Component", ResourceCategory.Component },
+        { "Src/ECS/Runtime/System", ResourceCategory.System },
         { "Src/ECS/Tools", ResourceCategory.Tools },
+        { "Src/ECS/UI", ResourceCategory.UI },
         { "Src/ECS/Test", ResourceCategory.Test },
     };
 
@@ -33,26 +52,23 @@ class ResourceGenerator
 
     private const string OutputFile = "Data/ResourceManagement/ResourcePaths.cs";
 
-    // 通过最长前缀匹配 ScanConfig 确定资源分类
+    // 通过最长前缀和 Capability 内部分层确定资源分类
     private static ResourceCategory GetCategoryFromPath(string resPath)
     {
         if (string.IsNullOrEmpty(resPath)) return ResourceCategory.Other;
         var relPath = resPath.StartsWith("res://") ? resPath.Substring(6) : resPath;
 
-        ResourceCategory best = ResourceCategory.Other;
-        int bestLen = -1;
-        foreach (var kv in ScanConfig)
+        if (TryGetBestCategoryRule(relPath, out var explicitCategory, out _))
         {
-            string prefix = kv.Key;
-            if ((relPath.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase) ||
-                 relPath.Equals(prefix, StringComparison.OrdinalIgnoreCase))
-                && prefix.Length > bestLen)
-            {
-                bestLen = prefix.Length;
-                best = kv.Value;
-            }
+            return explicitCategory;
         }
-        return best;
+
+        if (TryGetCapabilityLayer(relPath, out _, out var capabilityCategory))
+        {
+            return capabilityCategory;
+        }
+
+        return ResourceCategory.Other;
     }
 
     static void Main(string[] args)
@@ -74,8 +90,8 @@ class ResourceGenerator
         var resourcesByCategory = new Dictionary<ResourceCategory, Dictionary<string, string>>();
         var duplicates = new List<string>();
 
-        // 2. 扫描目录（路径来源于 ScanConfig 配置字典）
-        foreach (var relativePath in ScanConfig.Keys)
+        // 2. 扫描目录（路径来源于 ScanRoots；分类在 GetCategoryFromPath 中统一推导）
+        foreach (var relativePath in ScanRoots)
         {
             var fullPath = Path.Combine(projectRoot, relativePath);
             if (!Directory.Exists(fullPath))
@@ -206,8 +222,8 @@ class ResourceGenerator
             }
             if (isExcluded) continue;
 
-            // 若该子目录已在 ScanConfig 中单独配置，跳过（由独立扫描处理，避免重复）
-            if (ScanConfig.ContainsKey(relativePath)) continue;
+            // 若该子目录已作为独立扫描根，跳过（由独立扫描处理，避免重复）
+            if (IsConfiguredScanRoot(relativePath)) continue;
 
             ScanDirectory(subDir, projectRoot, resourcesByCategory, duplicates);
         }
@@ -217,15 +233,11 @@ class ResourceGenerator
     {
         string relPath = resPath.StartsWith("res://") ? resPath.Substring(6) : resPath;
 
-        // 通过 ScanConfig 找最长匹配前缀并剥离，与分类逻辑保持一致
-        int bestLen = -1;
-        foreach (var key in ScanConfig.Keys)
+        var namingRoot = GetNamingRoot(relPath);
+        if (!string.IsNullOrEmpty(namingRoot))
         {
-            if (relPath.StartsWith(key + "/", StringComparison.OrdinalIgnoreCase) && key.Length > bestLen)
-                bestLen = key.Length;
+            relPath = relPath.Substring(namingRoot.Length).TrimStart('/');
         }
-        if (bestLen > 0)
-            relPath = relPath.Substring(bestLen + 1); // +1 跳过分隔符 '/'
 
         if (relPath.EndsWith(".tscn", StringComparison.OrdinalIgnoreCase)) relPath = relPath.Substring(0, relPath.Length - 5);
         if (relPath.EndsWith(".tres", StringComparison.OrdinalIgnoreCase)) relPath = relPath.Substring(0, relPath.Length - 5);
@@ -237,6 +249,94 @@ class ResourceGenerator
 
         // 只取文件名（最后一段）；若同分类内出现重名，ResourceGenerator 日志会提示
         return filteredParts.Last().Replace("-", "_");
+    }
+
+    private static bool IsConfiguredScanRoot(string relativePath)
+    {
+        foreach (var root in ScanRoots)
+        {
+            if (relativePath.Equals(root, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TryGetBestCategoryRule(string relPath, out ResourceCategory category, out string prefix)
+    {
+        category = ResourceCategory.Other;
+        prefix = string.Empty;
+
+        foreach (var kv in CategoryRules)
+        {
+            if (MatchesPrefix(relPath, kv.Key) && kv.Key.Length > prefix.Length)
+            {
+                prefix = kv.Key;
+                category = kv.Value;
+            }
+        }
+
+        return prefix.Length > 0;
+    }
+
+    private static string GetNamingRoot(string relPath)
+    {
+        var bestPrefix = string.Empty;
+
+        if (TryGetBestCategoryRule(relPath, out _, out var explicitPrefix))
+        {
+            bestPrefix = explicitPrefix;
+        }
+
+        if (TryGetCapabilityLayer(relPath, out var capabilityRoot, out _)
+            && capabilityRoot.Length > bestPrefix.Length)
+        {
+            bestPrefix = capabilityRoot;
+        }
+
+        return bestPrefix;
+    }
+
+    private static bool TryGetCapabilityLayer(string relPath, out string layerRoot, out ResourceCategory category)
+    {
+        layerRoot = string.Empty;
+        category = ResourceCategory.Other;
+
+        var parts = relPath.Replace("\\", "/").Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length < 5
+            || !string.Equals(parts[0], "Src", StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(parts[1], "ECS", StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(parts[2], "Capabilities", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var layer = parts[4];
+        category = layer.ToLowerInvariant() switch
+        {
+            "entity" => ResourceCategory.Entity,
+            "component" => ResourceCategory.Component,
+            "system" => ResourceCategory.System,
+            "tests" => ResourceCategory.Test,
+            "presets" => ResourceCategory.Preset,
+            _ => ResourceCategory.Other,
+        };
+
+        if (category == ResourceCategory.Other)
+        {
+            return false;
+        }
+
+        layerRoot = string.Join('/', parts.Take(5));
+        return true;
+    }
+
+    private static bool MatchesPrefix(string relPath, string prefix)
+    {
+        return relPath.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase)
+               || relPath.Equals(prefix, StringComparison.OrdinalIgnoreCase);
     }
 
     private static void GenerateCode(string projectRoot, Dictionary<ResourceCategory, Dictionary<string, string>> resourcesByCategory)

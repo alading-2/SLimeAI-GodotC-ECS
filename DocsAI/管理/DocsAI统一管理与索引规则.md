@@ -2,7 +2,7 @@
 
 > 状态：current
 > 定位：DocsAI 统一事实源、分层、索引和迁移规则。
-> 更新：2026-05-31
+> 更新：2026-06-01
 
 ## 1. 总原则
 
@@ -24,6 +24,10 @@
 | ---- | ---- |
 | `DocsAI/管理/` | 已确定的 DocsAI 管理、索引、迁移、维护规则 |
 | `DocsAI/ECS/` | ECS 框架功能文档事实源 |
+| `DocsAI/ECS/Runtime/` | Entity / Data / Event / System Core 等共享 ECS 内核文档 |
+| `DocsAI/ECS/Capabilities/` | Ability / Damage / Movement 等功能 owner 文档 |
+| `DocsAI/ECS/Tools/` | Timer / ObjectPool / Input / TargetSelector / Logger 等通用工具文档 |
+| `DocsAI/ECS/UI/` | UI binding、HUD、调试 UI 与界面层规则 |
 | `DocsAI/思考/` | 框架功能背后的深度分析、设计推导、ADR、复盘 |
 | `DocsAI/Archive/` | 历史文档和失效资料归档 |
 | `Workspace/DocsAI/` | 工作区级文档，例如跨仓库、submodule、AI 流程 |
@@ -50,10 +54,12 @@ ECS owner 文档优先无损保存原文。`Concept.md`、`Usage.md`、`Tests.md
 
 功能归属规则：
 
-- `Base/` 不作为 DocsAI 分类，避免 `DocsAI/ECS/Base` 与 `DocsAI/ECS` 双入口。
-- `DocsAI/ECS/Component/` 暂时作为 Component 迁移区，与 `Src/ECS/Base/Component/` 保持目录对齐。
-- `Src/ECS/Base/Component/Ability/ChargeComponent/README.md` 对应 `DocsAI/ECS/Component/Ability/ChargeComponent/README.md`，其他 Component 文档同理保留原相对目录和原文件名。
-- 后续如果要把具体 Component 再按功能 owner 拆分，必须先更新本管理规则和迁移清单，不得临时移动造成索引漂移。
+- 新任务默认从 `Runtime/` 或 `Capabilities/` 进入，不从旧技术层分类进入。
+- `Runtime/` 只放跨功能共享的 ECS 内核：Entity identity/lifecycle、Data runtime、EventBus、System lifecycle。
+- `Capabilities/<Owner>/` 放用户会用功能词描述的 owner，例如 Ability、Damage、Movement、Collision、Feature、Effect、Projectile、AI、Spawn、Unit。
+- Capability 内部可以继续保留 Component / System / Events / Tests / DataKeys 语义；这些语义不再作为 DocsAI 顶层路由。
+- `Tools/` 和 `UI/` 保留顶层，不强行迁入 Capabilities。
+- 旧 `DocsAI/ECS/System/`、`DocsAI/ECS/Component/`、`DocsAI/ECS/Entity/`、`DocsAI/ECS/Data/`、`DocsAI/ECS/Event/` 不作为当前入口；需要保留的内容迁入对应 owner 的 `Concepts/` 或原文件名下。
 
 ## 4. Src 文档规则
 
@@ -79,6 +85,7 @@ ECS owner 文档优先无损保存原文。`Concept.md`、`Usage.md`、`Tests.md
 | ---- | ---- |
 | 新增或移动 DocsAI 顶层目录 | `DocsAI/README.md`、`DocsAI/INDEX.md` |
 | 新增或移动 ECS owner | `DocsAI/ECS/README.md` |
+| 新增或移动 Runtime / Capability owner | `DocsAI/ECS/README.md`、`DocsAI/ECS/Runtime/README.md`、`DocsAI/ECS/Capabilities/README.md`、`DocsAI/管理/目录架构迁移清单.md` |
 | 新增管理规则 | `DocsAI/管理/README.md` |
 | 新增深度思考 | `DocsAI/思考/README.md` |
 | 从 Src 迁移文档 | `DocsAI/管理/Src文档迁移清单.md`、`DocsAI/ECS/README.md` |
@@ -89,7 +96,7 @@ AI 读取顺序：
 2. `DocsAI/INDEX.md`
 3. `DocsAI/管理/DocsAI统一管理与索引规则.md`
 4. `DocsAI/ECS/README.md`
-5. 目标 owner 下的完整迁移文档
+5. 目标 `Runtime/<owner>` 或 `Capabilities/<owner>` 下的完整迁移文档；迁移未完成时按 `DocsAI/管理/目录架构迁移清单.md` 追溯旧路径
 6. 需要验证时读取 `Tests.md`、迁移文档中的测试章节或测试脚本
 7. 需要理解背景时读取相关 `DocsAI/思考/`
 

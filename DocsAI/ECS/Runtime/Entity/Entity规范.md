@@ -1,0 +1,278 @@
+<!-- migrated-from: Src/ECS/Base/Entity/Entity规范.md -->
+
+> 迁移来源：`Src/ECS/Base/Entity/Entity规范.md`
+> 迁移说明：本文主体从原 `Src/ECS` 文档迁入 `DocsAI` 统一管理；原 `Src/ECS` Markdown 文件已删除。
+> 状态：legacy-migrated；当前用法先读 `README.md` 和 `Entity使用说明.md`。
+> 校准：2026-05-31 Data / Event / DocsAI 更新后，本文旧示例中的 `DataKey.*`、`XxxEventData`、`string EntityId`、`GetInstanceId().ToString()` 不能作为新代码模板。
+
+# Entity 规范说明
+
+## 概述
+
+Entity 是 ECS 架构中的核心容器，代表一个游戏实体（玩家、敌人、子弹等）。在本项目的"伪 ECS"架构中，Entity 是 Godot Node，同时实现 `IEntity` 接口。
+
+**核心文件参考**：
+- [IEntity.cs](../../../Src/ECS/Runtime/Entity/IEntity.cs) - 接口定义
+- [TemplateEntity.cs](../../../Src/ECS/Runtime/Entity/TemplateEntity.cs) - 标准模板
+- [Entity使用说明.md](./Entity使用说明.md) - 当前 Data / Event / Entity hard cutover 边界
+
+---
+
+## IEntity 接口
+
+每个 Entity 必须实现 `IEntity` 接口：
+
+```csharp
+public interface IEntity
+{
+    /// <summary>动态数据容器</summary>
+    Data Data { get; }
+    
+    /// <summary>局部事件总线</summary>
+    EventBus Events { get; }
+}
+```
+
+> hard cutover 目标：runtime identity 使用 typed `EntityId`。`GeneratedDataKey.Id` 只作为 DataOS / snapshot / observation 的字符串投影；不要用 `GetInstanceId().ToString()` 生成业务身份。
+
+---
+
+## Entity 设计原则
+
+### 1. Entity 是纯容器 (Pure Container)
+
+> [!IMPORTANT]
+> **Entity 严禁包含业务逻辑**，它仅仅是一个"挂载点"：
+> - **挂载数据**：持有 `Data` 容器
+> - **挂载事件**：持有 `Events` 总线
+> - **挂载组件**：作为 Component 的父节点
+> - **提供身份容器**：当前通过 `Data` 投影保存 `GeneratedDataKey.Id`，hard cutover 后由 typed `EntityId` / `EntityRegistry` 管理
+
+**核心准则**：
+- 如果你在 Entity 类中写了 `_Process` 或 `_PhysicsProcess`，**你错了**。请移至 Component。
+- 如果你在 Entity 类中写了 `TakeDamage()` 方法，**你错了**。请移至 HealthComponent 或 DamageSystem。
+- Entity 类文件行数通常不超过 **50 行**。
+
+**业务逻辑归属**：
+- ❌ 死亡逻辑 → ✅ 放在 `LifecycleComponent`
+- ❌ 移动逻辑 → ✅ 放在 `EntityMovementComponent`（或对应 Movement System）
+- ❌ 攻击逻辑 → ✅ 放在 `AttackComponent` 或对应 System
+
+### 2. 统一使用 EntityManager
+
+> [!IMPORTANT]
+> 所有 Entity 操作必须通过 `EntityManager` 进行
+
+```csharp
+// ✅ 正确：使用 EntityManager
+var enemy = EntityManager.Spawn<Enemy>(config);
+EntityManager.Destroy(enemy);
+var health = EntityManager.GetComponent<HealthComponent>(enemy);
+
+// ❌ 错误：直接操作节点树
+entity.QueueFree();
+entity.GetNode<HealthComponent>("HealthComponent");
+```
+
+### 3. 生命周期管理
+
+**统一管理原则**:
+- 无论是对象池 Entity 还是普通 Entity,**统一使用 `EntityManager.Spawn` 创建,使用 `EntityManager.Destroy` 销毁**。
+- `EntityManager` 会根据配置自动处理对象池归还或节点销毁。
+
+**对象池 Entity** (Enemy、Bullet 等高频对象):
+- 实现 `IPoolable` 接口
+- 配置 `UsingObjectPool = true`
+- 销毁时自动归还对象池
+
+**非对象池 Entity** (Player、Boss 等单例):
+- 无需实现 `IPoolable`
+- 配置 `UsingObjectPool = false`
+- 销毁时自动执行 `QueueFree`并注销
+
+### 4. Spawn 后的数据设置
+
+> [!TIP]
+> **推荐模式: Spawn -> Configure -> Use**
+
+由于 `OnComponentRegistered` 早于外部数据设置执行,请遵循以下模式初始化 Entity:
+
+```csharp
+// 1. Spawn (注入基础配置)
+var enemy = EntityManager.Spawn<Enemy>(config);
+
+// 2. Configure (设置运行时数据)
+// 这些操作会触发 GameEventType.Data.PropertyChanged,激活 Component 的逻辑
+enemy.Data.Set(GeneratedDataKey.Level, 10);
+enemy.Data.Set(GeneratedDataKey.CurrentHp, 100f);
+```
+
+### 5. 事件订阅
+
+**Entity 使用局部事件总线 (`Entity.Events`)**:
+- `Entity.Events` 是每个 Entity 的局部事件总线,用于实体内部的组件间通信
+- 事件订阅在 `OnPoolAcquire` 中进行(对象池 Entity)
+- 无需手动解绑,`EntityManager.Destroy` 会自动调用 `Events.Clear()`
+
+```csharp
+// ✅ 在 OnPoolAcquire 中订阅事件
+public void OnPoolAcquire()
+{
+    // 订阅死亡事件
+    Events.On<GameEventType.Unit.Killed>(OnKilled);
+    
+    // 订阅受伤事件
+    Events.On<GameEventType.Unit.Damaged>(OnDamaged);
+}
+
+private void OnKilled(GameEventType.Unit.Killed evt)
+{
+    _log.Info($"{Name} 死亡");
+    // 业务逻辑...
+}
+
+private void OnDamaged(GameEventType.Unit.Damaged evt)
+{
+    _log.Info($"{Name} 受到 {evt.Amount} 点伤害");
+}
+
+// ✅ 无需手动解绑(EntityManager.Destroy 自动调用 Events.Clear())
+```
+
+> [!IMPORTANT]
+> **EventBus 自动防止死循环**: 当事件正在执行时,同类型的事件不会再次触发,避免事件死循环
+
+### 6. Entity 迁移约定（2026-04）
+
+> [!IMPORTANT]
+> **迁移不是万能克隆**。本框架的迁移语义固定为：
+> `新建目标 Entity -> 迁移受控 Data -> 销毁源 Entity`
+
+**统一入口**：
+
+```csharp
+var migrated = EntityManager.Migrate<VisualPreviewEntity>(
+    sourceEntity, // 源实体
+    new EntityMigrationConfig
+    {
+        TargetSpawn = new EntitySpawnConfig
+        {
+            Config = config, // 目标实体配置
+            UsingObjectPool = false // 目标实体生成方式
+        },
+        Profile = new EntityMigrationProfile
+        {
+            Name = "ProjectileToPreview", // 迁移 Profile 名称
+            ExcludeDataKeys = [GeneratedDataKey.Name] // 显式排除的 DataKey
+        },
+        DataOverrides = new Dictionary<string, object>
+        {
+            [GeneratedDataKey.Team] = Team.Enemy // 迁移完成后覆写的数据
+        }
+    }
+);
+```
+
+**v1 默认迁移内容**：
+- 迁移基础 `Data`
+- 当前旧实现会继承直接 `PARENT` 归属链与其上的 `ParentDestroyPolicy`；hard cutover 后改由 `LifecycleTree` 表达
+- 自动记录 `GeneratedDataKey.SourceEntityId / GeneratedDataKey.OriginEntityId`
+- 迁移成功后默认 `EntityManager.Destroy(source)`
+
+**明确不迁移的内容**：
+- `Entity.Events` 的订阅表
+- Component 私有字段和闭包状态
+- 视觉节点树 / `VisualRoot`
+- 整张关系图
+- `GeneratedDataKey.Id`
+
+**规则说明**：
+- `Data` 迁移默认遵循迁移 profile / descriptor allowlist，不再依赖旧的手写元数据迁移开关
+- `Node / IEntity / IComponent / Delegate / EventBus` 这类绑定旧实例生命周期的引用，默认一律不迁移
+- 如果某段状态必须跨迁移保留，先把它数据化，写进 `Data`
+- 只是换状态、换皮或启停能力时，不要滥用迁移；优先用 `Data + Component + Visual` 处理
+
+### 7. 碰撞组件挂载约定
+
+如果 Entity 需要参与碰撞系统，请遵循以下分工：
+
+- `CollisionComponent` 只负责 Entity 根节点为 `Area2D` 时的视觉体碰撞桥接
+- `HurtboxComponent` 直接作为 `Area2D` 挂在 Entity 场景里，并在自身下配置 `CollisionShape2D`
+- `ContactDamageComponent` 只消费 `HurtboxEntered / HurtboxExited`
+
+### 8. 碰撞型对象池 Entity 时序约定（2026-04）
+
+当对象池 Entity 的**根节点本身参与物理世界**（`CollisionObject2D`，如 `CharacterBody2D`、`Area2D`）时，必须遵循下面的统一时序：
+
+- `Get(false)`：仅取对象，不提前触发 `OnPoolAcquire`
+- 回池时：先禁用处理与显示；若根节点为碰撞类型，则先停放到远离战场的泊车位，再脱树
+- 出池时：先挂回场景树，但保持碰撞关闭
+- `EntityManager.Spawn`：设置位置/旋转、`ForceUpdateTransform()`、注册组件
+- `pool.Activate()`：统一恢复处理与碰撞，并在此时才触发 `OnPoolAcquire`
+- 若根节点是 `CharacterBody2D`：必须在 `Activate()` 后再 `CallDeferred(MoveAndSlide)`
+
+这样做的目的，是避免复用对象在旧死亡坐标或半初始化状态下重新参与宽相计算，触发伪 `entered` 事件。
+
+---
+
+## 标准模板
+
+参考 [TemplateEntity.cs](../../../Src/ECS/Runtime/Entity/TemplateEntity.cs) 创建新 Entity。
+
+```csharp
+public partial class MyEntity : CharacterBody2D, IEntity, IPoolable
+{
+    private static readonly Log _log = new(nameof(MyEntity));
+
+    // ================= IEntity 实现 =================
+
+    public Data Data { get; private set; }
+    public EventBus Events { get; } = new EventBus();
+
+    public MyEntity()
+    {
+        // Data 默认绑定 catalog；spawn 时由 runtime snapshot record 写入初始值。
+        Data = new Data(this);
+    }
+
+    // ================= Godot 生命周期 =================
+
+    public override void _Ready()
+    {
+        base._Ready();
+    }
+
+    // ================= IPoolable 接口 =================
+
+    public void OnPoolAcquire()
+    {
+        // ✅ 订阅事件(EntityManager已自动清空)
+        Events.On<GameEventType.Unit.Killed>(OnKilled);
+    }
+
+    public void OnPoolRelease()
+    {
+        // ✅ 重置自身状态(非Data管理的)
+        Velocity = Vector2.Zero;
+    }
+
+    public void OnPoolReset() { }
+
+    // ================= 事件处理 =================
+
+    private void OnKilled(GameEventType.Unit.Killed evt)
+    {
+        _log.Info($"{Name} 死亡");
+        // 业务逻辑...
+    }
+}
+```
+
+---
+
+## 更新记录
+
+### 2026-01-12
+- ✅ 创建 Entity 规范文档
+- ✅ 明确 Entity 是纯容器，业务逻辑归 Component
+- ✅ 强调统一使用 EntityManager

@@ -26,7 +26,7 @@ var enemy = EntityManager.Spawn<EnemyEntity>(new EntitySpawnConfig
 
 ## 验证
 
-- `res://Src/ECS/Test/SingleTest/ECS/DataOS/DataCatalogTestScene.tscn`
-- `res://Src/ECS/Test/SingleTest/ECS/DataOS/DataRuntimeTestScene.tscn`
-- `res://Src/ECS/Test/SingleTest/ECS/DataOS/DataSnapshotApplyTestScene.tscn`
-- `res://Src/ECS/Test/SingleTest/ECS/System/SystemCore/SystemCoreRuntimeTest.tscn`
+- `res://Src/ECS/Runtime/Data/Tests/DataOS/DataCatalogTestScene.tscn`
+- `res://Src/ECS/Runtime/Data/Tests/DataOS/DataRuntimeTestScene.tscn`
+- `res://Src/ECS/Runtime/Data/Tests/DataOS/DataSnapshotApplyTestScene.tscn`
+- `res://Src/ECS/Runtime/System/Tests/SystemCore/SystemCoreRuntimeTest.tscn`

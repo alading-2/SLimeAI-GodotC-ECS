@@ -1,11 +1,13 @@
 # ResourceManagement - 资源管理系统
 
 ## 概述
-`ResourceManagement` 是项目的统一资源加载入口。它通过 `ResourcePaths.cs`（由 `ResourceGenerator` 自动生成）获取资源路径，并提供类型安全的加载方法。
+`ResourceManagement` 是项目的统一资源加载入口。它通过 `ResourcePaths.cs`（由 `ResourceGenerator` 自动生成）获取资源路径，并提供统一加载方法。
+
+AI-first 目标：让 AI 和运行时从同一个 manifest 查资源，不在业务代码、测试 UI 或预览工具里散落 `res://` 字符串。
 
 ## 核心原则
 1. **禁止硬编码**: 严禁在业务代码中使用 `res://` 开头的字符串路径。统一管理有利于路径变更时的重构。
-2. **统一分类**: 资源必须属于 `ResourceCategory` 中的某一分类。
+2. **统一分类**: 资源必须属于 `ResourceCategory` 中的某一分类；Preset 是独立分类，不等同于 Component。
 3. **类型安全**: 优先使用 `ResourceManagement.Load<T>` 进行加载。
 4. **目录选择**: UI / 编辑器需要“列出可选资源”时，优先使用 `ResourceCatalog`，不要在运行时全盘扫描 `res://`。
 
@@ -57,6 +59,8 @@ var allGroups = ResourceCatalog.GetGroups(
 
 - **Entity**: 游戏实体预制体 (如 `PlayerEntity.tscn`)
 - **Component**: 组件预制体 (如 `HealthComponent.tscn`)
+- **Preset**: 组件组合预设 (如 `UnitCorePreset.tscn`、`AbilityPreset.tscn`)
+- **System**: 需要通过 `SystemRegistry` 加载或管理的系统场景
 - **UI**: 界面预制体 (如 `HealthBarUI.tscn`)
 - **Asset**: 纯视觉资源场景 (如 `豺狼人.tscn` - 仅包含动画/解构视图)
 - **DataOS snapshot**: 单位、技能、系统配置等运行时数据来自 `Data/DataOS/Snapshots/runtime_snapshot.json`。
@@ -71,3 +75,14 @@ var allGroups = ResourceCatalog.GetGroups(
 > ```bash
 > dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj
 > ```
+
+生成器当前扫描：
+
+- `assets/**` 视觉资源
+- `Src/ECS/Runtime/**` 共享 Runtime 资源
+- `Src/ECS/Capabilities/**` 功能 owner 内部 `Entity / Component / System / Tests / Presets`
+- `Src/ECS/Tools/**`
+- `Src/ECS/UI/**`
+- `Src/ECS/Test/**`
+
+不要把 `Src/ECS/Capabilities` 整体理解成 `Component` 分类；分类由 owner 内部目录层决定。

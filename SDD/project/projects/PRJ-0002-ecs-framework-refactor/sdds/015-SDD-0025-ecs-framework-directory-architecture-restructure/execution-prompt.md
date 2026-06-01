@@ -11,7 +11,8 @@ Src/ECS/Runtime
 Src/ECS/Capabilities
 DocsAI/ECS/Runtime
 DocsAI/ECS/Capabilities
-DocsAI/ECS/Foundations
+DocsAI/ECS/Tools
+DocsAI/ECS/UI
 ```
 
 保留 ECS 概念，不迁到 `GameOS/`。
@@ -33,6 +34,7 @@ DocsAI/ECS/Foundations
 - 不删除 ECS 语义。
 - 不把 Runtime 变成业务大杂烩。
 - 不把 Tools/UI 强行塞进 Capabilities。
+- 不创建或恢复 `DocsAI/ECS/Foundations` 作为 current 路由层。
 - 不手动移动会被 DataOS generator 覆盖的 generated 文件。
 - 不混入当前工作区已有 `.uid` / `__pycache__` 改动。
 - 不在 `Src/ECS` 新增长期 Markdown 文档。
@@ -59,8 +61,7 @@ python3 Workspace/SDD/sdd.py validate SDD-0025
 3. Runtime 内核迁移。
 4. Ability / Movement / Damage 迁移。
 5. Collision / Feature / Effect / Projectile / AI / Spawn / Unit 迁移。
-6. DocsOld 原文复制到 Foundations。
+6. 历史概念材料按 owner `Concepts/` 或 Archive/Thinking 收口。
 7. 最终旧路径清理和全量验证。
 
 每个阶段完成后更新 `tasks.md`、`progress.md` 和项目级 `progress.md`。
-

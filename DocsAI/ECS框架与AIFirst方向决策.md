@@ -1,6 +1,7 @@
 # ECS 框架与 AI-first 方向决策
 
 > 日期：2026-05-28
+> 更新：2026-06-01，SDD-0025 后当前目录入口为 `DocsAI/ECS/Runtime`、`DocsAI/ECS/Capabilities`、`DocsAI/ECS/Tools`、`DocsAI/ECS/UI`；`Foundation/Foundations` 不再作为当前路由层。
 > 状态：方向决策记录，供后续 SDD / DocsAI / Skill / 代码优化参考。
 > 范围：旧 Godot C# ECS 主线、历史 AI-first / GameOS 尝试、PRJ-0002 ECS 优化、Resources/Engine 外部框架分析、网上 ECS 资料。
 > 结论类型：架构方向，不是本次代码改造任务。
@@ -30,7 +31,7 @@ AI-first 是框架的工程目标和使用方式，不是放弃 ECS 的理由。
 - `../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/`：承接 Data / Event / Entity / Relationship / 字符串键名等具体系统优化设计。
 - `../../SlimeAI-AiFirst/DocsAI/ArchitectureDecisionRecords/深度分析：AI-firstGameOS与ECS概念边界.md`：记录旧 AI-first GameOS / Capability Composition Runtime 的探索与判断。
 - `../../SlimeAI-AiFirst/DocsAI/Framework/Overview.md`、`../../SlimeAI-AiFirst/DocsAI/Framework/Principles.md`：记录旧纯 AI-first GameOS 的定位。
-- `./ECS/Base/` 文档：当前旧 ECS 模块契约入口；`DocsAI/` 是当前框架文档事实源。
+- `./ECS/README.md` 文档：当前按 Runtime / Capabilities / Tools / UI 路由；`DocsAI/` 是当前框架文档事实源。
 
 ### 1.2 引擎与框架资料
 
@@ -246,8 +247,9 @@ AI 每次任务开始，应能快速定位：
 
 ```text
 DocsAI/README.md
+  -> DocsAI/ECS/README.md
+  -> DocsAI/ECS/<Runtime|Capabilities|Tools|UI>/<owner>/
   -> SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/
-  -> DocsAI/ECS/ 模块文档
   -> Skill / SDD / 测试命令
 ```
 
@@ -257,6 +259,7 @@ DocsAI/README.md
 - 历史计划不标记 history。
 - 旧 AI-first / GameOS 文档继续暗示要迁走旧 ECS。
 - SDD 旧设计与最新决策冲突却仍标 current。
+- `Foundation/Foundations`、旧 `System/`、旧 `Component/` 或 `Src/ECS/Base` 继续作为当前入口。
 
 ### 5.2 系统信息可查
 
@@ -283,6 +286,18 @@ Agent 侧要做的，不是替代框架，而是围绕框架建立工作流：
 | 文档收敛 | 找冲突事实源 -> 标 history / current -> 更新入口 |
 
 这些工作流已经在 SystemAgent / SDD 方向上不断完善。框架侧要配合这些工作流提供稳定入口和验证证据；具体系统如何提供，放到 PRJ-0002。
+
+### 5.5 Input 体现 AI-first 契约
+
+Input 是“AI 需要快速知道在哪里改、怎么改、怎么验证”的典型系统。当前裁决是：
+
+- `project.godot` 继续作为 Godot InputMap 物理绑定事实源。
+- `DocsAI/ECS/Tools/Input/InputMap.md` 作为 AI 可读 manifest，记录业务 action、Godot action、默认键盘/手柄绑定、上下文和 consumer。
+- `InputManager` 提供业务 typed facade，业务组件不新增裸字符串 action。
+- 手柄按 Xbox/XInput、PlayStation、Nintendo Switch、Steam Input、generic SDL gamepad 等类型分层理解；`BtnA/B/X/Y` 只是当前兼容 action 名，不代表唯一设备类型。
+- UI 按钮图标和平台显示后续用 `ControllerGlyphProfile` 或等价层处理，不写进 Ability/Movement 等业务 owner。
+
+这类系统不需要先重写 runtime，而应先建立稳定 manifest 和验证 gate，让 AI 不再从散落按键名猜业务语义。
 
 ---
 
@@ -494,8 +509,10 @@ AI-first 工程层:
 ### 本地
 
 - `./README.md`
-- `./ECS/Data/Data系统说明.md`
-- `../Src/ECS/Base/`
+- `./ECS/README.md`
+- `./ECS/Runtime/Data/Data系统说明.md`
+- `../Src/ECS/Runtime/`
+- `../Src/ECS/Capabilities/`
 - `../Src/ECS/Test/`
 - `../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/00-旧ECS框架问题总览.md`
 - `../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/`
