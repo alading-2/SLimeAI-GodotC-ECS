@@ -1,26 +1,41 @@
 # EntityManager 当前说明
 
 > 状态：current
-> 更新：2026-05-31
-> 范围：`Src/ECS/Base/Entity/Core/EntityManager.cs`、`Src/ECS/Base/Entity/Core/EntityManager_*.cs`、`Src/ECS/Base/Entity/IEntity.cs`。
+> 更新：2026-06-01
+> 范围：`Src/ECS/Base/Entity/Core/Manager/EntityManager.cs`、`Src/ECS/Base/Entity/Core/**`、`Src/ECS/Base/Entity/IEntity.cs`。
 > 设计事实源：`../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/3.Entity系统优化/`。
 
 ## 1. 定位
 
-`EntityManager` 当前仍是旧 ECS 的统一 Node 生命周期入口。Spawn 已改为 `EntitySpawnPipeline` 的薄 facade；Ability owner 已迁到 `AbilityInventoryService`，Projectile / Effect owner 已迁到对应 ownership service。
+`EntityManager` 当前是 Runtime Entity 的统一薄 facade。Spawn 已改为 `EntitySpawnPipeline` 编排；Ability owner 已迁到 `AbilityInventoryService`，Projectile / Effect owner 已迁到对应 ownership service；Damage / Movement 归因已迁到 `EntityAttributionResolver`。
 
 它目前负责：
 
 - Entity spawn / register / destroy。
-- 通过 `EntitySpawnPipeline` 调度对象池 / 场景实例化、runtime snapshot record apply、视觉场景注入、Transform 初始化、registry、Component、LifecycleTree 和 activate。
+- 组装对象池 / 场景实例化回调，并通过 `EntitySpawnPipeline` 调度 runtime snapshot record apply、视觉场景注入、Transform 初始化、registry、Component、LifecycleTree 和 activate。
 - Component 扫描、注册、反查和卸载；当前已委托给 `ComponentRegistrar` 内部 owner 索引。
 - 业务 owner 引用的 descriptor 注册、添加、移除和 destroy cleanup；当前由 `OwnedReferenceRegistry` 同步 `EntityId / EntityIdList` 与 `string / string_array` Data projection。
 - typed lifecycle parent 查询/绑定；手工注册实体或迁移路径使用 `AttachLifecycleParent / GetLifecycleParentId / GetLifecycleLink`，不再通过旧 PARENT relationship 读取生命周期父级。
-- 迁移期仍保留旧 Relationship 清理代码；新业务 owner 清单已迁到 `AbilityInventoryService`、`ProjectileOwnershipService`、`EffectOwnershipService`，`EntityManager_Ability` 只保留旧调用点转发。
+- 迁移期仍保留旧 Relationship 清理代码，并隔离在 `LegacyRelationship/`；新业务 owner 清单已迁到 `AbilityInventoryService`、`ProjectileOwnershipService`、`EffectOwnershipService`。
 
-这就是本轮 Entity hard cutover 要拆的核心问题：`EntityManager` 同时承担了太多生命周期细节和业务 owner 逻辑。后续实现不应继续往 `EntityManager` partial 里加 Ability、Projectile、Effect、Damage 或 UI 专属入口。
+后续实现不应继续往 `EntityManager` partial 里加 Ability、Projectile、Effect、Damage 或 UI 专属入口。
 
-## 2. 当前可用入口
+## 2. Core 目录结构
+
+| 子目录 | 文件 | 职责 |
+| --- | --- | --- |
+| `Identity/` | `EntityId.cs`、`EntityIdList.cs` | typed identity 和不可变多引用值对象。 |
+| `Registry/` | `EntityRegistry.cs` | id -> node、node -> id 注册表。 |
+| `Spawn/` | `EntitySpawnPipeline.cs` | spawn 请求、结果和阶段编排。 |
+| `Lifecycle/` | `LifecycleTree.cs`、`LifecycleLink.cs`、`ParentDestroyPolicy.cs`、`EntityDestroyPipeline.cs` | 生命周期父子关系和销毁管线。 |
+| `Components/` | `ComponentRegistrar.cs`、`EntityManager_Component*.cs` | Component 注册、反查、卸载和 warmup。 |
+| `References/` | `OwnedReferenceDescriptor.cs`、`OwnedReferenceRegistry.cs` | owner-list Data projection 和 child destroy cleanup。 |
+| `Attribution/` | `EntityAttributionResolver.cs` | Damage / Movement 等系统的 owner/source 归因解析。 |
+| `Migration/` | `EntityManager_Migration.cs`、`EntityMigration*.cs` | Entity migration 配置和 facade。 |
+| `LegacyRelationship/` | `EntityRelationship*.cs`、`EntityManager_Relationship.cs` | 旧 Relationship 兼容隔离区；不作为新业务入口。 |
+| `Manager/` | `EntityManager.cs`、`EntityManager_Collision.cs` | public facade 和少量旧 glue。 |
+
+## 3. 当前可用入口
 
 创建 Entity：
 
@@ -83,7 +98,7 @@ var owner = EntityManager.GetEntityByComponent(component);
 - 不新增 `EntityManager_Ability` 这类业务 partial。
 - 不用 `GetInstanceId().ToString()` 生成业务身份。
 
-## 3. Data 边界
+## 4. Data 边界
 
 `EntityManager.Spawn` 当前已经接入 descriptor-first DataOS 链路：
 
@@ -109,9 +124,9 @@ enemy.Data.Set(GeneratedDataKey.CurrentHp, hp - 10f);
 - `DataRegistry / DataMeta` 作为字段事实源。
 - 手写 stable key 字符串。
 
-`GeneratedDataKey.Id` 只作为 DataOS / snapshot / observation 的字符串投影。Entity hard cutover 后，runtime identity 应通过 typed `EntityId` 或 `EntityRegistry.GetEntityId(Node)` 读取，不让业务系统散读 `GeneratedDataKey.Id`。
+`GeneratedDataKey.Id` 只作为 DataOS / snapshot / observation 的字符串投影。runtime identity 应通过 typed `EntityId` 或 `EntityRegistry.GetEntityId(Node)` 读取，不让业务系统散读 `GeneratedDataKey.Id`。
 
-## 4. Event 边界
+## 5. Event 边界
 
 Event 当前以 payload 类型作为事件 key：
 
@@ -142,7 +157,7 @@ public static partial class GameEventType
 
 Entity 内部协作优先 `entity.Events`；跨实体、跨系统的低频广播才用 `GlobalEventBus.Global`，长期订阅者必须显式清理。
 
-## 5. Relationship 边界
+## 6. Relationship 边界
 
 旧 `EntityRelationshipManager` 不再作为新设计入口。它把下面几类语义混在一个字符串关系图里：
 
@@ -153,7 +168,7 @@ Entity 内部协作优先 `entity.Events`；跨实体、跨系统的低频广播
 - Debug graph。
 - Damage attribution 的间接 parent-chain 推断。
 
-hard cutover 后只保留 lifecycle parent：
+当前只保留 lifecycle parent：
 
 ```text
 LifecycleTree
@@ -175,9 +190,9 @@ LifecycleTree
 
 当前 DataOS 尚无原生 `entity_id/entity_id_list` valueType。默认执行路径是 generated string / string_array projection + owner service/helper 转换；如果要生成 `DataKey<EntityId>`，必须先扩展 DataOS schema、generator、validator 和 converter。
 
-## 6. 目标拆分
+## 7. 拆分结果
 
-后续 Entity hard cutover 不继续扩大 `EntityManager`，而是拆成：
+当前不继续扩大 `EntityManager`，已拆成：
 
 | 模块 | 职责 |
 | --- | --- |
@@ -195,9 +210,11 @@ LifecycleTree
 | `EntityDestroyPipeline` | lifecycle destroy、owner cleanup、component unregister、data/events clear、pool/queue free |
 | `EntityObservationDumper` | AI / debug 可读事实导出 |
 
-## 7. 删除目标
+`EntityNodeFactory / EntityDataInitializer / EntityVisualInitializer / EntityTransformInitializer / EntityObservationDumper` 仍是目标形态名称，当前实现仍合并在 `EntitySpawnPipeline` 或现有调试路径中；新增代码不要把这些职责重新塞进业务 service。
 
-hard cutover 完成时，这些入口应退出 runtime：
+## 8. 删除目标
+
+这些入口已经不再作为新业务 runtime 入口，后续只允许继续收敛或删除：
 
 - `EntityRelationshipManager`
 - `EntityRelationshipType`
@@ -211,7 +228,7 @@ hard cutover 完成时，这些入口应退出 runtime：
 - parent-chain damage attribution
 - raw string entity id public API
 
-## 8. 验证
+## 9. 验证
 
 文档更新：
 
@@ -225,4 +242,5 @@ find Src/ECS -type f -name '*.md' | sort
 ```bash
 Tools/run-build.sh
 Tools/run-tests.sh
+dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
 ```

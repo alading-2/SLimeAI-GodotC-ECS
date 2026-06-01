@@ -4,7 +4,7 @@
 
 - **Status**: done
 - **Created**: 2026-05-31
-- **Updated**: 2026-05-31
+- **Updated**: 2026-06-01
 - **Type**: refactor
 - **Scope**: SlimeAI
 - **Git Boundary**: /home/slime/Code/SlimeAI/SlimeAI
@@ -44,6 +44,6 @@
 ## Current Resume
 
 - **Current Task**: done
-- **Last Conclusion**: T1.1~T1.7 已完成；`EntitySpawnPipeline` 已接管 `EntityManager.Spawn<T>` 编排，`EntitySpawnConfig` 已删除 `ParentEntity / AutoAddParentRelation / ParentRelationTypes`，改用 `LifecycleParentId`。
-- **Next Action**: 写 `EntityIdList / OwnedReferenceRegistry` RED tests；把 projectile/effect/ability owner list 从旧 Relationship 查询迁出。
+- **Last Conclusion**: T1.1~T1.11 已完成；Entity Relationship hard cutover 当前 checkout 已收口，Projectile / Effect / Ability owner 已迁到对应 service，Damage / Movement 归因已迁到 `EntityAttributionResolver`，DocsAI 与 skill 已同步。
+- **Next Action**: 后续只处理收尾治理：继续删除 `LegacyRelationship/` 中剩余兼容代码、提交/归档打包，或按新问题创建新的 SDD。
 - **Open Blockers**: none

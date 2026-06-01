@@ -18,7 +18,7 @@
 **设计理念**：
 - **底层抽象**：`EntityManager` 和 `UIManager` 都基于此类构建
 - **职责单一**：只负责"注册表"管理，不涉及具体业务逻辑
-- **关系分离**：关系管理由 `EntityRelationshipManager` 负责
+- **关系分离**：Entity 生命周期父子关系由 `LifecycleTree` 负责，Component owner 反查由 `ComponentRegistrar` 负责，业务 owner 由各 capability service 负责
 
 ---
 
@@ -166,7 +166,7 @@ graph TB
     UM --> |委托| NLM
 ```
 
-- **EntityManager**：在 `NodeLifecycleManager` 基础上添加 `IEntity` 特化逻辑（Data、Events、Component）
+- **EntityManager**：在 `NodeLifecycleManager` 基础上添加 `IEntity` 特化逻辑（Data、Events、Component、LifecycleTree）
 - **UIManager**：在 `NodeLifecycleManager` 基础上添加 `UIBase` 特化逻辑（绑定、关系）
 
 ---
@@ -174,4 +174,4 @@ graph TB
 ## 相关文档
 
 - [EntityManager 文档](../../Entity/EntityManager.md)
-- [EntityRelationshipManager 文档](../../../../Src/ECS/Base/Entity/Core/EntityRelationshipManager.cs)
+- [Entity 使用说明](../../Entity/Entity使用说明.md)

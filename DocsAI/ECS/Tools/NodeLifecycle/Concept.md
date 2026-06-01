@@ -23,7 +23,7 @@ NodeLifecycleManager.GetNodesByType(type);
 ### 设计原则
 
 - **单一职责**：只管理节点注册/查询/注销
-- **关系管理委托**：Entity-Component 关系由 EntityRelationshipManager 管理
+- **关系管理委托**：Entity 生命周期父子关系由 `LifecycleTree` 管理，Component owner 反查由 `ComponentRegistrar` 管理，业务 owner 由各 capability service 管理
 - **是 EntityManager 的基础**：EntityManager 在其之上构建 Entity 特化逻辑
 
 ## 3. 职责边界
@@ -31,5 +31,5 @@ NodeLifecycleManager.GetNodesByType(type);
 | NodeLifecycle 做 | NodeLifecycle 不做 |
 | ---- | ---- |
 | 节点注册/查询/注销 | Entity 特化逻辑（归 EntityManager） |
-| 类型索引 | 关系管理（归 EntityRelationshipManager） |
+| 类型索引 | 关系管理（归 `LifecycleTree` / `ComponentRegistrar` / capability service） |
 | 基础生命周期 | 对象池管理 |

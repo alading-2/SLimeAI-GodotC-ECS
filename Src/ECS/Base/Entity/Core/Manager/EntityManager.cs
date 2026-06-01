@@ -54,73 +54,18 @@ public readonly record struct EntitySpawnConfig
 }
 
 /// <summary>
-/// Entity 管理器 - 伪 ECS 架构的统一节点生命周期管理入口
-/// 
-/// ==================== 模块化设计 ====================
-/// 
-/// 本类采用 partial class 设计，分为以下模块：
-/// 1. [EntityManager.cs]（本文件）- 核心层
-///    - 职责：生命周期管理（Spawn, Register, Destroy）、核心数据结构、基础查询
-/// 
-/// 2. [EntityManager_Component.cs] - 组件层
-///    - 职责：Component 管理（RegisterComponents, AddComponent, GetComponent, RemoveComponent）
-/// 
-/// 3. [EntityManager_Ability.cs] - 技能层
-///    - 职责：Ability 管理（AddAbility, RemoveAbility, GetAbilities）
-/// 
-/// ==================== 设计理念 ====================
-/// 
-/// 1. 命名哲学：
-///    - 在本项目的伪 ECS 架构中，Component 本质上也是 Entity（都是 Node）
-///    - EntityManager 管理的是"所有需要生命周期管理的 Node"，而非狭义的"游戏实体"
-///    - 这与 Unity ECS 的 EntityManager 设计理念一致（同时管理 Entity 和 Component）
-/// 
-/// 2. 职责边界：
-///    - EntityManager：管理节点的 **生命周期**（生成、注册、查询、销毁）
-///    - EntityRelationshipManager：管理节点的 **关系**（父子、依赖、组合）
-///    - 两者协作构成完整的 ECS 管理体系
-/// 
-/// 3. 统一数据源：
-///    - Entity 和 Component 都注册到 _entities 字典（InstanceId -> Node）
-///    - 通过 _entitiesByType 索引实现高效的类型查询
-///    - 通过方法名区分操作语义（Spawn vs AddComponent）
-/// 
-/// ==================== 职责范围 (Core) ====================
-/// 
-/// - Entity 管理：生成、注册、查询、销毁
-/// - 核心查询：按类型查询、全局遍历
-/// - 关系建立：自动建立 Entity-Component 关系（委托给 EntityRelationshipManager）
-/// 
-/// ==================== 使用示例 ====================
-/// 
-/// <code>
-/// // 生成 Entity (对象池)
-/// var enemy = EntityManager.Spawn<Enemy>(new EntitySpawnConfig
-/// {
-///     Config = enemyData,
-///     UsingObjectPool = true,
-///     PoolName = ObjectPoolNames.EnemyPool,
-///     Position = new Vector2(100, 200)
-/// });
-/// 
-/// // 生成 Entity (场景) - 类型安全，无需指定 SceneName
-/// // 自动使用 typeof(T).Name (即 "Player") 查找 ResourceManagement
-/// var player = EntityManager.Spawn<Player>(new EntitySpawnConfig
-/// {
-///     Config = playerData,
-///     UsingObjectPool = false,
-///     Position = new Vector2(500, 300)
-/// });
-/// 
-/// // 动态添加 Component
-/// EntityManager.AddComponent(enemy, buffComponent);
-/// 
-/// // 查询 Component
-/// var healthComps = EntityManager.GetComponentsByType<HealthComponent>("HealthComponent");
-/// 
-/// // 通过 Component 反查 Entity
-/// var entity = EntityManager.GetEntityByComponent(component);
-/// </code>
+/// Entity 管理器。
+/// <para>
+/// 当前定位是 Runtime Entity 的薄 facade：创建委托给 EntitySpawnPipeline，
+/// Component 归属委托给 ComponentRegistrar，生命周期父子关系委托给 LifecycleTree，
+/// 业务 owner projection 委托给 OwnedReferenceRegistry。
+/// </para>
+/// <para>
+/// 源码按职责拆在 Core 子目录：
+/// Identity / Registry / Spawn / Lifecycle / Components / References / Attribution /
+/// Migration / LegacyRelationship / Manager。
+/// 新业务入口不要继续加到 EntityManager partial；Projectile、Effect、Ability、UI 等语义应进入对应 capability service。
+/// </para>
 /// </summary>
 public static partial class EntityManager
 {

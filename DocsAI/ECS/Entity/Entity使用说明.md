@@ -1,17 +1,23 @@
 # Entity 使用说明
 
 > 状态：current
-> 更新：2026-05-31
+> 更新：2026-06-01
 > sourcePaths: `Src/ECS/Base/Entity/`
 > relatedDocs: `README.md`、`../Data/Data系统说明.md`、`../Event/Event系统说明.md`
 
 ## 1. 源码入口
 
 - `Src/ECS/Base/Entity/IEntity.cs`：Entity 纯容器接口，当前只暴露 `Data` 和 `Events`。
-- `Src/ECS/Base/Entity/Core/EntityManager.cs`：当前旧 ECS 统一 spawn / register / destroy 入口。
-- `Src/ECS/Base/Entity/Core/EntityId.cs`、`EntityIdList.cs`：runtime typed identity 和不可变多引用列表。
-- `Src/ECS/Base/Entity/Core/OwnedReferenceRegistry.cs`：业务 owner 引用 Data projection 与 destroy cleanup hook。
-- `Src/ECS/Base/Entity/TemplateEntity.cs`：当前模板；后续 Entity hard cutover 需要按 `3.Entity系统优化/` 更新。
+- `Src/ECS/Base/Entity/Core/Manager/EntityManager.cs`：Runtime Entity 薄 facade，统一 spawn / register / destroy 入口。
+- `Src/ECS/Base/Entity/Core/Spawn/EntitySpawnPipeline.cs`：spawn 阶段编排，顺序是 create -> data -> visual -> transform -> registry -> component -> lifecycle -> activate -> spawned event。
+- `Src/ECS/Base/Entity/Core/Identity/EntityId.cs`、`Identity/EntityIdList.cs`：runtime typed identity 和不可变多引用列表。
+- `Src/ECS/Base/Entity/Core/Registry/EntityRegistry.cs`：`EntityId` 与 Godot node 的双向注册表。
+- `Src/ECS/Base/Entity/Core/Lifecycle/LifecycleTree.cs`：单 parent 生命周期树，只表达销毁和 detach。
+- `Src/ECS/Base/Entity/Core/Components/ComponentRegistrar.cs`：Component 注册、反查和 owner index。
+- `Src/ECS/Base/Entity/Core/References/OwnedReferenceRegistry.cs`：业务 owner 引用 Data projection 与 destroy cleanup hook。
+- `Src/ECS/Base/Entity/Core/Attribution/EntityAttributionResolver.cs`：Damage / Movement 归因解析入口。
+- `Src/ECS/Base/Entity/Core/LegacyRelationship/`：旧 Relationship 隔离区，不作为新功能入口。
+- `Src/ECS/Base/Entity/TemplateEntity.cs`：当前模板，保持纯容器边界。
 - `Data/DataKey/Generated/DataKey_Generated.cs`：当前 Data 访问唯一 generated handle。
 - `Data/EventType/`：当前 Event payload contract。
 
@@ -31,7 +37,7 @@ var enemy = EntityManager.Spawn<EnemyEntity>(new EntitySpawnConfig
 });
 ```
 
-`EntityManager.Spawn` 当前仍负责对象池 / 场景实例化、runtime snapshot record apply、视觉注入、位置旋转、Component 注册和旧关系绑定。Component 注册/反查已由 `ComponentRegistrar` 内部索引接管，不再通过 `ENTITY_TO_COMPONENT` 关系表达。Entity hard cutover 会继续把 spawn 阶段拆成 `EntitySpawnPipeline / EntityRegistry / ComponentRegistrar / LifecycleTree`，但创建入口仍必须由 framework 管理，不能直接 `new` 后挂树。
+`EntityManager.Spawn` 当前是 `EntitySpawnPipeline` 的薄 facade。对象池 / 场景实例化仍由 facade 组装 `CreateNode` 回调，runtime snapshot record apply、视觉注入、位置旋转、registry、Component 注册、LifecycleTree attach 和激活由管线统一编排。Component 注册/反查已由 `ComponentRegistrar` 内部索引接管，不再通过 `ENTITY_TO_COMPONENT` 关系表达。创建入口必须由 framework 管理，不能直接 `new` 后挂树。
 
 当前 `EntityManager.Spawn<T>` 已是 `EntitySpawnPipeline` 的薄 facade，底层阶段顺序是：
 
@@ -72,7 +78,7 @@ var owner = EntityManager.GetEntityByComponent(component);
 var enemies = EntityManager.GetEntitiesByType<EnemyEntity>(nameof(EnemyEntity));
 ```
 
-查询只用于当前旧 ECS 运行时。后续 Entity hard cutover 后，身份查询应收口到 typed `EntityId` / `EntityRegistry`，业务 owner 查询收口到对应 capability service。
+查询只用于 Entity runtime 的基础注册表能力。身份查询应收口到 typed `EntityId` / `EntityRegistry`，业务 owner 查询收口到对应 capability service。
 
 ## 3. Data 使用
 
@@ -88,7 +94,7 @@ Entity identity 的当前边界：
 
 - `GeneratedDataKey.Id` 只作为 DataOS / snapshot / observation 的字符串投影。
 - 业务代码不要散读 `GeneratedDataKey.Id` 来表达引用。
-- Entity hard cutover 目标是 runtime API 使用 typed `EntityId`；如果需要 DataOS 原生 `entity_id/entity_id_list`，必须先扩展 DataOS schema / generator / validator / converter。
+- runtime API 使用 typed `EntityId`；如果需要 DataOS 原生 `entity_id/entity_id_list`，必须先扩展 DataOS schema / generator / validator / converter。
 
 业务引用的默认过渡形态：
 
@@ -143,7 +149,7 @@ private void OnDamaged(GameEventType.Unit.Damaged evt)
 
 ## 5. Relationship 边界
 
-旧 `EntityRelationshipManager` 只作为待删除旧实现理解对象。新设计只保留 lifecycle parent 语义：
+旧 `EntityRelationshipManager` 只作为兼容清理和历史审计对象。当前设计只保留 lifecycle parent 语义：
 
 - lifecycle parent：进入 `LifecycleTree`，表达单 parent、销毁策略和层级遍历。
 - component owner：进入 `ComponentRegistrar` 内部索引，不进入通用 Relationship 图。
@@ -153,7 +159,7 @@ private void OnDamaged(GameEventType.Unit.Damaged evt)
 - item / UI owner：进入对应 capability service、typed Data projection、`EntityIdList` owner list 或 owner index。
 - damage / movement attribution：进入 `EntityAttributionResolver`，读取 Projectile / Effect / Source / Origin projection，不沿 parent chain 猜。
 
-当前代码中的旧 `ParentEntity / AutoAddParentRelation / ParentRelationTypes / EntityRelationshipType` 不能作为新功能模板继续复制。
+`Src/ECS/Base/Entity/Core/LegacyRelationship/` 中的旧 `ParentEntity / AutoAddParentRelation / ParentRelationTypes / EntityRelationshipType` 只能作为兼容清理和历史审计对象，不能作为新功能模板继续复制。
 
 ## 6. Entity 模板边界
 
@@ -198,4 +204,5 @@ find Src/ECS -type f -name '*.md' | sort
 ```bash
 Tools/run-build.sh
 Tools/run-tests.sh
+dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
 ```
