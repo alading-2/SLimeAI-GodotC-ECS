@@ -8,9 +8,7 @@
 
 | 文档 | 说明 |
 | --- | --- |
-| [Event系统说明.md](Event系统说明.md) | EventBus、GlobalEventBus 和 typed payload 使用规则 |
-| [Concepts/EventBus架构设计.md](Concepts/EventBus架构设计.md) | EventBus 架构设计和历史说明 |
-| [Concepts/Context模式设计.md](Concepts/Context模式设计.md) | Context 模式背景 |
+| [Event系统说明.md](Event系统说明.md) | EventBus、GlobalEventBus 和 typed payload 使用规则；附录含架构设计决策与 Context 模式背景 |
 
 ## 源码
 
