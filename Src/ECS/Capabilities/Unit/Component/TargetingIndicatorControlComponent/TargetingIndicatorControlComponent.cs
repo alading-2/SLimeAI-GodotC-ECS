@@ -127,16 +127,16 @@ public partial class TargetingIndicatorControlComponent : Node, IComponent
     /// </summary>
     private void HandleTargetingInput(Node2D node2D)
     {
-        // X 键确认
-        if (InputManager.IsX())
+        // Targeting context：确认当前点选位置
+        if (InputManager.IsTargetConfirmPressed())
         {
             GlobalEventBus.Global.Emit(
                 new GameEventType.Targeting.TargetConfirmed(node2D.GlobalPosition)
             );
         }
 
-        // B 键取消
-        if (InputManager.IsCancel())
+        // Targeting context：取消当前点选会话
+        if (InputManager.IsTargetCancelPressed())
         {
             GlobalEventBus.Global.Emit(
                 new GameEventType.Targeting.TargetCancelled()

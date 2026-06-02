@@ -85,12 +85,12 @@ public partial class ActiveSkillInputComponent : Node, IComponent
     /// </summary>
     private void HandleActiveAbilityInput()
     {
-        // 1. 处理技能切换逻辑 (LB/RB) - 改变当前选中的技能索引
-        if (InputManager.IsLeftBumper()) CycleActiveAbility(-1);
-        if (InputManager.IsRightBumper()) CycleActiveAbility(1);
+        // 1. 处理技能切换逻辑 - 改变当前选中的技能索引
+        if (InputManager.IsPreviousActiveAbilityPressed()) CycleActiveAbility(-1);
+        if (InputManager.IsNextActiveAbilityPressed()) CycleActiveAbility(1);
 
-        // 2. 处理技能释放逻辑 (X 键) - 触发目标解析并请求施法
-        if (InputManager.IsX()) TryUseCurrentActiveAbility();
+        // 2. 处理技能释放逻辑 - 触发目标解析并请求施法
+        if (InputManager.IsUseActiveAbilityPressed()) TryUseCurrentActiveAbility();
     }
 
     /// <summary>

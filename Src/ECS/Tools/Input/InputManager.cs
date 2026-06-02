@@ -8,46 +8,78 @@ using Godot;
 /// </summary>
 public static class InputManager
 {
+    private const string ConfirmAction = "BtnA";
+    private const string CancelAction = "BtnB";
+    private const string FaceButtonWestAction = "BtnX";
+    private const string FaceButtonNorthAction = "BtnY";
+    private const string PauseAction = "BtnStart";
+    private const string SelectAction = "BtnSelect";
+    private const string HomeAction = "BtnHome";
+    private const string LeftBumperAction = "BtnLB";
+    private const string RightBumperAction = "BtnRB";
+    private const string LeftTriggerAction = "BtnLT";
+    private const string RightTriggerAction = "BtnRT";
+
     // ==================== 按钮状态查询 ====================
 
     /// <summary>确认键（A键/空格）是否刚按下</summary>
-    public static bool IsConfirm() => Godot.Input.IsActionJustPressed("BtnA");
+    public static bool IsConfirm() => Godot.Input.IsActionJustPressed(ConfirmAction);
 
     /// <summary>取消键（B键/ESC）是否刚按下</summary>
-    public static bool IsCancel() => Godot.Input.IsActionJustPressed("BtnB");
+    public static bool IsCancel() => Godot.Input.IsActionJustPressed(CancelAction);
 
     /// <summary>攻击键（X键）是否刚按下</summary>
-    public static bool IsX() => Godot.Input.IsActionJustPressed("BtnX");
+    public static bool IsX() => Godot.Input.IsActionJustPressed(FaceButtonWestAction);
 
     /// <summary>特殊键（Y键）是否刚按下</summary>
-    public static bool IsY() => Godot.Input.IsActionJustPressed("BtnY");
+    public static bool IsY() => Godot.Input.IsActionJustPressed(FaceButtonNorthAction);
 
     /// <summary>暂停键（Start/ESC）是否刚按下</summary>
-    public static bool IsPause() => Godot.Input.IsActionJustPressed("BtnStart");
+    public static bool IsPause() => Godot.Input.IsActionJustPressed(PauseAction);
 
     /// <summary>选择键（Select/Back）是否刚按下</summary>
-    public static bool IsSelect() => Godot.Input.IsActionJustPressed("BtnSelect");
+    public static bool IsSelect() => Godot.Input.IsActionJustPressed(SelectAction);
 
     /// <summary>Home键是否刚按下</summary>
-    public static bool IsHome() => Godot.Input.IsActionJustPressed("BtnHome");
+    public static bool IsHome() => Godot.Input.IsActionJustPressed(HomeAction);
 
     /// <summary>左肩键（LB）是否刚按下</summary>
-    public static bool IsLeftBumper() => Godot.Input.IsActionJustPressed("BtnLB");
+    public static bool IsLeftBumper() => Godot.Input.IsActionJustPressed(LeftBumperAction);
 
     /// <summary>右肩键（RB）是否刚按下</summary>
-    public static bool IsRightBumper() => Godot.Input.IsActionJustPressed("BtnRB");
+    public static bool IsRightBumper() => Godot.Input.IsActionJustPressed(RightBumperAction);
 
     /// <summary>左扳机（LT）是否按下（支持模拟量）</summary>
-    public static bool IsLeftTrigger() => Godot.Input.IsActionPressed("BtnLT");
+    public static bool IsLeftTrigger() => Godot.Input.IsActionPressed(LeftTriggerAction);
 
     /// <summary>右扳机（RT）是否按下（支持模拟量）</summary>
-    public static bool IsRightTrigger() => Godot.Input.IsActionPressed("BtnRT");
+    public static bool IsRightTrigger() => Godot.Input.IsActionPressed(RightTriggerAction);
 
     /// <summary>获取左扳机力度（0.0 ~ 1.0）</summary>
-    public static float GetLeftTriggerStrength() => Godot.Input.GetActionStrength("BtnLT");
+    public static float GetLeftTriggerStrength() => Godot.Input.GetActionStrength(LeftTriggerAction);
 
     /// <summary>获取右扳机力度（0.0 ~ 1.0）</summary>
-    public static float GetRightTriggerStrength() => Godot.Input.GetActionStrength("BtnRT");
+    public static float GetRightTriggerStrength() => Godot.Input.GetActionStrength(RightTriggerAction);
+
+    // ==================== 业务语义输入 ====================
+
+    /// <summary>Gameplay context：释放当前主动技能。</summary>
+    public static bool IsUseActiveAbilityPressed() => IsX();
+
+    /// <summary>Gameplay context：切换到上一个主动技能。</summary>
+    public static bool IsPreviousActiveAbilityPressed() => IsLeftBumper();
+
+    /// <summary>Gameplay context：切换到下一个主动技能。</summary>
+    public static bool IsNextActiveAbilityPressed() => IsRightBumper();
+
+    /// <summary>Targeting context：确认当前点选目标。</summary>
+    public static bool IsTargetConfirmPressed() => IsX();
+
+    /// <summary>Targeting context：取消当前点选目标。</summary>
+    public static bool IsTargetCancelPressed() => IsCancel();
+
+    /// <summary>UI/System context：切换暂停菜单。</summary>
+    public static bool IsPausePressed() => IsPause();
 
     // ==================== 摇杆/方向输入 ====================
 

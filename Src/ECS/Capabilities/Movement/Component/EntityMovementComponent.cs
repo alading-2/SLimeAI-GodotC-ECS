@@ -95,12 +95,32 @@ public partial class EntityMovementComponent : Node, IComponent
         {
             SwitchStrategy(new MovementParams { Mode = defaultMode });
         }
-        else
+        else if (ShouldReportMissingDefaultMoveMode(iEntity, defaultMode))
         {
             _log.Error($"[{entity.Name}] 缺少注册期 DefaultMoveMode，Movement 不会创建默认策略。请检查 runtime snapshot record completeness。");
         }
+        else
+        {
+            _log.Debug($"[{entity.Name}] DefaultMoveMode=None，跳过默认策略初始化，等待 MovementStarted 事件。");
+        }
 
         _log.Debug($"[{entity.Name}] EntityMovementComponent 注册完成 (CharacterBody2D={_body != null}, 默认模式={defaultMode})");
+    }
+
+    /// <summary>
+    /// 判断 DefaultMoveMode=None 是否应作为缺失配置错误上报。
+    /// <para>Unit 的默认移动模式是注册期必需配置；投射物和特效通常只通过 MovementStarted 进入临时策略。</para>
+    /// </summary>
+    internal static bool ShouldReportMissingDefaultMoveMode(IEntity entity, MoveMode defaultMode)
+    {
+        if (defaultMode != MoveMode.None)
+            return false;
+
+        if (entity is IUnit)
+            return true;
+
+        var entityType = entity.Data.Get<EntityType>(GeneratedDataKey.EntityType);
+        return (entityType & EntityType.Unit) != 0;
     }
 
     /// <inheritdoc/>

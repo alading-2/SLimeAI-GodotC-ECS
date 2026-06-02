@@ -292,7 +292,7 @@ Agent 侧要做的，不是替代框架，而是围绕框架建立工作流：
 Input 是“AI 需要快速知道在哪里改、怎么改、怎么验证”的典型系统。当前裁决是：
 
 - `project.godot` 继续作为 Godot InputMap 物理绑定事实源。
-- `DocsAI/ECS/Tools/Input/InputMap.md` 作为 AI 可读 manifest，记录业务 action、Godot action、默认键盘/手柄绑定、上下文和 consumer。
+- `DocsAI/ECS/Tools/Input/README.md` 作为 Input owner 主入口，AI 可读 manifest 可放在 README 表格或可选 `InputMap.md` 中，记录业务 action、Godot action、默认键盘/手柄绑定、上下文和 consumer。
 - `InputManager` 提供业务 typed facade，业务组件不新增裸字符串 action。
 - 手柄按 Xbox/XInput、PlayStation、Nintendo Switch、Steam Input、generic SDL gamepad 等类型分层理解；`BtnA/B/X/Y` 只是当前兼容 action 名，不代表唯一设备类型。
 - UI 按钮图标和平台显示后续用 `ControllerGlyphProfile` 或等价层处理，不写进 Ability/Movement 等业务 owner。

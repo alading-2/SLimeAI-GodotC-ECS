@@ -50,7 +50,7 @@ public partial class PauseMenuSystem : CanvasLayer, ISystem
 
     public override void _Process(double delta)
     {
-        if (!InputManager.IsPause())
+        if (!InputManager.IsPausePressed())
         {
             return;
         }

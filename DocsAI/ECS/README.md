@@ -12,7 +12,7 @@
 4. **通用工具和 UI**：改 Timer、ObjectPool、Input、UI binding 时读 [Tools/](Tools/) 或 [UI/](UI/)。
 5. **迁移追溯**：需要旧路径来源时读 [`../管理/目录架构迁移清单.md`](../管理/目录架构迁移清单.md) 和具体文档的 `migrated-from` 标记；不要把旧 `System/`、`Component/`、`Base/` 当入口。
 
-## 分层规则
+## 组织规则
 
 `DocsAI/ECS` 是 ECS 功能文档事实源。原 `Src/ECS/**.md` 长文档已迁入这里；`Src/ECS` 不再保留框架 Markdown 文档。
 
@@ -27,13 +27,12 @@ DocsAI/ECS/UI
 
 旧 `DocsAI/ECS/System`、`DocsAI/ECS/Component`、`DocsAI/ECS/Entity`、`DocsAI/ECS/Data`、`DocsAI/ECS/Event` 不再作为当前入口；若历史文档需要保留，必须迁入对应 Runtime / Capability / Tools / UI owner 的 `Concepts/` 或原文件名下。
 
-| 文件 | 用途 |
-| ---- | ---- |
-| `Concept.md` | 设计定位、契约、职责边界、依赖、红线；可选，不强制 |
-| `Usage.md` | 从原 `Src/ECS` 迁入的使用说明、API、示例、扩展步骤；可选，不强制 |
-| `Tests.md` | 验证入口和测试覆盖（有需要时建立） |
-| `Debug.md` | 排错流程和日志说明（有需要时建立） |
-| 原文件名 | 原文整体迁移更清晰时保留 |
+Owner 文档不强制拆成固定文件名。优先保证入口清晰、事实源少、内容不重复：
+
+- `README.md` 通常作为 owner 主入口，说明当前事实、源码入口、常用操作、扩展规则和验证入口。
+- `Concept.md`、`Usage.md`、`Tests.md`、`Debug.md`、`InputMap.md` 这类文件只是可选分层；内容少时可以合并在 `README.md`。
+- 原文结构完整、拆分会降低可读性或增加维护成本时，可以保留原文件名。
+- 如果拆分多个文档，必须在 `README.md` 说明每个文件的职责，避免多份文档重复表达同一事实。
 
 完整治理规则见 [`../管理/DocsAI统一管理与索引规则.md`](../管理/DocsAI统一管理与索引规则.md)。
 

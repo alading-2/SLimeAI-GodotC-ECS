@@ -72,6 +72,7 @@ namespace Slime.Test
                 TestCollisionPolicyCountsAndFilters();
                 TestCollisionPolicyUsesOwnerUnitForTeamFilter();
                 TestCollisionPolicyTrackedTargetOnly();
+                TestDefaultMoveModeNoneDiagnostics();
             }
             catch (System.Exception ex)
             {
@@ -92,6 +93,34 @@ namespace Slime.Test
             AssertEqual("默认 StopAfterCollisionCount", -1, collision.StopAfterCollisionCount);
             AssertEqual("默认 DestroyOnStop", false, collision.DestroyOnStop);
             AssertEqual("默认 EmitCollisionEvent", true, collision.EmitCollisionEvent);
+        }
+
+        private void TestDefaultMoveModeNoneDiagnostics()
+        {
+            var unit = new MockUnit("UnitWithoutDefaultMode", Team.Player);
+            var projectile = new MockEntity("ProjectileWithoutDefaultMode", Team.Player, EntityType.Projectile);
+            var effect = new MockEntity("EffectWithoutDefaultMode", Team.Player, EntityType.Effect);
+
+            AssertEqual(
+                "Unit 缺少默认移动模式应保持错误诊断",
+                true,
+                EntityMovementComponent.ShouldReportMissingDefaultMoveMode(unit, MoveMode.None));
+            AssertEqual(
+                "Projectile 无默认移动模式应等待 MovementStarted",
+                false,
+                EntityMovementComponent.ShouldReportMissingDefaultMoveMode(projectile, MoveMode.None));
+            AssertEqual(
+                "Effect 无默认移动模式应等待 MovementStarted",
+                false,
+                EntityMovementComponent.ShouldReportMissingDefaultMoveMode(effect, MoveMode.None));
+            AssertEqual(
+                "非 None 默认模式不应触发缺失诊断",
+                false,
+                EntityMovementComponent.ShouldReportMissingDefaultMoveMode(unit, MoveMode.PlayerInput));
+
+            unit.QueueFree();
+            projectile.QueueFree();
+            effect.QueueFree();
         }
 
         private void TestOrientationParamsDefaults()

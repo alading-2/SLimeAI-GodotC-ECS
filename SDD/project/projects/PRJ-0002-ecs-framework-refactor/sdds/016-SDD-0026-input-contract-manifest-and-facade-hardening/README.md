@@ -2,9 +2,9 @@
 
 ## Index Card
 
-- **Status**: active
+- **Status**: done
 - **Created**: 2026-06-01
-- **Updated**: 2026-06-01
+- **Updated**: 2026-06-02
 - **Type**: refactor
 - **Scope**: SlimeAI
 - **Git Boundary**: /home/slime/Code/SlimeAI/SlimeAI
@@ -36,7 +36,7 @@
 
 ## Current Resume
 
-- **Current Task**: T1.1
-- **Last Conclusion**: SDD-0026 已进入 active，执行胶囊、自包含设计引用和 execution prompt 已准备好。
-- **Next Action**: 从 T1.1 readiness baseline 开始；先确认 dirty 范围、构建和 SDD validate，再进入 T1.2 InputManager 业务语义 facade。
+- **Current Task**: done
+- **Last Conclusion**: SDD-0026 已完成；2026-06-02 追加文档治理裁决：Input DocsAI 主入口是 `DocsAI/ECS/Tools/Input/README.md`，`Concept.md / Usage.md / InputMap.md` 只是可选辅助页，不是固定模板。
+- **Next Action**: 本 SDD 无需继续；后续 Input 深化另建 SDD 覆盖 ControllerGlyphProfile、运行时 InputContext 或 manifest 自动校验。
 - **Open Blockers**: none

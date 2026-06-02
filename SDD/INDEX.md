@@ -3,9 +3,9 @@
 ## Summary
 
 - **pending**: 0
-- **active**: 1
+- **active**: 0
 - **blocked**: 0
-- **done**: 25
+- **done**: 26
 - **projects**: 2
 
 ## Projects
@@ -21,9 +21,7 @@
 
 ## Active
 
-| ID | Project | Title | Updated | Scope | Current Task |
-| --- | --- | --- | --- | --- | --- |
-| SDD-0026 | PRJ-0002 | Input Contract Manifest And Facade Hardening | 2026-06-01 | SlimeAI | T1.1 |
+无。
 
 ## Blocked
 
@@ -58,6 +56,7 @@
 | SDD-0023 | PRJ-0002 | SystemAgent Root Migration Rule Sync | 2026-05-30 | SlimeAI | done |
 | SDD-0024 | PRJ-0002 | Entity Relationship Full Rewrite | 2026-06-01 | SlimeAI | done |
 | SDD-0025 | PRJ-0002 | ECS Framework Directory Architecture Restructure | 2026-06-01 | SlimeAI | done |
+| SDD-0026 | PRJ-0002 | Input Contract Manifest And Facade Hardening | 2026-06-01 | SlimeAI | done |
 
 ## By Scope
 

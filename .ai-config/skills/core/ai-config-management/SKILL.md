@@ -17,18 +17,18 @@ metadata:
 | Skill           | `.ai-config/skills/<category>/<name>/SKILL.md` | `.codex/skills/`、`.claude/skills/`、`.windsurf/skills/`（打平） |
 | Rule            | `.ai-config/rules/rules.md`                    | `CLAUDE.md`、`.windsurf/rules/windsurfrules.md`                  |
 | Command         | `.ai-config/skills/<category>/<name>/SKILL.md` | `.claude/commands/opsx/*.md`（兼容命令按脚本转换）               |
-| Claude hook     | `.claude/settings.json`                        | 无副本，直接运行                                                 |
-| Claude subagent | `.claude/agents/*.md`                          | 无副本，直接运行                                                 |
-| Codex hook      | `.codex/hooks.json`                            | 无副本，直接运行                                                 |
-| Codex subagent  | `.codex/agents/*.toml`、`.codex/config.toml`   | 无副本，直接运行                                                 |
+| Claude hook     | Claude 项目 settings 文件（当前仓为 `.claude/settings.local.json`） | 无副本，直接运行                                                 |
+| Claude subagent | Claude 项目 agents 目录（存在时直接维护）       | 无副本，直接运行                                                 |
+| Codex hook      | Codex 项目 hook 配置（存在时直接维护）          | 无副本，直接运行                                                 |
+| Codex subagent  | Codex 项目 agent/config 配置（存在时直接维护）  | 无副本，直接运行                                                 |
 
 **原则**：skill / rule / command 只改统一源 `.ai-config/`，不改各工具的副本。副本由脚本生成。hook / subagent 直接改 `.claude/.codex` 项目配置。
 
 - 改 skill → 只改 `.ai-config/skills/<category>/<name>/SKILL.md`
 - 改 rule → 只改 `.ai-config/rules/rules.md`
 - 改 command → 只改 `.ai-config/skills/<category>/<name>/SKILL.md`
-- 改 Claude hook/subagent → 直接改 `.claude/settings.json` 或 `.claude/agents/*.md`
-- 改 Codex hook/subagent → 直接改 `.codex/hooks.json`、`.codex/agents/*.toml` 或 `.codex/config.toml`
+- 改 Claude hook/subagent → 直接改当前仓实际存在的 Claude settings 或 agents 配置
+- 改 Codex hook/subagent → 直接改当前仓实际存在的 Codex hook、agents 或 config 配置
 - 永远不要直接修改 `.codex/skills/`、`.claude/skills/`、`.windsurf/skills/`、`CLAUDE.md`、`.windsurf/rules/windsurfrules.md`
 
 ## 修改流程

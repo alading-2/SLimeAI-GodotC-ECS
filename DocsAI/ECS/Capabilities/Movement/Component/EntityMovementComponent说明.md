@@ -79,7 +79,7 @@ entity.Events.Emit(
 
 ## 5. DefaultMoveMode 与临时模式
 
-实体初始化阶段必须由 snapshot record 提前写入 `GeneratedDataKey.DefaultMoveMode`，组件注册后再进入该模式。
+Unit 实体初始化阶段必须由 snapshot record 提前写入 `GeneratedDataKey.DefaultMoveMode`，组件注册后再进入该模式。`Projectile` / `Effect` 这类事件驱动实体允许 `DefaultMoveMode = None`，组件注册时不创建默认策略，等待业务通过 `MovementStarted` 切入临时轨迹。
 
 临时运动结束后：
 

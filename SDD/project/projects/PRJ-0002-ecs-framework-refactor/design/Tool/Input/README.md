@@ -1,6 +1,6 @@
 # Input 工具设计包
 
-> 更新：2026-06-01
+> 更新：2026-06-02
 > 状态：current design package
 > 入口：`README.md`
 > 裁决：Input 需要优化，但第一阶段不是重写输入系统，而是把 Godot action、业务语义、输入上下文、调用点和验证面显式化，让 AI 不再从散落字符串和静态包装方法里猜输入协议。
@@ -19,6 +19,8 @@
 
 2026-06-01 补充裁决：手柄不只有 Xbox 一类。SlimeAI 当前保留 `BtnA/B/X/Y` 作为兼容 action 名，但文档和后续 UI 必须按“业务 action -> Godot action -> 中性物理布局 -> ControllerGlyphProfile”分层理解。
 
+2026-06-02 补充裁决：DocsAI owner 文档不强制拆成 `Concept.md / Usage.md / InputMap.md`。Input 当前主入口改为 `DocsAI/ECS/Tools/Input/README.md`；`Concept.md`、`Usage.md`、`InputMap.md` 只是辅助页，内容少时可合并，其他 owner 不需要照这个三件套建模板。SDD-0026 的实际范围是 facade hardening 和调用点收口，不是完整重写 Input runtime。
+
 ## 1. 文件结构
 
 | File | Role | 说明 |
@@ -36,8 +38,8 @@
 project.godot InputMap
   -> 仍然承载 Godot 层物理按键/手柄绑定
 
-InputActionId / InputManifest
-  -> 显式列出 action id、业务语义、设备、默认绑定、上下文、owner
+InputActionId / manifest 表
+  -> 显式列出 action id、业务语义、设备、默认绑定、上下文、owner；第一阶段可以放在 README 或可选 manifest 文档中
 
 InputManager / InputFacade
   -> 提供 typed API，不让业务散落字符串
@@ -72,7 +74,7 @@ Validation / DocsAI
 | --- | --- | --- |
 | `project.godot` | Godot InputMap 绑定事实源 | 不独自承担业务语义和 AI 路由。 |
 | `InputActionId` | 稳定 action 常量或生成型 typed id | 不承载设备细节和业务执行。 |
-| `InputManifest` | action 语义、上下文、owner、默认绑定和验证输入 | 不在 runtime 热路径扫描工程。 |
+| `Input manifest` | action 语义、上下文、owner、默认绑定和验证输入；可以是 README 表格、`InputMap.md` 或后续 JSON/DataOS descriptor | 不在 runtime 热路径扫描工程，也不强制所有 owner 都有独立 manifest 文件。 |
 | `InputManager` | typed 查询、向量读取、设备状态、震动 | 不直接执行技能、移动、UI 行为。 |
 | `InputContext` | 控制当前输入模式和屏蔽规则 | 不替代 SystemManager 的项目状态。 |
 | Gameplay components | 消费 typed 输入结果，发起业务请求 | 不拼 Godot action 字符串。 |

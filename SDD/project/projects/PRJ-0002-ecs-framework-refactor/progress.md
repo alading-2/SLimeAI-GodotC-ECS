@@ -6,10 +6,10 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-01
+- **Updated**: 2026-06-02
 - **Current SDD**: SDD-0026
-- **Last Conclusion**: SDD-0025 已完成并追加收口：`Src/ECS/Base` 已清空，`IEntity/TemplateEntity` 位于 `Src/ECS/Runtime/Entity/`，`IComponent/TemplateComponent` 位于 `Src/ECS/Runtime/Component/`，具体 Entity / Component / Preset 按 owner 放入 Capability；DocsAI 当前入口为 Runtime / Capabilities / Tools / UI，`Foundation/Foundations` 不再作为当前路由层。
-- **Next Action**: 按 `DocsAI/ECS/README.md` 进入对应 owner；当前 active 主线为 SDD-0026 Input Contract Manifest And Facade Hardening。
+- **Last Conclusion**: SDD-0026 已完成；2026-06-02 追加 DocsAI 组织裁决：Input owner 主入口为 `DocsAI/ECS/Tools/Input/README.md`，`Concept.md / Usage.md / InputMap.md` 只是可选辅助页，不再作为固定三件套或强制模板。
+- **Next Action**: PRJ-0002 当前无 active 子 SDD；后续按 `DocsAI/ECS/README.md` 进入对应 owner，新需求另建 SDD。
 - **Open Blockers**: none
 
 ## Project Status Board
@@ -31,7 +31,7 @@
 | SDD-0023 | done | `design/4.SystemAgent目录更改到SlimeAI里面/README.md` | `SDD/`、`Workspace/`、`.ai-config` 迁入 `SlimeAI/` 后的 rules、skill、DocsAI、SDD template 和验证门禁语义收口已完成 |
 | SDD-0024 | done | `design/3.Entity系统优化/` | Entity Relationship Full Rewrite 已完成：typed EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除已收口 |
 | SDD-0025 | done | `design/6.ECS框架目录架构大重构/` | 已完成：`Src/ECS/Runtime + Src/ECS/Capabilities` 成为源码主入口；DocsAI 当前入口为 `Runtime + Capabilities + Tools + UI`；`Foundation/Foundations` 已从当前路由删除 |
-| SDD-0026 | active | `design/Tool/Input/` | Input Contract Manifest And Facade Hardening：继续补业务语义 facade、调用点迁移、manifest gate 和验证闭环 |
+| SDD-0026 | done | `design/Tool/Input/` | Input Contract Manifest And Facade Hardening 已完成；Input DocsAI 主入口改为 README，Concept/Usage/InputMap 降为可选辅助分层 |
 | TBD | proposed | `design/13-旧ECS框架Event系统问题分析与优化方向.md` | P1：保留 EventBus，优化事件主键、事件定义和请求-响应边界 |
 
 ## Timeline
@@ -269,3 +269,11 @@
 - **Resume**: 当前 active SDD 为 SDD-0026；目录架构问题从 `DocsAI/ECS/README.md` 和 `design/6.ECS框架目录架构大重构/README.md` 恢复。
 - **Impact**: 后续 AI 改键不应从组件里猜 `BtnX` 含义；应从 `DocsAI/ECS/Tools/Input/InputMap.md` 查业务 action、context、consumer，再改 `project.godot` 和 `InputManager`。
 - **Resume**: 若继续 Input runtime 优化，下一步先新增业务语义 facade（如 `IsUseActiveAbilityPressed`、`IsTargetConfirmPressed`），再分阶段替换 `ActiveSkillInputComponent` / `TargetingIndicatorControlComponent` 的按钮名 API，并保留 Debug/Test 例外。
+
+### P033 — 2026-06-01 — sdd-0026-done
+
+- **Context**: 完成 Input Contract Manifest And Facade Hardening。
+- **Conclusion**: Input runtime 已补业务语义 facade：`IsUseActiveAbilityPressed`、`IsPreviousActiveAbilityPressed`、`IsNextActiveAbilityPressed`、`IsTargetConfirmPressed`、`IsTargetCancelPressed`、`IsPausePressed`；Ability、Targeting、PauseMenu 调用点已迁移，不再从按钮名 API 猜业务语义。
+- **Evidence**: `dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly` 0 warning / 0 error；`python3 Workspace/SDD/sdd.py validate SDD-0026` 和 `validate --all` 均 0/0；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only` 输出 39 skills Critical 0 / Advisory 0；业务层旧按钮 API grep gate 无输出。
+- **Impact**: AI 改键入口现在从 `DocsAI/ECS/Tools/Input/InputMap.md` 的业务 action/context 出发，追到 `InputManager` 语义方法和 consumer；Debug/Test 裸输入仍作为例外保留。
+- **Resume**: PRJ-0002 当前无 active 子 SDD；未来 Input 深化应新建 SDD 覆盖 `ControllerGlyphProfile`、运行时 `InputContext` 或 manifest 自动校验。
