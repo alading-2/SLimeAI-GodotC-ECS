@@ -7,9 +7,9 @@
 ## Latest Resume
 
 - **Updated**: 2026-06-02
-- **Current SDD**: SDD-0026
-- **Last Conclusion**: SDD-0026 已完成；2026-06-02 追加 DocsAI 组织裁决：Input owner 主入口为 `DocsAI/ECS/Tools/Input/README.md`，`Concept.md / Usage.md / InputMap.md` 只是可选辅助页，不再作为固定三件套或强制模板。
-- **Next Action**: PRJ-0002 当前无 active 子 SDD；后续按 `DocsAI/ECS/README.md` 进入对应 owner，新需求另建 SDD。
+- **Current SDD**: SDD-0027
+- **Last Conclusion**: 已基于 `design/Tool/Timer/` 创建并补齐 SDD-0027 `Timer Scheduler Full Rewrite`，包含执行级设计、12 项任务、BDD 和 `execution-prompt.md`。
+- **Next Action**: 从 `sdds/017-SDD-0027-timer-scheduler-full-rewrite/execution-prompt.md` 执行 T1.1 readiness baseline；先记录 Timer 热路径、调用点、DocsAI 漂移、Godot/.NET Timer 命中和 SDD validate 基线。
 - **Open Blockers**: none
 
 ## Project Status Board
@@ -32,6 +32,7 @@
 | SDD-0024 | done | `design/3.Entity系统优化/` | Entity Relationship Full Rewrite 已完成：typed EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除已收口 |
 | SDD-0025 | done | `design/6.ECS框架目录架构大重构/` | 已完成：`Src/ECS/Runtime + Src/ECS/Capabilities` 成为源码主入口；DocsAI 当前入口为 `Runtime + Capabilities + Tools + UI`；`Foundation/Foundations` 已从当前路由删除 |
 | SDD-0026 | done | `design/Tool/Input/` | Input Contract Manifest And Facade Hardening 已完成；Input DocsAI 主入口改为 README，Concept/Usage/InputMap 降为可选辅助分层 |
+| SDD-0027 | pending | `design/Tool/Timer/` | Timer Scheduler Full Rewrite 已创建执行胶囊；等待按提示词执行纯 C# scheduler、TimerManager facade、owner/purpose/clock、diagnostics、压力场景和验证门禁 |
 | TBD | proposed | `design/13-旧ECS框架Event系统问题分析与优化方向.md` | P1：保留 EventBus，优化事件主键、事件定义和请求-响应边界 |
 
 ## Timeline
@@ -277,3 +278,11 @@
 - **Evidence**: `dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly` 0 warning / 0 error；`python3 Workspace/SDD/sdd.py validate SDD-0026` 和 `validate --all` 均 0/0；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only` 输出 39 skills Critical 0 / Advisory 0；业务层旧按钮 API grep gate 无输出。
 - **Impact**: AI 改键入口现在从 `DocsAI/ECS/Tools/Input/InputMap.md` 的业务 action/context 出发，追到 `InputManager` 语义方法和 consumer；Debug/Test 裸输入仍作为例外保留。
 - **Resume**: PRJ-0002 当前无 active 子 SDD；未来 Input 深化应新建 SDD 覆盖 `ControllerGlyphProfile`、运行时 `InputContext` 或 manifest 自动校验。
+
+### P034 — 2026-06-02 — sdd-0027-created
+
+- **Context**: 用户要求根据 `design/Tool/Timer` 文档生成 SDD 和执行 SDD 的提示词。
+- **Conclusion**: 已创建并补齐 `SDD-0027 Timer Scheduler Full Rewrite`。该 SDD 固定 Timer 重构执行边界：纯 C# scheduler、TimerManager facade、min-heap、TimerHandle、owner/purpose/clock、主线程 dispatch、debug diagnostics、TimerStressValidation、DocsAI/skill sync 和最终验证。
+- **Evidence**: `sdds/017-SDD-0027-timer-scheduler-full-rewrite/README.md`、`design/main.md`、`tasks.md`、`bdd.md`、`progress.md`、`notes.md`、`execution-prompt.md`；项目 `README.md`、`roadmap.md`、`project.json` 和本 `progress.md` 已切到 SDD-0027。
+- **Impact**: 后续 Timer 实现不应从聊天记忆恢复，也不应做局部优化；新执行会话应直接按 `execution-prompt.md` 逐项推进。
+- **Resume**: 从 SDD-0027 T1.1 readiness baseline 开始；当前框架仓 dirty worktree 中存在大量非本 SDD 改动，执行时必须保留并避免混入。

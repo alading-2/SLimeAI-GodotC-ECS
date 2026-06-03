@@ -95,7 +95,7 @@ public class CooldownNode : DecoratorNode
     private readonly float _cooldownTime;
 
     /// <summary>冷却计时器，非 null 表示冷却中</summary>
-    private GameTimer? _timer;
+    private TimerHandle _timer;
 
     public CooldownNode(BehaviorNode child, float cooldownTime)
         : base(child, $"Cooldown({cooldownTime}s)")
@@ -106,7 +106,7 @@ public class CooldownNode : DecoratorNode
     public override NodeState Evaluate(AIContext ctx)
     {
         // 1. 冷却中，直接阻断
-        if (_timer != null)
+        if (_timer.IsValid)
             return NodeState.Failure;
 
         // 2. 冷却就绪，执行子节点
@@ -115,7 +115,14 @@ public class CooldownNode : DecoratorNode
         // 3. 只有当子节点 "成功" 时，才启动冷却定时器
         if (state == NodeState.Success)
         {
-            _timer = TimerManager.Instance.Delay(_cooldownTime).OnComplete(() => _timer = null);
+            _timer = TimerManager.Instance.Delay(
+                _cooldownTime,
+                new TimerOptions(
+                    new TimerOwner(TimerOwnerType.Component, $"{ctx.Entity.GetHashCode()}:{nameof(CooldownNode)}:{_cooldownTime:F2}"),
+                    TimerPurpose.DecoratorCooldown,
+                    TimerClock.Game,
+                    "DecoratorCooldown"),
+                () => _timer = default);
         }
 
         return state;
@@ -124,8 +131,11 @@ public class CooldownNode : DecoratorNode
     /// <inheritdoc/>
     public override void Reset(AIContext? ctx = null)
     {
-        _timer?.Cancel();
-        _timer = null;
+        if (_timer.IsValid)
+        {
+            TimerManager.Instance?.Cancel(_timer, TimerCancelReason.Replaced);
+            _timer = default;
+        }
         base.Reset(ctx);
     }
 }

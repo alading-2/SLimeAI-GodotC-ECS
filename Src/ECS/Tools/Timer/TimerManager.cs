@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using Godot;
 
 
@@ -9,21 +11,15 @@ using Godot;
 /// 
 /// 核心职责：
 /// 1. 统一驱动游戏内所有的非物理计时逻辑。
-/// 2. 提供高性能的对象池化定时器 (GameTimer)，降低 GC 分配压力。
-/// 3. 支持游戏时间 (Scaled) 与真实时间 (Unscaled) 的双重计时模式。
-/// 4. 提供便捷的链式 API 用于配置回调、标签和生命周期。
+/// 2. 使用纯 C# TimerScheduler 作为调度核心，避免每帧扫描所有 active timer。
+/// 3. 支持游戏时间 (Game) 与真实时间 (Real) 的双重计时模式。
+/// 4. 提供 handle/options 新 API，并保留旧链式 API 作为兼容 facade。
 /// 
 /// 用法示例：
-/// // 1. 简单延迟
-/// TimerManager.Instance.Delay(2.0f).OnComplete(() => GD.Print("完成"));
-/// 
-/// // 2. 循环触发并带标签
-/// TimerManager.Instance.Loop(1.0f).WithTag("Buff").OnLoop(() => ApplyBuffEffect());
-/// 
-/// // 3. 倒计时模式 (带进度回调)
-/// TimerManager.Instance.Countdown(10.0f, 0.5f)
-///     .Countdown((elapsed, progress) => UpdateUI(progress))
-///     .OnComplete(() => OnTimeUp());
+/// var owner = new TimerOwner(TimerOwnerType.Component, "example-component");
+/// var options = new TimerOptions(owner, TimerPurpose.Debug, TimerClock.Game);
+/// var handle = TimerManager.Instance.Delay(2.0f, options, () => GD.Print("完成"));
+/// TimerManager.Instance.Cancel(handle, TimerCancelReason.Manual);
 /// </summary>
 public partial class TimerManager : Node, ISystem
 {
@@ -43,11 +39,10 @@ public partial class TimerManager : Node, ISystem
 
     private static readonly Log _log = new(nameof(TimerManager));
 
-    /// <summary> 
-    /// 内部维护的 GameTimer 对象池。
-    /// 通过 ForEachActive 遍历所有正在运行的定时器，确保高性能。
+    /// <summary>
+    /// 纯 C# 调度核心；TimerManager 只负责 Godot 生命周期和 delta 输入。
     /// </summary>
-    private ObjectPool<GameTimer> _timerPool;
+    private readonly TimerScheduler _scheduler = new();
 
     /// <summary> 用于手动计算 UnscaledDeltaTime 的时间戳（毫秒） </summary>
     private ulong _lastTicksMsec;
@@ -66,15 +61,6 @@ public partial class TimerManager : Node, ISystem
         Instance = this;
         _lastTicksMsec = Time.GetTicksMsec();
 
-        // 从全局管理器获取专门为 GameTimer 准备的对象池
-        _timerPool = ObjectPoolManager.GetPool<GameTimer>(ObjectPoolNames.TimerPool);
-
-        if (_timerPool == null)
-        {
-            _log.Error("无法获取 TimerPool，请确保 ObjectPoolNames.TimerPool 已在 ObjectPoolInit 中注册");
-            return;
-        }
-
         // 绑定每一帧的原始处理开始信号，用于更新基础时间戳
         GetTree().Connect(SceneTree.SignalName.ProcessFrame, Callable.From(OnProcessFrame));
     }
@@ -85,8 +71,7 @@ public partial class TimerManager : Node, ISystem
     /// </summary>
     public override void _ExitTree()
     {
-        _timerPool?.ReleaseAll();
-        _timerPool?.Destroy();
+        _scheduler.Clear(TimerCancelReason.SceneExit);
         Instance = null;
     }
 
@@ -111,30 +96,16 @@ public partial class TimerManager : Node, ISystem
     }
 
     /// <summary>
-    /// 核心更新逻辑：遍历所有活跃的定时器并分发时间增量。
+    /// 核心更新逻辑：输入 clock delta，由 TimerScheduler 只处理到期 timer 和显式 per-frame timer。
     /// </summary>
     private void ProcessTimers(double delta)
     {
         float scaledDelta = (float)delta;
         float unscaledDelta = _unscaledDeltaTime;
 
-        // 调用对象池的内部高效遍历方法
-        _timerPool.ForEachActive(timer =>
-        {
-            // 延迟回收：在下一帧开始时回收上一帧已完成的定时器
-            if (timer.IsDone)
-            {
-                _timerPool.Release(timer);
-                return;
-            }
-
-            // 暂停逻辑：直接跳过更新
-            if (timer.IsPaused) return;
-
-            // 分发增量：根据定时器配置选择使用 scaled 还是 unscaled 时间
-            float dt = timer.UseUnscaledTime ? unscaledDelta : scaledDelta;
-            timer.Update(dt);
-        });
+        _scheduler.Tick(TimerClock.Game, scaledDelta);
+        _scheduler.Tick(TimerClock.Real, unscaledDelta);
+        _scheduler.DispatchDueCallbacks();
     }
 
     // ============ 工厂方法 (Factory Methods) ============
@@ -148,10 +119,9 @@ public partial class TimerManager : Node, ISystem
     /// <returns>GameTimer 实例，建议后续追加 .OnComplete() 配置</returns>
     public GameTimer Delay(float duration, bool useUnscaledTime = false)
     {
-        var timer = _timerPool.Get();
+        var timer = new GameTimer();
         timer.Configure(duration, false, useUnscaledTime);
-        timer.Id = Guid.NewGuid().ToString();
-        ApplyTimerProjectPause(timer);
+        timer.BindLegacy(this, TimerMode.Delay);
         return timer;
     }
 
@@ -164,10 +134,9 @@ public partial class TimerManager : Node, ISystem
     /// <returns>GameTimer 实例，建议后续追加 .OnLoop() 配置</returns>
     public GameTimer Loop(float interval, bool useUnscaledTime = false)
     {
-        var timer = _timerPool.Get();
+        var timer = new GameTimer();
         timer.Configure(interval, true, useUnscaledTime, repeatCount: -1);
-        timer.Id = Guid.NewGuid().ToString();
-        ApplyTimerProjectPause(timer);
+        timer.BindLegacy(this, TimerMode.Loop);
         return timer;
     }
 
@@ -182,10 +151,9 @@ public partial class TimerManager : Node, ISystem
     /// <returns>GameTimer 实例，建议后续追加 .OnRepeat() 配置</returns>
     public GameTimer Repeat(float interval, int count, bool immediate = false, bool useUnscaledTime = false)
     {
-        var timer = _timerPool.Get();
+        var timer = new GameTimer();
         timer.Configure(interval, true, useUnscaledTime, repeatCount: count, immediate: immediate);
-        timer.Id = Guid.NewGuid().ToString();
-        ApplyTimerProjectPause(timer);
+        timer.BindLegacy(this, TimerMode.Repeat);
         return timer;
     }
 
@@ -200,13 +168,125 @@ public partial class TimerManager : Node, ISystem
     /// <returns>GameTimer 实例，建议后续追加 .Countdown() 配置进度回调</returns>
     public GameTimer Countdown(float duration, float interval, bool immediate = false, bool useUnscaledTime = false)
     {
-        var timer = _timerPool.Get();
+        var timer = new GameTimer();
         // 倒计时本质上是一个带总量限制的循环定时器
         timer.Configure(interval, true, useUnscaledTime, repeatCount: -1, totalDuration: duration,
             immediate: immediate);
-        timer.Id = Guid.NewGuid().ToString();
-        ApplyTimerProjectPause(timer);
+        timer.BindLegacy(this, TimerMode.Countdown);
         return timer;
+    }
+
+    // ============ 新 handle/options API ============
+
+    public TimerHandle Delay(float duration, TimerOptions options, Action onComplete)
+    {
+        return _scheduler.Delay(duration, options, onComplete);
+    }
+
+    public TimerHandle Loop(float interval, TimerOptions options, Action onLoop)
+    {
+        return _scheduler.Loop(interval, options, onLoop);
+    }
+
+    public TimerHandle Repeat(float interval, int count, TimerOptions options, Action<int> onRepeat, Action? onComplete = null)
+    {
+        return _scheduler.Repeat(interval, count, options, onRepeat, onComplete);
+    }
+
+    public TimerHandle Countdown(float duration, float interval, TimerOptions options, Action<float, float> onTick, Action? onComplete = null)
+    {
+        return _scheduler.Countdown(duration, interval, options, onTick, onComplete);
+    }
+
+    public bool Cancel(TimerHandle handle, TimerCancelReason reason = TimerCancelReason.Manual)
+    {
+        return _scheduler.Cancel(handle, reason);
+    }
+
+    public int CancelByOwner(TimerOwner owner, TimerCancelReason reason = TimerCancelReason.OwnerDestroyed)
+    {
+        return _scheduler.CancelByOwner(owner, reason);
+    }
+
+    public int CancelByOwnerAndPurpose(TimerOwner owner, TimerPurpose purpose, TimerCancelReason reason = TimerCancelReason.Manual)
+    {
+        return _scheduler.CancelByOwnerAndPurpose(owner, purpose, reason);
+    }
+
+    public bool Pause(TimerHandle handle, TimerPauseMask mask = TimerPauseMask.Manual)
+    {
+        return _scheduler.Pause(handle, mask);
+    }
+
+    public bool Resume(TimerHandle handle, TimerPauseMask mask = TimerPauseMask.Manual)
+    {
+        return _scheduler.Resume(handle, mask);
+    }
+
+    public bool TryGetRemaining(TimerHandle handle, out float remaining)
+    {
+        return _scheduler.TryGetRemaining(handle, out remaining);
+    }
+
+    public bool TryGetProgress(TimerHandle handle, out float progress)
+    {
+        return _scheduler.TryGetProgress(handle, out progress);
+    }
+
+    public TimerDiagnosticsSnapshot GetTimerDiagnostics(TimerDiagnosticsFilter? filter = null)
+    {
+        return _scheduler.GetTimerDiagnostics(filter);
+    }
+
+    public string FormatTimerSummary(TimerDiagnosticsSnapshot snapshot, int topN = 10)
+    {
+        return TimerDiagnosticsFormatter.FormatSummary(snapshot, topN);
+    }
+
+    public string FormatTimerDump(TimerDiagnosticsSnapshot snapshot)
+    {
+        return TimerDiagnosticsFormatter.FormatDump(snapshot);
+    }
+
+    public void PrintTimerSummary(int topN = 10)
+    {
+        GD.Print(FormatTimerSummary(GetTimerDiagnostics(new TimerDiagnosticsFilter(MaxEntries: 0)), topN));
+    }
+
+    public void PrintTimerDump(TimerDiagnosticsFilter? filter = null)
+    {
+        GD.Print(FormatTimerDump(GetTimerDiagnostics(filter)));
+    }
+
+    public Error ExportTimerDiagnosticsJson(string path, TimerDiagnosticsFilter? filter = null)
+    {
+        try
+        {
+            var snapshot = GetTimerDiagnostics(filter);
+            var json = JsonSerializer.Serialize(snapshot, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+            var absolutePath = ProjectSettings.GlobalizePath(path);
+            var directory = Path.GetDirectoryName(absolutePath);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            File.WriteAllText(absolutePath, json);
+            return Error.Ok;
+        }
+        catch (Exception ex)
+        {
+            GD.PushError($"Timer diagnostics export failed: {ex.Message}");
+            return Error.Failed;
+        }
+    }
+
+    internal bool SetLegacyOnUpdate(TimerHandle handle, Action<float>? onUpdate)
+    {
+        return _scheduler.SetOnUpdate(handle, onUpdate);
     }
 
     // ============ 批量管理 (Batch Management) ============
@@ -217,10 +297,10 @@ public partial class TimerManager : Node, ISystem
     /// <param name="id">Guid 字符串</param>
     public void Cancel(string id)
     {
-        _timerPool.ForEachActive(timer =>
+        if (TryParseHandle(id, out var handle))
         {
-            if (timer.Id == id) timer.Cancel();
-        });
+            _scheduler.Cancel(handle, TimerCancelReason.Manual);
+        }
     }
 
     /// <summary>
@@ -230,10 +310,7 @@ public partial class TimerManager : Node, ISystem
     /// <param name="tag">标签字符串 (如："Buff", "Skill")</param>
     public void CancelByTag(string tag)
     {
-        _timerPool.ForEachActive(timer =>
-        {
-            if (timer.Tag == tag) timer.Cancel();
-        });
+        _scheduler.CancelByTag(tag, TimerCancelReason.Manual);
     }
 
     /// <summary>
@@ -242,7 +319,7 @@ public partial class TimerManager : Node, ISystem
     /// </summary>
     public void SetAllTimerPaused(bool paused)
     {
-        _timerPool.ForEachActive(timer => { timer.IsPaused = paused; });
+        _scheduler.SetAllPaused(paused, TimerPauseMask.Manual);
     }
 
     /// <summary>
@@ -251,17 +328,14 @@ public partial class TimerManager : Node, ISystem
     /// </summary>
     public void SetAllTimerPausedByTag(string tag, bool paused)
     {
-        _timerPool.ForEachActive(timer =>
-        {
-            if (timer.Tag == tag) timer.IsPaused = paused;
-        });
+        _scheduler.SetPausedByTag(tag, paused, TimerPauseMask.Manual);
     }
 
     /// <summary> 
     /// 获取当前正在内存中运行（活跃）的定时器总数。
     /// 通常用于性能分析或调试监控。
     /// </summary>
-    public int GetActiveTimerCount() => _timerPool.ActiveCount;
+    public int GetActiveTimerCount() => _scheduler.GetTimerDiagnostics().ActiveCount;
 
     /// <summary> 
     /// 获取对象池的即时统计状态。
@@ -269,8 +343,7 @@ public partial class TimerManager : Node, ISystem
     /// </summary>
     public (int Active, int Pooled) GetStats()
     {
-        var stats = _timerPool.GetStats();
-        return (stats.ActiveCount, stats.Count);
+        return (_scheduler.GetTimerDiagnostics().ActiveCount, 0);
     }
 
     /// <inheritdoc />
@@ -285,27 +358,10 @@ public partial class TimerManager : Node, ISystem
         ApplyProjectPauseState(args.Current);
     }
 
-    private void ApplyTimerProjectPause(GameTimer timer)
-    {
-        var snapshot = SystemManager.Instance?.ProjectState.Snapshot;
-        if (snapshot == null)
-        {
-            timer.SystemPaused = false;
-            return;
-        }
-
-        timer.SystemPaused = !timer.UseUnscaledTime && ShouldPauseScaledTimers(snapshot.Value);
-    }
-
     private void ApplyProjectPauseState(ProjectStateSnapshot snapshot)
     {
-        if (_timerPool == null)
-        {
-            return;
-        }
-
         var shouldPauseScaledTimers = ShouldPauseScaledTimers(snapshot);
-        _timerPool.ForEachActive(timer => { timer.SystemPaused = !timer.UseUnscaledTime && shouldPauseScaledTimers; });
+        _scheduler.SetClockPaused(TimerClock.Game, shouldPauseScaledTimers);
     }
 
     private static bool ShouldPauseScaledTimers(ProjectStateSnapshot snapshot)
@@ -315,6 +371,7 @@ public partial class TimerManager : Node, ISystem
 
     public SystemRuntimeInfo GetSystemRuntimeInfo()
     {
+        var diagnostics = _scheduler.GetTimerDiagnostics();
         return new SystemRuntimeInfo
         {
             SystemId = nameof(TimerManager),
@@ -323,22 +380,43 @@ public partial class TimerManager : Node, ISystem
                 new SystemStat
                 {
                     Name = "活跃定时器",
-                    Value = _timerPool?.ActiveCount.ToString() ?? "0",
+                    Value = diagnostics.ActiveCount.ToString(),
                     Category = "统计"
                 },
                 new SystemStat
                 {
-                    Name = "对象池容量",
-                    Value = _timerPool?.Count.ToString() ?? "0",
-                    Category = "对象池"
+                    Name = "派发队列",
+                    Value = diagnostics.DispatchQueueCount.ToString(),
+                    Category = "调度"
                 },
                 new SystemStat
                 {
                     Name = "Unscaled Delta",
                     Value = $"{_unscaledDeltaTime:F4}s",
                     Category = "时间"
+                },
+                new SystemStat
+                {
+                    Name = "Per-frame Timer",
+                    Value = diagnostics.PerFrameUpdateCount.ToString(),
+                    Category = "调度"
                 }
             }
         };
+    }
+
+    private static bool TryParseHandle(string id, out TimerHandle handle)
+    {
+        handle = default;
+        var parts = id.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length != 2 ||
+            !int.TryParse(parts[0], out var timerId) ||
+            !int.TryParse(parts[1], out var generation))
+        {
+            return false;
+        }
+
+        handle = new TimerHandle(timerId, generation);
+        return true;
     }
 }

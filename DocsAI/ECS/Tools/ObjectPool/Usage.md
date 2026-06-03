@@ -5,6 +5,10 @@
 
 # ObjectPool C# 版本
 
+> 状态：current
+> 更新：2026-06-02
+> 当前入口：`DocsAI/ECS/Tools/ObjectPool/README.md`
+
 基于 TypeScript 和 GDScript 版本设计的 Godot 4.x C# 高性能对象池实现。专门针对 Godot Node 的生命周期进行了优化，支持自动处理 `ProcessMode` 和 `Visible`。
 
 ## 特性
@@ -17,22 +21,45 @@
 - **挂树后同步禁用** - 脱树节点重新 `AddChild` 后立即同步关闭碰撞，覆盖 `SetDeferred` 尚未生效的窗口。
 - **两阶段激活时序** - `Get(false)` 不提前触发 `OnPoolAcquire`，而是等 `Activate()` 时才真正完成挂树保障、恢复节点并触发生命周期。
 - **生命周期回调** - 通过 `IPoolable` 接口实现精准的对象重置逻辑。
-- **全局管理器** - `ObjectPoolManager` 自动管理所有创建的池，支持**静态归还**与**按名查找**。
+- **全局管理器** - `ObjectPoolManager` 自动管理所有创建的池，支持**静态归还**与**按名查找**；Node 走 Meta，纯 C# 对象走内部映射。
 - **详细统计** - 实时追踪复用率、活跃数、闲置数及创建/销毁总量。
-- **线程安全** - 内部使用 `lock` 确保管理器操作的安全性。
+- **管理器线程锁** - `ObjectPoolManager` 内部用 `lock` 保护全局池字典；Godot Node 生命周期操作仍必须在主线程执行。
 
 ## 文件组织
 
 - `ObjectPool.cs`: 核心对象池逻辑与 `IPoolable` 接口定义。
 - `ObjectPoolManager.cs`: 全局池管理逻辑，负责池的注册、查找与静态归还。
-- `ParentManager.cs`: 内部工具类，负责处理池化节点的父级挂载逻辑。
+- `ObjectPoolObservability.cs`: 对象池容量元数据和 TestSystem 观测入口。
+- `DocsAI/ECS/Tools/ParentManager/`: 父级挂载工具 owner，负责池化节点的父级路径解析。
 - `ObjectPoolInit.cs`: 推荐的全局初始化入口（AutoLoad）。
+
+## 测试与验证状态
+
+`Src/ECS/Tools/ObjectPool/Tests` 当前处于重构前状态：
+
+- `ObjectPoolVisualTest.cs/.tscn` 和 `ObjectPoolManagerTest.cs/.tscn` 是人工可视化 demo，不是自动回归测试。
+- `TestProjectile.cs`、`TestEffect.cs`、`VisualTestBullet.cs` 的根节点都是 `Node2D`，不能证明 `CollisionObject2D` 回池脱树策略。
+- 这些 demo 缺少 README 五字段、PASS artifact、`index.json` / `result.json` 和 artifact `checks[]`。
+- demo 池名不得继续使用或覆盖真实 `ObjectPoolNames`；测试池名应使用 `Test/ObjectPool/...` 或 `Demo/ObjectPool/...` 前缀。
+
+后续测试重构必须按 [Tests.md](Tests.md) 执行：
+
+1. 保留现有 UI 场景为 manual demo。
+2. 新增 Runtime contract checks，覆盖统计、容量、重复归还、manager mapping 和全局污染隔离。
+3. 新增 Godot collision validation scene，覆盖 `Area2D` / `CharacterBody2D` 根节点脱树、`Get(false)` 到 `Activate()` 的碰撞关闭窗口和旧位置幽灵事件。
+4. 新增或更新 `Src/ECS/Tools/ObjectPool/Tests/README.md`，包含 `expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath`。
+5. Godot validation 必须写 PASS artifact；不能只看 stdout、exit code 或 UI 面板。
 
 ## 重要限制
 
-### 静态归还仅支持 Node 对象
+### 静态归还支持 Node 和已映射的纯 C# 对象
 
-`ObjectPoolManager.ReturnToPool()` 方法**仅支持 Godot Node 对象**的自动归还，因为它依赖 `Node.Data` 容器存储池名称。
+`ObjectPoolManager.ReturnToPool()` 当前支持两类对象：
+
+- Godot `Node`：通过 `ObjectPoolName` Meta 查找所属池。
+- 纯 C# 对象：通过 `ObjectPoolManager.MapObject()` 维护的内部映射查找所属池。
+
+限制：纯 C# 对象必须通过 `ObjectPool<T>.Get()` 取出，才能建立映射；手动 `new` 出来的对象不能静态归还。
 
 **支持的用法**：
 
@@ -42,17 +69,23 @@ var enemy = enemyPool.Get();
 ObjectPoolManager.ReturnToPool(enemy);  // 自动查找池并归还
 ```
 
+```csharp
+// ✅ 纯 C# 对象 - 必须先从池中 Get，建立归属映射
+var pool = new ObjectPool<MyData>(() => new MyData(), config);
+var data = pool.Get();
+ObjectPoolManager.ReturnToPool(data);
+```
+
 **不支持的用法**：
 
 ```csharp
-// ❌ 纯 C# 类 - 不支持静态归还
+// ❌ 手动 new 出来的纯 C# 对象 - 没有池归属映射
 public class MyData { }
-var pool = new ObjectPool<MyData>(() => new MyData(), config);
-var data = pool.Get();
+var data = new MyData();
 ObjectPoolManager.ReturnToPool(data);  // 会报错！
 ```
 
-**纯 C# 类的正确用法**：
+**纯 C# 类也可以直接调用池的 Release 方法**：
 
 ```csharp
 // ✅ 直接调用池的 Release 方法
@@ -63,9 +96,9 @@ pool.Release(data);  // 必须持有池引用
 
 **设计原因**：
 
-- 移除了冗余的 `_instanceToPoolName` 字典，性能更优
-- Godot 游戏中 99% 的池化对象都是 Node（Enemy、Bullet、Item）
-- 纯 C# 类池化场景极少，直接持有池引用更简洁
+- Node 使用 Godot 原生 Meta，避免额外字典和循环引用。
+- 纯 C# 对象使用内部映射，只覆盖确实从池里取出的对象。
+- 直接持有池引用仍是纯 C# 热路径中最清晰的写法。
 
 ## 快速开始
 
@@ -74,10 +107,10 @@ pool.Release(data);  // 必须持有池引用
 项目采用集中式初始化模式，通过 `ObjectPoolInit.cs` (AutoLoad) 统一管理核心对象池。
 
 ```csharp
-// 在 Data/ObjectPool/ObjectPoolInit.cs 中
+// 在 Src/ECS/Tools/ObjectPool/ObjectPoolInit.cs 中
 public override void _Ready()
 {
-    // 使用 PoolNames 常量避免字符串硬编码
+    // 使用 ObjectPoolNames 常量避免字符串硬编码
     new ObjectPool<EnemyEntity>(
         () => (EnemyEntity)ResourceManagement.LoadScene<EnemyEntity>().Instantiate(),
         new ObjectPoolConfig
@@ -105,11 +138,11 @@ var pool = new ObjectPool<Bullet>(
 
 ```csharp
 // 方式 A: 通过管理器查找 (解耦)
-var pool = ObjectPoolManager.GetPool<Node>(PoolNames.EnemyPool);
+var pool = ObjectPoolManager.GetPool<Node>(ObjectPoolNames.EnemyPool);
 var enemy = pool?.Get();
 
 // 方式 B: 静态全局归还 (最整洁，推荐 - 仅限 Node 对象)
-// 对象不需要持有池的引用，管理器会自动从 Node.Data 中查找池名称
+// 对象不需要持有池的引用，管理器会自动从 Node Meta 中查找池名称
 ObjectPoolManager.ReturnToPool(enemy);
 
 // 方式 C: 直接调用池的 Release (适用于所有类型)
@@ -152,6 +185,13 @@ public partial class Enemy : CharacterBody2D, IPoolable
 - `CharacterBody2D` 在 `Activate()` 之后再 `CallDeferred(MoveAndSlide)`
 
 这套流程是当前项目解决“幽灵碰撞”的标准做法。
+
+补充边界：
+
+- `SetDeferred` 用于把碰撞属性修改提交到安全点，不证明对象已经立即退出物理世界。
+- `CollisionObject2D.disable_mode = Remove` 可作为引擎层额外保护，但只在 `ProcessMode.Disabled` 语义下生效，不能替代多阶段 spawn 的脱树隔离。
+- 泊车位不是唯一正确性来源；它只覆盖挂树瞬间被物理世界看到的短窗口。
+- 碰撞事件到达后仍由 Collision / Damage / Movement owner 过滤实体有效性、team、owner 和生命周期。
 
 ### 1. 为什么 ObjectPoolInit 使用 \_EnterTree 而非 \_Ready？
 
@@ -231,7 +271,7 @@ AutoLoad 加载顺序（按 Priority）：
 
 ## 项目规范建议
 
-1.  **名称管理**：所有全局池名称必须定义在 `PoolNames` 结构体中。
+1.  **名称管理**：所有全局池名称必须定义在 `ObjectPoolNames` 结构体中。
 2.  **初始化**：核心系统的对象池（敌人、玩家、掉落物）应在 `ObjectPoolInit` 中完成预热。
 3.  **回收**：
     - **Node 对象**：优先在对象自身的死亡逻辑中调用 `ObjectPoolManager.ReturnToPool(this)`。
@@ -239,3 +279,4 @@ AutoLoad 加载顺序（按 Priority）：
 4.  **性能**：对象池会自动处理节点的挂载逻辑。对于极高频率（如每秒百发）的子弹，建议在配置中指定合理的 `ParentPath`。
 5.  **类型选择**：本项目主要池化 Node 对象（Enemy、Bullet、Item），极少需要池化纯 C# 类。
 6.  **碰撞型根节点**：凡是根节点为 `CollisionObject2D` 的池化实体，都应统一走“泊车位 + 脱树 + 挂树后同步禁用 + Activate 后恢复碰撞”的方案，不要自行手写一套属性开关时序。
+7.  **重构边界**：后续 ObjectPool 重构优先拆内部策略和补观测，不先修改 `Get/Release/Activate` public API。

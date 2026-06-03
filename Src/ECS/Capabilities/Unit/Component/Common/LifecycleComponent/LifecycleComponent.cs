@@ -75,11 +75,13 @@ public partial class LifecycleComponent : Node, IComponent
     private Data? _data;
 
     /// <summary> 生命周期计时器：用于召唤物等限时单位 </summary>
-    private GameTimer? _lifeTimer;
+    private TimerHandle _lifeTimer;
     /// <summary> 复活计时器：用于英雄复活倒计时 </summary>
-    private GameTimer? _reviveTimer;
+    private TimerHandle _reviveTimer;
     /// <summary> 普通单位死亡动画结束后延迟销毁计时器 </summary>
-    private GameTimer? _deathLingerTimer;
+    private TimerHandle _deathLingerTimer;
+    /// <summary> 复活后短暂无敌计时器 </summary>
+    private TimerHandle _reviveInvulnerabilityTimer;
     /// <summary> 单位原始碰撞层，用于复活后恢复 </summary>
     private uint _originalCollisionLayer;
 
@@ -133,14 +135,15 @@ public partial class LifecycleComponent : Node, IComponent
     private void UpdateLifeTimer()
     {
         // 取消旧计时器
-        _lifeTimer?.Cancel();
-        _lifeTimer = null;
+        CancelTimer(ref _lifeTimer, TimerCancelReason.Replaced);
 
         // 根据当前 MaxLifeTime 决定是否启动新计时器
         if (MaxLifeTime > 0)
         {
-            _lifeTimer = TimerManager.Instance?.Delay(MaxLifeTime)
-                .OnComplete(() => Kill(DeathType.Summon));
+            _lifeTimer = TimerManager.Instance.Delay(
+                MaxLifeTime,
+                BuildTimerOptions(TimerPurpose.Lifecycle, "UnitLifeTime"),
+                () => Kill(DeathType.Summon));
             _log.Debug($"启动生命周期计时器: {MaxLifeTime}s");
         }
     }
@@ -155,12 +158,10 @@ public partial class LifecycleComponent : Node, IComponent
         GlobalEventBus.Global.Off<GameEventType.Unit.Killed>(OnUnitKilled);
 
         // 取消计时器
-        _lifeTimer?.Cancel();
-        _reviveTimer?.Cancel();
-        _deathLingerTimer?.Cancel();
-        _lifeTimer = null;
-        _reviveTimer = null;
-        _deathLingerTimer = null;
+        CancelTimer(ref _lifeTimer, TimerCancelReason.ComponentUnregistered);
+        CancelTimer(ref _reviveTimer, TimerCancelReason.ComponentUnregistered);
+        CancelTimer(ref _deathLingerTimer, TimerCancelReason.ComponentUnregistered);
+        CancelTimer(ref _reviveInvulnerabilityTimer, TimerCancelReason.ComponentUnregistered);
 
         _entity = null;
         _data = null;
@@ -276,8 +277,10 @@ public partial class LifecycleComponent : Node, IComponent
             default:
                 // 普通死亡：启动保底计时器（防止没有 dead 动画时永远不被销毁）
                 // 有 dead 动画时，OnAnimationFinished 会取消此计时器并重启 0.5 秒短计时器
-                _deathLingerTimer = TimerManager.Instance?.Delay(GlobalConfig.EnemyDeathLingerTime)
-                    .OnComplete(DestroyEntity);
+                _deathLingerTimer = TimerManager.Instance.Delay(
+                    GlobalConfig.EnemyDeathLingerTime,
+                    BuildTimerOptions(TimerPurpose.Lifecycle, "DeathLinger"),
+                    DestroyEntity);
                 break;
         }
     }
@@ -319,9 +322,11 @@ public partial class LifecycleComponent : Node, IComponent
         {
             // 普通单位：dead 动画播完，立即进入 Dead 状态锁住动画，取消保底计时器，0.5 秒后销毁
             ChangeState(LifecycleState.Dead);
-            _deathLingerTimer?.Cancel();
-            _deathLingerTimer = TimerManager.Instance?.Delay(0.5f)
-                .OnComplete(DestroyEntity);
+            CancelTimer(ref _deathLingerTimer, TimerCancelReason.Replaced);
+            _deathLingerTimer = TimerManager.Instance.Delay(
+                0.5f,
+                BuildTimerOptions(TimerPurpose.Lifecycle, "DeathAnimationLinger"),
+                DestroyEntity);
         }
     }
 
@@ -337,8 +342,11 @@ public partial class LifecycleComponent : Node, IComponent
         _entity?.Events.Emit(new GameEventType.Unit.Reviving(ReviveDuration));
 
         // 启动复活计时器，每 0.1 秒执行一次进度回调
-        _reviveTimer = TimerManager.Instance?.Countdown(ReviveDuration, 0.1f)
-            .OnCountdown((elapsed, progress) =>
+        _reviveTimer = TimerManager.Instance.Countdown(
+            ReviveDuration,
+            0.1f,
+            BuildTimerOptions(TimerPurpose.Revive, "ReviveCountdown"),
+            (elapsed, progress) =>
             {
                 // 随着复活进度增加，逐步恢复血量并触发 HealthChanged 事件让血条 UI 更新
                 float maxHp = _data.Get<float>(GeneratedDataKey.FinalHp);
@@ -346,8 +354,8 @@ public partial class LifecycleComponent : Node, IComponent
                 float oldHp = _data.Get<float>(GeneratedDataKey.CurrentHp);
                 _data.Set(GeneratedDataKey.CurrentHp, newHp);
                 _entity?.Events.Emit(new GameEventType.Data.HealthChanged(oldHp, newHp));
-            })
-            .OnComplete(CompleteRevive); // 计时结束，完成复活
+            },
+            CompleteRevive); // 计时结束，完成复活
     }
 
     /// <summary>
@@ -369,8 +377,10 @@ public partial class LifecycleComponent : Node, IComponent
         if (ReviveInvulnerabilityDuration > 0)
         {
             _data?.Set(GeneratedDataKey.IsInvulnerable, true);
-            TimerManager.Instance?.Delay(ReviveInvulnerabilityDuration)
-                .OnComplete(() => _data?.Set(GeneratedDataKey.IsInvulnerable, false));
+            _reviveInvulnerabilityTimer = TimerManager.Instance.Delay(
+                ReviveInvulnerabilityDuration,
+                BuildTimerOptions(TimerPurpose.Revive, "ReviveInvulnerability"),
+                () => _data?.Set(GeneratedDataKey.IsInvulnerable, false));
         }
 
         // 4. 回到存活状态
@@ -391,9 +401,24 @@ public partial class LifecycleComponent : Node, IComponent
         if (State != LifecycleState.Dead) return;
 
         // 如果已经在复活中，取消当前的复活计时器
-        _reviveTimer?.Cancel();
-        _reviveTimer = null;
+        CancelTimer(ref _reviveTimer, TimerCancelReason.Replaced);
 
         CompleteRevive();
+    }
+
+    private TimerOptions BuildTimerOptions(TimerPurpose purpose, string tag)
+    {
+        return new TimerOptions(
+            new TimerOwner(TimerOwnerType.Component, $"{GetInstanceId()}:{purpose}:{tag}"),
+            purpose,
+            TimerClock.Game,
+            tag);
+    }
+
+    private static void CancelTimer(ref TimerHandle handle, TimerCancelReason reason)
+    {
+        if (!handle.IsValid) return;
+        TimerManager.Instance?.Cancel(handle, reason);
+        handle = default;
     }
 }

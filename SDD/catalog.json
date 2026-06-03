@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-01 22:37",
+  "generated_at": "2026-06-03 06:35",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -32,7 +32,7 @@
       "slug": "ecs-framework-optimization",
       "title": "ECS Framework Optimization",
       "status": "active",
-      "updated_at": "2026-06-01",
+      "updated_at": "2026-06-02",
       "scope": "SlimeAI",
       "tags": [
         "ecs",
@@ -43,9 +43,11 @@
         "relationship",
         "directory-architecture",
         "capability",
-        "docsai"
+        "docsai",
+        "tools",
+        "timer"
       ],
-      "current_sdd": "SDD-0026",
+      "current_sdd": "SDD-0027",
       "bucket": "projects",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor"
     }
@@ -630,7 +632,7 @@
       "title": "Input Contract Manifest And Facade Hardening",
       "status": "done",
       "type": "refactor",
-      "updated_at": "2026-06-01",
+      "updated_at": "2026-06-02",
       "scope": "SlimeAI",
       "affected_areas": [
         "ecs/tools/input"
@@ -645,6 +647,27 @@
       "project_order": 16,
       "current_task": "done",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/016-SDD-0026-input-contract-manifest-and-facade-hardening"
+    },
+    {
+      "id": "SDD-0027",
+      "slug": "timer-scheduler-full-rewrite",
+      "title": "Timer Scheduler Full Rewrite",
+      "status": "blocked",
+      "type": "refactor",
+      "updated_at": "2026-06-03",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "ecs/tools/timer"
+      ],
+      "tags": [
+        "timer",
+        "tools",
+        "ai-first"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 17,
+      "current_task": "T1.8",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/017-SDD-0027-timer-scheduler-full-rewrite"
     }
   ]
 }

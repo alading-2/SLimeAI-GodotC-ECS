@@ -1,6 +1,6 @@
 # 现状证据与 AI-first 裁决
 
-> 更新：2026-05-31
+> 更新：2026-06-03
 > 状态：current design note
 
 ## 1. 问题重新定义
@@ -38,11 +38,14 @@ Godot 物理节点复用
 
 | 来源 | 对本设计的约束 |
 | --- | --- |
-| Godot `Area2D` 官方文档 | `Area2D` 会检测其它 `CollisionObject2D` 的进入/退出，并跟踪尚未退出的重叠对象；`body_entered / area_entered` 等信号要求 `monitoring=true`。这说明它不是普通开关状态，而是物理世界中的持续 overlap 关系。 |
+| Context7 Godot 4.6 `Area2D` 文档 | `Area2D.monitoring` 控制 Area 检测 body/area enter/exit；它是检测能力开关，不是对象完整离开物理世界的生命周期证明。 |
+| Context7 Godot 4.6 `CollisionShape2D` / `CollisionPolygon2D` 文档 | `disabled` 控制碰撞形状是否参与检测，并应通过 `Object.set_deferred()` 修改。这说明 deferred 是安全提交工具，不是立即退场语义。 |
 | Godot `Object.set_deferred` 官方文档 | `set_deferred` 在当前帧末尾赋值，等价于通过 `call_deferred` 调用 `set`。所以它适合避开不安全修改点，但不能当作“此刻立即从物理世界消失”的证明。 |
 | Godot `CollisionObject2D.disable_mode` 官方文档 | `DISABLE_MODE_REMOVE` 表示 `process_mode=disabled` 时从物理模拟中移除并在恢复处理时重新加入；这提供一层引擎级语义，但不替代对象池在多阶段 spawn 中对旧位置、挂树窗口和业务激活的控制。 |
-| Godot issue `#69407` | 同一物理帧内移动对象并重新启用碰撞时，存在 `body_entered` 错发的复现场景；这与历史幽灵碰撞问题一致，说明只靠属性切换和同帧位置更新风险很高。 |
-| Microsoft `ObjectPool` 文档 | 对象池适合昂贵初始化、有限资源、可预测高频复用；对象池不总是提升性能，核心抽象是 `Get/Return`、创建策略和 reset policy。这支持把 SlimeAI 的业务生命周期从 ObjectPool 内收口出去。 |
+| Godot issue `#69407` / `#79464` / `#74988` | 同帧移动或恢复 collision mask 后仍可能触发 `body_entered`；`monitorable` toggle 对已有 Area2D 重叠不保证重发 enter；`ProcessMode.Disabled` 与 Area2D overlap 也有异常案例。这与历史幽灵碰撞问题一致，说明只靠属性切换和同帧位置更新风险很高。 |
+| Microsoft `ObjectPool`、Unity `ObjectPool<T>`、Game Programming Patterns `Object Pool` | 通用对象池关注复用、容量、创建/回收策略和 reset policy；重用对象不会自动清理业务状态。这支持把 SlimeAI 的业务生命周期从 ObjectPool 内收口出去。 |
+| 本地 Resources Godot 4.6.2 分析 | Capability 不应直接持有或操作裸 `PhysicsServer2D` RID，物理行为应通过 Godot Node / bridge 代理，避免生命周期和 Data/Event 观察面断裂。 |
+| 本地 Arch / ET 分析 | 对象复用会带来旧引用误命中风险，可后续观察 generation / destroyed flag；当前不因此替换 EntityId 或重写 Entity runtime。 |
 
 ## 4. 当前主要风险
 
@@ -87,6 +90,8 @@ AI 读 `ObjectPool<T>` 时，难以区分：
 
 根节点参与物理世界的池化对象继续默认脱树。脱树不是性能优先策略，而是正确性优先策略。对于 `CharacterBody2D`、`Area2D` 这类对象，正确退出物理世界比省一次 `RemoveChild/AddChild` 更重要。
 
+`CollisionObject2D.disable_mode = REMOVE` 可以作为后续辅助策略验证，但不改变当前裁决：它依赖 `ProcessMode.Disabled` 语义，无法单独覆盖 `Get(false)` 到 `Activate()` 的半初始化窗口，也无法替代业务事件过滤。
+
 ### 5.3 策略必须显式化
 
 下一步不是推翻 `ObjectPool`，而是把隐藏在泛型池里的 Godot 物理策略拆出来，使代码结构变成：
@@ -116,3 +121,10 @@ CollisionIsolationStrategy
 2. 先补文档、测试和 observation。
 3. 再做内部策略拆分。
 4. 最后由 Entity hard cutover 接管 spawn/destroy 编排。
+
+2026-06-02 复核后，优先级调整为：
+
+1. P0：收敛 DocsAI / SDD 文档，明确 ObjectPool / Entity / Collision owner 边界。
+2. P1：拆 `PoolNodeLifecycleStrategy` 与 `CollisionIsolationStrategy`，保持行为不变。
+3. P2：补节点级状态观测，避免继续依赖自然语言日志排查幽灵碰撞。
+4. P3：补 Godot scene test，对照验证脱树、非脱树、`disable_mode=REMOVE` 和错误场景结构。

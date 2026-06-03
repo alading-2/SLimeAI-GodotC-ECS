@@ -42,8 +42,8 @@ public partial class SpawnSystem : Node, ISystem,
     public bool IsWaveActive { get; private set; }
 
     // === 内部组件 ===
-    private GameTimer? _waveTimer; // 控制波次总时长
-    private GameTimer? _checkTimer; // 核心轮询计时器(替代大量独立的 Rule Timer)）
+    private TimerHandle _waveTimer; // 控制波次总时长
+    private TimerHandle _checkTimer; // 核心轮询计时器(替代大量独立的 Rule Timer)）
 
     private const float CheckInterval = 0.1f;
 
@@ -121,10 +121,11 @@ public partial class SpawnSystem : Node, ISystem,
         IsWaveActive = true;
 
         // 1. 创建波次总时长计时器
-        _waveTimer?.Cancel(); // 取消旧计时器
-        _waveTimer = TimerManager.Instance.Delay(SpawnSystemConfig.WaveDuration)
-            .WithTag("SpawnSystem")
-            .OnComplete(OnWaveTimeout);
+        CancelTimer(ref _waveTimer, TimerCancelReason.Replaced); // 取消旧计时器
+        _waveTimer = TimerManager.Instance.Delay(
+            SpawnSystemConfig.WaveDuration,
+            BuildTimerOptions(TimerPurpose.SpawnWave),
+            OnWaveTimeout);
 
         // 2. 初始化规则状态
         _activeStates.Clear();
@@ -146,10 +147,11 @@ public partial class SpawnSystem : Node, ISystem,
         }
 
         // 创建核心检查循环计时器 (CheckInterval 循环)
-        _checkTimer?.Cancel(); // 取消旧计时器
-        _checkTimer = TimerManager.Instance.Loop(CheckInterval)
-            .WithTag("SpawnSystem")
-            .OnLoop(OnCheckTimerTimeout);
+        CancelTimer(ref _checkTimer, TimerCancelReason.Replaced); // 取消旧计时器
+        _checkTimer = TimerManager.Instance.Loop(
+            CheckInterval,
+            BuildTimerOptions(TimerPurpose.SpawnCheck),
+            OnCheckTimerTimeout);
 
         _log.Info($"波次 {waveIndex} 开始! 持续时间: {SpawnSystemConfig.WaveDuration}s, 激活规则数: {_activeStates.Count}");
         // 通过事件总线通知 UI 和其他系统
@@ -216,10 +218,8 @@ public partial class SpawnSystem : Node, ISystem,
     private void StopWaveRuntime(bool clearEnemies)
     {
         IsWaveActive = false;
-        _waveTimer?.Cancel();
-        _checkTimer?.Cancel();
-        _waveTimer = null;
-        _checkTimer = null;
+        CancelTimer(ref _waveTimer, TimerCancelReason.SystemStopped);
+        CancelTimer(ref _checkTimer, TimerCancelReason.SystemStopped);
         _activeStates.Clear();
 
         if (clearEnemies)
@@ -271,6 +271,22 @@ public partial class SpawnSystem : Node, ISystem,
             // 将修改后的 struct 重新赋值回 List
             _activeStates[i] = state;
         }
+    }
+
+    private TimerOptions BuildTimerOptions(TimerPurpose purpose)
+    {
+        return new TimerOptions(
+            new TimerOwner(TimerOwnerType.System, $"{nameof(SpawnSystem)}:{purpose}"),
+            purpose,
+            TimerClock.Game,
+            $"{nameof(SpawnSystem)}:{purpose}");
+    }
+
+    private static void CancelTimer(ref TimerHandle handle, TimerCancelReason reason)
+    {
+        if (!handle.IsValid) return;
+        TimerManager.Instance?.Cancel(handle, reason);
+        handle = default;
     }
 
     // ========================================

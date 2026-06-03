@@ -2,7 +2,8 @@
 
 > status: current
 > sourcePaths: Src/ECS/Capabilities/Collision/Component/
-> relatedDocs: ./Collision概念.md
+> relatedDocs: ./Collision概念.md, ../Concepts/README.md, ../Concepts/对象池碰撞兼容说明.md
+> lastReviewed: 2026-06-02
 
 ## 1. 源码入口
 
@@ -14,9 +15,9 @@
 
 完整迁移全文：
 
-- [CollisionComponent.md](../Component/Collision/CollisionComponent/CollisionComponent.md)
-- [ContactDamageComponent.md](../Component/Collision/ContactDamageComponent/ContactDamageComponent.md)
-- [PickupComponent.md](../Component/Collision/PickupComponent/PickupComponent.md)
+- [CollisionComponent.md](../Component/CollisionComponent/CollisionComponent.md)
+- [ContactDamageComponent.md](../Component/ContactDamageComponent/ContactDamageComponent.md)
+- [PickupComponent.md](../Component/PickupComponent/PickupComponent.md)
 
 ## 2. 常见调用流程
 
@@ -96,11 +97,34 @@ Collision = new MovementCollisionParams
 
 ### 对象池碰撞实体时序
 
-回池：先禁用处理与显示 → 泊车位 → 脱树
-出池：先挂树（碰撞关闭）→ Spawn → ForceUpdateTransform → Activate 恢复碰撞
+物理根节点池化实体由 ObjectPool / Entity Runtime 协作处理，Collision 只消费最终事件：
+
+```text
+回池：
+  ObjectPool.Release
+  -> 组件卸载 / 事件解绑
+  -> 禁用处理与显示
+  -> 泊车位
+  -> 脱树
+
+出池：
+  ObjectPool.Get(false)
+  -> 挂树但保持碰撞关闭
+  -> EntitySpawnPipeline 设置 Data / Visual / Transform / Component
+  -> ObjectPool.Activate 恢复碰撞
+  -> CharacterBody2D CallDeferred(MoveAndSlide)
+```
+
+收到 `entered/exited` 后仍要过滤：
+
+- Source Entity 是否仍有效。
+- Target Entity 是否仍有效。
+- Source / Target 是否处于回池、释放中或半初始化状态。
+- team / owner / source / target / lifecycle 是否仍匹配业务语义。
 
 ## 5. Debug 入口
 
 - Godot 编辑器"可见碰撞形状"选项
 - 碰撞层常量：`Data/DataKey/Base/CollisionLayers.cs`
-- 对象池碰撞诊断日志：覆盖 ObjectPool / EntityManager.Spawn / EnemyEntity / ReturnToPool
+- 对象池碰撞诊断：优先看 `DocsAI/ECS/Tools/ObjectPool/README.md`、`ObjectPoolObservability`、`ObjectPoolManager.GetAllStats()` 和后续节点状态快照
+- 深度技术链路：`DocsAI/ECS/Capabilities/Collision/Concepts/对象池碰撞兼容说明.md`

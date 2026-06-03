@@ -19,7 +19,7 @@ using Godot;
 /// </summary>
 public class WaitIdleAction : BehaviorNode
 {
-    private GameTimer? _timer;
+    private TimerHandle _timer;
 
     /// <summary>
     /// 创建原地等待动作节点
@@ -32,16 +32,23 @@ public class WaitIdleAction : BehaviorNode
         var data = ctx.Entity.Data;
 
         // 首次进入：启动定时器
-        if (_timer == null)
+        if (!_timer.IsValid)
         {
             float waitTime = data.Get<float>(GeneratedDataKey.PatrolWaitTime, 1.5f);
             data.Set(GeneratedDataKey.PatrolWaitDone, false);
 
-            _timer = TimerManager.Instance.Delay(waitTime).OnComplete(() =>
-            {
-                data.Set(GeneratedDataKey.PatrolWaitDone, true);
-                _timer = null;
-            });
+            _timer = TimerManager.Instance.Delay(
+                waitTime,
+                new TimerOptions(
+                    new TimerOwner(TimerOwnerType.Component, $"{ctx.Entity.GetHashCode()}:{nameof(WaitIdleAction)}"),
+                    TimerPurpose.AIWait,
+                    TimerClock.Game,
+                    "AIWait"),
+                () =>
+                {
+                    data.Set(GeneratedDataKey.PatrolWaitDone, true);
+                    _timer = default;
+                });
         }
 
         // 停止移动，进入 Idle
@@ -62,8 +69,11 @@ public class WaitIdleAction : BehaviorNode
     /// <inheritdoc/>
     public override void Reset(AIContext? ctx = null)
     {
-        _timer?.Cancel();
-        _timer = null;
+        if (_timer.IsValid)
+        {
+            TimerManager.Instance?.Cancel(_timer, TimerCancelReason.Replaced);
+            _timer = default;
+        }
         ctx?.Entity.Data.Set(GeneratedDataKey.PatrolWaitDone, false);
     }
 }

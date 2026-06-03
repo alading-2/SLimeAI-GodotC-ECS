@@ -1,0 +1,97 @@
+{
+  "status": "FAIL",
+  "expectedInputs": "headless TimerScheduler stress sequence driven by synthetic Game/Real clock deltas",
+  "expectedObservations": "no-due timers stay active without callbacks, due timers dispatch on main thread, owner/purpose diagnostics expose leak hints",
+  "passCriteria": "all TimerStressValidation checks pass and artifact checks are complete",
+  "failCriteria": "any timer callback count, owner cancel, pause clock, diagnostics or main-thread dispatch expectation fails",
+  "artifactPath": ".ai-temp/scene-tests/artifacts/timer-stress-validation.json",
+  "generatedAt": "2026-06-02T23:49:00.0008403\u002B00:00",
+  "checks": [
+    {
+      "name": "LongDelayNoDue",
+      "passed": true,
+      "message": "PASS",
+      "observations": {
+        "activeCount": "10000",
+        "callbackCount": "0",
+        "tickAllocatedBytes": "0",
+        "lastTickCostMs": "0.0081"
+      }
+    },
+    {
+      "name": "StaggeredDue",
+      "passed": true,
+      "message": "PASS",
+      "observations": {
+        "activeCount": "0",
+        "callbackCount": "10000",
+        "maxCallbacksDispatchedInFrame": "10000"
+      }
+    },
+    {
+      "name": "CancelByOwner",
+      "passed": true,
+      "message": "PASS",
+      "observations": {
+        "cancelledCount": "10000",
+        "callbackCount": "0",
+        "activeCount": "0",
+        "cancelledLazyHeapItems": "10000"
+      }
+    },
+    {
+      "name": "LoopRepeatCountdown",
+      "passed": false,
+      "message": "countdown completed: expected=1, actual=0",
+      "observations": {
+        "loopCount": "3",
+        "repeatRemaining": "2,1,0",
+        "repeatCompleted": "1",
+        "countdownTickCount": "3",
+        "countdownCompleted": "0",
+        "activeCount": "1"
+      }
+    },
+    {
+      "name": "GamePauseRealClock",
+      "passed": true,
+      "message": "PASS",
+      "observations": {
+        "gameCallbacksWhilePaused": "0",
+        "realCallbacksWhileGamePaused": "1",
+        "gameCallbacksAfterResume": "1"
+      }
+    },
+    {
+      "name": "PerFrameUpdateIsolation",
+      "passed": true,
+      "message": "PASS",
+      "observations": {
+        "updateCount": "1",
+        "perFrameUpdateCount": "1",
+        "activeCount": "1001"
+      }
+    },
+    {
+      "name": "OwnerPurposeLeakHints",
+      "passed": true,
+      "message": "PASS",
+      "observations": {
+        "activeCount": "2",
+        "leakHintCount": "2",
+        "hasExpectedTopOwner": "True",
+        "hasDebugPurpose": "True"
+      }
+    },
+    {
+      "name": "MainThreadDispatch",
+      "passed": true,
+      "message": "PASS",
+      "observations": {
+        "callbackThreadBeforeDispatch": "-1",
+        "mainThreadId": "1",
+        "callbackThreadId": "1"
+      }
+    }
+  ]
+}

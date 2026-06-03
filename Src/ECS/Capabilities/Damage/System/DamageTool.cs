@@ -20,7 +20,7 @@ internal sealed record DamageApplyOptions
 /// <summary>
 /// 伤害应用结果。
 /// </summary>
-internal readonly record struct DamageApplyResult(int HitCount, GameTimer? Timer);
+internal readonly record struct DamageApplyResult(int HitCount, TimerHandle? Timer);
 
 /// <summary>
 /// 伤害应用工具（归属 DamageSystem）。
@@ -98,8 +98,8 @@ internal static class DamageTool
     /// <param name="guardian">守护节点；失效时自动取消计时器，防止僵尸 tick</param>
     /// <param name="immediate">是否在创建 DoT 后立即执行第一次 tick</param>
     /// <param name="hitRegistry">命中注册表；非 null 时整个 DoT 生命周期内每目标只命中一次</param>
-    /// <returns>GameTimer（可手动取消）；参数无效或依赖缺失时返回 null</returns>
-    public static GameTimer? ScheduleDoT(
+    /// <returns>TimerHandle（可手动取消）；参数无效或依赖缺失时返回 null</returns>
+    public static TimerHandle? ScheduleDoT(
         System.Func<IReadOnlyList<IEntity>?> targetsProvider,
         DamageApplyOptions options,
         Node? guardian = null,
@@ -121,14 +121,30 @@ internal static class DamageTool
         var interval = Mathf.Max(options.TickInterval, 0.01f); // 间隔下限，防止 0 或负数导致异常
         var duration = Mathf.Max(options.TotalDuration, interval);
 
-        GameTimer? timer = null;
-        timer = TimerManager.Instance.Countdown(duration, interval, immediate: immediate)
-            .OnLoop(() =>
+        if (immediate)
+        {
+            var immediateTargets = targetsProvider();
+            if (immediateTargets != null && immediateTargets.Count > 0)
+            {
+                ApplyToList(immediateTargets, options, hitRegistry);
+            }
+        }
+
+        TimerHandle timer = default;
+        timer = TimerManager.Instance.Countdown(
+            duration,
+            interval,
+            new TimerOptions(
+                BuildDamageOwner(options, guardian),
+                TimerPurpose.DoT,
+                TimerClock.Game,
+                "DamageDoT"),
+            (_, _) =>
             {
                 // 守护节点失效时终止 DoT，避免引用悬空和无效结算
                 if (guardian != null && !GodotObject.IsInstanceValid(guardian))
                 {
-                    timer?.Cancel();
+                    TimerManager.Instance?.Cancel(timer, TimerCancelReason.TargetInvalid);
                     return;
                 }
 
@@ -139,6 +155,15 @@ internal static class DamageTool
             });
 
         return timer;
+    }
+
+    private static TimerOwner BuildDamageOwner(DamageApplyOptions options, Node? guardian)
+    {
+        var source = guardian ?? options.Attacker;
+        var id = source != null
+            ? $"{source.GetInstanceId()}:{TimerPurpose.DoT}"
+            : $"DamageTool:{TimerPurpose.DoT}";
+        return new TimerOwner(TimerOwnerType.System, id);
     }
 
     /// <summary>

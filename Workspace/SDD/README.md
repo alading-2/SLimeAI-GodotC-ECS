@@ -8,6 +8,7 @@
 - `SDD/` 保存任务实例、全局索引、模板和归档状态目录。
 - `.ai-config/skills/sdd/` 保存 AI 使用 SDD 的 skill 入口。
 - `Workspace/SystemAgent/` 可引用 SDD，但不收编 SDD 的任务实例或设计文档。
+- 深度思考 / 需求确认由 `systemagent-deepthink` 负责；SDD 只在需要落盘、任务执行记忆或跨会话恢复时接管 artifact。
 
 ## CLI 入口
 

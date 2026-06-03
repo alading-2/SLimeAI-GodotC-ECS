@@ -17,10 +17,32 @@ public class GameTimer : IPoolable
     public float Elapsed { get; private set; }
 
     /// <summary> 距离结束还剩下的时间（秒） </summary>
-    public float Remaining => Math.Max(0, Duration - Elapsed);
+    public float Remaining
+    {
+        get
+        {
+            if (_isScheduled && _manager != null && _manager.TryGetRemaining(_handle, out var remaining))
+            {
+                return remaining;
+            }
+
+            return Math.Max(0, Duration - Elapsed);
+        }
+    }
 
     /// <summary> 当前进度的百分比 (0.0 表示开始，1.0 表示完成) </summary>
-    public float Progress => Duration > 0 ? Math.Clamp(Elapsed / Duration, 0f, 1f) : 1f;
+    public float Progress
+    {
+        get
+        {
+            if (_isScheduled && _manager != null && _manager.TryGetProgress(_handle, out var progress))
+            {
+                return progress;
+            }
+
+            return Duration > 0 ? Math.Clamp(Elapsed / Duration, 0f, 1f) : 1f;
+        }
+    }
 
     /// <summary> 是否为循环定时器（完成后自动重置并重新计时） </summary>
     public bool IsLoop { get; set; }
@@ -39,7 +61,21 @@ public class GameTimer : IPoolable
     public bool IsPaused
     {
         get => _manualPaused || SystemPaused;
-        set => _manualPaused = value;
+        set
+        {
+            _manualPaused = value;
+            if (_isScheduled && _manager != null)
+            {
+                if (value)
+                {
+                    _manager.Pause(_handle, TimerPauseMask.Manual);
+                }
+                else
+                {
+                    _manager.Resume(_handle, TimerPauseMask.Manual);
+                }
+            }
+        }
     }
 
     /// <summary> 是否已完成（或已取消） </summary>
@@ -91,6 +127,11 @@ public class GameTimer : IPoolable
     private Action<float, float>? _onCountdown;
     private Action<float>? _onUpdate;
 
+    private TimerManager? _manager;
+    private TimerMode _mode;
+    private TimerHandle _handle;
+    private bool _isScheduled;
+
     /// <summary>
     /// 是否需要在第一帧立即触发回调（用于 Repeat 的 immediate 模式）
     /// </summary>
@@ -104,6 +145,7 @@ public class GameTimer : IPoolable
     public GameTimer OnComplete(Action callback)
     {
         _onComplete = callback;
+        EnsureScheduled();
         return this;
     }
 
@@ -113,6 +155,7 @@ public class GameTimer : IPoolable
     public GameTimer OnLoop(Action callback)
     {
         _onLoop = callback;
+        EnsureScheduled();
         return this;
     }
 
@@ -122,6 +165,7 @@ public class GameTimer : IPoolable
     public GameTimer OnRepeat(Action<int> callback)
     {
         _onRepeat = callback;
+        EnsureScheduled();
         return this;
     }
 
@@ -131,6 +175,7 @@ public class GameTimer : IPoolable
     public GameTimer OnCountdown(Action<float, float> callback)
     {
         _onCountdown = callback;
+        EnsureScheduled();
         return this;
     }
 
@@ -140,6 +185,8 @@ public class GameTimer : IPoolable
     public GameTimer OnUpdate(Action<float> callback)
     {
         _onUpdate = callback;
+        EnsureScheduled();
+        _manager?.SetLegacyOnUpdate(_handle, HandleUpdate);
         return this;
     }
 
@@ -188,6 +235,112 @@ public class GameTimer : IPoolable
         TotalDuration = totalDuration;
         TotalElapsed = 0;
         _shouldTriggerImmediately = immediate;
+    }
+
+    /// <summary>
+    /// 绑定 legacy wrapper 所属的 manager 和调度模式。真实调度会在首次配置回调或查询时懒启动。
+    /// </summary>
+    internal void BindLegacy(TimerManager manager, TimerMode mode)
+    {
+        _manager = manager;
+        _mode = mode;
+    }
+
+    /// <summary>
+    /// 懒启动 scheduler timer，确保 WithTag 等链式配置有机会先写入。
+    /// </summary>
+    private void EnsureScheduled()
+    {
+        if (_isScheduled || IsDone || _manager == null)
+        {
+            return;
+        }
+
+        ApplyImmediateIfNeeded();
+
+        if (IsDone)
+        {
+            return;
+        }
+
+        var ownerId = string.IsNullOrWhiteSpace(Tag) ? "legacy-api" : Tag;
+        var options = new TimerOptions(
+            new TimerOwner(TimerOwnerType.Tool, ownerId),
+            TimerPurpose.Debug,
+            UseUnscaledTime ? TimerClock.Real : TimerClock.Game,
+            Tag,
+            _onUpdate != null ? HandleUpdate : null);
+
+        _handle = _mode switch
+        {
+            TimerMode.Delay => _manager.Delay(Duration, options, HandleComplete),
+            TimerMode.Loop => _manager.Loop(Duration, options, HandleLoop),
+            TimerMode.Repeat => _manager.Repeat(Duration, RepeatCount, options, HandleRepeat, HandleComplete),
+            TimerMode.Countdown => _manager.Countdown(TotalDuration, Duration, options, HandleCountdown, HandleComplete),
+            _ => throw new InvalidOperationException($"Unsupported timer mode: {_mode}")
+        };
+
+        Id = $"{_handle.Id}:{_handle.Generation}";
+        _isScheduled = true;
+    }
+
+    private void ApplyImmediateIfNeeded()
+    {
+        if (!_shouldTriggerImmediately)
+        {
+            return;
+        }
+
+        _shouldTriggerImmediately = false;
+
+        if (_mode == TimerMode.Repeat)
+        {
+            _onLoop?.Invoke();
+            RepeatCount--;
+            _onRepeat?.Invoke(RepeatCount);
+            if (RepeatCount <= 0)
+            {
+                HandleComplete();
+            }
+        }
+        else if (_mode == TimerMode.Countdown)
+        {
+            _onCountdown?.Invoke(0, 0);
+        }
+    }
+
+    private void HandleLoop()
+    {
+        _onLoop?.Invoke();
+    }
+
+    private void HandleRepeat(int remaining)
+    {
+        RepeatCount = remaining;
+        _onRepeat?.Invoke(remaining);
+    }
+
+    private void HandleCountdown(float elapsed, float progress)
+    {
+        TotalElapsed = elapsed;
+        _onCountdown?.Invoke(elapsed, progress);
+    }
+
+    private void HandleUpdate(float progress)
+    {
+        Elapsed = Duration * progress;
+        _onUpdate?.Invoke(progress);
+    }
+
+    private void HandleComplete()
+    {
+        Elapsed = Duration;
+        if (TotalDuration > 0)
+        {
+            TotalElapsed = TotalDuration;
+        }
+        IsDone = true;
+        _onComplete?.Invoke();
     }
 
     // ============ IPoolable 接口实现 ============
@@ -249,17 +402,29 @@ public class GameTimer : IPoolable
         _onUpdate = null;
         _onRepeat = null;
         _onCountdown = null;
+        _manager = null;
+        _mode = TimerMode.Delay;
+        _handle = default;
+        _isScheduled = false;
     }
 
     /// <summary>
     /// 暂停计时
     /// </summary>
-    public void Pause() => IsPaused = true;
+    public void Pause()
+    {
+        EnsureScheduled();
+        IsPaused = true;
+    }
 
     /// <summary>
     /// 恢复计时
     /// </summary>
-    public void Resume() => IsPaused = false;
+    public void Resume()
+    {
+        EnsureScheduled();
+        IsPaused = false;
+    }
 
     /// <summary>
     /// 取消定时器
@@ -267,6 +432,11 @@ public class GameTimer : IPoolable
     /// </summary>
     public void Cancel()
     {
+        if (_isScheduled && _manager != null)
+        {
+            _manager.Cancel(_handle, TimerCancelReason.Manual);
+        }
+
         IsCancelled = true;
         IsDone = true;
     }
@@ -278,6 +448,11 @@ public class GameTimer : IPoolable
     public void Complete(bool triggerCallback = true)
     {
         if (IsDone) return;
+
+        if (_isScheduled && _manager != null)
+        {
+            _manager.Cancel(_handle, TimerCancelReason.Replaced);
+        }
 
         Elapsed = Duration;
         IsDone = true;

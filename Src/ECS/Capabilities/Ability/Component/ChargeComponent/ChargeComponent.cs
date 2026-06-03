@@ -22,7 +22,7 @@ public partial class ChargeComponent : Node, IComponent
     private IEntity? _entity;
 
     /// <summary>充能恢复计时器（由 TimerManager 管理）</summary>
-    private GameTimer? _chargeTimer;
+    private TimerHandle _chargeTimer;
 
     // ================= 属性访问 =================
 
@@ -142,7 +142,7 @@ public partial class ChargeComponent : Node, IComponent
         if (_data == null) return;
 
         // 如果已经在恢复中，不重复启动
-        if (_chargeTimer != null) return;
+        if (_chargeTimer.IsValid) return;
 
         // 计算充能时间间隔 (应用冷却缩减)
         // 充能回复速度某种意义上也是冷却时间，但跟冷却时间是不同的概念
@@ -153,10 +153,10 @@ public partial class ChargeComponent : Node, IComponent
         // 如果充能时间间隔<=0，不启动充能恢复计时器
         if (chargeTime <= 0f) return;
 
-        // 使用 TimerManager.Loop() 创建循环计时器
-        _chargeTimer = TimerManager.Instance.Loop(chargeTime)
-            .WithTag("AbilityCharge")
-            .OnLoop(RecoverOneCharge);
+        _chargeTimer = TimerManager.Instance.Loop(
+            chargeTime,
+            BuildTimerOptions(TimerPurpose.Charge, "AbilityCharge"),
+            RecoverOneCharge);
 
         _log.Debug($"启动充能恢复: {AbilityName}, 间隔: {chargeTime:F2}s");
     }
@@ -279,9 +279,9 @@ public partial class ChargeComponent : Node, IComponent
         if (CurrentCharges >= MaxCharges) return 1f;
 
         // 如果计时器存在，返回其进度
-        if (_chargeTimer != null)
+        if (_chargeTimer.IsValid)
         {
-            return _chargeTimer.Progress;
+            return TimerManager.Instance.TryGetProgress(_chargeTimer, out var progress) ? progress : 0f;
         }
 
         return 0f;
@@ -308,10 +308,19 @@ public partial class ChargeComponent : Node, IComponent
     /// </summary>
     private void StopChargeRecovery()
     {
-        if (_chargeTimer != null)
+        if (_chargeTimer.IsValid)
         {
-            _chargeTimer.Cancel();
-            _chargeTimer = null;
+            TimerManager.Instance?.Cancel(_chargeTimer, TimerCancelReason.ComponentUnregistered);
+            _chargeTimer = default;
         }
+    }
+
+    private TimerOptions BuildTimerOptions(TimerPurpose purpose, string tag)
+    {
+        return new TimerOptions(
+            new TimerOwner(TimerOwnerType.Component, $"{GetInstanceId()}:{purpose}"),
+            purpose,
+            TimerClock.Game,
+            tag);
     }
 }

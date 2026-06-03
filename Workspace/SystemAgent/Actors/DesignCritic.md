@@ -7,7 +7,7 @@
 ## Invocation conditions
 
 - 用户要求“深度思考”“分析缺陷”“完善方案”或架构取舍。
-- DesignDiscovery 判断任务为 `large`，或高风险 `medium`。
+- DeepThink 判断任务为 `large`，或高风险 `medium`。
 - Planner 的计划存在关键未知、跨边界风险、验证空洞或多个可选方案。
 - WorkflowIteration、Retrospective 或 Reviewer 发现设计阶段缺口。
 
@@ -30,7 +30,7 @@ DesignCritic:
 - Trade-offs:
 - User Decisions:
 - Recommendation:
-- SDD Updates:
+- Artifact Updates:
 ```
 
 ## Role Category

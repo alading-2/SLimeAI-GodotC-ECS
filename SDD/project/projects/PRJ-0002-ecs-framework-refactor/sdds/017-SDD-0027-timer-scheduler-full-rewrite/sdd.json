@@ -1,0 +1,52 @@
+{
+  "id": "SDD-0027",
+  "slug": "timer-scheduler-full-rewrite",
+  "title": "Timer Scheduler Full Rewrite",
+  "status": "blocked",
+  "type": "refactor",
+  "created_at": "2026-06-02",
+  "updated_at": "2026-06-03",
+  "scope": "SlimeAI",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI/SlimeAI"
+  ],
+  "affected_areas": [
+    "ecs/tools/timer"
+  ],
+  "tags": [
+    "timer",
+    "tools",
+    "ai-first"
+  ],
+  "progress": {
+    "current_task": "T1.8",
+    "completed_tasks": 9,
+    "total_tasks": 12,
+    "percent": 75
+  },
+  "bdd": {
+    "required": true,
+    "reason": "Timer 是 gameplay/runtime 热路径工具，本 SDD 修改公共 API、调度语义、生命周期 cleanup、diagnostics 和 Godot 场景验证方式。"
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md",
+    "execution_prompt": "execution-prompt.md"
+  },
+  "project_id": "PRJ-0002",
+  "project_order": 17,
+  "shared_design_refs": [
+    "../../design/INDEX.md",
+    "../../design/Tool/Timer/README.md",
+    "../../design/Tool/Timer/01-现状证据与AI-first裁决.md",
+    "../../design/Tool/Timer/02-目标架构与优化路线.md",
+    "../../design/Tool/Timer/03-调用点迁移与验证计划.md"
+  ],
+  "blockers": [
+    "Current BrotatoLike target has no project.godot, C# project, Tools/run-godot-scene.sh or analyzer, and this environment has no godot/godot4 CLI; cannot produce TimerStressValidation index.json/result.json/PASS artifact, scene-gate report or BrotatoLike smoke evidence."
+  ]
+}

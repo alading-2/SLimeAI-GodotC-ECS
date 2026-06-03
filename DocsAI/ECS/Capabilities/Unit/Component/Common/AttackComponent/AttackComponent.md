@@ -116,6 +116,7 @@ CD阶段：   |<------------------ 攻击间隔 (AttackInterval) ---------------
 
 - **表现**：一收到命令，立刻触发伤害判定命中，并瞬间回到 Idle 状态。
 - **结论**：动作 0 毫秒完成，所有频率控制 100% 甩锅给“攻击间隔”。适用于 Brotato、吸血鬼幸存者这类弹幕游戏，无视僵直，纯数值互秒。
+- **Timer 约束**：即时模式不创建 0 秒 `Delay`；`TimerScheduler.Delay` 的 duration 必须大于 0，`AttackComponent` 会在 `WindUpTime <= 0` 时直接执行命中分支。
 
 ---
 
@@ -131,7 +132,7 @@ CD阶段：   |<------------------ 攻击间隔 (AttackInterval) ---------------
     ├─ 校验失败 → 静默丢弃，无事件
     └─ 校验通过 →
         emit: Attack.Started
-        ├─ WindowUp=0 → ExecuteDamage() → emit: Attack.Finished
+        ├─ WindUpTime<=0 → ValidateTargetForStrike() → ExecuteDamage() → emit: Attack.Finished
         └─ WindUpTime>0 → [EnterWindUp]
                │
                ├─ 0.2s × n → ValidateAttackContext()

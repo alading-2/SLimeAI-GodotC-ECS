@@ -4,16 +4,16 @@
 
 - **Status**: active
 - **Created**: 2026-05-25
-- **Updated**: 2026-06-01
+- **Updated**: 2026-06-02
 - **Scope**: SlimeAI
-- **Current SDD**: SDD-0026
-- **Tags**: ecs, optimization, data, event, entity, relationship, directory-architecture, capability, docsai
+- **Current SDD**: SDD-0027
+- **Tags**: ecs, optimization, data, event, entity, relationship, directory-architecture, capability, docsai, tools, timer
 
 ## What This Project Is About
 
 本项目用于重新梳理 `Src/ECS` 旧 ECS 框架的真实问题，并形成“保留旧 ECS 主线、按问题域优化完善”的设计事实源。当前框架仓和 SDD 均位于 `/home/slime/Code/SlimeAI/SlimeAI`；外层 `/home/slime/Code/SlimeAI` 只作为包含游戏仓、Resources 和框架仓的父目录。
 
-当前方向已经纠偏：不再把旧 ECS 作为迁移输入，不再以整体替换或复制外部参考结构为目标。旧框架整体可保留；Data 子系统已按 SDD-0012 至 SDD-0022 完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 收口。Entity / Relationship 已按 SDD-0024 完成 hard cutover。SDD-0025 已把 ECS 物理目录和 DocsAI 路由重构为 `Runtime + Capabilities + Tools + UI`，同时保留 ECS 语义；SDD-0026 已完成 Input Contract 业务语义 facade、调用点迁移和验证闭环。
+当前方向已经纠偏：不再把旧 ECS 作为迁移输入，不再以整体替换或复制外部参考结构为目标。旧框架整体可保留；Data 子系统已按 SDD-0012 至 SDD-0022 完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 收口。Entity / Relationship 已按 SDD-0024 完成 hard cutover。SDD-0025 已把 ECS 物理目录和 DocsAI 路由重构为 `Runtime + Capabilities + Tools + UI`，同时保留 ECS 语义；SDD-0026 已完成 Input Contract 业务语义 facade、调用点迁移和验证闭环。当前新增 SDD-0027，目标是按 `design/Tool/Timer/` 将 Timer 从便利实现升级为纯 C# scheduler + TimerManager facade + diagnostics + 压力场景的框架级工具。
 
 ## Reading Order
 
@@ -33,5 +33,8 @@
 14. `sdds/012-SDD-0022-data-projection-diagnostics-contract-hardening/progress.md` — Data residual contract hardening 已完成记录
 15. `roadmap.md` — 设计文档到 SDD 的映射、执行顺序、依赖和状态
 16. `progress.md` — 项目级关键结论和恢复点
-17. `sdds/` — 项目内有序 SDD
-18. `notes.md` — 参考与开放问题
+17. `design/Tool/Timer/README.md` — Timer 当前共享设计包入口
+18. `sdds/017-SDD-0027-timer-scheduler-full-rewrite/README.md` — Timer 执行型 SDD 胶囊
+19. `sdds/017-SDD-0027-timer-scheduler-full-rewrite/execution-prompt.md` — Timer 新会话执行提示词
+20. `sdds/` — 项目内有序 SDD
+21. `notes.md` — 参考与开放问题

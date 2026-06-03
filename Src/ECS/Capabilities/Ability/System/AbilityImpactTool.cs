@@ -19,7 +19,7 @@ internal sealed record AbilityImpactOptions
 /// <summary>
 /// 技能命中结果。
 /// </summary>
-internal readonly record struct AbilityImpactResult(int TargetsHit, GameTimer? Timer);
+internal readonly record struct AbilityImpactResult(int TargetsHit, TimerHandle? Timer);
 
 /// <summary>
 /// 技能命中工具（薄层编排）。
@@ -79,7 +79,7 @@ internal static class AbilityImpactTool
         }
 
         // 若配置了持续伤害，委托 DamageTool 调度 DoT 定时器
-        GameTimer? timer = null;
+        TimerHandle? timer = null;
         if (hasDot)
         {
             // 每次 tick 重新解析 Query.Origin，支持跟随施法者移动的范围技能

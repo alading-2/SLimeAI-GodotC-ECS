@@ -4,7 +4,7 @@
 
 - **pending**: 0
 - **active**: 0
-- **blocked**: 0
+- **blocked**: 1
 - **done**: 26
 - **projects**: 2
 
@@ -13,7 +13,7 @@
 | ID | Title | Status | Bucket | Current SDD | Path |
 | --- | --- | --- | --- | --- | --- |
 | PRJ-0001 | SystemAgent Optimization | active | projects | SDD-0008 | SDD/project/projects/PRJ-0001-systemagent-optimization |
-| PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0026 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
+| PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0027 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
 
 ## Pending
 
@@ -25,7 +25,9 @@
 
 ## Blocked
 
-无。
+| ID | Project | Title | Updated | Scope | Current Task |
+| --- | --- | --- | --- | --- | --- |
+| SDD-0027 | PRJ-0002 | Timer Scheduler Full Rewrite | 2026-06-03 | SlimeAI | T1.8 |
 
 ## Done
 
@@ -56,7 +58,7 @@
 | SDD-0023 | PRJ-0002 | SystemAgent Root Migration Rule Sync | 2026-05-30 | SlimeAI | done |
 | SDD-0024 | PRJ-0002 | Entity Relationship Full Rewrite | 2026-06-01 | SlimeAI | done |
 | SDD-0025 | PRJ-0002 | ECS Framework Directory Architecture Restructure | 2026-06-01 | SlimeAI | done |
-| SDD-0026 | PRJ-0002 | Input Contract Manifest And Facade Hardening | 2026-06-01 | SlimeAI | done |
+| SDD-0026 | PRJ-0002 | Input Contract Manifest And Facade Hardening | 2026-06-02 | SlimeAI | done |
 
 ## By Scope
 
@@ -78,6 +80,7 @@
 - SDD-0024 — Entity Relationship Full Rewrite
 - SDD-0025 — ECS Framework Directory Architecture Restructure
 - SDD-0026 — Input Contract Manifest And Facade Hardening
+- SDD-0027 — Timer Scheduler Full Rewrite
 
 ### Workspace/SDD
 
@@ -104,6 +107,7 @@
 ### ai-first
 
 - SDD-0026 — Input Contract Manifest And Facade Hardening
+- SDD-0027 — Timer Scheduler Full Rewrite
 
 ### bootstrap
 
@@ -312,9 +316,14 @@
 
 - SDD-0012 — Data System Full Rewrite - Catalog TDD Slice
 
+### timer
+
+- SDD-0027 — Timer Scheduler Full Rewrite
+
 ### tools
 
 - SDD-0026 — Input Contract Manifest And Facade Hardening
+- SDD-0027 — Timer Scheduler Full Rewrite
 
 ### workflow
 

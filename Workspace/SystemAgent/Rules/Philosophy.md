@@ -1,6 +1,6 @@
 # Philosophy
 
-> 从 AIFeatureDevelopmentProtocol 提取的独特原则。其余内容已由 NewFeature route + DesignDiscovery + ReviewGates 覆盖。
+> 从 AIFeatureDevelopmentProtocol 提取的独特原则。其余内容已由 NewFeature route + DeepThink + ReviewGates 覆盖。
 
 ## 基本原则
 

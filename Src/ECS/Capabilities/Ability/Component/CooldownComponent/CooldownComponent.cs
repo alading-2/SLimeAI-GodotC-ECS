@@ -19,7 +19,7 @@ public partial class CooldownComponent : Node, IComponent
     // ================= 标准字段 =================
     private Data? _data;
     private IEntity? _entity;
-    private GameTimer? _timer;
+    private TimerHandle _timer;
 
     // ================= 属性访问 =================
 
@@ -91,7 +91,7 @@ public partial class CooldownComponent : Node, IComponent
     public bool IsReady()
     {
         // 如果 Timer 存在，说明正在冷却中
-        return _timer == null;
+        return !_timer.IsValid;
     }
 
     /// <summary>启动冷却计时</summary>
@@ -107,12 +107,13 @@ public partial class CooldownComponent : Node, IComponent
         CancelTimer();
 
         // 创建 Timer
-        _timer = TimerManager.Instance.Delay(totalCooldown)
-            .WithTag("AbilityCooldown")
-            .OnComplete(() =>
+        _timer = TimerManager.Instance.Delay(
+            totalCooldown,
+            BuildTimerOptions(TimerPurpose.Cooldown, "AbilityCooldown"),
+            () =>
             {
                 // 冷却完成
-                _timer = null;
+                _timer = default;
 
                 _entity?.Events.Emit(
                     new GameEventType.Ability.Ready()
@@ -134,15 +135,15 @@ public partial class CooldownComponent : Node, IComponent
     /// <summary>获取冷却进度 (0.0=刚开始, 1.0=完成)</summary>
     public float GetCooldownProgress()
     {
-        if (_timer == null) return 1f;
-        return _timer.Progress;
+        if (!_timer.IsValid) return 1f;
+        return TimerManager.Instance.TryGetProgress(_timer, out var progress) ? progress : 1f;
     }
 
     /// <summary>获取剩余冷却时间 (秒)</summary>
     public float GetRemainingCooldown()
     {
-        if (_timer == null) return 0f;
-        return _timer.Remaining;
+        if (!_timer.IsValid) return 0f;
+        return TimerManager.Instance.TryGetRemaining(_timer, out var remaining) ? remaining : 0f;
     }
 
     /// <summary>获取最终冷却时间 (应用冷却缩减后)</summary>
@@ -160,10 +161,19 @@ public partial class CooldownComponent : Node, IComponent
 
     private void CancelTimer()
     {
-        if (_timer != null)
+        if (_timer.IsValid)
         {
-            _timer.Cancel();
-            _timer = null;
+            TimerManager.Instance?.Cancel(_timer, TimerCancelReason.ComponentUnregistered);
+            _timer = default;
         }
+    }
+
+    private TimerOptions BuildTimerOptions(TimerPurpose purpose, string tag)
+    {
+        return new TimerOptions(
+            new TimerOwner(TimerOwnerType.Component, $"{GetInstanceId()}:{purpose}"),
+            purpose,
+            TimerClock.Game,
+            tag);
     }
 }

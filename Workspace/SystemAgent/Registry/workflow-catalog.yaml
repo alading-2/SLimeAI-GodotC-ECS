@@ -30,7 +30,7 @@ workflows:
       - Workspace/SystemAgent/Routes/NewFeature.md
     conditional_read:
       design:
-        - Workspace/SystemAgent/Actors/DesignDiscovery.md
+        - Workspace/SystemAgent/Actors/DeepThink.md
         - Workspace/SystemAgent/Actors/DesignCritic.md
       git_worktree:
         - Workspace/SystemAgent/Rules/Git.md
@@ -50,7 +50,7 @@ workflows:
       - id: RV-DOC-SYNC
       - id: RV-RETROSPECTIVE
     external_resources: not_preloaded
-    completion_artifact: SDD design/tasks/progress/bdd, worktree decision record when applicable, DesignDiscovery confirmation package when used, validation output, git status, retrospective verdict
+    completion_artifact: SDD design/tasks/progress/bdd, worktree decision record when applicable, DeepThink confirmation package when used, validation output, git status, retrospective verdict
   debug_fix:
     label: Debug Fix
     description: bug、构建失败、测试失败、验证失败或异常定位。
@@ -89,7 +89,7 @@ workflows:
       - Workspace/SystemAgent/Routes/WorkflowIteration.md
     conditional_read:
       design:
-        - Workspace/SystemAgent/Actors/DesignDiscovery.md
+        - Workspace/SystemAgent/Actors/DeepThink.md
         - Workspace/SystemAgent/Actors/DesignCritic.md
       roles:
         - Workspace/SystemAgent/Actors/Retrospective.md
@@ -105,7 +105,7 @@ workflows:
       - id: RV-CONFIG-SYNC
       - id: RV-RETROSPECTIVE
     external_resources: ai_decided_by_task_need
-    completion_artifact: updated SystemAgent docs/config, DesignDiscovery/DesignCritic notes when used, plus retrospective verdict
+    completion_artifact: updated SystemAgent docs/config, DeepThink/DesignCritic notes when used, plus retrospective verdict
   config_maintenance:
     label: Config Maintenance
     description: skill、rule、command、hook、subagent、sync 或 skill-test 维护。

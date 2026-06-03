@@ -51,7 +51,7 @@ public partial class EffectComponent : Node, IComponent
     private AnimatedSprite2D? _sprite;
 
     /// <summary>生命周期计时器</summary>
-    private GameTimer? _lifeTimer;
+    private TimerHandle _lifeTimer;
 
     /// <summary>当前动画名</summary>
     private string _currentAnimation = string.Empty;
@@ -82,8 +82,7 @@ public partial class EffectComponent : Node, IComponent
         if (_sprite != null)
             _sprite.AnimationFinished -= OnAnimationFinished;
 
-        _lifeTimer?.Cancel();
-        _lifeTimer = null;
+        CancelLifeTimer(TimerCancelReason.ComponentUnregistered);
 
         // 取消宿主销毁事件监听
         GlobalEventBus.Global.Off<GameEventType.Global.EntityDestroyed>(OnHostDestroyed);
@@ -261,8 +260,14 @@ public partial class EffectComponent : Node, IComponent
     {
         if (MaxLifeTime > 0)
         {
-            _lifeTimer = TimerManager.Instance?.Delay(MaxLifeTime)
-                .OnComplete(DestroySelf);
+            _lifeTimer = TimerManager.Instance.Delay(
+                MaxLifeTime,
+                new TimerOptions(
+                    new TimerOwner(TimerOwnerType.Component, $"{GetInstanceId()}:{TimerPurpose.EffectLifetime}"),
+                    TimerPurpose.EffectLifetime,
+                    TimerClock.Game,
+                    "EffectLifetime"),
+                DestroySelf);
             _log.Debug($"启动生命周期计时器: {MaxLifeTime}s");
         }
     }
@@ -296,5 +301,12 @@ public partial class EffectComponent : Node, IComponent
         {
             EntityManager.Destroy(entityNode);
         }
+    }
+
+    private void CancelLifeTimer(TimerCancelReason reason)
+    {
+        if (!_lifeTimer.IsValid) return;
+        TimerManager.Instance?.Cancel(_lifeTimer, reason);
+        _lifeTimer = default;
     }
 }

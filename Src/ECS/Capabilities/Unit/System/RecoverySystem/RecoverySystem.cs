@@ -59,7 +59,7 @@ public partial class RecoverySystem : Node, ISystem,
     /// 底层驱动计时器。
     /// 依托于 TimerManager 运行，循环触发行恢复处理函数。
     /// </summary>
-    private GameTimer? _recoveryTimer;
+    private TimerHandle _recoveryTimer;
 
     /// <summary>
     /// 恢复计算的时间步长。
@@ -169,8 +169,14 @@ public partial class RecoverySystem : Node, ISystem,
         }
 
         // 使用 TimerManager 启动一个循环调用的计时器，回调指向 ProcessRecovery
-        _recoveryTimer = TimerManager.Instance?.Loop(RecoveryInterval)
-            .OnLoop(ProcessRecovery);
+        _recoveryTimer = TimerManager.Instance.Loop(
+            RecoveryInterval,
+            new TimerOptions(
+                new TimerOwner(TimerOwnerType.System, nameof(RecoverySystem)),
+                TimerPurpose.Recovery,
+                TimerClock.Game,
+                $"{nameof(RecoverySystem)}:{TimerPurpose.Recovery}"),
+            ProcessRecovery);
 
         _log.Debug($"恢复计时器已启动，配置间隔: {RecoveryInterval}s");
     }
@@ -180,8 +186,11 @@ public partial class RecoverySystem : Node, ISystem,
     /// </summary>
     private void StopRecoveryTimer()
     {
-        _recoveryTimer?.Cancel();
-        _recoveryTimer = null;
+        if (_recoveryTimer.IsValid)
+        {
+            TimerManager.Instance?.Cancel(_recoveryTimer, TimerCancelReason.SystemStopped);
+            _recoveryTimer = default;
+        }
     }
 
     // ================= 批量恢复执行逻辑 =================

@@ -17,7 +17,7 @@ small 默认不创建 SDD；medium 可选，用户要求深度分析、后续继
 ## Phases
 
 1. Route：输出 route 摘要，确认 git boundary、task_size、SDD 策略和 worktree 判断。
-2. Discover：medium/large 或高风险任务调用 `Capabilities/DesignDiscovery.md`，必要时追加 `Roles/DesignCritic.md`。
+2. Discover：medium/large 或高风险任务调用 `Workspace/SystemAgent/Actors/DeepThink.md`，必要时追加 `Workspace/SystemAgent/Actors/DesignCritic.md`。
 3. Plan：用 SDD 或本次上下文冻结任务切片、验收标准、owner skill 和验证方式。
 4. Execute：按 owner capability skill 做最小范围实现，不把 workflow、role 或 gate 正文复制到 skill。
 5. Validate：按影响面运行 owner、interaction、feature-slice 或 release-batch 验证并保存证据。
@@ -35,7 +35,7 @@ small 默认不创建 SDD；medium 可选，用户要求深度分析、后续继
 
 Planner, TestDesigner, Implementer, Reviewer, Verifier, Retrospective。
 
-Design phase: medium/large 新功能、重构、迁移或 SDD 实施在计划冻结前调用 `Workspace/SystemAgent/Actors/DesignDiscovery.md`；large 或高风险 medium 任务追加 `Workspace/SystemAgent/Actors/DesignCritic.md`，再进入 Planner 的可执行拆分。
+Design phase: medium/large 新功能、重构、迁移或 SDD 实施在计划冻结前调用 `Workspace/SystemAgent/Actors/DeepThink.md`；large 或高风险 medium 任务追加 `Workspace/SystemAgent/Actors/DesignCritic.md`，再进入 Planner 的可执行拆分。
 
 Conditional senior roles: when the change touches multi-system gameplay, GodotBridge presentation, validation tooling, or SystemAgent validation gates, add `SeniorGameDeveloper` and `SeniorProgrammer` before final Reviewer aggregation. Single owner-scoped Runtime/DataOS changes do not require these senior roles by default.
 
@@ -47,7 +47,7 @@ Conditional senior roles: when the change touches multi-system gameplay, GodotBr
 
 SDD tasks/progress、Runtime/DataOS/Godot/文档验证证据、必要时 BDD 场景。若当前任务使用 SDD，应提供 `progress.md` Latest Resume 和最近一次更新的证据。
 
-DesignDiscovery 输出的确认包、默认假设、Must Confirm 和 SDD Updates 必须写入当前 SDD 的 `design/`、`progress.md`、`tasks.md`、`bdd.md` 或 `notes.md`，不得只保留在聊天中。
+DeepThink 输出的确认包、默认假设、Must Confirm 和 Artifact Updates 必须写入当前 SDD 的 `design/`、`progress.md`、`tasks.md`、`bdd.md` 或 `notes.md`，不得只保留在聊天中。确认问题写在设计文档的 `## Must Confirm`、`## Should Confirm`、`## Defaults I Will Use` 标题下；用户裁决和采用的默认假设写入 `progress.md`。
 
 Validation scope must be reported separately from pass/fail as `owner`、`interaction`、`feature-slice` or `release-batch`.
 

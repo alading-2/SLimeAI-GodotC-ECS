@@ -1,0 +1,62 @@
+[
+  {
+    "Name": "LongDelayNoDue-1000",
+    "TimerCount": 1000,
+    "ScheduleMs": 0.8557,
+    "TickMs": 0.0054,
+    "DispatchMs": 0.0002,
+    "CancelMs": 0,
+    "TickAllocatedBytes": 0,
+    "ActiveCount": 1000,
+    "CallbackCount": 0,
+    "CancelledCount": 0
+  },
+  {
+    "Name": "LongDelayNoDue-10000",
+    "TimerCount": 10000,
+    "ScheduleMs": 12.7209,
+    "TickMs": 0.0109,
+    "DispatchMs": 0.0002,
+    "CancelMs": 0,
+    "TickAllocatedBytes": 0,
+    "ActiveCount": 10000,
+    "CallbackCount": 0,
+    "CancelledCount": 0
+  },
+  {
+    "Name": "StaggeredDue-10000",
+    "TimerCount": 10000,
+    "ScheduleMs": 12.5992,
+    "TickMs": 13.3561,
+    "DispatchMs": 0.3283,
+    "CancelMs": 0,
+    "TickAllocatedBytes": 0,
+    "ActiveCount": 0,
+    "CallbackCount": 10000,
+    "CancelledCount": 0
+  },
+  {
+    "Name": "CancelByOwner-10000",
+    "TimerCount": 10000,
+    "ScheduleMs": 17.4691,
+    "TickMs": 0.0023,
+    "DispatchMs": 0,
+    "CancelMs": 2.1144,
+    "TickAllocatedBytes": 0,
+    "ActiveCount": 0,
+    "CallbackCount": 0,
+    "CancelledCount": 10000
+  },
+  {
+    "Name": "PerFrameProgress-1000-of-11000",
+    "TimerCount": 11000,
+    "ScheduleMs": 6.6801,
+    "TickMs": 0.198,
+    "DispatchMs": 0,
+    "CancelMs": 0,
+    "TickAllocatedBytes": 0,
+    "ActiveCount": 11000,
+    "CallbackCount": 1000,
+    "CancelledCount": 0
+  }
+]

@@ -1,9 +1,9 @@
 # ObjectPool 工具设计包
 
-> 更新：2026-05-31
+> 更新：2026-06-03
 > 状态：current design package
 > 入口：`README.md`
-> 裁决：对象池保留，但必须从“替碰撞系统兜底”的历史状态收口为 AI-first 生命周期工具；根节点参与物理的池化对象继续默认脱树，后续重构重点是策略显式化、生命周期分层和可观测验证。
+> 裁决：对象池保留，不做整体重写；根节点参与物理的池化对象继续默认脱树。后续重构重点是策略显式化、生命周期分层、节点状态观测和 Godot 场景验证，而不是取消脱树或让 ObjectPool 接管 Entity / Collision 业务语义。
 
 ## 0. 本设计包回答什么
 
@@ -17,6 +17,21 @@
 
 结论先写清楚：**要继续脱树，但不要把脱树当成对象池唯一职责，也不要让对象池继续无限吸收碰撞、Entity、业务状态和组件注册问题。**
 
+2026-06-02 复核后补充裁决：
+
+- 当前实现路线正确，不建议回退到“只关 monitoring/disabled/layer/mask”。
+- 当前实现需要重构，但重构优先级是“内部策略拆分 + 观测 + 场景验证”，不是大改 public API。
+- `CollisionObject2D.disable_mode = REMOVE` 可作为辅助保护项研究，但不能替代脱树，因为它不解决 `Get(false)` 到 `Activate()` 之间的旧位置、半初始化和事件队列窗口。
+- 场景结构问题（普通 `Node` 阻断 `Node2D` transform）必须独立进入 Collision / scene gate，不应再被归因成 ObjectPool 单点问题。
+
+2026-06-02 对 `Src/ECS/Tools/ObjectPool/Tests` 的补充裁决：
+
+- 现有 `ObjectPoolVisualTest` / `ObjectPoolManagerTest` 保留为 manual demo，不再作为回归验证入口。
+- 现有 demo 的根节点对象都是 `Node2D`，不能验证 `CollisionObject2D` 根节点脱树，也不能证明幽灵碰撞已解决。
+- 测试池名不能再使用 `ProjectilePool` / `EffectPool` 这类真实池名，必须改成 `Test/ObjectPool/...` 或 `Demo/ObjectPool/...` 隔离名称。
+- demo 退出时不应调用会污染全局状态的 `ObjectPoolManager.DestroyAll()`，除非该场景只创建隔离池并明确验证全局清理。
+- 后续实现必须补两类自动化验证：Runtime contract checks 与 Godot collision validation scene；后者必须有 README 五字段、PASS artifact 和 `checks[]`。
+
 ## 1. 读取事实源
 
 本轮已读取的本地事实源：
@@ -24,20 +39,23 @@
 | 来源 | 结论 |
 | --- | --- |
 | `DocsAI/ECS框架与AIFirst方向决策.md` | 当前方向是 AI-first ECS，不是抛弃 ECS，也不是复制外部 GameOS；应保留 Entity / Data / Event / System 心智模型并强化契约、验证和观察面。 |
-| `DocsAI/思考/碰撞问题/幽灵碰撞问题深度分析.md` | 旧幽灵碰撞的一个根因是空间链路中插入普通 `Node`，导致 `Area2D` 等空间节点无法继承 `Node2D` transform；这属于场景结构问题，不应长期由对象池兜底。 |
-| `DocsOld/框架/ECS/Collision/碰撞问题需要注意.md` | 仅靠 `ProcessMode`、`monitoring`、`SetDeferred`、远点停放都不是完整退场语义；对象池兜底和组件内聚需要分层。 |
-| `DocsOld/框架/ECS/Collision/对象池碰撞兼容说明.md` | Godot 物理 pair、deferred 与监控队列存在时序风险；历史实现选择“泊车位 + 脱树 + 同步禁用 + 延迟激活”。 |
+| `DocsAI/ECS/Capabilities/Collision/Concepts/碰撞问题需要注意.md` | 旧幽灵碰撞的一个根因是空间链路中插入普通 `Node`，导致 `Area2D` 等空间节点无法继承 `Node2D` transform；这属于场景结构问题，不应长期由对象池兜底。 |
+| `DocsAI/ECS/Capabilities/Collision/Concepts/README.md` | 当前 Collision Concepts 已把场景结构、对象池兼容、碰撞层和历史问题分成不同职责。 |
+| `DocsAI/ECS/Capabilities/Collision/Concepts/对象池碰撞兼容说明.md` | Godot 物理 pair、deferred 与监控队列存在时序风险；当前实现选择“泊车位 + 脱树 + 同步禁用 + 延迟激活”。 |
 | `DocsAI/ECS/Tools/ObjectPool/Concept.md`、`Usage.md` | current 文档已经把 detach-isolate-reattach 作为当前标准做法。 |
-| `DocsAI/ECS/Entity/README.md`、`EntityManager.md` | Entity hard cutover 目标是拆分 `EntityManager` 的 spawn / registry / component / destroy / pool 编排职责。 |
+| `DocsAI/ECS/Runtime/Entity/README.md`、`DocsAI/ECS/Runtime/Entity/EntityManager.md` | Entity hard cutover 目标是拆分 `EntityManager` 的 spawn / registry / component / destroy / pool 编排职责。 |
 | `Src/ECS/Tools/ObjectPool/ObjectPool.cs` | 当前对象池已实现 `NeedsTreeDetach(node is CollisionObject2D)`、泊车位、递归碰撞开关、`Get(false)` / `Activate()` 两阶段激活、`IPoolable` 生命周期和活跃对象统计。 |
-| `Src/ECS/Base/Component/Collision/*` | `HurtboxComponent`、`CollisionComponent`、`PickupComponent` 仍各自处理 `Area2D` 信号和监控关闭；说明碰撞职责已经部分下沉到组件，但缺统一策略契约。 |
+| `Src/ECS/Capabilities/Collision/Component/*` | `HurtboxComponent`、`CollisionComponent`、`PickupComponent` 仍各自处理 `Area2D` 信号和监控关闭；说明碰撞职责已经部分下沉到组件，但缺统一策略契约。 |
 | `/home/slime/Code/SlimeAI/Resources/Engine/Docs` 与本地 Godot 源码资源 | 本地有 Godot 4.6.2 源码与引擎分析资料，可继续用于源码级验证；本设计不直接复制外部框架结构。 |
+| `Src/ECS/Tools/ObjectPool/Tests/*` | 当前测试目录实际是 UI/鼠标 demo：`Control` 场景、随机位置、`Node2D` demo 对象、无 artifact oracle；需要重构为 demo + contract + validation 三层。 |
 
 外部资料校准：
 
-- Godot 官方类文档用于确认 `Area2D`、`Node`、`Object.set_deferred/call_deferred` 等 API 的语义边界。
-- Godot issue `godotengine/godot#92691` 用于校准 `Area2D` / shape 禁用启用与监控状态变化相关的事件时序风险。
-- .NET / Unity 对象池资料用于校准通用对象池边界：对象池核心价值是减少高频分配和销毁，不应承载业务生命周期真相。
+- Context7 `/godotengine/godot-docs` 与 `/websites/godotengine_en_4_6`：校准 `Area2D.monitoring`、`monitorable`、`CollisionShape2D.disabled`、`CollisionPolygon2D.disabled`、`Object.set_deferred` 和 `CollisionObject2D.disable_mode` 的官方语义。
+- Godot 官方类文档和 issue `godotengine/godot#69407` / `#79464` / `#74988`：校准同帧移动或碰撞开关、`monitorable` 切换、`ProcessMode.Disabled` 与 Area2D 事件时序风险。
+- Microsoft / Unity / Game Programming Patterns 对象池资料：校准通用对象池边界；对象池应处理复用、容量、reset policy 和统计，不应承载业务生命周期真相。
+- `/home/slime/Code/SlimeAI/Resources/Engine/Docs/FrameworkAnalysis/Reports/godot-4.6.2-stable/12-Godot-源码分析报告.md`：校准 SlimeAI 不应直接绕过 Godot Node 代理去操作裸 PhysicsServer2D RID。
+- `/home/slime/Code/SlimeAI/Resources/Engine/Docs/FrameworkAnalysis/Reports/Arch/04-Arch-源码分析报告.md` 与 `ET-Framework/13-ET-Framework-源码分析报告.md`：提供 pooled reference / generation / stale reference 的后续观察项，不要求当前立刻替换 EntityId。
 
 ## 2. 总裁决
 
@@ -146,7 +164,7 @@ AI-first 的规则应写成：
 
 ### 4.4 历史包袱 D：场景结构错误不应由池子补偿
 
-`DocsAI/思考/碰撞问题/幽灵碰撞问题深度分析.md` 已经说明，普通 `Node` 插在 `Node2D` 空间链路中会让空间节点无法继承 transform。这个问题的解决方式是：
+`DocsAI/ECS/Capabilities/Collision/Concepts/碰撞问题需要注意.md` 已经说明，普通 `Node` 插在 `Node2D` 空间链路中会让空间节点无法继承 transform。这个问题的解决方式是：
 
 - 场景结构门禁。
 - Component / preset 基类约束。
@@ -230,7 +248,7 @@ Collision 系统应补齐三类契约：
 
 - `DocsAI/ECS/Tools/ObjectPool/Concept.md` 更新：明确脱树不是临时补丁，而是物理根节点池化对象的默认隔离策略。
 - `DocsAI/ECS/Tools/ObjectPool/Usage.md` 更新：补充策略表和禁止事项。
-- `DocsAI/ECS/Collision/*` 更新：说明对象池只负责物理退场，碰撞事件过滤属于 Collision owner。
+- `DocsAI/ECS/Capabilities/Collision/*` 更新：说明对象池只负责物理退场，碰撞事件过滤属于 Collision owner。
 - owner skill 更新：修改 ObjectPool / Collision / Entity 相关实现时必须同步对应文档和验证。
 
 ### 6.2 P1：把策略从泛型池里拆出来
@@ -278,7 +296,87 @@ Discarded
 
 这些字段用于 scene test 和 AI debug，不要求全部进 Data。
 
-### 6.4 P3：补 Godot 场景验证
+### 6.4 2026-06-02 复核后的 Evidence / Inference / Unknown
+
+#### Evidence
+
+| 证据 | 结论 |
+| --- | --- |
+| `ObjectPool<T>` 当前代码 | 已有 `PoolParkingPosition`、`NeedsTreeDetach(node is CollisionObject2D)`、`SetCollisionTreeActive`、`ForceDisableCollisionsDirect`、`Get(false)`、`Activate()`。行为已经是生命周期隔离状态机雏形。 |
+| `EntitySpawnPipeline` + `EntityManager.Spawn` | 对象池路径已按 `pool.Get(false)` → Data / Visual / Transform / Component / Registry → `pool.Activate()` → `CharacterBody2D.CallDeferred(MoveAndSlide)` 执行。时序 owner 实际在 Entity Runtime。 |
+| Collision 组件代码 | `CollisionComponent` / `HurtboxComponent` 注册和注销信号，并在注销时 deferred 关闭 monitoring / monitorable。Collision owner 已承担事件桥接与组件退场的一部分职责。 |
+| Context7 Godot 4.6 docs | `Area2D.monitoring` 控制 Area 检测 enter/exit；`CollisionPolygon2D.disabled` 等碰撞属性应通过 `Object.set_deferred()` 修改；`disable_mode` 绑定 `ProcessMode.Disabled` 语义。 |
+| Godot issue 与历史源码分析 | shape 禁用/启用、物理回调中修改属性和事件队列存在时序风险；只靠属性开关不能证明节点已退出物理世界。 |
+| 本地 Resources 引擎分析 | SlimeAI 不应让 Capability 直接持有 PhysicsServer2D RID；Godot 物理操作应通过 Node / Bridge 代理保持生命周期可追踪。 |
+
+#### Inference
+
+| 推断 | 设计落点 |
+| --- | --- |
+| 脱树仍是当前最稳妥退场语义 | 物理根节点池化对象继续默认脱树。 |
+| `disable_mode=REMOVE` 有参考价值但不足以替代脱树 | 后续可作为 `CollisionIsolationStrategy` 辅助配置，不作为 P0 行为切换。 |
+| 节点级状态观测比继续加自然语言日志更重要 | 补 `PoolNodeStateSnapshot` / state registry，支撑 Godot scene test。 |
+| 旧引用误命中风险不只来自对象池 | 后续可在 Entity lifecycle / ObjectPool observation 中评估 generation 或 destroyed flag。 |
+
+#### Unknown
+
+| 未知 | 验证方式 |
+| --- | --- |
+| `disable_mode=REMOVE` 在当前 Godot 4.6.2 + SlimeAI `Get(false)` / `Activate()` 时序下是否能减少防线 | 增加对照场景：仅 `ProcessMode.Disabled + disable_mode=REMOVE` vs 脱树策略，比较旧位置 entered 事件。 |
+| `RemoveChild/AddChild` 对高频 Projectile 的实际成本 | profiling 或场景压测，记录每帧 projectile 数、复用率、AddChild/RemoveChild 耗时和误触发事件数。 |
+| 节点状态观测字段的最小集合 | 先从 `insideTree / inPool / needsDetach / active / last frame / last position` 开始，验证 TestSystem 是否足够定位问题。 |
+
+### 6.5 2026-06-03 ResearchAdoption 复核
+
+```yaml
+externalResources:
+  enabled:
+    - engine-framework
+    - web
+    - context7
+  scope:
+    - /home/slime/Code/SlimeAI/Resources/Engine/Engine/godot-4.6.2-stable
+    - /home/slime/Code/SlimeAI/Resources/Engine/Docs
+    - Godot 4.6 Area2D / CollisionShape2D / CollisionObject2D docs
+    - Godot issue 69407 / 79464 / 74988 / godot-proposals 3424
+  reason: 复核对象池碰撞隔离是否继续脱树、是否引入 disable_mode=REMOVE、以及 Tests 场景重构的 oracle。
+  expires: current-task
+copiedCodeOrAssets: none
+```
+
+#### Evidence
+
+| 证据 | 结论 |
+| --- | --- |
+| Godot 4.6 docs / Context7 | `CollisionShape2D.disabled` 应通过 `Object.set_deferred()` 修改；`Area2D` overlap 列表在 physics step 更新，不会在对象移动后立即同步；`disable_mode=REMOVE` 绑定 `ProcessMode.Disabled`。 |
+| Godot issue `#69407` | 同一 physics frame 中移动出 Area 并恢复 collision mask 仍可能触发 `body_entered`；社区 workaround 是等待 physics frame，但这不构成对象池状态机。 |
+| Godot issue `#79464` | `monitorable` toggle 对已有重叠 Area2D 不保证重新发 enter，说明属性开关不能替代 pair/event oracle。 |
+| Godot issue `#74988` | `ProcessMode.Disabled -> Inherit` 与 Area2D overlap 存在异常案例，说明 process mode 不是完整物理退场。 |
+| 本地 Godot 4.6.2 `collision_object_2d.cpp` | ENTER_TREE/EXIT_TREE 和 `DISABLE_MODE_REMOVE` 都通过 set physics space 实现；脱树是稳定的 space=null 退场语义。 |
+| 本地 Godot 4.6.2 `godot_collision_object_2d.cpp` | shape disabled 会 broadphase remove，重新启用会 pending update 并 create/move broadphase entry。 |
+| 本地 Godot 4.6.2 `godot_area_pair_2d.cpp` / `godot_area_2d.cpp` | Area pair 和 query 是 setup/pre_solve/flush_queries 的状态机；area-area pair 构造时快照 `monitorable`。 |
+| Resources/Engine Unity / Bevy / IFramework 分析 | 外部框架可采纳的是 stateful event validation、deferred structural boundary、pool capacity/reset/observability；不复制它们的物理 API。 |
+
+#### Inference
+
+| 推断 | 设计落点 |
+| --- | --- |
+| Godot 对象池碰撞问题不是单点 bug，而是 Node 场景树、PhysicsServer RID、broadphase pair 和 Area signal queue 的组合时序。 | SlimeAI 继续按显式生命周期隔离处理，不等待上游 issue 修复。 |
+| `disable_mode=REMOVE` 与脱树都能触发 set space null，但前者依赖 process mode，且不覆盖 `Get(false)` 半初始化窗口。 | 作为 `CollisionIsolationStrategy.ApplyOptionalDisableMode` 的对照实验，不作为默认策略。 |
+| 仅靠 `SetDeferred`、等待一帧或属性值读数不能证明回池对象已退出物理世界。 | Godot validation scene 必须输出 `checks[]`、事件列表、旧/新坐标、release/acquire/activate frame。 |
+
+#### Adopt Now / Later / Reject
+
+| 候选机制 | 决策 | 原因 |
+| --- | --- | --- |
+| 物理根节点回池脱树 | Adopt Now | EXIT_TREE / set space null 是当前最清晰的 Godot 物理退场语义。 |
+| `Get(false)` 挂树后同步禁用 + `Activate()` 后恢复 | Adopt Now | 覆盖同帧回收再出池的 deferred 未生效窗口。 |
+| Godot collision validation artifact | Adopt Now | 没有结构化事件序列，就无法区分旧 pair 补发和新命中。 |
+| `disable_mode=REMOVE` | Adopt Later | 可降低某些 process disabled 场景风险，但不替代脱树和业务过滤。 |
+| 只靠 `monitoring/monitorable/disabled/layer=0` | Reject | 无法证明已有 pair、pending query 和旧 transform 已清空。 |
+| 复制 Unity Physics / Bevy physics API | Reject | SlimeAI 当前问题是 Godot Node/PhysicsServer 时序，不是缺少底层物理 DSL。 |
+
+### 6.6 P3：补 Godot 场景验证
 
 最小验证场景：
 
@@ -286,6 +384,35 @@ Discarded
 2. `Area2D` 投射物在命中点回池并立即复用，不应补发旧 `entered`。
 3. 普通 UI / Timer / 非碰撞 Node 池不脱树，不受碰撞策略影响。
 4. Component 父链中插入普通 `Node` 的负向场景应被检测出来，不能再误判为对象池问题。
+
+### 6.7 P3 补充：重构 `Src/ECS/Tools/ObjectPool/Tests`
+
+本阶段不直接把现有 UI demo 改成验证场景，而是拆分测试职责：
+
+| 层级 | 目标文件 | 裁决 |
+| --- | --- | --- |
+| Runtime contract | `Src/ECS/Tools/ObjectPool/Tests/ObjectPoolContractRuntimeTest.cs` | 自动验证池容量、统计、重复归还、active snapshot、静态归还、manager mapping 和测试池隔离。 |
+| Collision validation | `Src/ECS/Tools/ObjectPool/Tests/ObjectPoolCollisionIsolationValidation.cs/.tscn` | 自动验证 `Area2D` / `CharacterBody2D` 根节点回池脱树、`Get(false)` 窗口碰撞关闭、`Activate()` 后只在新位置触发。 |
+| Scene README | `Src/ECS/Tools/ObjectPool/Tests/README.md` | 提供 `expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath`。 |
+| Manual demo | 当前 `ObjectPoolVisualTest` / `ObjectPoolManagerTest` | 保留演示价值，改名或 README 标记为 legacy/manual demo，不作为 PASS/FAIL。 |
+
+`ObjectPoolCollisionIsolationValidation` 的最小 check：
+
+- `collision_area_release_detaches`
+- `collision_character_release_detaches`
+- `collision_get_false_attached_disabled`
+- `collision_activate_after_transform`
+- `collision_immediate_reuse_same_frame`
+- `collision_non_collision_node_not_detached`
+- `collision_artifact_oracle_complete`
+
+PASS artifact 建议：
+
+```text
+.ai-temp/scene-tests/artifacts/objectpool-collision-isolation-validation.json
+```
+
+Verifier 不能用“无 error”“exit code 0”或 stdout `PASS` 替代 artifact oracle。通过声明必须同时检查 run `index.json`、per-scene `result.json`、scene artifact、artifact 五字段和 `checks[]`。
 
 ## 7. 不推荐方向
 
@@ -322,4 +449,3 @@ ObjectPool 重构完成不是“没有幽灵碰撞日志”。
 - Pool 观测能显示对象处于池内、挂树未激活、活跃或释放中。
 - Godot scene test 能复现并验证旧位置回池再出池不触发幽灵碰撞。
 - DocsAI / Skill / SDD 索引同步，AI 下次能从 owner 入口找到这份裁决。
-

@@ -133,9 +133,9 @@ components:
       - id: design-critic
         role: Workspace/SystemAgent/Actors/DesignCritic.md
         trigger: deep design analysis, large SDD task, or high-risk medium workflow change
-      - id: design-discovery
-        role: Workspace/SystemAgent/Actors/DesignDiscovery.md
-        trigger: design discovery, architecture trade-off, or SDD creation
+      - id: deepthink
+        role: Workspace/SystemAgent/Actors/DeepThink.md
+        trigger: direction discovery, requirement confirmation, architecture trade-off, or SDD creation
     conditional_review:
       - id: senior-game-developer
         role: Workspace/SystemAgent/Actors/SeniorGameDeveloper.md

@@ -28,7 +28,7 @@ public partial class TriggerComponent : Node, IComponent
     // ================= 状态变量 =================
 
     /// <summary>周期触发模式下的计时器实例</summary>
-    private GameTimer? _periodicTimer;
+    private TimerHandle _periodicTimer;
 
     // ================= 属性访问 =================
 
@@ -61,8 +61,7 @@ public partial class TriggerComponent : Node, IComponent
         UnsubscribeEvent();
 
         // 取消定时器
-        _periodicTimer?.Cancel();
-        _periodicTimer = null;
+        CancelPeriodicTimer();
 
         _data = null;
         _entity = null;
@@ -167,11 +166,17 @@ public partial class TriggerComponent : Node, IComponent
         if (interval <= 0f) return;
 
         // 取消旧的定时器
-        _periodicTimer?.Cancel();
+        CancelPeriodicTimer();
 
         // 创建新的循环定时器
-        _periodicTimer = TimerManager.Instance.Loop(interval)
-            .OnLoop(OnPeriodicTimerTick);
+        _periodicTimer = TimerManager.Instance.Loop(
+            interval,
+            new TimerOptions(
+                new TimerOwner(TimerOwnerType.Component, $"{GetInstanceId()}:{TimerPurpose.PeriodicTrigger}"),
+                TimerPurpose.PeriodicTrigger,
+                TimerClock.Game,
+                "AbilityPeriodicTrigger"),
+            OnPeriodicTimerTick);
 
         _log.Debug($"技能 {AbilityName} 启动周期触发定时器: {interval}s");
     }
@@ -184,6 +189,13 @@ public partial class TriggerComponent : Node, IComponent
         if (_data == null || _entity is not AbilityEntity ability) return;
 
         TriggerAbility();
+    }
+
+    private void CancelPeriodicTimer()
+    {
+        if (!_periodicTimer.IsValid) return;
+        TimerManager.Instance?.Cancel(_periodicTimer, TimerCancelReason.ComponentUnregistered);
+        _periodicTimer = default;
     }
 
 

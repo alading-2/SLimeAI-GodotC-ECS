@@ -207,42 +207,42 @@ skills:
       - Workspace/SDD/docs/SDDFormat.md
       - Workspace/SDD/docs/CLI.md
       - Workspace/SDD/docs/ValidationRules.md
-  - id: sdd-design-discovery
-    source: .ai-config/skills/sdd/sdd-design-discovery/SKILL.md
-    category: sdd
+  - id: systemagent-deepthink
+    source: .ai-config/skills/systemagent/systemagent-deepthink/SKILL.md
+    category: systemagent
     function_category: authoring
     role: capability
     status: active
     canonical_docs:
-      - Workspace/SystemAgent/Actors/DesignDiscovery.md
+      - Workspace/SystemAgent/Actors/DeepThink.md
       - Workspace/SystemAgent/Actors/DesignCritic.md
       - Workspace/SDD/docs/SDDFormat.md
       - Workspace/SDD/docs/CLI.md
-  - id: systemagent-config-maintenance
-    source: .ai-config/skills/systemagent/systemagent-config-maintenance/SKILL.md
+  - id: systemagent-config-maintenance-workflow
+    source: .ai-config/skills/systemagent/systemagent-config-maintenance-workflow/SKILL.md
     category: systemagent
     role: systemagent-wrapper
     status: active
     canonical_docs:
       - Workspace/SystemAgent/Routes/ConfigMaintenance.md
       - Workspace/SystemAgent/Rules/AIConfigBoundary.md
-  - id: systemagent-debug-fix
-    source: .ai-config/skills/systemagent/systemagent-debug-fix/SKILL.md
+  - id: systemagent-debug-fix-workflow
+    source: .ai-config/skills/systemagent/systemagent-debug-fix-workflow/SKILL.md
     category: systemagent
     role: systemagent-wrapper
     status: active
     canonical_docs:
       - Workspace/SystemAgent/Routes/DebugFix.md
-  - id: systemagent-new-feature
-    source: .ai-config/skills/systemagent/systemagent-new-feature/SKILL.md
+  - id: systemagent-new-feature-workflow
+    source: .ai-config/skills/systemagent/systemagent-new-feature-workflow/SKILL.md
     category: systemagent
     role: systemagent-wrapper
     status: active
     canonical_docs:
       - Workspace/SystemAgent/Routes/NewFeature.md
-      - Workspace/SystemAgent/Actors/DesignDiscovery.md
-  - id: systemagent-research-adoption
-    source: .ai-config/skills/systemagent/systemagent-research-adoption/SKILL.md
+      - Workspace/SystemAgent/Actors/DeepThink.md
+  - id: systemagent-research-adoption-workflow
+    source: .ai-config/skills/systemagent/systemagent-research-adoption-workflow/SKILL.md
     category: systemagent
     role: systemagent-wrapper
     status: active
@@ -265,8 +265,8 @@ skills:
     canonical_docs:
       - Workspace/SystemAgent/Tools/skill-test/README.md
       - Workspace/SystemAgent/Skills/WrapperSkillPolicy.md
-  - id: systemagent-validation-release
-    source: .ai-config/skills/systemagent/systemagent-validation-release/SKILL.md
+  - id: systemagent-validation-release-workflow
+    source: .ai-config/skills/systemagent/systemagent-validation-release-workflow/SKILL.md
     category: systemagent
     role: systemagent-wrapper
     status: active
@@ -279,5 +279,5 @@ skills:
     status: active
     canonical_docs:
       - Workspace/SystemAgent/Routes/WorkflowIteration.md
-      - Workspace/SystemAgent/Actors/DesignDiscovery.md
+      - Workspace/SystemAgent/Actors/DeepThink.md
       - Workspace/SystemAgent/Actors/DesignCritic.md

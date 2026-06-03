@@ -28,7 +28,7 @@ public partial class ContactDamageComponent : Node, IComponent
     private readonly Dictionary<Node2D, IEntity?> _contactBodies = new();
 
     /// <summary>接触目标 -> 伤害计时器的映射表</summary>
-    private readonly Dictionary<Node2D, GameTimer> _bodyTimers = new();
+    private readonly Dictionary<Node2D, TimerHandle> _bodyTimers = new();
 
     /// <summary>
     /// 组件注册时初始化，订阅受击区碰撞事件
@@ -163,8 +163,14 @@ public partial class ContactDamageComponent : Node, IComponent
         }
 
         var interval = GetAttackInterval(attacker, attackerEntity);
-        var timer = TimerManager.Instance.Loop(interval)
-            .OnLoop(() => OnBodyDamageTick(attacker, attackerEntity));
+        var timer = TimerManager.Instance.Loop(
+            interval,
+            new TimerOptions(
+                BuildRelationOwner(attacker),
+                TimerPurpose.ContactDamage,
+                TimerClock.Game,
+                "ContactDamage"),
+            () => OnBodyDamageTick(attacker, attackerEntity));
 
         _bodyTimers[attacker] = timer;
     }
@@ -266,7 +272,7 @@ public partial class ContactDamageComponent : Node, IComponent
     {
         if (_bodyTimers.TryGetValue(attacker, out var timer))
         {
-            timer.Cancel();
+            TimerManager.Instance?.Cancel(timer, TimerCancelReason.TargetInvalid);
             _bodyTimers.Remove(attacker);
         }
     }
@@ -278,10 +284,17 @@ public partial class ContactDamageComponent : Node, IComponent
     {
         foreach (var kv in _bodyTimers)
         {
-            kv.Value.Cancel();
+            TimerManager.Instance?.Cancel(kv.Value, TimerCancelReason.ComponentUnregistered);
         }
 
         _bodyTimers.Clear();
+    }
+
+    private TimerOwner BuildRelationOwner(Node2D attacker)
+    {
+        return new TimerOwner(
+            TimerOwnerType.Component,
+            $"{GetInstanceId()}:{attacker.GetInstanceId()}:{TimerPurpose.ContactDamage}");
     }
 
     /// <summary>

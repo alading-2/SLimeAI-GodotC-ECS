@@ -57,10 +57,10 @@ public partial class AttackComponent : Node, IComponent
     private Node2D? _currentTarget;
 
     /// <summary>阶段推进计时器：处理前摇->命中、后摇->空闲的跳转</summary>
-    private GameTimer? _phaseTimer;
+    private TimerHandle _phaseTimer;
 
     /// <summary>校验计时器：攻击期间定期检查目标是否跑掉或死亡</summary>
-    private GameTimer? _validationTimer;
+    private TimerHandle _validationTimer;
 
     /// <summary>校验计时器间隔（秒）- 兼顾性能与响应速度。0.2s 是人类反应级别的两倍，足够灵敏且开销极低</summary>
     private const float ValidationInterval = 0.2f;
@@ -130,8 +130,8 @@ public partial class AttackComponent : Node, IComponent
         // 发出 Started 通知，告知外部（如 UI 进度条、特效、AI 记录）攻击已正式进入准备阶段
         _entity.Events.Emit(new GameEventType.Attack.Started(target));
 
-        // 统一走 WindUp 流程（WindUpTime=0 时 Timer 会在下一帧立即触发 OnWindUpComplete）
-        // 这保证动画播放、校验计时器等逻辑只维护一处
+        // 统一走 WindUp 流程；WindUpTime=0 使用即时命中分支，避免创建非法的 0 秒 Timer。
+        // 这保证动画播放、校验计时器等逻辑只维护一处。
         EnterWindUp(windUpTime);
     }
 
@@ -164,14 +164,25 @@ public partial class AttackComponent : Node, IComponent
         _entity?.Events.Emit(new GameEventType.Unit.PlayAnimationRequested(
                 attackAnim, ForceRestart: true, Duration: attackInterval));
 
-        // 设置 Delay 定时器：当 WindUp 时间结束时，触发动作完成（命中）回调
-        _phaseTimer = TimerManager.Instance.Delay(windUpTime)
-            .OnComplete(OnWindUpComplete);
+        // 即时模式不进入 TimerScheduler；TimerScheduler 的 Delay 契约要求 duration > 0。
+        if (windUpTime <= 0f)
+        {
+            OnWindUpComplete();
+            return;
+        }
+
+        // 设置 Delay 定时器：当 WindUp 时间结束时，触发动作完成（命中）回调。
+        _phaseTimer = TimerManager.Instance.Delay(
+            windUpTime,
+            BuildTimerOptions(TimerPurpose.AttackWindup),
+            OnWindUpComplete);
 
         // 设置 Loop 定时器：在准备期间，每隔一小段时间检查一次目标是否还在，
         // 避免"蓄力很久对方跑了，但我依然原地砍出伤害"的问题。
-        _validationTimer = TimerManager.Instance.Loop(ValidationInterval)
-            .OnLoop(ValidateAttackContext);
+        _validationTimer = TimerManager.Instance.Loop(
+            ValidationInterval,
+            BuildTimerOptions(TimerPurpose.AttackValidation),
+            ValidateAttackContext);
     }
 
     /// <summary>
@@ -226,15 +237,19 @@ public partial class AttackComponent : Node, IComponent
         _log.Trace($"状态转换: WindUp → Recovery (收招硬直: {recoveryTime:F2}s)");
 
         // 取消前摇计时任务（虽然已经到期了，但 Cleanup 时逻辑更稳），设置新的收招计时任务
-        _phaseTimer?.Cancel();
-        _phaseTimer = TimerManager.Instance.Delay(recoveryTime)
-            .OnComplete(OnRecoveryComplete);
+        CancelTimer(ref _phaseTimer, TimerCancelReason.Replaced);
+        _phaseTimer = TimerManager.Instance.Delay(
+            recoveryTime,
+            BuildTimerOptions(TimerPurpose.AttackRecovery),
+            OnRecoveryComplete);
 
         // 如果是即时模式进入的（没有前摇周期），我们需要补启动校验循环
-        if (_validationTimer == null)
+        if (!_validationTimer.IsValid)
         {
-            _validationTimer = TimerManager.Instance.Loop(ValidationInterval)
-                .OnLoop(ValidateAttackContext);
+            _validationTimer = TimerManager.Instance.Loop(
+                ValidationInterval,
+                BuildTimerOptions(TimerPurpose.AttackValidation),
+                ValidateAttackContext);
         }
     }
 
@@ -268,9 +283,11 @@ public partial class AttackComponent : Node, IComponent
             _state = AttackState.Recovery;
             _data.Set(GeneratedDataKey.AttackState, AttackState.Recovery);
 
-            _phaseTimer?.Cancel();
-            _phaseTimer = TimerManager.Instance.Delay(remainingCooldown)
-                .OnComplete(() => CompleteFinishAttack(didHit));
+            CancelTimer(ref _phaseTimer, TimerCancelReason.Replaced);
+            _phaseTimer = TimerManager.Instance.Delay(
+                remainingCooldown,
+                BuildTimerOptions(TimerPurpose.AttackRecovery),
+                () => CompleteFinishAttack(didHit));
             return;
         }
 
@@ -482,10 +499,24 @@ public partial class AttackComponent : Node, IComponent
     /// </summary>
     private void CleanupTimers()
     {
-        _phaseTimer?.Cancel();
-        _phaseTimer = null;
-        _validationTimer?.Cancel();
-        _validationTimer = null;
+        CancelTimer(ref _phaseTimer, TimerCancelReason.ComponentUnregistered);
+        CancelTimer(ref _validationTimer, TimerCancelReason.ComponentUnregistered);
+    }
+
+    private TimerOptions BuildTimerOptions(TimerPurpose purpose)
+    {
+        return new TimerOptions(
+            new TimerOwner(TimerOwnerType.Component, $"{GetInstanceId()}:{purpose}"),
+            purpose,
+            TimerClock.Game,
+            $"Attack:{purpose}");
+    }
+
+    private static void CancelTimer(ref TimerHandle handle, TimerCancelReason reason)
+    {
+        if (!handle.IsValid) return;
+        TimerManager.Instance?.Cancel(handle, reason);
+        handle = default;
     }
 
     // ================= 动画选择 (Animation Selection) =================

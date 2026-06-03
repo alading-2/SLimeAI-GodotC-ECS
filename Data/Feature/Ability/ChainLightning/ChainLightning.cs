@@ -203,18 +203,32 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
         // 5. 准备下一跳（延迟进行索敌与开劈）
         var nextDamage = currentDamage * context.DamageDecay;
 
-        TimerManager.Instance.Delay(context.Delay).OnComplete(() =>
-        {
-            // 延迟结束后，在这个时间点查找最合适的目标，而不是提前查找
-            var nextTarget = FindNextChainTarget(context, fromPos, hitTargets);
-            if (nextTarget == null)
+        TimerManager.Instance.Delay(
+            context.Delay,
+            new TimerOptions(
+                BuildChainOwner(context),
+                TimerPurpose.ChainDelay,
+                TimerClock.Game,
+                "ChainLightning"),
+            () =>
             {
-                _log.Debug($"链式闪电中断: 未找到下一个目标，已弹跳 {hitTargets.Count} 次");
-                return;
-            }
+                // 延迟结束后，在这个时间点查找最合适的目标，而不是提前查找
+                var nextTarget = FindNextChainTarget(context, fromPos, hitTargets);
+                if (nextTarget == null)
+                {
+                    _log.Debug($"链式闪电中断: 未找到下一个目标，已弹跳 {hitTargets.Count} 次");
+                    return;
+                }
 
-            ExecuteBounce(context, currentTarget, nextTarget, nextDamage, remainingBounces - 1, hitTargets);
-        });
+                ExecuteBounce(context, currentTarget, nextTarget, nextDamage, remainingBounces - 1, hitTargets);
+            });
+    }
+
+    private static TimerOwner BuildChainOwner(ChainBounceContext context)
+    {
+        var casterId = context.Caster is Node casterNode ? casterNode.GetInstanceId().ToString() : context.Caster.GetHashCode().ToString();
+        var featureId = global::FeatureId.Ability.Active.ChainLightning;
+        return new TimerOwner(TimerOwnerType.Feature, $"{featureId}:{casterId}");
     }
 
     /// <summary>

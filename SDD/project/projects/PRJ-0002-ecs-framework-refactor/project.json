@@ -4,7 +4,7 @@
   "title": "ECS Framework Optimization",
   "status": "active",
   "created_at": "2026-05-25",
-  "updated_at": "2026-06-01",
+  "updated_at": "2026-06-02",
   "scope": "SlimeAI",
   "tags": [
     "ecs",
@@ -15,9 +15,11 @@
     "relationship",
     "directory-architecture",
     "capability",
-    "docsai"
+    "docsai",
+    "tools",
+    "timer"
   ],
-  "current_sdd": "SDD-0026",
+  "current_sdd": "SDD-0027",
   "sdds": [
     {
       "id": "SDD-0011",
@@ -130,6 +132,13 @@
       "title": "Input Contract Manifest And Facade Hardening",
       "order": 16,
       "status": "done"
+    },
+    {
+      "id": "SDD-0027",
+      "slug": "timer-scheduler-full-rewrite",
+      "title": "Timer Scheduler Full Rewrite",
+      "order": 17,
+      "status": "pending"
     }
   ],
   "links": {
