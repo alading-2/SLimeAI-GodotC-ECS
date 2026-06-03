@@ -21,7 +21,7 @@
   - 业务命中通知
   - 运动完成/实体销毁
 
-  这导致 Src/ECS/Base/Component/Movement/EntityMovementComponent.cs 中 HandleMovementCollision() 一旦收到碰撞就直接走完成链路，和 Src/ECS/Base/System/Movement/Config/MovementParams.cs 里“碰撞仅
+  这导致 Src/ECS/Capabilities/Movement/Component/EntityMovementComponent.cs 中 HandleMovementCollision() 一旦收到碰撞就直接走完成链路，和 Src/ECS/Capabilities/Movement/System/Core/MovementParams.cs 里”碰撞仅
   通知、销毁可选”的文档语义已经不一致。
   本次重构采用“组件编排 + 子模块”的方向，不做全局集中系统；碰撞桥接仍留在碰撞系统，移动组件只负责消费“候选碰撞”，再通过声明式碰撞策略决定是否通知、计数、停止、销毁。
 
@@ -107,7 +107,7 @@
   ### 4. 将停止接口事件化，而不是暴露组件直接调用
 
   根据项目红线，不能通过外部直接调组件方法来停移动。
-  新增 GameEventType.Unit.MovementStopRequested，并新增对应 MovementStopRequestedEventData，由 Src/ECS/Base/Component/Movement/EntityMovementComponent.cs 监听处理。字段固定为：
+  新增 GameEventType.Unit.MovementStopRequested，并新增对应 MovementStopRequestedEventData，由 Src/ECS/Capabilities/Movement/Component/EntityMovementComponent.cs 监听处理。字段固定为：
 
   - Reason
     已新增 `Requested` 停止原因，避免滥用 `Interrupted`。
@@ -173,7 +173,7 @@
 
   ### 8. CharacterBody2D 的重复碰撞去重规则
 
-  先把当前旧实现里 [EntityMovementComponent.cs](../../../../Src/ECS/Base/Component/Movement/EntityMovementComponent.cs) `ApplyMovement()` 那段 `CharacterBody2D` 碰撞判断说清楚：
+  先把当前旧实现里 [EntityMovementComponent.cs](../../../../Src/ECS/Capabilities/Movement/Component/EntityMovementComponent.cs) `ApplyMovement()` 那段 `CharacterBody2D` 碰撞判断说清楚：
 
   - `Area2D` 路径已经有 `CollisionComponent -> CollisionEntered` 这条“进入事件”桥接
   - `CharacterBody2D` 路径没有同等桥接，只能在 `MoveAndSlide()` 之后读取“本帧撞到了谁”
@@ -215,7 +215,7 @@
 
   ## Public API / Interface Changes
 
-  - Src/ECS/Base/System/Movement/Config/MovementParams.cs
+  - Src/ECS/Capabilities/Movement/System/Core/MovementParams.cs
     新增 Collision 配置对象与 OnCollision 回调；废弃 DestroyOnCollision。
   - Src/ECS/Capabilities/Unit/Events/GameEventType_Unit_Movement.cs
     扩展 MovementCollisionEventData；新增 MovementStopRequested 事件。

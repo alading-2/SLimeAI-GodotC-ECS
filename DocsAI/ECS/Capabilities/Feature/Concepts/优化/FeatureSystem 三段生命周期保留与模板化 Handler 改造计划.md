@@ -15,7 +15,7 @@
   - 调整 FeatureSystem 执行 API：保留 OnFeatureActivated(ctx)、OnFeatureEnded(ctx, reason)，并明确 OnFeatureActivated 内顺序为 FeatureIsActive=true -> OnActivated -> Feature.Activated事
     件 -> OnExecute -> ExecuteResult -> Feature.Executed事件 -> ActivationCount++。
   - AbilitySystem 对同步技能仍在执行后立即调用 OnFeatureEnded(ctx, Completed)；后续异步能力可由返回的执行句柄或专门 API 延迟结束。
-  - AbilityConfig 新增导出字段 FeatureHandlerId，映射 DataKey.FeatureHandlerId；Name 是技能名，FeatureGroupId 暂时保留为技能展示分组，不再作为主要执行器索引。
+  - AbilityConfig 新增导出字段 FeatureHandlerId，映射 GeneratedDataKey.FeatureHandlerId；Name 是技能名，FeatureGroupId 暂时保留为技能展示分组，不再作为主要执行器索引。
   - 移除 AbilityConfig 中的执行器 ID 推导入口；AbilityConfig.FeatureHandlerId 必须显式填写，不再由技能分组和技能名称组合出执行器 ID。
   - 移除或弱化 IFeatureHandler.FeatureGroup 与 FeatureHandlerRegistry 分组索引；运行时查找只根据 FeatureHandlerId。如果测试面板需要分组，使用 AbilityConfig.FeatureGroupId。
   - Ability 子域不再保留专属 FeatureHandler 基类；通用 Handler 直接实现 IFeatureHandler，并从 FeatureContext.ActivationData 读取上下文。
@@ -40,7 +40,7 @@
   ## 文档与 Skill 同步
 
   - 更新 Docs/框架/项目索引.md：修正 AbilityConfig、FeatureSystem、IFeatureHandler、FeatureHandlerRegistry 描述。
-  - 更新 Src/ECS/Base/System/FeatureSystem/README.md 和 Src/ECS/Base/System/AbilitySystem/README.md：明确三段生命周期用途、同步/异步能力差异、模板 Handler 写法。
+  - 更新 Src/ECS/Runtime/System/FeatureSystem/README.md 和 Src/ECS/Capabilities/Ability/System/README.md：明确三段生命周期用途、同步/异步能力差异、模板 Handler 写法。
   - 更新 .codex/skills/feature-system/SKILL.md：禁止把核心效果写在 OnActivated，推荐写在 OnExecute。
   - 更新 .codex/skills/ability-system/SKILL.md：要求显式填写 FeatureHandlerId，缺失或未注册对应处理器时添加技能失败。
 

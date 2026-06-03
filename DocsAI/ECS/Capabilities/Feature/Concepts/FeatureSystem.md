@@ -262,12 +262,13 @@ EntityManager.RemoveAbility(owner, name)
 |:---|:---|:---|
 | `Data/Feature/Definition/FeatureDefinition.cs` | `[GlobalClass] Resource` | Feature 配置资源基类，编辑器填表 |
 | `Data/Feature/Definition/FeatureModifierEntry.cs` | `[GlobalClass] Resource` | 单条修改器配置条目 |
-| `Data/DataKey/Feature/DataKey_Feature.cs` | `partial DataKey` | FeatureCategory / FeatureHandlerId / FeatureType / FeatureTriggerMode / FeatureEnabled / FeatureIsActive / FeatureActivationCount |
+| `Data/DataKey/Feature/FeatureId/FeatureId.cs` | `partial class` | Feature 处理器 ID 常量注册表，各模块用 partial 文件扩展 |
+| `Data/DataKey/Generated/DataKey_Generated.cs` | `static class GeneratedDataKey` | FeatureCategory / FeatureHandlerId / FeatureEnabled / FeatureIsActive / FeatureActivationCount 等 typed key |
 | `Data/DataKey/Feature/FeatureEnums.cs` | `enum` | FeatureType / FeatureTriggerMode 通用枚举 |
 | `Data/DataKey/Feature/DataCategory_Feature.cs` | `enum` | Feature 数据分类（Basic / Trigger / Modifier / State）|
 | `Src/ECS/Capabilities/Feature/Events/GameEventType_Feature.cs` | `partial GameEventType` | 生命周期事件（Granted / Enabled / Disabled / Activated / Ended / Removed）|
 
-### 系统层（Src/ECS/Base/System/FeatureSystem/）
+### 系统层（Src/ECS/Capabilities/Feature/System/）
 
 | 文件 | 类型 | 说明 |
 |:---|:---|:---|
@@ -310,7 +311,7 @@ public class SpeedBoostHandler : IFeatureHandler
     public void OnGranted(FeatureContext ctx)
     {
         // 永久加速（也可直接用 FeatureDefinition.Modifiers 代替这里）
-        ctx.Owner?.Data.AddModifier("MoveSpeed",
+        ctx.Owner?.Data.AddModifier(GeneratedDataKey.MoveSpeed,
             new DataModifier(ModifierType.Multiplicative, 1.3f, source: ctx.Feature));
     }
 

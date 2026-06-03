@@ -162,7 +162,7 @@ Runner.Tick(_context);
    - 不再通过 `MoveMode` 直接暂停 AI
 
 2. **引入 `EntityActionState`**
-   - 新增 `DataKey.ActionState`
+   - 新增 `GeneratedDataKey.ActionState`
    - 提供 `Push/Pop` 或引用计数 Helper
 
 3. **统一消费状态标记**

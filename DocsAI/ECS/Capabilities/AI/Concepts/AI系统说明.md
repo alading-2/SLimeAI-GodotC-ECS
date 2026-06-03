@@ -203,7 +203,7 @@ SelectorNode("近战敌人")
     IsAttackReadyCondition → Success（冷却就绪）
     StopMovementAction → Success（设 AIMoveDirection=Zero）
     FaceTargetAction → Success（设朝向）
-    RequestAttackAction → 发 attack:requested 事件，AttackState=Idle → return Running
+    RequestAttackAction → 发 `GameEventType.Attack.Requested`，前摇 Running，后摇/冷却 Failure
     → 攻击序列 Running，_currentIndex=6（停在 RequestAttackAction）
   Selector i=0 ≠ 旧 _currentIndex=1
     → ResetChildrenExcept(0, ctx) → 追逐序列 Reset（MoveToTargetAction 清理）
@@ -296,9 +296,9 @@ ResetChildrenExcept(1, ctx) 遍历：
 每帧由 `AIComponent` 复用同一个实例（避免 new）：
 
 - `ctx.Entity`：当前 AI 单位（唯一入口）
-- 读状态：`ctx.Entity.Data.Get<T>(DataKey.xxx)`
-- 写意图：`ctx.Entity.Data.Set(DataKey.xxx, value)`
-- 发请求：`ctx.Entity.Events?.Emit(GameEventType.xxx, payload)`
+- 读状态：`ctx.Entity.Data.Get<T>(GeneratedDataKey.xxx)`
+- 写意图：`ctx.Entity.Data.Set(GeneratedDataKey.xxx, value)`
+- 发请求：`ctx.Entity.Events?.Emit(new GameEventType.Xxx.Yyy(...))`
 - 计时：用 `TimerManager.Instance.Delay(t)`，禁止手动累加 delta
 
 ---
@@ -320,8 +320,8 @@ ResetChildrenExcept(1, ctx) 遍历：
 
 - `OnComponentRegistered`：
   - 缓存 `IEntity/Data`
-  - 记录出生点 `DataKey.SpawnPosition`
-  - 置 `DataKey.AIEnabled = true`
+  - 记录出生点 `GeneratedDataKey.SpawnPosition`
+  - 置 `GeneratedDataKey.AIEnabled = true`
   - 默认装配近战树 `EnemyBehaviorTreeBuilder.BuildMeleeEnemyTree()`
 - `_Process`：
   - 检查 Runner / AIEnabled / 生命周期（Dead 直接返回）
@@ -369,9 +369,9 @@ var tree = new SelectorNode("自定义Boss")
 
 ### 原子条件节点（`Src/ECS/AI/Conditions/`）
 
-- `HasValidTargetCondition`：校验 `DataKey.TargetNode` 存活且非 Dead/Reviving
+- `HasValidTargetCondition`：校验 `GeneratedDataKey.TargetNode` 存活且非 Dead/Reviving
 - `IsInRangeCondition(dataKey)`：通用范围检测，传入不同 DataKey 可用于攻击/技能
-- `IsAttackReadyCondition`：`DataKey.AttackState == Idle`
+- `IsAttackReadyCondition`：`GeneratedDataKey.AttackState == Idle`
 - `IsAbilityReadyCondition(name)`：技能冷却完毕或有充能可用
 - `IsLowHpCondition(threshold)`：血量百分比低于阈值（0~100）
 
@@ -384,7 +384,7 @@ var tree = new SelectorNode("自定义Boss")
 - `StopMovementAction`：停止移动（瞬时 Success）
 - `FaceTargetAction`：面向目标（瞬时 Success）
 - `FleeFromTargetAction`：反向全速逃离，持续 Running
-- `RequestAttackAction`：发 `attack:requested`，前摇 Running，后摇/冷却 Failure
+- `RequestAttackAction`：发 `GameEventType.Attack.Requested`，前摇 Running，后摇/冷却 Failure
 - `AutoCastAbilityAction(name)`：`TryTrigger` 流水线施法，成功 Success
 
 ---
@@ -393,9 +393,9 @@ var tree = new SelectorNode("自定义Boss")
 
 AI 默认移动链路如下：
 
-1. `AIComponent` 驱动行为树，写入 `DataKey.AIMoveDirection` 与 `DataKey.AIMoveSpeedMultiplier`
-2. `EntityMovementComponent` 在注册时按 `DataKey.DefaultMoveMode` 进入默认策略
-3. 默认策略为 `MoveMode.AIControlled` 时，`AIControlledStrategy` 读取 AI 意图并写入 `DataKey.Velocity`
+1. `AIComponent` 驱动行为树，写入 `GeneratedDataKey.AIMoveDirection` 与 `GeneratedDataKey.AIMoveSpeedMultiplier`
+2. `EntityMovementComponent` 在注册时按 `GeneratedDataKey.DefaultMoveMode` 进入默认策略
+3. 默认策略为 `MoveMode.AIControlled` 时，`AIControlledStrategy` 读取 AI 意图并写入 `GeneratedDataKey.Velocity`
 4. `EntityMovementComponent` 在 `_PhysicsProcess` 中调用 `VelocityResolver.Resolve()` + `MoveAndSlide()`
 5. 组件再根据速度更新朝向与翻转表现
 
@@ -417,16 +417,16 @@ AI 默认移动链路如下：
 
 ### 事件输入
 
-- 监听 `attack:requested`：尝试启动攻击
-- 监听 `attack:cancel_requested`：外部中断
+- 监听 `GameEventType.Attack.Requested`：尝试启动攻击
+- 监听 `GameEventType.Attack.CancelRequested`：外部中断
 
 ### 关键流程
 
 1. `OnAttackRequested`
    - 仅 `Idle` 可进入
    - 通过 `ValidateCanAttack` 校验自身/目标/距离
-   - 发 `attack:started`
-   - 请求播放攻击动画 `unit:play_animation_requested`
+   - 发 `GameEventType.Attack.Started`
+   - 请求播放攻击动画 `GameEventType.Unit.PlayAnimationRequested`
    - 进入 `EnterWindUp`
 
 2. `OnWindUpComplete`
@@ -440,16 +440,16 @@ AI 默认移动链路如下：
 4. `FinishAttack`
    - 计算剩余冷却：`AttackInterval - WindUp - Recovery`
    - 若剩余 > 0，复用 `Recovery` 状态延迟结束
-   - 最终 `CompleteFinishAttack`：置 `AttackState = Idle` 并发 `attack:finished`
+   - 最终 `CompleteFinishAttack`：置 `AttackState = Idle` 并发 `GameEventType.Attack.Finished`
 
 5. `CancelAttack`
    - 清理计时器并置 Idle
-   - 发 `unit:stop_animation_requested`
-   - 发 `attack:cancelled`
+   - 发 `GameEventType.Unit.StopAnimationRequested`
+   - 发 `GameEventType.Attack.Cancelled`
 
 ### 与行为树的耦合点
 
-- 行为树以 `DataKey.AttackState == Idle` 判断“可开新攻击”。
+- 行为树以 `GeneratedDataKey.AttackState == Idle` 判断“可开新攻击”。
 - 攻击组件维护整个攻击占用窗口（前摇/后摇/剩余间隔），自然限制攻击频率。
 
 ---
@@ -458,10 +458,10 @@ AI 默认移动链路如下：
 
 职责：
 
-- 监听 `unit:play_animation_requested` 播放指定动画
-- 监听 `unit:stop_animation_requested` 强制回 Idle
-- 监听 `unit:damaged` 播放受击动画
-- 监听 `unit:killed` 播放死亡动画
+- 监听 `GameEventType.Unit.PlayAnimationRequested` 播放指定动画
+- 监听 `GameEventType.Unit.StopAnimationRequested` 强制回 Idle
+- 监听 `GameEventType.Unit.Damaged` 播放受击动画
+- 监听 `GameEventType.Unit.Killed` 播放死亡动画
 - 在 `_Process` 中根据速度在 `idle/run` 间自动切换
 
 攻击协作点：
@@ -486,11 +486,11 @@ AI 默认移动链路如下：
 ## 4.2 关键事件
 
 - 攻击事件（`Src/ECS/Capabilities/Unit/Events/Attack/GameEventType_Attack.cs`）
-  - 命令：`attack:requested`、`attack:cancel_requested`
-  - 通知：`attack:started`、`attack:finished`、`attack:cancelled`
+  - 命令：`GameEventType.Attack.Requested`、`GameEventType.Attack.CancelRequested`
+  - 通知：`GameEventType.Attack.Started`、`GameEventType.Attack.Finished`、`GameEventType.Attack.Cancelled`
 - 单位事件（`Src/ECS/Capabilities/Unit/Events/GameEventType_Unit.cs`）
-  - 动画：`unit:play_animation_requested`、`unit:stop_animation_requested`
-  - 生命周期/受击：`unit:killed`、`unit:damaged`
+  - 动画：`GameEventType.Unit.PlayAnimationRequested`、`GameEventType.Unit.StopAnimationRequested`
+  - 生命周期/受击：`GameEventType.Unit.Killed`、`GameEventType.Unit.Damaged`
 
 ---
 
@@ -501,16 +501,16 @@ AIComponent._Process
   -> Runner.Tick(ctx)
     -> Selector(近战敌人)
       -> Sequence(攻击序列)
-        -> FindEnemyAction    写入 DataKey.TargetNode
+        -> FindEnemyAction    写入 GeneratedDataKey.TargetNode
         -> HasValidTargetCondition   校验目标有效
         -> IsInRangeCondition        检查攻击范围
         -> IsAttackReadyCondition    检查冷却
         -> StopMovementAction        停步
         -> FaceTargetAction          面向目标
-        -> RequestAttackAction       发 attack:requested
+        -> RequestAttackAction       发 `GameEventType.Attack.Requested`
           -> AttackComponent 启动前摇/校验
             -> 命中时 ExecuteDamage -> DamageService.Process
-            -> 结束发 attack:finished
+            -> 结束发 `GameEventType.Attack.Finished`
           -> UnitAnimationComponent 响应动画事件
 ```
 
@@ -554,7 +554,7 @@ _runner.SetTree(EnemyBehaviorTreeBuilder.BuildRangedTree());
 
 ### 6.4 攻击表现增强
 
-- 在 `attack:started/finished/cancelled` 上接 VFX/SFX/UI
+- 在 `GameEventType.Attack.Started` / `Finished` / `Cancelled` 上接 VFX/SFX/UI
 - 继续保持"AI 发命令、组件执行"的边界
 
 ---
