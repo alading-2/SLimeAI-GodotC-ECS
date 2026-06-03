@@ -7,7 +7,7 @@
 
 > 2026-05 更新：系统管理已切到“代码只注册 `SystemId + Factory`，DataOS snapshot records 声明装载、挂载分组、标签和运行条件”的数据驱动模型。旧版代码侧生命周期/形态枚举、Profile 装配表和四维阶段模型已退出正式流程。
 
-> 2026-06-03 更新：System AI-first contract hardening 已进入 SDD-0029。后续修改 System Core 时必须同步 `DocsAI/ECS/Runtime/System/README.md`、本文、`SystemManifest.md`（生成后）和 SDD-0029 进度；首切片只补 manifest / preflight / diagnostics / trace / artifact，不做 typed `SystemId` hard cutover。
+> 2026-06-03 更新：System AI-first contract hardening 已进入 SDD-0029。后续修改 System Core 时必须同步 `DocsAI/ECS/Runtime/System/README.md`、本文、`SystemManifest.md` 和 SDD-0029 进度；首切片只补 manifest / preflight / diagnostics / trace / artifact，不做 typed `SystemId` hard cutover。
 
 ## 0. 开发者从哪里开始看
 
@@ -23,6 +23,9 @@
    - 想看系统配置：`Data/DataOS/Snapshots/runtime_snapshot.json` 的 `system.config`
    - 想看状态门禁：`Lifecycle/SystemRunCondition.cs`
    - 想看启动预设：`Data/DataOS/Snapshots/runtime_snapshot.json` 的 `system.preset`
+   - 想看系统清单：`DocsAI/ECS/Runtime/System/SystemManifest.md`
+   - 想看 preflight：`Src/ECS/Runtime/System/Preflight/`
+   - 想看 diagnostics / reason code / trace：`Src/ECS/Runtime/System/Diagnostics/`
    - 想看 AI-first contract 执行计划：`SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md`
 
 推荐这样看的原因是：
@@ -70,6 +73,15 @@
   - `SystemExecuteResult.cs`
   - `SystemRunCondition.cs`
   - `SystemRegistrationContext.cs`
+- `Preflight/`：AI-first 启动前检查
+  - `SystemPreflight.cs`
+  - `SystemPreflightReport.cs`
+  - `SystemPreflightIssue.cs`
+- `Diagnostics/`：AI-first 诊断合同
+  - `SystemDiagnosticsSnapshot.cs`
+  - `SystemManager_Diagnostics.cs`
+  - `SystemBlockedReasonCode.cs`
+  - `SystemLifecycleTrace.cs`
 - `State/`：项目级运行状态
   - `ProjectStateService.cs`
   - `ProjectStateSnapshot.cs`
@@ -169,6 +181,8 @@ shouldRun = IsEnabled && IsStateAllowed
 
 外部命令也使用同一套运行态裁决。业务代码不要直接调用系统单例执行业务，应通过 `SystemManager.Execute<TSystem, TRequest, TResult>(request)` 进入系统。命令是否能在暂停、前台、局内等状态下执行，只看该系统在 `SystemData` 中的三域运行条件；同一个系统内所有命令共享这套条件。如果某个命令需要不同运行条件，应拆出新的系统，而不是给命令单独增加策略。
 
+`SystemRunCondition.GetBlockedReasonDetail(snapshot)` 返回稳定 `SystemBlockedReasonCode` 和中文 message。自动测试、BDD 和 diagnostics 应优先断言 code，例如 `FlowStateMismatch`、`BlockedOverlay`、`SimulationStateMismatch`；中文 message 只作为 UI / 日志说明。
+
 ## 6. SystemPresetData：只做批量选择
 
 `SystemPresetData` 不是高级运行配置，也不承载运行条件。它只解决“本模式要装哪些系统”：
@@ -198,3 +212,76 @@ shouldRun = IsEnabled && IsStateAllowed
 - 局内系统不能只依赖 `GameStart` 事件启动关键运行态；如果系统在 `FrontEnd` 被运行条件挡住，应该在 `OnStarted(SessionPlaying)` 中补齐进入局内后的启动逻辑
 - 老的 `TestDataRegister` 已删除，测试数据定义应直接走 descriptor 生成的 typed handle 体系，不再回到手写 C# 元数据。
 - `SystemRegistry` 遇到空描述符或重复 `SystemId` 时，当前约定是记录 `Log.Error` 并忽略本次注册，避免在模块初始化阶段滥用 `throw`
+
+## 8. SystemPreflight
+
+`SystemPreflight.Run()` 是只读检查，不会写回 DataOS、registry 或 runtime。它当前检查：
+
+| Rule | 级别 | 说明 |
+| --- | --- | --- |
+| `SYS-PF-001` | error | `system.config` 必须有非空 `SystemId` 和 `Description` |
+| `SYS-PF-002` | error | Required system 必须有 descriptor |
+| `SYS-PF-003` | error | active preset `EnabledSystemIds` 必须有 config |
+| `SYS-PF-004` | error | active preset 不能禁用 Required system |
+| `SYS-PF-005` | error | dependency 必须存在 config 和 descriptor |
+| `SYS-PF-006` | error | dependency graph 不能有 cycle |
+| `SYS-PF-007` | warning/error | descriptor-only system 必须显式进入 test-only allow-list |
+| `SYS-PF-010` | warning | Priority 冲突只警告，排序用 SystemId 稳定补充 |
+
+当前 SystemCore 测试允许 `SystemCoreRuntimeTest.` 前缀作为 test-only descriptor。新增测试临时 descriptor 时，优先使用这个前缀或在 `SystemPreflightOptions` 显式 allow-list。
+
+## 9. Diagnostics Snapshot
+
+`SystemManager.GetDiagnosticsSnapshot()` 合并四类事实：
+
+- DataOS `system.config` / `system.preset`
+- `SystemRegistry` descriptor
+- `SystemManager` runtime entries
+- `ProjectStateService` 当前三域状态
+
+snapshot 字段包括：
+
+```text
+schemaVersion
+projectState
+activePreset
+configCount / registeredDescriptorCount / loadedCount / runningCount / blockedCount / disabledCount
+entries[]
+preflightIssues[]
+recentTrace[]
+```
+
+每个 `entries[]` 条目包含 `systemId`、owner、sourcePath、configRecordId、registered、configured、loaded、enabled、stateAllowed、running、blockedReasonCode、blockedReason、mountGroup、tags、dependencies 和 customStats。
+
+TestSystem 的 System Info 模块已经读取 `SystemDiagnosticsSnapshot`，再适配成原展示快照；添加、移除、启用、禁用仍调用 `SystemManager.TryAddSystem / TryRemoveSystem / TrySetSystemEnabled`，操作语义不变。
+
+## 10. Lifecycle Trace 与 Artifact
+
+`SystemLifecycleTrace` 是固定容量 ring buffer，记录：
+
+- `BootstrapStarted / ConfigLoaded / PresetLoaded / BootstrapCompleted`
+- `SystemAdded / SystemRemoved / SystemEnabled / SystemDisabled`
+- `StateAllowedChanged / SystemStarted / SystemStopped`
+- `CommandBlocked / CommandExecuted`
+
+默认不长期写文件。SystemCore Godot 场景会把 diagnostics snapshot 输出到：
+
+```text
+.ai-temp/scene-tests/artifacts/system-core-diagnostics.json
+```
+
+场景标准答案见：
+
+```text
+Src/ECS/Runtime/System/Tests/SystemCore/README.md
+```
+
+运行入口：
+
+```bash
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
+Tools/run-godot-scene.sh run res://SlimeAI/Src/ECS/Runtime/System/Tests/SystemCore/SystemCoreRuntimeTest.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/analyze-godot-scene-logs.sh
+```
+
+如果承载游戏 runner 或 Godot CLI 不可用，只能记录 blocker，不能声明 scene gate 通过。

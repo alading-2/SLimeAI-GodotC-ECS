@@ -57,7 +57,7 @@ public sealed class SystemRunCondition
     /// <returns>满足条件返回 true。</returns>
     public bool Evaluate(ProjectStateSnapshot snapshot)
     {
-        return !GetBlockedReason(snapshot).IsBlocked;
+        return !GetBlockedReasonDetail(snapshot).IsBlocked;
     }
 
     /// <summary>
@@ -66,27 +66,45 @@ public sealed class SystemRunCondition
     /// <param name="snapshot">当前项目状态快照。</param>
     public (bool IsBlocked, string Reason) GetBlockedReason(ProjectStateSnapshot snapshot)
     {
+        var reason = GetBlockedReasonDetail(snapshot);
+        return (reason.IsBlocked, reason.Message);
+    }
+
+    /// <summary>
+    /// 返回运行条件未通过的稳定原因码和中文说明；Code=None 表示通过。
+    /// </summary>
+    /// <param name="snapshot">当前项目状态快照。</param>
+    public SystemBlockedReason GetBlockedReasonDetail(ProjectStateSnapshot snapshot)
+    {
         if (!MatchesFlowState(AllowedFlowStates, snapshot.FlowState))
         {
-            return (true, $"FlowState={snapshot.FlowState} 不在允许范围 {AllowedFlowStates}");
+            return new SystemBlockedReason(
+                SystemBlockedReasonCode.FlowStateMismatch,
+                $"FlowState={snapshot.FlowState} 不在允许范围 {AllowedFlowStates}");
         }
 
         if (!ContainsRequiredOverlays(RequiredOverlays, snapshot.Overlays))
         {
-            return (true, $"Overlays={snapshot.Overlays} 缺少要求覆盖层 {RequiredOverlays}");
+            return new SystemBlockedReason(
+                SystemBlockedReasonCode.MissingRequiredOverlay,
+                $"Overlays={snapshot.Overlays} 缺少要求覆盖层 {RequiredOverlays}");
         }
 
         if (HasBlockedOverlay(BlockedOverlays, snapshot.Overlays))
         {
-            return (true, $"Overlays={snapshot.Overlays} 命中禁止覆盖层 {BlockedOverlays}");
+            return new SystemBlockedReason(
+                SystemBlockedReasonCode.BlockedOverlay,
+                $"Overlays={snapshot.Overlays} 命中禁止覆盖层 {BlockedOverlays}");
         }
 
         if (!MatchesSimulationState(AllowedSimulationStates, snapshot.SimulationState))
         {
-            return (true, $"SimulationState={snapshot.SimulationState} 不在允许范围 {AllowedSimulationStates}");
+            return new SystemBlockedReason(
+                SystemBlockedReasonCode.SimulationStateMismatch,
+                $"SimulationState={snapshot.SimulationState} 不在允许范围 {AllowedSimulationStates}");
         }
 
-        return (false, string.Empty);
+        return SystemBlockedReason.None;
     }
 
     /// <summary>

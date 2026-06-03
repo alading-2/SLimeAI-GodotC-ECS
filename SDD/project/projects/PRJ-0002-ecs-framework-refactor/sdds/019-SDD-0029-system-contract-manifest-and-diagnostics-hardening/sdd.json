@@ -2,7 +2,7 @@
   "id": "SDD-0029",
   "slug": "system-contract-manifest-and-diagnostics-hardening",
   "title": "System Contract Manifest And Diagnostics Hardening",
-  "status": "pending",
+  "status": "done",
   "type": "refactor",
   "created_at": "2026-06-03",
   "updated_at": "2026-06-03",
@@ -25,10 +25,10 @@
     "docsai"
   ],
   "progress": {
-    "current_task": "T1.1",
-    "completed_tasks": 0,
+    "current_task": "done",
+    "completed_tasks": 9,
     "total_tasks": 9,
-    "percent": 0
+    "percent": 100
   },
   "bdd": {
     "required": true,
@@ -50,5 +50,11 @@
     "../../design/8.System优化/01-现状证据与AI-first裁决.md",
     "../../design/8.System优化/02-目标架构与优化路线.md",
     "../../design/8.System优化/03-调用点迁移与验证计划.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-06-03 19:29",
+      "summary": "dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly: success, 0 warnings / 0 errors; bash Data/DataOS/Tools/validate-dataos.sh Data/DataOS/Authoring/slimeainew.authoring.db: passed; python3 Workspace/SDD/sdd.py validate SDD-0029: 0 errors / 0 warnings; python3 Workspace/SDD/sdd.py validate --all: 0 errors / 0 warnings; targeted git diff --check: clean; bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only: 40 skills, Critical:0, Advisory:0; Godot scene not run because Games/BrotatoLike has no Tools/run-godot-scene.sh and no SlimeAI mirror scene."
+    }
   ]
 }

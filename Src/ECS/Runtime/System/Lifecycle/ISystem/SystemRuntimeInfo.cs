@@ -24,6 +24,9 @@ public class SystemRuntimeInfo
     /// <summary>状态门禁未通过时的原因；为空表示通过。</summary>
     public string BlockedReason { get; set; } = string.Empty;
 
+    /// <summary>状态门禁未通过时的稳定原因码。</summary>
+    public SystemBlockedReasonCode BlockedReasonCode { get; set; } = SystemBlockedReasonCode.None;
+
     /// <summary>系统挂载分组。</summary>
     public SystemGroup MountGroup { get; set; }
 

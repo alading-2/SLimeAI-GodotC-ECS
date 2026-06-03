@@ -2,10 +2,10 @@
 
 ## Summary
 
-- **pending**: 1
+- **pending**: 0
 - **active**: 0
 - **blocked**: 1
-- **done**: 27
+- **done**: 28
 - **projects**: 2
 
 ## Projects
@@ -17,9 +17,7 @@
 
 ## Pending
 
-| ID | Project | Title | Updated | Scope | Current Task |
-| --- | --- | --- | --- | --- | --- |
-| SDD-0029 | PRJ-0002 | System Contract Manifest And Diagnostics Hardening | 2026-06-03 | SlimeAI | T1.1 |
+无。
 
 ## Active
 
@@ -62,6 +60,7 @@
 | SDD-0025 | PRJ-0002 | ECS Framework Directory Architecture Restructure | 2026-06-01 | SlimeAI | done |
 | SDD-0026 | PRJ-0002 | Input Contract Manifest And Facade Hardening | 2026-06-02 | SlimeAI | done |
 | SDD-0028 | PRJ-0002 | ObjectPool Collision ParkedInTree Cutover | 2026-06-03 | SlimeAI | done |
+| SDD-0029 | PRJ-0002 | System Contract Manifest And Diagnostics Hardening | 2026-06-03 | SlimeAI | done |
 
 ## By Scope
 

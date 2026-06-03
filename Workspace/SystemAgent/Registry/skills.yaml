@@ -113,6 +113,11 @@ skills:
     category: ecs
     role: owner-skill-out-of-scope
     status: active
+  - id: ecs-system
+    source: .ai-config/skills/ecs/ecs-system/SKILL.md
+    category: ecs
+    role: owner-skill-out-of-scope
+    status: active
   - id: ability-system
     source: .ai-config/skills/gameos/ability-system/SKILL.md
     category: gameos

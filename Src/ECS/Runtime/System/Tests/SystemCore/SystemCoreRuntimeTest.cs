@@ -1,6 +1,10 @@
 using Godot;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 
 namespace Slime.Test.SystemCore
 {
@@ -11,7 +15,13 @@ namespace Slime.Test.SystemCore
     public partial class SystemCoreRuntimeTest : Node
     {
         private static readonly Log _log = new(nameof(SystemCoreRuntimeTest));
+        private const string ArtifactPath = ".ai-temp/scene-tests/artifacts/system-core-diagnostics.json";
+        private const string ExpectedInputs = "SystemManager autoload with DataOS runtime_snapshot system.config/system.preset records and SystemRegistry descriptors";
+        private const string ExpectedObservations = "SystemPreflight reports zero errors, diagnostics snapshot contains core counts, stable blocked reason codes and recent lifecycle trace";
+        private const string PassCriteria = "all SystemCoreRuntimeTest checks pass and diagnostics artifact schemaVersion/configCount/registeredDescriptorCount/loadedCount are present";
+        private const string FailCriteria = "any System Core assertion fails, diagnostics snapshot cannot serialize, preflight has errors or artifact write fails";
 
+        private readonly List<string> _failureReasons = new();
         private int _passedCount;
         private int _failedCount;
 
@@ -32,15 +42,26 @@ namespace Slime.Test.SystemCore
                 TestDataOsRuntimeTableSystemCollectionsDoNotContainNull();
                 TestSystemConfigPresetCalculatesEnabledSystems();
                 TestCoreSystemDescriptorsRegistered();
+                TestSystemPreflightCurrentSnapshotPasses();
                 TestRequiredSystemCannotBeDisabledOrRemoved();
                 TestMissingSystemManagementReportsFailure();
                 TestSystemCommandExecutionRespectsRunningState();
+                TestDiagnosticsSnapshotContract();
                 TestStatusCollectionKeepsInvulnerableUntilAllSourcesExpire();
                 TestSystemRegistryKeepsFirstDescriptorWhenDuplicateRegistered();
             }
             catch (Exception ex)
             {
                 Fail($"测试过程中发生异常: {ex}");
+            }
+
+            try
+            {
+                WriteDiagnosticsArtifact(_failedCount == 0);
+            }
+            catch (Exception ex)
+            {
+                Fail($"diagnostics artifact 写入失败: {ex}");
             }
 
             _log.Info($"System Core 运行时测试结束: PASS={_passedCount}, FAIL={_failedCount}");
@@ -81,6 +102,9 @@ namespace Slime.Test.SystemCore
             var (isBlocked, reason) = condition.GetBlockedReason(blockedSnapshot);
             AssertEqual("GetBlockedReason 应返回阻塞标记", true, isBlocked);
             AssertEqual("GetBlockedReason 应返回可读原因", true, !string.IsNullOrEmpty(reason));
+
+            var detail = condition.GetBlockedReasonDetail(blockedSnapshot);
+            AssertEqual("GetBlockedReasonDetail 应返回稳定阻断码", SystemBlockedReasonCode.BlockedOverlay, detail.Code);
         }
 
         private void TestProjectStateFlowHelpers()
@@ -242,6 +266,16 @@ namespace Slime.Test.SystemCore
             AssertEqual("EntityManager 描述符应已注册", true, SystemRegistry.GetDescriptor("EntityManager") != null);
         }
 
+        private void TestSystemPreflightCurrentSnapshotPasses()
+        {
+            var report = SystemPreflight.Run();
+
+            AssertEqual("SystemPreflight 应使用 schemaVersion=1", 1, report.SchemaVersion);
+            AssertEqual("SystemPreflight 应覆盖当前 14 条 system.config", 14, report.ConfigCount);
+            AssertEqual("SystemPreflight 应至少覆盖当前 14 个注册 descriptor", true, report.RegisteredDescriptorCount >= 14);
+            AssertEqual("SystemPreflight 当前核心配置应无 error", 0, report.ErrorCount);
+        }
+
         private void TestRequiredSystemCannotBeDisabledOrRemoved()
         {
             var manager = SystemManager.Instance;
@@ -309,6 +343,7 @@ namespace Slime.Test.SystemCore
             );
 
             AssertEqual("外部系统命令应被非运行态阻断", false, blockedResult.Success);
+            AssertEqual("外部系统命令阻断应返回稳定原因码", SystemBlockedReasonCode.FlowStateMismatch, blockedResult.ReasonCode);
             AssertEqual("阻断结果应带可读原因", true, !string.IsNullOrEmpty(blockedResult.Message));
 
             manager.ProjectState.BeginGameplaySession();
@@ -318,6 +353,37 @@ namespace Slime.Test.SystemCore
 
             AssertEqual("运行态系统命令应允许进入系统处理器", true, executedResult.Success);
             AssertEqual("DamageService 应报告空伤害请求未处理", false, executedResult.Value.Processed);
+        }
+
+        private void TestDiagnosticsSnapshotContract()
+        {
+            var manager = SystemManager.Instance;
+            if (manager == null)
+            {
+                Fail("SystemManager.Instance 应存在");
+                return;
+            }
+
+            manager.ProjectState.BeginGameplaySession();
+            var snapshot = manager.GetDiagnosticsSnapshot();
+            var damageService = snapshot.Entries.FirstOrDefault(static entry => entry.SystemId == "DamageService");
+
+            AssertEqual("SystemDiagnosticsSnapshot schemaVersion 应为 1", 1, snapshot.SchemaVersion);
+            AssertEqual("SystemDiagnosticsSnapshot 应覆盖当前 14 条 config", 14, snapshot.ConfigCount);
+            AssertEqual("SystemDiagnosticsSnapshot 应至少覆盖当前 14 个 descriptor", true, snapshot.RegisteredDescriptorCount >= 14);
+            AssertEqual("SystemDiagnosticsSnapshot 应包含已加载系统", true, snapshot.LoadedCount > 0);
+            AssertEqual("SystemDiagnosticsSnapshot 应包含 lifecycle trace", true, snapshot.TraceCount > 0);
+            AssertEqual("SystemDiagnosticsSnapshot 应包含 DamageService", true, damageService != null);
+            AssertEqual("DamageService diagnostics 应有 owner", "Damage", damageService?.Owner);
+            AssertEqual("DamageService 运行态 diagnostics 应通过", SystemBlockedReasonCode.None.ToString(), damageService?.BlockedReasonCode);
+
+            var json = JsonSerializer.Serialize(snapshot, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            });
+            AssertEqual("SystemDiagnosticsSnapshot 应可序列化为 JSON", true, json.Contains("\"schemaVersion\"", StringComparison.Ordinal));
+            AssertEqual("SystemDiagnosticsSnapshot JSON 应包含 reason code", true, json.Contains("\"blockedReasonCode\"", StringComparison.Ordinal));
         }
 
         private void TestStatusCollectionKeepsInvulnerableUntilAllSourcesExpire()
@@ -359,6 +425,7 @@ namespace Slime.Test.SystemCore
         private void Fail(string message)
         {
             _failedCount++;
+            _failureReasons.Add(message);
             _log.Error($"[FAIL] {message}");
         }
 
@@ -372,6 +439,72 @@ namespace Slime.Test.SystemCore
             {
                 Fail($"{message}: expected={expected}, actual={actual}");
             }
+        }
+
+        private void WriteDiagnosticsArtifact(bool passed)
+        {
+            var snapshot = SystemManager.Instance?.GetDiagnosticsSnapshot() ?? new SystemDiagnosticsSnapshot();
+            var artifact = new SystemCoreDiagnosticsArtifact
+            {
+                Status = passed ? "PASS" : "FAIL",
+                ExpectedInputs = ExpectedInputs,
+                ExpectedObservations = ExpectedObservations,
+                PassCriteria = PassCriteria,
+                FailCriteria = FailCriteria,
+                ArtifactPath = ArtifactPath,
+                SchemaVersion = snapshot.SchemaVersion,
+                ConfigCount = snapshot.ConfigCount,
+                RegisteredDescriptorCount = snapshot.RegisteredDescriptorCount,
+                LoadedCount = snapshot.LoadedCount,
+                RunningCount = snapshot.RunningCount,
+                BlockedCount = snapshot.BlockedCount,
+                Diagnostics = snapshot,
+                FailureReasons = new List<string>(_failureReasons)
+            };
+
+            var json = JsonSerializer.Serialize(artifact, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            });
+
+            var absolutePath = Path.Combine(ProjectSettings.GlobalizePath("res://"), ArtifactPath);
+            WriteJsonFile(absolutePath, json);
+
+            var runArtifactDirectory = System.Environment.GetEnvironmentVariable("GODOT_SCENE_TEST_ARTIFACT_DIR");
+            if (!string.IsNullOrWhiteSpace(runArtifactDirectory))
+            {
+                WriteJsonFile(Path.Combine(runArtifactDirectory, Path.GetFileName(ArtifactPath)), json);
+            }
+        }
+
+        private static void WriteJsonFile(string path, string json)
+        {
+            var directory = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            File.WriteAllText(path, json);
+        }
+
+        private sealed class SystemCoreDiagnosticsArtifact
+        {
+            public string Status { get; init; } = string.Empty;
+            public string ExpectedInputs { get; init; } = string.Empty;
+            public string ExpectedObservations { get; init; } = string.Empty;
+            public string PassCriteria { get; init; } = string.Empty;
+            public string FailCriteria { get; init; } = string.Empty;
+            public string ArtifactPath { get; init; } = string.Empty;
+            public int SchemaVersion { get; init; }
+            public int ConfigCount { get; init; }
+            public int RegisteredDescriptorCount { get; init; }
+            public int LoadedCount { get; init; }
+            public int RunningCount { get; init; }
+            public int BlockedCount { get; init; }
+            public SystemDiagnosticsSnapshot Diagnostics { get; init; } = new();
+            public List<string> FailureReasons { get; init; } = new();
         }
     }
 }

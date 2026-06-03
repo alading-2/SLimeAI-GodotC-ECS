@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using slime.data.Systems;
 
 /// <summary>
@@ -16,6 +17,7 @@ public partial class SystemManager : Node
 
     // 生命周期域 -> Host 节点。避免业务系统直接散挂在 SystemManager 根下。
     private readonly Dictionary<SystemGroup, Node> _hosts = new();
+    private readonly SystemLifecycleTrace _lifecycleTrace = new();
     private bool _isInitialized;
     private bool _isBootstrapped; // 启动完成
 
@@ -129,11 +131,14 @@ public partial class SystemManager : Node
             return;
         }
 
+        _lifecycleTrace.Record("BootstrapStarted", string.Empty, ProjectState.Snapshot);
         try
         {
             // 1. 初始化配置服务
             SystemConfigService.Initialize();
             SystemPresetService.Initialize();
+            _lifecycleTrace.Record("ConfigLoaded", string.Empty, ProjectState.Snapshot, message: $"configCount={SystemConfigService.GetAllConfigs().Count()}");
+            _lifecycleTrace.Record("PresetLoaded", string.Empty, ProjectState.Snapshot, message: $"activePreset={SystemPresetService.GetActivePreset()?.PresetName ?? "none"}");
         }
         catch (Exception ex)
         {
@@ -185,6 +190,7 @@ public partial class SystemManager : Node
 
         _isBootstrapped = true;
         EmitSignal(SignalName.BootstrapCompleted);
+        _lifecycleTrace.Record("BootstrapCompleted", string.Empty, ProjectState.Snapshot, message: $"loadedCount={_entries.Count}");
 
         // 打印系统加载和运行状态
         PrintSystemStatus();
@@ -314,7 +320,7 @@ public partial class SystemManager : Node
 
         // 创建运行时条目：初始启用状态取配置默认值，状态门禁用当前快照评估。
         var runCondition = CreateRunCondition(config);
-        var (isBlocked, blockedReason) = runCondition.GetBlockedReason(ProjectState.Snapshot);
+        var blockedReason = runCondition.GetBlockedReasonDetail(ProjectState.Snapshot);
         var entry = new ManagedSystemEntry
         {
             Descriptor = descriptor,
@@ -324,12 +330,14 @@ public partial class SystemManager : Node
             NodeInstance = nodeInstance,
             System = system,
             IsEnabled = config.StartEnabled, // 人工开关：配置默认值
-            IsStateAllowed = !isBlocked, // 状态门禁：运行条件裁决
-            BlockedReason = blockedReason,
+            IsStateAllowed = !blockedReason.IsBlocked, // 状态门禁：运行条件裁决
+            BlockedReason = blockedReason.Message,
+            BlockedReasonCode = blockedReason.Code,
             IsRunning = false
         };
 
         _entries.Add(descriptor.SystemId, entry);
+        _lifecycleTrace.Record("SystemAdded", descriptor.SystemId, ProjectState.Snapshot);
         ApplyEntryState(entry, notifyTransition: true); // 根据初始状态立即裁决是否运行
         _log.Info($"系统 {descriptor.SystemId} 已加载: Enabled={entry.IsEnabled}, StateAllowed={entry.IsStateAllowed}, Running={entry.IsRunning}, BlockedReason={entry.BlockedReason}");
     }
@@ -352,6 +360,7 @@ public partial class SystemManager : Node
         }
 
         entry.IsEnabled = true;
+        _lifecycleTrace.Record("SystemEnabled", systemId, ProjectState.Snapshot);
         ApplyEntryState(entry, notifyTransition: true);
     }
 
@@ -373,6 +382,7 @@ public partial class SystemManager : Node
         }
 
         entry.IsEnabled = false;
+        _lifecycleTrace.Record("SystemDisabled", systemId, ProjectState.Snapshot, SystemBlockedReasonCode.Disabled);
         ApplyEntryState(entry, notifyTransition: true);
     }
 
@@ -401,15 +411,28 @@ public partial class SystemManager : Node
     /// <param name="message">无法执行时的中文原因。</param>
     public bool CanExecute(string systemId, out string message)
     {
+        return CanExecute(systemId, out message, out _);
+    }
+
+    /// <summary>
+    /// 判断指定系统当前能否执行外部命令，并返回稳定阻断原因码。
+    /// </summary>
+    /// <param name="systemId">系统 Id。</param>
+    /// <param name="message">无法执行时的中文原因。</param>
+    /// <param name="reasonCode">无法执行时的稳定原因码。</param>
+    public bool CanExecute(string systemId, out string message, out SystemBlockedReasonCode reasonCode)
+    {
         if (!_entries.TryGetValue(systemId, out var entry))
         {
             message = $"系统 {systemId} 未加载";
+            reasonCode = SystemBlockedReasonCode.NotLoaded;
             return false;
         }
 
         if (!entry.IsEnabled)
         {
             message = $"系统 {systemId} 已禁用";
+            reasonCode = SystemBlockedReasonCode.Disabled;
             return false;
         }
 
@@ -418,16 +441,21 @@ public partial class SystemManager : Node
             message = string.IsNullOrEmpty(entry.BlockedReason)
                 ? $"系统 {systemId} 当前项目状态不允许运行"
                 : entry.BlockedReason;
+            reasonCode = entry.BlockedReasonCode == SystemBlockedReasonCode.None
+                ? SystemBlockedReasonCode.Unknown
+                : entry.BlockedReasonCode;
             return false;
         }
 
         if (!entry.IsRunning)
         {
             message = $"系统 {systemId} 尚未进入运行态";
+            reasonCode = SystemBlockedReasonCode.NotRunning;
             return false;
         }
 
         message = string.Empty;
+        reasonCode = SystemBlockedReasonCode.None;
         return true;
     }
 
@@ -448,15 +476,20 @@ public partial class SystemManager : Node
                 continue;
             }
 
-            if (!CanExecute(entry.Descriptor.SystemId, out var message))
+            if (!CanExecute(entry.Descriptor.SystemId, out var message, out var reasonCode))
             {
-                return SystemExecuteResult<TResult>.Blocked(message);
+                _lifecycleTrace.Record("CommandBlocked", entry.Descriptor.SystemId, ProjectState.Snapshot, reasonCode, message);
+                return SystemExecuteResult<TResult>.Blocked(reasonCode, message);
             }
 
-            return SystemExecuteResult<TResult>.Ok(system.Execute(request));
+            var result = system.Execute(request);
+            _lifecycleTrace.Record("CommandExecuted", entry.Descriptor.SystemId, ProjectState.Snapshot);
+            return SystemExecuteResult<TResult>.Ok(result);
         }
 
-        return SystemExecuteResult<TResult>.Blocked($"系统 {typeof(TSystem).Name} 未加载");
+        var targetMissingMessage = $"系统 {typeof(TSystem).Name} 未加载";
+        _lifecycleTrace.Record("CommandBlocked", typeof(TSystem).Name, ProjectState.Snapshot, SystemBlockedReasonCode.CommandTargetMissing, targetMissingMessage);
+        return SystemExecuteResult<TResult>.Blocked(SystemBlockedReasonCode.CommandTargetMissing, targetMissingMessage);
     }
 
     /// <summary>
@@ -470,9 +503,20 @@ public partial class SystemManager : Node
         foreach (var entry in _entries.Values)
         {
             // 先重算状态门禁，再通知系统，再统一应用启停。
-            var (isBlocked, blockedReason) = entry.RunCondition.GetBlockedReason(args.Current);
-            entry.BlockedReason = blockedReason;
-            entry.IsStateAllowed = !isBlocked;
+            var previousAllowed = entry.IsStateAllowed;
+            var blockedReason = entry.RunCondition.GetBlockedReasonDetail(args.Current);
+            entry.BlockedReason = blockedReason.Message;
+            entry.BlockedReasonCode = blockedReason.Code;
+            entry.IsStateAllowed = !blockedReason.IsBlocked;
+            if (previousAllowed != entry.IsStateAllowed)
+            {
+                _lifecycleTrace.Record(
+                    "StateAllowedChanged",
+                    entry.Descriptor.SystemId,
+                    args.Current,
+                    blockedReason.Code,
+                    blockedReason.Message);
+            }
 
             entry.System?.OnProjectStateChanged(args);
 
@@ -528,11 +572,18 @@ public partial class SystemManager : Node
         {
             entry.System.OnStarted(ProjectState.Snapshot);
             entry.IsRunning = true;
+            _lifecycleTrace.Record("SystemStarted", entry.Descriptor.SystemId, ProjectState.Snapshot);
             return;
         }
 
         entry.System.OnStopped(ProjectState.Snapshot);
         entry.IsRunning = false;
+        _lifecycleTrace.Record(
+            "SystemStopped",
+            entry.Descriptor.SystemId,
+            ProjectState.Snapshot,
+            entry.IsEnabled ? entry.BlockedReasonCode : SystemBlockedReasonCode.Disabled,
+            entry.IsEnabled ? entry.BlockedReason : "系统已禁用");
     }
 
     /// <summary>

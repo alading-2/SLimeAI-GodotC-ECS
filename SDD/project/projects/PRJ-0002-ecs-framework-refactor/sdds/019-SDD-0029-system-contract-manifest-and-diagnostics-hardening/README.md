@@ -2,7 +2,7 @@
 
 ## Index Card
 
-- **Status**: pending
+- **Status**: done
 - **Created**: 2026-06-03
 - **Updated**: 2026-06-03
 - **Type**: refactor
@@ -35,7 +35,7 @@
 
 ## Current Resume
 
-- **Current Task**: T1.1
-- **Last Conclusion**: SDD-0029 已创建并补齐为 pending 执行胶囊；目标是 System AI-first contract hardening，不进入 typed SystemId hard cutover。
-- **Next Action**: 从 `execution-prompt.md` 执行 T1.1 readiness baseline；先记录 dirty workspace、System config/registry/execute 调用点、DocsAI 当前状态和现有验证基线。
+- **Current Task**: done
+- **Last Conclusion**: Runtime System AI-first contract hardening 已完成：SystemManifest、SystemPreflight、SystemDiagnosticsSnapshot、稳定 blocked reason code、lifecycle trace、TestSystem diagnostics adapter、SystemCore diagnostics artifact 支持、DocsAI 同步和 ecs-system skill 同步均已落地；未重写 SystemManager 生命周期，未做 typed SystemId hard cutover。
+- **Next Action**: 本 SDD 无剩余框架代码任务；承载游戏 runner 可用后，运行 SystemCoreRuntimeTest 并检查 `.ai-temp/scene-tests/artifacts/system-core-diagnostics.json` 作为 scene-gate 证据。
 - **Open Blockers**: none

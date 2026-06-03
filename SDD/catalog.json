@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-03 18:11",
+  "generated_at": "2026-06-03 19:29",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -698,7 +698,7 @@
       "id": "SDD-0029",
       "slug": "system-contract-manifest-and-diagnostics-hardening",
       "title": "System Contract Manifest And Diagnostics Hardening",
-      "status": "pending",
+      "status": "done",
       "type": "refactor",
       "updated_at": "2026-06-03",
       "scope": "SlimeAI",
@@ -718,7 +718,7 @@
       ],
       "project_id": "PRJ-0002",
       "project_order": 19,
-      "current_task": "T1.1",
+      "current_task": "done",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening"
     }
   ]

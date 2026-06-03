@@ -6,7 +6,8 @@
 public readonly record struct SystemExecuteResult<TResult>(
     bool Success,
     TResult? Value,
-    string Message
+    string Message,
+    SystemBlockedReasonCode ReasonCode = SystemBlockedReasonCode.None
 )
 {
     /// <summary>
@@ -15,7 +16,7 @@ public readonly record struct SystemExecuteResult<TResult>(
     /// <param name="value">领域结果。</param>
     public static SystemExecuteResult<TResult> Ok(TResult value)
     {
-        return new SystemExecuteResult<TResult>(true, value, string.Empty);
+        return new SystemExecuteResult<TResult>(true, value, string.Empty, SystemBlockedReasonCode.None);
     }
 
     /// <summary>
@@ -24,6 +25,16 @@ public readonly record struct SystemExecuteResult<TResult>(
     /// <param name="message">阻断原因。</param>
     public static SystemExecuteResult<TResult> Blocked(string message)
     {
-        return new SystemExecuteResult<TResult>(false, default, message);
+        return new SystemExecuteResult<TResult>(false, default, message, SystemBlockedReasonCode.Unknown);
+    }
+
+    /// <summary>
+    /// 创建带稳定原因码的阻断结果。
+    /// </summary>
+    /// <param name="reasonCode">稳定阻断原因码。</param>
+    /// <param name="message">中文阻断原因。</param>
+    public static SystemExecuteResult<TResult> Blocked(SystemBlockedReasonCode reasonCode, string message)
+    {
+        return new SystemExecuteResult<TResult>(false, default, message, reasonCode);
     }
 }

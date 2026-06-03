@@ -96,6 +96,7 @@ public partial class SystemManager
 
             entry.System?.OnUnRegistered();
             _entries.Remove(systemId);
+            _lifecycleTrace.Record("SystemRemoved", systemId, ProjectState.Snapshot);
 
             if (entry.NodeInstance != null && GodotObject.IsInstanceValid(entry.NodeInstance))
             {

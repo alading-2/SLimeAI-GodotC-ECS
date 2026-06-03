@@ -16,14 +16,23 @@ internal sealed class SystemInfoService
     public List<SystemInfoSnapshot> GetSnapshots(SystemManager? manager)
     {
         var snapshots = new List<SystemInfoSnapshot>();
-        var loadedRuntimeInfos = manager?.GetAllSystems() ?? new List<SystemRuntimeInfo>();
+        if (manager != null)
+        {
+            var diagnostics = manager.GetDiagnosticsSnapshot();
+            foreach (var entry in diagnostics.Entries)
+            {
+                var dependentSystemId = FindLoadedDependentSystem(entry.SystemId, diagnostics.Entries);
+                snapshots.Add(BuildSnapshot(entry, dependentSystemId));
+            }
+
+            snapshots.Sort(CompareSnapshots);
+            return snapshots;
+        }
 
         foreach (var config in SystemConfigService.GetAllConfigs())
         {
-            var runtimeInfo = manager?.GetSystemRuntimeInfo(config.SystemId);
             var descriptor = SystemRegistry.GetDescriptor(config.SystemId);
-            var dependentSystemId = FindLoadedDependentSystem(config.SystemId, loadedRuntimeInfos);
-            snapshots.Add(BuildSnapshot(config, runtimeInfo, descriptor != null, dependentSystemId));
+            snapshots.Add(BuildSnapshot(config, null, descriptor != null, string.Empty));
         }
 
         snapshots.Sort(CompareSnapshots);
@@ -101,6 +110,7 @@ internal sealed class SystemInfoService
             IsEnabled = runtimeInfo?.IsEnabled ?? false,
             IsRunning = runtimeInfo?.IsRunning ?? false,
             IsStateAllowed = runtimeInfo?.IsStateAllowed ?? false,
+            BlockedReasonCode = runtimeInfo?.BlockedReasonCode.ToString() ?? SystemBlockedReasonCode.None.ToString(),
             BlockedReason = runtimeInfo?.BlockedReason ?? string.Empty,
             MountGroup = config.MountGroup,
             Tags = config.Tags,
@@ -111,6 +121,40 @@ internal sealed class SystemInfoService
             Dependencies = config.Dependencies,
             Description = config.Description,
             CustomStats = runtimeInfo?.CustomStats ?? new List<SystemStat>(),
+            Status = status,
+            DependentSystemId = dependentSystemId
+        };
+    }
+
+    private static SystemInfoSnapshot BuildSnapshot(
+        SystemDiagnosticsEntry entry,
+        string dependentSystemId)
+    {
+        var status = ResolveStatus(entry);
+        return new SystemInfoSnapshot
+        {
+            SystemId = entry.SystemId,
+            IsRegistered = entry.Registered,
+            IsLoaded = entry.Loaded,
+            IsEnabled = entry.Enabled,
+            IsRunning = entry.Running,
+            IsStateAllowed = entry.StateAllowed,
+            BlockedReasonCode = entry.BlockedReasonCode,
+            BlockedReason = entry.BlockedReason,
+            MountGroup = Enum.TryParse<SystemGroup>(entry.MountGroup, out var group) ? group : SystemGroup.Else,
+            Tags = Enum.TryParse<SystemTag>(entry.Tags, out var tags) ? tags : SystemTag.None,
+            Required = entry.Required,
+            AutoLoad = entry.AutoLoad,
+            StartEnabled = entry.StartEnabled,
+            Priority = entry.Priority,
+            Dependencies = entry.Dependencies,
+            Description = entry.Description,
+            CustomStats = entry.CustomStats.ConvertAll(static stat => new SystemStat
+            {
+                Category = stat.Category,
+                Name = stat.Name,
+                Value = stat.Value
+            }),
             Status = status,
             DependentSystemId = dependentSystemId
         };
@@ -138,26 +182,42 @@ internal sealed class SystemInfoService
             : SystemInfoStatus.Loaded;
     }
 
-    private static string FindLoadedDependentSystem(string targetSystemId, List<SystemRuntimeInfo> loadedRuntimeInfos)
+    private static SystemInfoStatus ResolveStatus(SystemDiagnosticsEntry entry)
     {
-        foreach (var runtimeInfo in loadedRuntimeInfos)
+        if (!entry.Loaded)
         {
-            if (string.Equals(runtimeInfo.SystemId, targetSystemId, StringComparison.Ordinal))
+            return SystemInfoStatus.NotLoaded;
+        }
+
+        if (!entry.Enabled)
+        {
+            return SystemInfoStatus.Disabled;
+        }
+
+        if (!entry.StateAllowed)
+        {
+            return SystemInfoStatus.Blocked;
+        }
+
+        return entry.Running
+            ? SystemInfoStatus.Running
+            : SystemInfoStatus.Loaded;
+    }
+
+    private static string FindLoadedDependentSystem(string targetSystemId, List<SystemDiagnosticsEntry> entries)
+    {
+        foreach (var entry in entries)
+        {
+            if (!entry.Loaded || string.Equals(entry.SystemId, targetSystemId, StringComparison.Ordinal))
             {
                 continue;
             }
 
-            var config = SystemConfigService.GetConfig(runtimeInfo.SystemId);
-            if (config == null)
-            {
-                continue;
-            }
-
-            foreach (var dependency in config.Dependencies)
+            foreach (var dependency in entry.Dependencies)
             {
                 if (string.Equals(dependency, targetSystemId, StringComparison.Ordinal))
                 {
-                    return runtimeInfo.SystemId;
+                    return entry.SystemId;
                 }
             }
         }
@@ -197,6 +257,7 @@ internal sealed class SystemInfoSnapshot
     public bool IsEnabled { get; init; }
     public bool IsRunning { get; init; }
     public bool IsStateAllowed { get; init; }
+    public string BlockedReasonCode { get; init; } = SystemBlockedReasonCode.None.ToString();
     public string BlockedReason { get; init; } = string.Empty;
     public SystemGroup MountGroup { get; init; }
     public SystemTag Tags { get; init; }

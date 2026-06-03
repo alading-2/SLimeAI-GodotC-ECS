@@ -296,6 +296,7 @@ public partial class SystemInfoTestModule : TestModuleBase
             $"启用：{FormatBool(snapshot.IsEnabled)}\n" +
             $"运行：{FormatBool(snapshot.IsRunning)}\n" +
             $"状态门禁：{FormatBool(snapshot.IsStateAllowed)}\n" +
+            $"阻断码：{FormatEmpty(snapshot.BlockedReasonCode)}\n" +
             $"阻塞原因：{FormatEmpty(snapshot.BlockedReason)}";
 
         _detailsLabel.Text = BuildDetailsText(snapshot);

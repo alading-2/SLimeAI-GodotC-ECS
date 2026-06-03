@@ -34,6 +34,9 @@ internal sealed class ManagedSystemEntry
     /// <summary>状态门禁未通过时的原因；为空表示通过。</summary>
     public string BlockedReason { get; set; } = string.Empty;
 
+    /// <summary>状态门禁未通过时的稳定原因码。</summary>
+    public SystemBlockedReasonCode BlockedReasonCode { get; set; } = SystemBlockedReasonCode.None;
+
     /// <summary>系统当前是否处于运行态（IsEnabled &amp;&amp; IsStateAllowed）。</summary>
     public bool IsRunning { get; set; }
 }

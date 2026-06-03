@@ -105,6 +105,7 @@ public partial class SystemManager
             IsRunning = entry.IsRunning,
             IsStateAllowed = entry.IsStateAllowed,
             BlockedReason = entry.BlockedReason,
+            BlockedReasonCode = entry.BlockedReasonCode,
             MountGroup = entry.Config.MountGroup,
             Tags = entry.Config.Tags,
             CustomStats = new List<SystemStat>()
