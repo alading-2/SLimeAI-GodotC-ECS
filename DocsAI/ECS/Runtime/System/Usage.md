@@ -7,6 +7,8 @@
 
 > 2026-05 更新：系统管理已切到“代码只注册 `SystemId + Factory`，DataOS snapshot records 声明装载、挂载分组、标签和运行条件”的数据驱动模型。旧版代码侧生命周期/形态枚举、Profile 装配表和四维阶段模型已退出正式流程。
 
+> 2026-06-03 更新：System AI-first contract hardening 已进入 SDD-0029。后续修改 System Core 时必须同步 `DocsAI/ECS/Runtime/System/README.md`、本文、`SystemManifest.md`（生成后）和 SDD-0029 进度；首切片只补 manifest / preflight / diagnostics / trace / artifact，不做 typed `SystemId` hard cutover。
+
 ## 0. 开发者从哪里开始看
 
 如果你是第一次接这套 System Core，建议按下面顺序看：
@@ -21,6 +23,7 @@
    - 想看系统配置：`Data/DataOS/Snapshots/runtime_snapshot.json` 的 `system.config`
    - 想看状态门禁：`Lifecycle/SystemRunCondition.cs`
    - 想看启动预设：`Data/DataOS/Snapshots/runtime_snapshot.json` 的 `system.preset`
+   - 想看 AI-first contract 执行计划：`SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md`
 
 推荐这样看的原因是：
 

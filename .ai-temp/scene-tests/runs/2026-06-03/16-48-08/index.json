@@ -1,0 +1,93 @@
+{
+  "generatedAt": "2026-06-03T08:48:18.408Z",
+  "startedAt": "2026-06-03T08:48:08.457Z",
+  "durationMs": 9951,
+  "failed": false,
+  "runDir": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08",
+  "removedLogDirs": [],
+  "metadata": {
+    "command": "run-many",
+    "scenes": [
+      "res://Src/ECS/Tools/ObjectPool/Tests/ObjectPoolContractRuntimeTest.tscn",
+      "res://Src/ECS/Tools/ObjectPool/Tests/ObjectPoolCollisionIsolationValidation.tscn"
+    ],
+    "build": true,
+    "continueOnFail": true,
+    "includeAll": false,
+    "filter": null,
+    "timeoutMs": 30000,
+    "maxLogLines": 80,
+    "fullLogs": false,
+    "errorsOnly": true,
+    "attempts": 1,
+    "logRetentionDays": 999,
+    "godot": null,
+    "manifest": null
+  },
+  "summary": {
+    "totalScenes": 2,
+    "executedScenes": 2,
+    "skippedScenes": 0,
+    "passedScenes": 2,
+    "failedScenes": 0,
+    "timedOutScenes": 0,
+    "attemptsUsed": 2
+  },
+  "skippedScenes": [],
+  "entries": [
+    {
+      "scene": "res://Src/ECS/Tools/ObjectPool/Tests/ObjectPoolContractRuntimeTest.tscn",
+      "attempt": 1,
+      "status": "passed",
+      "failed": false,
+      "failureReason": null,
+      "exitCode": 0,
+      "timedOut": false,
+      "firstError": null,
+      "stdoutLineCount": 213,
+      "stderrLineCount": 158,
+      "logFiles": {
+        "stdout": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/001_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolContractRuntimeTest.tscn_attempt1/stdout.log",
+        "stderr": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/001_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolContractRuntimeTest.tscn_attempt1/stderr.log",
+        "combined": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/001_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolContractRuntimeTest.tscn_attempt1/combined.log",
+        "result": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/001_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolContractRuntimeTest.tscn_attempt1/result.json"
+      },
+      "artifactDirs": {
+        "screenshots": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/001_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolContractRuntimeTest.tscn_attempt1/screenshots",
+        "artifacts": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/001_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolContractRuntimeTest.tscn_attempt1/artifacts"
+      },
+      "artifacts": {
+        "screenshots": [],
+        "files": []
+      }
+    },
+    {
+      "scene": "res://Src/ECS/Tools/ObjectPool/Tests/ObjectPoolCollisionIsolationValidation.tscn",
+      "attempt": 1,
+      "status": "passed",
+      "failed": false,
+      "failureReason": null,
+      "exitCode": 0,
+      "timedOut": false,
+      "firstError": null,
+      "stdoutLineCount": 156,
+      "stderrLineCount": 147,
+      "logFiles": {
+        "stdout": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/002_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolCollisionIsolationValidation.tscn_attempt1/stdout.log",
+        "stderr": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/002_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolCollisionIsolationValidation.tscn_attempt1/stderr.log",
+        "combined": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/002_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolCollisionIsolationValidation.tscn_attempt1/combined.log",
+        "result": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/002_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolCollisionIsolationValidation.tscn_attempt1/result.json"
+      },
+      "artifactDirs": {
+        "screenshots": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/002_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolCollisionIsolationValidation.tscn_attempt1/screenshots",
+        "artifacts": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/002_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolCollisionIsolationValidation.tscn_attempt1/artifacts"
+      },
+      "artifacts": {
+        "screenshots": [],
+        "files": [
+          ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/002_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolCollisionIsolationValidation.tscn_attempt1/artifacts/objectpool-collision-isolation-validation.json"
+        ]
+      }
+    }
+  ]
+}

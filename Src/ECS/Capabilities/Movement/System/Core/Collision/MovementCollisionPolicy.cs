@@ -40,7 +40,8 @@ public sealed class MovementCollisionPolicy
         MoveMode mode,
         in MovementParams @params,
         Node2D? target,
-        out MovementCollisionContext context)
+        out MovementCollisionContext context,
+        long? currentPhysicsFrame = null)
     {
         context = default;
 
@@ -51,6 +52,13 @@ public sealed class MovementCollisionPolicy
         }
 
         var config = _config.Value;
+        var frame = currentPhysicsFrame ?? ObjectPoolRuntimeStateStore.CurrentPhysicsFrame;
+        if (sourceEntity is Node sourceNode
+            && !CollisionLogicGuard.CanProcessCollision(sourceNode, target, frame))
+        {
+            return false;
+        }
+
         // 运动系统约定碰撞目标直接就是 IEntity；非 IEntity 目标只参与节点级匹配，不参与阵营/类型过滤。
         var targetEntity = target as IEntity;
         // 阵营 / 实体类型 / 目标匹配 三重过滤

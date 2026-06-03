@@ -72,6 +72,8 @@ namespace Slime.Test
                 TestCollisionPolicyCountsAndFilters();
                 TestCollisionPolicyUsesOwnerUnitForTeamFilter();
                 TestCollisionPolicyTrackedTargetOnly();
+                TestCollisionPolicyRejectsPooledSourceAndTarget();
+                TestCollisionPolicyRejectsActivationEmbargo();
                 TestDefaultMoveModeNoneDiagnostics();
             }
             catch (System.Exception ex)
@@ -691,6 +693,87 @@ namespace Slime.Test
             source.QueueFree();
             trackedEnemy.QueueFree();
             otherEnemy.QueueFree();
+        }
+
+        private void TestCollisionPolicyRejectsPooledSourceAndTarget()
+        {
+            var source = new MockEntity("PooledSource", Team.Player, EntityType.Projectile);
+            var enemy = new MockEntity("PooledEnemy", Team.Enemy, EntityType.Unit);
+
+            AddChild(source);
+            AddChild(enemy);
+
+            var policy = new MovementCollisionPolicy();
+            var @params = new MovementParams
+            {
+                Mode = MoveMode.SineWave,
+                CollisionParams = new MovementCollisionParams
+                {
+                    TeamFilter = TeamFilter.Enemy,
+                    EntityTypeFilter = EntityType.Unit
+                }
+            };
+            policy.Reset(@params);
+
+            ObjectPoolRuntimeStateStore.MarkReleased(source, "Test/ObjectPool/MovementSource", new Vector2(999999, 999999));
+            bool sourceAccepted = policy.TryAccept(source, MoveMode.SineWave, @params, enemy, out _);
+            AssertEqual("回池 source 不应进入 MovementCollision", false, sourceAccepted);
+
+            ObjectPoolRuntimeStateStore.MarkActivated(source, "Test/ObjectPool/MovementSource");
+            ObjectPoolRuntimeStateStore.MarkReleased(enemy, "Test/ObjectPool/MovementTarget", new Vector2(1004096, 999999));
+            bool targetAccepted = policy.TryAccept(source, MoveMode.SineWave, @params, enemy, out _);
+            AssertEqual("回池 target 不应进入 MovementCollision", false, targetAccepted);
+
+            ObjectPoolRuntimeStateStore.Remove(source);
+            ObjectPoolRuntimeStateStore.Remove(enemy);
+            source.QueueFree();
+            enemy.QueueFree();
+        }
+
+        private void TestCollisionPolicyRejectsActivationEmbargo()
+        {
+            var source = new MockEntity("EmbargoSource", Team.Player, EntityType.Projectile);
+            var enemy = new MockEntity("EmbargoEnemy", Team.Enemy, EntityType.Unit);
+
+            AddChild(source);
+            AddChild(enemy);
+
+            var policy = new MovementCollisionPolicy();
+            var @params = new MovementParams
+            {
+                Mode = MoveMode.SineWave,
+                CollisionParams = new MovementCollisionParams
+                {
+                    TeamFilter = TeamFilter.Enemy,
+                    EntityTypeFilter = EntityType.Unit
+                }
+            };
+            policy.Reset(@params);
+
+            ObjectPoolRuntimeStateStore.MarkActivated(source, "Test/ObjectPool/MovementEmbargo");
+            ObjectPoolRuntimeStateStore.TryGet(source, out var state);
+
+            bool embargoAccepted = policy.TryAccept(
+                source,
+                MoveMode.SineWave,
+                @params,
+                enemy,
+                out _,
+                state.LastAcquirePhysicsFrame);
+            AssertEqual("Activate 首帧应被 MovementCollision embargo", false, embargoAccepted);
+
+            bool readyAccepted = policy.TryAccept(
+                source,
+                MoveMode.SineWave,
+                @params,
+                enemy,
+                out _,
+                state.CollisionReadyPhysicsFrame);
+            AssertEqual("到达 ready frame 后 MovementCollision 可继续策略过滤", true, readyAccepted);
+
+            ObjectPoolRuntimeStateStore.Remove(source);
+            source.QueueFree();
+            enemy.QueueFree();
         }
 
         /// <summary>

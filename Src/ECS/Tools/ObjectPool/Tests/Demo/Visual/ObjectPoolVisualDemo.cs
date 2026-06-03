@@ -4,10 +4,10 @@ using System;
 namespace Slime.Test;
 
 /// <summary>
-/// C# 版对象池可视化测试场景
-/// 提供直观的 UI 面板、实时图表和交互控制
+/// C# 版对象池可视化演示场景。
+/// <para>该场景只用于人工观察对象复用和统计，不作为自动回归门禁。</para>
 /// </summary>
-public partial class ObjectPoolVisualTest : Control
+public partial class ObjectPoolVisualDemo : Control
 {
     private ObjectPool<VisualTestBullet> _pool;
     private Rect2 _spawnBounds;
@@ -64,7 +64,7 @@ public partial class ObjectPoolVisualTest : Control
             },
             config: new ObjectPoolConfig
             {
-                Name = "VisualTestPool",
+                Name = "Demo/ObjectPool/VisualTestPool",
                 InitialSize = 10,
                 MaxSize = _maxPoolSize,
                 EnableStats = true,

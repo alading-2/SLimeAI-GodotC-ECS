@@ -26,6 +26,7 @@ description: 修改 SlimeAI ECS Collision Capability、碰撞层、Hurtbox、Con
 - 碰撞过滤统一读取 Collision DataKeys / layer / mask / team 规则。
 - 接触伤害只把碰撞转成 DamageService 请求，不直接改 HP。
 - 对象池回收 Godot `CollisionObject2D` 默认走 `ParkedInTree`，Collision / Movement / Damage 业务入口必须查 pool runtime state 和 `CollisionReadyPhysicsFrame`。
+- `CollisionComponent` / `HurtboxComponent` 发业务事件前必须通过 `CollisionLogicGuard`，不能把回池对象或激活首帧对象转成有效业务碰撞。
 - `ContactDamageComponent` timer tick 前必须验证 attacker 仍允许处理碰撞；guard 失败时取消 timer 并清理旧引用。
 - MovementCollision 负责命中检测和派发，伤害结算仍走 Damage Capability。
 

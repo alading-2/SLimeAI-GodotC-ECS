@@ -2,10 +2,10 @@
 
 ## Summary
 
-- **pending**: 0
-- **active**: 1
+- **pending**: 1
+- **active**: 0
 - **blocked**: 1
-- **done**: 26
+- **done**: 27
 - **projects**: 2
 
 ## Projects
@@ -13,17 +13,17 @@
 | ID | Title | Status | Bucket | Current SDD | Path |
 | --- | --- | --- | --- | --- | --- |
 | PRJ-0001 | SystemAgent Optimization | active | projects | SDD-0008 | SDD/project/projects/PRJ-0001-systemagent-optimization |
-| PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0028 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
+| PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0029 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
 
 ## Pending
 
-无。
+| ID | Project | Title | Updated | Scope | Current Task |
+| --- | --- | --- | --- | --- | --- |
+| SDD-0029 | PRJ-0002 | System Contract Manifest And Diagnostics Hardening | 2026-06-03 | SlimeAI | T1.1 |
 
 ## Active
 
-| ID | Project | Title | Updated | Scope | Current Task |
-| --- | --- | --- | --- | --- | --- |
-| SDD-0028 | PRJ-0002 | ObjectPool Collision ParkedInTree Cutover | 2026-06-03 | SlimeAI | T1.1 |
+无。
 
 ## Blocked
 
@@ -61,6 +61,7 @@
 | SDD-0024 | PRJ-0002 | Entity Relationship Full Rewrite | 2026-06-01 | SlimeAI | done |
 | SDD-0025 | PRJ-0002 | ECS Framework Directory Architecture Restructure | 2026-06-01 | SlimeAI | done |
 | SDD-0026 | PRJ-0002 | Input Contract Manifest And Facade Hardening | 2026-06-02 | SlimeAI | done |
+| SDD-0028 | PRJ-0002 | ObjectPool Collision ParkedInTree Cutover | 2026-06-03 | SlimeAI | done |
 
 ## By Scope
 
@@ -84,6 +85,7 @@
 - SDD-0026 — Input Contract Manifest And Facade Hardening
 - SDD-0027 — Timer Scheduler Full Rewrite
 - SDD-0028 — ObjectPool Collision ParkedInTree Cutover
+- SDD-0029 — System Contract Manifest And Diagnostics Hardening
 
 ### Workspace/SDD
 
@@ -112,6 +114,7 @@
 - SDD-0026 — Input Contract Manifest And Facade Hardening
 - SDD-0027 — Timer Scheduler Full Rewrite
 - SDD-0028 — ObjectPool Collision ParkedInTree Cutover
+- SDD-0029 — System Contract Manifest And Diagnostics Hardening
 
 ### bootstrap
 
@@ -188,6 +191,7 @@
 ### diagnostics
 
 - SDD-0022 — Data Projection Diagnostics Contract Hardening
+- SDD-0029 — System Contract Manifest And Diagnostics Hardening
 
 ### directory-architecture
 
@@ -196,6 +200,7 @@
 ### docsai
 
 - SDD-0025 — ECS Framework Directory Architecture Restructure
+- SDD-0029 — System Contract Manifest And Diagnostics Hardening
 
 ### ecs
 
@@ -286,6 +291,7 @@
 
 - SDD-0014 — Data Runtime Slot and Policy Model
 - SDD-0016 — Data Compute Resolver Runtime
+- SDD-0029 — System Contract Manifest And Diagnostics Hardening
 
 ### runtime_snapshot
 
@@ -312,6 +318,10 @@
 ### subagent
 
 - SDD-0010 — Git Worktree Subagent Safety Strategy
+
+### system
+
+- SDD-0029 — System Contract Manifest And Diagnostics Hardening
 
 ### systemagent
 

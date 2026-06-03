@@ -27,27 +27,30 @@
 
 ## 文件组织
 
-- `ObjectPool.cs`: 核心对象池逻辑与 `IPoolable` 接口定义。
-- `ObjectPoolManager.cs`: 全局池管理逻辑，负责池的注册、查找与静态归还。
-- `ObjectPoolObservability.cs`: 对象池容量元数据和 TestSystem 观测入口。
+- `Core/ObjectPool.cs`: 核心对象池逻辑。
+- `Core/IPoolable.cs`: 池化对象生命周期接口。
+- `Management/ObjectPoolManager.cs`: 全局池管理逻辑，负责池的注册、查找与静态归还。
+- `Management/ObjectPoolInit.cs`: 推荐的全局初始化入口（AutoLoad）。
+- `Lifecycle/`: Node 显隐、ProcessMode、parking grid 和 fallback detach 策略。
+- `RuntimeState/`: pool runtime state、节点状态快照和 `CollisionLogicGuard`。
+- `Observability/ObjectPoolObservability.cs`: 对象池容量元数据和 TestSystem 观测入口。
 - `DocsAI/ECS/Tools/ParentManager/`: 父级挂载工具 owner，负责池化节点的父级路径解析。
-- `ObjectPoolInit.cs`: 推荐的全局初始化入口（AutoLoad）。
 
 ## 测试与验证状态
 
-`Src/ECS/Tools/ObjectPool/Tests` 当前处于重构前状态：
+`Src/ECS/Tools/ObjectPool/Tests` 当前按 AI-first 验证职责分层：
 
-- `ObjectPoolVisualTest.cs/.tscn` 和 `ObjectPoolManagerTest.cs/.tscn` 是人工可视化 demo，不是自动回归测试。
-- `TestProjectile.cs`、`TestEffect.cs`、`VisualTestBullet.cs` 的根节点都是 `Node2D`，不能证明 `CollisionObject2D` 回池场外常驻、激活首帧 guard 或 parking grid 压力。
-- 这些 demo 缺少 README 五字段、PASS artifact、`index.json` / `result.json` 和 artifact `checks[]`。
-- demo 池名不得继续使用或覆盖真实 `ObjectPoolNames`；测试池名应使用 `Test/ObjectPool/...` 或 `Demo/ObjectPool/...` 前缀。
+- `Tests/Contracts/ObjectPoolContractRuntimeTest.cs/.tscn` 是自动 contract checks。
+- `Tests/Validation/CollisionIsolation/ObjectPoolCollisionIsolationValidation.cs/.tscn` 是 Godot collision validation scene，旁置 README 五字段和 PASS artifact。
+- `Tests/Demo/Visual/ObjectPoolVisualDemo.cs/.tscn` 与 `Tests/Demo/Manager/ObjectPoolManagerDemo.cs/.tscn` 是人工 demo，不作为 PASS/FAIL。
+- `Tests/Demo/Fixtures/` 保存 demo 用 `Node2D` fixture，不用于证明 `CollisionObject2D` 隔离。
 
 后续测试重构必须按 [Tests.md](Tests.md) 执行：
 
-1. 保留现有 UI 场景为 manual demo。
-2. 新增 Runtime contract checks，覆盖统计、容量、重复归还、manager mapping 和全局污染隔离。
-3. 新增 Godot collision validation scene，覆盖 `Area2D` / `CharacterBody2D` 根节点场外常驻、`Activate()` 后首帧 guard、同帧复用旧 signal 和 parking grid 压力。
-4. 新增或更新 `Src/ECS/Tools/ObjectPool/Tests/README.md`，包含 `expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath`。
+1. Contract 与 validation 分目录，不与 demo 混放。
+2. Runtime contract checks 覆盖统计、容量、重复归还、manager mapping 和全局污染隔离。
+3. Godot collision validation scene 覆盖 `Area2D` / `CharacterBody2D` 根节点场外常驻、`Activate()` 后首帧 guard、raw callback 到 business event oracle、同帧复用和 parking grid 压力。
+4. `Tests/Validation/CollisionIsolation/README.md` 包含 `expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath`。
 5. Godot validation 必须写 PASS artifact；不能只看 stdout、exit code 或 UI 面板。
 
 ## 重要限制
@@ -107,7 +110,7 @@ pool.Release(data);  // 必须持有池引用
 项目采用集中式初始化模式，通过 `ObjectPoolInit.cs` (AutoLoad) 统一管理核心对象池。
 
 ```csharp
-// 在 Src/ECS/Tools/ObjectPool/ObjectPoolInit.cs 中
+// 在 Src/ECS/Tools/ObjectPool/Management/ObjectPoolInit.cs 中
 public override void _Ready()
 {
     // 使用 ObjectPoolNames 常量避免字符串硬编码

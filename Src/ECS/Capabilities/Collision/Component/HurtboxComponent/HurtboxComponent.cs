@@ -73,6 +73,7 @@ public partial class HurtboxComponent : Area2D, IComponent
     {
         if (_entity == null || !IsInstanceValid(target)) return;
         var targetEntity = ResolveOwningEntity(target);
+        if (!CanEmitCollision(target, targetEntity)) return;
         _entity.Events.Emit(new GameEventType.Collision.HurtboxEntered(_entity, this, target, targetEntity));
     }
 
@@ -80,10 +81,25 @@ public partial class HurtboxComponent : Area2D, IComponent
     {
         if (_entity == null || !IsInstanceValid(target)) return;
         var targetEntity = ResolveOwningEntity(target);
+        if (!CanEmitCollision(target, targetEntity)) return;
         _entity.Events.Emit(new GameEventType.Collision.HurtboxExited(_entity, this, target, targetEntity));
     }
 
     // ================= 工具 =================
+
+    /// <summary>
+    /// 判断 Hurtbox 事件是否允许进入业务事件总线。
+    /// </summary>
+    private bool CanEmitCollision(Node2D target, IEntity? targetEntity)
+    {
+        var currentFrame = ObjectPoolRuntimeStateStore.CurrentPhysicsFrame;
+        var sourceNode = _entity as Node;
+        var targetEntityNode = targetEntity as Node;
+
+        return CollisionLogicGuard.CanProcessCollision(sourceNode, this, currentFrame)
+            && CollisionLogicGuard.CanProcessCollision(target, currentFrame)
+            && CollisionLogicGuard.CanProcessCollision(targetEntityNode, currentFrame);
+    }
 
     /// <summary>
     /// 解析节点的所属实体，向上遍历节点树查找第一个实现 IEntity 的节点

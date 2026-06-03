@@ -95,6 +95,7 @@ public partial class CollisionComponent : Node, IComponent
     {
         // 安全性检查：确保实体存在且目标节点有效
         if (_entity == null || !IsInstanceValid(target)) return;
+        if (!CanEmitCollision(target)) return;
 
         // 向实体局部事件总线发射碰撞进入事件
         _entity.Events.Emit(new GameEventType.Collision.CollisionEntered(_entity, target));
@@ -107,8 +108,19 @@ public partial class CollisionComponent : Node, IComponent
     {
         // 安全性检查：确保实体存在且目标节点有效
         if (_entity == null || !IsInstanceValid(target)) return;
+        if (!CanEmitCollision(target)) return;
 
         // 向实体局部事件总线发射碰撞退出事件
         _entity.Events.Emit(new GameEventType.Collision.CollisionExited(_entity, target));
+    }
+
+    /// <summary>
+    /// 判断当前碰撞事件是否允许进入业务事件总线。
+    /// </summary>
+    private bool CanEmitCollision(Node2D target)
+    {
+        var currentFrame = ObjectPoolRuntimeStateStore.CurrentPhysicsFrame;
+        var sourceNode = _entity as Node;
+        return CollisionLogicGuard.CanProcessCollision(sourceNode, target, currentFrame);
     }
 }

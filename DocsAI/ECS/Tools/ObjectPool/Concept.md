@@ -1,7 +1,7 @@
 # ObjectPool 概念
 
 > status: current
-> sourcePaths: Src/ECS/Tools/ObjectPool/
+> sourcePaths: Src/ECS/Tools/ObjectPool/Core/, Src/ECS/Tools/ObjectPool/Lifecycle/, Src/ECS/Tools/ObjectPool/RuntimeState/
 > relatedDocs: DocsAI/ECS/Tools/ObjectPool/README.md, DocsAI/ECS/Tools/ObjectPool/Usage.md, DocsAI/ECS/Capabilities/Collision/Concepts/Godot物理时序与对象池碰撞.md
 > lastReviewed: 2026-06-03
 
@@ -79,17 +79,18 @@ ObjectPool 当前问题不是“使用对象池本身错误”，而是策略藏
 - Godot 物理协作：parking grid、runtime state、激活首帧 embargo、fallback detach。
 - Entity 编排配合：`Get(false)`、`Activate()`、`MoveAndSlide` 时序。
 
-后续重构应拆出内部策略：
+当前内部策略按职责拆分在源码子目录中：
 
 ```text
 ObjectPool<T>
-  -> PoolNodeLifecycleStrategy
-  -> PoolParkingStrategy
-  -> ObjectPoolRuntimeStateStore
-  -> CollisionLogicGuard
-  -> DetachFallbackStrategy
-  -> PoolLifecycleContext
-  -> PoolNodeStateSnapshot / Observation
+  -> Core/ObjectPool.cs
+  -> Lifecycle/PoolNodeLifecycleStrategy.cs
+  -> Lifecycle/PoolParkingStrategy.cs
+  -> RuntimeState/ObjectPoolRuntimeStateStore.cs
+  -> RuntimeState/CollisionLogicGuard.cs
+  -> Lifecycle/DetachFallbackStrategy.cs
+  -> Lifecycle/PoolLifecycleContext.cs
+  -> Observability/ObjectPoolObservability.cs
 ```
 
 这类拆分是为了可读、可测、可观测，不是为了引入新的 public abstraction。

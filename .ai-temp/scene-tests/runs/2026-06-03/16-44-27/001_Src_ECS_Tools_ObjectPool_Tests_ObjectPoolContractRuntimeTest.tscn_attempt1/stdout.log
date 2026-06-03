@@ -1,0 +1,213 @@
+[16:44:35][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.主动.连锁闪电
+[16:44:35][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.被动.圆环伤害
+[16:44:35][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.投射物.圆弧射击
+[16:44:35][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.投射物.贝塞尔射击
+[16:44:35][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.投射物.回旋镖投掷
+[16:44:35][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.位移.冲刺
+[16:44:35][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.被动.环绕技能
+[16:44:35][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.投射物.定点抛炸弹
+[16:44:35][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.投射物.正弦波射击
+[16:44:35][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 技能.主动.猛击
+[16:44:35][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 测试.技能.流水线.HandlerManagedEntityAbility
+[16:44:35][INFO][FeatureHandlerRegistry] 注册 FeatureHandler: 测试.技能.流水线.AbilityToolBridgeAbility
+[16:44:35][INFO][HealthBarUI] [ModuleInitializer] HealthBarUI.Initialize() 开始执行
+[16:44:35][INFO][HealthBarUI] [ModuleInitializer] HealthBarUI 全局事件监听已初始化完成
+[16:44:35][INFO][ParentManager] ParentManager 已初始化
+[16:44:35][INFO][SystemManager] SystemManager _Ready 开始启动系统框架
+[16:44:35][DEBUG][SystemConfigService] 加载系统配置: DamageNumberRuntimeBridge
+[16:44:35][DEBUG][SystemConfigService] 加载系统配置: DamageService
+[16:44:35][DEBUG][SystemConfigService] 加载系统配置: DamageStatisticsSystem
+[16:44:35][DEBUG][SystemConfigService] 加载系统配置: EntityManager
+[16:44:35][DEBUG][SystemConfigService] 加载系统配置: MouseSelectionSystem
+[16:44:35][DEBUG][SystemConfigService] 加载系统配置: ObjectPoolInit
+[16:44:35][DEBUG][SystemConfigService] 加载系统配置: PauseMenuSystem
+[16:44:35][DEBUG][SystemConfigService] 加载系统配置: ProjectStateBridge
+[16:44:35][DEBUG][SystemConfigService] 加载系统配置: RecoverySystem
+[16:44:35][DEBUG][SystemConfigService] 加载系统配置: SpawnSystem
+[16:44:35][DEBUG][SystemConfigService] 加载系统配置: TargetingManagerRuntime
+[16:44:35][DEBUG][SystemConfigService] 加载系统配置: TestSystem
+[16:44:35][DEBUG][SystemConfigService] 加载系统配置: TimerManager
+[16:44:35][DEBUG][SystemConfigService] 加载系统配置: UIManager
+[16:44:35][INFO][SystemConfigService] SystemConfigService 初始化完成，共加载 14 个系统配置
+[16:44:35][DEBUG][SystemPresetService] 加载系统预设: Default (Active=True)
+[16:44:35][INFO][SystemPresetService] SystemPresetService 初始化完成，共加载 1 个预设，激活预设: Default
+[16:44:36][INFO][SystemManager] 根据预设计算，应加载 14 个系统
+[16:44:36][INFO][SystemManager] 当前已注册系统描述符数量: 14
+[16:44:36][DEBUG][ParentManager] 已注册父节点: TimerPool -> Tool/GameTimer
+[16:44:36][INFO][ObjectPool] 创建对象池: TimerPool, 初始大小: 50, 最大大小: 300, 父节点路径: Tool/GameTimer
+[16:44:36][DEBUG][ParentManager] 已注册父节点: EnemyPool -> ECS/Entity/Unit/EnemyPool
+[16:44:36][INFO][ObjectPool] 创建对象池: EnemyPool, 初始大小: 100, 最大大小: 500, 父节点路径: ECS/Entity/Unit/EnemyPool
+[16:44:36][DEBUG][ParentManager] 已注册父节点: AbilityPool -> ECS/Entity/Ability/AbilityPool
+[16:44:36][INFO][ObjectPool] 创建对象池: AbilityPool, 初始大小: 50, 最大大小: 300, 父节点路径: ECS/Entity/Ability/AbilityPool
+[16:44:36][DEBUG][ParentManager] 已注册父节点: EffectPool -> ECS/Entity/EffectPool
+[16:44:36][INFO][ObjectPool] 创建对象池: EffectPool, 初始大小: 100, 最大大小: 500, 父节点路径: ECS/Entity/EffectPool
+[16:44:36][DEBUG][ParentManager] 已注册父节点: HealthBarPool -> UI/UI/HealthBarUIPool
+[16:44:36][INFO][ObjectPool] 创建对象池: HealthBarPool, 初始大小: 50, 最大大小: 200, 父节点路径: UI/UI/HealthBarUIPool
+[16:44:36][DEBUG][ParentManager] 已注册父节点: DamageNumberUIPool -> UI/UI/DamageNumberUIPool
+[16:44:36][INFO][ObjectPool] 创建对象池: DamageNumberUIPool, 初始大小: 100, 最大大小: 500, 父节点路径: UI/UI/DamageNumberUIPool
+[16:44:36][DEBUG][ParentManager] 已注册父节点: ProjectilePool -> ECS/Entity/ProjectileEntityPool
+[16:44:36][INFO][ObjectPool] 创建对象池: ProjectilePool, 初始大小: 30, 最大大小: 200, 父节点路径: ECS/Entity/ProjectileEntityPool
+[16:44:36][DEBUG][ParentManager] 已注册父节点: LightningLinePool -> ECS/Entity/Ability/LightningLinePool
+[16:44:36][INFO][ObjectPool] 创建对象池: LightningLinePool, 初始大小: 10, 最大大小: 50, 父节点路径: ECS/Entity/Ability/LightningLinePool
+[16:44:36][SUCCESS][ObjectPoolInit] ObjectPoolInit 初始化完成
+[16:44:36][INFO][SystemManager] 系统 ObjectPoolInit 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[16:44:36][INFO][SystemManager] 系统 TimerManager 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[16:44:36][INFO][SystemManager] 项目状态切换: Boot/None/Running -> FrontEnd/None/Running
+[16:44:36][INFO][SystemManager] 系统 ProjectStateBridge 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[16:44:36][INFO][EntityManager_Component] 🔥 开始预热 Entity Component 缓存...
+[16:44:36][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Capabilities/Ability/Entity/AbilityEntity.tscn: 4 components
+[16:44:36][WARNING][EntityManager_Component]   - 预热警告: res://Src/ECS/Runtime/Entity/Tests/ComponentRegistrarRuntimeTest.tscn 未找到任何 Component (可能结构特殊)
+[16:44:36][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Capabilities/Effect/Entity/EffectEntity.tscn: 3 components
+[16:44:36][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Capabilities/Unit/Entity/Enemy/EnemyEntity.tscn: 11 components
+[16:44:36][WARNING][EntityManager_Component]   - 预热警告: res://Src/ECS/Runtime/Entity/Tests/EntityAttributionResolverRuntimeTest.tscn 未找到任何 Component (可能结构特殊)
+[16:44:36][WARNING][EntityManager_Component]   - 预热警告: res://Src/ECS/Runtime/Entity/Tests/EntityDestroyPipelineRuntimeTest.tscn 未找到任何 Component (可能结构特殊)
+[16:44:36][WARNING][EntityManager_Component]   - 预热警告: res://Src/ECS/Runtime/Entity/Tests/EntityIdentityRuntimeTest.tscn 未找到任何 Component (可能结构特殊)
+[16:44:36][WARNING][EntityManager_Component]   - 预热警告: res://Src/ECS/Runtime/Entity/Tests/EntitySpawnPipelineRuntimeTest.tscn 未找到任何 Component (可能结构特殊)
+[16:44:36][WARNING][EntityManager_Component]   - 预热警告: res://Src/ECS/Runtime/Entity/Tests/LifecycleTreeRuntimeTest.tscn 未找到任何 Component (可能结构特殊)
+[16:44:36][WARNING][EntityManager_Component]   - 预热警告: res://Src/ECS/Capabilities/Effect/Entity/LightningLineEffect/LightningLineEffect.tscn 未找到任何 Component (可能结构特殊)
+[16:44:36][WARNING][EntityManager_Component]   - 预热警告: res://Src/ECS/Runtime/Entity/Tests/OwnedReferenceRegistryRuntimeTest.tscn 未找到任何 Component (可能结构特殊)
+[16:44:36][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Capabilities/Unit/Entity/Player/PlayerEntity.tscn: 12 components
+[16:44:36][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Capabilities/Projectile/Entity/ProjectileEntity.tscn: 3 components
+[16:44:36][DEBUG][EntityManager_Component]   - 缓存 res://Src/ECS/Capabilities/Unit/Entity/TargetingIndicator/TargetingIndicatorEntity.tscn: 10 components
+[16:44:36][WARNING][EntityManager_Component]   - 预热警告: res://Src/ECS/Test/GlobalTest/VisualPreview/Entity/VisualPreviewEntity.tscn 未找到任何 Component (可能结构特殊)
+[16:44:36][INFO][EntityManager_Component] ✅ 缓存预热完成: 6 个 Entity, 共 43 个 Component 路径已缓存。
+[16:44:36][INFO][SystemManager] 系统 EntityManager 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[16:44:36][INFO][SystemManager] 系统 DamageService 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[16:44:36][DEBUG][DamageStatisticsSystem] 伤害统计系统初始化完成
+[16:44:36][INFO][SystemManager] 系统 DamageStatisticsSystem 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[16:44:36][DEBUG][RecoverySystem] 恢复计时器已启动，配置间隔: 1s
+[16:44:36][INFO][RecoverySystem] RecoverySystem 已启动，恢复间隔: 1s
+[16:44:36][INFO][SystemManager] 系统 RecoverySystem 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[16:44:36][INFO][SpawnSystem] SpawnSystem (TimerManager Architecture) 初始化完成
+[16:44:36][INFO][SystemManager] 系统 SpawnSystem 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[16:44:36][INFO][SystemManager] 系统 TargetingManagerRuntime 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[16:44:36][INFO][PauseMenuSystem] PauseMenuSystem 初始化完成
+[16:44:36][INFO][SystemManager] 系统 PauseMenuSystem 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[16:44:36][SUCCESS][UIManager] UIManager 初始化完成
+[16:44:36][INFO][SystemManager] 系统 UIManager 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[16:44:36][INFO][SystemManager] 系统 DamageNumberRuntimeBridge 已加载: Enabled=True, StateAllowed=False, Running=False, BlockedReason=FlowState=FrontEnd 不在允许范围 Gameplay
+[16:44:36][INFO][TestSystem] TestSystem 初始化完成
+[16:44:36][INFO][SystemManager] 系统 TestSystem 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[16:44:36][INFO][SystemManager] 系统 MouseSelectionSystem 已加载: Enabled=True, StateAllowed=True, Running=True, BlockedReason=
+[16:44:36][INFO][SystemManager] ========== 系统状态报告 ==========
+[16:44:36][INFO][SystemManager] 项目状态: FlowState=FrontEnd, Overlays=None, SimulationState=Running
+[16:44:36][INFO][SystemManager] 已加载系统总数: 14
+[16:44:36][INFO][SystemManager]   [Running] ObjectPoolInit
+[16:44:36][INFO][SystemManager]       MountGroup: Base, Tags: Core, Runtime
+[16:44:36][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[16:44:36][INFO][SystemManager]   [Running] TimerManager
+[16:44:36][INFO][SystemManager]       MountGroup: Base, Tags: Core, Runtime
+[16:44:36][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[16:44:36][INFO][SystemManager]   [Running] ProjectStateBridge
+[16:44:36][INFO][SystemManager]       MountGroup: Base, Tags: Core, Runtime
+[16:44:36][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[16:44:36][INFO][SystemManager]   [Running] EntityManager
+[16:44:36][INFO][SystemManager]       MountGroup: Base, Tags: Core, Runtime
+[16:44:36][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[16:44:36][INFO][SystemManager]   [EnabledBlocked] DamageService
+[16:44:36][INFO][SystemManager]       MountGroup: Combat, Tags: Core, Combat, Runtime
+[16:44:36][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[16:44:36][INFO][SystemManager]   [EnabledBlocked] DamageStatisticsSystem
+[16:44:36][INFO][SystemManager]       MountGroup: Combat, Tags: Core, Combat, Runtime
+[16:44:36][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[16:44:36][INFO][SystemManager]   [EnabledBlocked] RecoverySystem
+[16:44:36][INFO][SystemManager]       MountGroup: Combat, Tags: Core, Combat, Runtime
+[16:44:36][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[16:44:36][INFO][SystemManager]   [EnabledBlocked] SpawnSystem
+[16:44:36][INFO][SystemManager]       MountGroup: Gameplay, Tags: Gameplay, Runtime
+[16:44:36][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[16:44:36][INFO][SystemManager]   [EnabledBlocked] TargetingManagerRuntime
+[16:44:36][INFO][SystemManager]       MountGroup: Combat, Tags: Core, Combat, Runtime
+[16:44:36][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[16:44:36][INFO][SystemManager]   [EnabledBlocked] PauseMenuSystem
+[16:44:36][INFO][SystemManager]       MountGroup: UI, Tags: UI, Runtime
+[16:44:36][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[16:44:36][INFO][SystemManager]   [Running] UIManager
+[16:44:36][INFO][SystemManager]       MountGroup: UI, Tags: Core, UI, Runtime
+[16:44:36][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[16:44:36][INFO][SystemManager]   [EnabledBlocked] DamageNumberRuntimeBridge
+[16:44:36][INFO][SystemManager]       MountGroup: UI, Tags: Combat, UI, Runtime
+[16:44:36][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay
+[16:44:36][INFO][SystemManager]   [Running] TestSystem
+[16:44:36][INFO][SystemManager]       MountGroup: Test, Tags: Debug, Test
+[16:44:36][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[16:44:36][INFO][SystemManager]   [Running] MouseSelectionSystem
+[16:44:36][INFO][SystemManager]       MountGroup: Debug, Tags: Debug, Test
+[16:44:36][INFO][SystemManager]       IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: 
+[16:44:36][INFO][SystemManager] 统计: 运行中=7, 已启用=14, 已禁用=0
+[16:44:36][INFO][SystemManager] ==================================
+[16:44:36][INFO][SystemManager] SystemManager 启动完成
+[16:44:36][INFO][ParentManager] ParentManager 已初始化
+[16:44:36][DEBUG][ParentManager] 已注册父节点: Test/ObjectPool/WarmupStats -> ECS/Node
+[16:44:36][INFO][ObjectPool] 创建对象池: Test/ObjectPool/WarmupStats, 初始大小: 2, 最大大小: 4, 父节点路径: ECS/Node
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 预热后闲置数量 | expected=2 actual=2
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 预热后总创建数量 | expected=2 actual=2
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 预热后活跃数量 | expected=0 actual=0
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] Get/Release 后闲置数量恢复 | expected=2 actual=2
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] Get 后应统计一次获取 | expected=1 actual=1
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] Release 后应统计一次归还 | expected=1 actual=1
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 生命周期 Acquire 回调 | expected=1 actual=1
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 生命周期 Release 回调 | expected=1 actual=1
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 生命周期 Reset 回调 | expected=1 actual=1
+[16:44:36][DEBUG][ParentManager] 已注册父节点: Test/ObjectPool/PlainStaticReturn -> ECS/Node
+[16:44:36][INFO][ObjectPool] 创建对象池: Test/ObjectPool/PlainStaticReturn, 初始大小: 0, 最大大小: 2, 父节点路径: ECS/Node
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 纯对象可通过 ObjectPoolManager 静态归还 | expected=1 actual=1
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 静态归还后进入闲置栈 | expected=1 actual=1
+[16:44:36][DEBUG][ParentManager] 已注册父节点: Test/ObjectPool/DuplicateReleaseGuard -> ECS/Node
+[16:44:36][INFO][ObjectPool] 创建对象池: Test/ObjectPool/DuplicateReleaseGuard, 初始大小: 0, 最大大小: 2, 父节点路径: ECS/Node
+[16:44:36][WARNING][ObjectPool] Test/ObjectPool/DuplicateReleaseGuard: 实例 Slime.Test.ObjectPoolContractRuntimeTest+PlainPoolItem 不在活跃集合中。已忽略。
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 重复归还不应重复统计 | expected=1 actual=1
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 重复归还不应让 ActiveCount 为负 | expected=0 actual=0
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 重复归还不应重复入栈 | expected=1 actual=1
+[16:44:36][DEBUG][ParentManager] 已注册父节点: Test/ObjectPool/CapacityDiscard -> ECS/Node
+[16:44:36][INFO][ObjectPool] 创建对象池: Test/ObjectPool/CapacityDiscard, 初始大小: 0, 最大大小: 1, 父节点路径: ECS/Node
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 超过容量的归还应丢弃 | expected=1 actual=1
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 容量丢弃后闲置数不超过 MaxSize | expected=1 actual=1
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 容量丢弃后活跃数归零 | expected=0 actual=0
+[16:44:36][DEBUG][ParentManager] 已注册父节点: Test/ObjectPool/StaticReturnNode -> Pools/StaticReturnNode
+[16:44:36][INFO][ObjectPool] 创建对象池: Test/ObjectPool/StaticReturnNode, 初始大小: 0, 最大大小: 2, 父节点路径: Pools/StaticReturnNode
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] Node 可通过 ObjectPoolName meta 静态归还 | expected=1 actual=1
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] Node 静态归还后进入闲置栈 | expected=1 actual=1
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] Node 静态归还后仍在树中 | expected=True actual=True
+[16:44:36][DEBUG][ParentManager] 已注册父节点: Test/ObjectPool/ActiveSnapshotIsCopy -> ECS/Node
+[16:44:36][INFO][ObjectPool] 创建对象池: Test/ObjectPool/ActiveSnapshotIsCopy, 初始大小: 0, 最大大小: 4, 父节点路径: ECS/Node
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 活跃快照应是副本 | expected=2 actual=2
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 释放后新快照应反映当前活跃数量 | expected=1 actual=1
+[16:44:36][DEBUG][ParentManager] 已注册父节点: Test/ObjectPool/ManagerPoolIsolation -> ECS/Node
+[16:44:36][INFO][ObjectPool] 创建对象池: Test/ObjectPool/ManagerPoolIsolation, 初始大小: 1, 最大大小: 2, 父节点路径: ECS/Node
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 隔离测试池应注册到 manager | expected=True actual=True
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 隔离测试池必须使用 Test/ObjectPool 命名空间 | expected=True actual=True
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 隔离测试池名不能使用真实池名 | expected=False actual=False
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 真实池 ProjectilePool 存在性不应被测试池改变 | expected=True actual=True
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 真实池 ProjectilePool 的池名不应被替换 | expected=ProjectilePool actual=ProjectilePool
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 真实池 ProjectilePool 的创建计数不应被替换 | expected=30 actual=30
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 真实池 EffectPool 存在性不应被测试池改变 | expected=True actual=True
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 真实池 EffectPool 的池名不应被替换 | expected=EffectPool actual=EffectPool
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 真实池 EffectPool 的创建计数不应被替换 | expected=100 actual=100
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 真实池 EnemyPool 存在性不应被测试池改变 | expected=True actual=True
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 真实池 EnemyPool 的池名不应被替换 | expected=EnemyPool actual=EnemyPool
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 真实池 EnemyPool 的创建计数不应被替换 | expected=100 actual=100
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 真实池 AbilityPool 存在性不应被测试池改变 | expected=True actual=True
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 真实池 AbilityPool 的池名不应被替换 | expected=AbilityPool actual=AbilityPool
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 真实池 AbilityPool 的创建计数不应被替换 | expected=50 actual=50
+[16:44:36][DEBUG][ParentManager] 已注册父节点: Test/ObjectPool/AreaParkedInTree -> Pools/AreaParkedInTree
+[16:44:36][INFO][ObjectPool] 创建对象池: Test/ObjectPool/AreaParkedInTree, 初始大小: 0, 最大大小: 2, 父节点路径: Pools/AreaParkedInTree
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] Area 出池后应在树中 | expected=True actual=True
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] Area 回池后仍应在树中 | expected=True actual=True
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] Area 回池后应隐藏 | expected=False actual=False
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] Area 回池后应停处理 | expected=Disabled actual=Disabled
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] Area 回池后应写 runtime state | expected=True actual=True
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] runtime state 标记 IsInPool | expected=True actual=True
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] runtime state 标记 CollisionLogicActive=false | expected=False actual=False
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] runtime state 记录池名 | expected=Test/ObjectPool/AreaParkedInTree actual=Test/ObjectPool/AreaParkedInTree
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] guard 应拒绝回池节点 | expected=False actual=False
+[16:44:36][DEBUG][ParentManager] 已注册父节点: Test/ObjectPool/ActivationReadyFrame -> Pools/ActivationReadyFrame
+[16:44:36][INFO][ObjectPool] 创建对象池: Test/ObjectPool/ActivationReadyFrame, 初始大小: 0, 最大大小: 2, 父节点路径: Pools/ActivationReadyFrame
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] Activate 后应写 runtime state | expected=True actual=True
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] Activate 后碰撞逻辑标记 active | expected=True actual=True
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] Activate 当前 physics frame 仍应被 embargo | expected=False actual=False
+[16:44:36][SUCCESS][ObjectPoolContractRuntimeTest] [PASS] 到达 ready frame 后 guard 应放行 | expected=True actual=True
+[16:44:36][INFO][ObjectPoolManager] 所有对象池已销毁并清空。
+[16:44:36][INFO][ObjectPoolContractRuntimeTest] ObjectPool 运行时契约测试结束: PASS=50, FAIL=0
+[16:44:36][INFO][UIManager] UIManager 已清空，共清理 0 个 UI
+[16:44:36][DEBUG][SpawnSystem] SpawnSystem 已清理

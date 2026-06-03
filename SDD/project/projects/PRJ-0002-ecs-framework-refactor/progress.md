@@ -7,9 +7,9 @@
 ## Latest Resume
 
 - **Updated**: 2026-06-03
-- **Current SDD**: SDD-0028
-- **Last Conclusion**: 已精简 `DocsAI/ECS/Capabilities/Collision/Concepts` 为 current 三入口并把旧碰撞/脱树长文移入 `History/`；已创建并补齐 SDD-0028 `ObjectPool Collision ParkedInTree Cutover`，包含执行级设计、DeepThink 结论、12 项任务、BDD 和 `execution-prompt.md`。
-- **Next Action**: 从 `sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover/execution-prompt.md` 执行 T1.1 readiness baseline；先记录 ObjectPool 旧默认脱树实现、Collision/Movement/ContactDamage guard 缺口、ObjectPool Tests/demo 状态、dirty baseline 和 SDD validate 基线。
+- **Current SDD**: SDD-0029
+- **Last Conclusion**: 已创建并补齐 SDD-0029 `System Contract Manifest And Diagnostics Hardening`，用于在保留 Runtime System Core 的前提下补齐 manifest、preflight、diagnostics、trace、DocsAI Runtime/System 同步和 SystemCore artifact；不进入 typed SystemId hard cutover。
+- **Next Action**: 从 `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md` 执行 T1.1 readiness baseline；先记录当前 dirty workspace、System config/registry/execute 调用点、DocsAI 入口状态和验证基线。
 - **Open Blockers**: none
 
 ## Project Status Board
@@ -34,6 +34,7 @@
 | SDD-0026 | done | `design/Tool/Input/` | Input Contract Manifest And Facade Hardening 已完成；Input DocsAI 主入口改为 README，Concept/Usage/InputMap 降为可选辅助分层 |
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
 | SDD-0028 | pending | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已创建执行胶囊；等待按提示词执行 runtime state、parking grid、CollisionLogicGuard、ContactDamage stale attacker cleanup、contract tests、Godot collision validation 和 DocsAI/skill sync |
+| SDD-0029 | pending | `design/8.System优化/` | System Contract Manifest And Diagnostics Hardening 已创建执行胶囊；等待按提示词执行 SystemManifest、SystemPreflight、SystemDiagnosticsSnapshot、LifecycleTrace、DocsAI Runtime/System 同步和 SystemCore artifact |
 | TBD | proposed | `design/13-旧ECS框架Event系统问题分析与优化方向.md` | P1：保留 EventBus，优化事件主键、事件定义和请求-响应边界 |
 
 ## Timeline

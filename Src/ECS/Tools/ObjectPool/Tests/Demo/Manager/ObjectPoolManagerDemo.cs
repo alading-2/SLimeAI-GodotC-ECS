@@ -5,10 +5,10 @@ using System.Collections.Generic;
 namespace Slime.Test;
 
 /// <summary>
-/// ObjectPoolManager 全局管理器测试场景
-/// 演示多对象池管理、全局统计和混合使用
+/// ObjectPoolManager 全局管理器演示场景。
+/// <para>该场景只用于人工观察多池统计和混合使用，不作为自动回归门禁。</para>
 /// </summary>
-public partial class ObjectPoolManagerTest : Control
+public partial class ObjectPoolManagerDemo : Control
 {
     // 持有池引用以防止被 GC（尽管 ObjectPoolManager 会持有引用，但为了类型安全访问建议持有）
     private ObjectPool<TestProjectile> _projectilePool;
@@ -65,7 +65,7 @@ public partial class ObjectPoolManagerTest : Control
             },
             config: new ObjectPoolConfig
             {
-                Name = "ProjectilePool",
+                Name = "Demo/ObjectPool/ProjectilePool",
                 InitialSize = 20,
                 MaxSize = 200,
                 ParentPath = $"{Name}/GameContainer", // 挂载到当前的 GameContainer 下
@@ -84,7 +84,7 @@ public partial class ObjectPoolManagerTest : Control
             },
             config: new ObjectPoolConfig
             {
-                Name = "EffectPool",
+                Name = "Demo/ObjectPool/EffectPool",
                 InitialSize = 10,
                 MaxSize = 50,
                 ParentPath = $"{Name}/GameContainer",
@@ -196,14 +196,19 @@ public partial class ObjectPoolManagerTest : Control
         leftVBox.AddChild(new HSeparator());
 
         // Global Controls
-        var btnClean = new Button { Text = "清理闲置 (保留10个)" };
-        btnClean.Pressed += () => ObjectPoolManager.CleanupAll(10);
+        var btnClean = new Button { Text = "清理演示池闲置 (保留10个)" };
+        btnClean.Pressed += () =>
+        {
+            _projectilePool?.Cleanup(10);
+            _effectPool?.Cleanup(10);
+        };
         leftVBox.AddChild(btnClean);
 
-        var btnDestroy = new Button { Text = "销毁所有池" };
+        var btnDestroy = new Button { Text = "销毁演示池" };
         btnDestroy.Pressed += () =>
         {
-            ObjectPoolManager.DestroyAll();
+            _projectilePool?.Destroy();
+            _effectPool?.Destroy();
             // 重新初始化以防崩溃
             InitializePools();
         };
@@ -250,6 +255,7 @@ public partial class ObjectPoolManagerTest : Control
 
     public override void _ExitTree()
     {
-        ObjectPoolManager.DestroyAll();
+        _projectilePool?.Destroy();
+        _effectPool?.Destroy();
     }
 }

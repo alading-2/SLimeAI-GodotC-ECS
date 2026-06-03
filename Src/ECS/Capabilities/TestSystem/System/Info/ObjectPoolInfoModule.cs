@@ -199,7 +199,8 @@ public partial class ObjectPoolInfoModule : TestModuleBase
             $"闲置数量：{snapshot.Stats.Count}\n" +
             $"使用中数量：{snapshot.Stats.ActiveCount}\n" +
             $"累计创建：{snapshot.Stats.TotalCreated}\n" +
-            $"复用率：{snapshot.Stats.ReuseRate:P2}";
+            $"复用率：{snapshot.Stats.ReuseRate:P2}\n" +
+            $"节点状态：{snapshot.NodeStateCount} 个，回池 {snapshot.PooledNodeCount} 个，首帧保护 {snapshot.EmbargoedNodeCount} 个";
 
         _detailsLabel.Text =
             $"累计获取：{snapshot.Stats.TotalAcquired}\n" +
@@ -209,8 +210,38 @@ public partial class ObjectPoolInfoModule : TestModuleBase
             $"累计丢弃：{snapshot.Stats.TotalDiscarded}\n" +
             $"\n" +
             $"初始容量：{FormatCapacity(snapshot.HasMetadata, snapshot.InitialSize)}\n" +
-            $"最大容量：{FormatCapacity(snapshot.HasMetadata, snapshot.MaxSize)}";
+            $"最大容量：{FormatCapacity(snapshot.HasMetadata, snapshot.MaxSize)}\n" +
+            $"\n" +
+            $"detach fallback 节点：{snapshot.FallbackNodeCount}\n" +
+            BuildNodeStateText(snapshot.NodeStates);
         _statusLabel.Text = $"已选择 {snapshot.PoolName}";
+    }
+
+    /// <summary>
+    /// 构建节点级运行时状态明细。
+    /// </summary>
+    private static string BuildNodeStateText(IReadOnlyList<PoolNodeStateSnapshot> nodeStates)
+    {
+        if (nodeStates.Count == 0)
+        {
+            return "节点状态：暂无";
+        }
+
+        var lines = new List<string> { "节点状态：" };
+        var maxCount = Math.Min(12, nodeStates.Count);
+        for (var i = 0; i < maxCount; i++)
+        {
+            var state = nodeStates[i];
+            lines.Add(
+                $"- {state.NodeName} | inPool={state.IsInPool} logic={state.CollisionLogicActive} ready={state.CollisionReadyPhysicsFrame} parked={state.ParkingPosition}");
+        }
+
+        if (nodeStates.Count > maxCount)
+        {
+            lines.Add($"... 还有 {nodeStates.Count - maxCount} 个节点");
+        }
+
+        return string.Join("\n", lines);
     }
 
     /// <summary>

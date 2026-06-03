@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Src/ECS/Tools/ObjectPool/Tests/Validation/CollisionIsolation/ObjectPoolCollisionIsolationValidation.cs" id="1_collision_validation"]
+
+[node name="ObjectPoolCollisionIsolationValidation" type="Node"]
+script = ExtResource("1_collision_validation")

@@ -3,17 +3,19 @@
 > 状态：current test design
 > 更新：2026-06-03
 > 范围：`Src/ECS/Tools/ObjectPool/Tests`
-> 裁决：当前目录里的两个 `Control` 场景保留为人工 demo；回归验证必须新增自动化 contract test 和 Godot collision validation scene，不能继续用 UI/鼠标演示代替场景门禁。
+> 裁决：测试目录按 `Contracts / Validation / Demo` 分层；`Control` 场景保留为人工 demo，回归验证必须走自动化 contract test 和 Godot collision validation scene。
 
 ## 1. 当前测试现状
 
 | 文件 | 当前性质 | 可保留价值 | 不能作为门禁的原因 |
 | --- | --- | --- | --- |
-| `ObjectPoolVisualTest.cs/.tscn` | 单池可视化 demo | 展示复用率、活跃/闲置统计、`ReleaseAll` 和手动生成 | 依赖 UI、鼠标、随机位置、每帧刷新；没有断言、artifact、README 五字段。 |
-| `ObjectPoolManagerTest.cs/.tscn` | 多池 manager demo | 展示 `ObjectPoolManager.GetAllStats()`、`CleanupAll()`、`DestroyAll()` | 使用 `ProjectilePool` / `EffectPool` 这类真实池名，存在覆盖全局池风险；`DestroyAll()` 会污染其它测试。 |
-| `TestProjectile.cs` / `TestEffect.cs` / `VisualTestBullet.cs` | demo 用 `Node2D` 对象 | 演示 `IPoolable`、生命周期、静态归还 | 根节点不是 `CollisionObject2D`，无法覆盖场外常驻、激活首帧 guard、parking grid 压力和 fallback 对照。 |
+| `Contracts/ObjectPoolContractRuntimeTest.cs/.tscn` | Runtime contract | 自动验证复用工具契约 | 不依赖 UI、鼠标、随机位置。 |
+| `Validation/CollisionIsolation/ObjectPoolCollisionIsolationValidation.cs/.tscn` | Godot collision validation | 自动验证 `ParkedInTree`、首帧 guard、raw callback 到 business event oracle、parking grid 和 fallback 对照 | 必须有旁置 README 五字段、runner evidence 和 PASS artifact。 |
+| `Demo/Visual/ObjectPoolVisualDemo.cs/.tscn` | 单池可视化 demo | 展示复用率、活跃/闲置统计、`ReleaseAll` 和手动生成 | 人工观察，不作为门禁。 |
+| `Demo/Manager/ObjectPoolManagerDemo.cs/.tscn` | 多池 manager demo | 展示 `ObjectPoolManager.GetAllStats()`、demo 池局部 cleanup 和 demo 池销毁 | 人工观察，不作为门禁。 |
+| `Demo/Fixtures/TestProjectile.cs` / `TestEffect.cs` / `VisualTestBullet.cs` | demo 用 `Node2D` 对象 | 演示 `IPoolable`、生命周期、静态归还 | 根节点不是 `CollisionObject2D`，不能替代 validation。 |
 
-结论：这些文件应改名或归类为 `Demo`，不要删除；但它们不再承担 ObjectPool 回归门禁。
+结论：legacy UI 场景已归类到 `Demo` 并改名，不再承担 ObjectPool 回归门禁。
 
 ## 2. 目标测试分层
 
@@ -24,7 +26,7 @@
 建议路径：
 
 ```text
-Src/ECS/Tools/ObjectPool/Tests/ObjectPoolContractRuntimeTest.cs
+Src/ECS/Tools/ObjectPool/Tests/Contracts/ObjectPoolContractRuntimeTest.cs
 ```
 
 必测 check：
@@ -52,9 +54,9 @@ Src/ECS/Tools/ObjectPool/Tests/ObjectPoolContractRuntimeTest.cs
 建议路径：
 
 ```text
-Src/ECS/Tools/ObjectPool/Tests/ObjectPoolCollisionIsolationValidation.cs
-Src/ECS/Tools/ObjectPool/Tests/ObjectPoolCollisionIsolationValidation.tscn
-Src/ECS/Tools/ObjectPool/Tests/README.md
+Src/ECS/Tools/ObjectPool/Tests/Validation/CollisionIsolation/ObjectPoolCollisionIsolationValidation.cs
+Src/ECS/Tools/ObjectPool/Tests/Validation/CollisionIsolation/ObjectPoolCollisionIsolationValidation.tscn
+Src/ECS/Tools/ObjectPool/Tests/Validation/CollisionIsolation/README.md
 ```
 
 场景必须 headless-friendly，自动执行，不依赖点击、滑条、随机位置或人工观察。
@@ -68,6 +70,7 @@ Src/ECS/Tools/ObjectPool/Tests/README.md
 | `collision_activate_first_frame_embargo` | `Activate()` 后第一 physics frame | 即使收到 entered，也被 guard 丢弃，不触发业务事件 / damage / destroy。 |
 | `collision_activate_after_ready_frame` | 到达 `CollisionReadyPhysicsFrame` 后 | 只处理新位置产生的期望碰撞。 |
 | `collision_immediate_reuse_same_frame` | 同帧或相邻帧 release → get(false) → activate | 旧 signal 不进入业务；artifact 记录 release/acquire/activate/ready frame。 |
+| `collision_guard_event_oracle` | raw collision callback 到业务事件 | pooled / activation-frame raw callback 被记录但不进入 business event；ready-frame callback 可进入 business event。 |
 | `collision_parking_grid_pressure` | 大量对象回池停放 | 停车区 pair / event / frame time 在阈值内。 |
 | `collision_detach_fallback_control` | 显式启用 fallback detach | fallback 可用但不作为默认成功条件。 |
 | `collision_artifact_oracle_complete` | artifact 自检 | 五字段非空，`checks[]` 覆盖以上 check，`failureReasons=[]`。 |
@@ -79,16 +82,16 @@ Src/ECS/Tools/ObjectPool/Tests/README.md
 
 ### 2.3 Manual demo
 
-当前 `ObjectPoolVisualTest` 和 `ObjectPoolManagerTest` 可继续保留，但应降级为人工 demo：
+当前 `ObjectPoolVisualDemo` 和 `ObjectPoolManagerDemo` 可继续保留，但只作为人工 demo：
 
-- 文件名或 README 标记为 `legacy/manual demo`。
+- 文件名、路径或 README 标记为 `Demo` / `manual demo`。
 - UI 文案保留演示价值即可，不承担 PASS/FAIL。
 - demo 池名改为 `Demo/ObjectPool/VisualBullet`、`Demo/ObjectPool/Projectile`、`Demo/ObjectPool/Effect` 这类隔离名称。
 - demo 退出时不调用全局 `ObjectPoolManager.DestroyAll()`，除非 demo 先证明它只创建了隔离池。
 
 ## 3. README 五字段
 
-`Src/ECS/Tools/ObjectPool/Tests/README.md` 必须包含：
+`Src/ECS/Tools/ObjectPool/Tests/Validation/CollisionIsolation/README.md` 必须包含：
 
 ```markdown
 expectedInputs:
@@ -100,6 +103,7 @@ expectedObservations:
 - 回池对象 `CollisionLogicActive=false`，不会进入业务碰撞。
 - activate 后第一 physics frame 被 guard 丢弃。
 - ready frame 后只处理新位置期望碰撞。
+- raw collision callback 和 business collision event 分开记录。
 - fallback detach 只作为对照路径。
 
 passCriteria:
@@ -114,6 +118,7 @@ failCriteria:
 - 只有 stdout PASS marker。
 - 回池对象进入业务碰撞。
 - 激活首帧触发业务命中。
+- raw pooled / activation-frame callback 被记为 business event。
 - 默认路径发生 RemoveChild、关碰撞或 layer/mask/shape 修改。
 - 测试池覆盖真实 ObjectPoolNames。
 

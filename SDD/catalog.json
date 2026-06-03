@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-03 16:07",
+  "generated_at": "2026-06-03 18:11",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -47,9 +47,10 @@
         "tools",
         "timer",
         "objectpool",
-        "collision"
+        "collision",
+        "system"
       ],
-      "current_sdd": "SDD-0028",
+      "current_sdd": "SDD-0029",
       "bucket": "projects",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor"
     }
@@ -675,7 +676,7 @@
       "id": "SDD-0028",
       "slug": "objectpool-collision-parkedintree-cutover",
       "title": "ObjectPool Collision ParkedInTree Cutover",
-      "status": "active",
+      "status": "done",
       "type": "refactor",
       "updated_at": "2026-06-03",
       "scope": "SlimeAI",
@@ -690,8 +691,35 @@
       ],
       "project_id": "PRJ-0002",
       "project_order": 18,
-      "current_task": "T1.1",
+      "current_task": "done",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover"
+    },
+    {
+      "id": "SDD-0029",
+      "slug": "system-contract-manifest-and-diagnostics-hardening",
+      "title": "System Contract Manifest And Diagnostics Hardening",
+      "status": "pending",
+      "type": "refactor",
+      "updated_at": "2026-06-03",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "ecs/runtime/system",
+        "DocsAI/ECS/Runtime/System",
+        "Src/ECS/Runtime/System",
+        "Src/ECS/Capabilities/TestSystem/System/System",
+        "Data/DataOS"
+      ],
+      "tags": [
+        "system",
+        "runtime",
+        "ai-first",
+        "diagnostics",
+        "docsai"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 19,
+      "current_task": "T1.1",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening"
     }
   ]
 }

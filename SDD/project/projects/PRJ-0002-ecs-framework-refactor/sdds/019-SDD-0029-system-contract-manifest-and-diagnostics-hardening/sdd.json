@@ -1,0 +1,54 @@
+{
+  "id": "SDD-0029",
+  "slug": "system-contract-manifest-and-diagnostics-hardening",
+  "title": "System Contract Manifest And Diagnostics Hardening",
+  "status": "pending",
+  "type": "refactor",
+  "created_at": "2026-06-03",
+  "updated_at": "2026-06-03",
+  "scope": "SlimeAI",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI/SlimeAI"
+  ],
+  "affected_areas": [
+    "ecs/runtime/system",
+    "DocsAI/ECS/Runtime/System",
+    "Src/ECS/Runtime/System",
+    "Src/ECS/Capabilities/TestSystem/System/System",
+    "Data/DataOS"
+  ],
+  "tags": [
+    "system",
+    "runtime",
+    "ai-first",
+    "diagnostics",
+    "docsai"
+  ],
+  "progress": {
+    "current_task": "T1.1",
+    "completed_tasks": 0,
+    "total_tasks": 9,
+    "percent": 0
+  },
+  "bdd": {
+    "required": true,
+    "reason": "本 SDD 会改变 Runtime System 的 AI-first 合同、diagnostics 和验证方式。"
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0002",
+  "project_order": 19,
+  "shared_design_refs": [
+    "../../design/INDEX.md",
+    "../../design/8.System优化/README.md",
+    "../../design/8.System优化/01-现状证据与AI-first裁决.md",
+    "../../design/8.System优化/02-目标架构与优化路线.md",
+    "../../design/8.System优化/03-调用点迁移与验证计划.md"
+  ]
+}

@@ -19,9 +19,10 @@
     "tools",
     "timer",
     "objectpool",
-    "collision"
+    "collision",
+    "system"
   ],
-  "current_sdd": "SDD-0028",
+  "current_sdd": "SDD-0029",
   "sdds": [
     {
       "id": "SDD-0011",
@@ -147,6 +148,13 @@
       "slug": "objectpool-collision-parkedintree-cutover",
       "title": "ObjectPool Collision ParkedInTree Cutover",
       "order": 18,
+      "status": "pending"
+    },
+    {
+      "id": "SDD-0029",
+      "slug": "system-contract-manifest-and-diagnostics-hardening",
+      "title": "System Contract Manifest And Diagnostics Hardening",
+      "order": 19,
       "status": "pending"
     }
   ],

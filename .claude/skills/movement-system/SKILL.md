@@ -26,6 +26,7 @@ description: 修改 SlimeAI ECS Movement Capability、MovementDataKeys、Movemen
 - 数值型“不限制”统一用 `-1`，例如最大距离 / 最大时长。
 - 纯 Movement 不依赖 `Godot.Vector2` 或 `Node2D`；Godot 同步写在 bridge。
 - `Unit` 的 `DefaultMoveMode` 是注册期必需配置；`Projectile` / `Effect` 可保持 `None`，通过 `MovementStarted` 进入临时策略。
+- `MovementCollisionPolicy.TryAccept` 必须先经过 `CollisionLogicGuard`，回池 source/target 或未到 `CollisionReadyPhysicsFrame` 的节点不得进入碰撞计数、事件派发或停止请求。
 - 新策略通过 `IMovementStrategy` / `MovementStrategyRegistry` 接入，并补 Runtime 测试和 BrotatoLike smoke。
 
 ## 验证

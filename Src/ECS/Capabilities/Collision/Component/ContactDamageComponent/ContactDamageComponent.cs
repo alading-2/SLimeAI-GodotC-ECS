@@ -72,6 +72,10 @@ public partial class ContactDamageComponent : Node, IComponent
     {
         var attacker = evt.Target;
         if (!IsInstanceValid(attacker)) return;
+        if (!CanUseAttacker(attacker, evt.TargetEntity))
+        {
+            return;
+        }
 
         _contactBodies[attacker] = evt.TargetEntity;
 
@@ -132,8 +136,13 @@ public partial class ContactDamageComponent : Node, IComponent
 
         if (!IsInstanceValid(attacker))
         {
-            _contactBodies.Remove(attacker);
-            CancelBodyTimer(attacker);
+            CleanupAttacker(attacker);
+            return;
+        }
+
+        if (!CanUseAttacker(attacker, attackerEntity))
+        {
+            CleanupAttacker(attacker);
             return;
         }
 
@@ -155,6 +164,7 @@ public partial class ContactDamageComponent : Node, IComponent
     private void StartBodyTimer(Node2D attacker, IEntity? attackerEntity, bool applyImmediateDamage)
     {
         if (!IsInstanceValid(attacker)) return;
+        if (!CanUseAttacker(attacker, attackerEntity)) return;
         if (_bodyTimers.ContainsKey(attacker)) return;
 
         if (applyImmediateDamage)
@@ -202,6 +212,13 @@ public partial class ContactDamageComponent : Node, IComponent
                 continue;
             }
 
+            if (!CanUseAttacker(attacker, attackerEntity))
+            {
+                invalidAttackers ??= new List<Node2D>();
+                invalidAttackers.Add(attacker);
+                continue;
+            }
+
             // 检查敌对关系：只有敌对目标才会触发接触伤害
             if (!IsHostile(attacker, attackerEntity))
                 continue;
@@ -234,6 +251,7 @@ public partial class ContactDamageComponent : Node, IComponent
         if (_entity == null || _data == null) return;
         if (_entity is not IUnit victimUnit) return;
         if (!IsInstanceValid(attacker)) return;
+        if (!CanUseAttacker(attacker, attackerEntity)) return;
 
         var contactDamage = GetContactDamage(attacker, attackerEntity);
         if (contactDamage <= 0f)
@@ -259,9 +277,11 @@ public partial class ContactDamageComponent : Node, IComponent
     /// <returns>存活时返回 true，否则返回 false</returns>
     private bool CanDealContactDamage()
     {
+        var entityNode = _entity as Node;
         return _entity != null
             && _data != null
-            && !_data.Get<bool>(GeneratedDataKey.IsDead);
+            && !_data.Get<bool>(GeneratedDataKey.IsDead)
+            && CollisionLogicGuard.CanProcessCollision(entityNode);
     }
 
     /// <summary>
@@ -275,6 +295,15 @@ public partial class ContactDamageComponent : Node, IComponent
             TimerManager.Instance?.Cancel(timer, TimerCancelReason.TargetInvalid);
             _bodyTimers.Remove(attacker);
         }
+    }
+
+    /// <summary>
+    /// 清理指定攻击者的旧接触状态和计时器。
+    /// </summary>
+    private void CleanupAttacker(Node2D attacker)
+    {
+        _contactBodies.Remove(attacker);
+        CancelBodyTimer(attacker);
     }
 
     /// <summary>
@@ -310,6 +339,17 @@ public partial class ContactDamageComponent : Node, IComponent
 
         var bodyTeam = entity.Data.Get<Team>(GeneratedDataKey.Team);
         return bodyTeam != Team.Neutral && bodyTeam != _team;
+    }
+
+    /// <summary>
+    /// 判断攻击者当前是否允许作为接触伤害来源。
+    /// </summary>
+    private static bool CanUseAttacker(Node2D attacker, IEntity? attackerEntity)
+    {
+        var currentFrame = ObjectPoolRuntimeStateStore.CurrentPhysicsFrame;
+        var attackerEntityNode = attackerEntity as Node;
+        return CollisionLogicGuard.CanProcessCollision(attacker, currentFrame)
+            && CollisionLogicGuard.CanProcessCollision(attackerEntityNode, currentFrame);
     }
 
     /// <summary>

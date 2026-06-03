@@ -129,11 +129,14 @@ public static class ResourcePaths
     public const string Tools_InputTest = "InputTest";
     public const string Tools_LogTest = "LogTest";
     public const string Tools_MyMathTest = "MyMathTest";
+    public const string Tools_ObjectPoolCollisionIsolationValidation = "ObjectPoolCollisionIsolationValidation";
+    public const string Tools_ObjectPoolContractRuntimeTest = "ObjectPoolContractRuntimeTest";
     public const string Tools_ObjectPoolInit = "ObjectPoolInit";
-    public const string Tools_ObjectPoolManagerTest = "ObjectPoolManagerTest";
-    public const string Tools_ObjectPoolVisualTest = "ObjectPoolVisualTest";
+    public const string Tools_ObjectPoolManagerDemo = "ObjectPoolManagerDemo";
+    public const string Tools_ObjectPoolVisualDemo = "ObjectPoolVisualDemo";
     public const string Tools_TargetSelectorTest = "TargetSelectorTest";
     public const string Tools_TimerManager = "TimerManager";
+    public const string Tools_TimerStressValidation = "TimerStressValidation";
 
     // --- Data ---
 
@@ -294,11 +297,14 @@ public static class ResourcePaths
                 { Tools_InputTest, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/Input/Tests/InputTest.tscn") },
                 { Tools_LogTest, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/Logger/Tests/LogTest.tscn") },
                 { Tools_MyMathTest, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/Math/Tests/MyMathTest.tscn") },
-                { Tools_ObjectPoolInit, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/ObjectPool/ObjectPoolInit.tscn") },
-                { Tools_ObjectPoolManagerTest, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/ObjectPool/Tests/ObjectPoolManagerTest.tscn") },
-                { Tools_ObjectPoolVisualTest, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/ObjectPool/Tests/ObjectPoolVisualTest.tscn") },
+                { Tools_ObjectPoolCollisionIsolationValidation, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/ObjectPool/Tests/Validation/CollisionIsolation/ObjectPoolCollisionIsolationValidation.tscn") },
+                { Tools_ObjectPoolContractRuntimeTest, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/ObjectPool/Tests/Contracts/ObjectPoolContractRuntimeTest.tscn") },
+                { Tools_ObjectPoolInit, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/ObjectPool/Management/ObjectPoolInit.tscn") },
+                { Tools_ObjectPoolManagerDemo, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/ObjectPool/Tests/Demo/Manager/ObjectPoolManagerDemo.tscn") },
+                { Tools_ObjectPoolVisualDemo, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/ObjectPool/Tests/Demo/Visual/ObjectPoolVisualDemo.tscn") },
                 { Tools_TargetSelectorTest, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/TargetSelector/Tests/TargetSelectorTest.tscn") },
                 { Tools_TimerManager, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/Timer/TimerManager.tscn") },
+                { Tools_TimerStressValidation, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/Timer/Tests/TimerStressValidation.tscn") },
             }
         },
         { ResourceCategory.Data, new Dictionary<string, ResourceData>

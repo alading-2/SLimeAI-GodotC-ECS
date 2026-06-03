@@ -2,7 +2,7 @@
 
 ## Index Card
 
-- **Status**: active
+- **Status**: done
 - **Created**: 2026-06-03
 - **Updated**: 2026-06-03
 - **Type**: refactor
@@ -39,7 +39,7 @@
 
 ## Current Resume
 
-- **Current Task**: T1.1
+- **Current Task**: done
 - **Last Conclusion**: 已生成 SDD-0028 执行胶囊，目标是把 ObjectPool / Collision 从旧默认脱树和关碰撞方案迁移到 `ParkedInTree`、pool runtime state guard、激活首帧 embargo 和结构化验证。
 - **Next Action**: 新执行会话从 `execution-prompt.md` 的 T1.1 readiness baseline 开始；先只读源码和当前文档，记录旧实现、dirty baseline、guard 缺口、测试缺口和 SDD validate 基线。
 - **Open Blockers**: none

@@ -6,14 +6,14 @@
 - **Created**: 2026-05-25
 - **Updated**: 2026-06-03
 - **Scope**: SlimeAI
-- **Current SDD**: SDD-0028
-- **Tags**: ecs, optimization, data, event, entity, relationship, directory-architecture, capability, docsai, tools, timer, objectpool, collision
+- **Current SDD**: SDD-0029
+- **Tags**: ecs, optimization, data, event, entity, relationship, directory-architecture, capability, docsai, tools, timer, objectpool, collision, system
 
 ## What This Project Is About
 
 本项目用于重新梳理 `Src/ECS` 旧 ECS 框架的真实问题，并形成“保留旧 ECS 主线、按问题域优化完善”的设计事实源。当前框架仓和 SDD 均位于 `/home/slime/Code/SlimeAI/SlimeAI`；外层 `/home/slime/Code/SlimeAI` 只作为包含游戏仓、Resources 和框架仓的父目录。
 
-当前方向已经纠偏：不再把旧 ECS 作为迁移输入，不再以整体替换或复制外部参考结构为目标。旧框架整体可保留；Data 子系统已按 SDD-0012 至 SDD-0022 完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 收口。Entity / Relationship 已按 SDD-0024 完成 hard cutover。SDD-0025 已把 ECS 物理目录和 DocsAI 路由重构为 `Runtime + Capabilities + Tools + UI`，同时保留 ECS 语义；SDD-0026 已完成 Input Contract 业务语义 facade、调用点迁移和验证闭环。SDD-0027 Timer 重构已完成可执行代码/文档主链路但被当前 BrotatoLike runner/Godot CLI 缺失阻塞在场景验证。当前新增 SDD-0028，目标是把 ObjectPool / Collision 从旧默认脱树和关碰撞方案迁移到 `ParkedInTree`、pool runtime state guard、激活首帧 embargo 和结构化验证。
+当前方向已经纠偏：不再把旧 ECS 作为迁移输入，不再以整体替换或复制外部参考结构为目标。旧框架整体可保留；Data 子系统已按 SDD-0012 至 SDD-0022 完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 收口。Entity / Relationship 已按 SDD-0024 完成 hard cutover。SDD-0025 已把 ECS 物理目录和 DocsAI 路由重构为 `Runtime + Capabilities + Tools + UI`，同时保留 ECS 语义；SDD-0026 已完成 Input Contract 业务语义 facade、调用点迁移和验证闭环。SDD-0027 Timer 重构已完成可执行代码/文档主链路但被当前 BrotatoLike runner/Godot CLI 缺失阻塞在场景验证。SDD-0028 负责 ObjectPool / Collision `ParkedInTree`、pool runtime state guard、激活首帧 embargo 和结构化验证。当前新增 SDD-0029，目标是在保留现有 Runtime System Core 的前提下补齐 manifest / preflight / diagnostics / trace，并同步 DocsAI Runtime/System 文档。
 
 ## Reading Order
 
@@ -39,5 +39,8 @@
 20. `design/Tool/ObjectPool/README.md` — ObjectPool 当前共享设计包入口
 21. `sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover/README.md` — ObjectPool / Collision 执行型 SDD 胶囊
 22. `sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover/execution-prompt.md` — ObjectPool / Collision 新会话执行提示词
-23. `sdds/` — 项目内有序 SDD
-24. `notes.md` — 参考与开放问题
+23. `design/8.System优化/README.md` — Runtime System AI-first 优化共享设计包入口
+24. `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/README.md` — System contract 执行型 SDD 胶囊
+25. `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md` — System contract 新会话执行提示词
+26. `sdds/` — 项目内有序 SDD
+27. `notes.md` — 参考与开放问题

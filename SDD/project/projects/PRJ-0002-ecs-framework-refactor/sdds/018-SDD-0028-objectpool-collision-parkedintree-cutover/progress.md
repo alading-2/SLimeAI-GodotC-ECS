@@ -2,10 +2,10 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-03 16:07
-- **Current Task**: T1.1
-- **Last Conclusion**: SDD 已进入 active。
-- **Next Action**: 按 tasks.md 的 Current 继续。
+- **Updated**: 2026-06-03 16:54
+- **Current Task**: done
+- **Last Conclusion**: ObjectPool default cutover completed: ParkedInTree is the default, pool runtime state/CollisionLogicGuard/activation-frame embargo are integrated across ObjectPool, Collision, Movement and ContactDamage, validation scenes and DocsAI/skills are synchronized.
+- **Next Action**: Monitor downstream game smoke once a current BrotatoLike runner is restored; current framework-local Godot validation evidence is recorded under .ai-temp/scene-tests/runs/2026-06-03/16-51-46.
 - **Open Blockers**: none
 ## Timeline
 
@@ -32,3 +32,123 @@
 - **Evidence**: start command
 - **Impact**: 任务可以继续推进。
 - **Resume**: 按 tasks.md 的 Current 继续。
+
+### P004 — 2026-06-03 16:36 — change
+
+- **Context**: 更新任务状态。
+- **Conclusion**: 已完成任务 T1.1。
+- **Evidence**: task command
+- **Impact**: 任务进度已同步。
+- **Resume**: 继续处理下一个未完成任务。
+
+### P005 — 2026-06-03 16:36 — change
+
+- **Context**: 更新任务状态。
+- **Conclusion**: 已完成任务 T1.2。
+- **Evidence**: task command
+- **Impact**: 任务进度已同步。
+- **Resume**: 继续处理下一个未完成任务。
+
+### P006 — 2026-06-03 16:36 — change
+
+- **Context**: 更新任务状态。
+- **Conclusion**: 已完成任务 T1.3。
+- **Evidence**: task command
+- **Impact**: 任务进度已同步。
+- **Resume**: 继续处理下一个未完成任务。
+
+### P007 — 2026-06-03 16:36 — change
+
+- **Context**: 更新任务状态。
+- **Conclusion**: 已完成任务 T1.4。
+- **Evidence**: task command
+- **Impact**: 任务进度已同步。
+- **Resume**: 继续处理下一个未完成任务。
+
+### P008 — 2026-06-03 16:36 — change
+
+- **Context**: 更新任务状态。
+- **Conclusion**: 已完成任务 T1.5。
+- **Evidence**: task command
+- **Impact**: 任务进度已同步。
+- **Resume**: 继续处理下一个未完成任务。
+
+### P009 — 2026-06-03 16:36 — change
+
+- **Context**: 更新任务状态。
+- **Conclusion**: 已完成任务 T1.6。
+- **Evidence**: task command
+- **Impact**: 任务进度已同步。
+- **Resume**: 继续处理下一个未完成任务。
+
+### P010 — 2026-06-03 16:36 — change
+
+- **Context**: 更新任务状态。
+- **Conclusion**: 已完成任务 T1.7。
+- **Evidence**: task command
+- **Impact**: 任务进度已同步。
+- **Resume**: 继续处理下一个未完成任务。
+
+### P011 — 2026-06-03 16:36 — change
+
+- **Context**: 更新任务状态。
+- **Conclusion**: 已完成任务 T1.8。
+- **Evidence**: task command
+- **Impact**: 任务进度已同步。
+- **Resume**: 继续处理下一个未完成任务。
+
+### P012 — 2026-06-03 16:36 — change
+
+- **Context**: 更新任务状态。
+- **Conclusion**: 已完成任务 T1.10。
+- **Evidence**: task command
+- **Impact**: 任务进度已同步。
+- **Resume**: 继续处理下一个未完成任务。
+
+### P013 — 2026-06-03 16:36 — change
+
+- **Context**: 更新任务状态。
+- **Conclusion**: 已完成任务 T1.11。
+- **Evidence**: task command
+- **Impact**: 任务进度已同步。
+- **Resume**: 继续处理下一个未完成任务。
+
+### P014 — 2026-06-03 16:36 — blocker
+
+- **Context**: 任务进入 blocked。
+- **Conclusion**: Godot scene validation is blocked: current environment has no godot/godot4 command and /home/slime/Code/SlimeAI/Games/BrotatoLike has no Tools/run-godot-scene.sh, so ObjectPoolCollisionIsolationValidation cannot produce runner index.json/result.json/PASS artifact or scene-gate evidence. Code, docs, skill sync, build, DataOS and SDD/skill validation have been completed with fresh CLI evidence.
+- **Evidence**: block command
+- **Impact**: 继续执行前需要解除阻塞。
+- **Resume**: Godot scene validation is blocked: current environment has no godot/godot4 command and /home/slime/Code/SlimeAI/Games/BrotatoLike has no Tools/run-godot-scene.sh, so ObjectPoolCollisionIsolationValidation cannot produce runner index.json/result.json/PASS artifact or scene-gate evidence. Code, docs, skill sync, build, DataOS and SDD/skill validation have been completed with fresh CLI evidence.
+
+### P015 — 2026-06-03 16:54 — resume
+
+- **Context**: 启动或恢复 SDD。
+- **Conclusion**: SDD 已进入 active。
+- **Evidence**: start command
+- **Impact**: 任务可以继续推进。
+- **Resume**: 按 tasks.md 的 Current 继续。
+
+### P016 — 2026-06-03 16:54 — change
+
+- **Context**: 更新任务状态。
+- **Conclusion**: 已完成任务 T1.9。
+- **Evidence**: task command
+- **Impact**: 任务进度已同步。
+- **Resume**: 继续处理下一个未完成任务。
+
+### P017 — 2026-06-03 16:54 — change
+
+- **Context**: 更新任务状态。
+- **Conclusion**: 已完成任务 T1.12。
+- **Evidence**: task command
+- **Impact**: 任务进度已同步。
+- **Resume**: 继续处理下一个未完成任务。
+
+### P018 — 2026-06-03 16:54 — validation
+
+- **Context**: 任务完成。
+- **Conclusion**: ObjectPool default cutover completed: ParkedInTree is the default, pool runtime state/CollisionLogicGuard/activation-frame embargo are integrated across ObjectPool, Collision, Movement and ContactDamage, validation scenes and DocsAI/skills are synchronized.
+- **Evidence**: dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly => 0 errors; DataOS validate => passed; ObjectPoolContractRuntimeTest + ObjectPoolCollisionIsolationValidation Godot runner => passed; scene analyzer gate-report => pass; SDD validate SDD-0028/--all => 0 errors 0 warnings; ai-config sync + skill-test static all => Critical:0 Advisory:0.
+- **Impact**: 任务已完成并保留归档上下文。
+- **Resume**: Monitor downstream game smoke once a current BrotatoLike runner is restored; current framework-local Godot validation evidence is recorded under .ai-temp/scene-tests/runs/2026-06-03/16-51-46.

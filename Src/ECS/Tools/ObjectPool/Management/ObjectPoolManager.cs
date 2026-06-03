@@ -208,6 +208,8 @@ public static class ObjectPoolManager
         }
 
         ObjectPoolObservability.Clear();
+        ObjectPoolRuntimeStateStore.Clear();
+        PoolParkingStrategy.Clear();
         _log.Info("所有对象池已销毁并清空。");
     }
 }

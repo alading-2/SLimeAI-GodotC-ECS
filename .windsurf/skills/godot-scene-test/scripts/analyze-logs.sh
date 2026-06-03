@@ -124,6 +124,10 @@ function nonEmpty(value) {
   return value !== null && value !== undefined;
 }
 
+function normalizeStatus(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
 function resToLocal(scene) {
   return scene.startsWith("res://") ? scene.slice("res://".length) : scene;
 }
@@ -250,7 +254,8 @@ for (const scene of requestedScenes) {
   const catalogPresent = catalogPath ? catalogContains(catalogPath, scene) : false;
   const resultPassed = result?.status === "passed" && result?.exitCode === 0 && !result?.firstError;
   const indexPassed = entry?.status === "passed" && entry?.exitCode === 0;
-  const artifactPassed = artifact.data?.status === "pass" && Array.isArray(artifact.data?.failureReasons) && artifact.data.failureReasons.length === 0;
+  const artifactStatus = normalizeStatus(artifact.data?.status);
+  const artifactPassed = artifactStatus === "pass" && Array.isArray(artifact.data?.failureReasons) && artifact.data.failureReasons.length === 0;
   const readmeComplete = Object.values(readmeFields).every(Boolean);
   const artifactComplete = Object.values(artifactFields).every(Boolean);
   let status = "pass";
@@ -306,7 +311,7 @@ for (const scene of requestedScenes) {
   });
 }
 
-const failedScenes = sceneReports.filter((scene) => scene.index.status === "failed" || scene.result.status === "failed" || scene.artifact.status === "fail").map((scene) => scene.scene);
+const failedScenes = sceneReports.filter((scene) => scene.index.status === "failed" || scene.result.status === "failed" || normalizeStatus(scene.artifact.status) === "fail").map((scene) => scene.scene);
 const passedScenes = sceneReports.filter((scene) => scene.status === "pass").map((scene) => scene.scene);
 const skippedScenes = index.skippedScenes ?? [];
 const verdict = hasBlock ? "block" : hasWarn ? "warn" : "pass";

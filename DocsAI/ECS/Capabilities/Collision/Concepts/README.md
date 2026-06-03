@@ -16,7 +16,7 @@ Collision Capability 只负责把 Godot 碰撞信号和移动碰撞候选转成 
 - Collision / Movement / Damage / ContactDamage 入口必须检查 pool runtime state、ready frame、实体有效性、team、owner 和 lifecycle。
 - `Detach`、`disable_mode=REMOVE`、关闭 `Monitoring/Monitorable`、禁用 shape 或改 layer/mask 只作为组件真实卸载、fallback 或对照验证路径。
 
-> 注意：当前 `Src/ECS/Tools/ObjectPool/ObjectPool.cs` 仍保留旧默认脱树 / 关碰撞实现。本目录记录的是后续 ObjectPool + Collision SDD 的目标裁决，不表示源码已经迁移完成。
+> 注意：当前 ObjectPool 源码入口已拆分到 `Src/ECS/Tools/ObjectPool/Core/`、`Lifecycle/`、`RuntimeState/` 和 `Tests/`；碰撞隔离默认策略以这些当前源码和 `DocsAI/ECS/Tools/ObjectPool/` 为准。
 
 ## 当前文档
 

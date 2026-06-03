@@ -90,8 +90,6 @@ public class ObjectPool<T> where T : class
     // 追踪当前活跃的对象集合，用于支持 ReleaseAll
     private readonly HashSet<T> _activeItems = new();
 
-    private static readonly Vector2 PoolParkingPosition = new(1000000, 1000000);
-
     /// <summary> 当对象被成功获取出池时触发 </summary>
     public event Action<T>? OnInstanceAcquire;
     /// <summary> 当对象被归还入池时触发 </summary>
@@ -188,18 +186,10 @@ public class ObjectPool<T> where T : class
 
             // 存储池名称而非池引用，避免循环引用和类型转换问题
             // 使用 Godot 原生 Meta 数据存储，解耦 Data 系统
-            node.SetMeta("ObjectPoolName", _config.Name);
-            node.SetMeta("InPool", false);
+            PoolNodeLifecycleStrategy.InitializeNode(node, PoolName);
 
             // 自动挂载到父节点
-            if (node.GetParent() == null && !string.IsNullOrEmpty(_config.Name))
-            {
-                var parent = ParentManager.GetParent(_config.Name);
-                if (parent != null)
-                {
-                    parent.AddChild(node);
-                }
-            }
+            PoolNodeLifecycleStrategy.EnsureParent(node, PoolName);
         }
 
         _stats.TotalCreated++;
@@ -211,140 +201,33 @@ public class ObjectPool<T> where T : class
     {
         if (obj is Node node)
         {
-            node.SetMeta("InPool", true);
+            PoolNodeLifecycleStrategy.MarkInPool(node);
             ApplyInactiveState(node);
         }
         _stack.Push(obj);
         _stats.Count = _stack.Count;
     }
 
-    /// <summary> 判断节点是否需要脱树隔离（根节点是 CollisionObject2D 才需要） </summary>
-    private static bool NeedsTreeDetach(Node node) => node is CollisionObject2D;
-
     /// <summary>
-    /// 递归启用/禁用节点树中的碰撞相关节点。
-    /// 使用 SetDeferred 保证在物理安全点更新属性，避免在物理回调中直接修改。
-    /// </summary>
-    /// <param name="node">根节点</param>
-    /// <param name="active">true 启用碰撞，false 禁用碰撞</param>
-    private static void SetCollisionTreeActive(Node node, bool active)
-    {
-        // 禁用时将角色速度清零，防止回收后残留速度导致出池瞬间位移异常
-        if (!active && node is CharacterBody2D body)
-            body.Velocity = Vector2.Zero;
-
-        // Area2D：通过 Monitoring / Monitorable 控制检测与被检测
-        if (node is Area2D area)
-        {
-            area.SetDeferred(Area2D.PropertyName.Monitoring, active);
-            area.SetDeferred(Area2D.PropertyName.Monitorable, active);
-        }
-
-        // 碰撞形状：统一通过 Disabled 控制启用/禁用
-        if (node is CollisionShape2D shape)
-        {
-            shape.SetDeferred(CollisionShape2D.PropertyName.Disabled, !active);
-        }
-        else if (node is CollisionPolygon2D polygon)
-        {
-            polygon.SetDeferred(CollisionPolygon2D.PropertyName.Disabled, !active);
-        }
-
-        // 递归对子节点应用相同的碰撞状态
-        foreach (Node child in node.GetChildren())
-        {
-            SetCollisionTreeActive(child, active);
-        }
-    }
-
-    /// <summary>
-    /// 应用禁用状态：停止处理、隐藏。
-    /// 碰撞类型（CollisionObject2D）额外执行脱树，彻底清理物理状态；
-    /// 非碰撞类型仅禁用碰撞属性。
+    /// 应用回池停放状态：停止处理、隐藏、移到停车区并记录 runtime state。
+    /// <para>默认 ParkedInTree，不脱树、不关闭碰撞、不修改 layer/mask/shape。</para>
     /// </summary>
     private void ApplyInactiveState(Node node)
     {
-        node.ProcessMode = Node.ProcessModeEnum.Disabled;
-        if (node is CanvasItem item) item.Visible = false;
+        PoolNodeLifecycleStrategy.ApplyInactive(node);
 
-        // 先将需要脱树的碰撞节点停放到远离战场的位置。
-        // 即使 AddChild 时物理世界先看到一次节点，也只会看到泊车位而非死亡坐标。
-        if (NeedsTreeDetach(node) && node is Node2D parkedNode2D)
-        {
-            parkedNode2D.GlobalPosition = PoolParkingPosition;
-            if (parkedNode2D.IsInsideTree())
-                parkedNode2D.ForceUpdateTransform();
-        }
-        else if (node is Node2D node2D)
-        {
-            if (node2D.IsInsideTree())
-                node2D.ForceUpdateTransform();
-        }
-
-        SetCollisionTreeActive(node, false);
-
-        // 碰撞类型脱树：set_space(null) 彻底清空 monitored_bodies，杜绝幽灵碰撞
-        if (NeedsTreeDetach(node))
-        {
-            node.GetParent()?.RemoveChild(node);
-        }
+        var parkingPosition = PoolParkingStrategy.Allocate(node, PoolName);
+        PoolParkingStrategy.Park(node, parkingPosition);
+        ObjectPoolRuntimeStateStore.MarkReleased(node, PoolName, parkingPosition);
     }
 
     /// <summary>
-    /// 应用激活状态：恢复处理、显示、启用碰撞。
-    /// 调用前碰撞类型节点必须已挂回场景树（由 ReattachToTree 保证）。
+    /// 应用激活状态：恢复处理、显示，并记录首帧碰撞 embargo。
     /// </summary>
-    private static void ApplyActiveState(Node node)
+    private void ApplyActiveState(Node node)
     {
-        node.ProcessMode = Node.ProcessModeEnum.Inherit;
-        if (node is CanvasItem item) item.Visible = true;
-        if (node is Node2D node2D && node2D.IsInsideTree()) node2D.ForceUpdateTransform();
-        SetCollisionTreeActive(node, true);
-    }
-
-    /// <summary>
-    /// 将脱树节点重新挂回场景树。
-    /// AddChild 后立即同步禁用碰撞形状，防止节点以死亡坐标入树时触发幽灵 BodyEntered：
-    /// ApplyInactiveState 使用 SetDeferred 禁用形状，若同帧回收再出池则延迟未生效，
-    /// 节点会以上次死亡坐标（靠近玩家）重新入树，CollisionShape 仍为启用状态，
-    /// 导致 Player 的 HurtboxComponent(Area2D) 误触 BodyEntered。
-    /// 此处直接赋值安全：ReattachToTree 仅在 EntityManager.Spawn 的游戏逻辑上下文调用，非物理回调。
-    /// </summary>
-    private void ReattachToTree(Node node)
-    {
-        if (!NeedsTreeDetach(node) || node.GetParent() != null) return;
-
-        var parent = ParentManager.GetParent(PoolName);
-        if (parent != null)
-        {
-            parent.AddChild(node);
-            // 同步禁用：覆盖 SetDeferred 尚未生效的状态，确保入树瞬间碰撞已关闭
-            ForceDisableCollisionsDirect(node);
-        }
-        else
-        {
-            _log.Error($"{PoolName}: 无法挂回场景树，ParentManager 未找到父节点");
-        }
-    }
-
-    /// <summary>
-    /// 直接（同步）禁用节点树中所有碰撞相关组件，不使用 SetDeferred。
-    /// 仅在非物理回调的游戏逻辑帧中调用（如 ReattachToTree）。
-    /// </summary>
-    private static void ForceDisableCollisionsDirect(Node node)
-    {
-        if (node is Area2D area)
-        {
-            area.Monitoring = false;
-            area.Monitorable = false;
-        }
-        if (node is CollisionShape2D shape)
-            shape.Disabled = true;
-        else if (node is CollisionPolygon2D polygon)
-            polygon.Disabled = true;
-
-        foreach (Node child in node.GetChildren())
-            ForceDisableCollisionsDirect(child);
+        PoolNodeLifecycleStrategy.ApplyActive(node);
+        ObjectPoolRuntimeStateStore.MarkActivated(node, PoolName);
     }
 
     /// <summary>
@@ -378,10 +261,7 @@ public class ObjectPool<T> where T : class
         // 执行 Godot 激活逻辑
         if (obj is Node node)
         {
-            node.SetMeta("InPool", false);
-
-            // 脱树节点先挂回场景树（碰撞仍禁用，不会产生幽灵事件）
-            ReattachToTree(node);
+            PoolNodeLifecycleStrategy.MarkAcquired(node, PoolName);
 
             if (activateNode)
                 ApplyActiveState(node);
@@ -409,10 +289,7 @@ public class ObjectPool<T> where T : class
     {
         if (obj is not Node node) return;
 
-        node.SetMeta("InPool", false);
-
-        // 防御性保障：确保延迟激活路径下，脱树节点已经挂回场景树
-        ReattachToTree(node);
+        PoolNodeLifecycleStrategy.MarkAcquired(node, PoolName);
         ApplyActiveState(node);
 
         if (obj is IPoolable poolable) poolable.OnPoolAcquire();
@@ -459,9 +336,16 @@ public class ObjectPool<T> where T : class
         if (obj == null) return;
 
         // 1. 检查是否已经在池中 (对标 GDScript 的 meta 检查)
-        if (obj is Node node && node.HasMeta("InPool") && node.GetMeta("InPool").AsBool())
+        if (obj is Node node && PoolNodeLifecycleStrategy.IsMarkedInPool(node))
         {
             _log.Warn($"{PoolName}: 实例 {obj} 已在池中。已忽略。");
+            return;
+        }
+
+        // 纯 C# 对象没有 Godot Meta，必须通过活跃集合防止重复归还导致统计为负。
+        if (!_activeItems.Contains(obj))
+        {
+            _log.Warn($"{PoolName}: 实例 {obj} 不在活跃集合中。已忽略。");
             return;
         }
 
@@ -513,11 +397,7 @@ public class ObjectPool<T> where T : class
     {
         if (obj is Node node)
         {
-            // 脱树节点不在场景树中，用 Free 直接释放；在树中的用 QueueFree
-            if (node.GetParent() == null)
-                node.Free();
-            else
-                node.QueueFree();
+            PoolNodeLifecycleStrategy.Discard(node);
         }
         else if (obj is IDisposable disposable) disposable.Dispose();
     }

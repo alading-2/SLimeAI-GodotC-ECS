@@ -78,7 +78,7 @@ public partial class MyCustomUI : UIBase
 
 如果你的 UI 需要频繁创建（如头顶血条、飘字），请使用对象池。
 
-1. **注册池名称**：在 `Src/Tools/ObjectPool/ObjectPoolInit.cs` 的 `ObjectPoolNames` 中添加常量。
+1. **注册池名称**：在 `Src/ECS/Tools/ObjectPool/Management/ObjectPoolInit.cs` 的 `ObjectPoolNames` 中添加常量。
 2. **初始化池**：在 `ObjectPoolInit.InitPools()` 中添加初始化代码。
 
 ```csharp

@@ -1,0 +1,141 @@
+{
+  "generatedAt": "2026-06-03T08:51:29.333Z",
+  "runDir": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08",
+  "manifestPath": "",
+  "verdict": "block",
+  "summary": {
+    "requested": 2,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "missing": 0
+  },
+  "requestedScenes": [
+    "res://Src/ECS/Tools/ObjectPool/Tests/ObjectPoolContractRuntimeTest.tscn",
+    "res://Src/ECS/Tools/ObjectPool/Tests/ObjectPoolCollisionIsolationValidation.tscn"
+  ],
+  "passedScenes": [],
+  "failedScenes": [],
+  "skippedScenes": [],
+  "missingScenes": [],
+  "scenes": [
+    {
+      "scene": "res://Src/ECS/Tools/ObjectPool/Tests/ObjectPoolContractRuntimeTest.tscn",
+      "status": "block",
+      "scope": null,
+      "releaseBatch": null,
+      "evidence": {
+        "indexJson": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/index.json",
+        "resultJson": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/001_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolContractRuntimeTest.tscn_attempt1/result.json",
+        "artifactJson": "",
+        "jsonlLog": ""
+      },
+      "index": {
+        "status": "passed",
+        "exitCode": 0,
+        "firstError": null
+      },
+      "result": {
+        "status": "passed",
+        "exitCode": 0,
+        "firstError": null
+      },
+      "artifact": {
+        "status": "missing",
+        "failureReasons": null,
+        "fields": {
+          "expectedInputs": false,
+          "expectedObservations": false,
+          "passCriteria": false,
+          "failCriteria": false,
+          "artifactPath": false
+        },
+        "checks": [],
+        "missingChecks": []
+      },
+      "readme": {
+        "path": "Src/ECS/Tools/ObjectPool/Tests/README.md",
+        "fields": {
+          "expectedInputs": true,
+          "expectedObservations": true,
+          "passCriteria": true,
+          "failCriteria": true,
+          "artifactPath": true
+        }
+      },
+      "catalog": {
+        "path": "",
+        "present": false
+      },
+      "freshness": {
+        "artifactMtime": null,
+        "staleAgainst": []
+      }
+    },
+    {
+      "scene": "res://Src/ECS/Tools/ObjectPool/Tests/ObjectPoolCollisionIsolationValidation.tscn",
+      "status": "block",
+      "scope": null,
+      "releaseBatch": null,
+      "evidence": {
+        "indexJson": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/index.json",
+        "resultJson": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/002_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolCollisionIsolationValidation.tscn_attempt1/result.json",
+        "artifactJson": ".ai-temp/scene-tests/runs/2026-06-03/16-48-08/002_Src_ECS_Tools_ObjectPool_Tests_ObjectPoolCollisionIsolationValidation.tscn_attempt1/artifacts/objectpool-collision-isolation-validation.json",
+        "jsonlLog": ""
+      },
+      "index": {
+        "status": "passed",
+        "exitCode": 0,
+        "firstError": null
+      },
+      "result": {
+        "status": "passed",
+        "exitCode": 0,
+        "firstError": null
+      },
+      "artifact": {
+        "status": "PASS",
+        "failureReasons": 0,
+        "fields": {
+          "expectedInputs": true,
+          "expectedObservations": true,
+          "passCriteria": true,
+          "failCriteria": true,
+          "artifactPath": true
+        },
+        "checks": [
+          "collision_area_release_parked_in_tree",
+          "collision_character_release_parked_in_tree",
+          "collision_activate_first_frame_embargo",
+          "collision_activate_after_ready_frame",
+          "collision_immediate_reuse_same_frame",
+          "collision_parking_grid_pressure",
+          "collision_detach_fallback_control",
+          "collision_artifact_oracle_complete"
+        ],
+        "missingChecks": []
+      },
+      "readme": {
+        "path": "Src/ECS/Tools/ObjectPool/Tests/README.md",
+        "fields": {
+          "expectedInputs": true,
+          "expectedObservations": true,
+          "passCriteria": true,
+          "failCriteria": true,
+          "artifactPath": true
+        }
+      },
+      "catalog": {
+        "path": "",
+        "present": false
+      },
+      "freshness": {
+        "artifactMtime": "2026-06-03T08:48:18.202Z",
+        "staleAgainst": []
+      }
+    }
+  ],
+  "actionItems": [
+    "Rerun or fix artifact standard-answer fields: res://Src/ECS/Tools/ObjectPool/Tests/ObjectPoolContractRuntimeTest.tscn"
+  ]
+}
