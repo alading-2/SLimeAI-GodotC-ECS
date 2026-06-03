@@ -230,7 +230,6 @@ Data 变更事件统一走 Entity 的事件系统：
 
 ```csharp
 entity.Events.On<GameEventType.Data.PropertyChanged>(
-    GameEventType.Data.PropertyChanged,
     evt => { /* evt.Key / evt.OldValue / evt.NewValue */ });
 ```
 

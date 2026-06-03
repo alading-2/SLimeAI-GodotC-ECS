@@ -10,6 +10,7 @@
 | --- | --- |
 | [Data系统说明.md](Data系统说明.md) | DataOS、runtime snapshot、typed DataKey 和运行时存储规则 |
 | [Data使用说明.md](Data使用说明.md) | Data API 使用方式、字段访问和常见流程 |
+| [Concepts/Data系统架构设计.md](Concepts/Data系统架构设计.md) | 为什么 descriptor-first、核心概念、数据分层、设计权衡 |
 
 ## 源码
 

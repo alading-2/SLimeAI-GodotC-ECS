@@ -59,8 +59,8 @@ _data.RemoveModifier(GeneratedDataKey.MoveSpeed, modifier);
 _data.On(DataKey.CurrentHp, (old, newVal) => { ... });
 
 // ✅ 新方式：通过 Entity.Events
-_entity.Events.On<GameEventType.Data.PropertyChangedEventData>(
-    GameEventType.Data.PropertyChanged, evt => { ... });
+_entity.Events.On<GameEventType.Data.PropertyChanged>(
+    evt => { ... });
 ```
 
 ## 4. 修改边界

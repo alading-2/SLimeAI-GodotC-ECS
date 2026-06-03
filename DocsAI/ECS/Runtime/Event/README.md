@@ -8,7 +8,9 @@
 
 | 文档 | 说明 |
 | --- | --- |
-| [Event系统说明.md](Event系统说明.md) | EventBus、GlobalEventBus 和 typed payload 使用规则；附录含架构设计决策与 Context 模式背景 |
+| [Event系统说明.md](Event系统说明.md) | EventBus、GlobalEventBus 和 typed payload 使用规则 |
+| [Concepts/EventBus架构设计.md](Concepts/EventBus架构设计.md) | 为什么自定义 EventBus、三层架构、与现代框架对比 |
+| [Concepts/Context模式设计.md](Concepts/Context模式设计.md) | Context Object Pattern 原理、与 EventData 区别、最佳实践 |
 
 ## 源码
 

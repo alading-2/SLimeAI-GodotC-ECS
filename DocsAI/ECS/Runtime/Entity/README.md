@@ -11,9 +11,12 @@
 1. `Entity使用说明.md`：当前可执行 API、owner 引用、生命周期和归因规则。
 2. `EntityManager.md`：`EntityManager` 当前 facade 边界和 `Core` 子目录结构。
 3. `../Component/README.md`：`IComponent`、`ComponentRegistrar` 和 Entity-Component owner 索引。
-4. `../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/014-SDD-0024-entity-relationship-full-rewrite/README.md`：SDD-0024 完成态、任务和验证记录。
-5. `../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/3.Entity系统优化/README.md`：Entity / Relationship hard cutover 的设计裁决和历史上下文。
-6. `Entity规范.md`：旧 `Src/ECS` 文档迁移稿，只用于审计历史写法，不作为新代码模板。
+4. `Concepts/Entity架构设计理念.md`：为什么 Scene 即 Entity、模块边界、与纯 ECS 对比。
+5. `Concepts/EntityManager设计理念.md`：为什么拆分为 Pipeline、为什么不让 EntityManager 兼任业务。
+6. `Concepts/Entity受控迁移设计.md`：迁移语义、边界和适用场景。
+7. `../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/014-SDD-0024-entity-relationship-full-rewrite/README.md`：SDD-0024 完成态、任务和验证记录。
+8. `../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/3.Entity系统优化/README.md`：Entity / Relationship hard cutover 的设计裁决和历史上下文。
+9. `Entity规范.md`：旧 `Src/ECS` 文档迁移稿，只用于审计历史写法，不作为新代码模板。
 
 ## 2. 当前源码结构
 
