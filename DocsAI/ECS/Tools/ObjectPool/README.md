@@ -35,7 +35,6 @@ Src/ECS/Tools/ObjectPool/RuntimeState/
 Src/ECS/Tools/ObjectPool/Observability/ObjectPoolObservability.cs
 Src/ECS/Tools/ObjectPool/Tests/Contracts/
 Src/ECS/Tools/ObjectPool/Tests/Validation/CollisionIsolation/
-Src/ECS/Tools/ObjectPool/Tests/Demo/
 Src/ECS/Runtime/Entity/Spawn/EntitySpawnPipeline.cs
 Src/ECS/Runtime/Entity/Manager/EntityManager.cs
 ```
@@ -69,20 +68,19 @@ Src/ECS/Runtime/Entity/Manager/EntityManager.cs
 
 ## Tests / Validation 入口
 
-当前 `Src/ECS/Tools/ObjectPool/Tests/Demo` 下的 `ObjectPoolVisualDemo` 与 `ObjectPoolManagerDemo` 是 legacy/manual demo，不是回归门禁：
+当前 `Src/ECS/Tools/ObjectPool/Tests` 只保留两个自动验证入口：
 
-- 它们继承 `Control`，依赖 UI、鼠标、随机位置和人工观察。
-- 测试对象是 `Node2D`，没有覆盖 `CollisionObject2D` 根节点场外常驻、激活首帧 guard 和 parking grid 压力。
-- 不要求 README 五字段、PASS artifact、`index.json` / `result.json` / `checks[]`，也不得声明 PASS/FAIL。
-- demo 池名必须使用 `Demo/ObjectPool/...`，退出时只销毁自身创建的 demo 池。
+- `Tests/Contracts/ObjectPoolContractRuntimeTest.tscn`
+- `Tests/Validation/CollisionIsolation/ObjectPoolCollisionIsolationValidation.tscn`
 
-新的验证拆三层：
+验证拆两层：
 
 | 层级 | 目标 | 门禁 |
 | --- | --- | --- |
 | Runtime contract | `Tests/Contracts/` 验证 `Get/Release/Activate`、统计、容量、重复归还、manager mapping、隔离池名 | 可自动运行的 contract checks，不依赖 UI。 |
 | Godot collision validation | `Tests/Validation/CollisionIsolation/` 验证 `Area2D` / `CharacterBody2D` 根节点回池场外常驻、激活首帧不进业务、raw callback 到 business event oracle、parking grid 压力和 fallback detach 对照 | scene README 五字段 + PASS artifact + `checks[]`。 |
-| Manual demo | `Tests/Demo/` 保留可视化面板用于人工观察池复用和统计 | 不作为 PASS/FAIL。 |
+
+历史 UI demo 和 demo fixture 已删除，不再作为当前事实源。
 
 详细测试设计见 [Tests.md](Tests.md)。
 

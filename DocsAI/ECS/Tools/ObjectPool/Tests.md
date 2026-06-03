@@ -3,7 +3,7 @@
 > 状态：current test design
 > 更新：2026-06-03
 > 范围：`Src/ECS/Tools/ObjectPool/Tests`
-> 裁决：测试目录按 `Contracts / Validation / Demo` 分层；`Control` 场景保留为人工 demo，回归验证必须走自动化 contract test 和 Godot collision validation scene。
+> 裁决：测试目录只保留 `Contracts / Validation` 两层；历史 `Control` demo 和 `Node2D` fixture 已删除，回归验证必须走自动化 contract test 和 Godot collision validation scene。
 
 ## 1. 当前测试现状
 
@@ -11,11 +11,8 @@
 | --- | --- | --- | --- |
 | `Contracts/ObjectPoolContractRuntimeTest.cs/.tscn` | Runtime contract | 自动验证复用工具契约 | 不依赖 UI、鼠标、随机位置。 |
 | `Validation/CollisionIsolation/ObjectPoolCollisionIsolationValidation.cs/.tscn` | Godot collision validation | 自动验证 `ParkedInTree`、首帧 guard、raw callback 到 business event oracle、parking grid 和 fallback 对照 | 必须有旁置 README 五字段、runner evidence 和 PASS artifact。 |
-| `Demo/Visual/ObjectPoolVisualDemo.cs/.tscn` | 单池可视化 demo | 展示复用率、活跃/闲置统计、`ReleaseAll` 和手动生成 | 人工观察，不作为门禁。 |
-| `Demo/Manager/ObjectPoolManagerDemo.cs/.tscn` | 多池 manager demo | 展示 `ObjectPoolManager.GetAllStats()`、demo 池局部 cleanup 和 demo 池销毁 | 人工观察，不作为门禁。 |
-| `Demo/Fixtures/TestProjectile.cs` / `TestEffect.cs` / `VisualTestBullet.cs` | demo 用 `Node2D` 对象 | 演示 `IPoolable`、生命周期、静态归还 | 根节点不是 `CollisionObject2D`，不能替代 validation。 |
 
-结论：legacy UI 场景已归类到 `Demo` 并改名，不再承担 ObjectPool 回归门禁。
+结论：legacy UI 场景和 demo fixture 已删除，不再承担 ObjectPool 回归门禁。
 
 ## 2. 目标测试分层
 
@@ -79,15 +76,6 @@ Src/ECS/Tools/ObjectPool/Tests/Validation/CollisionIsolation/README.md
 
 - 普通 `Node` 阻断 `Node2D` 空间链路属于 Collision scene structure gate，应该在 Collision 验证中覆盖。
 - ObjectPool validation 只引用该风险，不在对象池里继续堆补丁。
-
-### 2.3 Manual demo
-
-当前 `ObjectPoolVisualDemo` 和 `ObjectPoolManagerDemo` 可继续保留，但只作为人工 demo：
-
-- 文件名、路径或 README 标记为 `Demo` / `manual demo`。
-- UI 文案保留演示价值即可，不承担 PASS/FAIL。
-- demo 池名改为 `Demo/ObjectPool/VisualBullet`、`Demo/ObjectPool/Projectile`、`Demo/ObjectPool/Effect` 这类隔离名称。
-- demo 退出时不调用全局 `ObjectPoolManager.DestroyAll()`，除非 demo 先证明它只创建了隔离池。
 
 ## 3. README 五字段
 

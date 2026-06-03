@@ -1,12 +1,11 @@
 # ObjectPool Tests
 
-ObjectPool 测试目录按 AI-first 验证职责分层：
+ObjectPool 测试目录只保留 AI-first 自动验证入口：
 
 | 目录 | 用途 | 门禁 |
 | --- | --- | --- |
 | `Contracts/` | Runtime contract checks，验证池容量、统计、重复归还、静态归还、active snapshot 和测试池隔离。 | 自动回归入口。 |
 | `Validation/CollisionIsolation/` | Godot collision validation，验证 `ParkedInTree`、activation-frame embargo、parking grid、fallback control 和结构化 artifact。 | scene gate 入口。 |
-| `Demo/` | 人工演示场景和 demo fixture。 | 不作为 PASS/FAIL。 |
 
 运行 ObjectPool 专项验证时优先使用：
 
@@ -16,4 +15,4 @@ Tools/run-godot-scene.sh run res://SlimeAI/Src/ECS/Tools/ObjectPool/Tests/Valida
 Tools/analyze-godot-scene-logs.sh
 ```
 
-`Demo/Visual/ObjectPoolVisualDemo.tscn` 和 `Demo/Manager/ObjectPoolManagerDemo.tscn` 只用于人工观察，不参与 scene gate。
+历史 UI demo 已删除；ObjectPool 不再保留依赖 UI、鼠标、随机数或人工观察的测试场景。

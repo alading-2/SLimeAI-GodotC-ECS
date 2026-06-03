@@ -38,16 +38,15 @@
 
 ## 测试与验证状态
 
-`Src/ECS/Tools/ObjectPool/Tests` 当前按 AI-first 验证职责分层：
+`Src/ECS/Tools/ObjectPool/Tests` 当前只保留 AI-first 自动验证入口：
 
 - `Tests/Contracts/ObjectPoolContractRuntimeTest.cs/.tscn` 是自动 contract checks。
 - `Tests/Validation/CollisionIsolation/ObjectPoolCollisionIsolationValidation.cs/.tscn` 是 Godot collision validation scene，旁置 README 五字段和 PASS artifact。
-- `Tests/Demo/Visual/ObjectPoolVisualDemo.cs/.tscn` 与 `Tests/Demo/Manager/ObjectPoolManagerDemo.cs/.tscn` 是人工 demo，不作为 PASS/FAIL。
-- `Tests/Demo/Fixtures/` 保存 demo 用 `Node2D` fixture，不用于证明 `CollisionObject2D` 隔离。
+- 历史 UI demo 和 demo fixture 已删除；不再保留依赖 UI、鼠标、随机数或人工观察的 ObjectPool 测试场景。
 
 后续测试重构必须按 [Tests.md](Tests.md) 执行：
 
-1. Contract 与 validation 分目录，不与 demo 混放。
+1. Contract 与 validation 分目录，不保留 demo 测试场景。
 2. Runtime contract checks 覆盖统计、容量、重复归还、manager mapping 和全局污染隔离。
 3. Godot collision validation scene 覆盖 `Area2D` / `CharacterBody2D` 根节点场外常驻、`Activate()` 后首帧 guard、raw callback 到 business event oracle、同帧复用和 parking grid 压力。
 4. `Tests/Validation/CollisionIsolation/README.md` 包含 `expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath`。
