@@ -14,7 +14,7 @@
 
 > 文档收敛说明：`AISystem_Prompt.md` 已移除，本文件作为 Docs 侧唯一 AI 说明。
 >
-> 源码目录说明：`Src/AI` 的基类"有什么用、怎么用"请看 `DocsAI/Modules/AI.md`。
+> 源码目录说明：`Src/AI` 的基类"有什么用、怎么用"请看 `DocsAI/ECS/Capabilities/AI/System/Usage.md`。
 
 ---
 
@@ -561,7 +561,7 @@ _runner.SetTree(EnemyBehaviorTreeBuilder.BuildRangedTree());
 
 ## 7. 维护约定
 
-- 若新增原子节点，需更新 `DocsAI/Modules/AI.md` 的节点速查表。
+- 若新增原子节点，需更新 `DocsAI/ECS/Capabilities/AI/System/Usage.md` 的节点速查表。
 - 若修改行为树结构或节点返回语义，需同步更新本说明第 3.4 节。
 - 若新增 AI 关键 DataKey/Event，需补充到本文第 4 节。
 - 若更改攻击状态机时序（WindUp/Recovery/CD 语义），需验证：

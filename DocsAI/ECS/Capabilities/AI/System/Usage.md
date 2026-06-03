@@ -83,8 +83,8 @@ Src/ECS/Capabilities/AI/System/
 
 实战口诀：
 
-- **读状态** → `ctx.Entity.Data.Get<T>(DataKey.xxx)`
-- **写意图** → `ctx.Entity.Data.Set(DataKey.xxx, value)`
+- **读状态** → `ctx.Entity.Data.Get<T>(GeneratedDataKey.xxx)`
+- **写意图** → `ctx.Entity.Data.Set(GeneratedDataKey.xxx, value)`
 - **发命令** → `ctx.Entity.Events.Emit(...)`
 - **做计时** → 优先 `TimerManager`，不要在节点里手动累加 `delta`
 
@@ -258,7 +258,7 @@ var tree = new SelectorNode("Boss")
 ## 5. 解耦约束
 
 - ✅ 推荐：
-  - Action 节点写 `DataKey.AIMoveDirection`、`DataKey.AIMoveSpeedMultiplier`
+  - Action 节点写 `GeneratedDataKey.AIMoveDirection`、`GeneratedDataKey.AIMoveSpeedMultiplier`
   - 发 `GameEventType.Attack.Requested` 事件
 - ❌ 禁止：
   - 在行为树节点里直接改 `CharacterBody2D.Velocity`
@@ -284,7 +284,7 @@ var tree = EnemyBehaviorTreeBuilder.BuildSkillMeleeTree("火球术");
 
 // 方式二：自定义优先级（技能范围与攻击范围不同时）
 var tree = new SelectorNode("法术近战")
-    .Add(EnemyBehaviorTreeBuilder.SkillBranch("火球术", DataKey.AbilityRange))
+    .Add(EnemyBehaviorTreeBuilder.SkillBranch("火球术", GeneratedDataKey.AbilityRange))
     .Add(EnemyBehaviorTreeBuilder.AttackBranch())
     .Add(EnemyBehaviorTreeBuilder.ChaseBranch())
     .Add(EnemyBehaviorTreeBuilder.PatrolBranch());

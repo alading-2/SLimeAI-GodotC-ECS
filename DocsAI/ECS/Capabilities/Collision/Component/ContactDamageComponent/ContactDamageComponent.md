@@ -95,8 +95,8 @@ ContactDamageComponent 直接消费专用事件
 
 当前数值读取方式：
 
-- 伤害值：攻击者 `DataKey.FinalAttack`
-- 伤害间隔：攻击者 `DataKey.AttackInterval`
+- 伤害值：攻击者 `GeneratedDataKey.FinalAttack`
+- 伤害间隔：攻击者 `GeneratedDataKey.AttackInterval`
 
 ## 6. 应用方式
 

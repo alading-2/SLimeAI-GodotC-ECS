@@ -32,9 +32,9 @@
 ```csharp
 var abilityConfig = new Dictionary<string, object>
 {
-    [DataKey.Name] = "Fireball",
-    [DataKey.AbilityCostType] = AbilityCostType.Mana,  // 消耗类型
-    [DataKey.AbilityCostAmount] = 50f                  // 消耗数量
+    [GeneratedDataKey.Name] = "Fireball",
+    [GeneratedDataKey.AbilityCostType] = AbilityCostType.Mana,  // 消耗类型
+    [GeneratedDataKey.AbilityCostAmount] = 50f                  // 消耗数量
 };
 ```
 
@@ -43,10 +43,10 @@ var abilityConfig = new Dictionary<string, object>
 | 消耗类型 | 资源键 | 说明 | 示例技能 |
 |:---|:---|:---|:---|
 | `AbilityCostType.None` | - | 无消耗 | 冲刺、翻滚 |
-| `AbilityCostType.Mana` | `DataKey.CurrentMana` | 魔法值 | 火球术、冰霜新星 |
+| `AbilityCostType.Mana` | `GeneratedDataKey.CurrentMana` | 魔法值 | 火球术、冰霜新星 |
 | `AbilityCostType.Energy` | `CurrentEnergy` | 能量 | 战吼、猛击 |
 | `AbilityCostType.Ammo` | `CurrentAmmo` | 弹药 | 狙击、火箭炮 |
-| `AbilityCostType.Health` | `DataKey.CurrentHp` | 生命值 | 血祭、狂怒 |
+| `AbilityCostType.Health` | `GeneratedDataKey.CurrentHp` | 生命值 | 血祭、狂怒 |
 
 > [!NOTE]
 > `Energy` 和 `Ammo` 系统当前为预留接口,需要未来实现对应的资源系统。
@@ -103,11 +103,11 @@ sequenceDiagram
 // 配置火球术 - 消耗 50 魔法
 var fireballConfig = new Dictionary<string, object>
 {
-    [DataKey.Name] = "Fireball",
-    [DataKey.AbilityType] = AbilityType.Active,
-    [DataKey.AbilityCostType] = AbilityCostType.Mana,
-    [DataKey.AbilityCostAmount] = 50f,
-    [DataKey.AbilityCooldown] = 3f
+    [GeneratedDataKey.Name] = "Fireball",
+    [GeneratedDataKey.AbilityType] = AbilityType.Active,
+    [GeneratedDataKey.AbilityCostType] = AbilityCostType.Mana,
+    [GeneratedDataKey.AbilityCostAmount] = 50f,
+    [GeneratedDataKey.AbilityCooldown] = 3f
 };
 
 AbilityInventoryService.Runtime.AddAbility(player, fireballConfig);
@@ -124,10 +124,10 @@ AbilityInventoryService.Runtime.AddAbility(player, fireballConfig);
 // 配置血祭 - 消耗 30% 当前生命值
 var bloodRageConfig = new Dictionary<string, object>
 {
-    [DataKey.Name] = "BloodRage",
-    [DataKey.AbilityType] = AbilityType.Active,
-    [DataKey.AbilityCostType] = AbilityCostType.Health,
-    [DataKey.AbilityCostAmount] = 30f,  // 固定值,可在 Executor 中改为百分比
+    [GeneratedDataKey.Name] = "BloodRage",
+    [GeneratedDataKey.AbilityType] = AbilityType.Active,
+    [GeneratedDataKey.AbilityCostType] = AbilityCostType.Health,
+    [GeneratedDataKey.AbilityCostAmount] = 30f,  // 固定值,可在 Executor 中改为百分比
 };
 ```
 
@@ -142,12 +142,12 @@ var bloodRageConfig = new Dictionary<string, object>
 // 配置冲刺 - 仅冷却,无资源消耗
 var dashConfig = new Dictionary<string, object>
 {
-    [DataKey.Name] = "Dash",
-    [DataKey.AbilityType] = AbilityType.Active,
-    [DataKey.AbilityCostType] = AbilityCostType.None,  // 无消耗
-    [DataKey.AbilityCooldown] = 8f,
-    [DataKey.IsAbilityUsesCharges] = true,
-    [DataKey.AbilityMaxCharges] = 2
+    [GeneratedDataKey.Name] = "Dash",
+    [GeneratedDataKey.AbilityType] = AbilityType.Active,
+    [GeneratedDataKey.AbilityCostType] = AbilityCostType.None,  // 无消耗
+    [GeneratedDataKey.AbilityCooldown] = 8f,
+    [GeneratedDataKey.IsAbilityUsesCharges] = true,
+    [GeneratedDataKey.AbilityMaxCharges] = 2
 };
 ```
 
@@ -168,7 +168,7 @@ var dashConfig = new Dictionary<string, object>
 var caster = AbilityInventoryService.Runtime.GetOwner(_entity as AbilityEntity);
 
 // 读取施法者的资源
-var currentMana = caster.Data.Get<float>(DataKey.CurrentMana);
+var currentMana = caster.Data.Get<float>(GeneratedDataKey.CurrentMana);
 ```
 
 ### 2. 与其他组件的区别
@@ -214,11 +214,11 @@ public class BloodRageExecutor : IAbilityExecutor
         var caster = context.Caster;
         
         // 动态计算消耗量 (30% 最大生命值)
-        var maxHp = caster.Data.Get<float>(DataKey.FinalHp);
+        var maxHp = caster.Data.Get<float>(GeneratedDataKey.FinalHp);
         var costAmount = maxHp * 0.3f;
         
         // 临时修改消耗值
-        ability.Data.Set(DataKey.AbilityCostAmount, costAmount);
+        ability.Data.Set(GeneratedDataKey.AbilityCostAmount, costAmount);
         
         // 技能逻辑...
     }
@@ -244,7 +244,7 @@ public const string CostReduction = "CostReduction"; // 0~100百分比
 在 `CostComponent.OnConsumeCost` 中应用:
 
 ```csharp
-var reduction = caster.Data.Get<float>(DataKey.CostReduction);
+var reduction = caster.Data.Get<float>(GeneratedDataKey.CostReduction);
 var finalCost = CostAmount * (1 - reduction / 100f);
 ```
 

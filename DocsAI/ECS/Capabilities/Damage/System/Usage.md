@@ -91,8 +91,8 @@
 ```csharp
 // 查询玩家统计数据
 var player = EntityManager.GetEntitiesByType<Player>("Player").First();
-float totalDamage = player.Data.Get<float>(DataKey.TotalDamageDealt);
-int kills = player.Data.Get<int>(DataKey.TotalKills);
+float totalDamage = player.Data.Get<float>(GeneratedDataKey.TotalDamageDealt);
+int kills = player.Data.Get<int>(GeneratedDataKey.TotalKills);
 ```
 
 ---
@@ -179,7 +179,7 @@ public void Process(DamageInfo info)
 #### [CritProcessor](../../../../../Src/ECS/Capabilities/Damage/System/Processors/CritProcessor.cs) (P:300)
 *   **逻辑**: 通过 `EntityAttributionResolver.ResolveUnit(info.Attacker)` 查找攻击者归属 IUnit，读取 `CritRate` 进行概率判定。
 *   **效果**: 若暴击，`IsCritical = true`, `FinalDamage *= (CritDamage / 100)`。
-*   **数据来源**: `DataKey.CritRate`（暴击率）, `DataKey.CritDamage`（暴击倍率，如 150）。
+*   **数据来源**: `GeneratedDataKey.CritRate`（暴击率）, `GeneratedDataKey.CritDamage`（暴击倍率，如 150）。
 
 ### Stage 2: 生存判定 (Survival) - 决定是否命中
 
@@ -192,7 +192,7 @@ public void Process(DamageInfo info)
 ### Stage 3: 护盾抵扣 (Shield) - 优先消耗
 
 #### [ShieldProcessor](../../../../../Src/ECS/Capabilities/Damage/System/Processors/ShieldProcessor.cs) (P:200)
-*   **逻辑**: 读取 `Victim` 的 `DataKey.Shield`。
+*   **逻辑**: 读取 `Victim` 的 `GeneratedDataKey.Shield`。
 *   **机制**: 护盾承受 **原始伤害** (在护甲减免之前)。这是为了防止高护甲角色配合护盾变得过于坚不可摧。
 *   **效果**: 扣除护盾值。若护盾不足，剩余伤害 (`Overflow`) 继续流转；若护盾足够，`FinalDamage = 0`，但可能不标记为 Dodged。
 
@@ -205,7 +205,7 @@ public void Process(DamageInfo info)
 *   **注意**: 当前代码未检查 `DamageType.True`（已注释），真实伤害仍受护甲影响。
 
 #### [DamageTakenAmplificationProcessor](../../../../../Src/ECS/Capabilities/Damage/System/Processors/DamageTakenAmplificationProcessor.cs) (P:310)
-*   **逻辑**: 读取 `Victim` 的 `DataKey.DamageTakenMultiplier`。
+*   **逻辑**: 读取 `Victim` 的 `GeneratedDataKey.DamageTakenMultiplier`。
 *   **效果**: 直接乘算 `FinalDamage` (用于实现易伤 Debuff 或减伤 Buff)。
 
 #### [FlatReductionProcessor](../../../../../Src/ECS/Capabilities/Damage/System/Processors/FlatReductionProcessor.cs) (P:320)

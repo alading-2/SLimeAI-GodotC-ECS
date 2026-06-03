@@ -42,10 +42,10 @@
 private void InitializeData()
 {
     // 如果没有当前血量，就用最大血量填满
-    if (!_data.Has(DataKey.CurrentHp))
+    if (!_data.Has(GeneratedDataKey.CurrentHp))
     {
-        float maxHp = _data.Get<float>(DataKey.FinalHp);
-        _data.Set(DataKey.CurrentHp, maxHp);
+        float maxHp = _data.Get<float>(GeneratedDataKey.FinalHp);
+        _data.Set(GeneratedDataKey.CurrentHp, maxHp);
     }
 }
 ```

@@ -13,7 +13,7 @@
 
 当前代码入口：
 
-- `DocsAI/Modules/TestSystem.md`
+- `DocsAI/ECS/Capabilities/TestSystem/Usage.md`
 - `Src/ECS/Tools/Input/MouseSelection/MouseSelectionSystem.cs`
 - `Src/ECS/Tools/Input/MouseSelection/MouseSelectionSystem.Interaction.cs`
 - `Src/ECS/Tools/Input/MouseSelection/MouseSelectionSystem.Picking.cs`
@@ -438,6 +438,6 @@ Src/ECS/Capabilities/TestSystem/System/
 ## 10. 相关文档
 
 - [TestSystem 重构方案](./TestSystem重构方案.md)
-- [TestSystem AI 执行契约](../../../DocsAI/Modules/TestSystem.md)
+- [TestSystem AI 执行契约](../Usage.md)
 
 如果后续对 `TestSystem` 的代码结构、模块接入方式、目录组织策略有改动，应优先同步本文件与重构方案文档，避免设计和实现再次脱节。

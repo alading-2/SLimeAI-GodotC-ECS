@@ -39,7 +39,7 @@
 ## 设计边界
 
 - 数学层负责：点采样、切线采样、长度近似、弧长映射、几何判定、随机采样。
-- 数学层不负责：`MovementParams`、`DataKey.Velocity`、实体过滤、目标排序、策略阶段机。
+- 数学层不负责：`MovementParams`、`GeneratedDataKey.Velocity`、实体过滤、目标排序、策略阶段机。
 - 运行时仍统一使用 Godot `Vector2`，不引入新的运行时数学库抽象。
 
 ## 使用建议

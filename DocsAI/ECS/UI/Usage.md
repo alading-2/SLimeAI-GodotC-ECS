@@ -60,7 +60,7 @@ public partial class MyCustomUI : UIBase
     private void OnDataChanged(GameEventType.Data.PropertyChangedEventData evt)
     {
         // 过滤我们关心的 Key
-        if (evt.Key == DataKey.CurrentHp)
+        if (evt.Key == GeneratedDataKey.CurrentHp)
         {
             UpdateDisplay();
         }
@@ -68,7 +68,7 @@ public partial class MyCustomUI : UIBase
 
     private void UpdateDisplay()
     {
-        var hp = _entity.Data.Get<float>(DataKey.CurrentHp);
+        var hp = _entity.Data.Get<float>(GeneratedDataKey.CurrentHp);
         _label.Text = $"HP: {hp}";
     }
 }

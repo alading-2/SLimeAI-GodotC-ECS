@@ -399,7 +399,7 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 - 由预览场景直接扫描并控制 `VisualRoot` 下的唯一 `AnimatedSprite2D`；非循环动作播完后会持续回放当前预览动作
 - 鼠标移到动作下拉框上滚轮切换动作
 - 刷新时保留当前分类和动作选择
-- 鼠标选择后显示 `DataKey.Name`、资源键、资源路径、分类、默认动作和当前动作
+- 鼠标选择后显示 `GeneratedDataKey.Name`、资源键、资源路径、分类、默认动作和当前动作
 - `AssetUnit*` 默认动作为 `idle`，`AssetEffect` 默认动作为 `Effect`，其他 AnimatedSprite2D 资源默认取第一个动作
 - `AssetProjectile` 只要求展示和选择，不强制参与 AnimatedSprite2D 动作控制
 
@@ -485,7 +485,7 @@ public partial class MyTestModule : TestModuleBase
 
 ```csharp
 // ✅ 正确：显式 typed handle
-ability.Data.Get<string>(GeneratedDataKey.Name);
+ability.Data.Get<string>(GeneratedGeneratedDataKey.Name);
 
 // ❌ 错误：依赖旧字符串取键方式
 ability.Data.Get<string>("Name");

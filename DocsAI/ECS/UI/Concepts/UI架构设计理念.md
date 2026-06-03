@@ -65,8 +65,8 @@ public partial class HealthBarUI : Control, IPoolable
 
     private void UpdateDisplay()
     {
-        var maxHp = _targetEntity.Data.Get<float>(DataKey.MaxHp);
-        var currentHp = _targetEntity.Data.Get<float>(DataKey.CurrentHp);
+        var maxHp = _targetEntity.Data.Get<float>(GeneratedDataKey.MaxHp);
+        var currentHp = _targetEntity.Data.Get<float>(GeneratedDataKey.CurrentHp);
         _progressBar.Value = currentHp / maxHp * 100;
     }
 

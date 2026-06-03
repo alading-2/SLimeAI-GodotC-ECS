@@ -208,17 +208,17 @@ private void OnWindUpComplete()
 ### 数据初始化（DataInitComponent 或配置文件中）
 
 ```csharp
-entity.Data.Set(DataKey.AttackRange, 80f);
-entity.Data.Set(DataKey.AttackInterval, 1.0f);
-entity.Data.Set(DataKey.FinalAttack, 20f);
+entity.Data.Set(GeneratedDataKey.AttackRange, 80f);
+entity.Data.Set(GeneratedDataKey.AttackInterval, 1.0f);
+entity.Data.Set(GeneratedDataKey.FinalAttack, 20f);
 
 // 即时模式（Roguelite 类游戏，不设置则默认 0）
-// entity.Data.Set(DataKey.AttackWindUpTime, 0f);
-// entity.Data.Set(DataKey.AttackRecoveryTime, 0f);
+// entity.Data.Set(GeneratedDataKey.AttackWindUpTime, 0f);
+// entity.Data.Set(GeneratedDataKey.AttackRecoveryTime, 0f);
 
 // 前后摇模式（ACT 类游戏）
-entity.Data.Set(DataKey.AttackWindUpTime, 0.2f);
-entity.Data.Set(DataKey.AttackRecoveryTime, 0.1f);
+entity.Data.Set(GeneratedDataKey.AttackWindUpTime, 0.2f);
+entity.Data.Set(GeneratedDataKey.AttackRecoveryTime, 0.1f);
 ```
 
 ### AI 节点发起攻击
