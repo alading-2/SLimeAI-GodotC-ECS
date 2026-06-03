@@ -2,8 +2,8 @@
 
 > status: current
 > sourcePaths: Src/ECS/Capabilities/Collision/Component/
-> relatedDocs: ./Collision概念.md, ../Concepts/README.md, ../Concepts/对象池碰撞兼容说明.md
-> lastReviewed: 2026-06-02
+> relatedDocs: ./Collision概念.md, ../Concepts/README.md, ../Concepts/Godot物理时序与对象池碰撞.md, ../Concepts/Node2D父链约束.md
+> lastReviewed: 2026-06-03
 
 ## 1. 源码入口
 
@@ -102,16 +102,17 @@ Collision = new MovementCollisionParams
 ```text
 回池：
   ObjectPool.Release
-  -> 组件卸载 / 事件解绑
+  -> runtimeState.IsInPool = true
+  -> runtimeState.CollisionLogicActive = false
   -> 禁用处理与显示
-  -> 泊车位
-  -> 脱树
+  -> 移动到分散 parking grid
+  -> 默认不脱树、不关碰撞、不改 layer/mask/shape
 
 出池：
   ObjectPool.Get(false)
-  -> 挂树但保持碰撞关闭
   -> EntitySpawnPipeline 设置 Data / Visual / Transform / Component
-  -> ObjectPool.Activate 恢复碰撞
+  -> ObjectPool.Activate
+  -> runtimeState.CollisionReadyPhysicsFrame = currentPhysicsFrame + 1
   -> CharacterBody2D CallDeferred(MoveAndSlide)
 ```
 
@@ -119,12 +120,13 @@ Collision = new MovementCollisionParams
 
 - Source Entity 是否仍有效。
 - Target Entity 是否仍有效。
-- Source / Target 是否处于回池、释放中或半初始化状态。
+- Source / Target 是否处于回池、释放中、半初始化状态，或尚未到达 `CollisionReadyPhysicsFrame`。
 - team / owner / source / target / lifecycle 是否仍匹配业务语义。
+- ContactDamage timer tick 也必须重新验证 attacker 是否仍允许处理碰撞。
 
 ## 5. Debug 入口
 
 - Godot 编辑器"可见碰撞形状"选项
 - 碰撞层常量：`Data/DataKey/Base/CollisionLayers.cs`
 - 对象池碰撞诊断：优先看 `DocsAI/ECS/Tools/ObjectPool/README.md`、`ObjectPoolObservability`、`ObjectPoolManager.GetAllStats()` 和后续节点状态快照
-- 深度技术链路：`DocsAI/ECS/Capabilities/Collision/Concepts/对象池碰撞兼容说明.md`
+- 深度技术链路：`DocsAI/ECS/Capabilities/Collision/Concepts/Godot物理时序与对象池碰撞.md`

@@ -28,6 +28,7 @@
 - **敌对判定**：只对非中立且敌对阵营生效
 - **伤害节流**：为每个接触目标维护独立循环计时器
 - **伤害结算**：通过 `SystemManager.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(...)` 发起标准伤害请求
+- **对象池 guard**：timer tick 前必须确认攻击者仍允许处理碰撞，避免旧 attacker Node 复用后被当作旧接触继续伤害
 
 ## 3. 与碰撞系统的协作关系
 
@@ -65,6 +66,7 @@ ContactDamageComponent 直接消费专用事件
 - 计时器触发时执行 `OnBodyDamageTick()`
 - 若自己已死亡，则清理全部计时器
 - 若目标节点失效，则只移除对应目标计时器
+- 若目标节点已回池、`CollisionLogicActive=false`，或当前 physics frame 尚未到达 `CollisionReadyPhysicsFrame`，则取消对应计时器并移除接触记录
 - 若仍有效，则继续调用 `ApplyDamageFrom()`
 
 ### 4.3 死亡与复活
@@ -126,6 +128,17 @@ Entity Root
 3. **复活恢复**：死亡时仅暂停计时器，复活后基于仍在接触的目标集合恢复持续伤害
 
 这样即使底层偶发漏掉离开事件，也不会无限制地对无效目标持续结算伤害。
+
+### 7.1 对象池复用风险
+
+2026-06-03 已确认：旧 `_contactBodies` / `_bodyTimers` 持有 attacker `Node2D` 时，如果 attacker 进池又被复用，同一个 Node 可能被旧 timer 当成旧接触目标继续伤害。这是独立 bug，不应靠对象池脱树或关碰撞掩盖。
+
+后续实现必须补：
+
+- `HurtboxEntered` 入口先查 pool runtime state。
+- `OnBodyDamageTick` 前查 attacker 是否仍 `CollisionLogicActive` 且已过 `CollisionReadyPhysicsFrame`。
+- attacker 进池或 guard 失败时，取消对应 timer，并从 `_contactBodies` / `_bodyTimers` 移除。
+- 如 validation 证明还不够，再记录 acquire token / generation。
 
 ## 8. 关键文件
 

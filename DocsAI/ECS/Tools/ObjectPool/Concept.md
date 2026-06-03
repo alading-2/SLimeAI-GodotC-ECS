@@ -2,22 +2,26 @@
 
 > status: current
 > sourcePaths: Src/ECS/Tools/ObjectPool/
-> relatedDocs: DocsAI/ECS/Tools/ObjectPool/README.md, DocsAI/ECS/Tools/ObjectPool/Usage.md, DocsAI/ECS/Capabilities/Collision/Concepts/对象池碰撞兼容说明.md
-> lastReviewed: 2026-06-02
+> relatedDocs: DocsAI/ECS/Tools/ObjectPool/README.md, DocsAI/ECS/Tools/ObjectPool/Usage.md, DocsAI/ECS/Capabilities/Collision/Concepts/Godot物理时序与对象池碰撞.md
+> lastReviewed: 2026-06-03
 
 ## 1. 一句话定位
 
-通用 C# 对象池，负责对象复用、容量、池归属、基础 Node 出入池状态；针对 Godot 4.x 的 `CollisionObject2D` 根节点实现 detach-isolate-reattach 模式，支持两阶段激活和 `IPoolable` 生命周期。
+通用 C# 对象池，负责对象复用、容量、池归属、基础 Node 出入池状态；针对 Godot 4.x 的 `CollisionObject2D` 根节点默认采用 `ParkedInTree` 场外常驻策略，支持两阶段激活、pool runtime state、激活首帧碰撞逻辑禁用和 `IPoolable` 生命周期。
 
-当前裁决：**保留对象池，继续对物理根节点默认脱树；后续重构重点是把 Node lifecycle 与 Collision isolation 显式拆成内部策略，不改变 public API 和现有行为。**
+当前裁决：**保留对象池，物理根节点默认不脱树、不关碰撞、不改 layer/mask/shape；后续重构重点是把 Node lifecycle、parking grid、ObjectPoolRuntimeStateStore、CollisionLogicGuard 和 fallback detach 显式拆成内部策略，不改变 public API。**
 
 ## 2. 核心概念
 
-### Detach-Isolate-Reattach 模式
+### ParkedInTree 场外常驻策略
 
-针对 Godot 物理引擎的碰撞对生命周期问题：
-- **回池**：先移动到泊车位 → 脱树（set_space(null) 彻底清空物理状态）
-- **出池**：先挂树（碰撞关闭）→ Entity pipeline 设置 Data / Visual / Transform / Component → Activate 恢复碰撞
+针对 Godot 物理引擎的碰撞对生命周期问题，默认不再切换物理参与状态：
+
+- **回池**：标记 `IsInPool=true`、`CollisionLogicActive=false`，隐藏、停处理，移动到分散 parking grid。
+- **出池**：`Get(false)` 后由 Entity pipeline 设置 Data / Visual / Transform / Component。
+- **激活**：`Activate()` 标记 `CollisionLogicActive=true`，设置 `CollisionReadyPhysicsFrame=currentPhysicsFrame+1`，激活第一帧不处理业务碰撞。
+
+这条策略的重点是避免默认 `RemoveChild/AddChild` 和 layer/mask/shape/monitoring 反复切换，让旧 signal / 停车区事件在业务入口被 guard 丢弃。
 
 ### 两阶段激活
 
@@ -63,7 +67,7 @@ public interface IPoolable
 | 对象复用、容量、活跃/闲置统计 | 业务逻辑 |
 | 池归属映射和静态归还 | Entity 注册、Data 初始化 |
 | Node 显隐、ProcessMode、ParentPath 基础挂载 | owner/source/target、阵营、伤害归因 |
-| `CollisionObject2D` 根节点泊车、脱树、挂树后同步禁用 | 判断 `entered/exited` 是否业务有效 |
+| `CollisionObject2D` 根节点 parking grid、pool runtime state、激活首帧 embargo、fallback detach | 判断 `entered/exited` 是否业务有效 |
 | `Get(false)` / `Activate()` 两阶段生命周期 | 组件注册、lifecycle parent、GlobalEvent 发送 |
 
 ## 4. AI-first 当前判断
@@ -72,7 +76,7 @@ ObjectPool 当前问题不是“使用对象池本身错误”，而是策略藏
 
 - 复用工具职责：`Stack<T>`、容量、预热、统计。
 - Godot Node 生命周期：显隐、处理模式、ParentPath、QueueFree/Free。
-- Godot 物理隔离：泊车、脱树、同步禁用、deferred 恢复。
+- Godot 物理协作：parking grid、runtime state、激活首帧 embargo、fallback detach。
 - Entity 编排配合：`Get(false)`、`Activate()`、`MoveAndSlide` 时序。
 
 后续重构应拆出内部策略：
@@ -80,7 +84,10 @@ ObjectPool 当前问题不是“使用对象池本身错误”，而是策略藏
 ```text
 ObjectPool<T>
   -> PoolNodeLifecycleStrategy
-  -> CollisionIsolationStrategy
+  -> PoolParkingStrategy
+  -> ObjectPoolRuntimeStateStore
+  -> CollisionLogicGuard
+  -> DetachFallbackStrategy
   -> PoolLifecycleContext
   -> PoolNodeStateSnapshot / Observation
 ```
@@ -92,5 +99,5 @@ ObjectPool<T>
 - **IPoolable**：池化对象接口
 - **ObjectPoolManager**：全局池管理
 - **EntitySpawnPipeline / EntityManager**：Entity 注册、初始化和最终激活
-- **Collision Capability**：Area2D 信号桥接、事件过滤和 layer/mask 约定
+- **Collision Capability**：Area2D 信号桥接、pool runtime state guard、事件过滤和 layer/mask 约定
 - **Godot 物理引擎**：碰撞对、监控队列和物理帧时序

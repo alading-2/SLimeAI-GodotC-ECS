@@ -4,7 +4,7 @@
   "title": "ECS Framework Optimization",
   "status": "active",
   "created_at": "2026-05-25",
-  "updated_at": "2026-06-02",
+  "updated_at": "2026-06-03",
   "scope": "SlimeAI",
   "tags": [
     "ecs",
@@ -17,9 +17,11 @@
     "capability",
     "docsai",
     "tools",
-    "timer"
+    "timer",
+    "objectpool",
+    "collision"
   ],
-  "current_sdd": "SDD-0027",
+  "current_sdd": "SDD-0028",
   "sdds": [
     {
       "id": "SDD-0011",
@@ -138,6 +140,13 @@
       "slug": "timer-scheduler-full-rewrite",
       "title": "Timer Scheduler Full Rewrite",
       "order": 17,
+      "status": "blocked"
+    },
+    {
+      "id": "SDD-0028",
+      "slug": "objectpool-collision-parkedintree-cutover",
+      "title": "ObjectPool Collision ParkedInTree Cutover",
+      "order": 18,
       "status": "pending"
     }
   ],

@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-03 06:35",
+  "generated_at": "2026-06-03 16:07",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -32,7 +32,7 @@
       "slug": "ecs-framework-optimization",
       "title": "ECS Framework Optimization",
       "status": "active",
-      "updated_at": "2026-06-02",
+      "updated_at": "2026-06-03",
       "scope": "SlimeAI",
       "tags": [
         "ecs",
@@ -45,9 +45,11 @@
         "capability",
         "docsai",
         "tools",
-        "timer"
+        "timer",
+        "objectpool",
+        "collision"
       ],
-      "current_sdd": "SDD-0027",
+      "current_sdd": "SDD-0028",
       "bucket": "projects",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor"
     }
@@ -668,6 +670,28 @@
       "project_order": 17,
       "current_task": "T1.8",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/017-SDD-0027-timer-scheduler-full-rewrite"
+    },
+    {
+      "id": "SDD-0028",
+      "slug": "objectpool-collision-parkedintree-cutover",
+      "title": "ObjectPool Collision ParkedInTree Cutover",
+      "status": "active",
+      "type": "refactor",
+      "updated_at": "2026-06-03",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "ecs/tools/objectpool",
+        "ecs/capabilities/collision"
+      ],
+      "tags": [
+        "objectpool",
+        "collision",
+        "ai-first"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 18,
+      "current_task": "T1.1",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover"
     }
   ]
 }

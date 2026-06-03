@@ -3,7 +3,7 @@
 ## Summary
 
 - **pending**: 0
-- **active**: 0
+- **active**: 1
 - **blocked**: 1
 - **done**: 26
 - **projects**: 2
@@ -13,7 +13,7 @@
 | ID | Title | Status | Bucket | Current SDD | Path |
 | --- | --- | --- | --- | --- | --- |
 | PRJ-0001 | SystemAgent Optimization | active | projects | SDD-0008 | SDD/project/projects/PRJ-0001-systemagent-optimization |
-| PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0027 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
+| PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0028 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
 
 ## Pending
 
@@ -21,7 +21,9 @@
 
 ## Active
 
-无。
+| ID | Project | Title | Updated | Scope | Current Task |
+| --- | --- | --- | --- | --- | --- |
+| SDD-0028 | PRJ-0002 | ObjectPool Collision ParkedInTree Cutover | 2026-06-03 | SlimeAI | T1.1 |
 
 ## Blocked
 
@@ -81,6 +83,7 @@
 - SDD-0025 — ECS Framework Directory Architecture Restructure
 - SDD-0026 — Input Contract Manifest And Facade Hardening
 - SDD-0027 — Timer Scheduler Full Rewrite
+- SDD-0028 — ObjectPool Collision ParkedInTree Cutover
 
 ### Workspace/SDD
 
@@ -108,6 +111,7 @@
 
 - SDD-0026 — Input Contract Manifest And Facade Hardening
 - SDD-0027 — Timer Scheduler Full Rewrite
+- SDD-0028 — ObjectPool Collision ParkedInTree Cutover
 
 ### bootstrap
 
@@ -132,6 +136,10 @@
 ### codegen
 
 - SDD-0018 — Data Descriptor Migration and Generated Handles
+
+### collision
+
+- SDD-0028 — ObjectPool Collision ParkedInTree Cutover
 
 ### compute
 
@@ -238,6 +246,10 @@
 
 - SDD-0021 — Data No-Compatibility Hard Cutover
 - SDD-0022 — Data Projection Diagnostics Contract Hardening
+
+### objectpool
+
+- SDD-0028 — ObjectPool Collision ParkedInTree Cutover
 
 ### openspec-retirement
 

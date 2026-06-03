@@ -20,6 +20,8 @@
 - 移动停止/销毁决策
 - `CharacterBody2D` 的移动碰撞采样
 
+对象池实体进入业务前必须额外经过 pool runtime state guard：`IsInPool`、`CollisionLogicActive` 和 `CollisionReadyPhysicsFrame` 不通过时，`CollisionEntered / CollisionExited` 不应继续被 Movement / Damage / Projectile 解释为有效命中。
+
 ## 2. 桥接范围
 
 ### 2.1 支持的来源
@@ -75,6 +77,8 @@
 - `CharacterBody2D` 路径：自己在 `ApplyMovement()` 里读取 slide collision
 
 收到候选碰撞后，移动组件会继续交给 `MovementCollisionPolicy` 过滤、去重、计数；`CollisionComponent` 本身不参与“碰到后是否停止/销毁”的决策。
+
+池化投射物或特效还必须遵守：`Activate()` 后第一 physics frame 不处理业务碰撞，避免旧 signal dispatch 让新对象刚出生就误判命中。
 
 ### 4.2 与 `HurtboxComponent`
 

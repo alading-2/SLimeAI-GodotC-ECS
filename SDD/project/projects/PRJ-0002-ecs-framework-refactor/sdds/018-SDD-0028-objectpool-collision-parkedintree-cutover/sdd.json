@@ -1,0 +1,50 @@
+{
+  "id": "SDD-0028",
+  "slug": "objectpool-collision-parkedintree-cutover",
+  "title": "ObjectPool Collision ParkedInTree Cutover",
+  "status": "active",
+  "type": "refactor",
+  "created_at": "2026-06-03",
+  "updated_at": "2026-06-03",
+  "scope": "SlimeAI",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI/SlimeAI"
+  ],
+  "affected_areas": [
+    "ecs/tools/objectpool",
+    "ecs/capabilities/collision"
+  ],
+  "tags": [
+    "objectpool",
+    "collision",
+    "ai-first"
+  ],
+  "progress": {
+    "current_task": "T1.1",
+    "completed_tasks": 0,
+    "total_tasks": 12,
+    "percent": 0
+  },
+  "bdd": {
+    "required": true,
+    "reason": "ObjectPool 与 Collision 是 gameplay/runtime 热路径，本 SDD 修改池化物理根节点默认生命周期、碰撞业务入口 guard、ContactDamage timer 清理、验证场景和 DocsAI/skill 契约。"
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md",
+    "execution_prompt": "execution-prompt.md"
+  },
+  "project_id": "PRJ-0002",
+  "project_order": 18,
+  "shared_design_refs": [
+    "../../design/INDEX.md",
+    "../../design/Tool/ObjectPool/README.md",
+    "../../design/Tool/ObjectPool/01-现状证据与AI-first裁决.md",
+    "../../design/Tool/ObjectPool/02-目标架构与重构路线.md",
+    "../../design/Tool/ObjectPool/03-碰撞停放与逻辑验证结论草案.md"
+  ]
+}

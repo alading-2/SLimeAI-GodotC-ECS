@@ -6,7 +6,7 @@
 # ObjectPool C# 版本
 
 > 状态：current
-> 更新：2026-06-02
+> 更新：2026-06-03
 > 当前入口：`DocsAI/ECS/Tools/ObjectPool/README.md`
 
 基于 TypeScript 和 GDScript 版本设计的 Godot 4.x C# 高性能对象池实现。专门针对 Godot Node 的生命周期进行了优化，支持自动处理 `ProcessMode` 和 `Visible`。
@@ -16,9 +16,9 @@
 - **泛型支持** - `ObjectPool<T>` 支持任意引用类型。
 - **混合命名空间** - 核心工具类位于全局命名空间，无需 `using` 即可随时随地调用。
 - **自动管理 Node** - 出池自动激活（`Inherit` + `Visible`），入池自动挂起（`Disabled` + `Invisible`）。
-- **碰撞类型脱树隔离** - `CollisionObject2D` 节点回池时自动 `RemoveChild` 脱树（`set_space(null)` 彻底清理物理状态），出池时 `AddChild` 挂回；非碰撞类型保持属性开关行为。
-- **泊车位防幽灵碰撞** - 回池时会先把碰撞节点停放到远离战场的位置，避免重新挂树瞬间被物理世界看到旧死亡坐标。
-- **挂树后同步禁用** - 脱树节点重新 `AddChild` 后立即同步关闭碰撞，覆盖 `SetDeferred` 尚未生效的窗口。
+- **场外常驻策略** - `CollisionObject2D` 节点回池后默认仍留在 `SceneTree`，不脱树、不关碰撞、不改 layer/mask/shape，只隐藏、停处理、移动到分散 parking grid。
+- **碰撞逻辑验证** - 所有业务碰撞入口必须查 pool runtime state；回池对象和未到 ready frame 的对象不处理碰撞逻辑。
+- **激活首帧保护** - `Activate()` 后设置 `CollisionReadyPhysicsFrame = currentPhysicsFrame + 1`，激活第一帧默认不处理业务碰撞。
 - **两阶段激活时序** - `Get(false)` 不提前触发 `OnPoolAcquire`，而是等 `Activate()` 时才真正完成挂树保障、恢复节点并触发生命周期。
 - **生命周期回调** - 通过 `IPoolable` 接口实现精准的对象重置逻辑。
 - **全局管理器** - `ObjectPoolManager` 自动管理所有创建的池，支持**静态归还**与**按名查找**；Node 走 Meta，纯 C# 对象走内部映射。
@@ -38,7 +38,7 @@
 `Src/ECS/Tools/ObjectPool/Tests` 当前处于重构前状态：
 
 - `ObjectPoolVisualTest.cs/.tscn` 和 `ObjectPoolManagerTest.cs/.tscn` 是人工可视化 demo，不是自动回归测试。
-- `TestProjectile.cs`、`TestEffect.cs`、`VisualTestBullet.cs` 的根节点都是 `Node2D`，不能证明 `CollisionObject2D` 回池脱树策略。
+- `TestProjectile.cs`、`TestEffect.cs`、`VisualTestBullet.cs` 的根节点都是 `Node2D`，不能证明 `CollisionObject2D` 回池场外常驻、激活首帧 guard 或 parking grid 压力。
 - 这些 demo 缺少 README 五字段、PASS artifact、`index.json` / `result.json` 和 artifact `checks[]`。
 - demo 池名不得继续使用或覆盖真实 `ObjectPoolNames`；测试池名应使用 `Test/ObjectPool/...` 或 `Demo/ObjectPool/...` 前缀。
 
@@ -46,7 +46,7 @@
 
 1. 保留现有 UI 场景为 manual demo。
 2. 新增 Runtime contract checks，覆盖统计、容量、重复归还、manager mapping 和全局污染隔离。
-3. 新增 Godot collision validation scene，覆盖 `Area2D` / `CharacterBody2D` 根节点脱树、`Get(false)` 到 `Activate()` 的碰撞关闭窗口和旧位置幽灵事件。
+3. 新增 Godot collision validation scene，覆盖 `Area2D` / `CharacterBody2D` 根节点场外常驻、`Activate()` 后首帧 guard、同帧复用旧 signal 和 parking grid 压力。
 4. 新增或更新 `Src/ECS/Tools/ObjectPool/Tests/README.md`，包含 `expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath`。
 5. Godot validation 必须写 PASS artifact；不能只看 stdout、exit code 或 UI 面板。
 
@@ -171,26 +171,42 @@ public partial class Enemy : CharacterBody2D, IPoolable
 
 ## 常见问题与技术细节
 
-### 0. 为什么碰撞节点不能只靠 `disabled` / `monitoring` 开关？
+### 0. 为什么默认不再脱树 / 关碰撞？
 
-对象池复用 `Area2D` / `CharacterBody2D` 时，如果只是切换 `CollisionShape2D.disabled`、`Area2D.monitoring`、`collision_layer / collision_mask`，Godot 物理宽相仍可能在旧位置重建碰撞对，导致伪 `entered`。
+对象池复用 `Area2D` / `CharacterBody2D` 时，旧策略通过“泊车位 + 脱树 + 关碰撞 + 两阶段激活”规避 Godot 物理时序风险。2026-06-03 重新校准后，默认策略改成 `ParkedInTree`：
 
-当前项目最终采用下面这套组合方案：
+- 回池后仍在 `SceneTree`。
+- 仍保留碰撞体。
+- 不 `RemoveChild`。
+- 不调用 `SetCollisionTreeActive(false)`。
+- 不改 `monitoring/monitorable`、shape disabled、layer/mask。
+- 只隐藏、停处理、移动到分散 parking grid，并写 pool runtime state。
 
-- 回池时若根节点是 `CollisionObject2D`，先停放到泊车位，再脱树
-- `Get(false)` 阶段会先挂回场景树，但保持碰撞关闭
-- 挂树后立即同步关闭碰撞，覆盖 deferred 尚未生效窗口
-- `EntityManager.Spawn` 完成位置/旋转设置、`ForceUpdateTransform()` 与组件注册
-- 最后 `pool.Activate()` 统一执行防御性挂树检查、恢复处理与碰撞，并触发 `OnPoolAcquire / OnInstanceAcquire`
-- `CharacterBody2D` 在 `Activate()` 之后再 `CallDeferred(MoveAndSlide)`
+原因：如果默认仍脱树或仍关碰撞，新方案就没有意义；而且反复切 layer/mask/shape/monitoring 会重新引入 deferred 和 pair 重建窗口。业务正确性改由统一 guard 保证。
 
-这套流程是当前项目解决“幽灵碰撞”的标准做法。
+推荐最小 guard：
+
+```text
+release:
+  CollisionLogicActive = false
+  CollisionReadyPhysicsFrame = int.MaxValue
+  move to parking grid
+
+activate:
+  CollisionLogicActive = true
+  CollisionReadyPhysicsFrame = currentPhysicsFrame + 1
+
+collision callback:
+  reject if !CollisionLogicActive
+  reject if currentPhysicsFrame < CollisionReadyPhysicsFrame
+```
 
 补充边界：
 
-- `SetDeferred` 用于把碰撞属性修改提交到安全点，不证明对象已经立即退出物理世界。
-- `CollisionObject2D.disable_mode = Remove` 可作为引擎层额外保护，但只在 `ProcessMode.Disabled` 语义下生效，不能替代多阶段 spawn 的脱树隔离。
-- 泊车位不是唯一正确性来源；它只覆盖挂树瞬间被物理世界看到的短窗口。
+- Godot 文档说明 `Area2D` overlap 列表每个 physics step 更新一次，不会在对象移动后立即同步。
+- `SetDeferred` 用于把属性修改提交到安全点，不证明对象已经立即退出物理世界。
+- `Detach` / `CollisionObject2D.disable_mode = Remove` 只作为 fallback / 对照验证，不再是默认策略。
+- parking grid 不是唯一正确性来源；它负责减少停车区 pair 压力，业务正确性靠 guard。
 - 碰撞事件到达后仍由 Collision / Damage / Movement owner 过滤实体有效性、team、owner 和生命周期。
 
 ### 1. 为什么 ObjectPoolInit 使用 \_EnterTree 而非 \_Ready？
@@ -278,5 +294,5 @@ AutoLoad 加载顺序（按 Priority）：
     - **纯 C# 类**：必须持有池引用并调用 `pool.Release(obj)`。
 4.  **性能**：对象池会自动处理节点的挂载逻辑。对于极高频率（如每秒百发）的子弹，建议在配置中指定合理的 `ParentPath`。
 5.  **类型选择**：本项目主要池化 Node 对象（Enemy、Bullet、Item），极少需要池化纯 C# 类。
-6.  **碰撞型根节点**：凡是根节点为 `CollisionObject2D` 的池化实体，都应统一走“泊车位 + 脱树 + 挂树后同步禁用 + Activate 后恢复碰撞”的方案，不要自行手写一套属性开关时序。
+6.  **碰撞型根节点**：凡是根节点为 `CollisionObject2D` 的池化实体，默认走 `ParkedInTree`：不脱树、不关碰撞、不改 layer/mask/shape；业务碰撞入口必须查 `ObjectPoolRuntimeStateStore`，并遵守激活首帧不处理碰撞。
 7.  **重构边界**：后续 ObjectPool 重构优先拆内部策略和补观测，不先修改 `Get/Release/Activate` public API。
