@@ -1,0 +1,199 @@
+# CommonTool 与 ResourceManagement 裁决
+
+> 更新：2026-06-03
+> 状态：current design input
+> 裁决：`CommonTool` 不应继续作为杂项扩展点；现有资源路径加载需求应回归 `ResourceManagement` 的 AI-first 加载契约。
+
+## 1. 当前证据
+
+### 1.1 CommonTool 当前形态
+
+`Src/ECS/Tools/CommonTool.cs` 只有一个方法：
+
+```text
+LoadPackedScene(string path, string usageName)
+  -> 空路径 warn
+  -> ResourceManagement.LoadPath<PackedScene>(path)
+  -> null 时 error
+```
+
+调用点：
+
+- `Src/ECS/Runtime/Entity/Spawn/EntitySpawnPipeline.cs`
+- `Src/ECS/Capabilities/Effect/System/EffectTool.cs`
+- `Data/Feature/Ability/ChainLightning/ChainLightning.cs`
+- Data residual 设计文档中的历史示例
+
+这说明它实际承担的是“DataOS / runtime record 中保存 res:// path，最终实例化点统一加载 PackedScene”的便利封装，不是通用杂项工具。
+
+### 1.2 ResourceManagement 当前形态
+
+`Data/ResourceManagement/ResourceManagement.cs` 提供：
+
+- `Load<T>(string name, ResourceCategory category)`
+- `LoadPath<T>(string path)`
+- `LoadAll<T>(ResourceCategory category, string pathFilter = "")`
+- `GetNames(ResourceCategory category, string pathFilter = "")`
+
+`Data/ResourceManagement/README.md` 已明确：
+
+- 资源加载统一入口是 `ResourceManagement`。
+- 业务代码不应硬编码 `res://`。
+- UI / 编辑器列资源用 `ResourceCatalog`。
+- `ResourcePaths.cs` 由 `Tools/ResourceGenerator` 生成。
+
+### 1.3 ResourceCatalog 当前形态
+
+`Data/ResourceManagement/ResourceCatalog.cs` 从两类来源构建目录：
+
+- `DataRuntimeBootstrap.Default` 的 runtime snapshot records。
+- `ResourcePaths.Resources` 中的 asset entries。
+
+它对 TestSystem/ResourcePicker 有价值，但当前仍缺少“目录覆盖验证”和“加载失败结构化结果”。
+
+## 2. 是否必要
+
+### CommonTool
+
+作为独立 Tool owner 不必要。
+
+它的名字过宽，会鼓励 AI 把“暂时不知道放哪”的方法继续塞进去。AI-first 框架最怕这种入口，因为它没有 owner、没有验证门禁、没有禁用列表。
+
+保留现有方法可以作为短期兼容，但必须冻结：
+
+- 不新增新方法。
+- 不作为 DocsAI/ECS/Tools 的正式 owner。
+- 后续迁移到更明确的 `ResourceManagement.LoadPackedScenePath(...)` 或 `ResourceLoadingTool.LoadPackedScene(...)`。
+
+### ResourceManagement
+
+必要。
+
+原因：
+
+- AI 需要从统一 manifest 查资源，而不是全局搜索 `res://`。
+- DataOS snapshot 只应保存路径、stable id 或关系，不保存 `PackedScene` / `Node` / `Resource` 运行时对象。
+- ResourceCatalog 是 TestSystem、资源选择器、视觉预览和调试面板的共同基础。
+
+## 3. 当前缺陷
+
+| 缺陷 | 证据 | AI-first 影响 |
+| --- | --- | --- |
+| `CommonTool` 名字过宽 | `CommonTool.cs` 注释写“通用杂项工具”。 | AI 会把无 owner 的工具继续堆进去。 |
+| `Load<T>` fallback 使用 contains 匹配 | 找不到精确 key 后遍历 `kvp.Key.Contains(name)`。 | 重名或相近名时可能静默加载错误资源。 |
+| `LoadPath<T>` 缺 source policy | 任意 path 都能传入。 | 难区分 DataOS 合法资源引用和业务裸 `res://`。 |
+| 加载结果只有 `T?` | 失败只写 log。 | AI 和测试无法拿到结构化失败原因。 |
+| ResourceCatalog cache 缺 artifact | `ClearCache()` 存在，但没有目录覆盖报告。 | 资源生成后是否同步，AI 只能靠人工看 UI。 |
+| ResourceGenerator gate 未挂到工具文档 | README 提醒运行，但没有 grep/validate gate。 | 添加/移动资源后容易忘记生成。 |
+
+## 4. 目标架构
+
+### 4.1 ResourceManagement 仍是唯一加载入口
+
+目标边界：
+
+| API | 目标职责 | 不做 |
+| --- | --- | --- |
+| `Load<T>(key, category)` | 严格按 `ResourcePaths` key/category 加载 | 不继续隐式 contains fallback 作为默认路径 |
+| `LoadPath<T>(path, source)` | 只给 DataOS resource ref、runtime snapshot、debug/test 明确来源使用 | 不让业务随意传裸 `res://` |
+| `TryLoad<T>(request, out result)` | 输出结构化加载结果 | 不只靠 log 说明失败 |
+| `ResourceCatalog` | 提供选择目录、分组、搜索、snapshot/data asset 投影 | 不直接实例化业务对象 |
+| `ResourceCatalogDiagnostics` | 输出目录覆盖、重复 key、missing path、stale generated source | 不参与 gameplay 热路径 |
+
+### 4.2 建议契约
+
+后续实现可引入轻量 DTO：
+
+```text
+ResourceLoadRequest
+  Key
+  Category
+  Path
+  Source: GeneratedKey | DataSnapshot | Debug | Test | LegacyPath
+  UsageName
+  Owner
+
+ResourceLoadResult
+  Success
+  ResourceType
+  ResolvedPath
+  MatchedBy: ExactKey | Path | LegacyContainsFallback
+  ErrorCode
+  Message
+```
+
+第一阶段不需要改所有调用点，只要先能让失败时输出结构化信息，并把 fallback 标出来。
+
+### 4.3 CommonTool 收口
+
+迁移目标：
+
+```text
+CommonTool.LoadPackedScene(path, usageName)
+  -> ResourceManagement.LoadPackedScenePath(path, source: DataSnapshot, usageName)
+```
+
+保留策略：
+
+- 旧方法短期保留并标为 compatibility facade。
+- 任何新增资源加载逻辑必须放 `ResourceManagement` 或对应 capability owner，不放 `CommonTool`。
+- DocsAI 不为 `CommonTool` 单独建 owner；本设计包就是它的裁决记录。
+
+## 5. 调用点建议
+
+### EntitySpawnPipeline
+
+`EntitySpawnPipeline` 从 record path 加载视觉场景是合理的，但应携带：
+
+- record id
+- entity id
+- stable key 或 field name
+- usage name
+- source = `DataSnapshot`
+
+这样 AI 看到失败 artifact 时能知道是哪个 snapshot record 缺资源。
+
+### EffectTool / ChainLightning
+
+Effect/Ability 通过 DataOS 或 feature data 加载视觉资源时，应继续允许 `LoadPath`，但要区分：
+
+- 静态 generated key 资源：优先 `Load<T>(key, category)`。
+- DataOS resource ref：允许 `LoadPath<T>`，但 source 必须说明来自哪条 record/field。
+
+### UI / System / ObjectPool
+
+这些大多已经使用 `ResourceManagement.Load<T>(nameof(...), category)`，应继续保留。但 `contains fallback` 一旦触发，应在 diagnostics 中暴露，避免类名近似导致错误加载。
+
+## 6. Not Recommended
+
+- 不建议继续新增 `CommonTool.SomeHelper()`。
+- 不建议在 capability 里直接 `GD.Load<T>("res://...")`。
+- 不建议让 Data 保存 `PackedScene` 或 `Resource` 对象。
+- 不建议让 `ResourceCatalog` 在 gameplay 热路径全量刷新。
+- 不建议删除 `LoadPath`，因为 DataOS snapshot 中保存资源路径是当前明确边界；要做的是 source policy 和 diagnostics。
+
+## 7. 验证门禁
+
+文档/设计阶段：
+
+```bash
+rg -n "CommonTool\\.|GD\\.Load|ResourceLoader\\.Load|res://" Src/ECS Data DocsAI/ECS
+python3 Workspace/SDD/sdd.py validate --all
+```
+
+实现阶段：
+
+```bash
+dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
+dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj
+```
+
+建议新增 diagnostics gate：
+
+```text
+ResourceCatalogDiagnostics
+  - duplicate keys = 0
+  - missing file paths = 0
+  - legacy contains fallback count = 0 in new code
+  - DataOS resource refs loadable = true for selected smoke records
+```

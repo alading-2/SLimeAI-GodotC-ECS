@@ -6,10 +6,10 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-03
+- **Updated**: 2026-06-04
 - **Current SDD**: SDD-0029
-- **Last Conclusion**: 已创建并补齐 SDD-0029 `System Contract Manifest And Diagnostics Hardening`，用于在保留 Runtime System Core 的前提下补齐 manifest、preflight、diagnostics、trace、DocsAI Runtime/System 同步和 SystemCore artifact；不进入 typed SystemId hard cutover。
-- **Next Action**: 从 `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md` 执行 T1.1 readiness baseline；先记录当前 dirty workspace、System config/registry/execute 调用点、DocsAI 入口状态和验证基线。
+- **Last Conclusion**: 已补齐项目级共享设计包 `design/7.Component/`：Component 保留 `IComponent + ComponentRegistrar` 最小契约，不改纯数据 ECS storage；后续建议首切片补 ComponentManifest、生命周期契约、外部订阅清理审计、动态组件策略、preflight 和验证 artifact。当前执行型 SDD 仍是 SDD-0029。
+- **Next Action**: 若继续 System 执行，仍从 `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md` 的 T1.1 readiness baseline 开始；若切到 Component 实施，先创建 `Component Contract Manifest And Lifecycle Hardening` 执行型 SDD，并从 `design/7.Component/README.md` 进入。
 - **Open Blockers**: none
 
 ## Project Status Board
@@ -35,6 +35,7 @@
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
 | SDD-0028 | pending | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已创建执行胶囊；等待按提示词执行 runtime state、parking grid、CollisionLogicGuard、ContactDamage stale attacker cleanup、contract tests、Godot collision validation 和 DocsAI/skill sync |
 | SDD-0029 | pending | `design/8.System优化/` | System Contract Manifest And Diagnostics Hardening 已创建执行胶囊；等待按提示词执行 SystemManifest、SystemPreflight、SystemDiagnosticsSnapshot、LifecycleTrace、DocsAI Runtime/System 同步和 SystemCore artifact |
+| TBD | proposed | `design/7.Component/` | Component AI-first Contract Layer 设计包已完成；建议新建执行型 SDD，先补 ComponentManifest、lifecycle contract、subscription cleanup audit、dynamic component policy、preflight、DocsAI/skill sync 和 ComponentRegistrar artifact |
 | TBD | proposed | `design/13-旧ECS框架Event系统问题分析与优化方向.md` | P1：保留 EventBus，优化事件主键、事件定义和请求-响应边界 |
 
 ## Timeline
@@ -296,3 +297,12 @@
 - **Evidence**: `DocsAI/ECS/Capabilities/Collision/Concepts/README.md`、`Godot物理时序与对象池碰撞.md`、`Node2D父链约束.md`、`History/`；`sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover/README.md`、`design/main.md`、`tasks.md`、`bdd.md`、`progress.md`、`notes.md`、`execution-prompt.md`；项目 `README.md`、`roadmap.md`、`project.json` 和本 `progress.md` 已切到 SDD-0028。
 - **Impact**: 后续 ObjectPool / Collision 实现不应从旧 `Concepts/对象池碰撞兼容说明.md` 顶层路径恢复，也不应做只改对象池半边的局部补丁；新执行会话应直接按 SDD-0028 提示词逐项推进。
 - **Resume**: 从 SDD-0028 T1.1 readiness baseline 开始；当前框架仓 dirty worktree 中存在大量非本 SDD 改动，执行时必须保留并避免混入。
+
+### P036 — 2026-06-04 — component-design-package
+
+- **Context**: 用户要求按 AI-first 思想深度复查旧 ECS Component，并在 `design/7.Component/` 生成设计文档，参考本地 Resources、Context7 和 web 资料。
+- **Conclusion**: 已补齐 Component 项目级共享设计包；裁决保留 `IComponent + ComponentRegistrar` 最小契约，不把 Component 改成纯数据 ECS storage，不恢复 `ENTITY_TO_COMPONENT` 关系图。后续首切片建议只做 ComponentManifest、生命周期契约、外部订阅清理审计、动态组件策略、preflight、DocsAI/skill sync 和验证 artifact。
+- **Evidence**: `design/7.Component/README.md`、`01-现状证据与AI-first裁决.md`、`02-目标架构与优化路线.md`、`03-调用点迁移与验证计划.md`；`design/INDEX.md`、`README.md`、`roadmap.md` 和本 `progress.md` 已同步 Component 入口与恢复点。
+- **Research Adoption**: externalResources enabled=`engine-framework, official-docs`，scope=`Resources/Engine/Docs/FrameworkAnalysis/Reports/*` 中 ECS component / relationship / GodotBridge 片段 + Context7 Bevy ECS component / bundle / query / ChildOf 文档片段；web/curl 部分官方细页在当前网络下超时，未作为强证据；copiedCodeOrAssets=none。
+- **Impact**: 后续 AI 不应把 SlimeAI Component 当作 Bevy / Unity DOTS / Flecs / EnTT 的纯数据组件；新增或修改组件应先查 Component manifest、owner 文档、Data/Event/Service 边界和注销清理规则。
+- **Resume**: 若进入 Component 实施，先创建 `Component Contract Manifest And Lifecycle Hardening` 执行型 SDD；若继续当前 System 主线，仍从 SDD-0029 execution prompt 的 T1.1 readiness baseline 开始。

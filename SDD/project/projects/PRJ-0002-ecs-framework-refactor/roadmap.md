@@ -2,7 +2,7 @@
 
 ## Purpose
 
-项目级执行路线图，追踪 `design/` 下每份问题分析文档的完成情况和后续 SDD 拆分建议。多份文档可以合并为一个 SDD；Data 核心 runtime 重构已按切片序列完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 主链路。Entity / Relationship 已按 SDD-0024 完成 hard cutover。ECS 目录架构大重构已按 SDD-0025 收口为 `Runtime + Capabilities + Tools + UI`；Input Contract 已按 SDD-0026 完成业务语义 facade 和调用点迁移；Timer Scheduler Full Rewrite 已创建 SDD-0027 并因当前承载游戏 runner/Godot CLI 缺失阻塞在场景验证；ObjectPool / Collision ParkedInTree cutover 已创建 SDD-0028；Runtime System AI-first 优化已创建 SDD-0029，目标是 manifest / preflight / diagnostics / trace 和 DocsAI 同步。
+项目级执行路线图，追踪 `design/` 下每份问题分析文档的完成情况和后续 SDD 拆分建议。多份文档可以合并为一个 SDD；Data 核心 runtime 重构已按切片序列完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 主链路。Entity / Relationship 已按 SDD-0024 完成 hard cutover。ECS 目录架构大重构已按 SDD-0025 收口为 `Runtime + Capabilities + Tools + UI`；Component AI-first 设计包已补齐，后续建议以 manifest / lifecycle / subscription / dynamic policy / preflight 为首切片；Input Contract 已按 SDD-0026 完成业务语义 facade 和调用点迁移；Timer Scheduler Full Rewrite 已创建 SDD-0027 并因当前承载游戏 runner/Godot CLI 缺失阻塞在场景验证；ObjectPool / Collision ParkedInTree cutover 已创建 SDD-0028；Runtime System AI-first 优化已创建 SDD-0029，目标是 manifest / preflight / diagnostics / trace 和 DocsAI 同步。
 
 ## Design Progress
 
@@ -22,6 +22,7 @@
 | `design/4.SystemAgent目录更改到SlimeAI里面/README.md` | done | SDD-0023 | `SDD/`、`Workspace/`、`.ai-config/` 迁入 `SlimeAI/` 后的 rules / skill / DocsAI / SDD template 语义收口已完成 |
 | `design/3.Entity系统优化/` | done | SDD-0024 | Entity / Relationship hard cutover 已完成；typed EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除已收口 |
 | `design/6.ECS框架目录架构大重构/` | done | SDD-0025 | 已完成目录架构收口；裁决 `Src/ECS/Runtime + Src/ECS/Capabilities`，DocsAI 当前入口为 `Runtime + Capabilities + Tools + UI`，不保留 `Foundation/Foundations` 当前路由层 |
+| `design/7.Component/` | proposed | TBD | Runtime Component AI-first 设计包已完成；推荐保留 `IComponent + ComponentRegistrar` 最小契约，首切片补 ComponentManifest、lifecycle contract、subscription cleanup audit、dynamic component policy、preflight 和验证 artifact |
 | `design/Tool/Input/` | done | SDD-0026 | Input Contract Manifest And Facade Hardening 已完成：InputManager 业务语义 facade、Ability/Targeting/UI 调用点迁移、DocsAI/skill 同步和验证闭环已收口 |
 | `design/Tool/Timer/` | pending | SDD-0027 | Timer Scheduler Full Rewrite 已完成可执行代码/文档主链路；当前 blocked 于 TimerStressValidation / scene-gate / BrotatoLike smoke 缺 runner 和 Godot CLI 证据 |
 | `design/Tool/ObjectPool/` | pending | SDD-0028 | ObjectPool Collision ParkedInTree Cutover 已创建执行型 SDD；目标为 pool runtime state、parking grid、CollisionLogicGuard、ContactDamage 旧引用清理、ObjectPool contract、Godot collision validation 和 DocsAI/skill sync |
@@ -48,6 +49,7 @@
 | P0 | `design/4.SystemAgent目录更改到SlimeAI里面/README.md` | **SDD-0023**：SystemAgent / AI config 根迁移后的 rules、skill、SDD template、DocsAI 和验证门禁语义收口 |
 | P0 | `design/3.Entity系统优化/` + `entity-rewrite-execution-prompt.md` | **SDD-0024 已完成**：Entity Relationship Full Rewrite，按 hard cutover 完成 EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除 |
 | P0 | `design/6.ECS框架目录架构大重构/` + `directory-architecture-restructure-execution-prompt.md` | **SDD-0025 已完成**：ECS Framework Directory Architecture Restructure，按 `Runtime + Capabilities` 重构 `Src/ECS`，DocsAI current route 为 `Runtime + Capabilities + Tools + UI`，历史概念材料按 owner `Concepts/` 或 Archive/Thinking 收口 |
+| P1 | `design/7.Component/` | **建议新建 SDD**：Component Contract Manifest And Lifecycle Hardening；首切片不改 runtime 行为，补 manifest、preflight、subscription cleanup audit、dynamic component policy、DocsAI/skill sync 和 ComponentRegistrar artifact，再单独评估 `EntityManager.Destroy` 是否收口到 `EntityDestroyPipeline` |
 | P1 | `design/Tool/Input/` + `sdds/016-SDD-0026-input-contract-manifest-and-facade-hardening/execution-prompt.md` | **SDD-0026 已完成**：Input Contract Manifest And Facade Hardening，业务语义 facade、调用点迁移、manifest gate 和验证闭环已收口 |
 | P1 | `design/Tool/Timer/` + `sdds/017-SDD-0027-timer-scheduler-full-rewrite/execution-prompt.md` | **SDD-0027 blocked**：Timer Scheduler Full Rewrite 已等待当前 BrotatoLike runner/Godot CLI，用于补 TimerStressValidation、scene-gate 和 smoke 证据 |
 | P1 | `design/Tool/ObjectPool/` + `sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover/execution-prompt.md` | **SDD-0028 pending**：ObjectPool Collision ParkedInTree Cutover，按 `ParkedInTree` 默认迁移、runtime state、CollisionLogicGuard、ContactDamage 清理、ObjectPool contract 和 Godot collision validation 一次性收口 |
