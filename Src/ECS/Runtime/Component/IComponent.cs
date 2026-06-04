@@ -7,7 +7,7 @@ using System.Linq;
 ///
 /// Component 是 SlimeAI 自定义生命周期节点，不使用 Godot _EnterTree/_Ready 作为注册入口。
 /// 初始化、事件订阅、Entity/Data 缓存都必须放在 OnComponentRegistered。
-/// 需要固定结构参数时，由代码化 composition 在注册前注入，不使用 [Export] / Inspector 作为默认配置来源。
+/// 需要固定结构参数时，由代码化 composition 在注册前注入，不使用 Inspector 导出参数作为默认配置来源。
 /// 
 /// 标准实现模式：
 /// <code>

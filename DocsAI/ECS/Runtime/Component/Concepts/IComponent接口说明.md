@@ -27,7 +27,7 @@ public interface IComponent
 | 实现 `IComponent` | 有注册/注销回调，能在注册时缓存 `IEntity` 和 `Data` | 新组件优先使用 |
 | 类名以 `Component` 结尾 | 兼容旧节点，只有 owner 索引，没有接口回调 | 只作为兼容 |
 
-注册后，Entity 与 Component 的归属关系只进入 `ComponentRegistrar` 内部索引。新代码不要再通过 `EntityRelationshipManager` 或 `ENTITY_TO_COMPONENT` 查询组件归属。
+注册后，Entity 与 Component 的归属关系只进入 `ComponentRegistrar` 内部索引。新代码不要再通过旧 Relationship 图查询组件归属。
 
 ## 标准写法
 
@@ -82,7 +82,7 @@ public partial class MyComponent : Node, IComponent
 - 在 `OnComponentRegistered` 订阅 `Entity.Events`。
 - 在 `OnComponentUnregistered` 清理本组件缓存的引用。
 - 不需要在组件注销时手动清空 `Entity.Events`；Entity 销毁流程会统一清理。
-- 固定结构参数应在注册前由代码化 composer/profile 注入，不使用 `[Export]` / Inspector 作为默认配置来源。
+- 固定结构参数应在注册前由代码化 composer/profile 注入，不使用 Inspector 导出参数作为默认配置来源。
 
 ## 参数注入
 
@@ -149,6 +149,7 @@ var data = EntityManager.GetEntityData(this);
 ```text
 EntityManager.Spawn/Register
   -> EntityRegistry register
+  -> ComponentComposer.Compose(entity)
   -> RegisterComponents(entity)
   -> ComponentRegistrar 建立 owner 索引
   -> IComponent.OnComponentRegistered(entity)
@@ -160,11 +161,13 @@ EntityManager.Destroy
   -> Data / Events / registry / pool cleanup
 ```
 
+`EntitySpawnPipeline` 与 `EntityManager.RegisterComponents(entity)` 都会在 `ComponentRegistrar` 注册前调用 `ComponentComposer.Compose(entity)`。如果 Entity 实现 `IComponentCompositionProvider`，默认组件组合由 C# profile 创建，注册期读取到的是已经注入 typed options 的组件。
+
 ## 红线
 
 - 不用 `EntityRelationshipManager` 查 Component owner。
 - 不在 `_EnterTree()` / `_Ready()` 里假设 Entity 已注册；注册相关初始化放到 `OnComponentRegistered`。
-- 不使用 `[Export]` / Inspector 作为 Component 默认配置来源。
+- 不使用 Inspector 导出参数作为 Component 默认配置来源。
 - 不用字符串访问 Data，例如 `_data.Get<float>("CurrentHp")`。
 - 不给 Component 私有字段存放跨系统共享业务状态。
 - 不把具体业务组件放回 `Runtime/Component`；具体组件归 Capability owner。

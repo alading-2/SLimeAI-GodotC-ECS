@@ -62,7 +62,7 @@ DataRegistry.Register(...);
 
 ## Component 参数不是 Data
 
-纯代码化 Component 组合后，固定结构参数由 composition profile 注入，不通过 `[Export]` / Inspector，也不默认进入 DataOS。
+纯代码化 Component 组合后，固定结构参数由 composition profile 注入，不通过 Inspector 导出参数，也不默认进入 DataOS。
 
 进入 Data 的条件是“业务状态或配置需要被跨系统读取、观察、迁移或由 runtime snapshot 管理”。只影响单个 Component 如何桥接 Godot 节点的参数，应留在 Component options 中。
 
@@ -100,6 +100,6 @@ public void OnComponentUnregistered()
 - 用字符串 key 访问 Data。
 - 在 Component 内新建 DataKey 事实源。
 - 在 `_EnterTree()` / `_Ready()` 里读取 Spawn 后才会写入的数据。
-- 用 `[Export]` / Inspector 承载 Component 默认参数。
+- 用 Inspector 导出参数承载 Component 默认参数。
 - 用 `GetComponent<T>()` 直接调用其他组件方法来完成常规通信。
 - 为了目录整齐把 Capability 组件移回 `Runtime/Component`。

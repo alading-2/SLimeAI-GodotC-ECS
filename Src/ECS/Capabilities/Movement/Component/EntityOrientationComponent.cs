@@ -15,8 +15,9 @@ public partial class EntityOrientationComponent : Node, IComponent
 {
     private static readonly Log _log = new(nameof(EntityOrientationComponent));
 
-    [Export]
-    public OrientationSink Sink { get; set; } = OrientationSink.RootRotation;
+    private OrientationSink _sink = OrientationSink.RootRotation;
+
+    public OrientationSink Sink => _sink;
 
     private IEntity? _entity;
     private Data? _data;
@@ -37,6 +38,15 @@ public partial class EntityOrientationComponent : Node, IComponent
     private float _accumulatedAngle; //已累积自转角度（度）
     private bool _isClockwise = true; //旋转方向（true=顺时针）
     private bool _isSuspendedByMovement; // 是否因当前 movement 请求暂停朝向输出
+
+    /// <summary>
+    /// 注册前注入朝向输出策略。
+    /// <para>该参数只描述 Godot bridge 输出落点，不进入 Entity.Data。</para>
+    /// </summary>
+    public void Configure(EntityOrientationComponentOptions options)
+    {
+        _sink = options.Sink;
+    }
 
     public void OnComponentRegistered(Node entity)
     {
@@ -409,3 +419,8 @@ public partial class EntityOrientationComponent : Node, IComponent
         _isActive = true;
     }
 }
+
+/// <summary>
+/// EntityOrientationComponent 的代码化结构参数。
+/// </summary>
+public readonly record struct EntityOrientationComponentOptions(OrientationSink Sink);

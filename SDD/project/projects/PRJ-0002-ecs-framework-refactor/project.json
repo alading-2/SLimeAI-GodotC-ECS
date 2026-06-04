@@ -22,7 +22,7 @@
     "collision",
     "system"
   ],
-  "current_sdd": "SDD-0029",
+  "current_sdd": "none",
   "sdds": [
     {
       "id": "SDD-0011",
@@ -155,7 +155,14 @@
       "slug": "system-contract-manifest-and-diagnostics-hardening",
       "title": "System Contract Manifest And Diagnostics Hardening",
       "order": 19,
-      "status": "pending"
+      "status": "done"
+    },
+    {
+      "id": "SDD-0030",
+      "slug": "component-code-composition-and-contract-hardening",
+      "title": "Component Code Composition And Contract Hardening",
+      "order": 20,
+      "status": "done"
     }
   ],
   "links": {

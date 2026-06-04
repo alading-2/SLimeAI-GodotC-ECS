@@ -7,7 +7,7 @@ using Godot;
 /// 架构：单例常驻，与 Enemy 逻辑分离，通过组件（Component）复用共享行为。
 /// </para>
 /// </summary>
-public partial class PlayerEntity : CharacterBody2D, IUnit
+public partial class PlayerEntity : CharacterBody2D, IUnit, IComponentCompositionProvider
 {
 	private static readonly Log _log = new(nameof(PlayerEntity));
 
@@ -39,4 +39,9 @@ public partial class PlayerEntity : CharacterBody2D, IUnit
 	}
 
 	// PlayerEntity 不使用对象池；DefaultMoveMode 必须由 unit.player runtime snapshot record 提前写入。
+
+	public ComponentCompositionProfile GetComponentCompositionProfile()
+	{
+		return UnitComponentCompositionProfiles.Player();
+	}
 }

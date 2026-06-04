@@ -5,7 +5,7 @@
 - **pending**: 0
 - **active**: 0
 - **blocked**: 1
-- **done**: 28
+- **done**: 29
 - **projects**: 2
 
 ## Projects
@@ -13,7 +13,7 @@
 | ID | Title | Status | Bucket | Current SDD | Path |
 | --- | --- | --- | --- | --- | --- |
 | PRJ-0001 | SystemAgent Optimization | active | projects | SDD-0008 | SDD/project/projects/PRJ-0001-systemagent-optimization |
-| PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0029 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
+| PRJ-0002 | ECS Framework Optimization | active | projects | none | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
 
 ## Pending
 
@@ -61,6 +61,7 @@
 | SDD-0026 | PRJ-0002 | Input Contract Manifest And Facade Hardening | 2026-06-02 | SlimeAI | done |
 | SDD-0028 | PRJ-0002 | ObjectPool Collision ParkedInTree Cutover | 2026-06-03 | SlimeAI | done |
 | SDD-0029 | PRJ-0002 | System Contract Manifest And Diagnostics Hardening | 2026-06-03 | SlimeAI | done |
+| SDD-0030 | PRJ-0002 | Component Code Composition And Contract Hardening | 2026-06-04 | SlimeAI | done |
 
 ## By Scope
 
@@ -85,6 +86,7 @@
 - SDD-0027 — Timer Scheduler Full Rewrite
 - SDD-0028 — ObjectPool Collision ParkedInTree Cutover
 - SDD-0029 — System Contract Manifest And Diagnostics Hardening
+- SDD-0030 — Component Code Composition And Contract Hardening
 
 ### Workspace/SDD
 
@@ -114,6 +116,7 @@
 - SDD-0027 — Timer Scheduler Full Rewrite
 - SDD-0028 — ObjectPool Collision ParkedInTree Cutover
 - SDD-0029 — System Contract Manifest And Diagnostics Hardening
+- SDD-0030 — Component Code Composition And Contract Hardening
 
 ### bootstrap
 
@@ -142,6 +145,10 @@
 ### collision
 
 - SDD-0028 — ObjectPool Collision ParkedInTree Cutover
+
+### component
+
+- SDD-0030 — Component Code Composition And Contract Hardening
 
 ### compute
 
@@ -291,6 +298,7 @@
 - SDD-0014 — Data Runtime Slot and Policy Model
 - SDD-0016 — Data Compute Resolver Runtime
 - SDD-0029 — System Contract Manifest And Diagnostics Hardening
+- SDD-0030 — Component Code Composition And Contract Hardening
 
 ### runtime_snapshot
 

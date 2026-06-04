@@ -9,7 +9,7 @@ using Godot;
 /// - 效果执行归 AbilityEffect 执行器
 /// - 支持对象池复用（实现 IPoolable）
 /// </summary>
-public partial class AbilityEntity : Node, IEntity, IPoolable
+public partial class AbilityEntity : Node, IEntity, IPoolable, IComponentCompositionProvider
 {
     private static readonly Log _log = new(nameof(AbilityEntity));
 
@@ -65,5 +65,10 @@ public partial class AbilityEntity : Node, IEntity, IPoolable
     {
         // 可以在这里移除所有动态添加的组件，如果需要的话
         // 但通常为了复用，我们保留组件结构，只重置数据
+    }
+
+    public ComponentCompositionProfile GetComponentCompositionProfile()
+    {
+        return AbilityComponentCompositionProfiles.Default();
     }
 }

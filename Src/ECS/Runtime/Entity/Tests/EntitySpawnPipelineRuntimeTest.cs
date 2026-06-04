@@ -21,6 +21,10 @@ public partial class EntitySpawnPipelineRuntimeTest : Node
         try
         {
             EntitySpawnPipeline_Spawn_ShouldApplyDataRegisterComponentAndAttachLifecycle();
+            EntitySpawnPipeline_Spawn_ShouldComposeProfileBeforeComponentRegistration();
+            EntityManager_RegisterComponents_ShouldComposeProfileBeforeScan();
+            EntitySpawnPipeline_ComponentProfiles_ShouldMatchLegacyPresetSets();
+            EntitySpawnPipeline_UnitCoreProfile_ShouldInjectOrientationSink();
             EntitySpawnPipeline_Spawn_ShouldRollbackWhenDataApplyFails();
             EntitySpawnConfig_ShouldExposeLifecycleParentIdWithoutBusinessRelationFields();
         }
@@ -76,6 +80,147 @@ public partial class EntitySpawnPipelineRuntimeTest : Node
         AssertEqual("lifecycle policy 应写入", ParentDestroyPolicy.Detach, lifecycleTree.GetLink(result.EntityId)!.Value.DestroyPolicy);
         AssertEqual("component 应注册到 owner", result.Node, componentRegistrar.GetEntityByComponent(component));
         AssertEqual("component callback 应执行一次", 1, component.RegisterCount);
+    }
+
+    private void EntitySpawnPipeline_Spawn_ShouldComposeProfileBeforeComponentRegistration()
+    {
+        var sequence = new List<string>();
+        var registry = new EntityRegistry();
+        var lifecycleTree = new LifecycleTree();
+        var componentRegistrar = new ComponentRegistrar(registry);
+        var pipeline = new EntitySpawnPipeline(registry, lifecycleTree, componentRegistrar);
+        var record = BuildRecord("entity.composable", "Composable");
+
+        var result = pipeline.Spawn(new EntitySpawnRequest<ProbeComposableEntity>
+        {
+            CreateNode = () => new ProbeComposableEntity("Composable", sequence),
+            Config = record,
+            RuntimeDataBootstrap = DataRuntimeBootstrap.Default,
+            RuntimeDataRecord = record,
+            EntityId = new EntityId("entity.composable"),
+            AddToSceneTree = node => AddChild(node)
+        });
+
+        var component = result.Node?.GetNodeOrNull<ConfiguredProbeComponent>("Component/ConfiguredProbeComponent");
+
+        AssertTrue("composition spawn 应成功", result.Success);
+        AssertTrue("composition 应创建组件", component != null);
+        AssertEqual("typed options 应在注册前注入", "configured", component?.ConfiguredValueAtRegister);
+        AssertEqual("composition component 注册回调应执行一次", 1, component?.RegisterCount ?? 0);
+        AssertEqual("composition component 应进入 owner index", result.Node, componentRegistrar.GetEntityByComponent(component));
+        AssertEqual("composition 顺序应为 configure -> registered", "configure,component-registered", string.Join(",", sequence));
+    }
+
+    private void EntityManager_RegisterComponents_ShouldComposeProfileBeforeScan()
+    {
+        var sequence = new List<string>();
+        var entity = new ProbeComposableEntity("DirectComposable", sequence);
+
+        AddChild(entity);
+        EntityManager.RegisterComponents(entity);
+
+        var component = entity.GetNodeOrNull<ConfiguredProbeComponent>("Component/ConfiguredProbeComponent");
+
+        AssertTrue("EntityManager.RegisterComponents 应创建代码化组件", component != null);
+        if (component == null)
+            return;
+
+        AssertEqual("EntityManager typed options 应在注册前注入", "configured", component.ConfiguredValueAtRegister);
+        AssertEqual("EntityManager composition component 注册回调应执行一次", 1, component.RegisterCount);
+        AssertEqual("EntityManager composition component 应进入 owner index", entity, EntityManager.GetEntityByComponent(component));
+        AssertEqual("EntityManager composition 顺序应为 configure -> registered", "configure,component-registered", string.Join(",", sequence));
+    }
+
+    private void EntitySpawnPipeline_ComponentProfiles_ShouldMatchLegacyPresetSets()
+    {
+        AssertProfile(
+            "Player profile 应复刻 UnitCore + Player Preset",
+            new PlayerEntity(),
+            "HealthComponent",
+            "LifecycleComponent",
+            "UnitStateComponent",
+            "RecoveryComponent",
+            "DataInitComponent",
+            "UnitAnimationComponent",
+            "EntityMovementComponent",
+            "EntityOrientationComponent",
+            "CollisionComponent",
+            "PickupComponent",
+            "ActiveSkillInputComponent");
+
+        AssertProfile(
+            "Enemy profile 应复刻 Enemy + UnitCore Preset",
+            new EnemyEntity(),
+            "AIComponent",
+            "AttackComponent",
+            "HealthComponent",
+            "LifecycleComponent",
+            "UnitStateComponent",
+            "RecoveryComponent",
+            "DataInitComponent",
+            "UnitAnimationComponent",
+            "EntityMovementComponent",
+            "EntityOrientationComponent",
+            "CollisionComponent");
+
+        AssertProfile(
+            "TargetingIndicator profile 应复刻 UnitCore Preset",
+            new TargetingIndicatorEntity(),
+            "HealthComponent",
+            "LifecycleComponent",
+            "UnitStateComponent",
+            "RecoveryComponent",
+            "DataInitComponent",
+            "UnitAnimationComponent",
+            "EntityMovementComponent",
+            "EntityOrientationComponent",
+            "CollisionComponent");
+
+        AssertProfile(
+            "Ability profile 应复刻 Ability Preset",
+            new AbilityEntity(),
+            "TriggerComponent",
+            "CooldownComponent",
+            "ChargeComponent",
+            "CostComponent");
+    }
+
+    private void AssertProfile(string message, Node entity, params string[] expectedNames)
+    {
+        if (entity is not IComponentCompositionProvider provider)
+        {
+            Fail($"{message}: entity 未实现 IComponentCompositionProvider");
+            return;
+        }
+
+        var profile = provider.GetComponentCompositionProfile();
+        var actualNames = new List<string>();
+        foreach (var entry in profile.Entries)
+        {
+            actualNames.Add(entry.NodeName);
+        }
+
+        AssertEqual($"{message} 数量", expectedNames.Length, actualNames.Count);
+        for (var i = 0; i < expectedNames.Length && i < actualNames.Count; i++)
+        {
+            AssertEqual($"{message} 第 {i + 1} 项", expectedNames[i], actualNames[i]);
+        }
+    }
+
+    private void EntitySpawnPipeline_UnitCoreProfile_ShouldInjectOrientationSink()
+    {
+        var entity = new PlayerEntity();
+        AddChild(entity);
+
+        var composed = ComponentComposer.Compose(entity, UnitComponentCompositionProfiles.UnitCore());
+        var orientation = entity.GetNodeOrNull<EntityOrientationComponent>("Component/EntityOrientationComponent");
+
+        AssertEqual("UnitCore profile 应创建 9 个组件", 9, composed);
+        AssertTrue("UnitCore profile 应创建朝向组件", orientation != null);
+        AssertEqual(
+            "UnitCore profile 应把朝向输出注入为 VisualFlipX",
+            OrientationSink.VisualFlipX,
+            orientation?.Sink ?? OrientationSink.RootRotation);
     }
 
     private void EntitySpawnPipeline_Spawn_ShouldRollbackWhenDataApplyFails()
@@ -174,6 +319,33 @@ public partial class EntitySpawnPipelineRuntimeTest : Node
         public EventBus Events { get; } = new EventBus();
     }
 
+    private sealed partial class ProbeComposableEntity : Node, IEntity, IComponentCompositionProvider
+    {
+        private readonly List<string> _sequence;
+
+        public ProbeComposableEntity(string name, List<string> sequence)
+        {
+            Name = name;
+            _sequence = sequence;
+            Data = new Data(this);
+        }
+
+        public Data Data { get; private set; }
+        public EventBus Events { get; } = new EventBus();
+
+        public ComponentCompositionProfile GetComponentCompositionProfile()
+        {
+            return new ComponentCompositionProfile(new[]
+            {
+                new ComponentCompositionEntry(
+                    "ConfiguredProbeComponent",
+                    () => new ConfiguredProbeComponent(_sequence),
+                    component => ((ConfiguredProbeComponent)component).Configure(
+                        new ConfiguredProbeComponentOptions("configured")))
+            });
+        }
+    }
+
     private sealed partial class ProbeComponent : Node, IComponent
     {
         private readonly List<string> _sequence;
@@ -196,4 +368,38 @@ public partial class EntitySpawnPipelineRuntimeTest : Node
         {
         }
     }
+
+    private sealed partial class ConfiguredProbeComponent : Node, IComponent
+    {
+        private readonly List<string> _sequence;
+        private string _configuredValue = string.Empty;
+
+        public ConfiguredProbeComponent(List<string> sequence)
+        {
+            _sequence = sequence;
+            Name = "ConfiguredProbeComponent";
+        }
+
+        public int RegisterCount { get; private set; }
+        public string ConfiguredValueAtRegister { get; private set; } = string.Empty;
+
+        public void Configure(ConfiguredProbeComponentOptions options)
+        {
+            _configuredValue = options.Value;
+            _sequence.Add("configure");
+        }
+
+        public void OnComponentRegistered(Node entity)
+        {
+            RegisterCount++;
+            ConfiguredValueAtRegister = _configuredValue;
+            _sequence.Add("component-registered");
+        }
+
+        public void OnComponentUnregistered()
+        {
+        }
+    }
+
+    private readonly record struct ConfiguredProbeComponentOptions(string Value);
 }

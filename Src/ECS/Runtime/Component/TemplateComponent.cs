@@ -9,7 +9,7 @@ using Godot;
 /// - 单一职责：只做一件事
 /// - 数据驱动：通过 Data 容器读写数据
 /// - 事件驱动：监听 Entity.Events 响应变化
-/// - 代码化组合：固定结构参数由 composer 注入，不使用 [Export] / Inspector
+/// - 代码化组合：固定结构参数由 composer 注入，不使用 Inspector 导出参数
 /// </summary>
 public partial class TemplateComponent : Node, IComponent
 {
@@ -17,7 +17,7 @@ public partial class TemplateComponent : Node, IComponent
 
     // ================= 组件结构参数 =================
 
-    // 【重要】Component 不使用 [Export] / Inspector 作为默认配置来源。
+    // 【重要】Component 不使用 Inspector 导出参数作为默认配置来源。
     // 需要固定结构参数时，由代码化 composition 在注册前调用 Configure 注入。
     // 示例：EntityOrientationComponent.Sink 这种“输出到 root rotation 还是 VisualRoot flip”的桥接参数，
     // 属于组件结构参数，不属于 Entity.Data。

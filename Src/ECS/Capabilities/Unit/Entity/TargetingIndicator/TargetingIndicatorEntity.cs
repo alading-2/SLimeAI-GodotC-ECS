@@ -7,7 +7,7 @@ using Godot;
 /// - Entity 是纯容器，仅持有 Data 和 Events
 /// - 所有业务逻辑由 TargetingIndicatorControlComponent 处理
 /// </summary>
-public partial class TargetingIndicatorEntity : Node2D, IEntity, IUnit
+public partial class TargetingIndicatorEntity : Node2D, IEntity, IUnit, IComponentCompositionProvider
 {
     private static readonly Log _log = new(nameof(TargetingIndicatorEntity));
 
@@ -35,5 +35,10 @@ public partial class TargetingIndicatorEntity : Node2D, IEntity, IUnit
 
     public override void _ExitTree()
     {
+    }
+
+    public ComponentCompositionProfile GetComponentCompositionProfile()
+    {
+        return UnitComponentCompositionProfiles.UnitCore();
     }
 }

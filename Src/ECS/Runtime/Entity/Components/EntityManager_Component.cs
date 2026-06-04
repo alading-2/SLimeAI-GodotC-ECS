@@ -132,6 +132,8 @@ public static partial class EntityManager
     public static void RegisterComponents(Node entity)
     {
         int registeredCount = 0;
+        var hasCompositionProvider = entity is IComponentCompositionProvider;
+        var composedCount = ComponentComposer.Compose(entity);
 
         // 尝试从缓存获取
         string cacheKey = entity.SceneFilePath;
@@ -140,7 +142,7 @@ public static partial class EntityManager
         IList<Node> componentsToRegister = new List<Node>();
 
         // Check if cache exists AND has content
-        if (_componentPathCache.TryGetValue(cacheKey, out var cachedPaths) && cachedPaths.Count > 0)
+        if (!hasCompositionProvider && composedCount == 0 && _componentPathCache.TryGetValue(cacheKey, out var cachedPaths) && cachedPaths.Count > 0)
         {
             // [Hit Cache] 使用缓存路径直接获取节点
             foreach (var path in cachedPaths)
@@ -160,6 +162,7 @@ public static partial class EntityManager
         else
         {
             // [Miss Cache] 回退到递归查找
+            // compose 创建的新组件不一定存在于预热缓存中，因此本次必须实时扫描。
             // _componentLog.Debug($"[Cache Miss] Entity {entity.Name} (Key: {cacheKey})"); 
             var allChildren = entity.FindChildren("*", "Node", true, false);
 

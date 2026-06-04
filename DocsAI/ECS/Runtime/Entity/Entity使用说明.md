@@ -1,7 +1,7 @@
 # Entity 使用说明
 
 > 状态：current
-> 更新：2026-06-01
+> 更新：2026-06-04
 > sourcePaths: `Src/ECS/Runtime/Entity/`、`Src/ECS/Capabilities/*/Entity/`
 > relatedDocs: `README.md`、`../Data/Data系统说明.md`、`../Event/Event系统说明.md`
 
@@ -13,7 +13,8 @@
 - `Src/ECS/Runtime/Entity/Identity/EntityId.cs`、`Identity/EntityIdList.cs`：runtime typed identity 和不可变多引用列表。
 - `Src/ECS/Runtime/Entity/Registry/EntityRegistry.cs`：`EntityId` 与 Godot node 的双向注册表。
 - `Src/ECS/Runtime/Entity/Lifecycle/LifecycleTree.cs`：单 parent 生命周期树，只表达销毁和 detach。
-- `Src/ECS/Runtime/Entity/Components/ComponentRegistrar.cs`：Component 注册、反查和 owner index。
+- `Src/ECS/Runtime/Entity/Components/ComponentRegistrar.cs`：Component 注册、反查和 owner index；`EntityManager.RegisterComponents(entity)` 会先执行代码化 Component composition。
+- `Src/ECS/Runtime/Component/ComponentComposition.cs`：Entity 默认 Component 组合 contract。
 - `Src/ECS/Runtime/Entity/References/OwnedReferenceRegistry.cs`：业务 owner 引用 Data projection 与 destroy cleanup hook。
 - `Src/ECS/Runtime/Entity/Attribution/EntityAttributionResolver.cs`：Damage / Movement 归因解析入口。
 - `Src/ECS/Runtime/Entity/LegacyRelationship/`：旧 Relationship 隔离区，不作为新功能入口。
@@ -44,7 +45,7 @@ var enemy = EntityManager.Spawn<EnemyEntity>(new EntitySpawnConfig
 当前 `EntityManager.Spawn<T>` 已是 `EntitySpawnPipeline` 的薄 facade，底层阶段顺序是：
 
 ```text
-create -> data -> visual -> transform -> registry -> component -> lifecycle -> activate -> spawned event
+create -> data -> visual -> transform -> registry -> component composition -> component register -> lifecycle -> activate -> spawned event
 ```
 
 如果需要生命周期父级，只能使用 `LifecycleParentId / ParentDestroyPolicy`：
@@ -202,9 +203,10 @@ public partial class ProjectileEntity : Area2D, IEntity, IPoolable
 | Component owner 索引 | `Src/ECS/Runtime/Entity/Components/` |
 | 具体 Unit / Ability / Projectile / Effect Entity | `Src/ECS/Capabilities/<owner>/Entity/` |
 | 具体业务组件 | `Src/ECS/Capabilities/<owner>/Component/` |
-| 组件组合预设 | `Src/ECS/Capabilities/<owner>/Presets/` |
+| Component 代码化组合 | `Src/ECS/Capabilities/<owner>/Entity/*ComponentCompositionProfiles.cs` |
+| 旧 Component Preset 对照 | `Src/ECS/Capabilities/<owner>/Presets/` |
 
-Preset 是场景组合资源，不是 Runtime Component 类型。ResourceGenerator 会把 `Capabilities/<owner>/Presets/` 归类为 `ResourceCategory.Preset`。
+SDD-0030 后，Player / Enemy / TargetingIndicator / Ability 的默认组件组合事实源是 C# `ComponentCompositionProfile`，不再从 Entity root scene instance Component Preset。`Capabilities/<owner>/Presets/` 暂时只作为 legacy 对照输入保留，不新增默认组合 Preset。
 
 ## 8. 验证入口
 

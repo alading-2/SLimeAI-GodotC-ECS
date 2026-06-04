@@ -1,7 +1,7 @@
 # Entity 文档入口
 
 > 状态：current
-> 更新：2026-06-01
+> 更新：2026-06-04
 > 范围：`Src/ECS/Runtime/Entity/**`、Capability 具体 Entity Node、`Data/DataKey/Generated/`、`Src/ECS/Capabilities/*/Events/`、`Src/ECS/Runtime/Event/Global/`。
 > 完成态事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/014-SDD-0024-entity-relationship-full-rewrite/README.md`。
 > 设计包：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/3.Entity系统优化/`。
@@ -45,6 +45,7 @@
 - 业务 owner list 使用 capability service + generated Data projection：Ability 用 `AbilityInventoryService.Runtime`，Projectile 用 `ProjectileOwnershipService.Runtime`，Effect 用 `EffectOwnershipService.Runtime`。
 - `OwnedReferenceRegistry` 只负责 owner-list projection 和 child destroy cleanup，不决定 child 是否随 owner 销毁。
 - Component owner 反查走 `ComponentRegistrar` 内部索引，不再用 `ENTITY_TO_COMPONENT`。
+- 默认 Component 组合走 `ComponentComposer` / `ComponentCompositionProfile`；`EntitySpawnPipeline` 和 `EntityManager.RegisterComponents(entity)` 都会在 Component 注册前执行 composition。
 - `IEntity`、`TemplateEntity` 位于 `Src/ECS/Runtime/Entity/`；具体 `EnemyEntity`、`PlayerEntity`、`TargetingIndicatorEntity` 等属于 `Src/ECS/Capabilities/<owner>/Entity/`。
 - `IComponent`、`TemplateComponent` 位于 `Src/ECS/Runtime/Component/`；具体业务组件属于 `Src/ECS/Capabilities/<owner>/Component/`。
 - Damage / Movement 归因统一走 `EntityAttributionResolver`，读取 Projectile / Effect / Source / Origin projection，不沿旧 parent-chain 猜 owner。

@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-03 19:29",
+  "generated_at": "2026-06-04 16:51",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -50,7 +50,7 @@
         "collision",
         "system"
       ],
-      "current_sdd": "SDD-0029",
+      "current_sdd": "none",
       "bucket": "projects",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor"
     }
@@ -720,6 +720,33 @@
       "project_order": 19,
       "current_task": "done",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening"
+    },
+    {
+      "id": "SDD-0030",
+      "slug": "component-code-composition-and-contract-hardening",
+      "title": "Component Code Composition And Contract Hardening",
+      "status": "done",
+      "type": "refactor",
+      "updated_at": "2026-06-04",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "ecs/runtime/component",
+        "Src/ECS/Runtime/Component",
+        "Src/ECS/Runtime/Entity/Spawn",
+        "Src/ECS/Capabilities/Unit",
+        "Src/ECS/Capabilities/Ability",
+        "DocsAI/ECS/Runtime/Component",
+        ".ai-config/skills/ecs/ecs-component"
+      ],
+      "tags": [
+        "component",
+        "runtime",
+        "ai-first"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 20,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/020-SDD-0030-component-code-composition-and-contract-hardening"
     }
   ]
 }

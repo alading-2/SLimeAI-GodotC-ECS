@@ -114,6 +114,7 @@ public sealed class EntitySpawnPipeline
 
             registered = true;
             NodeLifecycleManager.Register(entity);
+            ComponentComposer.Compose(entity);
             _componentRegistrar.RegisterComponents(entity);
             componentsRegistered = true;
 

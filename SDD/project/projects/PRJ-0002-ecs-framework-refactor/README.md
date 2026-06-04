@@ -6,14 +6,14 @@
 - **Created**: 2026-05-25
 - **Updated**: 2026-06-04
 - **Scope**: SlimeAI
-- **Current SDD**: SDD-0029
+- **Current SDD**: none
 - **Tags**: ecs, optimization, data, event, entity, component, relationship, directory-architecture, capability, docsai, tools, timer, objectpool, collision, system
 
 ## What This Project Is About
 
 本项目用于重新梳理 `Src/ECS` 旧 ECS 框架的真实问题，并形成“保留旧 ECS 主线、按问题域优化完善”的设计事实源。当前框架仓和 SDD 均位于 `/home/slime/Code/SlimeAI/SlimeAI`；外层 `/home/slime/Code/SlimeAI` 只作为包含游戏仓、Resources 和框架仓的父目录。
 
-当前方向已经纠偏：不再把旧 ECS 作为迁移输入，不再以整体替换或复制外部参考结构为目标。旧框架整体可保留；Data 子系统已按 SDD-0012 至 SDD-0022 完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 收口。Entity / Relationship 已按 SDD-0024 完成 hard cutover。SDD-0025 已把 ECS 物理目录和 DocsAI 路由重构为 `Runtime + Capabilities + Tools + UI`，同时保留 ECS 语义；Component 项目级设计包已补齐，裁决保留 `IComponent + ComponentRegistrar` 最小契约，后续将 Component Preset 完全代码化，并补 AI-first composition profile / manifest / lifecycle / subscription / dynamic policy / preflight。`design/Tool/其他Tool/` 已按 2026-06-04 用户裁决更新为功能优先 hard cutover：RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、MathFormula、NodeLifecycleRegistry 后续只保功能，不保旧 API 长期兼容。SDD-0026 已完成 Input Contract 业务语义 facade、调用点迁移和验证闭环。SDD-0027 Timer 重构已完成可执行代码/文档主链路但被当前 BrotatoLike runner/Godot CLI 缺失阻塞在场景验证。SDD-0028 负责 ObjectPool / Collision `ParkedInTree`、pool runtime state guard、激活首帧 embargo 和结构化验证。当前新增 SDD-0029，目标是在保留现有 Runtime System Core 的前提下补齐 manifest / preflight / diagnostics / trace，并同步 DocsAI Runtime/System 文档。
+当前方向已经纠偏：不再把旧 ECS 作为迁移输入，不再以整体替换或复制外部参考结构为目标。旧框架整体可保留；Data 子系统已按 SDD-0012 至 SDD-0022 完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 收口。Entity / Relationship 已按 SDD-0024 完成 hard cutover。SDD-0025 已把 ECS 物理目录和 DocsAI 路由重构为 `Runtime + Capabilities + Tools + UI`，同时保留 ECS 语义；`design/Tool/其他Tool/` 已按 2026-06-04 用户裁决更新为功能优先 hard cutover：RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、MathFormula、NodeLifecycleRegistry 后续只保功能，不保旧 API 长期兼容。SDD-0026 已完成 Input Contract 业务语义 facade、调用点迁移和验证闭环。SDD-0027 Timer 重构已完成可执行代码/文档主链路但被当前 BrotatoLike runner/Godot CLI 缺失阻塞在场景验证。SDD-0029 已完成 Runtime System manifest / preflight / diagnostics / trace 收口。SDD-0030 已完成 Component 默认组合从 `.tscn` Preset 到 C# profile / composer 的切换，并补齐 Component manifest、DocsAI 和 owner skill 规则。
 
 ## Reading Order
 
@@ -43,8 +43,10 @@
 24. `design/Tool/其他Tool/07-2026-06-04-AI-first完全重构校准.md` — 剩余 Tools 功能优先、可 hard cutover、不保旧 API 长期兼容的执行前 override
 25. `design/7.Component/README.md` — Runtime Component AI-first 优化共享设计包入口
 26. `design/7.Component/04-Component代码化组合与参数注入裁决.md` — Component Preset 纯代码化和参数注入裁决
-27. `design/8.System优化/README.md` — Runtime System AI-first 优化共享设计包入口
-28. `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/README.md` — System contract 执行型 SDD 胶囊
-29. `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md` — System contract 新会话执行提示词
-30. `sdds/` — 项目内有序 SDD
-31. `notes.md` — 参考与开放问题
+27. `sdds/020-SDD-0030-component-code-composition-and-contract-hardening/README.md` — Component code composition 执行型 SDD 胶囊
+28. `DocsAI/ECS/Runtime/Component/ComponentManifest.md` — Component current manifest
+29. `design/8.System优化/README.md` — Runtime System AI-first 优化共享设计包入口
+30. `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/README.md` — System contract 执行型 SDD 胶囊
+31. `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md` — System contract 新会话执行提示词
+32. `sdds/` — 项目内有序 SDD
+33. `notes.md` — 参考与开放问题

@@ -7,9 +7,9 @@
 ## Latest Resume
 
 - **Updated**: 2026-06-04
-- **Current SDD**: SDD-0029
-- **Last Conclusion**: `design/Tool/其他Tool/` 已按用户 2026-06-04 裁决更新：AI-first 功能优先，代码可丢弃，后续执行只保功能、不保旧 API 长期兼容；`ParentManager` 功能升级为 RuntimeMountRegistry / SceneMountRegistry，`TargetSelector` 升级为 TargetQueryEngine，`CommonTool` 是删除目标，`ResourceManagement`、`Math`、`NodeLifecycle` 按功能 owner hard cutover。
-- **Next Action**: 若继续 System 执行，仍从 `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md` 的 T1.1 readiness baseline 开始；若切到剩余 Tools 实施，先从 `design/Tool/其他Tool/07-2026-06-04-AI-first完全重构校准.md` 进入，并优先确认 Runtime mount scope、TargetSelector 是否第一阶段上空间索引、ResourceManagement 是否 strict fail-fast。
+- **Current SDD**: none
+- **Last Conclusion**: SDD-0030 已完成 Component 代码化组合主链路：Runtime 通用 `ComponentCompositionProfile` / `ComponentComposer` 已接入 spawn 与直接 `RegisterComponents` 路径，Unit/Ability 默认组件集合迁入 owner profile，Component Preset `.tscn` 只保留为 legacy 对照输入。
+- **Next Action**: 后续 Component 深化另起 SDD：subscription cleanup audit、dynamic component policy、preflight 或 legacy Preset 文件清理。
 - **Open Blockers**: none
 
 ## Project Status Board
@@ -35,8 +35,8 @@
 | TBD | proposed | `design/Tool/其他Tool/` | 2026-06-04 override 已完成：剩余 Tools 后续按 RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、MathFormula、NodeLifecycleRegistry 功能切片 hard cutover；只保功能，不保旧 API 长期兼容 |
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
 | SDD-0028 | pending | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已创建执行胶囊；等待按提示词执行 runtime state、parking grid、CollisionLogicGuard、ContactDamage stale attacker cleanup、contract tests、Godot collision validation 和 DocsAI/skill sync |
-| SDD-0029 | pending | `design/8.System优化/` | System Contract Manifest And Diagnostics Hardening 已创建执行胶囊；等待按提示词执行 SystemManifest、SystemPreflight、SystemDiagnosticsSnapshot、LifecycleTrace、DocsAI Runtime/System 同步和 SystemCore artifact |
-| TBD | proposed | `design/7.Component/` | Component AI-first Contract Layer 设计包已更新为纯代码化组合方向；建议新建执行型 SDD，先落地 ComponentCompositionProfile / ComponentComposer、复刻当前 Preset、移除 `[Export]` 默认参数入口，再补 manifest、lifecycle contract、subscription cleanup audit、dynamic component policy、preflight、DocsAI/skill sync 和 ComponentRegistrar artifact |
+| SDD-0029 | done | `design/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |
+| SDD-0030 | done | `design/7.Component/` | Component Code Composition And Contract Hardening 已完成：默认组件组合迁到 C# profile / composer，Entity root scene 停止 instance Component Preset，ComponentManifest / DocsAI / ecs-component skill 已同步 |
 | TBD | proposed | `design/13-旧ECS框架Event系统问题分析与优化方向.md` | P1：保留 EventBus，优化事件主键、事件定义和请求-响应边界 |
 
 ## Timeline
@@ -317,3 +317,11 @@
 - **Must Confirm**: 进入执行型 SDD 前确认：1. Runtime mount 默认 scope 是 `/root/SlimeAIRuntime` 持久挂载还是当前主场景/System host；2. TargetQueryEngine 第一阶段是否直接上空间索引；3. ResourceManagement 是否接受删除 contains fallback 后 strict fail-fast。
 - **Impact**: 后续执行者不应从旧 `ParentManager.GetOrRegister`、`EntityTargetSelector.Query` list-only、`CommonTool.LoadPackedScene`、`MyMath` 杂项公式或 `NodeLifecycleManager.GetAllNodes` 恢复 current API；应从 `07` override 和对应专题文档进入。
 - **Resume**: 若切到剩余 Tools 实施，优先创建 `Runtime Mount Registry Hard Cutover` 或 `Target Query Engine Hard Cutover`，并在 SDD 中写明上述 Must Confirm 的用户裁决或采用默认假设。
+
+### P038 — 2026-06-04 — sdd-0030-done
+
+- **Context**: 用户要求围绕 Component design/source/docs 生成并执行 SDD。
+- **Conclusion**: SDD-0030 已完成；Component 默认组合已从 `.tscn` Preset 迁到 C# profile / composer，`EntityOrientationComponent.Sink` 改为 typed options 注入，DocsAI ComponentManifest 和 `ecs-component` skill 源已同步。
+- **Evidence**: `sdds/020-SDD-0030-component-code-composition-and-contract-hardening/`、`Src/ECS/Runtime/Component/ComponentComposition.cs`、`Src/ECS/Capabilities/Unit/Entity/UnitComponentCompositionProfiles.cs`、`Src/ECS/Capabilities/Ability/Entity/AbilityComponentCompositionProfiles.cs`、`DocsAI/ECS/Runtime/Component/ComponentManifest.md`。
+- **Impact**: 后续 AI 不再从 Component Preset `.tscn` 推断默认组件集合；默认组合事实源是 owner C# profile，Preset 只作 legacy 对照输入。
+- **Resume**: PRJ-0002 当前无 active 子 SDD；后续 Component 深化另起 SDD，先读 `DocsAI/ECS/Runtime/Component/ComponentManifest.md` 和 SDD-0030 progress。

@@ -7,7 +7,7 @@ using Godot;
 /// 架构：与 Player 逻辑分离，通过组件（Component）复用共享行为。
 /// </para>
 /// </summary>
-public partial class EnemyEntity : CharacterBody2D, IPoolable, IUnit
+public partial class EnemyEntity : CharacterBody2D, IPoolable, IUnit, IComponentCompositionProvider
 {
     private static readonly Log _log = new("Enemy", LogLevel.Info);
 
@@ -73,5 +73,10 @@ public partial class EnemyEntity : CharacterBody2D, IPoolable, IUnit
     {
         // 可以在这里移除所有动态添加的组件，如果需要的话
         // 但通常为了复用，我们保留组件结构，只重置数据
+    }
+
+    public ComponentCompositionProfile GetComponentCompositionProfile()
+    {
+        return UnitComponentCompositionProfiles.Enemy();
     }
 }
