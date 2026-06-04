@@ -1,8 +1,8 @@
 # 现状证据与 AI-first 裁决
 
-> 更新：2026-06-03
-> 状态：current research decision
-> 裁决：剩余 Tools 不需要整体推翻；真正问题是 owner 边界、文档漂移、查询/加载/随机缺少结构化 diagnostics，以及部分工具仍以自由字符串和静态全局状态作为事实源。
+> 更新：2026-06-04
+> 状态：current research decision, 2026-06-04 user override
+> 裁决：剩余 Tools 的功能都按 AI-first 重新定义；执行时只保功能，不保旧 API 兼容。`ParentManager` 功能必须升级为 Runtime mount 能力；`CommonTool` 是删除目标；`TargetSelector`、`ResourceManagement`、`Math`、`NodeLifecycle` 按功能切片 hard cutover。
 
 ## 1. Goal
 
@@ -12,6 +12,7 @@
 - 每个 Tool 对 AI 是否必要，是否符合 AI-first ECS 原则。
 - 当前缺陷、隐藏风险和推荐完善路线。
 - 在 PRJ-0002 的 `design/Tool/其他Tool/` 中生成可恢复的设计事实源。
+- 按用户最新要求校准：AI 框架以 AI 为主，服务 AI 快速理解功能；需要重构就完全重构，不因旧代码形状保留兼容链。
 
 非目标：
 
@@ -67,8 +68,18 @@
 - Godot thread-safe APIs：跨线程或不安全时机修改 SceneTree 应使用 `CallDeferred(Node.MethodName.AddChild, childNode)`。
 - Godot groups：节点可以加入 group 并由 SceneTree 查询，但 group 只是引擎级集合，不提供 SlimeAI 的 Entity/Data/owner/purpose 语义。
 - Godot resources / PackedScene：C# 侧使用 `ResourceLoader.Load<PackedScene>()` / `GD.Load<PackedScene>()` 后实例化；SlimeAI 应继续用 `ResourceManagement` 包装加载入口。
+- Godot Node / SceneTree：child 随 parent 生命周期管理，group 查询只返回当前 tree 中属于 group 的节点；这支持 SlimeAI 保留统一 mount registry，但不支持把 group 当作 gameplay 查询事实源。
+- Godot RandomNumberGenerator：seed/state 支持可复现伪随机序列；这支持 TargetSelector / Math / Spawn 的 deterministic RNG 方向。
 
-### 2.4 Git boundary
+### 2.4 本地 Resources 校准
+
+启用 `Resources/Engine/Docs/FrameworkAnalysis/Reports` 最小范围搜索：
+
+- EnTT / DefaultEcs / Arch / Flecs / Gaia 报告都支持“Capability-owned selector / service 查询”方向，拒绝暴露通用 world query DSL、pair graph、archetype/chunk storage 或 registry public API。
+- EnTT resource cache 只采纳 stable key、loader、diagnostics 的观察思想，不复制 C++ handle/cache 模型。
+- Arch / DefaultEcs hierarchy 只作为 parent / hierarchy 派生数据与结构变更边界参考，不恢复通用 Relationship graph。
+
+### 2.5 Git boundary
 
 当前仓库边界：`/home/slime/Code/SlimeAI/SlimeAI`。
 
@@ -76,7 +87,7 @@
 
 ## 3. Problem Shape
 
-剩余 Tools 的共性问题不是“工具太多”，而是：
+剩余 Tools 的共性问题不是“工具太多”，也不是“是否还保留旧代码”，而是 AI 不能从入口快速判断功能、owner、scope、生命周期、失败原因和验证方式：
 
 - **owner 语义不稳定**：`CommonTool` 这种名字会诱导 AI 把杂项继续塞进去；`NodeLifecycle` 和 `ParentManager` 又容易被误当成 Entity/Relationship/System owner。
 - **文档与源码漂移**：`NodeLifecycle` 文档示例仍写 `Register(node, "Enemy")` 和 `GetNodesByType<T>("Enemy")`，源码已经没有这些签名。
@@ -84,6 +95,7 @@
 - **自由字符串仍存在**：资源 key、parent name、catalog prefix、usageName、entity id string 都还在若干工具里承担语义。
 - **查询与随机不可复现**：`TargetSelector` 和 `Math.CheckProbability` / `PositionTargetSelector` 依赖全局或即时随机源，测试和 AI debug 难稳定复现。
 - **可观察性不足**：选不到目标、加载失败、节点泄漏、挂载点创建延迟、概率边界异常等问题没有结构化 artifact。
+- **执行策略过保守**：旧设计包里“第一阶段保留兼容 API / 只补 diagnostics”的表述容易让后续实现继续沿旧入口叠补丁；用户已明确不需要为了代码兼任而保留旧 API。
 
 ## 4. Main Risks
 
@@ -92,9 +104,10 @@
 | TargetSelector 继续全局扫描 | 当前从 `NodeLifecycleManager.GetNodesByInterface<Node2D>()` 拿全部 Node2D，再几何过滤。 | 敌人规模上升后热路径成本和 GC/排序成本不可控。 |
 | `OriginProvider` 被忽略 | `TargetSelectorQuery.ResolveOrigin()` 存在，但几何和排序仍传 `query.Origin`。 | 光环/持续范围/跟随目标查询会出现“文档说跟随，实际不跟随”的隐性 bug。 |
 | NodeLifecycle 成为业务事实源 | Entity/UI/Component 都委托它，TargetSelector 也直接扫它。 | AI 容易绕过 EntityRegistry / LifecycleTree / UI owner，重新制造旧全局查询问题。 |
-| ParentManager 挂载点隐式创建 | `EnsurePath` 在 root 下用 deferred add，并立即返回 pending node。 | 同帧访问、场景切换、重复 Init、Root scope 不清时难诊断。 |
+| ParentManager 挂载点隐式创建 | `EnsurePath` 在 root 下用 deferred add，并立即返回 pending node。 | 同帧访问、场景切换、重复 Init、Root scope 不清时难诊断；但这说明 mount 功能重要，不是可删除工具。 |
 | ResourceManagement fallback 太宽 | `Load<T>` 找不到精确 key 时用 `Contains` 匹配。 | 重名或近似名时可能加载错误资源，AI 无法从日志知道是否走了 fallback。 |
 | Math 混合业务公式和纯数学 | `MyMath` 同时有冷却、护甲、概率，且使用 `GlobalConfig` 和 `GD.Randf()`。 | 公式 owner 不清，概率测试不稳定，跨能力复用边界模糊。 |
+| 长期兼容 facade 扩散 | 旧入口保留下来后，AI 会继续复制旧调用。 | 重构无法真正完成，DocsAI 与源码入口继续漂移。 |
 
 ## 5. Options
 
@@ -112,18 +125,18 @@
 
 适合：当前只需要设计包，不急着进入实现。
 
-### Option B：按工具风险做增量 hardening
+### Option B：按功能切片 hard cutover
 
 优点：
 
-- 保留现有 ECS/Godot 主线。
-- 优先修 `TargetSelector`、`NodeLifecycle`、`ParentManager` 的 AI debug 痛点。
-- 不需要重写 Tools 目录，也不引入新依赖。
+- 保留 ECS/Godot 功能主线，但不保旧 API 形状。
+- 每个切片内部可以改名、删旧方法、迁移调用点、重建测试，切片结束前删除临时兼容入口。
+- 优先解决 AI 最难判断的 mount、query、resource loading、random/diagnostics 问题。
 
 缺点：
 
 - 需要拆后续执行型 SDD。
-- 部分旧 API 会经历迁移和文档同步。
+- 验证成本更高，需要 grep gate、DocsAI/skill sync 和 Godot scene artifact。
 
 适合：推荐方案。
 
@@ -142,39 +155,42 @@
 
 ## 6. Recommendation
 
-采用 **Option B：按风险增量 hardening**。
+采用 **Option B：按功能切片 hard cutover**。
 
 推荐顺序：
 
-1. `TargetSelector` 先做查询契约硬化，因为它被 Ability、AI、AbilityImpact、Data feature handler 频繁调用，且直接影响 gameplay 正确性。
-2. `NodeLifecycle` 与 `ParentManager` 做边界收口，先补文档和 diagnostics，再决定是否改名或 facade 化。
-3. `Math` 补 deterministic RNG、公式 owner、几何 ownership 和测试边界，不做大重写。
-4. `CommonTool` 冻结，不再扩展；资源加载问题进入 `ResourceManagement` strict loading / diagnostics。
+1. `RuntimeMountRegistry` / `SceneMountRegistry`：把 `ParentManager` 功能升级为 mount manifest、scope、pending/in-tree diagnostics，解决大量 Entity / Pool / UI / Tool 节点路径统一问题。
+2. `TargetQueryEngine`：替换静态全局扫描式 `EntityTargetSelector`，补 query validation、resolved origin/forward、candidate source、diagnostics、deterministic RNG 和 safe sorting。
+3. `ResourceLoading`：删除 `CommonTool`，`ResourceManagement` 变 strict lookup、source policy、structured result、catalog diagnostics。
+4. `MathFormula` / deterministic random：拆 `MyMath` owner，保留 `Geometry2D` 纯算法，概率与采样支持 seed/RNG。
+5. `NodeLifecycleRegistry`：只保底层 Node registry、owner metadata、snapshot diagnostics 和 invalid cleanup；业务查询迁走后删除 public global scan 入口。
 
 ## 7. Must Confirm
 
-这些问题不阻塞本轮设计文档，但进入实现型 SDD 前必须确认：
+这些问题不阻塞本轮设计文档，但进入实现型 SDD 前必须确认。注意：这里不再询问“要不要兼容旧 API”，默认不兼容；只确认会影响功能结果的问题。
 
-- 是否接受 `CommonTool` 不再新增方法，并在后续迁移中把 `LoadPackedScene` 收口到 `ResourceManagement` 或 `ResourceLoadingTool`。
-- 是否接受 `TargetSelector` 作为下一轮 Tools 实现优先级最高的切片。
-- 是否接受 `NodeLifecycle` 不再作为业务模块可随意调用的公共查询入口，后续新业务默认走 Entity/UI/TargetSelector typed facade。
-- 是否接受 `ParentManager` 后续可能改名或 facade 化为 `RuntimeMountRegistry` / `SceneMountRegistry`，但第一阶段保留兼容 API。
+1. `ParentManager` 的默认挂载 scope：全局 `/root/SlimeAIRuntime` 持久挂载，还是当前主场景 / System host 下随场景销毁？
+2. `TargetSelector` 第一阶段是否直接上空间索引？默认建议先做 candidate source + diagnostics + deterministic RNG，等 profiling / 实体规模证据触发再上空间索引。
+3. `ResourceManagement` 是否接受 strict fail-fast：删除 contains fallback，缺精确 key / 缺 `ResourceLoadSource` 直接让验证失败？默认建议接受。
 
 ## 8. Should Confirm
 
-- `Math.MyMath` 中护甲、冷却、概率公式是否继续归 Math，还是后续按 Damage/Ability/Random 分 owner。
-- `TargetSelector` 是否需要在第一阶段加入空间索引，还是先只做 query validation、diagnostics 和 RNG/source hardening。
-- 资源 `LoadPath` 是否只允许 DataOS snapshot/resource ref 和明确 `ResourceLoadSource`，业务代码继续禁止直接 `res://`。
+- `ParentManager` 执行时是否直接改名为 `RuntimeMountRegistry` / `SceneMountRegistry`。
+- `CommonTool` 是否在资源加载 cutover 中直接删除。
+- `MyMath` 是否拆为 `AttributeFormula` / `CooldownFormula` / `DamageFormula` / `ProbabilityTool`。
+- `NodeLifecycleManager.GetAllNodes()` / `GetNodesByInterface<T>()` 是否从业务可见 API 删除。
 
 ## 9. Defaults I Will Use
 
 如果用户不补充，后续设计默认采用：
 
-- 第一阶段不做任何工具改名 hard cutover，只补契约、diagnostics、测试和文档。
-- `TargetSelector` 先不引入空间索引；当目标数量、查询次数或 profiling artifact 证明全局扫描成为瓶颈时再加。
+- 只保功能兼容，不保 API 兼容；旧类名、旧方法、旧文件可删除。
+- `ParentManager` 执行时升级为 `RuntimeMountRegistry` / `SceneMountRegistry` 语义，默认挂到 `/root/SlimeAIRuntime`，测试可注入 test root。
+- `TargetSelector` 先不引入空间索引；先完成 query contract、candidate source、diagnostics 和 deterministic RNG。当目标数量、查询次数或 profiling artifact 证明全局扫描成为瓶颈时再加。
 - `Math` 不引入第三方库，不迁到 `System.Numerics`，继续使用 Godot `Vector2`。
-- `CommonTool` 只作为现有兼容入口保留，不再新增杂项方法。
-- `ParentManager` 继续由 `SystemManager._EnterTree()` 初始化，但后续 mount path 需要 manifest 化。
+- `CommonTool` 删除；调用点迁入 `ResourceManagement` / `ResourceLoading`。
+- `ResourceManagement.Load<T>` 删除 contains fallback；`LoadPath` 必须携带 `ResourceLoadSource`。
+- `NodeLifecycle` 只保底层注册和 diagnostics，不作为新业务查询入口。
 
 ## 10. Not Recommended
 
@@ -183,7 +199,8 @@
 - 不建议把 `NodeLifecycleManager` 当作 Entity hard cutover 后的最终 Entity 查询系统。
 - 不建议让 `ParentManager` 管 Entity 生命周期、对象池状态或业务关系。
 - 不建议把 `CommonTool` 扩成“任何模块都能放一点”的杂项仓库。
-- 不建议为了 AI-first 去掉 ECS / Godot 的成熟心智模型。
+- 不建议继续写长期兼容 facade。
+- 不建议为了 AI-first 去掉 ECS / Godot 的成熟心智模型；要重构的是 SlimeAI 的 AI 可读契约，不是引擎事实。
 
 ## 11. DesignCritic
 
@@ -209,7 +226,7 @@
 
 ### Better Options Checked
 
-更小方案是只更新 DocsAI/Tools 文档。这能降低误路由，但不能给未来实现者足够的代码级风险清单。因此本轮选择项目级设计包，后续再决定是否拆执行型 SDD。
+更小方案是只更新 DocsAI/Tools 文档。这能降低误路由，但不能给未来实现者足够的代码级风险清单，也不符合用户“功能优先、可完全重构”的裁决。因此本轮选择项目级设计包，并用 `07-2026-06-04-AI-first完全重构校准.md` 作为执行前 override。
 
 ## 12. Artifact Updates
 
@@ -222,5 +239,6 @@
 - `design/Tool/其他Tool/04-NodeLifecycle与ParentManager边界.md`
 - `design/Tool/其他Tool/05-TargetSelector查询契约.md`
 - `design/Tool/其他Tool/06-实施路线与验证门禁.md`
+- `design/Tool/其他Tool/07-2026-06-04-AI-first完全重构校准.md`
 - `design/INDEX.md`
 - `README.md`

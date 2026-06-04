@@ -8,8 +8,8 @@
 
 - **Updated**: 2026-06-04
 - **Current SDD**: SDD-0029
-- **Last Conclusion**: 已补齐项目级共享设计包 `design/7.Component/`：Component 保留 `IComponent + ComponentRegistrar` 最小契约，不改纯数据 ECS storage；后续建议首切片补 ComponentManifest、生命周期契约、外部订阅清理审计、动态组件策略、preflight 和验证 artifact。当前执行型 SDD 仍是 SDD-0029。
-- **Next Action**: 若继续 System 执行，仍从 `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md` 的 T1.1 readiness baseline 开始；若切到 Component 实施，先创建 `Component Contract Manifest And Lifecycle Hardening` 执行型 SDD，并从 `design/7.Component/README.md` 进入。
+- **Last Conclusion**: `design/Tool/其他Tool/` 已按用户 2026-06-04 裁决更新：AI-first 功能优先，代码可丢弃，后续执行只保功能、不保旧 API 长期兼容；`ParentManager` 功能升级为 RuntimeMountRegistry / SceneMountRegistry，`TargetSelector` 升级为 TargetQueryEngine，`CommonTool` 是删除目标，`ResourceManagement`、`Math`、`NodeLifecycle` 按功能 owner hard cutover。
+- **Next Action**: 若继续 System 执行，仍从 `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md` 的 T1.1 readiness baseline 开始；若切到剩余 Tools 实施，先从 `design/Tool/其他Tool/07-2026-06-04-AI-first完全重构校准.md` 进入，并优先确认 Runtime mount scope、TargetSelector 是否第一阶段上空间索引、ResourceManagement 是否 strict fail-fast。
 - **Open Blockers**: none
 
 ## Project Status Board
@@ -32,10 +32,11 @@
 | SDD-0024 | done | `design/3.Entity系统优化/` | Entity Relationship Full Rewrite 已完成：typed EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除已收口 |
 | SDD-0025 | done | `design/6.ECS框架目录架构大重构/` | 已完成：`Src/ECS/Runtime + Src/ECS/Capabilities` 成为源码主入口；DocsAI 当前入口为 `Runtime + Capabilities + Tools + UI`；`Foundation/Foundations` 已从当前路由删除 |
 | SDD-0026 | done | `design/Tool/Input/` | Input Contract Manifest And Facade Hardening 已完成；Input DocsAI 主入口改为 README，Concept/Usage/InputMap 降为可选辅助分层 |
+| TBD | proposed | `design/Tool/其他Tool/` | 2026-06-04 override 已完成：剩余 Tools 后续按 RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、MathFormula、NodeLifecycleRegistry 功能切片 hard cutover；只保功能，不保旧 API 长期兼容 |
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
 | SDD-0028 | pending | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已创建执行胶囊；等待按提示词执行 runtime state、parking grid、CollisionLogicGuard、ContactDamage stale attacker cleanup、contract tests、Godot collision validation 和 DocsAI/skill sync |
 | SDD-0029 | pending | `design/8.System优化/` | System Contract Manifest And Diagnostics Hardening 已创建执行胶囊；等待按提示词执行 SystemManifest、SystemPreflight、SystemDiagnosticsSnapshot、LifecycleTrace、DocsAI Runtime/System 同步和 SystemCore artifact |
-| TBD | proposed | `design/7.Component/` | Component AI-first Contract Layer 设计包已完成；建议新建执行型 SDD，先补 ComponentManifest、lifecycle contract、subscription cleanup audit、dynamic component policy、preflight、DocsAI/skill sync 和 ComponentRegistrar artifact |
+| TBD | proposed | `design/7.Component/` | Component AI-first Contract Layer 设计包已更新为纯代码化组合方向；建议新建执行型 SDD，先落地 ComponentCompositionProfile / ComponentComposer、复刻当前 Preset、移除 `[Export]` 默认参数入口，再补 manifest、lifecycle contract、subscription cleanup audit、dynamic component policy、preflight、DocsAI/skill sync 和 ComponentRegistrar artifact |
 | TBD | proposed | `design/13-旧ECS框架Event系统问题分析与优化方向.md` | P1：保留 EventBus，优化事件主键、事件定义和请求-响应边界 |
 
 ## Timeline
@@ -306,3 +307,13 @@
 - **Research Adoption**: externalResources enabled=`engine-framework, official-docs`，scope=`Resources/Engine/Docs/FrameworkAnalysis/Reports/*` 中 ECS component / relationship / GodotBridge 片段 + Context7 Bevy ECS component / bundle / query / ChildOf 文档片段；web/curl 部分官方细页在当前网络下超时，未作为强证据；copiedCodeOrAssets=none。
 - **Impact**: 后续 AI 不应把 SlimeAI Component 当作 Bevy / Unity DOTS / Flecs / EnTT 的纯数据组件；新增或修改组件应先查 Component manifest、owner 文档、Data/Event/Service 边界和注销清理规则。
 - **Resume**: 若进入 Component 实施，先创建 `Component Contract Manifest And Lifecycle Hardening` 执行型 SDD；若继续当前 System 主线，仍从 SDD-0029 execution prompt 的 T1.1 readiness baseline 开始。
+
+### P037 — 2026-06-04 — other-tools-hard-cutover-override
+
+- **Context**: 用户要求按 AI-first 重新分析 `design/Tool/其他Tool`，明确“需要重构就完全重构绝不兼容”，并指出 `ParentManager` 有用，应统一管理大量 Entity 节点在 tree 中的路径。
+- **Conclusion**: 已将剩余 Tools 设计包从“增量 hardening / 兼容 facade”校准为“功能切片 hard cutover”：`ParentManager` 功能升级为 `RuntimeMountRegistry` / `SceneMountRegistry`，`TargetSelector` 升级为 `TargetQueryEngine` / `TargetQueryResult`，`CommonTool` 是删除目标，`ResourceManagement` 走 strict loading/source policy/structured result，`MyMath` 按公式 owner 拆分，`NodeLifecycle` 只保底层 registry/diagnostics。
+- **Evidence**: `design/Tool/其他Tool/07-2026-06-04-AI-first完全重构校准.md` 新增；`README.md`、`01-现状证据与AI-first裁决.md`、`02-CommonTool与ResourceManagement裁决.md`、`03-Math目标架构与验证.md`、`04-NodeLifecycle与ParentManager边界.md`、`05-TargetSelector查询契约.md`、`06-实施路线与验证门禁.md`、`design/INDEX.md`、`README.md`、`roadmap.md` 和本 `progress.md` 已同步。
+- **Research Adoption**: externalResources enabled=`engine-framework, official-docs`，scope=`Resources/Engine/Docs/FrameworkAnalysis/Reports` 中 query/resource/hierarchy/SceneTree 片段 + Context7 Godot 4.6 SceneTree/ResourceLoader/PackedScene/RandomNumberGenerator/groups 文档；copiedCodeOrAssets=none；adoption=采纳 mount lifecycle、resource facade、seeded random、capability-owned selector 和 diagnostics 思想，拒绝通用 world query DSL / group gameplay query / 第三方 ECS runtime。
+- **Must Confirm**: 进入执行型 SDD 前确认：1. Runtime mount 默认 scope 是 `/root/SlimeAIRuntime` 持久挂载还是当前主场景/System host；2. TargetQueryEngine 第一阶段是否直接上空间索引；3. ResourceManagement 是否接受删除 contains fallback 后 strict fail-fast。
+- **Impact**: 后续执行者不应从旧 `ParentManager.GetOrRegister`、`EntityTargetSelector.Query` list-only、`CommonTool.LoadPackedScene`、`MyMath` 杂项公式或 `NodeLifecycleManager.GetAllNodes` 恢复 current API；应从 `07` override 和对应专题文档进入。
+- **Resume**: 若切到剩余 Tools 实施，优先创建 `Runtime Mount Registry Hard Cutover` 或 `Target Query Engine Hard Cutover`，并在 SDD 中写明上述 Must Confirm 的用户裁决或采用默认假设。

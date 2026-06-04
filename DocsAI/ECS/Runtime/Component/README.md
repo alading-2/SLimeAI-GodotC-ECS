@@ -1,7 +1,7 @@
 # Runtime Component 文档入口
 
 > 状态：current
-> 更新：2026-06-01
+> 更新：2026-06-04
 > 范围：`Src/ECS/Runtime/Component/`、`Src/ECS/Runtime/Entity/Components/`、Capability 内部 `Component/` 目录。
 
 ## 定位
@@ -29,12 +29,14 @@
 | `IComponent`、`TemplateComponent` | `Src/ECS/Runtime/Component/` |
 | Component 注册、注销、owner 反查 | `Src/ECS/Runtime/Entity/Components/` |
 | Ability、Unit、Collision 等业务组件 | `Src/ECS/Capabilities/<owner>/Component/` |
-| 组合若干组件的场景预设 | `Src/ECS/Capabilities/<owner>/Presets/`，资源分类为 `Preset` |
+| Component 代码化组合 | `Src/ECS/Capabilities/<owner>/` 下的 composer/profile；旧 `Presets/` 只作为迁移期 legacy 输入 |
 
 ## 红线
 
 - Component owner 反查走 `EntityManager.GetEntityByComponent` / `ComponentRegistrar`，不恢复 `EntityRelationshipType.ENTITY_TO_COMPONENT`。
 - Component 间通信优先 `Entity.Events`，不要直接互调具体组件方法。
 - 运行时业务状态写入 `Entity.Data`，使用 generated `DataKey<T>`；不要用字符串字面量或旧 `DataMeta/DataRegistry`。
-- Capability 的具体 Entity、Component、Preset 都放在功能 owner 下，不按技术类型重新拉出顶层目录。
-
+- Component 是 SlimeAI 自定义生命周期节点；注册初始化只用 `OnComponentRegistered`，注销清理只用 `OnComponentUnregistered`。
+- 不使用 `_EnterTree()` / `_Ready()` 做 Entity/Data/Event 初始化。
+- 不使用 `[Export]` / Inspector 作为 Component 默认配置来源；固定结构参数由代码化 composer/profile 注入。
+- Capability 的具体 Entity、Component 和 composition profile 都放在功能 owner 下，不按技术类型重新拉出顶层目录。

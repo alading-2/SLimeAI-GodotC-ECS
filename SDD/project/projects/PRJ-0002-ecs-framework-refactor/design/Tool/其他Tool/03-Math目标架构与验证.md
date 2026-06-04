@@ -1,8 +1,8 @@
 # Math 目标架构与验证
 
-> 更新：2026-06-03
-> 状态：current design input
-> 裁决：Math 工具必要且整体方向正确；后续重点不是重写，而是拆清 owner 边界、随机源、公式归属和 deterministic validation。
+> 更新：2026-06-04
+> 状态：current design input, hard cutover override
+> 裁决：Math 功能必要，但不要求保留旧 `MyMath` 聚合类或 `GeometryCalculator` 兼容门面。执行型 SDD 应按功能 owner hard cutover：纯几何留 `Geometry2D`，业务公式拆 owner，概率/采样支持 deterministic RNG。
 
 ## 1. 当前证据
 
@@ -31,7 +31,7 @@ DocsAI/ECS/Tools/Math/Concepts/通用数学工具重构执行方案.md
 - Ability：触发概率、冷却/充能缩减、抛物线/贝塞尔技能。
 - Movement：Bezier、Parabola、CircularArc、Boomerang、SineWave 策略。
 - Spawn：`Geometry2D` 随机采样。
-- TargetSelector：`GeometryCalculator` 兼容门面转调 `Geometry2D`。
+- TargetSelector：当前 `GeometryCalculator` 兼容门面转调 `Geometry2D`；执行切片可删除或 internal 化该门面。
 
 ## 2. 是否必要
 
@@ -62,6 +62,7 @@ AI-first ECS 仍需要一个可复用数学层，原因是：
 | 护甲公式依赖 `GlobalConfig` | `CalculateArmorDamageMultiplier` 内部读取全局配置。 | Math 不再纯粹，公式变更来源不清。 |
 | 负护甲注释显示旧逻辑残留 | 注释保留“原逻辑”和备选方案。 | AI 可能复制错误公式或误判裁决。 |
 | `Geometry2D` ownership 文档有重叠 | Math 文档和 TargetSelector 文档都提 Geometry2D。 | AI 可能不知道几何算法归 Math，查询语义归 TargetSelector。 |
+| `GeometryCalculator` 作为旧兼容门面 | 当前文档建议保留旧入口。 | AI 会继续复制旧 API；执行时应删除、internal 化或只留迁移说明。 |
 | `BezierTemplateBuilder` 有玩法语义 | `RearWrap`、`SideSweep`、`SWeave`、`Converge` 偏技能模板。 | 它是运动/技能模板，不是通用贝塞尔数学核心。 |
 | 统计概率测试有随机波动 | 10000 次 50% 概率测试用不可注入随机源。 | 极低概率但仍可能 flaky。 |
 
@@ -86,10 +87,10 @@ AI-first ECS 仍需要一个可复用数学层，原因是：
 ```text
 Geometry2D 属于 Math。
 GeometryType / TargetSelectorQuery / EntityTargetSelector 属于 TargetSelector。
-GeometryCalculator 只是 TargetSelector 的兼容门面。
+GeometryCalculator 当前只是 TargetSelector 的旧兼容门面。
 ```
 
-因此后续文档应避免说“TargetSelector 拥有底层几何算法”。更准确说法是：TargetSelector 使用 Math/Geometry2D，并保留 GeometryCalculator 兼容入口。
+因此后续文档应避免说“TargetSelector 拥有底层几何算法”。更准确说法是：TargetSelector 使用 Math/Geometry2D。执行型 SDD 可以删除 `GeometryCalculator` 旧门面，或把它降为 internal migration helper；不应作为 AI current 示例入口。
 
 ### 5.3 RNG policy
 
@@ -102,11 +103,11 @@ GeometryCalculator 只是 TargetSelector 的兼容门面。
 
 ## 6. 推荐路线
 
-### Phase 1：文档和测试 hardening
+### Phase 1：Math owner hard cutover
 
 - 更新 DocsAI/Math，明确 Geometry2D ownership。
 - 在测试里使用固定 seed 或可注入 RNG。
-- 给 `CheckProbability` 增加 deterministic overload。
+- 将 `CheckProbability` 迁到 `ProbabilityTool` / deterministic random helper，或至少提供 deterministic overload 并迁移调用点。
 - 给护甲/冷却/属性公式补边界表：输入、输出、单位、范围、来源。
 
 ### Phase 2：公式 owner 收口
@@ -116,7 +117,7 @@ GeometryCalculator 只是 TargetSelector 的兼容门面。
   - `CooldownFormula`
   - `DamageFormula`
   - `ProbabilityTool`
-- 如果不拆，也必须在 `MyMath` 文档中说明每个公式的 capability owner 和验证入口。
+- 默认拆分；只有用户明确要求保留聚合类时，才在 `MyMath` 文档中说明每个公式的 capability owner 和验证入口。
 
 ### Phase 3：Bezier 模板语义收口
 
@@ -131,6 +132,8 @@ GeometryCalculator 只是 TargetSelector 的兼容门面。
 - 不建议让 Math 直接读取 Entity.Data。
 - 不建议让 Math 调用 EventBus、EntityManager、ObjectPool 或 Godot SceneTree。
 - 不建议继续在测试里依赖不可控随机统计。
+- 不建议长期保留 `MyMath` 作为所有业务公式的杂项类。
+- 不建议把 `GeometryCalculator` 作为 current 公开入口继续教给 AI。
 
 ## 8. 验证门禁
 

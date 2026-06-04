@@ -9,10 +9,19 @@ using Godot;
 /// - 单一职责：只做一件事
 /// - 数据驱动：通过 Data 容器读写数据
 /// - 事件驱动：监听 Entity.Events 响应变化
+/// - 代码化组合：固定结构参数由 composer 注入，不使用 [Export] / Inspector
 /// </summary>
 public partial class TemplateComponent : Node, IComponent
 {
     private static readonly Log _log = new(nameof(TemplateComponent));
+
+    // ================= 组件结构参数 =================
+
+    // 【重要】Component 不使用 [Export] / Inspector 作为默认配置来源。
+    // 需要固定结构参数时，由代码化 composition 在注册前调用 Configure 注入。
+    // 示例：EntityOrientationComponent.Sink 这种“输出到 root rotation 还是 VisualRoot flip”的桥接参数，
+    // 属于组件结构参数，不属于 Entity.Data。
+    private bool _enableSampleBehavior = true;
 
     // ================= 组件依赖 =================
 
@@ -48,6 +57,17 @@ public partial class TemplateComponent : Node, IComponent
     // 对外共享结果示例（必须存 Data）：
     // _data.Set(GeneratedDataKey.MovementFacingDirection, facingDirection);
 
+    // ================= 参数注入 =================
+
+    /// <summary>
+    /// 注册前注入组件结构参数。
+    /// <para>调用顺序：new component -> Configure(options) -> AddChild -> RegisterComponent -> OnComponentRegistered。</para>
+    /// </summary>
+    public void Configure(TemplateComponentOptions options)
+    {
+        _enableSampleBehavior = options.EnableSampleBehavior;
+    }
+
     // ================= IComponent 实现 =================
 
     public void OnComponentRegistered(Node entity)
@@ -80,16 +100,13 @@ public partial class TemplateComponent : Node, IComponent
         _entity = null;
     }
 
-    // ================= Godot 生命周期 =================
-
-    public override void _Ready()
-    {
-        // ❌ 不要在此订阅Data或Entity.Events事件(应在OnComponentRegistered)
-    }
+    // ================= 帧驱动入口 =================
 
     public override void _Process(double delta)
     {
-
+        // 可选：只有确实需要逐帧桥接 Godot 行为时才重写 _Process。
+        // 不要在这里做注册初始化；初始化只放 OnComponentRegistered。
+        if (!_enableSampleBehavior || _entity == null || _data == null) return;
     }
 
     // ================= 核心API =================
@@ -130,3 +147,9 @@ public partial class TemplateComponent : Node, IComponent
         // 这只是示例,实际根据需求选择合适的事件类型
     }
 }
+
+/// <summary>
+/// TemplateComponent 的代码化结构参数示例。
+/// <para>仅表达组件自身桥接/结构选择，不承载共享业务状态。</para>
+/// </summary>
+public readonly record struct TemplateComponentOptions(bool EnableSampleBehavior);

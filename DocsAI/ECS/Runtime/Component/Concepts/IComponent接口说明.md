@@ -1,12 +1,14 @@
 # IComponent 接口说明
 
 > 状态：current
-> 更新：2026-06-01
+> 更新：2026-06-04
 > 源码：`Src/ECS/Runtime/Component/IComponent.cs`、`Src/ECS/Runtime/Entity/Components/ComponentRegistrar.cs`
 
 ## 定位
 
 `IComponent` 是 Godot 可挂节点接入 Runtime Entity 的最小生命周期契约。它不是传统纯 ECS 的数据组件，也不是业务继承根；它只让 `EntityManager` 在 Entity 注册和注销时识别组件、建立内部 owner 索引，并回调组件初始化/清理逻辑。
+
+Component 是 SlimeAI 自定义生命周期节点。注册初始化只使用 `OnComponentRegistered`，注销清理只使用 `OnComponentUnregistered`；不要用 Godot `_EnterTree()` 或 `_Ready()` 作为 Entity/Data/Event 初始化入口。
 
 ```csharp
 public interface IComponent
@@ -80,6 +82,46 @@ public partial class MyComponent : Node, IComponent
 - 在 `OnComponentRegistered` 订阅 `Entity.Events`。
 - 在 `OnComponentUnregistered` 清理本组件缓存的引用。
 - 不需要在组件注销时手动清空 `Entity.Events`；Entity 销毁流程会统一清理。
+- 固定结构参数应在注册前由代码化 composer/profile 注入，不使用 `[Export]` / Inspector 作为默认配置来源。
+
+## 参数注入
+
+`IComponent` 不扩展参数签名。参数注入属于组件构造和注册之间的同一创建阶段：
+
+```text
+new component
+  -> Configure(options)
+  -> AddChild
+  -> ComponentRegistrar.RegisterComponent
+  -> IComponent.OnComponentRegistered
+```
+
+示例：
+
+```csharp
+public readonly record struct MyComponentOptions(bool EnableBridge);
+
+public partial class MyComponent : Node, IComponent
+{
+    private bool _enableBridge;
+
+    public void Configure(MyComponentOptions options)
+    {
+        _enableBridge = options.EnableBridge;
+    }
+
+    public void OnComponentRegistered(Node entity)
+    {
+        // 注册期读取 Entity/Data，并使用已经注入的结构参数。
+    }
+
+    public void OnComponentUnregistered()
+    {
+    }
+}
+```
+
+参数只用于组件结构或桥接策略。共享业务状态、runtime snapshot 配置和跨系统可观察结果仍进入 `Entity.Data`。
 
 ## Data 时序
 
@@ -121,8 +163,8 @@ EntityManager.Destroy
 ## 红线
 
 - 不用 `EntityRelationshipManager` 查 Component owner。
-- 不在 `_Ready()` 里假设 Entity 已注册；注册相关初始化放到 `OnComponentRegistered`。
+- 不在 `_EnterTree()` / `_Ready()` 里假设 Entity 已注册；注册相关初始化放到 `OnComponentRegistered`。
+- 不使用 `[Export]` / Inspector 作为 Component 默认配置来源。
 - 不用字符串访问 Data，例如 `_data.Get<float>("CurrentHp")`。
 - 不给 Component 私有字段存放跨系统共享业务状态。
 - 不把具体业务组件放回 `Runtime/Component`；具体组件归 Capability owner。
-

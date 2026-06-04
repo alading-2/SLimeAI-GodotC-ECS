@@ -1,7 +1,7 @@
 # Component 数据驱动设计理念
 
 > 状态：current
-> 更新：2026-06-01
+> 更新：2026-06-04
 > 相关入口：`DocsAI/ECS/Runtime/Data/Data系统说明.md`、`DocsAI/ECS/Runtime/Component/README.md`
 
 ## 一句话结论
@@ -56,8 +56,17 @@ DataRegistry.Register(...);
 | 组件内部算法推进 | 私有字段 | 当前角速度、阶段索引、累计角度 |
 | 节点或控件引用缓存 | 私有字段 | `AnimatedSprite2D`、`CollisionShape2D`、UI 控件 |
 | 临时局部变量 | 私有字段或方法局部变量 | 本帧目标缓存、一次性计算结果 |
+| 组件结构参数 | code composer/profile options | `EntityOrientationComponent.Sink`、内部桥接开关 |
 
 判断标准：删掉这个 DataKey 后，除了当前组件内部实现外没有任何调用方受影响，它大概率不该是 DataKey。
+
+## Component 参数不是 Data
+
+纯代码化 Component 组合后，固定结构参数由 composition profile 注入，不通过 `[Export]` / Inspector，也不默认进入 DataOS。
+
+进入 Data 的条件是“业务状态或配置需要被跨系统读取、观察、迁移或由 runtime snapshot 管理”。只影响单个 Component 如何桥接 Godot 节点的参数，应留在 Component options 中。
+
+示例：`EntityOrientationComponent.Sink` 只决定朝向输出写到 root rotation 还是 VisualRoot flip。它不会改变移动系统的朝向状态真相，其他系统也不应依赖它做业务判断。因此它属于 composition profile 参数，不应新增 DataKey。
 
 ## 事件协作
 
@@ -90,7 +99,7 @@ public void OnComponentUnregistered()
 - 用 `_currentHp`、`_moveSpeed` 这类私有字段保存业务真相。
 - 用字符串 key 访问 Data。
 - 在 Component 内新建 DataKey 事实源。
-- 在 `_Ready()` 里读取 Spawn 后才会写入的数据。
+- 在 `_EnterTree()` / `_Ready()` 里读取 Spawn 后才会写入的数据。
+- 用 `[Export]` / Inspector 承载 Component 默认参数。
 - 用 `GetComponent<T>()` 直接调用其他组件方法来完成常规通信。
 - 为了目录整齐把 Capability 组件移回 `Runtime/Component`。
-

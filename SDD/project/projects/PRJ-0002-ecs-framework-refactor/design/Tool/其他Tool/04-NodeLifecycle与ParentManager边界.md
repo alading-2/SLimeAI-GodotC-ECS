@@ -1,8 +1,8 @@
 # NodeLifecycle 与 ParentManager 边界
 
-> 更新：2026-06-03
-> 状态：current design input
-> 裁决：两者都需要保留，但都应降级为底层工具，不再承担业务 owner 语义。`NodeLifecycle` 管注册表，`ParentManager` 管挂载点；Entity 生命周期、UI 绑定、对象池状态和业务关系不归它们。
+> 更新：2026-06-04
+> 状态：current design input, hard cutover override
+> 裁决：`ParentManager` 的功能必须保留并升级为 Runtime mount 能力；它不是边缘兼容工具。`NodeLifecycle` 功能保留为底层 Node registry，但业务查询入口应 hard cutover 到 Entity/UI/TargetSelector typed facade。执行时只保功能，不保旧 API 兼容。
 
 ## 1. 当前证据
 
@@ -66,7 +66,7 @@ GetNodesByType<T>() where T : Node
 
 必要，但不是最终业务查询事实源。
 
-它现在是 Entity/UI/Component 的底层注册桥，短期不能删除。尤其在 Entity hard cutover 尚未完全清掉旧路径时，它仍承担兼容注册和测试断言。
+它现在是 Entity/UI/Component 的底层注册桥，功能上不能直接消失。但用户已经明确不需要旧代码兼容，因此执行型 SDD 不应把 `Register(Node)`、`GetAllNodes()`、`GetNodesByInterface<T>()` 当作长期公共 API 保留。正确目标是迁移调用点后保留一个低层 `NodeLifecycleRegistry`，对外输出 snapshot / diagnostics，而不是给业务做全局查询。
 
 但 AI-first 的目标不是让所有业务继续扫 `NodeLifecycleManager`，而是：
 
@@ -79,9 +79,16 @@ Component   -> ComponentRegistrar
 
 ### ParentManager
 
-必要。
+必要，而且是 AI-first 工具层的 P0 功能。
 
 运行时需要统一挂载点，否则 Entity、ObjectPool、System、UI 会散挂到任意节点下，AI debug 和场景树观察都困难。
+
+用户已明确：`ParentManager` 有用，它统一管理大量 Entity 节点在 tree 中的路径。旧设计中“必要但降级”的表述不准确；应改为“功能升级、接口 hard cutover”。后续目标不是保留旧 `ParentManager.GetOrRegister(name, path)`，而是建立 `RuntimeMountRegistry` / `SceneMountRegistry`：
+
+- mount id 来自 manifest，不来自散落字符串。
+- mount scope 明确：全局 root、当前 scene、system host、pool parking 或 test root。
+- creation mode 明确：immediate / deferred root。
+- status 可诊断：pending / in-tree / invalid。
 
 但 ParentManager 不应管理：
 
@@ -101,7 +108,7 @@ Component   -> ComponentRegistrar
 | NodeLifecycle | 无 invalid node cleanup | 节点销毁但未注销时可能残留。 |
 | NodeLifecycle | 无 owner/source metadata | AI 无法判断节点由 Entity、UI、Component 还是测试注册。 |
 | NodeLifecycle | DocsAI 示例错误 | AI 会复制不存在 API。 |
-| ParentManager | 自由字符串 name/path | 挂载点不是 manifest，调用点可随意新增。 |
+| ParentManager | 自由字符串 name/path | 挂载点不是 manifest，调用点可随意新增；执行时应 hard cutover 到 typed mount id / manifest。 |
 | ParentManager | root 下 deferred add 后立即返回 pending node | 节点尚未进 tree 时同帧行为难解释。 |
 | ParentManager | pending cache 不暴露状态 | AI 无法确认 mount 是否已实际进入 SceneTree。 |
 | ParentManager | `ParentNames` 常量混合对象池、Entity、UI | 易误解为业务关系事实源。 |
@@ -124,15 +131,15 @@ Godot group 可以作为引擎级分类集合，但它不能替代 SlimeAI 的 E
 
 ### 5.1 NodeLifecycle 目标
 
-保留底层 API，但补显式契约：
+保留底层能力，但不保旧公共查询 API：
 
 ```text
-NodeLifecycleManager
+NodeLifecycleRegistry
   -> low-level Node registry
   -> owner/source metadata
   -> snapshot diagnostics
   -> invalid cleanup
-  -> no direct business query by default
+  -> no public gameplay global scan
 ```
 
 建议新增数据形状：
@@ -154,11 +161,16 @@ NodeLifecycleSnapshot
   DuplicateTypeNameWarnings
 ```
 
-第一阶段不必删除旧 `Register(Node)`，但新 manager 调用点应尽量传 owner/source。
+执行型 SDD 的结束条件不是“新调用点尽量传 owner/source”，而是：
+
+- Entity / UI / Component 注册点传 owner/source。
+- 业务代码不再直接使用 `GetAllNodes()` / `GetNodesByInterface<T>()`。
+- TargetSelector 通过 candidate source 访问候选，不直接扫 NodeLifecycle。
+- 旧公共查询入口若仍存在，必须降为 internal/test-only 或删除。
 
 ### 5.2 ParentManager 目标
 
-演进为 manifest 化 mount registry：
+升级为 manifest 化 mount registry：
 
 ```text
 RuntimeMountRegistry
@@ -170,37 +182,37 @@ RuntimeMountRegistry
   Status: Pending | InTree | Invalid
 ```
 
-兼容 facade：
+旧 API 不作为长期目标：
 
 ```text
 ParentManager.GetOrRegister(name, path)
-  -> RuntimeMountRegistry.GetOrCreate(new MountId(name), path)
+  -> 迁移到 RuntimeMountRegistry.GetOrCreate(MountId)
 ```
 
-第一阶段可保留 `ParentManager` 名称，先补 diagnostics 和 manifest 文档。
+如果执行时需要临时 facade 辅助编译，切片完成前必须删除或标记 internal，不进入 DocsAI current 入口。DocsAI current 入口应讲 `RuntimeMountRegistry` / `SceneMountRegistry` 功能语义，而不是让 AI 继续学习自由字符串 `ParentManager` API。
 
 ## 6. 调用点迁移策略
 
 ### EntityManager
 
-- 继续通过 ParentManager 挂载非对象池 Entity。
-- 后续挂载点不应直接用 `typeof(T).Name` 作为唯一 mount id，应由 Entity mount manifest 定义。
+- 非对象池 Entity 继续需要统一 mount，但入口应迁到 RuntimeMountRegistry。
+- 挂载点不应直接用 `typeof(T).Name` 作为唯一 mount id，应由 Entity mount manifest 定义。
 - Entity 查询不应直接暴露 NodeLifecycle，目标是走 EntityRegistry / TargetSelector。
 
 ### UIManager
 
-- UI 注册可以继续委托 NodeLifecycle。
+- UI 注册可以使用 NodeLifecycleRegistry 作为底层登记，但对外只暴露 UIManager / UI owner API。
 - UI 查询对外只暴露 UIManager API。
 - UI 绑定关系后续应从旧 `EntityRelationshipManager` 迁移到 UI owner registry，不能由 NodeLifecycle 承担。
 
 ### TargetSelector
 
-- 第一阶段仍可从 NodeLifecycle/EntityManager 获取候选。
-- 但 TargetSelector 必须封装 candidate source，后续替换成 EntityRegistry 或 spatial index 时不影响 Ability/AI 调用点。
+- 默认从 EntityRegistryCandidateSource 或显式 candidate source 获取候选。
+- 如果执行早期临时接 NodeLifecycle，必须封装为 candidate source，切片结束前不让 Ability/AI 调用点知道 NodeLifecycle。
 
 ### ObjectPool
 
-- ParentManager 只给 pool parent。
+- RuntimeMountRegistry 只给 pool parent / parking mount。
 - pool state、parking position、collision ready frame 继续归 ObjectPool runtime state，不写到 ParentManager。
 
 ## 7. Not Recommended
@@ -208,8 +220,9 @@ ParentManager.GetOrRegister(name, path)
 - 不建议删除 NodeLifecycle 后让所有模块直接维护自己的 Godot node list。
 - 不建议业务代码新增 `NodeLifecycleManager.GetAllNodes()` 全局扫描。
 - 不建议用 Godot group 替代 Entity registry。
-- 不建议 ParentManager 参与 Destroy、Release、Damage、Collision 或 UI Bind。
+- 不建议 RuntimeMountRegistry / ParentManager 参与 Destroy、Release、Damage、Collision 或 UI Bind。
 - 不建议把 `ParentNames` 扩成业务关系常量表。
+- 不建议长期保留 `ParentManager.GetOrRegister(name, path)` 作为 current API。
 
 ## 8. 验证门禁
 
@@ -226,10 +239,12 @@ python3 Workspace/SDD/sdd.py validate --all
 dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
 ```
 
-建议新增 diagnostics 验收：
+建议新增 diagnostics / hard cutover 验收：
 
 - NodeLifecycle snapshot 中 invalid node count 为 0。
 - Entity/UI/Component/Test 注册来源可区分。
 - Parent mount snapshot 能显示 pending / in-tree 数量。
 - 同一 mount id 重复注册不会创建重复 root child。
 - DocsAI 示例签名与源码一致。
+- `rg -n "ParentManager\\.GetOrRegister|ParentManager\\.Register|ParentNames" Src/ECS DocsAI/ECS` 在 current 代码/文档中只剩迁移说明或 0 命中，具体口径由执行型 SDD 定义。
+- `rg -n "NodeLifecycleManager\\.GetAllNodes|NodeLifecycleManager\\.GetNodesByInterface" Src/ECS/Capabilities Src/ECS/Tools/TargetSelector DocsAI/ECS` 在业务路径中 0 命中。
