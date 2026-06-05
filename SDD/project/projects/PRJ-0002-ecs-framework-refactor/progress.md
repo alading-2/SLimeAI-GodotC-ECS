@@ -8,9 +8,9 @@
 
 - **Updated**: 2026-06-04
 - **Current SDD**: none
-- **Last Conclusion**: SDD-0030 已完成 Component 代码化组合主链路：Runtime 通用 `ComponentCompositionProfile` / `ComponentComposer` 已接入 spawn 与直接 `RegisterComponents` 路径，Unit/Ability 默认组件集合迁入 owner profile，Component Preset `.tscn` 只保留为 legacy 对照输入。
-- **Next Action**: 后续 Component 深化另起 SDD：subscription cleanup audit、dynamic component policy、preflight 或 legacy Preset 文件清理。
-- **Open Blockers**: none
+- **Last Conclusion**: `Tool/其他Tool` 已根据用户截图和最新裁决完成执行前复核：`ParentManager` 默认 `/root/SlimeAIRuntime` 已确认，资源加载 strict fail-fast 已确认；TargetSelector 后续按 `TargetQueryEngine + TargetQueryResult` 做“找目标报告”；`CommonTool.LoadPackedScene` 迁入资源加载，但保留受约束 Common Utilities 概念；`NodeLifecycle` 功能保留并建议从 Tools 迁到 Runtime registry 语义。
+- **Next Action**: 请用户检查 `design/Tool/其他Tool/08-2026-06-04-用户裁决后执行前复核.md`，重点确认 Common Utilities 目录、NodeLifecycle 是否迁到 Runtime、`EntityTargetSelector.Query` 是否只作为临时桥。
+- **Open Blockers**: 等待用户确认上述 3 个执行前问题；未阻塞文档复核，但阻塞源码实施。
 
 ## Project Status Board
 
@@ -32,7 +32,7 @@
 | SDD-0024 | done | `design/3.Entity系统优化/` | Entity Relationship Full Rewrite 已完成：typed EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除已收口 |
 | SDD-0025 | done | `design/6.ECS框架目录架构大重构/` | 已完成：`Src/ECS/Runtime + Src/ECS/Capabilities` 成为源码主入口；DocsAI 当前入口为 `Runtime + Capabilities + Tools + UI`；`Foundation/Foundations` 已从当前路由删除 |
 | SDD-0026 | done | `design/Tool/Input/` | Input Contract Manifest And Facade Hardening 已完成；Input DocsAI 主入口改为 README，Concept/Usage/InputMap 降为可选辅助分层 |
-| TBD | proposed | `design/Tool/其他Tool/` | 2026-06-04 override 已完成：剩余 Tools 后续按 RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、MathFormula、NodeLifecycleRegistry 功能切片 hard cutover；只保功能，不保旧 API 长期兼容 |
+| TBD | proposed | `design/Tool/其他Tool/` | 2026-06-04 user review 已完成：剩余 Tools 后续按 RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、Common Utilities、MathFormula 功能切片 hard cutover；已确认 `/root/SlimeAIRuntime` 和资源 strict fail-fast，剩余确认点见 `08-*` |
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
 | SDD-0028 | pending | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已创建执行胶囊；等待按提示词执行 runtime state、parking grid、CollisionLogicGuard、ContactDamage stale attacker cleanup、contract tests、Godot collision validation 和 DocsAI/skill sync |
 | SDD-0029 | done | `design/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |
@@ -311,10 +311,10 @@
 ### P037 — 2026-06-04 — other-tools-hard-cutover-override
 
 - **Context**: 用户要求按 AI-first 重新分析 `design/Tool/其他Tool`，明确“需要重构就完全重构绝不兼容”，并指出 `ParentManager` 有用，应统一管理大量 Entity 节点在 tree 中的路径。
-- **Conclusion**: 已将剩余 Tools 设计包从“增量 hardening / 兼容 facade”校准为“功能切片 hard cutover”：`ParentManager` 功能升级为 `RuntimeMountRegistry` / `SceneMountRegistry`，`TargetSelector` 升级为 `TargetQueryEngine` / `TargetQueryResult`，`CommonTool` 是删除目标，`ResourceManagement` 走 strict loading/source policy/structured result，`MyMath` 按公式 owner 拆分，`NodeLifecycle` 只保底层 registry/diagnostics。
+- **Conclusion**: 已将剩余 Tools 设计包从“增量 hardening / 兼容 facade”校准为“功能切片 hard cutover”：`ParentManager` 功能升级为 `RuntimeMountRegistry` / `SceneMountRegistry`，`TargetSelector` 升级为 `TargetQueryEngine` / `TargetQueryResult`，`ResourceManagement` 走 strict loading/source policy/structured result，`MyMath` 按公式 owner 拆分，`NodeLifecycle` 只保底层 registry/diagnostics。该条中 `CommonTool` 与 Must Confirm 口径已被后续 P039 用户复核校准。
 - **Evidence**: `design/Tool/其他Tool/07-2026-06-04-AI-first完全重构校准.md` 新增；`README.md`、`01-现状证据与AI-first裁决.md`、`02-CommonTool与ResourceManagement裁决.md`、`03-Math目标架构与验证.md`、`04-NodeLifecycle与ParentManager边界.md`、`05-TargetSelector查询契约.md`、`06-实施路线与验证门禁.md`、`design/INDEX.md`、`README.md`、`roadmap.md` 和本 `progress.md` 已同步。
 - **Research Adoption**: externalResources enabled=`engine-framework, official-docs`，scope=`Resources/Engine/Docs/FrameworkAnalysis/Reports` 中 query/resource/hierarchy/SceneTree 片段 + Context7 Godot 4.6 SceneTree/ResourceLoader/PackedScene/RandomNumberGenerator/groups 文档；copiedCodeOrAssets=none；adoption=采纳 mount lifecycle、resource facade、seeded random、capability-owned selector 和 diagnostics 思想，拒绝通用 world query DSL / group gameplay query / 第三方 ECS runtime。
-- **Must Confirm**: 进入执行型 SDD 前确认：1. Runtime mount 默认 scope 是 `/root/SlimeAIRuntime` 持久挂载还是当前主场景/System host；2. TargetQueryEngine 第一阶段是否直接上空间索引；3. ResourceManagement 是否接受删除 contains fallback 后 strict fail-fast。
+- **Must Confirm**: 已被 P039 校准。用户已确认 Runtime mount 默认 `/root/SlimeAIRuntime` 和 ResourceManagement strict fail-fast；剩余确认点为 Common Utilities 目录、NodeLifecycle Runtime 归属、`EntityTargetSelector.Query` 是否只作临时桥。
 - **Impact**: 后续执行者不应从旧 `ParentManager.GetOrRegister`、`EntityTargetSelector.Query` list-only、`CommonTool.LoadPackedScene`、`MyMath` 杂项公式或 `NodeLifecycleManager.GetAllNodes` 恢复 current API；应从 `07` override 和对应专题文档进入。
 - **Resume**: 若切到剩余 Tools 实施，优先创建 `Runtime Mount Registry Hard Cutover` 或 `Target Query Engine Hard Cutover`，并在 SDD 中写明上述 Must Confirm 的用户裁决或采用默认假设。
 
@@ -325,3 +325,12 @@
 - **Evidence**: `sdds/020-SDD-0030-component-code-composition-and-contract-hardening/`、`Src/ECS/Runtime/Component/ComponentComposition.cs`、`Src/ECS/Capabilities/Unit/Entity/UnitComponentCompositionProfiles.cs`、`Src/ECS/Capabilities/Ability/Entity/AbilityComponentCompositionProfiles.cs`、`DocsAI/ECS/Runtime/Component/ComponentManifest.md`。
 - **Impact**: 后续 AI 不再从 Component Preset `.tscn` 推断默认组件集合；默认组合事实源是 owner C# profile，Preset 只作 legacy 对照输入。
 - **Resume**: PRJ-0002 当前无 active 子 SDD；后续 Component 深化另起 SDD，先读 `DocsAI/ECS/Runtime/Component/ComponentManifest.md` 和 SDD-0030 progress。
+
+### P039 — 2026-06-04 — other-tools-user-review-calibrated
+
+- **Context**: 用户提供 SceneTree 截图并逐项裁决：`ParentManager` 当前规范路径作用成立，默认 `/root/SlimeAIRuntime` 可以；TargetSelector 重构可以但要说明怎么做；资源加载立刻报错；CommonTool 通用工具概念可保留但不应随便堆在 `Tools/`；NodeLifecycle 的统一注册/维护/id 管理本意成立，但要按 AI-first 重新规范。
+- **Conclusion**: 已新增 `08-2026-06-04-用户裁决后执行前复核.md` 并同步其他 Tools 设计包：TargetSelector 改为“找目标报告”契约；CommonTool 裁决从“通用工具概念删除”校准为“迁出当前资源加载方法，保留受约束 Common Utilities”；NodeLifecycle 裁决从 Tools helper 校准为 Runtime registry；ParentManager 保留截图中的可读层级风格并加 `/root/SlimeAIRuntime`、manifest 和 diagnostics。
+- **Evidence**: `design/Tool/其他Tool/08-2026-06-04-用户裁决后执行前复核.md`、`README.md`、`02-CommonTool与ResourceManagement裁决.md`、`04-NodeLifecycle与ParentManager边界.md`、`05-TargetSelector查询契约.md`、`06-实施路线与验证门禁.md`、`07-2026-06-04-AI-first完全重构校准.md`、`design/INDEX.md` 和本 `progress.md` 已同步。
+- **Research Adoption**: externalResources enabled=`official-docs, engine-framework`，scope=Context7 `/godotengine/godot-docs` 的 PackedScene/root add child/groups 片段 + `Resources/Engine/Docs/FrameworkAnalysis/Reports` 中 Bevy/Flecs/EnTT/DefaultEcs/综合报告关于 capability-owned selector、relationship/hierarchy 和 query DSL 的裁决；copiedCodeOrAssets=none。
+- **Impact**: 后续执行型 SDD 不应把 CommonTool 简单一删了事，也不应把 NodeLifecycle 删除后让各模块各写一套 registry；应按 `08-*` 的默认假设和确认点创建实现任务。
+- **Resume**: 等待用户确认：1. Common Utilities 目录选 `Src/ECS/Common/Utilities/` 还是 `Src/ECS/Runtime/Common/`；2. NodeLifecycle 是否迁到 `Src/ECS/Runtime/NodeLifecycle/`；3. `EntityTargetSelector.Query(query)` 是否只作为执行期临时桥并在切片结束前删除或 internal 化。

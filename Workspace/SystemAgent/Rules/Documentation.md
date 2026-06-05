@@ -36,7 +36,7 @@
 | --- | --- | --- |
 | `read_reference` | 读取参考资料、历史分析或外部资源 | 不把读取结果直接当作当前事实源 |
 | `edit_source` | 修改明确维护源 | 只写 `Workspace/SystemAgent/`、`.ai-config/`、SDD 或用户授权的源文件 |
-| `sync_generated` | 由脚本生成副本 | 不手写 `.claude/.codex/.windsurf` skill 副本或 rule 副本 |
+| `sync_generated` | 由脚本生成副本 | 不手写 `.claude/.codex/.devin/.trae` skill 副本或 rule 副本 |
 | `advisory_check` | hook、review 或 lint 给出提醒 | 默认不自动改写文件，不替代人工或 SDD 决策 |
 
 ## 禁止

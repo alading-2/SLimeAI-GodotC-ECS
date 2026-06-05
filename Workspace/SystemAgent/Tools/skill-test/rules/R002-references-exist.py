@@ -61,7 +61,8 @@ def check(
                 "Resources/",
                 ".claude/",
                 ".codex/",
-                ".windsurf/",
+                ".devin/",
+                ".trae/",
             )
             if not any(ref.startswith(p) for p in _KNOWN_PREFIXES):
                 continue

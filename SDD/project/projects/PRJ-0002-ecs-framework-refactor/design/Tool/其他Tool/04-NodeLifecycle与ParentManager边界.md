@@ -1,8 +1,8 @@
 # NodeLifecycle 与 ParentManager 边界
 
 > 更新：2026-06-04
-> 状态：current design input, hard cutover override
-> 裁决：`ParentManager` 的功能必须保留并升级为 Runtime mount 能力；它不是边缘兼容工具。`NodeLifecycle` 功能保留为底层 Node registry，但业务查询入口应 hard cutover 到 Entity/UI/TargetSelector typed facade。执行时只保功能，不保旧 API 兼容。
+> 状态：current design input, hard cutover override, user review calibrated
+> 裁决：`ParentManager` 的功能必须保留并升级为 Runtime mount 能力；用户截图已证明当前规范路径方向有效。`NodeLifecycle` 功能保留为 Runtime 底层 Node registry，用于统一注册、注销、id、owner metadata 和 diagnostics；但业务查询入口应 hard cutover 到 Entity/UI/TargetSelector typed facade。执行时只保功能，不保旧 API 兼容。
 
 ## 1. 当前证据
 
@@ -64,9 +64,11 @@ GetNodesByType<T>() where T : Node
 
 ### NodeLifecycle
 
-必要，但不是最终业务查询事实源。
+必要，但不是最终业务查询事实源，也不应继续放在 `Tools/` 语义下让 AI 当普通工具使用。
 
 它现在是 Entity/UI/Component 的底层注册桥，功能上不能直接消失。但用户已经明确不需要旧代码兼容，因此执行型 SDD 不应把 `Register(Node)`、`GetAllNodes()`、`GetNodesByInterface<T>()` 当作长期公共 API 保留。正确目标是迁移调用点后保留一个低层 `NodeLifecycleRegistry`，对外输出 snapshot / diagnostics，而不是给业务做全局查询。
+
+用户 2026-06-04 补充确认：`NodeLifecycle` 的本意是统一 Node 生命周期、注册、维护和 id 管理，避免 Entity、UI、Component 各写一套。这一判断成立。需要修正的是归属和边界，而不是删掉功能。
 
 但 AI-first 的目标不是让所有业务继续扫 `NodeLifecycleManager`，而是：
 
@@ -89,6 +91,8 @@ Component   -> ComponentRegistrar
 - mount scope 明确：全局 root、当前 scene、system host、pool parking 或 test root。
 - creation mode 明确：immediate / deferred root。
 - status 可诊断：pending / in-tree / invalid。
+
+用户提供的 SceneTree 截图已经证明当前功能方向可用：`ECS/Entity/Unit/EnemyPool`、`PlayerEntity/Player`、`EnemyEntity/Enemy`、`UI/UI/HealthBarUIPool` 等路径一眼能看懂。后续完善不应破坏这种可观察性；推荐只是加顶层 `/root/SlimeAIRuntime` 和 manifest / diagnostics。
 
 但 ParentManager 不应管理：
 
@@ -131,7 +135,7 @@ Godot group 可以作为引擎级分类集合，但它不能替代 SlimeAI 的 E
 
 ### 5.1 NodeLifecycle 目标
 
-保留底层能力，但不保旧公共查询 API：
+保留底层能力，但不保旧业务可见公共扫描 API：
 
 ```text
 NodeLifecycleRegistry
@@ -148,9 +152,12 @@ NodeLifecycleRegistry
 NodeLifecycleRegistration
   NodeId
   NodeType
+  NodePath
   OwnerKind: Entity | Component | UI | System | Tool | Test
   OwnerId
   RegisteredFrame
+  IsInsideTree
+  IsValid
   Source
 
 NodeLifecycleSnapshot
@@ -164,9 +171,24 @@ NodeLifecycleSnapshot
 执行型 SDD 的结束条件不是“新调用点尽量传 owner/source”，而是：
 
 - Entity / UI / Component 注册点传 owner/source。
-- 业务代码不再直接使用 `GetAllNodes()` / `GetNodesByInterface<T>()`。
+- 业务代码不再直接使用 `GetAllNodes()` / `GetNodesByInterface<T>()` 作为玩法查询。
 - TargetSelector 通过 candidate source 访问候选，不直接扫 NodeLifecycle。
 - 旧公共查询入口若仍存在，必须降为 internal/test-only 或删除。
+
+推荐源码归属：
+
+```text
+Src/ECS/Runtime/NodeLifecycle/
+  NodeLifecycleRegistry.cs
+  NodeLifecycleRegistration.cs
+  NodeLifecycleOwnerKind.cs
+  NodeLifecycleSnapshot.cs
+  NodeLifecycleDiagnostics.cs
+
+DocsAI/ECS/Runtime/NodeLifecycle/
+```
+
+理由：它是 Runtime 基础设施，服务 Entity / UI / Component / System / Tool 的 Godot Node 注册，不是普通 Tools helper。
 
 ### 5.2 ParentManager 目标
 
@@ -176,11 +198,24 @@ NodeLifecycleSnapshot
 RuntimeMountRegistry
   MountId
   Path
-  Scope: Root | CurrentScene | SystemHost | PoolParking | Test
+  Scope: RuntimeRoot | CurrentScene | SystemHost | PoolParking | Test
   Owner
   CreationMode: Immediate | DeferredRoot
   Status: Pending | InTree | Invalid
 ```
+
+用户已确认默认 root scope：
+
+```text
+/root/SlimeAIRuntime
+  ECS
+    Entity
+    Pool
+  UI
+  Tool
+```
+
+说明：这不要求抹掉截图中已有 `ECS/Entity/...`、`UI/...` 层级，只是把这些运行时节点统一收进框架根，避免散落在 root 或当前场景下。
 
 旧 API 不作为长期目标：
 
@@ -218,6 +253,7 @@ ParentManager.GetOrRegister(name, path)
 ## 7. Not Recommended
 
 - 不建议删除 NodeLifecycle 后让所有模块直接维护自己的 Godot node list。
+- 不建议继续把 NodeLifecycle 作为 `Tools/` 下的普通业务工具。
 - 不建议业务代码新增 `NodeLifecycleManager.GetAllNodes()` 全局扫描。
 - 不建议用 Godot group 替代 Entity registry。
 - 不建议 RuntimeMountRegistry / ParentManager 参与 Destroy、Release、Damage、Collision 或 UI Bind。

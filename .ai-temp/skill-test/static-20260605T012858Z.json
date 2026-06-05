@@ -1,0 +1,51 @@
+{
+  "scanned": 1,
+  "rules": {
+    "R001": {
+      "name": "frontmatter-required-fields",
+      "pass": 1,
+      "fail": 0,
+      "violations": []
+    },
+    "R002": {
+      "name": "references-exist",
+      "pass": 1,
+      "fail": 0,
+      "violations": []
+    },
+    "R003": {
+      "name": "source-of-truth-alignment",
+      "pass": 1,
+      "fail": 0,
+      "violations": []
+    },
+    "R004": {
+      "name": "sync-targets-up-to-date",
+      "pass": 0,
+      "fail": 1,
+      "violations": [
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/ai-config-management/SKILL.md",
+          "kind": "sync-mismatch",
+          "detail": "副本与源不一致: .windsurf/skills/ai-config-management/SKILL.md；请跑 sync-ai-config.sh",
+          "severity": "advisory"
+        }
+      ]
+    },
+    "R005": {
+      "name": "catalog-coverage",
+      "pass": 1,
+      "fail": 0,
+      "violations": []
+    },
+    "R006": {
+      "name": "no-direct-copy-edits",
+      "pass": 1,
+      "fail": 0,
+      "violations": []
+    }
+  },
+  "criticalFailures": 0,
+  "advisoryWarnings": 1,
+  "exitCode": 0
+}

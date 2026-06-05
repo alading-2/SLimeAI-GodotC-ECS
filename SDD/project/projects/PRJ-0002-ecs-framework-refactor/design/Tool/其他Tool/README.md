@@ -1,7 +1,7 @@
 # 其他 Tool 设计包
 
 > 更新：2026-06-04
-> 状态：current research decision, 2026-06-04 hard cutover override
+> 状态：current research decision, 2026-06-04 hard cutover override, user review calibrated
 > 范围：`CommonTool` / `ResourceManagement` 接入、`Math`、`NodeLifecycle`、`ParentManager`、`TargetSelector`
 > 排除：`Input`、`ObjectPool`、`Timer` 已有独立设计；`Logger/Log` 按用户要求跳过。
 
@@ -20,6 +20,7 @@ Math 必须保留，但要区分纯数学、游戏公式、概率和目标选择
 NodeLifecycle 功能必须保留为底层 Node registry，但业务查询入口应 hard cutover 到 Entity/UI/TargetSelector typed facade。
 ParentManager 功能必须保留并升级为 RuntimeMountRegistry / SceneMountRegistry：统一管理大量 Entity / Pool / UI / Tool 节点在 SceneTree 中的挂载路径。
 CommonTool 不应继续存在为杂项 owner；现有 LoadPackedScene 应迁入 ResourceManagement/ResourceLoading 契约，执行切片完成前删除旧入口。
+2026-06-04 user review：保留“通用工具区域”概念，但不保留无约束 `CommonTool` 杂物箱；Common Utilities 应从 Tools 独立出来，有 manifest、owner、禁止项和测试。
 ```
 
 ## 1. 工具裁决总览
@@ -31,7 +32,7 @@ CommonTool 不应继续存在为杂项 owner；现有 LoadPackedScene 应迁入 
 | `ResourceLoading` / `ResourceManagement` | 必要 | P1 功能能力；作为资源 manifest 与加载入口继续保留，执行时删除 contains fallback 和无 source `LoadPath`，补 structured result、source policy、catalog diagnostics。 | P1 |
 | `MathFormula` / `Geometry2D` / deterministic random | 必要 | P1 功能能力；拆清纯几何/曲线、游戏公式、概率随机和 TargetSelector 领域边界，不引入第三方数学运行时。 | P1 |
 | `NodeLifecycleRegistry` / `NodeLifecycle` | 必要但低层化 | P1 底层能力；保留 Node registry、owner metadata、snapshot diagnostics、invalid cleanup，业务查询 hard cutover 到 Entity/UI/TargetSelector。 | P1 |
-| `CommonTool` | 不保留为 owner | 删除目标；不作为独立 owner 或长期 facade。现有加载功能迁入 `ResourceManagement` / `ResourceLoading`。 | P1 |
+| `Common Utilities` / `CommonTool` | 通用工具概念保留，当前 `CommonTool` 形态不保留 | `CommonTool.LoadPackedScene` 迁入 `ResourceManagement` / `ResourceLoading`；通用工具另设受约束区域，不直接堆在 `Tools/`，每个 helper 必须有 owner、用途、禁止项和测试。 | P1 |
 
 ## 2. 阅读顺序
 
@@ -44,6 +45,7 @@ CommonTool 不应继续存在为杂项 owner；现有 LoadPackedScene 应迁入 
 | [05-TargetSelector查询契约.md](05-TargetSelector查询契约.md) | 目标查询引擎、候选源、过滤、排序、随机和 diagnostics |
 | [06-实施路线与验证门禁.md](06-实施路线与验证门禁.md) | 后续 SDD 拆分、调用点迁移、BDD 和验证命令 |
 | [07-2026-06-04-AI-first完全重构校准.md](07-2026-06-04-AI-first完全重构校准.md) | 用户最新裁决：功能优先、可 hard cutover、不为旧 API 长期兼容；进入执行前必须先读 |
+| [08-2026-06-04-用户裁决后执行前复核.md](08-2026-06-04-用户裁决后执行前复核.md) | 用户截图和最新答复后的通俗复核：确认 `/root/SlimeAIRuntime`、资源 strict fail-fast、TargetSelector 重构方式、Common Utilities 和 NodeLifecycle 归属问题 |
 
 ## 3. 当前事实源
 
@@ -64,5 +66,5 @@ CommonTool 不应继续存在为杂项 owner；现有 LoadPackedScene 应迁入 
 - `Math` 测试能稳定复现概率、曲线、几何边界，不依赖不可控随机。
 - `NodeLifecycle` 只在底层 manager 使用，业务查询默认走 Entity/UI/TargetSelector 的 typed facade。
 - `ParentManager` / `RuntimeMountRegistry` 的挂载点来自 manifest，不靠散落字符串；能输出 pending / in-tree / invalid diagnostics。
-- `CommonTool` 删除或迁入资源加载 owner，不再作为新增杂项入口。
+- `CommonTool.LoadPackedScene` 迁入资源加载 owner；Common Utilities 如果保留，必须有独立位置、manifest、禁止项和测试，不再作为新增杂项入口。
 - 资源加载能说明加载来源、分类、key/path、失败原因和 catalog 覆盖情况。

@@ -1,8 +1,8 @@
 # 现状证据与 AI-first 裁决
 
 > 更新：2026-06-04
-> 状态：current research decision, 2026-06-04 user override
-> 裁决：剩余 Tools 的功能都按 AI-first 重新定义；执行时只保功能，不保旧 API 兼容。`ParentManager` 功能必须升级为 Runtime mount 能力；`CommonTool` 是删除目标；`TargetSelector`、`ResourceManagement`、`Math`、`NodeLifecycle` 按功能切片 hard cutover。
+> 状态：current research decision, 2026-06-04 user override, user review calibrated
+> 裁决：剩余 Tools 的功能都按 AI-first 重新定义；执行时只保功能，不保旧 API 兼容。`ParentManager` 功能必须升级为 Runtime mount 能力；`CommonTool.LoadPackedScene` 是迁出目标，Common Utilities 概念可保留但必须受约束；`TargetSelector`、`ResourceManagement`、`Math`、`NodeLifecycle` 按功能切片 hard cutover。最新执行前复核见 `08-2026-06-04-用户裁决后执行前复核.md`。
 
 ## 1. Goal
 
@@ -161,22 +161,30 @@
 
 1. `RuntimeMountRegistry` / `SceneMountRegistry`：把 `ParentManager` 功能升级为 mount manifest、scope、pending/in-tree diagnostics，解决大量 Entity / Pool / UI / Tool 节点路径统一问题。
 2. `TargetQueryEngine`：替换静态全局扫描式 `EntityTargetSelector`，补 query validation、resolved origin/forward、candidate source、diagnostics、deterministic RNG 和 safe sorting。
-3. `ResourceLoading`：删除 `CommonTool`，`ResourceManagement` 变 strict lookup、source policy、structured result、catalog diagnostics。
+3. `ResourceLoading`：迁出 `CommonTool.LoadPackedScene`，`ResourceManagement` 变 strict lookup、source policy、structured result、catalog diagnostics。
 4. `MathFormula` / deterministic random：拆 `MyMath` owner，保留 `Geometry2D` 纯算法，概率与采样支持 seed/RNG。
-5. `NodeLifecycleRegistry`：只保底层 Node registry、owner metadata、snapshot diagnostics 和 invalid cleanup；业务查询迁走后删除 public global scan 入口。
+5. `NodeLifecycleRegistry`：从 Tools helper 语义迁到 Runtime registry，保留统一 Node 注册、注销、id、owner metadata、snapshot diagnostics 和 invalid cleanup；业务查询迁走后删除 public global scan 入口。
+6. `Common Utilities`：保留通用工具区域，但不保留无约束 `CommonTool.SomeHelper()` 杂物箱。
 
 ## 7. Must Confirm
 
 这些问题不阻塞本轮设计文档，但进入实现型 SDD 前必须确认。注意：这里不再询问“要不要兼容旧 API”，默认不兼容；只确认会影响功能结果的问题。
 
-1. `ParentManager` 的默认挂载 scope：全局 `/root/SlimeAIRuntime` 持久挂载，还是当前主场景 / System host 下随场景销毁？
-2. `TargetSelector` 第一阶段是否直接上空间索引？默认建议先做 candidate source + diagnostics + deterministic RNG，等 profiling / 实体规模证据触发再上空间索引。
-3. `ResourceManagement` 是否接受 strict fail-fast：删除 contains fallback，缺精确 key / 缺 `ResourceLoadSource` 直接让验证失败？默认建议接受。
+用户已确认：
+
+- `ParentManager` 默认挂载 scope 采用 `/root/SlimeAIRuntime`。
+- `ResourceManagement` 接受 strict fail-fast：删除 contains fallback，缺精确 key / 缺 `ResourceLoadSource` 直接让验证失败。
+
+进入实现型 SDD 前剩余必须确认：
+
+1. Common Utilities 的最终目录位置：推荐 `Src/ECS/Common/Utilities/`，备选 `Src/ECS/Runtime/Common/`。
+2. `NodeLifecycle` 是否从 `Src/ECS/Tools/NodeLifecycle/` 迁到 `Src/ECS/Runtime/NodeLifecycle/`。
+3. `EntityTargetSelector.Query(query)` 是否只作为执行期临时桥，切片结束前删除或 internal 化。
 
 ## 8. Should Confirm
 
 - `ParentManager` 执行时是否直接改名为 `RuntimeMountRegistry` / `SceneMountRegistry`。
-- `CommonTool` 是否在资源加载 cutover 中直接删除。
+- `CommonTool.LoadPackedScene` 迁出后当前 `CommonTool` 是否删除或 internal 化。
 - `MyMath` 是否拆为 `AttributeFormula` / `CooldownFormula` / `DamageFormula` / `ProbabilityTool`。
 - `NodeLifecycleManager.GetAllNodes()` / `GetNodesByInterface<T>()` 是否从业务可见 API 删除。
 
@@ -188,9 +196,10 @@
 - `ParentManager` 执行时升级为 `RuntimeMountRegistry` / `SceneMountRegistry` 语义，默认挂到 `/root/SlimeAIRuntime`，测试可注入 test root。
 - `TargetSelector` 先不引入空间索引；先完成 query contract、candidate source、diagnostics 和 deterministic RNG。当目标数量、查询次数或 profiling artifact 证明全局扫描成为瓶颈时再加。
 - `Math` 不引入第三方库，不迁到 `System.Numerics`，继续使用 Godot `Vector2`。
-- `CommonTool` 删除；调用点迁入 `ResourceManagement` / `ResourceLoading`。
+- `CommonTool.LoadPackedScene` 迁入 `ResourceManagement` / `ResourceLoading`；当前 `CommonTool` 删除或 internal 化。
+- 保留受约束 Common Utilities 区域，但不允许 `CommonTool.SomeHelper()` 杂物箱。
 - `ResourceManagement.Load<T>` 删除 contains fallback；`LoadPath` 必须携带 `ResourceLoadSource`。
-- `NodeLifecycle` 只保底层注册和 diagnostics，不作为新业务查询入口。
+- `NodeLifecycle` 迁到 Runtime registry 语义，只保底层注册和 diagnostics，不作为新业务查询入口。
 
 ## 10. Not Recommended
 

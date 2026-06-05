@@ -1,5 +1,5 @@
 #!/bin/bash
-# 统一同步 AI 配置：以 .ai-config/ 为唯一源，分发到 Codex、Claude、Windsurf
+# 统一同步 AI 配置：以 .ai-config/ 为唯一源，分发到 Codex、Claude、Devin、Trae
 # .ai-config/skills/ 内部可按领域分子目录，同步时自动打平到目标顶层
 set -euo pipefail
 
@@ -9,8 +9,9 @@ ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 mkdir -p "$ROOT/.codex/skills"
 mkdir -p "$ROOT/.claude/skills"
 mkdir -p "$ROOT/.claude/commands/opsx"
-mkdir -p "$ROOT/.windsurf/skills"
-mkdir -p "$ROOT/.windsurf/rules"
+mkdir -p "$ROOT/.devin/skills"
+mkdir -p "$ROOT/.devin/rules"
+mkdir -p "$ROOT/.trae/skills"
 mkdir -p "$(dirname "$ROOT/AGENTS.md")"
 mkdir -p "$(dirname "$ROOT/CLAUDE.md")"
 
@@ -50,37 +51,41 @@ sync_skills_flat() {
     done
 }
 
-echo "==> [1/7] Syncing skills: .ai-config/skills/ -> .codex/skills/"
+echo "==> [1/8] Syncing skills: .ai-config/skills/ -> .codex/skills/"
 sync_skills_flat "$ROOT/.ai-config/skills" "$ROOT/.codex/skills" ""
 
 echo ""
-echo "==> [2/7] Syncing skills: .ai-config/skills/ -> .claude/skills/ (exclude openspec-*)"
+echo "==> [2/8] Syncing skills: .ai-config/skills/ -> .claude/skills/ (exclude openspec-*)"
 sync_skills_flat "$ROOT/.ai-config/skills" "$ROOT/.claude/skills" "openspec-*"
 
 echo ""
-echo "==> [3/7] Syncing skills: .ai-config/skills/ -> .windsurf/skills/"
-sync_skills_flat "$ROOT/.ai-config/skills" "$ROOT/.windsurf/skills" ""
+echo "==> [3/8] Syncing skills: .ai-config/skills/ -> .devin/skills/"
+sync_skills_flat "$ROOT/.ai-config/skills" "$ROOT/.devin/skills" ""
 
 echo ""
-echo "==> [4/7] Syncing rules: .ai-config/rules/rules.md -> AGENTS.md"
+echo "==> [4/8] Syncing skills: .ai-config/skills/ -> .trae/skills/"
+sync_skills_flat "$ROOT/.ai-config/skills" "$ROOT/.trae/skills" ""
+
+echo ""
+echo "==> [5/8] Syncing rules: .ai-config/rules/rules.md -> AGENTS.md"
 cp "$ROOT/.ai-config/rules/rules.md" "$ROOT/AGENTS.md"
 
 echo ""
-echo "==> [5/7] Syncing rules: .ai-config/rules/rules.md -> CLAUDE.md"
+echo "==> [6/8] Syncing rules: .ai-config/rules/rules.md -> CLAUDE.md"
 cp "$ROOT/.ai-config/rules/rules.md" "$ROOT/CLAUDE.md"
 
 echo ""
-echo "==> [6/7] Syncing rules: .ai-config/rules/rules.md -> .windsurf/rules/windsurfrules.md"
+echo "==> [7/8] Syncing rules: .ai-config/rules/rules.md -> .devin/rules/devinrules.md"
 {
   echo "---"
   echo "trigger: always_on"
   echo "---"
   echo ""
   cat "$ROOT/.ai-config/rules/rules.md"
-} > "$ROOT/.windsurf/rules/windsurfrules.md"
+} > "$ROOT/.devin/rules/devinrules.md"
 
 echo ""
-echo "==> [7/7] Regenerating Claude commands from .ai-config/openspec skills"
+echo "==> [8/8] Regenerating Claude commands from .ai-config/openspec skills"
 python3 "$ROOT/Workspace/Tools/ai-config-sync/generate-claude-commands.py"
 
 echo ""
