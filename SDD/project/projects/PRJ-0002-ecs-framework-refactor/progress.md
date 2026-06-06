@@ -6,11 +6,11 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-04
+- **Updated**: 2026-06-06
 - **Current SDD**: none
-- **Last Conclusion**: `Tool/其他Tool` 已根据用户截图和最新裁决完成执行前复核：`ParentManager` 默认 `/root/SlimeAIRuntime` 已确认，资源加载 strict fail-fast 已确认；TargetSelector 后续按 `TargetQueryEngine + TargetQueryResult` 做“找目标报告”；`CommonTool.LoadPackedScene` 迁入资源加载，但保留受约束 Common Utilities 概念；`NodeLifecycle` 功能保留并建议从 Tools 迁到 Runtime registry 语义。
-- **Next Action**: 请用户检查 `design/Tool/其他Tool/08-2026-06-04-用户裁决后执行前复核.md`，重点确认 Common Utilities 目录、NodeLifecycle 是否迁到 Runtime、`EntityTargetSelector.Query` 是否只作为临时桥。
-- **Open Blockers**: 等待用户确认上述 3 个执行前问题；未阻塞文档复核，但阻塞源码实施。
+- **Last Conclusion**: `design/ECS框架优化/1.拆箱装箱+GC优化/` 已完成 AI-first 深度设计包：Data/Event 的 `object?` 是 P0 hard cutover 问题，Feature/Ability 的 `ActivationData/ExecuteResult object?` 必须同步类型化；ObjectPool 反射、TargetSelector 集合分配、Logger 字符串求值为 P1；字符串插值不是 P0，真正问题是日志 API 不能延迟消息构造。
+- **Next Action**: 请用户确认是否按推荐顺序创建执行型 SDD：1. Data Runtime Typed Value Hard Cutover；2. Event Dynamic Object Removal；3. Feature Ability Typed Execution Context。
+- **Open Blockers**: 源码实施前需确认 Data public object API 是否可删除/internal/obsolete debug-only，Event dynamic object API 是否可彻底删除，Feature Execute 是否改 typed generic contract。
 
 ## Project Status Board
 
@@ -37,6 +37,7 @@
 | SDD-0028 | pending | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已创建执行胶囊；等待按提示词执行 runtime state、parking grid、CollisionLogicGuard、ContactDamage stale attacker cleanup、contract tests、Godot collision validation 和 DocsAI/skill sync |
 | SDD-0029 | done | `design/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |
 | SDD-0030 | done | `design/7.Component/` | Component Code Composition And Contract Hardening 已完成：默认组件组合迁到 C# profile / composer，Entity root scene 停止 instance Component Preset，ComponentManifest / DocsAI / ecs-component skill 已同步 |
+| TBD | proposed | `design/ECS框架优化/1.拆箱装箱+GC优化/` | 2026-06-06 设计包已完成：推荐先建 Data Runtime Typed Value Hard Cutover，再建 Event Dynamic Object Removal 和 Feature Ability Typed Execution Context；P1 合并 ObjectPool/TargetSelector/Logger 分配优化 |
 | TBD | proposed | `design/13-旧ECS框架Event系统问题分析与优化方向.md` | P1：保留 EventBus，优化事件主键、事件定义和请求-响应边界 |
 
 ## Timeline
@@ -334,3 +335,12 @@
 - **Research Adoption**: externalResources enabled=`official-docs, engine-framework`，scope=Context7 `/godotengine/godot-docs` 的 PackedScene/root add child/groups 片段 + `Resources/Engine/Docs/FrameworkAnalysis/Reports` 中 Bevy/Flecs/EnTT/DefaultEcs/综合报告关于 capability-owned selector、relationship/hierarchy 和 query DSL 的裁决；copiedCodeOrAssets=none。
 - **Impact**: 后续执行型 SDD 不应把 CommonTool 简单一删了事，也不应把 NodeLifecycle 删除后让各模块各写一套 registry；应按 `08-*` 的默认假设和确认点创建实现任务。
 - **Resume**: 等待用户确认：1. Common Utilities 目录选 `Src/ECS/Common/Utilities/` 还是 `Src/ECS/Runtime/Common/`；2. NodeLifecycle 是否迁到 `Src/ECS/Runtime/NodeLifecycle/`；3. `EntityTargetSelector.Query(query)` 是否只作为执行期临时桥并在切片结束前删除或 internal 化。
+
+### P040 — 2026-06-06 — gc-boxing-deepthink-design
+
+- **Context**: 用户要求基于 AI-first 方向、DocsAI owner 文档、现有 `问题/` 初稿、源码和外部 .NET 资料，深度分析 SlimeAI 装箱拆箱与 GC 问题是否要改，并在 `design/ECS框架优化/1.拆箱装箱+GC优化` 下按功能生成设计文档。
+- **Conclusion**: 已完成 GC/装箱设计包。裁决 Data runtime object 是 P0：当前 `DataSlot.Value object?`、`DataChangeRecord object?`、computed resolver `object?` 仍在高频基础层；Event dynamic object 是 P0：typed EventBus 保留，但 `EmitDynamic/OnDynamic/Action<object>` 不应作为框架协议；Feature/Ability 的 `ActivationData/ExecuteResult object?` 是 Event 禁 object 后必须同步收口的上下文宽口；ObjectPool、TargetSelector、Logger 分配问题真实存在但为 P1。字符串插值不作为 P0，后续改日志 lazy/handler。
+- **Evidence**: `design/ECS框架优化/1.拆箱装箱+GC优化/README.md`、`设计/README.md`、`设计/00-总览与AI-first裁决.md`、`01-Data运行时object去除设计.md`、`02-EventBus动态object禁用设计.md`、`03-FeatureAbility上下文类型化设计.md`、`04-ObjectPool反射管理接口设计.md`、`05-TargetSelector集合分配与LINQ设计.md`、`06-Logger字符串与诊断分配设计.md`；`design/INDEX.md`、`roadmap.md`、`notes.md` 已同步。
+- **Research Adoption**: externalResources enabled=`official-docs`，scope=Microsoft Learn C# boxing/unboxing、.NET GC fundamentals、C# interpolated string handler；copiedCodeOrAssets=none；adoption=采纳 boxing/GC/handler 的语言运行时事实，具体架构裁决仍以 SlimeAI DocsAI/SDD/源码为准。
+- **Impact**: 后续不应只缓存反射或改字符串就宣称 GC 优化完成；先从 Data/Event/Feature 的 object 契约 hard cutover 开始，并以 profiler/benchmark/scene artifact 证明分配变化。
+- **Resume**: 若继续实施，先创建 `Data Runtime Typed Value Hard Cutover` SDD，并在 SDD Must Confirm 中写明：Data public object API 是否删除/internal/obsolete debug-only；`PropertyChanged(object?)` 是否改 typed/domain event + debug snapshot。

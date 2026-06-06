@@ -2,7 +2,7 @@
 
 ## Purpose
 
-项目级执行路线图，追踪 `design/` 下每份问题分析文档的完成情况和后续 SDD 拆分建议。多份文档可以合并为一个 SDD；Data 核心 runtime 重构已按切片序列完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 主链路。Entity / Relationship 已按 SDD-0024 完成 hard cutover。ECS 目录架构大重构已按 SDD-0025 收口为 `Runtime + Capabilities + Tools + UI`；Input Contract 已按 SDD-0026 完成业务语义 facade 和调用点迁移；Timer Scheduler Full Rewrite 已创建 SDD-0027 并因当前承载游戏 runner/Godot CLI 缺失阻塞在场景验证；ObjectPool / Collision ParkedInTree cutover 已创建 SDD-0028；Runtime System AI-first 优化已按 SDD-0029 完成 manifest / preflight / diagnostics / trace 和 DocsAI 同步。SDD-0030 已完成 Component Preset 代码化 composition profile / composer、typed options、ComponentManifest、DocsAI 和 skill sync。`design/Tool/其他Tool/` 已按 2026-06-04 用户复核改为功能优先 hard cutover：RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、Common Utilities、MathFormula 后续不为旧 API 长期兼容让路；已确认 `/root/SlimeAIRuntime` 和资源 strict fail-fast。
+项目级执行路线图，追踪 `design/` 下每份问题分析文档的完成情况和后续 SDD 拆分建议。多份文档可以合并为一个 SDD；Data 核心 runtime 重构已按切片序列完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 主链路，但 2026-06-06 GC/装箱复查确认运行时值存储仍需 typed value hard cutover。Entity / Relationship 已按 SDD-0024 完成 hard cutover。ECS 目录架构大重构已按 SDD-0025 收口为 `Runtime + Capabilities + Tools + UI`；Input Contract 已按 SDD-0026 完成业务语义 facade 和调用点迁移；Timer Scheduler Full Rewrite 已创建 SDD-0027 并因当前承载游戏 runner/Godot CLI 缺失阻塞在场景验证；ObjectPool / Collision ParkedInTree cutover 已创建 SDD-0028；Runtime System AI-first 优化已按 SDD-0029 完成 manifest / preflight / diagnostics / trace 和 DocsAI 同步。SDD-0030 已完成 Component Preset 代码化 composition profile / composer、typed options、ComponentManifest、DocsAI 和 skill sync。`design/Tool/其他Tool/` 已按 2026-06-04 用户复核改为功能优先 hard cutover：RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、Common Utilities、MathFormula 后续不为旧 API 长期兼容让路；已确认 `/root/SlimeAIRuntime` 和资源 strict fail-fast。
 
 ## Design Progress
 
@@ -10,6 +10,7 @@
 | --- | --- | --- | --- |
 | `design/main.md` | — | — | 项目主设计，共享上下文 |
 | `design/00-旧ECS框架问题总览.md` | done | — | 已完成方向纠偏：保留旧 ECS，聚焦真实问题 |
+| `design/ECS框架优化/1.拆箱装箱+GC优化/` | proposed | TBD | 2026-06-06 已完成 AI-first 装箱/GC 设计包：Data/Event/Feature object 为 P0/P1，ObjectPool/TargetSelector/Logger 为 P1，字符串插值不作为 P0 |
 | `design/01-Data系统问题分析.md` | done | SDD-0012~SDD-0021 | 兼容入口；完整 Data 设计已迁移到 `design/2.Data系统优化/`，SDD-0021 负责无兼容最终收口 |
 | `design/2.Data系统优化/` | done | SDD-0012~SDD-0022 | Data 核心 runtime 已完成 descriptor-first、DataDefinitionCatalog、DataSlot/policy、modifier、compute、snapshot apply、字段迁移、旧路径删除、SDD-0020 snapshot-first usage cutover、SDD-0021 no-compat hard cutover 和 SDD-0022 residual contract hardening |
 | `design/2.Data系统优化/04-Data系统现状复查与兼任问题.md` | done | SDD-0020 | SDD-0020 已完成 snapshot-first usage 主链路；其中部分 RuntimeTables / Data fallback 证据已被 06 更新 |
@@ -36,6 +37,12 @@
 
 | Priority | Design Docs | Goal |
 | --- | --- | --- |
+| P0 | `design/ECS框架优化/1.拆箱装箱+GC优化/设计/01-Data运行时object去除设计.md` | **建议新建 SDD**：Data Runtime Typed Value Hard Cutover；用 `DataRuntimeValue` / typed converter / typed computed / typed changed event 替换 DataSlot object 主链路，并把 untyped API 降为 loader/debug 边界 |
+| P0 | `design/ECS框架优化/1.拆箱装箱+GC优化/设计/02-EventBus动态object禁用设计.md` | **建议新建 SDD**：Event Dynamic Object Removal；删除或禁用 `EmitDynamic` / `OnDynamic` / `Action<object>`，Feature event action 改 typed registry |
+| P0 | `design/ECS框架优化/1.拆箱装箱+GC优化/设计/03-FeatureAbility上下文类型化设计.md` | **建议新建 SDD**：Feature Ability Typed Execution Context；把 `FeatureContext.ActivationData/ExecuteResult object?` 和 `IFeatureHandler.OnExecute object?` 改为 typed execution contract |
+| P1 | `design/ECS框架优化/1.拆箱装箱+GC优化/设计/04-ObjectPool反射管理接口设计.md` | 合入 SDD-0028 或后续 ObjectPool cleanup：`ObjectPoolManager` 改极小非泛型 runtime interface，删除反射调用 |
+| P1 | `design/ECS框架优化/1.拆箱装箱+GC优化/设计/05-TargetSelector集合分配与LINQ设计.md` | 合入 Target Query Engine Hard Cutover：处理 `new List`、`GetRange`、`new Random()`、LINQ 和 result ownership |
+| P1 | `design/ECS框架优化/1.拆箱装箱+GC优化/设计/06-Logger字符串与诊断分配设计.md` | 建议后续 Logger SDD：不禁字符串插值，补 `IsEnabled` / lazy message / interpolated string handler |
 | P0 | `design/2.Data系统优化/` | **SDD-0012**：Catalog TDD 第一切片，建立 descriptor-first DataDefinitionCatalog 和一次性旧定义审计 |
 | P0 | `design/2.Data系统优化/` | **SDD-0013**：补齐 DataOS descriptor authoring schema、generator、validator 和 snapshot descriptor 契约 |
 | P0 | `design/2.Data系统优化/` | **SDD-0014**：重建 DataSlot、DataValueConverter、write/range/allowed values 和 typed handle 读写模型 |
