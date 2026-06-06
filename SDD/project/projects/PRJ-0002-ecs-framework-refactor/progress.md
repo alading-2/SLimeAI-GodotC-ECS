@@ -8,8 +8,8 @@
 
 - **Updated**: 2026-06-06
 - **Current SDD**: none
-- **Last Conclusion**: `design/ECS框架优化/1.拆箱装箱+GC优化/` 已完成 AI-first 深度设计包：Data/Event 的 `object?` 是 P0 hard cutover 问题，Feature/Ability 的 `ActivationData/ExecuteResult object?` 必须同步类型化；ObjectPool 反射、TargetSelector 集合分配、Logger 字符串求值为 P1；字符串插值不是 P0，真正问题是日志 API 不能延迟消息构造。
-- **Next Action**: 请用户确认是否按推荐顺序创建执行型 SDD：1. Data Runtime Typed Value Hard Cutover；2. Event Dynamic Object Removal；3. Feature Ability Typed Execution Context。
+- **Last Conclusion**: `design/ECS框架优化/1.拆箱装箱+GC优化/` 已完成 AI-first 深度设计包并按用户裁决确认 Data 方案：Data/Event 的 `object?` 是 P0 hard cutover 问题；Data 最终采用 `DataSlot<T> + IDataSlot`，不采用 `DataRuntimeValue` 多字段 union；Feature/Ability 的 `ActivationData/ExecuteResult object?` 必须同步类型化；ObjectPool 反射、TargetSelector 集合分配、Logger 字符串求值为 P1；字符串插值不是 P0，真正问题是日志 API 不能延迟消息构造。
+- **Next Action**: 请用户确认是否按推荐顺序创建执行型 SDD：1. Data Runtime Generic Slot Hard Cutover；2. Event Dynamic Object Removal；3. Feature Ability Typed Execution Context。
 - **Open Blockers**: 源码实施前需确认 Data public object API 是否可删除/internal/obsolete debug-only，Event dynamic object API 是否可彻底删除，Feature Execute 是否改 typed generic contract。
 
 ## Project Status Board
@@ -37,7 +37,7 @@
 | SDD-0028 | pending | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已创建执行胶囊；等待按提示词执行 runtime state、parking grid、CollisionLogicGuard、ContactDamage stale attacker cleanup、contract tests、Godot collision validation 和 DocsAI/skill sync |
 | SDD-0029 | done | `design/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |
 | SDD-0030 | done | `design/7.Component/` | Component Code Composition And Contract Hardening 已完成：默认组件组合迁到 C# profile / composer，Entity root scene 停止 instance Component Preset，ComponentManifest / DocsAI / ecs-component skill 已同步 |
-| TBD | proposed | `design/ECS框架优化/1.拆箱装箱+GC优化/` | 2026-06-06 设计包已完成：推荐先建 Data Runtime Typed Value Hard Cutover，再建 Event Dynamic Object Removal 和 Feature Ability Typed Execution Context；P1 合并 ObjectPool/TargetSelector/Logger 分配优化 |
+| TBD | proposed | `design/ECS框架优化/1.拆箱装箱+GC优化/` | 2026-06-06 设计包已完成并按用户裁决确认 Data 方案：推荐先建 Data Runtime Generic Slot Hard Cutover，按 `DataSlot<T> + IDataSlot` 最终架构实施；再建 Event Dynamic Object Removal 和 Feature Ability Typed Execution Context；P1 合并 ObjectPool/TargetSelector/Logger 分配优化 |
 | TBD | proposed | `design/13-旧ECS框架Event系统问题分析与优化方向.md` | P1：保留 EventBus，优化事件主键、事件定义和请求-响应边界 |
 
 ## Timeline
@@ -339,8 +339,16 @@
 ### P040 — 2026-06-06 — gc-boxing-deepthink-design
 
 - **Context**: 用户要求基于 AI-first 方向、DocsAI owner 文档、现有 `问题/` 初稿、源码和外部 .NET 资料，深度分析 SlimeAI 装箱拆箱与 GC 问题是否要改，并在 `design/ECS框架优化/1.拆箱装箱+GC优化` 下按功能生成设计文档。
-- **Conclusion**: 已完成 GC/装箱设计包。裁决 Data runtime object 是 P0：当前 `DataSlot.Value object?`、`DataChangeRecord object?`、computed resolver `object?` 仍在高频基础层；Event dynamic object 是 P0：typed EventBus 保留，但 `EmitDynamic/OnDynamic/Action<object>` 不应作为框架协议；Feature/Ability 的 `ActivationData/ExecuteResult object?` 是 Event 禁 object 后必须同步收口的上下文宽口；ObjectPool、TargetSelector、Logger 分配问题真实存在但为 P1。字符串插值不作为 P0，后续改日志 lazy/handler。
+- **Conclusion**: 已完成 GC/装箱设计包并按用户反馈修正 Data 设计。裁决 Data runtime object 是 P0：当前 `DataSlot.Value object?`、`DataChangeRecord object?`、computed resolver `object?` 仍在高频基础层；Data 方案从上一版 `DataRuntimeValue` 多字段 union 改为 `DataSlot<T>`、`DataFieldDefinition<T>`、`DataValuePolicy<T>` 和 `IDataComputeResolver<T>`，因为当前 `Data.Get/Set<T>` 已有泛型主链路，union 会冗余并制造新宽口；Event dynamic object 是 P0：typed EventBus 保留，但 `EmitDynamic/OnDynamic/Action<object>` 不应作为框架协议；Feature/Ability 的 `ActivationData/ExecuteResult object?` 是 Event 禁 object 后必须同步收口的上下文宽口；ObjectPool、TargetSelector、Logger 分配问题真实存在但为 P1。字符串插值不作为 P0，后续改日志 lazy/handler。
 - **Evidence**: `design/ECS框架优化/1.拆箱装箱+GC优化/README.md`、`设计/README.md`、`设计/00-总览与AI-first裁决.md`、`01-Data运行时object去除设计.md`、`02-EventBus动态object禁用设计.md`、`03-FeatureAbility上下文类型化设计.md`、`04-ObjectPool反射管理接口设计.md`、`05-TargetSelector集合分配与LINQ设计.md`、`06-Logger字符串与诊断分配设计.md`；`design/INDEX.md`、`roadmap.md`、`notes.md` 已同步。
-- **Research Adoption**: externalResources enabled=`official-docs`，scope=Microsoft Learn C# boxing/unboxing、.NET GC fundamentals、C# interpolated string handler；copiedCodeOrAssets=none；adoption=采纳 boxing/GC/handler 的语言运行时事实，具体架构裁决仍以 SlimeAI DocsAI/SDD/源码为准。
+- **Research Adoption**: externalResources enabled=`official-docs, engine-framework`，scope=Microsoft Learn C# boxing/unboxing、.NET GC fundamentals、C# interpolated string handler；Unity Entities component docs；Bevy ECS component/storage docs；`Resources/Engine/Docs/FrameworkAnalysis/Reports` 中综合报告、DefaultEcs、Unreal GAS 对照；copiedCodeOrAssets=none；adoption=采纳 boxing/GC/handler 的语言运行时事实和 typed ECS 热路径共识，具体架构裁决仍以 SlimeAI DocsAI/SDD/源码为准。
 - **Impact**: 后续不应只缓存反射或改字符串就宣称 GC 优化完成；先从 Data/Event/Feature 的 object 契约 hard cutover 开始，并以 profiler/benchmark/scene artifact 证明分配变化。
-- **Resume**: 若继续实施，先创建 `Data Runtime Typed Value Hard Cutover` SDD，并在 SDD Must Confirm 中写明：Data public object API 是否删除/internal/obsolete debug-only；`PropertyChanged(object?)` 是否改 typed/domain event + debug snapshot。
+- **Resume**: 若继续实施，先创建 `Data Runtime Generic Slot Hard Cutover` SDD，并在 SDD Must Confirm 中写明：Data public object API 是否删除/internal/obsolete debug-only；`PropertyChanged(object?)` 是否改 typed/domain event + debug snapshot；`DataRuntimeValue` union 已被废弃，不作为实现默认方案。
+
+### P041 — 2026-06-06 — data-generic-slot-confirmed
+
+- **Context**: 用户确认 `DataSlot<T> + IDataSlot` 应是 Data 去 object 的最佳方案，要求更新文档。
+- **Conclusion**: Data GC hard cutover 方案已从“推荐”提升为“最终裁决”：`DataSlot<T>` 保存真实业务值，`IDataSlot` 只作为跨类型 slot 管理和 diagnostics 边界；不再把 `DataRuntimeValue` union、多字典拆分或 `object? Value` 作为同级候选。
+- **Evidence**: `design/ECS框架优化/1.拆箱装箱+GC优化/设计/01-Data运行时object去除设计.md`、`00-总览与AI-first裁决.md`、`README.md`、`design/INDEX.md`、`roadmap.md`、本 `progress.md` 已同步。
+- **Impact**: 后续 `Data Runtime Generic Slot Hard Cutover` SDD 不需要重新争论 Data 值容器形态；只需确认 public object API 删除/internal/obsolete debug-only、typed/domain change event 和 diagnostic snapshot 边界。
+- **Resume**: 继续实施时创建 `Data Runtime Generic Slot Hard Cutover` SDD，读取 `01-Data运行时object去除设计.md` 的 Confirmed Decisions 后进入实现设计。

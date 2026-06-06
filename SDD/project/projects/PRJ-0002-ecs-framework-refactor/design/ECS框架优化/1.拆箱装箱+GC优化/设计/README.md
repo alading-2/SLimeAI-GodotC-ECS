@@ -2,7 +2,7 @@
 
 > 状态：current
 > 更新：2026-06-06
-> 输入：用户关于 Data/Event object、字符串插值、AI-first 性能严谨性的裁决要求；`DocsAI/ECS框架与AIFirst方向决策.md`；Data/Event/Feature/ObjectPool/TargetSelector/Logger DocsAI 与源码审计；Microsoft Learn .NET boxing / GC / interpolated string handler 文档。
+> 输入：用户关于 Data/Event object、字符串插值、AI-first 性能严谨性的裁决要求；用户对 `DataRuntimeValue` 多字段方案的驳回；用户确认 `DataSlot<T> + IDataSlot` 是 Data 去 object 最佳方案；`DocsAI/ECS框架与AIFirst方向决策.md`；Data/Event/Feature/ObjectPool/TargetSelector/Logger DocsAI 与源码审计；Microsoft Learn .NET boxing / GC / interpolated string handler 文档；Resources/Engine 本地框架分析和 Unity Entities / Bevy ECS 官方资料。
 
 ## DeepThink 确认包
 
@@ -19,7 +19,8 @@
 - 已读 owner 文档：`DocsAI/ECS/Runtime/Data/Data系统说明.md`、`DocsAI/ECS/Runtime/Event/Event系统说明.md`、`DocsAI/ECS/Runtime/README.md`、`DocsAI/ECS/Tools/ObjectPool/README.md`。
 - 已读 SDD 源：`PRJ-0002` README、`design/INDEX.md`、`roadmap.md`、`progress.md`、现有 `问题/*.md`。
 - 已读源码：`DataRuntimeStorage.cs`、`Data.cs`、`GameEventType_Data.cs`、`DataModifier.cs`、`DataComputeRegistry.cs`、`EventBus.cs`、`EventContext.cs`、`FeatureContext.cs`、`IFeatureHandler.cs`、`FeatureSystem.cs`、`EmitEventAction.cs`、`AbilityFeatureHandler.cs`、`AbilitySystem.cs`、`CastContext.cs`、`TriggerComponent.cs`、`ObjectPoolManager.cs`、`EntityTargetSelector.cs`、`AbilityInventoryService.cs`、`ComponentRegistrar.cs`、`Log.cs`。
-- 外部资料：Microsoft Learn 确认 boxing 会把值类型包装到托管堆对象；GC 频率受分配率影响；interpolated string handler 是性能场景下避免无谓字符串构造的官方机制。
+- 本地引擎资料：`Resources/Engine/Docs/FrameworkAnalysis/Reports/99-SlimeAI-引擎源码综合分析报告.md`、`05-DefaultEcs-源码分析报告.md`、`09-Unreal-GAS-文档对照报告.md`。结论支持 typed data / typed event / Capability-owned selector，不支持把外部 ECS 运行时照搬进 SlimeAI。
+- 外部资料：Microsoft Learn 确认 boxing 会把值类型包装到托管堆对象；GC 频率受分配率影响；interpolated string handler 是性能场景下避免无谓字符串构造的官方机制。Unity Entities / Bevy ECS 资料用于校准成熟 ECS 的热路径状态主链路是 typed component / typed storage，动态能力只留在受约束边界。
 - 未读上下文：未做运行时 profiler；未跑 Godot 场景；未审完所有 gameplay / UI 调用点。
 
 ### Problem Shape
@@ -46,7 +47,7 @@
    - 优点：快。
    - 缺点：Data object 主问题仍在，AI-first 契约仍宽。
 
-2. P0 hard cutover：Data runtime typed value + Event 禁 dynamic object + Feature/Ability typed context。
+2. P0 hard cutover：Data runtime generic slot + Event 禁 dynamic object + Feature/Ability typed context。
    - 优点：解决最底层、最高频、最影响 AI 契约的问题。
    - 缺点：实施面大，需要 SDD 和强验证。
 
@@ -60,7 +61,7 @@
 
 推荐顺序：
 
-1. Data Runtime Typed Value Hard Cutover。
+1. Data Runtime Generic Slot Hard Cutover。
 2. Event Dynamic Object Removal。
 3. Feature / Ability Typed Execution Context。
 4. ObjectPool Manager Untyped Interface。
@@ -83,7 +84,8 @@
 
 - Data/Event/Feature 不保旧 object API 为 AI 框架长期入口；必要时保留 `internal` 或 `[Obsolete]` 人工调试入口，并在注释中写明装箱、拆箱和 GC 风险。
 - Event 不保动态 object 兼任。
-- Data 先按 descriptor `DataValueType` 建 typed runtime value，不直接把整个系统泛型化成大量 `DataSlot<T>` public API。
+- Data 主链路最终确认使用 `DataFieldDefinition<T>`、`DataSlot<T>`、`IDataSlot`、`DataValuePolicy<T>` 和 `IDataComputeResolver<T>`。`Dictionary<string, IDataSlot>` 只作为跨类型 slot 管理边界，不暴露 `object? Value`。
+- 不采用上一版 `DataRuntimeValue` 多字段 union；它会制造冗余字段和新一层动态分发，违背 `DataKey<T>` 已经建立的泛型契约。
 - 所有具体性能数字必须通过 profiler / benchmark / scene artifact 证明。
 
 ### Not Recommended
@@ -92,6 +94,7 @@
 - 不建议给 `EmitDynamic` 加缓存后继续让 Feature 用 object 事件。
 - 不建议为了人工便利保留 Data/Event object public API。
 - 不建议把 Data 值全部拆成多个 `Dictionary<string, float/int/bool>` 而不处理 computed、modifier、changed event 和 DataValueConverter；那只是局部存储优化。
+- 不建议使用 `DataRuntimeValue` 多字段 union 替代泛型 slot；这会从 `object` 宽口变成自定义宽口。
 
 ### Artifact Updates
 

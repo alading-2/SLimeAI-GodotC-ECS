@@ -10,7 +10,8 @@
 
 核心结论：
 
-- Data 是 P0：当前 `DataSlot.Value object?`、`DataChangeRecord object?`、computed resolver `object?` 仍在 Runtime Data 热路径中，必须改为 typed runtime value，不继续把 `object` 当 AI 框架主链路。
+- Data 是 P0：当前 `DataSlot.Value object?`、`DataChangeRecord object?`、computed resolver `object?` 仍在 Runtime Data 热路径中，必须改为 `DataSlot<T> + IDataSlot`、typed runtime field、typed policy 和 typed computed resolver，不继续把 `object` 当 AI 框架主链路。
+- Data 架构已确认：`DataSlot<T> + IDataSlot` 是最终方案；上一版 `DataRuntimeValue` 多字段 union 废弃。SlimeAI 已有 `DataKey<T>` 与 `Data.Get/Set<T>`，继续引入带多个候选字段的通用 value 结构会冗余、扩散分发逻辑，并削弱泛型契约。
 - Event 是 P0：泛型 `EventBus.Emit<T>` 可以保留，但 `EmitDynamic` / `OnDynamic` / `Action<object>` 不应继续作为框架事件协议入口；Event 完全由 AI 写，必须禁止 object 兼任。
 - Feature / Ability 是 P0/P1 交界：`FeatureContext.ActivationData/ExecuteResult object?` 和 `IFeatureHandler.OnExecute object?` 是当前 Ability 接入 Feature 的宽口桥，必须类型化，否则 Event 禁 object 后仍会从 Feature 绕回 object。
 - ObjectPool、TargetSelector、Logger 是 P1：确有反射、集合分配和日志字符串求值问题，但优先级低于 Data/Event object 热路径，应随对应 owner hard cutover 或性能 SDD 分批处理。

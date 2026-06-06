@@ -1,10 +1,14 @@
-# Data 运行时 object 去除设计
+# Data 运行时泛型存储设计
 
 ## 当前结论
 
-Data 必须改，而且应按 hard cutover 改。当前 Data 已经在事实源层完成 DataOS descriptor、runtime snapshot、generated `DataKey<T>`，但运行时值存储仍回到 `object?`。这会让 typed handle 的 AI-first 收益在热路径被抵消。
+Data 必须改，而且应按 hard cutover 改。当前 Data 已经在事实源层完成 DataOS descriptor、runtime snapshot、generated `DataKey<T>`，调用侧也已经是 `Data.Get/Set<T>(DataKey<T>)`，但运行时值存储仍回到 `object?`。这会让 typed handle 的 AI-first 收益在热路径被抵消。
 
 用户判断“Data 的 object 问题比较大”成立。Data 是 ECS 运行时状态容器，读写频率远高于大部分工具层 API，不能继续把 `object?` 当主链路。
+
+用户对上一版设计的批评也成立：不应再用一个带 `IntValue/FloatValue/BoolValue/...` 多字段的 `DataRuntimeValue` union 替代 `object?`。那只是把“一个 object 存任意类型”的问题换成“一个结构体携带所有可能类型的字段”，会引入冗余字段、额外分发、调试歧义和未来类型扩张成本。SlimeAI 既然已经有 `DataKey<T>` 和 `Data.Get/Set<T>`，主链路就应继续走泛型。
+
+用户已确认 `DataSlot<T> + IDataSlot` 是当前最优方案。本设计以此作为最终裁决：`DataSlot<T>` 保存真实业务值，`IDataSlot` 只作为跨类型 slot 管理和 diagnostics 边界；不再把 `DataRuntimeValue` union、`object? Value` 或多字典拆分作为同级候选。
 
 ## 当初为什么这么设计
 
@@ -43,113 +47,175 @@ DataOS descriptor -> runtime_snapshot.json -> DataDefinitionCatalog -> generated
 4. computed resolver、modifier pipeline 和 changed event 同步 typed 化。
 5. 执行后必须能用 grep gate 证明 AI 框架主链路不调用 object API。
 
-## 推荐架构
+## 最终架构
 
-### 1. 引入 `DataRuntimeValue`
+### 1. 用 `DataSlot<T>` 替代 `DataSlot.Value object?`
 
-用 descriptor `DataValueType` 做稳定分发，而不是把 public API 泛型化到所有内部类型。
+最终裁决不是新增通用 value union，而是让每个 slot 自己持有真实类型：
 
 目标形状：
 
 ```csharp
-internal readonly struct DataRuntimeValue
+internal interface IDataSlot
 {
-    public DataValueType ValueType { get; }
-    public int IntValue { get; }
-    public float FloatValue { get; }
-    public double DoubleValue { get; }
-    public bool BoolValue { get; }
-    public System.Numerics.Vector2 Vector2Value { get; }
-    public string? StringValue { get; }
-    public string[]? StringArrayValue { get; }
-    public ResourceRef ResourceRefValue { get; }
-    public object? DebugObjectValue { get; }
+    DataDefinition Definition { get; }
+    Type ValueClrType { get; }
+    bool HasValue { get; }
+    DataDiagnosticValue ToDiagnosticValue();
+}
+
+internal class DataSlot<T> : IDataSlot
+{
+    private readonly DataValuePolicy<T> _policy;
+    private T _value;
+    private bool _hasValue;
+
+    public virtual T GetEffectiveValue();
+    public virtual bool SetValue(T value);
+    public bool TrySetFromBoundary(object? rawValue, DataWriteSource source, out DataWriteReport report);
 }
 ```
 
-说明：
+裁决边界：
 
-- 数值、bool、Vector2、enum string、ResourceRef 走 typed 字段。
-- 引用型复杂数据仍可通过受约束字段保存，但必须由 descriptor 声明 `object_ref/runtime_only/runtimeTypeId`。
-- `DebugObjectValue` 只服务 debug/test/runtime object reference，不作为普通 DataKey 入口。
+- `DataRuntimeStorage` 可以继续用 `Dictionary<string, IDataSlot>` 管不同类型的 slot；这是类型擦除的管理边界，不存业务值。
+- 热路径 `Data.Set<T>(DataKey<T>, T)` 取到 `DataSlot<T>` 后直接写 `T`，不经过 `object?`。
+- 热路径 `Data.Get<T>(DataKey<T>)` 取到 `DataSlot<T>` 后直接读 `T`，不经过 `ConvertForRead(object?)`。
+- `IDataSlot` 只暴露 metadata、diagnostic snapshot 和边界方法，不能提供 `object? Value`。
+- 实现 SDD 不再比较 `DataRuntimeValue`、多字典存储和 `DataSlot<T>` 作为平级方案；只能在 `DataSlot<T> + IDataSlot` 内部细化 policy、resolver、change event 和 diagnostics。
 
-### 2. `DataSlot` 改为 typed value
+### 2. Catalog 建 typed runtime definition
 
-当前：
-
-```csharp
-public object? Value { get; private set; }
-public object? GetEffectiveValue()
-public bool SetValue(object? value)
-```
-
-目标：
+`DataDefinition.DefaultValue object?` 可以作为 snapshot/DTO 层的历史输入，但进入 runtime catalog 后必须投影为 typed definition：
 
 ```csharp
-private DataRuntimeValue _value;
-private bool _hasValue;
+internal interface IDataFieldDefinition
+{
+    string StableKey { get; }
+    Type ValueClrType { get; }
+    DataValueType ValueType { get; }
+    IDataSlot CreateSlot();
+}
 
-public DataRuntimeValue GetEffectiveValue();
-public bool SetValue(DataRuntimeValue value);
+internal sealed class DataFieldDefinition<T> : IDataFieldDefinition
+{
+    public DataKey<T> Key { get; }
+    public T DefaultValue { get; }
+    public DataValuePolicy<T> Policy { get; }
+
+    public IDataSlot CreateSlot() => new DataSlot<T>(this);
+}
 ```
 
-modifier 不再接收 `object? baseValue`，而是只允许数值型 `DataRuntimeValue`：
+`DataDefinitionCatalog.GetField<T>(DataKey<T>)` 必须校验 generated handle 的 `T` 与 descriptor `valueType/runtimeTypeId` 一致。不一致时 fail fast，而不是读写阶段再 `Convert.ChangeType`。
+
+### 3. Converter 分层：泛型热路径 + 边界 untyped
+
+上一版设计提出 `TryConvert<T>(..., out DataRuntimeValue)`，问题在于最终又回到统一 value 容器。新方案应直接转换到 `T`：
 
 ```csharp
-private DataRuntimeValue ApplyNumericModifiers(DataRuntimeValue baseValue)
+public sealed class DataValuePolicy<T>
+{
+    public bool TryConvertTyped(T value, DataWriteSource source, out T finalValue, out DataWriteReport report);
+    public bool TryConvertBoundary(object? rawValue, DataWriteSource source, out T finalValue, out DataWriteReport report);
+    public bool AreEqual(T left, T right);
+}
 ```
-
-这样能避免“拆箱 -> double -> 重新装箱”的默认路径。
-
-### 3. Converter 分层
-
-保留 untyped converter，但只在 loader/debug 边界调用：
 
 | 层 | API | 用途 |
 | --- | --- | --- |
-| Typed hot path | `TryConvert<T>(DataKey<T>, T value, out DataRuntimeValue value)` | 业务 `Data.Set<T>` |
-| Runtime read | `Read<T>(DataRuntimeValue value, DataDefinition definition)` | 业务 `Data.Get<T>` |
-| Boundary untyped | `TryConvertUntyped(object? raw, DataDefinition definition, DataWriteSource source, out DataRuntimeValue value)` | snapshot loader、debug tool |
+| Typed hot path | `Data.Set<T>(DataKey<T>, T)` -> `DataSlot<T>.SetValue(T)` | 业务读写主链路 |
+| Runtime read | `Data.Get<T>(DataKey<T>)` -> `DataSlot<T>.GetEffectiveValue()` | 业务读取主链路 |
+| Boundary untyped | `TrySetFromBoundary(object? raw, ...)` | snapshot loader、debug tool、TestSystem |
+| Diagnostics | `ToDiagnosticValue()` | UI/Test dump，允许格式化或复制 |
 
-注释要求：
+边界入口必须写清楚：
 
 ```csharp
-// 仅用于 loader/debug 边界。业务代码不要调用该入口；
-// 值类型传入 object 会产生装箱，且绕过 DataKey<T> 编译期契约。
+// 仅用于 loader/debug/TestSystem 边界。业务代码不要调用该入口；
+// 值类型传入 object 会产生装箱，且会绕过 DataKey<T> 编译期契约。
 ```
 
-### 4. Computed resolver 类型化
+### 4. Modifier pipeline 类型化
 
-当前 `IDataComputeResolver.Compute()` 返回 `object?`。目标至少分两步：
+`DataModifier.Value` 当前是 `float`，数值修饰管线只应存在于数值 slot。不要让所有字段都走 `object? -> double -> object?`。
 
-第一步：resolver 返回 `DataRuntimeValue`：
+推荐做法：
 
 ```csharp
-public interface IDataComputeResolver
+internal interface INumericDataSlot
+{
+    bool AddModifier(DataModifier modifier);
+    bool RemoveModifier(string modifierId);
+}
+
+internal sealed class NumericDataSlot<T> : DataSlot<T>, INumericDataSlot
+{
+    private readonly NumericDataValuePolicy<T> _numericPolicy;
+    private readonly List<DataModifier> _modifiers = new();
+
+    public override T GetEffectiveValue()
+    {
+        var baseValue = GetBaseValue();
+        return _numericPolicy.ApplyModifiers(baseValue, _modifiers, Definition);
+    }
+}
+```
+
+实现时可以用 `FloatDataValuePolicy`、`IntDataValuePolicy`、`DoubleDataValuePolicy` 三个显式策略，先不强依赖 C# generic math。重点是 slot 存的是 `T`，modifier 计算返回的也是 `T`。
+
+### 5. Computed resolver 类型化
+
+当前 `IDataComputeResolver.Compute()` 返回 `object?`。目标改为泛型 resolver：
+
+```csharp
+public interface IDataComputeResolver<T>
 {
     string ComputeId { get; }
-    DataRuntimeValue Compute(Data data, DataDefinition definition);
+    T Compute(Data data, DataFieldDefinition<T> definition);
+}
+
+public abstract class FloatComputeResolver : IDataComputeResolver<float>
+{
+    public abstract string ComputeId { get; }
+    public abstract float Compute(Data data, DataFieldDefinition<float> definition);
 }
 ```
 
-第二步：常见数值 resolver 提供泛型基类，避免每个 resolver 手写转换：
+`DataComputeRegistry` 可以用非泛型 metadata 管注册表，但执行时必须按 field 的 `T` 获取 `IDataComputeResolver<T>`。类型不匹配是 catalog build error，不是运行时转换。
+
+computed cache 不再是 `Dictionary<string, object?>`。computed 字段本身就是 `ComputedDataSlot<T>`，slot 内缓存 `T _cachedValue` 和 dirty flag。
+
+### 6. Data changed event 泛型化
+
+`PropertyChanged(string, object?, object?)` 不应继续是运行时通用事件。推荐由 typed slot 负责发 typed change：
 
 ```csharp
-public abstract class FloatComputeResolver : IDataComputeResolver
+public readonly record struct DataChanged<T>(DataKey<T> Key, T OldValue, T NewValue);
+
+internal interface IDataChangeDispatcher
 {
-    protected abstract float ComputeFloat(Data data, DataDefinition definition);
+    void Emit<T>(DataKey<T> key, T oldValue, T newValue);
 }
 ```
 
-### 5. Data changed event 分层
+对外分层：
 
-`PropertyChanged(string, object?, object?)` 不应继续是运行时通用事件。
+- 高频业务监听：Capability 自己定义领域事件，例如 `HealthChanged(float oldHp, float newHp)`，或订阅 `DataChanged<float>`。
+- Runtime 内部：slot 调 `IDataChangeDispatcher.Emit<T>`，不把 old/new 先装成 object。
+- Debug/TestSystem：单独生成 `DataDiagnosticChange`，可包含字符串、stable key、类型名和格式化值。
 
-推荐：
+### 7. `DataRuntimeValue` 裁决
 
-- Runtime 内部：`DataChangeRecord` 保存 `DataRuntimeValue OldValue/NewValue`。
-- 高频业务监听：提供领域事件，例如 `HealthChanged(float oldHp, float newHp)`，或由对应 Capability 发 typed event。
-- Debug/TestSystem：可以有 `DataChangedSnapshot`，在订阅时按需格式化为字符串或 diagnostic object。
+不推荐引入上一版 `DataRuntimeValue` 多字段 union，原因：
+
+- 它复制了 descriptor 已经知道的类型分发信息。
+- 它让每个值都携带所有候选类型字段，结构冗余明显。
+- 新增 `EntityId`、`ResourceRef`、`EntityIdList`、自定义 runtime ref 时会继续膨胀。
+- 它不能像 `DataSlot<T>` 一样让编译器直接检查 `DataKey<T>` 与 storage 的一致性。
+- 它仍鼓励写“通用 runtime value 处理器”，AI 容易继续绕过 `Data.Get/Set<T>`。
+
+只有一种例外：如果未来 profiler 证明 `Dictionary<string, IDataSlot>` 的虚调用/类型检查成为瓶颈，可以在非常热的固定字段集合上做 source-generated typed storage。但那应是 benchmark 驱动的 P2 优化，不是本轮 object 去除的默认架构。
 
 ## API 裁决
 
@@ -165,13 +231,15 @@ public abstract class FloatComputeResolver : IDataComputeResolver
 
 ## 迁移步骤
 
-1. 建 `DataRuntimeValue` 和 typed converter，先不删除旧 API。
-2. 改 `DataSlot`、modifier、computed cache 为 `DataRuntimeValue`。
-3. 改 `Data.Get/Set<T>(DataKey<T>)` 走 typed converter，不再进入 `object?`。
-4. 改 snapshot loader 和 debug/test untyped API 到边界 converter。
-5. 改 `DataChangeRecord` 和 `GameEventType.Data.PropertyChanged`。
-6. 迁移业务调用点，清理 `Get<T>(string)`、`SetUntyped(string, object?)`、`GetAll()` 非测试调用。
-7. 更新 DocsAI Runtime/Data 和 `ecs-data` skill。
+1. 建 `DataFieldDefinition<T>`、`DataSlot<T>`、`DataValuePolicy<T>`，先覆盖 `int/float/double/bool/string/string[]/ResourceRef/EntityId?`。
+2. 让 catalog build 阶段把 descriptor 投影为 typed runtime field，generated `DataKey<T>` 与 field `T` 不一致时报错。
+3. 改 `Data.Get/Set<T>(DataKey<T>)` 直接走 `DataSlot<T>`，不再进入 `SetUntyped(... object?)`。
+4. 改 modifier 为数值 slot/policy，移除 `object? -> double -> object?` 路径。
+5. 改 computed resolver 为 `IDataComputeResolver<T>`，computed cache 进入 `ComputedDataSlot<T>`。
+6. 改 `DataChangeRecord` 和 `GameEventType.Data.PropertyChanged` 为 typed change 或 domain event + diagnostic snapshot。
+7. 改 snapshot loader 和 debug/test untyped API 到边界 converter，保留注释和 grep gate。
+8. 迁移业务调用点，清理 `Get<T>(string)`、`SetUntyped(string, object?)`、`GetAll()` 非测试调用。
+9. 更新 DocsAI Runtime/Data 和 `ecs-data` skill。
 
 ## 验证门禁
 
@@ -183,9 +251,10 @@ rg -n "SetUntyped\\(|GetAll\\(|Dictionary<string, object>|object\\? OldValue|obj
 
 需要新增：
 
-- Data typed value unit / scene test：`float/int/bool/enum/vector2/string_array/object_ref`。
-- Modifier test：Additive/Multiplicative/FinalAdditive/Override/Cap 不装箱路径。
-- Computed resolver test：resolver 返回 typed value，cache dirty 正确。
+- Data generic slot unit / scene test：`float/int/bool/string/string_array/resource_ref/entity_id`。
+- Catalog type mismatch test：descriptor / generated handle / runtime field 不一致时 fail fast。
+- Modifier test：Additive/Multiplicative/FinalAdditive/Override/Cap 返回 typed `T`，不经 `object?`。
+- Computed resolver test：`IDataComputeResolver<T>` 返回 typed `T`，cache dirty 正确。
 - PropertyChanged test：业务 typed event 和 debug snapshot 分离。
 - 分配基线：至少用 benchmark 或 Godot scene artifact 记录改前/改后 `Get/Set/Modifier/Computed` 分配。
 
@@ -193,3 +262,9 @@ rg -n "SetUntyped\\(|GetAll\\(|Dictionary<string, object>|object\\? OldValue|obj
 
 - 是否接受删除或 internal 化业务层 `Data.Get<T>(string)` / `Data.Set<T>(string)`。
 - 是否接受 `PropertyChanged(object?)` 改为 typed/domain event + debug snapshot，而不是继续给 UI/TestSystem 监听 object。
+
+## Confirmed Decisions
+
+- `DataSlot<T> + IDataSlot` 是 Data 去 object 的最终架构方向。
+- `DataRuntimeValue` 多字段 union 不作为实现方案。
+- `Dictionary<string, IDataSlot>` 可作为 slot 管理边界；业务值不通过 `object?` 存储或读取。
