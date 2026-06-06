@@ -12,15 +12,17 @@
 | `main.md` | main | current | 2026-05-28 | 项目共享设计：保留旧 ECS 主线；Data 子系统按完整重构例外处理 |
 | `00-旧ECS框架问题总览.md` | overview | current | 2026-05-26 | 旧 ECS 的真实问题域、非目标和推荐拆分 |
 | `06-ECS完全重构执行原则.md` | hard-cutover-principles | current | 2026-05-30 | Data 无兼容复盘后的项目级执行原则；后续 Entity / Relationship / Event hard cutover 前必须先读 |
-| `ECS框架优化/1.拆箱装箱+GC优化/README.md` | gc-optimization-index | current | 2026-06-06 | 装箱拆箱与 GC 优化设计包入口；`问题/` 保存初稿扫描，`设计/` 保存 AI-first 裁决 |
-| `ECS框架优化/1.拆箱装箱+GC优化/设计/README.md` | gc-deepthink-entry | current | 2026-06-06 | DeepThink 确认包；记录 Goal、Context Read、Options、Recommendation、Must Confirm 和 Artifact Updates |
-| `ECS框架优化/1.拆箱装箱+GC优化/设计/00-总览与AI-first裁决.md` | gc-overview-decision | current | 2026-06-06 | 裁决 Data/Event/Feature object 为 P0/P1；字符串插值降级为日志 API 设计问题 |
+| `ECS框架优化/0.ECS框架的思考/README.md` | ecs-concept-index | current | 2026-06-06 | ECS 框架概念层思考入口；不承接实现，聚焦 Data/Event 底层协议、AI-first 框架可行性和传统 ECS 采纳边界 |
+| `ECS框架优化/0.ECS框架的思考/01-Data作为ECS框架核心的概念复盘与方案批判.md` | ecs-data-core-concept-review | current | 2026-06-06 | 深度复盘 Data 作为框架核心的概念定位；确认 `DataSlot<T> + IDataSlot` 方向正确，同时指出 typed policy、computed、change event、untyped 边界和高频索引仍需明确收口 |
+| `ECS框架优化/1.拆箱装箱+GC优化/README.md` | gc-optimization-index | current | 2026-06-06 | 装箱拆箱与 GC 优化设计包入口；Data 已由 SDD-0031 完成，当前聚焦 Event + Feature / Ability、ObjectPool、TargetSelector、Logger 等非 Data 切片 |
+| `ECS框架优化/1.拆箱装箱+GC优化/设计/README.md` | gc-deepthink-entry | current | 2026-06-06 | DeepThink 确认包；记录 Data 完成后的非 Data 重新分析、Options、Recommendation、Must Confirm 和 Artifact Updates |
+| `ECS框架优化/1.拆箱装箱+GC优化/设计/00-总览与AI-first裁决.md` | gc-overview-decision | current | 2026-06-06 | 裁决 Data 已完成主链路 hard cutover；下一步优先 Event + Feature / Ability typed execution boundary；Logger/Component/Lifecycle 降为 P2 或 profiler 驱动 |
 | `ECS框架优化/1.拆箱装箱+GC优化/设计/01-Data运行时object去除设计.md` | gc-data-runtime-generic-slot | current | 2026-06-06 | Data runtime object 去除设计；用户已确认 `DataSlot<T> + IDataSlot` 为最终架构，废弃 `DataRuntimeValue` 多字段 union，改为 typed policy、typed computed resolver 和 untyped 边界 API |
-| `ECS框架优化/1.拆箱装箱+GC优化/设计/02-EventBus动态object禁用设计.md` | gc-event-dynamic-object-removal | current | 2026-06-06 | 保留 typed EventBus，删除或禁用 EmitDynamic / OnDynamic / Action<object>，Feature event action 改 typed registry |
-| `ECS框架优化/1.拆箱装箱+GC优化/设计/03-FeatureAbility上下文类型化设计.md` | gc-feature-ability-typed-context | current | 2026-06-06 | Feature Execute 阶段和 Ability CastContext / AbilityExecutedResult typed contract 设计 |
-| `ECS框架优化/1.拆箱装箱+GC优化/设计/04-ObjectPool反射管理接口设计.md` | gc-objectpool-runtime-interface | current | 2026-06-06 | ObjectPoolManager 反射调用改极小非泛型 runtime interface；建议合入 SDD-0028 或后续 ObjectPool cleanup |
-| `ECS框架优化/1.拆箱装箱+GC优化/设计/05-TargetSelector集合分配与LINQ设计.md` | gc-target-query-allocation | current | 2026-06-06 | TargetQueryEngine / TargetQueryResult 下的 List、LINQ、Random 和 ComponentRegistrar 分配优化设计 |
-| `ECS框架优化/1.拆箱装箱+GC优化/设计/06-Logger字符串与诊断分配设计.md` | gc-logger-lazy-message | current | 2026-06-06 | 不禁字符串插值；用 IsEnabled / lazy / interpolated string handler 解决日志关闭时消息构造 |
+| `ECS框架优化/1.拆箱装箱+GC优化/设计/02-EventBus动态object禁用设计.md` | gc-event-dynamic-object-removal | current | 2026-06-06 | 保留 typed EventBus；Event dynamic object 必须与 Feature / Ability typed boundary 同批收口，不建议只缓存反射 |
+| `ECS框架优化/1.拆箱装箱+GC优化/设计/03-FeatureAbility上下文类型化设计.md` | gc-feature-ability-typed-context | current | 2026-06-06 | Feature 只类型化 Execute 输入/输出；Ability CastContext / AbilityExecutedResult 走 typed adapter，lifecycle context 不泛型化 |
+| `ECS框架优化/1.拆箱装箱+GC优化/设计/04-ObjectPool反射管理接口设计.md` | gc-objectpool-runtime-interface | current | 2026-06-06 | ObjectPoolManager 反射调用改极小非泛型 runtime interface；P1 小切片，不重写对象池生命周期 |
+| `ECS框架优化/1.拆箱装箱+GC优化/设计/05-TargetSelector集合分配与LINQ设计.md` | gc-target-query-allocation | current | 2026-06-06 | TargetQueryEngine / TargetQueryResult ownership 下处理 List、LINQ、Random；不在无 ownership 设计时池化返回 List |
+| `ECS框架优化/1.拆箱装箱+GC优化/设计/06-Logger字符串与诊断分配设计.md` | gc-logger-lazy-message | current | 2026-06-06 | Logger 降为 P2/热路径局部处理；不禁字符串插值，用 IsEnabled / lazy / interpolated string handler 解决必要调用点 |
 | `4.SystemAgent目录更改到SlimeAI里面/README.md` | systemagent-ai-config-root-migration | current | 2026-05-30 | `SDD/`、`Workspace/`、`.ai-config/` 已迁入 `SlimeAI/` 后的规则、路径和同步语义更新设计 |
 | `01-Data系统问题分析.md` | data-analysis-legacy-entry | current | 2026-05-28 | 历史入口；完整 Data 设计已迁移到 `design/2.Data系统优化/` |
 | `2.Data系统优化/README.md` | data-design-index | current | 2026-05-30 | Data 完全重构设计包入口；descriptor-first、policy 分层、Feature/Compute 边界、旧路径删除和 SDD-0021 无兼容收口 |

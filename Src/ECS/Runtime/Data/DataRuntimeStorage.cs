@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using slime.data.Features;
@@ -92,14 +93,64 @@ public sealed record DataWriteError(
     string? RawValue);
 
 /// <summary>
-/// 单个 descriptor 字段的运行时槽位。
+/// 跨类型槽位管理边界；不暴露业务值的 object 存储入口。
 /// </summary>
-public sealed class DataSlot
+public interface IDataSlot
 {
-    private readonly List<DataModifier> _modifiers = new();
+    /// <summary>
+    /// 字段 descriptor 定义。
+    /// </summary>
+    DataDefinition Definition { get; }
 
     /// <summary>
-    /// 创建运行时槽位。
+    /// 槽位实际保存的 CLR 类型。
+    /// </summary>
+    Type ValueClrType { get; }
+
+    /// <summary>
+    /// 是否已有运行时基础值。
+    /// </summary>
+    bool HasValue { get; }
+
+    /// <summary>
+    /// 边界诊断用：读取有效值，会在值类型字段上发生装箱。
+    /// </summary>
+    object? GetEffectiveValueForDiagnostics();
+
+    /// <summary>
+    /// 边界诊断用：读取已写入基础值，会在值类型字段上发生装箱。
+    /// </summary>
+    object? GetStoredValueForDiagnostics();
+
+    /// <summary>
+    /// 从 loader/debug/TestSystem 边界写入已通过策略校验的值。
+    /// </summary>
+    bool SetValueFromBoundary(object? value);
+
+    bool ClearValue();
+
+    bool AddModifier(DataModifier modifier);
+
+    bool RemoveModifier(string modifierId);
+
+    int RemoveModifiersBySource(object source);
+
+    bool ClearModifiers();
+
+    List<DataModifier> GetModifiers();
+}
+
+/// <summary>
+/// 单个 descriptor 字段的泛型运行时槽位。
+/// </summary>
+/// <typeparam name="T">槽位保存的 CLR 值类型。</typeparam>
+public sealed class DataSlot<T> : IDataSlot
+{
+    private readonly List<DataModifier> _modifiers = new();
+    private T _value = default!;
+
+    /// <summary>
+    /// 创建泛型运行时槽位。
     /// </summary>
     /// <param name="definition">字段 descriptor 定义。</param>
     public DataSlot(DataDefinition definition)
@@ -108,49 +159,47 @@ public sealed class DataSlot
         Definition = definition; // descriptor 定义
     }
 
-    /// <summary>
-    /// 字段 descriptor 定义。
-    /// </summary>
+    /// <inheritdoc />
     public DataDefinition Definition { get; }
 
-    /// <summary>
-    /// 是否已有运行时基础值。
-    /// </summary>
+    /// <inheritdoc />
+    public Type ValueClrType => typeof(T);
+
+    /// <inheritdoc />
     public bool HasValue { get; private set; }
 
     /// <summary>
-    /// 当前运行时基础值。
+    /// 获取当前 typed 有效值；未写入时回退到 descriptor default。
     /// </summary>
-    public object? Value { get; private set; }
-
-    /// <summary>
-    /// 获取当前有效值；未写入时回退到 descriptor default。
-    /// </summary>
-    public object? GetEffectiveValue()
+    public T GetEffectiveValue()
     {
-        var baseValue = HasValue ? Value : Definition.DefaultValue;
+        var baseValue = HasValue ? _value : ConvertToSlotValue(Definition.DefaultValue);
         return _modifiers.Count == 0 ? baseValue : ApplyModifiers(baseValue);
     }
 
     /// <summary>
-    /// 写入运行时基础值。
+    /// 写入 typed 运行时基础值。
     /// </summary>
     /// <param name="value">已转换并通过策略校验的值。</param>
-    public bool SetValue(object? value)
+    public bool SetValue(T value)
     {
-        if (HasValue && Equals(Value, value))
+        if (HasValue && EqualityComparer<T>.Default.Equals(_value, value))
         {
             return false;
         }
 
-        Value = value;
+        _value = value;
         HasValue = true;
         return true;
     }
 
-    /// <summary>
-    /// 清除运行时基础值。
-    /// </summary>
+    /// <inheritdoc />
+    public bool SetValueFromBoundary(object? value)
+    {
+        return SetValue(ConvertToSlotValue(value));
+    }
+
+    /// <inheritdoc />
     public bool ClearValue()
     {
         if (!HasValue)
@@ -158,15 +207,12 @@ public sealed class DataSlot
             return false;
         }
 
-        Value = null;
+        _value = default!;
         HasValue = false;
         return true;
     }
 
-    /// <summary>
-    /// 添加字段修改器。
-    /// </summary>
-    /// <param name="modifier">修改器实例。</param>
+    /// <inheritdoc />
     public bool AddModifier(DataModifier modifier)
     {
         ArgumentNullException.ThrowIfNull(modifier);
@@ -188,27 +234,19 @@ public sealed class DataSlot
         return true;
     }
 
-    /// <summary>
-    /// 按 id 移除字段修改器。
-    /// </summary>
-    /// <param name="modifierId">修改器 id。</param>
+    /// <inheritdoc />
     public bool RemoveModifier(string modifierId)
     {
         return _modifiers.RemoveAll(modifier => string.Equals(modifier.Id, modifierId, StringComparison.Ordinal)) > 0;
     }
 
-    /// <summary>
-    /// 按来源移除字段修改器。
-    /// </summary>
-    /// <param name="source">修改器来源。</param>
+    /// <inheritdoc />
     public int RemoveModifiersBySource(object source)
     {
         return _modifiers.RemoveAll(modifier => Equals(modifier.Source, source));
     }
 
-    /// <summary>
-    /// 清除字段所有修改器。
-    /// </summary>
+    /// <inheritdoc />
     public bool ClearModifiers()
     {
         if (_modifiers.Count == 0)
@@ -220,17 +258,27 @@ public sealed class DataSlot
         return true;
     }
 
-    /// <summary>
-    /// 获取字段修改器副本。
-    /// </summary>
+    /// <inheritdoc />
     public List<DataModifier> GetModifiers()
     {
         return new List<DataModifier>(_modifiers);
     }
 
-    private object? ApplyModifiers(object? baseValue)
+    /// <inheritdoc />
+    public object? GetEffectiveValueForDiagnostics()
     {
-        if (baseValue == null || !TryGetNumeric(baseValue, out var numericBase))
+        return GetEffectiveValue();
+    }
+
+    /// <inheritdoc />
+    public object? GetStoredValueForDiagnostics()
+    {
+        return HasValue ? _value : null;
+    }
+
+    private T ApplyModifiers(T baseValue)
+    {
+        if (!TryGetNumeric(baseValue, out var numericBase))
         {
             return baseValue;
         }
@@ -279,37 +327,78 @@ public sealed class DataSlot
             effective = Definition.MaxValue.Value;
         }
 
-        return ConvertNumericToDefinitionType(effective);
+        return ConvertNumericToSlotType(effective);
     }
 
-    private object ConvertNumericToDefinitionType(double value)
+    private T ConvertToSlotValue(object? value)
     {
-        return Definition.ValueType switch
-        {
-            DataValueType.Int => (object)(int)value,
-            DataValueType.Float => (object)(float)value,
-            DataValueType.Double => (object)value,
-            _ => (object)value
-        };
+        var converted = DataValueConverter.ConvertForRead(value, typeof(T), Definition.ValueType);
+        return converted == null ? default! : (T)converted;
     }
 
-    private static bool TryGetNumeric(object value, out double numericValue)
+    private static bool TryGetNumeric(T value, out double numericValue)
     {
-        switch (value)
+        var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+        if (targetType == typeof(int))
         {
-            case int intValue:
-                numericValue = intValue;
-                return true;
-            case float floatValue:
-                numericValue = floatValue;
-                return true;
-            case double doubleValue:
-                numericValue = doubleValue;
-                return true;
-            default:
-                numericValue = 0d;
-                return false;
+            numericValue = Convert.ToInt32(value, CultureInfo.InvariantCulture);
+            return true;
         }
+
+        if (targetType == typeof(float))
+        {
+            numericValue = Convert.ToSingle(value, CultureInfo.InvariantCulture);
+            return true;
+        }
+
+        if (targetType == typeof(double))
+        {
+            numericValue = Convert.ToDouble(value, CultureInfo.InvariantCulture);
+            return true;
+        }
+
+        numericValue = 0d;
+        return false;
+    }
+
+    private static T ConvertNumericToSlotType(double value)
+    {
+        if (typeof(T) == typeof(int))
+        {
+            var typedValue = (int)value;
+            return Unsafe.As<int, T>(ref typedValue);
+        }
+
+        if (typeof(T) == typeof(int?))
+        {
+            int? typedValue = (int)value;
+            return Unsafe.As<int?, T>(ref typedValue);
+        }
+
+        if (typeof(T) == typeof(float))
+        {
+            var typedValue = (float)value;
+            return Unsafe.As<float, T>(ref typedValue);
+        }
+
+        if (typeof(T) == typeof(float?))
+        {
+            float? typedValue = (float)value;
+            return Unsafe.As<float?, T>(ref typedValue);
+        }
+
+        if (typeof(T) == typeof(double))
+        {
+            return Unsafe.As<double, T>(ref value);
+        }
+
+        if (typeof(T) == typeof(double?))
+        {
+            double? typedValue = value;
+            return Unsafe.As<double?, T>(ref typedValue);
+        }
+
+        return default!;
     }
 
     private sealed class ModifierPriorityComparer : IComparer<DataModifier>
@@ -523,6 +612,90 @@ public static class DataValueConverter
         return true;
     }
 
+    /// <summary>
+    /// 执行 typed 热路径写入策略；成功路径直接返回 T，避免回到 untyped boundary 写槽位。
+    /// </summary>
+    /// <typeparam name="T">字段值类型。</typeparam>
+    /// <param name="definition">字段 descriptor 定义。</param>
+    /// <param name="rawValue">调用方传入的 typed 值。</param>
+    /// <param name="source">写入来源。</param>
+    /// <param name="finalValue">最终写入 typed 值。</param>
+    /// <param name="writeError">结构化错误。</param>
+    public static bool TryApplyTypedWritePoliciesWithReport<T>(
+        DataDefinition definition,
+        T rawValue,
+        DataWriteSource source,
+        out T finalValue,
+        out DataWriteError? writeError)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        finalValue = rawValue;
+        writeError = null;
+        if (!CanWrite(definition.WritePolicy, source))
+        {
+            writeError = CreateWriteError(
+                definition,
+                "write_policy_rejected",
+                $"Data write policy 拒绝写入：{definition.StableKey} ({definition.WritePolicy}, source={source})",
+                source,
+                rawValue,
+                definition.WritePolicy.ToString());
+            return false;
+        }
+
+        if (RequiresRuntimeObjectReference(definition) && rawValue is string or ResourceRef)
+        {
+            writeError = CreateWriteError(
+                definition,
+                "wrong_clr_type",
+                $"Data object_ref 运行时对象字段拒绝资源引用：{definition.StableKey} expected={definition.RuntimeTypeId}",
+                source,
+                rawValue,
+                null,
+                definition.RuntimeTypeId);
+            return false;
+        }
+
+        if (RequiresRuntimeObjectReference(definition) && !MatchesRuntimeObjectReference(definition, rawValue))
+        {
+            writeError = CreateWriteError(
+                definition,
+                "wrong_clr_type",
+                $"Data object_ref 运行时对象类型不匹配：{definition.StableKey} expected={definition.RuntimeTypeId}",
+                source,
+                rawValue,
+                null,
+                definition.RuntimeTypeId);
+            return false;
+        }
+
+        if (!IsAllowedValue(definition, rawValue))
+        {
+            writeError = CreateWriteError(
+                definition,
+                "allowed_values_rejected",
+                $"Data allowed_values 拒绝写入：{definition.StableKey} = {ToStableText(rawValue)}",
+                source,
+                rawValue,
+                "allowed_values");
+            return false;
+        }
+
+        if (!TryApplyRangePolicy(definition, rawValue, source, out finalValue, out var rangeError))
+        {
+            writeError = CreateWriteError(
+                definition,
+                "range_policy_rejected",
+                rangeError,
+                source,
+                rawValue,
+                definition.RangePolicy.ToString());
+            return false;
+        }
+
+        return true;
+    }
+
     private static DataWriteError CreateWriteError(
         DataDefinition definition,
         string code,
@@ -597,7 +770,67 @@ public static class DataValueConverter
         return false;
     }
 
+    private static bool TryApplyRangePolicy<T>(
+        DataDefinition definition,
+        T convertedValue,
+        DataWriteSource source,
+        out T finalValue,
+        out string error)
+    {
+        finalValue = convertedValue;
+        error = string.Empty;
+        if (definition.RangePolicy == DataRangePolicy.None || convertedValue is null)
+        {
+            return true;
+        }
+
+        if (!TryGetNumeric(convertedValue, out var numericValue))
+        {
+            error = $"Data range policy 仅支持数值字段：{definition.StableKey}";
+            return false;
+        }
+
+        var hasMin = definition.MinValue.HasValue;
+        var hasMax = definition.MaxValue.HasValue;
+        var min = definition.MinValue ?? numericValue;
+        var max = definition.MaxValue ?? numericValue;
+        var outOfRange = (hasMin && numericValue < min) || (hasMax && numericValue > max);
+        if (!outOfRange)
+        {
+            return true;
+        }
+
+        if (definition.RangePolicy == DataRangePolicy.ClampRuntime && source == DataWriteSource.Runtime)
+        {
+            var clamped = Math.Min(Math.Max(numericValue, min), max);
+            finalValue = ConvertNumericToTyped<T>(clamped);
+            return true;
+        }
+
+        error = $"Data range policy 拒绝写入：{definition.StableKey} = {numericValue.ToString(CultureInfo.InvariantCulture)}";
+        return false;
+    }
+
     private static bool IsAllowedValue(DataDefinition definition, object? convertedValue)
+    {
+        if (definition.AllowedValues.Count == 0)
+        {
+            return true;
+        }
+
+        var stableValue = ToStableText(convertedValue);
+        for (var i = 0; i < definition.AllowedValues.Count; i++)
+        {
+            if (string.Equals(definition.AllowedValues[i].Value, stableValue, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsAllowedValue<T>(DataDefinition definition, T convertedValue)
     {
         if (definition.AllowedValues.Count == 0)
         {
@@ -1059,6 +1292,25 @@ public static class DataValueConverter
         }
     }
 
+    private static bool TryGetNumeric<T>(T value, out double numericValue)
+    {
+        switch (value)
+        {
+            case int intValue:
+                numericValue = intValue;
+                return true;
+            case float floatValue:
+                numericValue = floatValue;
+                return true;
+            case double doubleValue:
+                numericValue = doubleValue;
+                return true;
+            default:
+                numericValue = 0;
+                return false;
+        }
+    }
+
     private static object ConvertNumericToOriginalType(double value, Type originalType)
     {
         if (originalType == typeof(int))
@@ -1073,6 +1325,46 @@ public static class DataValueConverter
 
         return value;
     }
+
+    private static T ConvertNumericToTyped<T>(double value)
+    {
+        if (typeof(T) == typeof(int))
+        {
+            var typedValue = (int)value;
+            return Unsafe.As<int, T>(ref typedValue);
+        }
+
+        if (typeof(T) == typeof(int?))
+        {
+            int? typedValue = (int)value;
+            return Unsafe.As<int?, T>(ref typedValue);
+        }
+
+        if (typeof(T) == typeof(float))
+        {
+            var typedValue = (float)value;
+            return Unsafe.As<float, T>(ref typedValue);
+        }
+
+        if (typeof(T) == typeof(float?))
+        {
+            float? typedValue = (float)value;
+            return Unsafe.As<float?, T>(ref typedValue);
+        }
+
+        if (typeof(T) == typeof(double))
+        {
+            return Unsafe.As<double, T>(ref value);
+        }
+
+        if (typeof(T) == typeof(double?))
+        {
+            double? typedValue = value;
+            return Unsafe.As<double?, T>(ref typedValue);
+        }
+
+        return default!;
+    }
 }
 
 /// <summary>
@@ -1081,8 +1373,7 @@ public static class DataValueConverter
 public sealed class DataRuntimeStorage
 {
     private readonly DataDefinitionCatalog _catalog;
-    private readonly Dictionary<string, DataSlot> _slots = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, object?> _computedCache = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, IDataSlot> _slots = new(StringComparer.Ordinal);
     private readonly HashSet<string> _dirtyComputedKeys = new(StringComparer.Ordinal);
     private readonly Data? _computeContext;
 
@@ -1144,10 +1435,9 @@ public sealed class DataRuntimeStorage
             throw new InvalidOperationException($"Data.Get 类型不匹配：{stableKey} expected={definition.ValueType}, actual={typeof(T).Name}");
         }
 
-        var value = definition.IsComputed
-            ? GetComputedValue(definition)
-            : GetOrCreateSlot(definition).GetEffectiveValue();
-        return (T)DataValueConverter.ConvertForRead(value, typeof(T), definition.ValueType)!;
+        return definition.IsComputed
+            ? GetComputedValue<T>(definition)
+            : GetOrCreateTypedSlot<T>(definition).GetEffectiveValue();
     }
 
     /// <summary>
@@ -1172,11 +1462,59 @@ public sealed class DataRuntimeStorage
     /// <param name="source">写入来源。</param>
     public bool TrySet<T>(DataKey<T> key, T value, out DataWriteReport report, DataWriteSource source = DataWriteSource.Runtime)
     {
-        return TrySetUntyped(key.StableKey, value, source, out report);
+        report = new DataWriteReport(key.StableKey, source);
+        if (!_catalog.TryGet(key.StableKey, out var definition))
+        {
+            report.AddError(new DataWriteError(
+                "unknown_key",
+                key.StableKey,
+                $"未注册 DataDefinition：{key.StableKey}",
+                source,
+                string.Empty,
+                typeof(T).Name,
+                null,
+                value?.ToString()));
+            return false;
+        }
+
+        if (!DataValueConverter.IsCompatible<T>(definition.ValueType))
+        {
+            report.AddError(new DataWriteError(
+                "wrong_clr_type",
+                key.StableKey,
+                $"Data value type 不匹配：{key.StableKey} ({definition.ValueType})",
+                source,
+                definition.ValueType.ToString(),
+                typeof(T).Name,
+                null,
+                value?.ToString()));
+            return false;
+        }
+
+        if (!DataValueConverter.TryApplyTypedWritePoliciesWithReport(definition, value, source, out var finalValue, out var error))
+        {
+            if (error != null)
+            {
+                report.AddError(error);
+            }
+
+            return false;
+        }
+
+        var slot = GetOrCreateTypedSlot<T>(definition);
+        var oldValue = slot.GetEffectiveValueForDiagnostics();
+        if (!slot.SetValue(finalValue))
+        {
+            return false;
+        }
+
+        MarkDependentComputedDirty(definition.StableKey);
+        Changed?.Invoke(new DataChangeRecord(definition.StableKey, oldValue, slot.GetEffectiveValueForDiagnostics()));
+        return true;
     }
 
     /// <summary>
-    /// 写入字段值。
+    /// 写入字段值；仅用于 loader/debug/TestSystem 边界，业务热路径应使用 DataKey&lt;T&gt;。
     /// </summary>
     /// <param name="stableKey">字段 stable key。</param>
     /// <param name="value">新值。</param>
@@ -1188,7 +1526,7 @@ public sealed class DataRuntimeStorage
     }
 
     /// <summary>
-    /// 写入字段值，并输出结构化诊断。
+    /// 写入字段值并输出结构化诊断；仅用于 loader/debug/TestSystem 边界，值类型进入这里会装箱。
     /// </summary>
     /// <param name="stableKey">字段 stable key。</param>
     /// <param name="value">新值。</param>
@@ -1215,7 +1553,7 @@ public sealed class DataRuntimeStorage
     }
 
     /// <summary>
-    /// 使用已解析 definition 写入字段值。
+    /// 使用已解析 definition 写入字段值；仅用于 loader/debug/TestSystem 边界。
     /// </summary>
     /// <param name="definition">字段 descriptor 定义。</param>
     /// <param name="value">新值。</param>
@@ -1226,7 +1564,7 @@ public sealed class DataRuntimeStorage
     }
 
     /// <summary>
-    /// 使用已解析 definition 写入字段值，并输出结构化诊断。
+    /// 使用已解析 definition 写入字段值并输出结构化诊断；值类型进入这里会装箱，不作为业务热路径。
     /// </summary>
     /// <param name="definition">字段 descriptor 定义。</param>
     /// <param name="value">新值。</param>
@@ -1235,6 +1573,7 @@ public sealed class DataRuntimeStorage
     public bool TrySetUntyped(DataDefinition definition, object? value, DataWriteSource source, out DataWriteReport report)
     {
         report = new DataWriteReport(definition.StableKey, source);
+        // 仅用于 loader/debug/TestSystem 边界；业务热路径应使用 DataKey<T>，值类型进入这里会装箱。
         if (!DataValueConverter.TryApplyWritePoliciesWithReport(definition, value, source, out var finalValue, out var error))
         {
             if (error != null)
@@ -1245,15 +1584,15 @@ public sealed class DataRuntimeStorage
             return false;
         }
 
-        var slot = GetOrCreateSlot(definition);
-        var oldValue = slot.GetEffectiveValue();
-        if (!slot.SetValue(finalValue))
+        var slot = GetOrCreateBoundarySlot(definition, finalValue);
+        var oldValue = slot.GetEffectiveValueForDiagnostics();
+        if (!slot.SetValueFromBoundary(finalValue))
         {
             return false;
         }
 
         MarkDependentComputedDirty(definition.StableKey);
-        Changed?.Invoke(new DataChangeRecord(definition.StableKey, oldValue, slot.GetEffectiveValue()));
+        Changed?.Invoke(new DataChangeRecord(definition.StableKey, oldValue, slot.GetEffectiveValueForDiagnostics()));
         return true;
     }
 
@@ -1318,8 +1657,8 @@ public sealed class DataRuntimeStorage
             return false;
         }
 
-        var slot = GetOrCreateSlot(definition);
-        var oldValue = slot.GetEffectiveValue();
+        var slot = GetOrCreateBoundarySlot(definition);
+        var oldValue = slot.GetEffectiveValueForDiagnostics();
         if (!slot.AddModifier(modifier))
         {
             report.AddError(new DataWriteError(
@@ -1335,7 +1674,7 @@ public sealed class DataRuntimeStorage
         }
 
         MarkDependentComputedDirty(stableKey);
-        Changed?.Invoke(new DataChangeRecord(stableKey, oldValue, slot.GetEffectiveValue()));
+        Changed?.Invoke(new DataChangeRecord(stableKey, oldValue, slot.GetEffectiveValueForDiagnostics()));
         return true;
     }
 
@@ -1347,15 +1686,15 @@ public sealed class DataRuntimeStorage
     public bool RemoveModifier(string stableKey, string modifierId)
     {
         var definition = _catalog.GetRequired(stableKey);
-        var slot = GetOrCreateSlot(definition);
-        var oldValue = slot.GetEffectiveValue();
+        var slot = GetOrCreateBoundarySlot(definition);
+        var oldValue = slot.GetEffectiveValueForDiagnostics();
         if (!slot.RemoveModifier(modifierId))
         {
             return false;
         }
 
         MarkDependentComputedDirty(stableKey);
-        Changed?.Invoke(new DataChangeRecord(stableKey, oldValue, slot.GetEffectiveValue()));
+        Changed?.Invoke(new DataChangeRecord(stableKey, oldValue, slot.GetEffectiveValueForDiagnostics()));
         return true;
     }
 
@@ -1373,7 +1712,7 @@ public sealed class DataRuntimeStorage
         var removedTotal = 0;
         foreach (var pair in _slots)
         {
-            var oldValue = pair.Value.GetEffectiveValue();
+            var oldValue = pair.Value.GetEffectiveValueForDiagnostics();
             var removed = pair.Value.RemoveModifiersBySource(source);
             if (removed == 0)
             {
@@ -1382,7 +1721,7 @@ public sealed class DataRuntimeStorage
 
             removedTotal += removed;
             MarkDependentComputedDirty(pair.Key);
-            Changed?.Invoke(new DataChangeRecord(pair.Key, oldValue, pair.Value.GetEffectiveValue()));
+            Changed?.Invoke(new DataChangeRecord(pair.Key, oldValue, pair.Value.GetEffectiveValueForDiagnostics()));
         }
 
         return removedTotal;
@@ -1402,7 +1741,7 @@ public sealed class DataRuntimeStorage
         var removedTotal = 0;
         foreach (var pair in _slots)
         {
-            var oldValue = pair.Value.GetEffectiveValue();
+            var oldValue = pair.Value.GetEffectiveValueForDiagnostics();
             var removed = pair.Value.RemoveModifier(modifierId) ? 1 : 0;
             if (removed == 0)
             {
@@ -1411,7 +1750,7 @@ public sealed class DataRuntimeStorage
 
             removedTotal += removed;
             MarkDependentComputedDirty(pair.Key);
-            Changed?.Invoke(new DataChangeRecord(pair.Key, oldValue, pair.Value.GetEffectiveValue()));
+            Changed?.Invoke(new DataChangeRecord(pair.Key, oldValue, pair.Value.GetEffectiveValueForDiagnostics()));
         }
 
         return removedTotal;
@@ -1424,7 +1763,7 @@ public sealed class DataRuntimeStorage
     public List<DataModifier> GetModifiers(string stableKey)
     {
         var definition = _catalog.GetRequired(stableKey);
-        return GetOrCreateSlot(definition).GetModifiers();
+        return GetOrCreateBoundarySlot(definition).GetModifiers();
     }
 
     /// <summary>
@@ -1434,15 +1773,15 @@ public sealed class DataRuntimeStorage
     public bool ClearModifiers(string stableKey)
     {
         var definition = _catalog.GetRequired(stableKey);
-        var slot = GetOrCreateSlot(definition);
-        var oldValue = slot.GetEffectiveValue();
+        var slot = GetOrCreateBoundarySlot(definition);
+        var oldValue = slot.GetEffectiveValueForDiagnostics();
         if (!slot.ClearModifiers())
         {
             return false;
         }
 
         MarkDependentComputedDirty(stableKey);
-        Changed?.Invoke(new DataChangeRecord(stableKey, oldValue, slot.GetEffectiveValue()));
+        Changed?.Invoke(new DataChangeRecord(stableKey, oldValue, slot.GetEffectiveValueForDiagnostics()));
         return true;
     }
 
@@ -1454,7 +1793,7 @@ public sealed class DataRuntimeStorage
         var clearedTotal = 0;
         foreach (var pair in _slots)
         {
-            var oldValue = pair.Value.GetEffectiveValue();
+            var oldValue = pair.Value.GetEffectiveValueForDiagnostics();
             if (!pair.Value.ClearModifiers())
             {
                 continue;
@@ -1462,7 +1801,7 @@ public sealed class DataRuntimeStorage
 
             clearedTotal++;
             MarkDependentComputedDirty(pair.Key);
-            Changed?.Invoke(new DataChangeRecord(pair.Key, oldValue, pair.Value.GetEffectiveValue()));
+            Changed?.Invoke(new DataChangeRecord(pair.Key, oldValue, pair.Value.GetEffectiveValueForDiagnostics()));
         }
 
         return clearedTotal;
@@ -1475,8 +1814,8 @@ public sealed class DataRuntimeStorage
     public bool Remove(string stableKey)
     {
         var definition = _catalog.GetRequired(stableKey);
-        var slot = GetOrCreateSlot(definition);
-        var oldValue = slot.GetEffectiveValue();
+        var slot = GetOrCreateBoundarySlot(definition);
+        var oldValue = slot.GetEffectiveValueForDiagnostics();
         var valueChanged = slot.ClearValue();
         var modifiersChanged = slot.ClearModifiers();
         if (!valueChanged && !modifiersChanged)
@@ -1485,7 +1824,7 @@ public sealed class DataRuntimeStorage
         }
 
         MarkDependentComputedDirty(stableKey);
-        Changed?.Invoke(new DataChangeRecord(stableKey, oldValue, slot.GetEffectiveValue()));
+        Changed?.Invoke(new DataChangeRecord(stableKey, oldValue, slot.GetEffectiveValueForDiagnostics()));
         return true;
     }
 
@@ -1496,22 +1835,21 @@ public sealed class DataRuntimeStorage
     {
         foreach (var pair in _slots)
         {
-            var oldValue = pair.Value.GetEffectiveValue();
+            var oldValue = pair.Value.GetEffectiveValueForDiagnostics();
             var valueChanged = pair.Value.ClearValue();
             var modifiersChanged = pair.Value.ClearModifiers();
             if (valueChanged || modifiersChanged)
             {
                 MarkDependentComputedDirty(pair.Key);
-                Changed?.Invoke(new DataChangeRecord(pair.Key, oldValue, pair.Value.GetEffectiveValue()));
+                Changed?.Invoke(new DataChangeRecord(pair.Key, oldValue, pair.Value.GetEffectiveValueForDiagnostics()));
             }
         }
 
-        _computedCache.Clear();
         _dirtyComputedKeys.Clear();
     }
 
     /// <summary>
-    /// 获取当前已写入基础值副本。
+    /// 获取当前已写入基础值副本；仅供 diagnostics/TestSystem dump 使用，值类型会在返回字典中装箱。
     /// </summary>
     public Dictionary<string, object?> GetAllValues()
     {
@@ -1520,7 +1858,7 @@ public sealed class DataRuntimeStorage
         {
             if (pair.Value.HasValue)
             {
-                values[pair.Key] = pair.Value.Value;
+                values[pair.Key] = pair.Value.GetStoredValueForDiagnostics();
             }
         }
 
@@ -1536,23 +1874,41 @@ public sealed class DataRuntimeStorage
         return _dirtyComputedKeys.Contains(stableKey);
     }
 
-    private DataSlot GetOrCreateSlot(DataDefinition definition)
+    private DataSlot<T> GetOrCreateTypedSlot<T>(DataDefinition definition)
+    {
+        if (_slots.TryGetValue(definition.StableKey, out var existing))
+        {
+            if (existing is DataSlot<T> typedSlot)
+            {
+                return typedSlot;
+            }
+
+            return ReplaceSlot<T>(definition, existing);
+        }
+
+        var slot = new DataSlot<T>(definition);
+        _slots[definition.StableKey] = slot;
+        return slot;
+    }
+
+    private IDataSlot GetOrCreateBoundarySlot(DataDefinition definition, object? value = null)
     {
         if (_slots.TryGetValue(definition.StableKey, out var slot))
         {
             return slot;
         }
 
-        slot = new DataSlot(definition);
+        slot = CreateSlot(ResolveBoundarySlotType(definition, value), definition);
         _slots[definition.StableKey] = slot;
         return slot;
     }
 
-    private object? GetComputedValue(DataDefinition definition)
+    private T GetComputedValue<T>(DataDefinition definition)
     {
-        if (!_dirtyComputedKeys.Contains(definition.StableKey) && _computedCache.TryGetValue(definition.StableKey, out var cached))
+        var slot = GetOrCreateTypedSlot<T>(definition);
+        if (!_dirtyComputedKeys.Contains(definition.StableKey) && slot.HasValue)
         {
-            return cached;
+            return slot.GetEffectiveValue();
         }
 
         if (_computeContext == null)
@@ -1567,9 +1923,67 @@ public sealed class DataRuntimeStorage
             throw new InvalidOperationException($"Data computed resolver 返回值类型不匹配：{definition.StableKey} ({definition.ValueType}) {error}");
         }
 
-        _computedCache[definition.StableKey] = computedValue;
+        slot.SetValueFromBoundary(computedValue);
         _dirtyComputedKeys.Remove(definition.StableKey);
-        return computedValue;
+        return slot.GetEffectiveValue();
+    }
+
+    private DataSlot<T> ReplaceSlot<T>(DataDefinition definition, IDataSlot existing)
+    {
+        var replacement = new DataSlot<T>(definition);
+        if (existing.HasValue)
+        {
+            replacement.SetValueFromBoundary(existing.GetStoredValueForDiagnostics());
+        }
+
+        var modifiers = existing.GetModifiers();
+        for (var i = 0; i < modifiers.Count; i++)
+        {
+            replacement.AddModifier(modifiers[i]);
+        }
+
+        _slots[definition.StableKey] = replacement;
+        return replacement;
+    }
+
+    private static IDataSlot CreateSlot(Type valueType, DataDefinition definition)
+    {
+        return (IDataSlot)Activator.CreateInstance(typeof(DataSlot<>).MakeGenericType(valueType), definition)!;
+    }
+
+    private static Type ResolveBoundarySlotType(DataDefinition definition, object? value)
+    {
+        if (definition.ValueType == DataValueType.ObjectRef
+            && definition.StoragePolicy == DataStoragePolicy.RuntimeOnly
+            && !string.IsNullOrWhiteSpace(definition.RuntimeTypeId))
+        {
+            return value != null && value is not ResourceRef && !value.GetType().IsValueType
+                ? value.GetType()
+                : typeof(object);
+        }
+
+        if (definition.ValueType == DataValueType.ObjectRef
+            && value != null
+            && value is not ResourceRef
+            && !value.GetType().IsValueType)
+        {
+            return value.GetType();
+        }
+
+        return definition.ValueType switch
+        {
+            DataValueType.String => typeof(string),
+            DataValueType.StringArray => typeof(string[]),
+            DataValueType.Int => typeof(int),
+            DataValueType.Float => typeof(float),
+            DataValueType.Double => typeof(double),
+            DataValueType.Bool => typeof(bool),
+            DataValueType.Vector2 => typeof(System.Numerics.Vector2),
+            DataValueType.Enum => typeof(string),
+            DataValueType.ModifierList => typeof(FeatureModifierEntryData[]),
+            DataValueType.ObjectRef => typeof(ResourceRef),
+            _ => typeof(object)
+        };
     }
 
     private static bool CanApplyModifier(DataDefinition definition, DataWriteSource source)
@@ -1604,7 +2018,6 @@ public sealed class DataRuntimeStorage
     private void MarkComputedDirtyRecursive(string stableKey)
     {
         _dirtyComputedKeys.Add(stableKey);
-        _computedCache.Remove(stableKey);
         var dependents = _catalog.GetDependentComputedKeys(stableKey);
         for (var i = 0; i < dependents.Count; i++)
         {

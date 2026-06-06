@@ -1,0 +1,51 @@
+{
+  "id": "SDD-0031",
+  "slug": "data-runtime-generic-slot-hard-cutover",
+  "title": "Data Runtime Generic Slot Hard Cutover",
+  "status": "done",
+  "type": "refactor",
+  "created_at": "2026-06-06",
+  "updated_at": "2026-06-06",
+  "scope": "SlimeAI",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI/SlimeAI"
+  ],
+  "affected_areas": [
+    "ecs/runtime/data"
+  ],
+  "tags": [
+    "data",
+    "gc",
+    "boxing",
+    "hard-cutover"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 9,
+    "total_tasks": 9,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "This SDD changes CLI or workflow behavior."
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0002",
+  "project_order": 21,
+  "shared_design_refs": [
+    "../../design/INDEX.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-06-06 18:32",
+      "summary": "dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly => Build succeeded, 960 warnings, 0 errors; DataOS validate slimeainew.authoring.db => passed; SDD validate SDD-0031 and --all => 0 errors, 0 warnings before closeout; DataCatalogTestScene/DataRuntimeTestScene/DataSnapshotApplyTestScene/DataFeatureBridgeTestScene all exited 0; precise grep gate found no old DataRuntimeStorage object slot/computed-cache/typed fallback patterns."
+    }
+  ]
+}

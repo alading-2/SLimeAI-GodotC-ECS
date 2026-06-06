@@ -9,6 +9,18 @@
 - ComponentRegistrar：P2，注册/注销阶段分配多于帧热路径，但 AI-first contract 仍可优化。
 - TestSystem/UI/diagnostics：低优先级，不为了零分配牺牲可读性。
 
+## Data 完成后的重新裁决
+
+Data 完成后，TargetSelector 是非 Data 切片里最值得做的性能 P1，但它不能按“看到 `new List` 就池化”的方式处理。
+
+重新分析源码后，当前风险不是单个 `new List`，而是查询结果 ownership 不清：
+
+- `EntityTargetSelector.Query` 返回可变 `List<IEntity>`，调用方可以长期持有。
+- 如果直接把内部 candidates / filtered 改成对象池 List，再把 List 还给调用方，会产生 buffer 被复用后的隐蔽数据污染。
+- `GetRange`、`new Random()`、排序中重复 Data.Get 都是真问题，但必须在 `TargetQueryEngine + TargetQueryResult/Lease` 的结果所有权模型下处理。
+- `AbilityInventoryService.GetManualAbilities().Where(...).ToList()` 可以局部手写循环，但只有在 UI/输入轮询频率证明它是热路径时才值得单独做。
+- `ComponentRegistrar` 的 `ToArray()` 不归入 TargetSelector SDD；多数是注册/注销 snapshot，默认 P2。
+
 ## 当初为什么这么设计
 
 早期实现用 `List<T>`、LINQ、`ToArray()` 是为了可读性和快速完成迁移。PRJ-0002 前几个阶段重点是 Data、Entity、目录架构、Component 组合和 Tool owner 边界，不是性能热路径。
@@ -53,6 +65,13 @@ public readonly struct TargetQueryLease : IDisposable
 
 关键不是某个类型，而是：候选列表、过滤列表、排序和截断由 `TargetQueryEngine` 管，调用方不新建中间集合。
 
+结果 ownership 裁决：
+
+- 如果结果只在当前调用帧使用，优先 `TargetQueryLease : IDisposable`，调用方显式释放。
+- 如果 UI / Debug 需要长期保存结果，调用方必须显式复制到自己的集合。
+- 不允许返回内部池化 `List<IEntity>` 给调用方长期持有。
+- diagnostics 默认关闭或低频启用，不能每次查询都创建完整字符串 / 列表 dump。
+
 ## TargetSelector 具体规则
 
 - 候选 buffer 复用，避免每次 `Query` 多个 `new List`。
@@ -96,3 +115,4 @@ rg -n "new Random\\(|GetRange\\(|\\.Where\\(.*\\)\\s*\\.ToList\\(|\\.Distinct\\(
 
 - 不推荐把所有 LINQ 全仓禁止。TestSystem、初始化和 diagnostics 保留 LINQ 可读性没问题。
 - 不推荐在旧 `EntityTargetSelector.Query` 上只删两个 `new List` 就宣称完成；真正目标是 `TargetQueryEngine` typed result 和 diagnostics。
+- 不推荐在没有 ownership 设计的前提下池化 `List<IEntity>`；这会把 GC 问题换成结果生命周期 bug。

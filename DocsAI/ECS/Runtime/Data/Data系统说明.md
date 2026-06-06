@@ -1,9 +1,10 @@
 # Data 系统说明
 
-> 状态：当前实现说明；SDD-0022 已把 DataOS snapshot -> generated typed handle -> catalog-bound Data 主链路继续硬化到 projection、diagnostics、catalog freeze 和 runtime record completeness。
+> 状态：当前实现说明；SDD-0031 已把 Runtime Data 主链路从 `DataSlot.Value object?` 切到 `DataSlot<T> + IDataSlot`，typed `DataKey<T>` 读写、modifier 和 computed cache 不再以 object 槽位保存业务值。
 > 范围：`Src/ECS/Runtime/Data/`、`Data/DataOS/`、`Data/DataKey/Generated/`、`Src/ECS/Capabilities/*/Events/`、`Src/ECS/Runtime/Event/Global/`、`Src/ECS/Runtime/Data/Events/`、`Data/Config/`、`Data/ResourceManagement/`、`Src/ECS/Runtime/Data/Tests/DataOS/`。
 > 设计事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/`。
-> 更新：2026-06-01
+> GC/装箱优化事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/021-SDD-0031-data-runtime-generic-slot-hard-cutover/`
+> 更新：2026-06-06
 
 ## 1. 一句话定位
 
@@ -85,11 +86,15 @@ public readonly record struct DataKey<T>(string StableKey)
 
 `Data` 绑定 catalog 后，实际读写走 `DataRuntimeStorage`：
 
-- 每个字段按需创建 `DataSlot`。
-- 未写入时读取 descriptor default。
-- 写入时执行 `writePolicy`、类型转换、`allowedValues` 和 `rangePolicy`。
-- modifier 存在 slot 内，并按 Additive / Multiplicative / FinalAdditive / Override / Cap 管线计算有效值。
+- 每个字段按需创建 `DataSlot<T>`，跨类型管理只通过 `IDataSlot` 保存 metadata、modifier 操作和 diagnostics 边界。
+- typed `Data.Get<T>(DataKey<T>)` / `Data.Set<T>(DataKey<T>, T)` 是业务主链路，非 computed 字段直接读写 `DataSlot<T>`。
+- 未写入时读取 descriptor default，并在 slot 内转换为 `T`。
+- 写入时执行 `writePolicy`、`allowedValues` 和 `rangePolicy`；typed 写入成功路径返回 `T`，不再回落到 `SetUntyped(... object?)`。
+- modifier 存在 slot 内，并按 Additive / Multiplicative / FinalAdditive / Override / Cap 管线计算 typed 有效值。
+- computed resolver 当前仍返回 `object?` 作为 registry 边界，但 computed cache 保存在 typed slot 内；resolver 返回值只在边界转换一次。
 - base value 或 modifier 变化会标脏依赖它的 computed 字段。
+
+`SetUntyped`、`TrySetUntyped` 和 `GetAll` 只保留给 snapshot loader、debug 和 TestSystem dump。值类型进入这些 API 会装箱，新业务代码不要绕过 generated `DataKey<T>` 调用它们。
 
 默认构造的 `Data` 会绑定 `DataRuntimeBootstrap.Default.Catalog`；需要测试隔离时通过测试基类或显式 catalog-bound helper 创建。运行时 Data 必须始终绑定 `DataDefinitionCatalog`。
 
@@ -202,6 +207,8 @@ if (report.HasErrors)
 
 `Data.Set(...)` 返回 `false` 通常代表策略拒绝、类型错误、范围错误或值未变化。需要查详细原因时优先看场景测试和 `DataValueConverter`。
 
+不要在业务代码新增 `SetUntyped` / `TrySetUntyped` / `GetAll` 调用；这些入口是 loader/debug/TestSystem 边界，会牺牲 `DataKey<T>` 的编译期契约并让值类型装箱。
+
 ### 4.4 Modifier
 
 字段只有 `modifierPolicy` 允许时才能加 modifier：
@@ -240,6 +247,8 @@ entity.Events.On<GameEventType.Data.PropertyChanged>(
 - 添加、移除、按来源回滚 modifier。
 
 读取 computed 不发事件；computed 只在依赖变化时标脏，下一次读取时重新计算。
+
+注意：`PropertyChanged` 的 `OldValue/NewValue object?` 是 Event/diagnostics 边界，本轮 SDD-0031 不改 Event 协议。业务热路径不要因为事件 payload 仍是 object 就恢复 untyped Data 存储。
 
 ## 6. 怎么测试
 

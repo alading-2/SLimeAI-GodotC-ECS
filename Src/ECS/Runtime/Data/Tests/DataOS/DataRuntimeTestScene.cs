@@ -1,6 +1,8 @@
 using Godot;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using slime.data.Features;
 
 namespace Slime.Test.DataOS;
@@ -14,12 +16,14 @@ public partial class DataRuntimeTestScene : DataSceneTestBase
     {
         Data_Get_ShouldReturnDescriptorDefault();
         Data_Set_ShouldWriteTypedValue();
+        Data_TypedHotPath_ShouldCreateGenericSlot();
         Data_Set_ShouldRejectUnknownKey();
         Data_Set_ShouldRejectWrongType();
         Data_WriteDiagnostics_ShouldReportFailureCodes();
         Data_ReferenceAndArrayContracts_ShouldNormalizeRuntimeTypes();
         Data_Set_ShouldRespectWritePolicy();
         Data_Set_ShouldApplyRangePolicy();
+        Data_TypedSet_ShouldApplyRangePolicy();
         Data_Set_ShouldRespectAllowedValues();
         Data_RemoveAndClear_ShouldReturnDescriptorDefault();
         Data_Set_ShouldPublishPropertyChanged();
@@ -44,6 +48,23 @@ public partial class DataRuntimeTestScene : DataSceneTestBase
         var data = new Data(Bootstrap.Catalog);
         AssertTrue("typed write accepted", data.Set(GeneratedDataKey.BaseHp, 20f));
         AssertEqual("typed read after write", 20f, data.Get<float>(GeneratedDataKey.BaseHp));
+    }
+
+    private void Data_TypedHotPath_ShouldCreateGenericSlot()
+    {
+        var storage = CreateRuntimeStorage(Definition("Attribute.BaseHp", DataValueType.Float, 10f));
+        var key = new DataKey<float>("Attribute.BaseHp");
+
+        AssertTrue("typed storage write accepted", storage.Set(key, 20f));
+
+        var slot = GetRuntimeSlot(storage, "Attribute.BaseHp");
+        var slotType = slot.GetType();
+        AssertTrue("typed slot is generic", slotType.IsGenericType);
+        var genericArgument = slotType.IsGenericType ? slotType.GenericTypeArguments[0] : null;
+        AssertEqual("typed slot generic argument", typeof(float), genericArgument);
+
+        var valueClrType = slotType.GetProperty("ValueClrType", BindingFlags.Public | BindingFlags.Instance)?.GetValue(slot);
+        AssertEqual("typed slot reports value clr type", typeof(float), valueClrType);
     }
 
     private void Data_Set_ShouldRejectUnknownKey()
@@ -169,6 +190,25 @@ public partial class DataRuntimeTestScene : DataSceneTestBase
         AssertFalse("clamp runtime rejects loader out of range", storage.SetUntyped("Attribute.Clamp", 120f, DataWriteSource.Loader));
         AssertFalse("reject runtime rejects", storage.SetUntyped("Attribute.Reject", 120f, DataWriteSource.Runtime));
         AssertFalse("validate rejects loader", storage.SetUntyped("Attribute.Validate", -1f, DataWriteSource.Loader));
+    }
+
+    private void Data_TypedSet_ShouldApplyRangePolicy()
+    {
+        var storage = CreateRuntimeStorage(
+            Definition("Attribute.TypedClampFloat", DataValueType.Float, 0f, minValue: 0f, maxValue: 100f, rangePolicy: DataRangePolicy.ClampRuntime),
+            Definition("Attribute.TypedRejectInt", DataValueType.Int, 0, minValue: 0f, maxValue: 10f, rangePolicy: DataRangePolicy.RejectRuntime),
+            Definition("Attribute.TypedClampDouble", DataValueType.Double, 0d, minValue: 0f, maxValue: 1f, rangePolicy: DataRangePolicy.ClampRuntime));
+
+        var floatKey = new DataKey<float>("Attribute.TypedClampFloat");
+        var intKey = new DataKey<int>("Attribute.TypedRejectInt");
+        var doubleKey = new DataKey<double>("Attribute.TypedClampDouble");
+
+        AssertTrue("typed clamp float accepts", storage.Set(floatKey, 120f));
+        AssertEqual("typed clamp float value", 100f, storage.Get(floatKey));
+        AssertFalse("typed reject int rejects", storage.TrySet(intKey, 20, out var report));
+        AssertEqual("typed reject int code", "range_policy_rejected", report.Errors[0].Code);
+        AssertTrue("typed clamp double accepts", storage.Set(doubleKey, 2d));
+        AssertEqual("typed clamp double value", 1d, storage.Get(doubleKey));
     }
 
     private void Data_Set_ShouldRespectAllowedValues()
@@ -359,5 +399,14 @@ public partial class DataRuntimeTestScene : DataSceneTestBase
         AssertEqual("initial transitive computed", 10f, data.Get<float>("C"));
         data.SetUntyped("A", 20f, DataWriteSource.Runtime);
         AssertEqual("transitive recomputed value", 20f, data.Get<float>("C"));
+    }
+
+    private static object GetRuntimeSlot(DataRuntimeStorage storage, string stableKey)
+    {
+        var field = typeof(DataRuntimeStorage).GetField("_slots", BindingFlags.NonPublic | BindingFlags.Instance)
+                    ?? throw new InvalidOperationException("DataRuntimeStorage._slots field not found");
+        var slots = field.GetValue(storage) as IDictionary
+                    ?? throw new InvalidOperationException("DataRuntimeStorage._slots is not an IDictionary");
+        return slots[stableKey] ?? throw new InvalidOperationException($"Data slot not found: {stableKey}");
     }
 }

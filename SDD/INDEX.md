@@ -5,7 +5,7 @@
 - **pending**: 0
 - **active**: 0
 - **blocked**: 1
-- **done**: 29
+- **done**: 30
 - **projects**: 2
 
 ## Projects
@@ -62,6 +62,7 @@
 | SDD-0028 | PRJ-0002 | ObjectPool Collision ParkedInTree Cutover | 2026-06-03 | SlimeAI | done |
 | SDD-0029 | PRJ-0002 | System Contract Manifest And Diagnostics Hardening | 2026-06-03 | SlimeAI | done |
 | SDD-0030 | PRJ-0002 | Component Code Composition And Contract Hardening | 2026-06-04 | SlimeAI | done |
+| SDD-0031 | PRJ-0002 | Data Runtime Generic Slot Hard Cutover | 2026-06-06 | SlimeAI | done |
 
 ## By Scope
 
@@ -87,6 +88,7 @@
 - SDD-0028 — ObjectPool Collision ParkedInTree Cutover
 - SDD-0029 — System Contract Manifest And Diagnostics Hardening
 - SDD-0030 — Component Code Composition And Contract Hardening
+- SDD-0031 — Data Runtime Generic Slot Hard Cutover
 
 ### Workspace/SDD
 
@@ -121,6 +123,10 @@
 ### bootstrap
 
 - SDD-0017 — Runtime Snapshot Record Apply and Entity Bootstrap
+
+### boxing
+
+- SDD-0031 — Data Runtime Generic Slot Hard Cutover
 
 ### capability
 
@@ -172,6 +178,7 @@
 - SDD-0020 — Data Snapshot-First Usage Cutover
 - SDD-0021 — Data No-Compatibility Hard Cutover
 - SDD-0022 — Data Projection Diagnostics Contract Hardening
+- SDD-0031 — Data Runtime Generic Slot Hard Cutover
 
 ### data-event-docsai-sync
 
@@ -225,6 +232,10 @@
 
 - SDD-0007 — Hook and Gate P0 Stability
 
+### gc
+
+- SDD-0031 — Data Runtime Generic Slot Hard Cutover
+
 ### git
 
 - SDD-0010 — Git Worktree Subagent Safety Strategy
@@ -236,6 +247,7 @@
 ### hard-cutover
 
 - SDD-0024 — Entity Relationship Full Rewrite
+- SDD-0031 — Data Runtime Generic Slot Hard Cutover
 
 ### hook
 

@@ -11,6 +11,16 @@
 - 如果日志级别关闭但消息已构造，就已经产生了字符串分配。
 - 所以要改的是 Logger API 和热路径调用方式，不是全仓禁 `$"..."`。
 
+## Data 完成后的重新裁决
+
+`SDD-0031` 完成后，Logger 仍不应升级为下一批 P0。重新分析后裁决如下：
+
+- Logger 不是协议 typed 化问题，不能和 Event / Feature / Ability 的 object 宽口同级处理。
+- `Trace` / `Debug` 带 `[Conditional("DEBUG")]`，非 DEBUG 编译会被编译器移除；因此不能只凭 `_log.Debug($"...")` grep 命中就判失败。
+- `Info`、`Warn`、`Error` 的调用点插值仍会在进入方法前求值；但 Warn / Error 属于可诊断性优先，不应为了零分配删除关键错误日志。
+- 默认只处理明确热路径：每帧循环、TargetQuery、Timer/Data diagnostics 等高频调用点。初始化、测试、Debug scene、错误日志保留可读性。
+- 后续如果要做 Logger SDD，应先提供 `IsEnabled` / lazy / interpolated string handler，再按 owner 迁移热路径调用点；不做全仓字符串风格重写。
+
 ## 当初为什么这么设计
 
 `Log` 当前目标是 Godot 输出友好、上下文过滤和 DEBUG 条件编译：
@@ -84,7 +94,7 @@ handler 在日志关闭时不追加内容，避免构造完整字符串。这个
 第一阶段：
 
 - 给 `Log` 加 `IsTraceEnabled/IsDebugEnabled/IsInfoEnabled`。
-- 对明确热路径高成本日志加门禁，尤其是循环、每帧 `_Process`、TargetSelector、Data/Timer diagnostics。
+- 对明确热路径高成本日志加门禁，尤其是循环、每帧 `_Process`、TargetSelector、Timer diagnostics。
 - 文档明确：不要在热路径把复杂 `$"..."` 直接传给无法延迟的日志 API。
 
 第二阶段：
@@ -102,7 +112,7 @@ handler 在日志关闭时不追加内容，避免构造完整字符串。这个
 | --- | --- |
 | 初始化 / 测试 / Debug scene | 可以直接用插值 |
 | Error / Warn | 可直接用；当前 API 已先做级别判断，但调用点插值仍会先求值，复杂消息建议加门禁 |
-| 每帧 / 高频循环 / Target query / Data hot path | 必须 `IsEnabled` 或 handler |
+| 每帧 / 高频循环 / Target query / Timer diagnostics | 必须 `IsEnabled` 或 handler |
 | UI 文本拼装 | 按 UI 刷新频率处理，不纳入 ECS P0 |
 | `string.Join(Select(...))` diagnostics | 只在 dump/export 时运行，不放 scheduler hot path |
 
@@ -118,5 +128,6 @@ rg -n "_log\\.Debug\\(\\$|Log\\.Debug\\(\\$|_log\\.Info\\(\\$|Log\\.Info\\(\\$" 
 ## 不推荐
 
 - 不推荐把所有字符串插值改成 `+`。这可能更差，也降低可读性。
-- 不推荐在 Data/Event P0 前投入大量时间做日志风格重写。
+- 不推荐在 Event + Feature / Ability P0 前投入大量时间做日志风格重写。
 - 不推荐为了零分配删除关键错误日志；错误日志属于可诊断性，优先保留。
+- 不推荐用 grep 命中数量替代 profiler 或热路径审计。

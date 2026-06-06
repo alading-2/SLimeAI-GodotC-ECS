@@ -182,7 +182,8 @@ public class Data
     }
 
     /// <summary>
-    /// 内部入口：按 descriptor definition 写入未泛型化值。
+    /// 边界入口：按 descriptor definition 写入未泛型化值。
+    /// 仅用于 snapshot loader、debug 和 TestSystem；业务热路径应使用 DataKey&lt;T&gt;。
     /// </summary>
     /// <param name="definition">字段 descriptor 定义。</param>
     /// <param name="value">要写入的值。</param>
@@ -198,7 +199,8 @@ public class Data
     }
 
     /// <summary>
-    /// 内部入口：按 descriptor definition 写入未泛型化值，并输出结构化诊断。
+    /// 边界入口：按 descriptor definition 写入未泛型化值，并输出结构化诊断。
+    /// 值类型进入 object 参数会装箱；业务代码不要绕过 DataKey&lt;T&gt; 调用。
     /// </summary>
     /// <param name="definition">字段 descriptor 定义。</param>
     /// <param name="value">要写入的值。</param>
@@ -215,7 +217,8 @@ public class Data
     }
 
     /// <summary>
-    /// 内部入口：按 stable key 写入未泛型化值。
+    /// 边界入口：按 stable key 写入未泛型化值。
+    /// 仅用于旧测试和调试胶水；业务热路径应使用 generated DataKey&lt;T&gt;。
     /// </summary>
     /// <param name="stableKey">字段 stable key。</param>
     /// <param name="value">要写入的值。</param>
@@ -231,7 +234,8 @@ public class Data
     }
 
     /// <summary>
-    /// 内部入口：按 stable key 写入未泛型化值，并输出结构化诊断。
+    /// 边界入口：按 stable key 写入未泛型化值，并输出结构化诊断。
+    /// 值类型进入 object 参数会装箱；新业务代码不要新增此调用。
     /// </summary>
     /// <param name="stableKey">字段 stable key。</param>
     /// <param name="value">要写入的值。</param>
@@ -603,7 +607,8 @@ public class Data
     }
 
     /// <summary>
-    /// 获取当前所有基础数据的副本
+    /// 获取当前所有基础数据的副本。
+    /// 仅供 diagnostics/TestSystem dump 使用，返回 Dictionary 会让值类型装箱。
     /// </summary>
     public Dictionary<string, object> GetAll()
     {

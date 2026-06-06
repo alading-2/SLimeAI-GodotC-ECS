@@ -6,6 +6,16 @@ Event 禁 object 后，Feature / Ability 也必须同步类型化。否则 objec
 
 当前 FeatureSystem 设计强调“Feature 不依赖 Ability 专有类型”，这个边界是对的；错误在于用 `object?` 实现解耦。AI-first 更适合用 typed adapter / typed execution contract 实现解耦。
 
+## Data 完成后的重新裁决
+
+Data 主链路已经由 `SDD-0031` 完成 hard cutover，因此 Feature / Ability 不再是“跟随 Data”的次级任务，而是 Event dynamic object 删除后的必需配套。重新分析后裁决如下：
+
+- Feature / Ability 必须和 Event dynamic object removal 同批设计。只删 EventBus dynamic API，不改 `ActivationData/ExecuteResult object?`，object 会从 Feature 执行链路绕回去。
+- 不建议把 Feature 的 Granted / Removed / Activated / Ended 全生命周期都泛型化。生命周期阶段主要传 owner、feature、instance、reason，普通 `FeatureLifecycleContext` 足够。
+- 真正需要 typed 的是 Execute 阶段：Ability 传入 `CastContext`，handler 返回 `AbilityExecutedResult`，这两个类型不应再靠 `object?` 和 `is` 判断连接。
+- `ExtraData Dictionary<string, object>` 不应作为长期 action 间通信入口；如果确实需要跨 action scratchpad，应使用 typed scratch key 或 Capability-owned context 字段。
+- `CastContext.SourceEventData object?` 应由 TriggerBinding 显式投影，而不是把原始事件 payload 塞进 Ability。
+
 ## 当初为什么这么设计
 
 Feature 是通用能力，Ability 是其中一个调用方。为了避免 Feature 反向依赖 Ability，当前设计把调用方专有数据放进：
@@ -45,7 +55,7 @@ featureCtx.ExecuteResult is AbilityExecutedResult
 
 ## 推荐架构
 
-### 1. 通用 `FeatureExecutionContext<TInput, TResult>`
+### 1. Execute-only typed context
 
 ```csharp
 public sealed class FeatureExecutionContext<TInput, TResult>
@@ -66,7 +76,7 @@ Ability 使用：
 FeatureExecutionContext<CastContext, AbilityExecutedResult>
 ```
 
-Feature core 不需要知道 Ability 细节，只处理泛型接口。
+Feature core 不需要知道 Ability 细节，只处理泛型接口。Granted / Removed / Activated / Ended 不使用这个泛型上下文。
 
 ### 2. Typed handler 接口
 
@@ -123,13 +133,13 @@ public readonly record struct AbilityTriggerSource<TEvent>(TEvent Event)
 
 ## 迁移步骤
 
-1. 新增 lifecycle context 与 typed execution context。
-2. 新增 typed handler registry，保留旧 registry 作为迁移输入但不新增旧 handler。
-3. 改 `AbilityFeatureHandler` 为 `AbilityFeatureHandler : IFeatureHandler<CastContext, AbilityExecutedResult>`。
-4. 改 `FeatureSystem.OnFeatureActivated`：执行阶段通过 typed registry 调用，结果写 typed context。
+1. 新增 `FeatureLifecycleContext`，承载 owner / feature / instance / source metadata；不要泛型化生命周期。
+2. 新增 `FeatureExecutionContext<TInput, TResult>` 与 typed handler registry。
+3. 改 `AbilityFeatureHandler` 为 typed Execute adapter，例如 `IFeatureHandler<CastContext, AbilityExecutedResult>`。
+4. 改 `FeatureSystem`：lifecycle 继续走普通 context，Execute 阶段通过 typed registry 调用。
 5. 改 `AbilitySystem.EmitAbilityExecutedEvent`：不再读 `object ExecuteResult`。
-6. 改 `CastContext.SourceEventData`，由 trigger binding 显式写 typed 来源。
-7. 清理 `FeatureContext.ExtraData Dictionary<string, object>`；如确需 action 间共享，改为 typed scratchpad key。
+6. 在 `Event + Feature/Ability Typed Execution Boundary` 联合 SDD 中同步改 `EmitEventAction` 和 `TriggerComponent`：typed trigger binding 将事件字段投影到 `CastContext`，不再设置 `SourceEventData object?`。
+7. 清理或限制 `FeatureContext.ExtraData Dictionary<string, object>`；如确需 action 间共享，改为 typed scratchpad key。
 
 ## 验证门禁
 
@@ -152,5 +162,6 @@ rg -n "ActivationData|ExecuteResult|OnExecute\\(FeatureContext|object\\? OnExecu
 
 ## Must Confirm
 
-- 是否接受 Feature Execute 阶段改 typed generic contract。
+- 是否接受只类型化 Feature Execute 阶段，lifecycle context 暂不泛型化。
 - 是否接受每个 Capability 自己注册 typed handler adapter，而不是复用 `object? OnExecute`。
+- 是否接受 `CastContext.SourceEventData` 由 typed trigger binding 投影替代。

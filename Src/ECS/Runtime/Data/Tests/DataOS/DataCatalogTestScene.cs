@@ -111,7 +111,19 @@ public partial class DataCatalogTestScene : DataSceneTestBase
     private void BuildCatalog_ShouldConsumeRepositoryRuntimeSnapshotDescriptors()
     {
         var catalog = Bootstrap.Catalog;
-        AssertEqual("descriptor count", 212, catalog.Count);
+        var snapshotJson = File.ReadAllText(ResolveDataOsPath("Snapshots/runtime_snapshot.json"));
+        var snapshot = JsonSerializer.Deserialize<RuntimeDataSnapshot>(
+            snapshotJson,
+            JsonOptions) ?? throw new InvalidOperationException("runtime snapshot deserialize failed");
+        using var snapshotDocument = JsonDocument.Parse(snapshotJson);
+        var manifestDescriptorCount = snapshotDocument.RootElement
+            .GetProperty("manifest")
+            .GetProperty("descriptorCount")
+            .GetInt32();
+
+        // descriptor 数量来自 runtime snapshot，不在测试里写死，避免 DataOS 新字段导致门禁漂移。
+        AssertEqual("descriptor count matches snapshot", snapshot.Descriptors.Count, catalog.Count);
+        AssertEqual("descriptor count matches manifest", manifestDescriptorCount, catalog.Count);
         AssertTrue("FinalHp descriptor exists", catalog.TryGet(GeneratedDataKey.FinalHp.StableKey, out var finalHp));
         AssertEqual("FinalHp is computed", DataStoragePolicy.Computed, finalHp.StoragePolicy);
         AssertEqual("Dependencies descriptor is string array", DataValueType.StringArray, catalog.GetRequired("Dependencies").ValueType);
