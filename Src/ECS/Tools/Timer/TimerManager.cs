@@ -34,8 +34,10 @@ public partial class TimerManager : Node, ISystem
                 .Instantiate());
     }
 
+    private static TimerManager? _instance;
+
     /// <summary> 全局唯一单例访问点 </summary>
-    public static TimerManager Instance;
+    public static TimerManager Instance => _instance!;
 
     private static readonly Log _log = new(nameof(TimerManager));
 
@@ -58,7 +60,11 @@ public partial class TimerManager : Node, ISystem
     /// </summary>
     public override void _EnterTree()
     {
-        Instance = this;
+        if (!NodeSingletonGuard.TryBind(this, ref _instance, _log))
+        {
+            return;
+        }
+
         _lastTicksMsec = Time.GetTicksMsec();
 
         // 绑定每一帧的原始处理开始信号，用于更新基础时间戳
@@ -72,7 +78,7 @@ public partial class TimerManager : Node, ISystem
     public override void _ExitTree()
     {
         _scheduler.Clear(TimerCancelReason.SceneExit);
-        Instance = null;
+        NodeSingletonGuard.Release(this, ref _instance);
     }
 
     /// <summary>

@@ -23,22 +23,20 @@ public partial class DamageService : Node
             static () => ResourceManagement.Load<PackedScene>(nameof(DamageService), ResourceCategory.System).Instantiate());
     }
 
+    private static DamageService? _instance;
+
     /// <summary> 获取全局单例实例 </summary>
-    public static DamageService Instance;
+    public static DamageService? Instance => _instance;
 
     // 已注册的伤害处理器列表
     private readonly List<IDamageProcessor> _processors = new();
 
     public override void _EnterTree()
     {
-        if (Instance != null && Instance != this)
+        if (!NodeSingletonGuard.TryBind(this, ref _instance, _log))
         {
-            _log.Warn("检测到重复的 DamageService 实例。正在销毁重复项。");
-            QueueFree();
             return;
         }
-
-        Instance = this;
 
         // 防止 Reparent 导致处理器重复添加
         _processors.Clear();
@@ -47,10 +45,7 @@ public partial class DamageService : Node
 
     public override void _ExitTree()
     {
-        if (Instance == this)
-        {
-            Instance = null;
-        }
+        NodeSingletonGuard.Release(this, ref _instance);
     }
 
     /// <summary>

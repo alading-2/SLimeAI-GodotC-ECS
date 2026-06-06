@@ -27,8 +27,10 @@ public partial class TestSystem : CanvasLayer
     /// <summary>测试系统日志器，用于记录初始化与关键调试操作。</summary>
     private static readonly Log _log = new(nameof(TestSystem));
 
+    private static TestSystem? _instance;
+
     /// <summary>测试系统单例，方便其它调试工具直接访问当前测试面板。</summary>
-    public static TestSystem? Instance { get; private set; }
+    public static TestSystem? Instance => _instance;
 
     /// <summary>当前被测试面板选中的实体；属性面板、技能面板等都会围绕它刷新。</summary>
     public IEntity? SelectedEntity => _selectionContext?.SelectedEntity;
@@ -129,13 +131,11 @@ public partial class TestSystem : CanvasLayer
     /// </summary>
     public override void _EnterTree()
     {
-        if (Instance != null && Instance != this)
+        if (!NodeSingletonGuard.TryBind(this, ref _instance, _log))
         {
-            QueueFree();
             return;
         }
 
-        Instance = this;
         Layer = 100;
         ProcessMode = ProcessModeEnum.Always;
     }
@@ -182,10 +182,7 @@ public partial class TestSystem : CanvasLayer
 
         UnbindMouseSelectionEvents();
 
-        if (Instance == this)
-        {
-            Instance = null;
-        }
+        NodeSingletonGuard.Release(this, ref _instance);
     }
 
     //====================================================
