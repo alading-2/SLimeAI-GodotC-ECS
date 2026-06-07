@@ -27,8 +27,10 @@ description: 修改 SlimeAI ECS Feature Capability、FeatureDefinition、Feature
 ## 规则
 
 - Feature 核心不引用游戏专有类型。
-- 子系统上下文优先通过 `FeatureContext.ActivationPayload` / `TryGetActivation<T>()` 传入，执行结果通过 `ExecutionResult` / `TryGetExecutionResult<T>()` 返回；`ActivationData`、`ExecuteResult`、`SourceEventData`、`ExtraData` 仅是 `[Obsolete]` 兼容入口。
-- `FeatureDefinition.Actions` 承载 `IFeatureAction` 原子动作，`FeatureService.ExecuteActions` 统一执行；action 不引用 Godot 或 BrotatoLike 专有类型。
+- 子系统上下文优先通过 `FeatureContext.SetActivationPayload<T>()` / `TryGetActivation<T>()` 传入，执行结果通过 `SetExecutionResult<T>()` / `TryGetExecutionResult<T>()` 返回；`ActivationData`、`ExecuteResult`、`Source`、`Trigger`、`ExtraData` 仅是 `[Obsolete]` 兼容入口。
+- `IFeatureHandler.OnExecute(FeatureContext)` 返回 `void`，结果必须写入 `FeatureContext` typed result；不要恢复 `object? OnExecute`。
+- `FeatureDefinition.Actions` 承载 `IFeatureAction` 原子动作，`FeatureSystem.ExecuteActions` 统一执行；action 不引用 Godot 或 BrotatoLike 专有类型。
+- Feature action 发事件时使用 `EmitEventAction<TEvent>` typed wrapper，不走 `EmitDynamic`。
 - `FeatureAutoTriggerService` 负责 Feature 自身 Periodic / OnEvent 注册，调用方必须持有并 Dispose 注册句柄。
 - `Feature.TriggerChance` 使用 0-100 百分比；新增 DataKey 必须同步 DataOS descriptor / seed / snapshot mirror。
 - Modifier 授予 / 回滚由 `FeatureService` 管理，避免 handler 私自写长期状态。

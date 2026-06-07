@@ -109,14 +109,13 @@ public static class AbilitySystem
             new GameEventType.Ability.Activated(abilityContext)
         );
 
-        // Feature 生命周期钩子：Activated（AbilitySystem 负责构建 FeatureContext，将 CastContext 存入 ActivationData）
+        // Feature 生命周期钩子：Activated（AbilitySystem 负责构建 typed FeatureContext）
         var featureCtx = new FeatureContext
         {
             Owner = abilityContext.Caster,
-            Feature = ability,
-            ActivationData = abilityContext,
-            Source = abilityContext.SourceEventData
+            Feature = ability
         };
+        featureCtx.SetActivationPayload(abilityContext);
         FeatureSystem.OnFeatureActivated(featureCtx);
 
         EmitAbilityExecutedEvent(abilityContext, featureCtx);
@@ -174,7 +173,7 @@ public static class AbilitySystem
     // ==================== 效果执行 ====================
 
     /// <summary>
-    /// 发送技能执行完成事件 - 结果由 IFeatureHandler.OnExecute 写入 FeatureContext.ExecuteResult
+    /// 发送技能执行完成事件 - 结果由 IFeatureHandler.OnExecute 写入 FeatureContext typed result
     /// </summary>
     private static void EmitAbilityExecutedEvent(CastContext context, FeatureContext featureCtx)
     {
@@ -185,7 +184,7 @@ public static class AbilitySystem
         var handlerId = ability.Data.Get<string>(GeneratedDataKey.FeatureHandlerId);
         AbilityExecutedResult result;
 
-        if (featureCtx.ExecuteResult is AbilityExecutedResult executedResult)
+        if (featureCtx.TryGetExecutionResult<AbilityExecutedResult>(out var executedResult))
         {
             result = executedResult;
         }

@@ -1,7 +1,7 @@
 # GC 优化设计入口
 
 > 状态：current
-> 更新：2026-06-06
+> 更新：2026-06-07
 > 输入：用户关于 Data/Event object、字符串插值、AI-first 性能严谨性的裁决要求；用户对 `DataRuntimeValue` 多字段方案的驳回；用户确认 `DataSlot<T> + IDataSlot` 是 Data 去 object 最佳方案；`DocsAI/ECS框架与AIFirst方向决策.md`；Data/Event/Feature/ObjectPool/TargetSelector/Logger DocsAI 与源码审计；Microsoft Learn .NET boxing / GC / interpolated string handler 文档；Resources/Engine 本地框架分析和 Unity Entities / Bevy ECS 官方资料。
 
 ## DeepThink 确认包
@@ -12,7 +12,9 @@
 
 2026-06-06 重新分析后，本设计入口的当前目标收窄为：在 `SDD-0031 Data Runtime Generic Slot Hard Cutover` 已完成的前提下，重新评估非 Data 切片的优先级、必要性和过度设计风险。
 
-本轮非目标：不直接改源码；不重新分析 Data 主链路；不做泛泛“全仓零 GC”口号；不为旧手写方便保留 Event / Feature object 主链路；不把所有字符串插值、`ToArray()` 或 LINQ 都误判为 P0。
+2026-06-07 执行结果：用户接受合并方向并要求“更新设计文档、生成 SDD、执行任务一起完成”。`SDD-0033 Non-Data GC Boundary Completion` 已完成本入口推荐的非 Data 明显问题收口：Event dynamic object 主链路、Feature / Ability raw object Execute 边界、ObjectPool manager 反射和 TargetSelector ownership facade。Logger 本轮不改，仍按 profiler / 热路径证据进入后续 P2。
+
+本轮完成后的非目标仍然成立：不重新分析 Data 主链路；不做泛泛“全仓零 GC”口号；不为旧手写方便恢复 Event / Feature object 主链路；不把所有字符串插值、`ToArray()` 或 LINQ 都误判为 P0。
 
 ### Context Read
 
@@ -22,14 +24,14 @@
 - 已读 SDD 源：`PRJ-0002` README、`design/INDEX.md`、`roadmap.md`、`progress.md`、现有 `问题/*.md`。
 - 已读源码：`DataRuntimeStorage.cs`、`Data.cs`、`GameEventType_Data.cs`、`DataModifier.cs`、`DataComputeRegistry.cs`、`EventBus.cs`、`EventContext.cs`、`FeatureContext.cs`、`IFeatureHandler.cs`、`FeatureSystem.cs`、`EmitEventAction.cs`、`AbilityFeatureHandler.cs`、`AbilitySystem.cs`、`CastContext.cs`、`TriggerComponent.cs`、`ObjectPoolManager.cs`、`EntityTargetSelector.cs`、`AbilityInventoryService.cs`、`ComponentRegistrar.cs`、`Log.cs`。
 - 重新分析补读源码：`EventBus.cs`、`FeatureContext.cs`、`IFeatureHandler.cs`、`EmitEventAction.cs`、`AbilitySystem.cs`、`TriggerComponent.cs`、`ObjectPoolManager.cs`、`EntityTargetSelector.cs`、`AbilityInventoryService.cs`、`ComponentRegistrar.cs`、`Log.cs`。
-- 当前 Data 状态：`SDD-0031` 已完成；Data 只作为历史背景，不再作为当前待执行 P0。
+- 当前 Data 状态：`SDD-0031` / `SDD-0032` 已完成；Data 只作为历史背景，不再作为当前待执行 P0。
 - 本地引擎资料：`Resources/Engine/Docs/FrameworkAnalysis/Reports/99-SlimeAI-引擎源码综合分析报告.md`、`05-DefaultEcs-源码分析报告.md`、`09-Unreal-GAS-文档对照报告.md`。结论支持 typed data / typed event / Capability-owned selector，不支持把外部 ECS 运行时照搬进 SlimeAI。
-- 外部资料：Microsoft Learn 确认 boxing 会把值类型包装到托管堆对象；GC 频率受分配率影响；interpolated string handler 是性能场景下避免无谓字符串构造的官方机制。Unity Entities / Bevy ECS 资料用于校准成熟 ECS 的热路径状态主链路是 typed component / typed storage，动态能力只留在受约束边界。
+- 外部资料：Microsoft Learn 确认 boxing 会把值类型包装到托管堆对象；GC 频率受分配率影响；interpolated string handler 是性能场景下避免无谓字符串构造的官方机制。Unity managed memory / GC 文档用于校准“减少每帧临时分配”和对象复用的常规性能原则；Bevy `Message` 文档用于校准 typed payload message / reader / writer 边界；本地 Resources 综合报告继续支持 typed event、少入口和 Capability-owned selector。
 - 未读上下文：未做运行时 profiler；未跑 Godot 场景；未审完所有 gameplay / UI 调用点。
 
 ### Problem Shape
 
-旧 Data/Event/Feature 设计把 `object?` 当成“方便兼任”的通用桥。Data 主链路已经通过 `SDD-0031` 收口；剩余真正影响下一步的是 Event + Feature / Ability 的 object 协议链。
+旧 Data/Event/Feature 设计把 `object?` 当成“方便兼任”的通用桥。Data 主链路已经通过 `SDD-0031` / `SDD-0032` 收口；Event + Feature / Ability 的 object 协议链已经通过 `SDD-0033` 收口。
 
 这个选择在人工框架中能降低 API 设计成本，但在 AI-first 框架中会制造三个问题：
 
@@ -41,7 +43,7 @@
 
 ### Main Risks
 
-- Event 禁 object 后，Feature 的 `EmitEventAction`、`TriggerComponent` 事件触发、Ability/Feature 上下文需要同步重构，否则会产生绕路。
+- Event 禁 object 后，Feature 的 `EmitEventAction` 和 Ability/Feature 上下文必须同步重构，否则会产生绕路；该项已由 `SDD-0033` 完成。`TriggerComponent` 当前没有稳定 dynamic event 主链路，后续若补 OnEvent binding，应沿 typed binding id 方向继续。
 - Feature / Ability 如果把完整 lifecycle 全部泛型化，会制造比 object 更难维护的 API 扩散；应只类型化 Execute 输入 / 输出。
 - TargetSelector 如果只池化 List 而不定义 result ownership，会引入调用方持有已复用 buffer 的隐蔽 bug。
 - 日志字符串问题容易被扩大成风格战争；实际应该以日志门禁和 handler 解决热路径求值。
@@ -64,21 +66,21 @@
 
 ### Recommendation
 
-采用方案 2。Data 已完成后，不再继续扩大 Data；下一步合并处理 Event + Feature / Ability typed execution boundary，再把 ObjectPool、TargetSelector、Logger 按 owner 后续处理。
+采用方案 2。Data 已完成后，不再继续扩大 Data；`SDD-0033` 已合并处理 Event + Feature / Ability typed execution boundary，并顺带完成 ObjectPool manager runtime interface 与 TargetQueryResult ownership facade 这两个明确 P1 小切片。Logger 仍按 owner 后续处理。
 
 推荐顺序：
 
-1. Event + Feature / Ability Typed Execution Boundary。
-2. ObjectPool Manager Runtime Interface。
-3. TargetQueryEngine 分配控制。
-4. AbilityInventory / ComponentRegistrar 局部 cleanup（需要调用频率或 profiler 证据）。
-5. Logger hot path lazy / interpolated string handler。
+1. 已完成：Event + Feature / Ability Typed Execution Boundary（SDD-0033）。
+2. 已完成：ObjectPool Manager Runtime Interface（SDD-0033 的局部切片）。
+3. 已完成基础 facade：TargetQueryEngine / TargetQueryResult ownership 与 diagnostics（SDD-0033）；后续 pooled lease / allocation artifact 另起 owner SDD。
+4. 后续：AbilityInventory / ComponentRegistrar 局部 cleanup（需要调用频率或 profiler 证据）。
+5. 后续：Logger hot path lazy / interpolated string handler。
 
 ### Must Confirm
 
-- 是否接受把下一步 SDD 定为 Event + Feature / Ability 联合切片，而不是单独做 Event 反射缓存。
-- 是否接受 Feature 只类型化 Execute 输入 / 输出，Granted / Removed / Activated / Ended lifecycle context 暂不泛型化。
-- 是否接受 TriggerComponent 从事件类型字符串 + object source 迁到 typed trigger binding id。
+- 已确认并执行：下一步 SDD 使用 Event + Feature / Ability 联合切片，而不是单独做 Event 反射缓存。
+- 已确认并执行：Feature 只类型化 Execute 输入 / 输出，Granted / Removed / Activated / Ended lifecycle context 暂不泛型化。
+- 已确认默认方向：不保留 TriggerComponent 事件类型字符串 + object source 的主链路；后续若补 OnEvent trigger binding，应走 typed trigger binding id。
 
 ### Should Confirm
 

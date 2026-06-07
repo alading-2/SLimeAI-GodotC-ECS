@@ -29,6 +29,7 @@ description: 修改 SlimeAI ECS EventBus、GlobalEventBus、Capability 事件或
 - 框架仓 `SlimeAI/` 禁止 `using BrotatoLike`、`BrotatoLike.Game.*` 或其它游戏 namespace 反向依赖。
 - 订阅方必须可清理，不把事件当状态存储。
 - Data 业务变更监听使用 `GameEventType.Data.Changed<T>`；`GameEventType.Data.PropertyChanged(string, object?, object?)` 只允许 TestSystem/debug/migration diagnostic 边界使用。
+- EventBus 不提供 dynamic object 主链路；不要恢复 `EmitDynamic` / `OnDynamic` / `OffDynamic` / `Action<object>` handler 分支。数据驱动事件先定义 typed payload，Feature action 使用 typed wrapper。
 
 ## 事件归属判定树
 

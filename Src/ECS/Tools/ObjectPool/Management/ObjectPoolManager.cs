@@ -12,8 +12,8 @@ public static class ObjectPoolManager
 {
     private static readonly Log _log = new(nameof(ObjectPoolManager));
 
-    // 全局池字典，按 PoolName 索引（存储任意类型的池）
-    private static readonly Dictionary<string, object> _pools = [];
+    // 全局池字典，按 PoolName 索引，管理层只依赖非泛型 runtime interface。
+    private static readonly Dictionary<string, IObjectPoolRuntime> _pools = [];
 
     // 非 Node 对象到池名称的映射（用于纯 C# 对象的静态归还）
     private static readonly Dictionary<object, string> _objectToPoolMap = [];
@@ -116,18 +116,22 @@ public static class ObjectPoolManager
             }
         }
 
-        // 3. 查找池并调用 Release
+        // 3. 查找池并通过 runtime interface 调用 Release
+        IObjectPoolRuntime? runtimePool;
         lock (_lock)
         {
-            if (_pools.TryGetValue(poolName, out var poolObj))
+            _pools.TryGetValue(poolName, out runtimePool);
+        }
+
+        if (runtimePool != null)
+        {
+            if (runtimePool.ReleaseUntyped(instance))
             {
-                var releaseMethod = poolObj.GetType().GetMethod("Release");
-                if (releaseMethod != null)
-                {
-                    releaseMethod.Invoke(poolObj, new[] { instance });
-                    return;
-                }
+                return;
             }
+
+            _log.Error($"池 '{poolName}' 拒绝归还对象 {instance}，期望类型 {runtimePool.ItemType.Name}。");
+            return;
         }
 
         // 池不存在
@@ -155,6 +159,15 @@ public static class ObjectPoolManager
         }
     }
 
+    /// <summary>根据名称获取非泛型 runtime pool，供管理器、测试和诊断使用。</summary>
+    public static IObjectPoolRuntime? GetRuntimePool(string name)
+    {
+        lock (_lock)
+        {
+            return _pools.GetValueOrDefault(name);
+        }
+    }
+
     /// <summary> 获取当前所有池的详细统计信息 </summary>
     public static Dictionary<string, PoolStats> GetAllStats()
     {
@@ -163,15 +176,7 @@ public static class ObjectPoolManager
             var stats = new Dictionary<string, PoolStats>();
             foreach (var kvp in _pools)
             {
-                var getStatsMethod = kvp.Value.GetType().GetMethod("GetStats");
-                if (getStatsMethod != null)
-                {
-                    var poolStats = getStatsMethod.Invoke(kvp.Value, null);
-                    if (poolStats is PoolStats ps)
-                    {
-                        stats[kvp.Key] = ps;
-                    }
-                }
+                stats[kvp.Key] = kvp.Value.GetStats();
             }
             return stats;
         }
@@ -184,8 +189,7 @@ public static class ObjectPoolManager
         {
             foreach (var poolObj in _pools.Values)
             {
-                var cleanupMethod = poolObj.GetType().GetMethod("Cleanup");
-                cleanupMethod?.Invoke(poolObj, new object[] { retainCount });
+                poolObj.Cleanup(retainCount);
             }
         }
     }
@@ -200,8 +204,7 @@ public static class ObjectPoolManager
         {
             foreach (var poolObj in _pools.Values)
             {
-                var clearMethod = poolObj.GetType().GetMethod("Clear");
-                clearMethod?.Invoke(poolObj, null);
+                poolObj.Clear();
             }
             _pools.Clear();
             _objectToPoolMap.Clear();

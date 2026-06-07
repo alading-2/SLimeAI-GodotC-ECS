@@ -1,0 +1,57 @@
+{
+  "id": "SDD-0033",
+  "slug": "non-data-gc-boundary-completion",
+  "title": "Non-Data GC Boundary Completion",
+  "status": "done",
+  "type": "refactor",
+  "created_at": "2026-06-07",
+  "updated_at": "2026-06-07",
+  "scope": "SlimeAI",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI/SlimeAI"
+  ],
+  "affected_areas": [
+    "Src/ECS/Runtime/Event",
+    "Src/ECS/Capabilities/Feature",
+    "Src/ECS/Capabilities/Ability",
+    "Src/ECS/Tools/ObjectPool",
+    "Src/ECS/Tools/TargetSelector"
+  ],
+  "tags": [
+    "gc",
+    "event",
+    "feature",
+    "ability",
+    "objectpool",
+    "target-selector"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 8,
+    "total_tasks": 8,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "This SDD changes Runtime Event, Feature / Ability execution, ObjectPool manager, and TargetSelector query behavior."
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0002",
+  "project_order": 23,
+  "shared_design_refs": [
+    "../../design/INDEX.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-06-07 13:15",
+      "summary": "dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly => Build succeeded, 0 warnings, 0 errors; DataOS validator => passed; python3 Workspace/SDD/sdd.py validate SDD-0033 => 0 errors, 0 warnings; bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only => 40 skills, Critical:0, Advisory:0; grep gates for Event/Feature object, ObjectPool reflection, and TargetSelector old facade usage returned no matches."
+    }
+  ]
+}

@@ -126,9 +126,7 @@ public partial class TriggerComponent : Node, IComponent
             return;
         }
 
-        // 订阅全局事件总线
-        // 注意：目前实现为订阅全局总线，逻辑上应通过 DataKey 配置是监听全局还是监听拥有者
-        // 使用 On<object> 配合 EventBus 对 Action<object> 的支持，实现通用监听
+        // 事件触发需要后续接入 typed trigger binding；本轮禁止再回到 EventBus dynamic object 主链路。
         foreach (var evt in eventTypes)
         {
             // TODO: 动态事件订阅待迁移

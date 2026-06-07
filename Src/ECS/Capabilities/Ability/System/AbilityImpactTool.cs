@@ -25,7 +25,7 @@ internal readonly record struct AbilityImpactResult(int TargetsHit, TimerHandle?
 /// 技能命中工具（薄层编排）。
 ///
 /// 编排顺序：目标查询 → 特效生成 → 伤害结算。
-/// 各步骤均为可选，职责分别委托给 EntityTargetSelector、EffectTool 和 DamageTool。
+/// 各步骤均为可选，职责分别委托给 TargetQueryEngine、EffectTool 和 DamageTool。
 /// DoT 调度与重复命中控制由 DamageTool 统一管理。
 /// </summary>
 internal static class AbilityImpactTool
@@ -39,74 +39,85 @@ internal static class AbilityImpactTool
     public static AbilityImpactResult Execute(IEntity caster, AbilityImpactOptions options)
     {
         var query = ResolveQuery(options.Query);
+        TargetQueryResult<IEntity>? queryResult = null;
 
-        // 1. 目标解析：优先使用显式目标列表，其次才走 Query 查询
-        IReadOnlyList<IEntity>? targets = options.Targets;
-        if (targets == null && query.HasValue)
+        try
         {
-            targets = EntityTargetSelector.Query(query.Value);
-        }
+            // 1. 目标解析：优先使用显式目标列表，其次才走 Query 查询
+            IReadOnlyList<IEntity>? targets = options.Targets;
+            if (targets == null && query.HasValue)
+            {
+                queryResult = TargetQueryEngine.QueryEntities(query.Value);
+                targets = queryResult.Items;
+            }
 
-        // 2. 特效生成
-        if (options.Effect.HasValue)
-        {
-            EffectTool.Spawn(ResolveEffectOptions(caster, options.Effect.Value, query));
-        }
+            // 2. 特效生成
+            if (options.Effect.HasValue)
+            {
+                EffectTool.Spawn(ResolveEffectOptions(caster, options.Effect.Value, query));
+            }
 
-        // 3. 伤害结算：无伤害参数时跳过；无 Query 时不做隐式伤害兜底
-        if (options.Damage == null)
-            return new AbilityImpactResult(targets?.Count ?? 0, null);
+            // 3. 伤害结算：无伤害参数时跳过；无 Query 时不做隐式伤害兜底
+            if (options.Damage == null)
+                return new AbilityImpactResult(targets?.Count ?? 0, null);
 
-        if (targets == null)
-        {
-            _log.Warn("AbilityImpactTool.Execute: Damage 已配置但缺少 Query/Targets，跳过伤害结算");
-            return new AbilityImpactResult(0, null);
-        }
+            if (targets == null)
+            {
+                _log.Warn("AbilityImpactTool.Execute: Damage 已配置但缺少 Query/Targets，跳过伤害结算");
+                return new AbilityImpactResult(0, null);
+            }
 
-        if (targets == null || targets.Count == 0)
-            return new AbilityImpactResult(targets?.Count ?? 0, null);
+            if (targets == null || targets.Count == 0)
+                return new AbilityImpactResult(targets?.Count ?? 0, null);
 
-        var dmg = options.Damage;
-        // 判断是否能伤害同一个目标
-        var hitRegistry = dmg.AllowRepeatHitSameTarget ? null : DamageTool.CreateHitRegistry();
+            var dmg = options.Damage;
+            // 判断是否能伤害同一个目标
+            var hitRegistry = dmg.AllowRepeatHitSameTarget ? null : DamageTool.CreateHitRegistry();
 
-        bool hasDot = dmg.TickInterval > 0f && dmg.TotalDuration > 0f;
-        int hitCount = 0;
-        if (!hasDot || dmg.ApplyImmediateTick)
-        {
-            // 单次伤害总是立即结算；DoT 是否首跳立即结算由 DamageApplyOptions.ApplyImmediateTick 控制
-            hitCount = DamageTool.ApplyToList(targets, dmg, hitRegistry);
-        }
+            bool hasDot = dmg.TickInterval > 0f && dmg.TotalDuration > 0f;
+            int hitCount = 0;
+            if (!hasDot || dmg.ApplyImmediateTick)
+            {
+                // 单次伤害总是立即结算；DoT 是否首跳立即结算由 DamageApplyOptions.ApplyImmediateTick 控制
+                hitCount = DamageTool.ApplyToList(targets, dmg, hitRegistry);
+            }
 
-        // 若配置了持续伤害，委托 DamageTool 调度 DoT 定时器
-        TimerHandle? timer = null;
-        if (hasDot)
-        {
-            // 每次 tick 重新解析 Query.Origin，支持跟随施法者移动的范围技能
-            timer = DamageTool.ScheduleDoT(
-                () =>
-                {
-                    if (options.Targets != null)
+            // 若配置了持续伤害，委托 DamageTool 调度 DoT 定时器
+            TimerHandle? timer = null;
+            if (hasDot)
+            {
+                // 每次 tick 重新解析 Query.Origin，支持跟随施法者移动的范围技能。
+                // provider 返回快照，避免未来 TargetQueryResult lease 释放后被异步 tick 持有。
+                timer = DamageTool.ScheduleDoT(
+                    () =>
                     {
-                        return options.Targets;
-                    }
+                        if (options.Targets != null)
+                        {
+                            return options.Targets;
+                        }
 
-                    var tickQuery = ResolveQuery(options.Query);
-                    if (!tickQuery.HasValue)
-                    {
-                        return null;
-                    }
+                        var tickQuery = ResolveQuery(options.Query);
+                        if (!tickQuery.HasValue)
+                        {
+                            return null;
+                        }
 
-                    return EntityTargetSelector.Query(tickQuery.Value);
-                },
-                dmg,
-                caster as Node,     // guardian：施法者失效时自动终止 DoT
-                immediate: false,
-                hitRegistry
-            );
+                        using var tickResult = TargetQueryEngine.QueryEntities(tickQuery.Value);
+                        return new List<IEntity>(tickResult.Items);
+                    },
+                    dmg,
+                    caster as Node,     // guardian：施法者失效时自动终止 DoT
+                    immediate: false,
+                    hitRegistry
+                );
+            }
+
+            return new AbilityImpactResult(hitCount, timer);
         }
-
-        return new AbilityImpactResult(hitCount, timer);
+        finally
+        {
+            queryResult?.Dispose();
+        }
     }
 
     /// <summary>

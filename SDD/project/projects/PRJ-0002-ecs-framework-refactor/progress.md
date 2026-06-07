@@ -6,10 +6,10 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-06
+- **Updated**: 2026-06-07
 - **Current SDD**: none
-- **Last Conclusion**: SDD-0031 Data Runtime Generic Slot Hard Cutover 已完成；用户要求重新分析非 Data 部分后，GC/装箱设计包已重新裁决：下一步不是继续分析 Data，也不是单独做 Event 反射缓存，而是把 Event dynamic object、Feature / Ability typed Execute boundary 和 Trigger typed binding 合并为一个协议收口 SDD。
-- **Next Action**: 若继续同一 GC/装箱优化设计包，创建 `Event + Feature/Ability Typed Execution Boundary` SDD；ObjectPool manager runtime interface 为后续 P1 小切片，TargetSelector allocation 必须随 `TargetQueryResult/Lease` ownership 做，Logger / ComponentRegistrar / lifecycle 分配为 P2 或 profiler 驱动。
+- **Last Conclusion**: SDD-0033 Non-Data GC Boundary Completion 已完成：Event dynamic object 主链路删除，Feature / Ability Execute 边界改 typed payload/result helper，ObjectPoolManager 改 `IObjectPoolRuntime` 非泛型管理接口，TargetSelector 新增 `TargetQueryEngine + TargetQueryResult` ownership / diagnostics facade；Logger 本轮不改。
+- **Next Action**: 若继续 GC/装箱优化，只从 Logger 热路径 lazy / interpolated string handler、TargetQuery pooled lease / deterministic RNG / allocation artifact、AbilityInventory / ComponentRegistrar 局部 cleanup 等 profiler 或 owner 证据驱动小切片恢复；不要重复创建 Event dynamic / Feature Execute / ObjectPool manager / TargetQueryResult 基础切片。
 - **Open Blockers**: none
 
 ## Project Status Board
@@ -38,6 +38,8 @@
 | SDD-0029 | done | `design/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |
 | SDD-0030 | done | `design/7.Component/` | Component Code Composition And Contract Hardening 已完成：默认组件组合迁到 C# profile / composer，Entity root scene 停止 instance Component Preset，ComponentManifest / DocsAI / ecs-component skill 已同步 |
 | SDD-0031 | done | `design/ECS框架优化/1.拆箱装箱+GC优化/` | Data Runtime Generic Slot Hard Cutover 已完成；非 Data 部分已重新裁决为 Event + Feature/Ability typed execution boundary 同批收口，ObjectPool / TargetSelector / Logger 降为 P1/P2 独立切片 |
+| SDD-0032 | done | `design/ECS框架优化/1.拆箱装箱+GC优化/` | Data Runtime Typed Contract Completion 已完成；业务 Data 协议不再以 string/untyped/object 作为主链路，debug / loader / diagnostic 边界保留命名和 grep gate |
+| SDD-0033 | done | `design/ECS框架优化/1.拆箱装箱+GC优化/` | Non-Data GC Boundary Completion 已完成；Event dynamic object、Feature / Ability raw object Execute、ObjectPool manager 反射、TargetSelector list-only ownership 已收口；Logger 仍为 P2 / profiler 驱动 |
 | TBD | proposed | `design/13-旧ECS框架Event系统问题分析与优化方向.md` | P1：保留 EventBus，优化事件主键、事件定义和请求-响应边界 |
 
 ## Timeline
@@ -368,3 +370,12 @@
 - **Evidence**: `design/ECS框架优化/1.拆箱装箱+GC优化/README.md`、`设计/README.md`、`设计/00-总览与AI-first裁决.md`、`02-EventBus动态object禁用设计.md`、`03-FeatureAbility上下文类型化设计.md`、`04-ObjectPool反射管理接口设计.md`、`05-TargetSelector集合分配与LINQ设计.md`、`06-Logger字符串与诊断分配设计.md`、`问题/00-总览.md`、`design/INDEX.md`、`README.md`、`roadmap.md` 已同步。
 - **Impact**: 后续恢复不应再从 Data 或单独 Event SDD 开始；应先创建联合协议收口 SDD，再按 owner 拆 ObjectPool / TargetSelector / Logger。
 - **Resume**: 若继续 GC/装箱优化，创建 `Event + Feature/Ability Typed Execution Boundary` SDD；Must Confirm 为是否接受联合切片、Feature 只类型化 Execute、TriggerComponent 改 typed trigger binding id。
+
+### P044 — 2026-06-07 — sdd-0033-done
+
+- **Context**: 用户确认非 Data GC 边界收口方向，并要求更新设计文档、生成 SDD、执行任务一起完成。用户明确 Data 已改完、Logger 本轮不改，ObjectPool 只处理明显问题，原则不是全仓清零 GC。
+- **Conclusion**: SDD-0033 已完成非 Data 明显宽口收口：`EventBus` 删除 dynamic object 主链路；`FeatureContext` 新增 typed activation/result helper，`IFeatureHandler.OnExecute` 改 `void`，Ability 主链路通过 typed `CastContext` / `AbilityExecutedResult` 传递；`ObjectPoolManager` 改 `Dictionary<string, IObjectPoolRuntime>` 并删除 manager 反射；`TargetQueryEngine + TargetQueryResult` 提供 read-only items 和 diagnostics，Ability / AI 调用点迁移到新 facade。
+- **Evidence**: `sdds/023-SDD-0033-non-data-gc-boundary-completion/`；`Src/ECS/Runtime/Event/EventBus.cs`、`Src/ECS/Capabilities/Feature/System/*`、`Src/ECS/Capabilities/Ability/System/*`、`Src/ECS/Tools/ObjectPool/*`、`Src/ECS/Tools/TargetSelector/*`；`DocsAI/ECS/Runtime/Event/`、`DocsAI/ECS/Capabilities/{Feature,Ability}/`、`DocsAI/ECS/Tools/{ObjectPool,TargetSelector}/` 和 owner skill 源已同步。
+- **Research Adoption**: externalResources enabled=`official-docs, engine-framework`，scope=Context7 Bevy `Message` docs、Unity managed memory / garbage collector docs、`Resources/Engine/Docs/FrameworkAnalysis/Reports/99-SlimeAI-引擎源码综合分析报告.md` 与 EnTT/DefaultEcs/Bevy 相关 typed event / Capability-owned selector 片段；copiedCodeOrAssets=none；adoption=采纳 typed payload、减少临时分配、显式 ownership 和少入口原则，不复制外部 ECS runtime。
+- **Impact**: 后续 AI 不应再建议只缓存 `EmitDynamic` 反射，也不应恢复 `object? OnExecute` 或 `Dictionary<string, object> _pools`；TargetSelector 后续性能深化必须从 `TargetQueryEngine` owner 继续，Logger 仍等待 profiler 或明确热路径证据。
+- **Resume**: PRJ-0002 当前无 active 子 SDD；若继续同一设计包，优先选择 Logger hot path lazy message API、TargetQuery pooled lease / deterministic RNG，或 profiler 证据指向的局部 cleanup。

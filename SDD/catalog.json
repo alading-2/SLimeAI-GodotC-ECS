@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-07 09:29",
+  "generated_at": "2026-06-07 13:17",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -32,7 +32,7 @@
       "slug": "ecs-framework-optimization",
       "title": "ECS Framework Optimization",
       "status": "active",
-      "updated_at": "2026-06-06",
+      "updated_at": "2026-06-07",
       "scope": "SlimeAI",
       "tags": [
         "ecs",
@@ -796,6 +796,34 @@
       "project_order": 22,
       "current_task": "done",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/022-SDD-0032-data-runtime-typed-contract-completion"
+    },
+    {
+      "id": "SDD-0033",
+      "slug": "non-data-gc-boundary-completion",
+      "title": "Non-Data GC Boundary Completion",
+      "status": "done",
+      "type": "refactor",
+      "updated_at": "2026-06-07",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "Src/ECS/Runtime/Event",
+        "Src/ECS/Capabilities/Feature",
+        "Src/ECS/Capabilities/Ability",
+        "Src/ECS/Tools/ObjectPool",
+        "Src/ECS/Tools/TargetSelector"
+      ],
+      "tags": [
+        "gc",
+        "event",
+        "feature",
+        "ability",
+        "objectpool",
+        "target-selector"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 23,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/023-SDD-0033-non-data-gc-boundary-completion"
     }
   ]
 }

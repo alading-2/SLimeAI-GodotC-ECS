@@ -113,22 +113,6 @@ public class EventBus
         list.Sort((a, b) => b.Priority.CompareTo(a.Priority));
     }
 
-    /// <summary>
-    /// 动态订阅事件（用于运行时通过反射/配置订阅的场景）
-    /// </summary>
-    public void OnDynamic(Type eventType, Action<object> handler, int priority = (int)EventPriority.Normal)
-    {
-        if (handler == null) return;
-        if (!_subscriptions.TryGetValue(eventType, out var list))
-        {
-            list = new List<Subscription>();
-            _subscriptions[eventType] = list;
-        }
-        var sub = new Subscription(eventType, handler, priority, false);
-        list.Add(sub);
-        list.Sort((a, b) => b.Priority.CompareTo(a.Priority));
-    }
-
     // ==================== 取消订阅 (Unsubscribe) ====================
 
     /// <summary>
@@ -144,19 +128,6 @@ public class EventBus
         var key = typeof(T);
         if (!_subscriptions.TryGetValue(key, out var list)) return;
 
-        var target = list.FirstOrDefault(s => s.Handler == handler);
-        if (target != null)
-        {
-            RemoveSubscription(target, list);
-        }
-    }
-
-    /// <summary>
-    /// 动态取消订阅事件
-    /// </summary>
-    public void OffDynamic(Type eventType, Action<object> handler)
-    {
-        if (!_subscriptions.TryGetValue(eventType, out var list)) return;
         var target = list.FirstOrDefault(s => s.Handler == handler);
         if (target != null)
         {
@@ -191,27 +162,6 @@ public class EventBus
         Trigger(in data);
     }
 
-    /// <summary>
-    /// 动态触发事件（用于 Feature 系统等运行时场景，通过反射调用泛型 Trigger）。
-    /// 性能低于泛型 Emit，仅用于数据驱动场景。
-    /// </summary>
-    public void EmitDynamic(object eventData)
-    {
-        if (eventData == null) return;
-        var eventType = eventData.GetType();
-        var triggerMethod = typeof(EventBus).GetMethod(
-            nameof(TriggerDynamicInner),
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        if (triggerMethod == null) return;
-        var generic = triggerMethod.MakeGenericMethod(eventType);
-        generic.Invoke(this, new[] { eventData });
-    }
-
-    private void TriggerDynamicInner<T>(object data) where T : struct
-    {
-        Trigger((T)data);
-    }
-
     private void Trigger<T>(in T data) where T : struct
     {
         var key = typeof(T);
@@ -244,10 +194,6 @@ public class EventBus
                     if (sub.Handler is Action<T> typedHandler)
                     {
                         typedHandler(data);
-                    }
-                    else if (sub.Handler is Action<object> objectHandler)
-                    {
-                        objectHandler(data);
                     }
                     else
                     {

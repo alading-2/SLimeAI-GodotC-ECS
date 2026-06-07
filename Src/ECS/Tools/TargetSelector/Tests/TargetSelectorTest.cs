@@ -37,6 +37,7 @@ public partial class TargetSelectorTest : Node
         _log.Info("开始测试 TargetSelector...");
 
         TestEntityQuery_FilterAndSort();
+        TestEntityQuery_ResultDiagnostics();
         TestPositionQuery_Ring();
         TestGeometryCalculator_Circle();
         TestGeometryCalculator_OtherShapes();
@@ -76,7 +77,8 @@ public partial class TargetSelectorTest : Node
                 MaxTargets = 2
             };
 
-            var results = EntityTargetSelector.Query(query);
+            using var result = TargetQueryEngine.QueryEntities(query);
+            var results = result.Items;
             var resultNames = string.Join(", ", results.Select(r => (r as Node)?.Name ?? "null"));
             _log.Info($"查询结果: [{resultNames}]");
 
@@ -89,6 +91,53 @@ public partial class TargetSelectorTest : Node
 
             AssertTrue(!results.Contains(friendly), "友军不应被 Enemy 过滤器选中");
             AssertTrue(!results.Contains(center), "自身不应被 Enemy 过滤器选中");
+        }
+        finally
+        {
+            CleanupEntities(center, enemyNear, enemyFar, friendly);
+        }
+    }
+
+    /// <summary>
+    /// 回归测试：
+    /// 新查询入口必须暴露结果 ownership 和诊断信息，避免调用方只拿到可变 List 后无法判断截断原因。
+    /// </summary>
+    private void TestEntityQuery_ResultDiagnostics()
+    {
+        _log.Info("测试实体查询结果 diagnostics...");
+
+        var center = new MockEntity("DiagnosticCenter", new Vector2(0, 0), Team.Player, EntityType.Unit);
+        var enemyNear = new MockEntity("DiagnosticEnemyNear", new Vector2(10, 0), Team.Enemy, EntityType.Unit);
+        var enemyFar = new MockEntity("DiagnosticEnemyFar", new Vector2(20, 0), Team.Enemy, EntityType.Unit);
+        var friendly = new MockEntity("DiagnosticFriendly", new Vector2(30, 0), Team.Player, EntityType.Unit);
+
+        EntityManager.Register(center);
+        EntityManager.Register(enemyNear);
+        EntityManager.Register(enemyFar);
+        EntityManager.Register(friendly);
+
+        try
+        {
+            var query = new TargetSelectorQuery
+            {
+                Geometry = GeometryType.Circle,
+                Origin = center.GlobalPosition,
+                Range = 100f,
+                CenterEntity = center,
+                TeamFilter = TeamFilter.Enemy,
+                TypeFilter = EntityType.Unit,
+                Sorting = TargetSorting.Nearest,
+                MaxTargets = 1
+            };
+
+            using var result = TargetQueryEngine.QueryEntities(query);
+
+            AssertTrue(result.Items.Count == 1, $"应只返回 1 个目标 (实际: {result.Items.Count})");
+            AssertTrue(result.Items[0] == enemyNear, $"第 1 个应为 DiagnosticEnemyNear, 实际: {(result.Items[0] as Node)?.Name}");
+            AssertTrue(result.Diagnostics.CandidateCount == 2, $"候选数量应为 2 (实际: {result.Diagnostics.CandidateCount})");
+            AssertTrue(result.Diagnostics.ReturnedCount == 1, $"返回数量应为 1 (实际: {result.Diagnostics.ReturnedCount})");
+            AssertTrue(result.Diagnostics.MaxTargets == 1, $"MaxTargets 应为 1 (实际: {result.Diagnostics.MaxTargets})");
+            AssertTrue(result.Diagnostics.Truncated, "查询结果应标记为已截断");
         }
         finally
         {
@@ -109,7 +158,8 @@ public partial class TargetSelectorTest : Node
             MaxTargets = 10
         };
 
-        var results = PositionTargetSelector.Query(query);
+        using var result = TargetQueryEngine.QueryPositions(query);
+        var results = result.Items;
 
         AssertTrue(results.Count == 10, $"应生成 10 个随机点 (实际: {results.Count})");
 

@@ -5,7 +5,7 @@
 - **pending**: 0
 - **active**: 0
 - **blocked**: 1
-- **done**: 31
+- **done**: 32
 - **projects**: 2
 
 ## Projects
@@ -64,6 +64,7 @@
 | SDD-0030 | PRJ-0002 | Component Code Composition And Contract Hardening | 2026-06-04 | SlimeAI | done |
 | SDD-0031 | PRJ-0002 | Data Runtime Generic Slot Hard Cutover | 2026-06-06 | SlimeAI | done |
 | SDD-0032 | PRJ-0002 | Data Runtime Typed Contract Completion | 2026-06-07 | SlimeAI | done |
+| SDD-0033 | PRJ-0002 | Non-Data GC Boundary Completion | 2026-06-07 | SlimeAI | done |
 
 ## By Scope
 
@@ -91,6 +92,7 @@
 - SDD-0030 — Component Code Composition And Contract Hardening
 - SDD-0031 — Data Runtime Generic Slot Hard Cutover
 - SDD-0032 — Data Runtime Typed Contract Completion
+- SDD-0033 — Non-Data GC Boundary Completion
 
 ### Workspace/SDD
 
@@ -109,6 +111,10 @@
 - SDD-0010 — Git Worktree Subagent Safety Strategy
 
 ## By Tag
+
+### ability
+
+- SDD-0033 — Non-Data GC Boundary Completion
 
 ### ai-config
 
@@ -230,11 +236,13 @@
 ### event
 
 - SDD-0032 — Data Runtime Typed Contract Completion
+- SDD-0033 — Non-Data GC Boundary Completion
 
 ### feature
 
 - SDD-0015 — Data Modifier Runtime and Feature Bridge
 - SDD-0032 — Data Runtime Typed Contract Completion
+- SDD-0033 — Non-Data GC Boundary Completion
 
 ### gate
 
@@ -244,6 +252,7 @@
 
 - SDD-0031 — Data Runtime Generic Slot Hard Cutover
 - SDD-0032 — Data Runtime Typed Contract Completion
+- SDD-0033 — Non-Data GC Boundary Completion
 
 ### git
 
@@ -282,6 +291,7 @@
 ### objectpool
 
 - SDD-0028 — ObjectPool Collision ParkedInTree Cutover
+- SDD-0033 — Non-Data GC Boundary Completion
 
 ### openspec-retirement
 
@@ -361,6 +371,10 @@
 - SDD-0009 — DesignDiscovery and DesignCritic Capability
 - SDD-0010 — Git Worktree Subagent Safety Strategy
 - SDD-0023 — SystemAgent Root Migration Rule Sync
+
+### target-selector
+
+- SDD-0033 — Non-Data GC Boundary Completion
 
 ### tdd
 

@@ -65,10 +65,11 @@ Src/ECS/Capabilities/Ability/System/
 正式提交成功后：
 
 - 发送 `Ability.Activated`
-- 构建 `FeatureContext`，把 `CastContext` 放入 `ActivationData`
+- 构建 `FeatureContext`，通过 `SetActivationPayload(CastContext)` 放入 typed activation payload
 - 调用 `FeatureSystem.OnFeatureActivated(...)`
-- 由 `AbilityFeatureHandler.OnExecute(...)` 把 `FeatureContext` 转回 `CastContext`
+- 由 `AbilityFeatureHandler.OnExecute(...)` 通过 `TryGetActivation<CastContext>()` 转回 `CastContext`
 - 调用具体技能的 `ExecuteAbility(context)`
+- 由 `AbilityFeatureHandler` 把 `AbilityExecutedResult` 写入 `SetExecutionResult(...)`
 - 发送 `Ability.Executed`
 - 同步技能立即调用 `FeatureSystem.OnFeatureEnded(..., FeatureEndReason.Completed)`
 
@@ -87,7 +88,8 @@ Src/ECS/Capabilities/Ability/System/
 
 ### AbilityFeatureHandler 负责
 
-- 把 `FeatureContext.ActivationData` 转回 `CastContext`
+- 把 `FeatureContext.ActivationPayload` typed 转回 `CastContext`
+- 把 `ExecuteAbility` 的 `AbilityExecutedResult` 写入 `FeatureContext.ExecutionResult`
 - 只暴露 `ExecuteAbility` 给具体技能实现
 - 不承载索敌、点选或 Ability 领域 helper
 
@@ -104,7 +106,7 @@ Src/ECS/Capabilities/Ability/System/
 - 管理指示器输入与确认/取消
 - 确认后发正式 `Ability.TryTrigger`
 
-当前实现已删除 `AbilityTargetSelectionComponent`。实体目标查询直接写在具体 Handler 内部，使用 `EntityTargetSelector.Query(...)`。
+当前实现已删除 `AbilityTargetSelectionComponent`。实体目标查询直接写在具体 Handler 内部，优先使用 `TargetQueryEngine.QueryEntities(...)`；旧 `EntityTargetSelector.Query(...)` 只作为兼容 facade。
 
 ---
 

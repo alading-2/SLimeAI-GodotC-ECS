@@ -13,16 +13,15 @@ internal abstract class AbilityFeatureHandler : IFeatureHandler
     /// FeatureSystem 调用入口。
     /// </summary>
     /// <param name="featureContext">Feature 运行上下文。</param>
-    /// <returns>技能执行结果。</returns>
-    public object? OnExecute(FeatureContext featureContext)
+    public void OnExecute(FeatureContext featureContext)
     {
-        if (!featureContext.TryGetActivationData<CastContext>(out var context))
+        if (!featureContext.TryGetActivation<CastContext>(out var context))
         {
-            _log.Error("AbilityFeatureHandler.OnExecute: ActivationData 不是 CastContext");
-            return null;
+            _log.Error("AbilityFeatureHandler.OnExecute: ActivationPayload 不是 CastContext");
+            return;
         }
 
-        return ExecuteAbility(context);
+        featureContext.SetExecutionResult(ExecuteAbility(context));
     }
 
     /// <summary>

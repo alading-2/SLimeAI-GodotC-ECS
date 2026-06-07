@@ -22,6 +22,7 @@ public partial class AbilitySystemPipelineTest : Node
             Test_AbilityFeatureHandler_DoesNotExposePrepareCast();
             Test_EntitySelectionAbility_AllowsHandlerManagedExecution();
             Test_AbilityToolHandler_CanExecuteThroughPipeline();
+            Test_FeatureContext_UsesTypedAbilityExecutionBoundary();
             Test_Dash_UsesLastMoveDirectionWhenVelocityIsZero();
             Test_ParabolaShot_UsesRandomPointInCircleInsteadOfEnemyPosition();
             Test_BoomerangThrow_UsesRandomPointInRingInsteadOfEnemyPosition();
@@ -227,6 +228,47 @@ public partial class AbilitySystemPipelineTest : Node
 
         EntityManager.Destroy(ability);
         EntityManager.Destroy(owner);
+    }
+
+    /// <summary>
+    /// 回归测试：
+    /// Ability 接入 FeatureSystem 时，执行输入和输出必须走 typed helper，
+    /// 不再依赖 raw object 返回值或调用方手动 cast。
+    /// </summary>
+    private void Test_FeatureContext_UsesTypedAbilityExecutionBoundary()
+    {
+        var context = new CastContext();
+        var featureContext = new FeatureContext();
+
+        featureContext.SetActivationPayload(context);
+
+        AssertEqual(
+            "FeatureContext 应能 typed 读取 Ability CastContext",
+            true,
+            featureContext.TryGetActivation<CastContext>(out var typedContext)
+        );
+        AssertEqual(
+            "FeatureContext typed activation 应保持原始引用",
+            context,
+            typedContext
+        );
+
+        var result = new AbilityExecutedResult
+        {
+            TargetsHit = 3
+        };
+        featureContext.SetExecutionResult(result);
+
+        AssertEqual(
+            "FeatureContext 应能 typed 读取 AbilityExecutedResult",
+            true,
+            featureContext.TryGetExecutionResult<AbilityExecutedResult>(out var typedResult)
+        );
+        AssertEqual(
+            "FeatureContext typed result 应保持原始引用",
+            result,
+            typedResult
+        );
     }
 
     /// <summary>

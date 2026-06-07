@@ -14,9 +14,9 @@
 | `06-ECS完全重构执行原则.md` | hard-cutover-principles | current | 2026-05-30 | Data 无兼容复盘后的项目级执行原则；后续 Entity / Relationship / Event hard cutover 前必须先读 |
 | `ECS框架优化/0.ECS框架的思考/README.md` | ecs-concept-index | current | 2026-06-06 | ECS 框架概念层思考入口；不承接实现，聚焦 Data/Event 底层协议、AI-first 框架可行性和传统 ECS 采纳边界 |
 | `ECS框架优化/0.ECS框架的思考/01-Data作为ECS框架核心的概念复盘与方案批判.md` | ecs-data-core-concept-review | current | 2026-06-06 | 深度复盘 Data 作为框架核心的概念定位；确认 `DataSlot<T> + IDataSlot` 方向正确，同时指出 typed policy、computed、change event、untyped 边界和高频索引仍需明确收口 |
-| `ECS框架优化/1.拆箱装箱+GC优化/README.md` | gc-optimization-index | current | 2026-06-06 | 装箱拆箱与 GC 优化设计包入口；Data 已由 SDD-0031 完成，当前聚焦 Event + Feature / Ability、ObjectPool、TargetSelector、Logger 等非 Data 切片 |
-| `ECS框架优化/1.拆箱装箱+GC优化/设计/README.md` | gc-deepthink-entry | current | 2026-06-06 | DeepThink 确认包；记录 Data 完成后的非 Data 重新分析、Options、Recommendation、Must Confirm 和 Artifact Updates |
-| `ECS框架优化/1.拆箱装箱+GC优化/设计/00-总览与AI-first裁决.md` | gc-overview-decision | current | 2026-06-06 | 裁决 Data 已完成主链路 hard cutover；下一步优先 Event + Feature / Ability typed execution boundary；Logger/Component/Lifecycle 降为 P2 或 profiler 驱动 |
+| `ECS框架优化/1.拆箱装箱+GC优化/README.md` | gc-optimization-index | current | 2026-06-07 | 装箱拆箱与 GC 优化设计包入口；Data 与非 Data 明显宽口已由 SDD-0031/0032/0033 完成，后续只从 Logger、TargetQuery pooled lease 或 profiler 证据驱动 owner 小切片恢复 |
+| `ECS框架优化/1.拆箱装箱+GC优化/设计/README.md` | gc-deepthink-entry | current | 2026-06-07 | DeepThink 确认包；记录 Data 完成后的非 Data 重新分析和 SDD-0033 执行结果，Logger 本轮不改 |
+| `ECS框架优化/1.拆箱装箱+GC优化/设计/00-总览与AI-first裁决.md` | gc-overview-decision | current | 2026-06-07 | 裁决 Data 主链路与非 Data 明显宽口均已收口；Event/Feature、ObjectPool manager、TargetQueryResult 基础切片不再重复创建 |
 | `ECS框架优化/1.拆箱装箱+GC优化/设计/01-Data运行时object去除设计.md` | gc-data-runtime-generic-slot | current | 2026-06-06 | Data runtime object 去除设计；用户已确认 `DataSlot<T> + IDataSlot` 为最终架构，废弃 `DataRuntimeValue` 多字段 union，改为 typed policy、typed computed resolver 和 untyped 边界 API |
 | `ECS框架优化/1.拆箱装箱+GC优化/设计/02-EventBus动态object禁用设计.md` | gc-event-dynamic-object-removal | current | 2026-06-06 | 保留 typed EventBus；Event dynamic object 必须与 Feature / Ability typed boundary 同批收口，不建议只缓存反射 |
 | `ECS框架优化/1.拆箱装箱+GC优化/设计/03-FeatureAbility上下文类型化设计.md` | gc-feature-ability-typed-context | current | 2026-06-06 | Feature 只类型化 Execute 输入/输出；Ability CastContext / AbilityExecutedResult 走 typed adapter，lifecycle context 不泛型化 |

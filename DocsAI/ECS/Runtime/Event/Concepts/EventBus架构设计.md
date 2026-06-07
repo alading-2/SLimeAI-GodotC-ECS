@@ -52,14 +52,14 @@ entity.Events.Emit(new Damaged(victim, 10f));
 | 派发中安全移除 | 标记延迟清理，不抛集合修改异常 |
 | 同类型重入保护 | 正在派发时再次 `Emit` 同类型 -> 阻止并 warning |
 | 异常隔离 | 单个 handler 抛异常不中断后续派发 |
-| 动态事件 | `EmitDynamic/OnDynamic` 仅给 Feature 等数据驱动场景 |
+| 动态事件 | 不提供 dynamic object 主入口；数据驱动场景必须先落成 typed payload / typed action wrapper |
 
 ## 5. 与现代框架对比
 
 | 特性 | Unity DOTS | Unreal GAS | Godot Signal | 本项目 EventBus |
 |------|-----------|-----------|-------------|----------------|
 | 类型安全 | 编译期 | 反射 | 弱类型 | 编译期 + 运行时检查 |
-| 动态事件 | 不支持 | 支持 | 支持 | 支持 |
+| 运行期路由 | 不支持 | 支持 | 支持 | 按 payload Type 路由 |
 | 优先级 | 无 | 支持 | 无 | 支持 |
 | 性能 | Burst 极致 | 反射开销 | 信号开销 | 零反射 + 零 GC (struct) |
 | 学习成本 | 高 | 中 | 低 | 低 |

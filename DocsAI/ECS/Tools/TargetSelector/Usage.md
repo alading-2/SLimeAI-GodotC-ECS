@@ -17,16 +17,16 @@
 2. `GeometryCalculator`
    - 兼容门面
    - 保留旧 API，内部转调 `Geometry2D`
-3. `EntityTargetSelector` / `PositionTargetSelector`
+3. `TargetQueryEngine`
    - 目标选择领域层
-   - 负责实体过滤、排序、数量裁剪或位置批量生成
+   - 负责实体过滤、排序、数量裁剪、位置批量生成、结果 ownership 和 diagnostics
 
 ## 典型入口
 
 ### 查询实体
 
 ```csharp
-var targets = EntityTargetSelector.Query(new TargetSelectorQuery
+using var result = TargetQueryEngine.QueryEntities(new TargetSelectorQuery
 {
     Geometry = GeometryType.Circle,
     Origin = caster.GlobalPosition,
@@ -36,12 +36,14 @@ var targets = EntityTargetSelector.Query(new TargetSelectorQuery
     Sorting = TargetSorting.Nearest,
     MaxTargets = 5,
 });
+var targets = result.Items;
+var wasTruncated = result.Diagnostics.Truncated;
 ```
 
 ### 生成位置
 
 ```csharp
-var points = PositionTargetSelector.Query(new TargetSelectorQuery
+using var result = TargetQueryEngine.QueryPositions(new TargetSelectorQuery
 {
     Geometry = GeometryType.Ring,
     Origin = caster.GlobalPosition,
@@ -49,6 +51,7 @@ var points = PositionTargetSelector.Query(new TargetSelectorQuery
     Range = 280f,
     MaxTargets = 3,
 });
+var points = result.Items;
 ```
 
 ### 直接使用几何层
@@ -67,8 +70,9 @@ bool inCone = GeometryCalculator.IsPointInCone(targetPos, casterPos, facing, 300
 ## 边界说明
 
 - `Geometry2D` 只做纯算法，不依赖 `IEntity`
-- `GeometryType`、`TargetSelectorQuery` 仍留在 `TargetSelector` 域
-- `GeometryCalculator` 现阶段不删除，避免一次性打断旧调用
+- `GeometryType`、`TargetSelectorQuery`、`TargetQueryResult<T>` 和 `TargetQueryDiagnostics` 仍留在 `TargetSelector` 域。
+- `EntityTargetSelector` / `PositionTargetSelector` 只作为旧兼容 facade；业务主链路优先使用 `TargetQueryEngine`。
+- `GeometryCalculator` 现阶段不删除，避免一次性打断旧调用。
 
 ## 当前支持的几何语义
 
@@ -84,4 +88,4 @@ bool inCone = GeometryCalculator.IsPointInCone(targetPos, casterPos, facing, 300
 
 1. 不要在业务里直接 `GetTree().GetNodesInGroup(...)` 再手写几何判断。
 2. 只需要纯几何能力时，优先调用 `Geometry2D`。
-3. 只需要目标选择语义时，继续使用 `EntityTargetSelector` 或 `PositionTargetSelector`。
+3. 只需要目标选择语义时，优先使用 `TargetQueryEngine.QueryEntities` 或 `TargetQueryEngine.QueryPositions`。

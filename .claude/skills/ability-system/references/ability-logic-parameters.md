@@ -159,8 +159,8 @@ internal class ArcShot : AbilityFeatureHandler
             castRange = ability.Data.Get<float>(DataKey.AbilityEffectRadius);
         }
 
-        var targets = castRange > 0f
-            ? EntityTargetSelector.Query(new TargetSelectorQuery
+        using var queryResult = castRange > 0f
+            ? TargetQueryEngine.QueryEntities(new TargetSelectorQuery
             {
                 Geometry = GeometryType.Circle,
                 Origin = casterNode.GlobalPosition,
@@ -170,7 +170,8 @@ internal class ArcShot : AbilityFeatureHandler
                 Sorting = TargetSorting.Nearest,
                 MaxTargets = 1
             })
-            : new List<IEntity>();
+            : null;
+        var targets = queryResult?.Items ?? System.Array.Empty<IEntity>();
         if (targets.Count == 0)
         {
             return new AbilityExecutedResult { TargetsHit = 0 };

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 /// 
 /// 用途：
 /// - 由 TriggerComponent 创建并传递给 AbilitySystem
-/// - 由 AbilitySystem 装入 FeatureContext.ActivationData，供 IFeatureHandler.OnExecute 读取
+/// - 由 AbilitySystem 装入 FeatureContext typed activation payload，供 IFeatureHandler.OnExecute 读取
 /// 
 /// 设计原则：
 /// - 替代 _TriggerEventData 存入 Data 的做法

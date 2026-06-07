@@ -43,6 +43,7 @@ public partial class ObjectPoolContractRuntimeTest : Node
             TestStaticReturnNode();
             TestActiveSnapshotIsCopy();
             TestManagerPoolIsolation();
+            TestManagerUsesRuntimePoolInterface();
             TestAreaReleaseStaysInTreeAndRecordsState();
             TestActivationReadyFrameGuard();
         }
@@ -232,6 +233,29 @@ public partial class ObjectPoolContractRuntimeTest : Node
                 AssertEqual($"真实池 {forbiddenName} 的创建计数不应被替换", beforeStats.TotalCreated, afterStats.TotalCreated);
             }
         }
+    }
+
+    private void TestManagerUsesRuntimePoolInterface()
+    {
+        var pool = CreatePool(
+            () => new PlainPoolItem(),
+            new ObjectPoolConfig
+            {
+                Name = "Test/ObjectPool/RuntimeInterface",
+                InitialSize = 0,
+                MaxSize = 2
+            });
+
+        var runtime = ObjectPoolManager.GetRuntimePool(pool.PoolName);
+        AssertEqual("manager 应暴露非泛型 runtime pool", true, runtime != null);
+        AssertEqual("runtime pool 应保留池名", pool.PoolName, runtime!.PoolName);
+        AssertEqual("错误类型 untyped release 应被拒绝", false, runtime.ReleaseUntyped(new object()));
+
+        var item = pool.Get();
+        AssertEqual("正确类型 untyped release 应成功", true, runtime.ReleaseUntyped(item));
+
+        var stats = runtime.GetStats();
+        AssertEqual("runtime release 应更新归还统计", 1, stats.TotalReleased);
     }
 
     private void TestAreaReleaseStaysInTreeAndRecordsState()

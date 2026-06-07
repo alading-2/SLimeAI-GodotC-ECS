@@ -2,7 +2,7 @@
 
 ## Purpose
 
-项目级执行路线图，追踪 `design/` 下每份问题分析文档的完成情况和后续 SDD 拆分建议。多份文档可以合并为一个 SDD；Data 核心 runtime 重构已按切片序列完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 主链路，并按 SDD-0031 完成 2026-06-06 GC/装箱复查后的 generic slot hard cutover：typed `DataKey<T>` 主链路、modifier effective value 和 computed cache 已使用 `DataSlot<T> + IDataSlot`，不采用 `DataRuntimeValue` 多字段 union。Data 完成后的 GC/装箱优化已重新裁决：下一步不是继续分析 Data，也不是单独缓存 Event 反射，而是把 Event dynamic object、Feature / Ability typed Execute boundary 和 Trigger typed binding 合并为一个协议收口 SDD。Entity / Relationship 已按 SDD-0024 完成 hard cutover。ECS 目录架构大重构已按 SDD-0025 收口为 `Runtime + Capabilities + Tools + UI`；Input Contract 已按 SDD-0026 完成业务语义 facade 和调用点迁移；Timer Scheduler Full Rewrite 已创建 SDD-0027 并因当前承载游戏 runner/Godot CLI 缺失阻塞在场景验证；ObjectPool / Collision ParkedInTree cutover 已创建 SDD-0028；Runtime System AI-first 优化已按 SDD-0029 完成 manifest / preflight / diagnostics / trace 和 DocsAI 同步。SDD-0030 已完成 Component Preset 代码化 composition profile / composer、typed options、ComponentManifest、DocsAI 和 skill sync。`design/Tool/其他Tool/` 已按 2026-06-04 用户复核改为功能优先 hard cutover：RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、Common Utilities、MathFormula 后续不为旧 API 长期兼容让路；已确认 `/root/SlimeAIRuntime` 和资源 strict fail-fast。
+项目级执行路线图，追踪 `design/` 下每份问题分析文档的完成情况和后续 SDD 拆分建议。多份文档可以合并为一个 SDD；Data 核心 runtime 重构已按切片序列完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 主链路，并按 SDD-0031 / SDD-0032 完成 2026-06-06 GC/装箱复查后的 generic slot hard cutover 与 typed contract completion：typed `DataKey<T>` 主链路、modifier effective value 和 computed cache 已使用 `DataSlot<T> + IDataSlot`，业务 Capability 和 AI 可调用 Data 协议不再使用 string key / untyped write / object payload 作为主链路。Data 完成后的 GC/装箱优化已按 SDD-0033 完成非 Data 明显宽口收口：Event dynamic object 主链路删除，Feature / Ability Execute 边界改 typed payload/result helper，ObjectPoolManager 改 `IObjectPoolRuntime` 非泛型管理接口，TargetSelector 新增 `TargetQueryEngine + TargetQueryResult` ownership / diagnostics facade。Logger 本轮不改，等待 profiler 或明确热路径证据。Entity / Relationship 已按 SDD-0024 完成 hard cutover。ECS 目录架构大重构已按 SDD-0025 收口为 `Runtime + Capabilities + Tools + UI`；Input Contract 已按 SDD-0026 完成业务语义 facade 和调用点迁移；Timer Scheduler Full Rewrite 已创建 SDD-0027 并因当前承载游戏 runner/Godot CLI 缺失阻塞在场景验证；ObjectPool / Collision ParkedInTree cutover 已按 SDD-0028 完成；Runtime System AI-first 优化已按 SDD-0029 完成 manifest / preflight / diagnostics / trace 和 DocsAI 同步。SDD-0030 已完成 Component Preset 代码化 composition profile / composer、typed options、ComponentManifest、DocsAI 和 skill sync。`design/Tool/其他Tool/` 已按 2026-06-04 用户复核改为功能优先 hard cutover：RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、Common Utilities、MathFormula 后续不为旧 API 长期兼容让路；已确认 `/root/SlimeAIRuntime` 和资源 strict fail-fast。
 
 ## Design Progress
 
@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | `design/main.md` | — | — | 项目主设计，共享上下文 |
 | `design/00-旧ECS框架问题总览.md` | done | — | 已完成方向纠偏：保留旧 ECS，聚焦真实问题 |
-| `design/ECS框架优化/1.拆箱装箱+GC优化/` | done | SDD-0031 | 2026-06-06 Data-only P0 切片已完成；Data 完成后已重新裁决：下一步合并 Event dynamic object removal、Feature / Ability typed Execute boundary 和 Trigger typed binding；ObjectPool / TargetSelector / Logger 降为 P1/P2 独立切片 |
+| `design/ECS框架优化/1.拆箱装箱+GC优化/` | done | SDD-0031~SDD-0033 | Data generic slot、Data typed contract 和非 Data 明显宽口均已完成；Event dynamic object、Feature / Ability typed Execute、ObjectPool manager interface、TargetQueryResult ownership 已收口；Logger / pooled lease /局部 cleanup 保留为 profiler 或 owner 证据驱动后续 |
 | `design/01-Data系统问题分析.md` | done | SDD-0012~SDD-0021 | 兼容入口；完整 Data 设计已迁移到 `design/2.Data系统优化/`，SDD-0021 负责无兼容最终收口 |
 | `design/2.Data系统优化/` | done | SDD-0012~SDD-0022 | Data 核心 runtime 已完成 descriptor-first、DataDefinitionCatalog、DataSlot/policy、modifier、compute、snapshot apply、字段迁移、旧路径删除、SDD-0020 snapshot-first usage cutover、SDD-0021 no-compat hard cutover 和 SDD-0022 residual contract hardening |
 | `design/2.Data系统优化/04-Data系统现状复查与兼任问题.md` | done | SDD-0020 | SDD-0020 已完成 snapshot-first usage 主链路；其中部分 RuntimeTables / Data fallback 证据已被 06 更新 |
@@ -27,8 +27,8 @@
 | `design/Tool/Input/` | done | SDD-0026 | Input Contract Manifest And Facade Hardening 已完成：InputManager 业务语义 facade、Ability/Targeting/UI 调用点迁移、DocsAI/skill 同步和验证闭环已收口 |
 | `design/Tool/其他Tool/` | proposed | TBD | 2026-06-04 user review 已完成：功能优先、代码可丢弃；后续建议按 RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、Common Utilities、MathFormula hard cutover 拆执行型 SDD |
 | `design/Tool/Timer/` | pending | SDD-0027 | Timer Scheduler Full Rewrite 已完成可执行代码/文档主链路；当前 blocked 于 TimerStressValidation / scene-gate / BrotatoLike smoke 缺 runner 和 Godot CLI 证据 |
-| `design/Tool/ObjectPool/` | pending | SDD-0028 | ObjectPool Collision ParkedInTree Cutover 已创建执行型 SDD；目标为 pool runtime state、parking grid、CollisionLogicGuard、ContactDamage 旧引用清理、ObjectPool contract、Godot collision validation 和 DocsAI/skill sync |
-| `design/8.System优化/` | pending | SDD-0029 | Runtime System AI-first Contract Layer 设计包；保留现有 System Core，首切片只做 manifest / preflight / diagnostics / trace / validation artifact，不做 typed SystemId hard cutover |
+| `design/Tool/ObjectPool/` | done | SDD-0028 | ObjectPool Collision ParkedInTree Cutover 已完成；SDD-0033 另行完成 ObjectPoolManager `IObjectPoolRuntime` 去反射小切片 |
+| `design/8.System优化/` | done | SDD-0029 | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |
 | `design/13-旧ECS框架Event系统问题分析与优化方向.md` | done | TBD | EventBus 保留，重点优化事件主键、Context、Global 边界和订阅生命周期 |
 | `design/03-字符串键名统一问题分析.md` | done | TBD | 跨 Data/Event/Relationship/Resource 的统一命名问题输入 |
 | `design/04-优化优先级与SDD拆分建议.md` | done | SDD-0012~SDD-0019 | 已按 Data Full Rewrite 拆成 8 个新切片 |
@@ -38,9 +38,10 @@
 | Priority | Design Docs | Goal |
 | --- | --- | --- |
 | Done | `design/ECS框架优化/1.拆箱装箱+GC优化/设计/01-Data运行时object去除设计.md` | **SDD-0031 已完成**：Data Runtime Generic Slot Hard Cutover；该设计页保留为历史输入和执行记录来源，不再作为当前待办 |
-| P0 | `design/ECS框架优化/1.拆箱装箱+GC优化/设计/02-EventBus动态object禁用设计.md` + `03-FeatureAbility上下文类型化设计.md` | **建议新建 SDD**：Event + Feature/Ability Typed Execution Boundary；删除或禁用 `EmitDynamic` / `OnDynamic` / `Action<object>` 主链路，Feature event action 改 typed registry，Feature Execute 改 typed adapter，TriggerComponent 改 typed trigger binding id |
-| P1 | `design/ECS框架优化/1.拆箱装箱+GC优化/设计/04-ObjectPool反射管理接口设计.md` | 建议后续 ObjectPool cleanup：`ObjectPoolManager` 改极小非泛型 runtime interface，删除 manager 反射调用；不重写对象池生命周期 |
-| P1 | `design/ECS框架优化/1.拆箱装箱+GC优化/设计/05-TargetSelector集合分配与LINQ设计.md` | 合入 Target Query Engine Hard Cutover：先定义 `TargetQueryResult/Lease` ownership，再处理 `new List`、`GetRange`、`new Random()`、LINQ |
+| Done | `design/ECS框架优化/1.拆箱装箱+GC优化/设计/01-Data运行时object去除设计.md` | **SDD-0032 已完成**：Data Runtime Typed Contract Completion；业务 Data 协议不再以 string/untyped/object 作为主链路，debug / loader / diagnostic 边界保留命名和 grep gate |
+| Done | `design/ECS框架优化/1.拆箱装箱+GC优化/设计/02-EventBus动态object禁用设计.md` + `03-FeatureAbility上下文类型化设计.md` | **SDD-0033 已完成**：Event + Feature/Ability Typed Execution Boundary；删除 `EmitDynamic` / `OnDynamic` / `Action<object>` 主链路，Feature event action 改 typed wrapper，Feature Execute 改 typed helper |
+| Done | `design/ECS框架优化/1.拆箱装箱+GC优化/设计/04-ObjectPool反射管理接口设计.md` | **SDD-0033 已完成**：`ObjectPoolManager` 改极小非泛型 runtime interface，删除 manager 反射调用；未重写对象池生命周期 |
+| Done | `design/ECS框架优化/1.拆箱装箱+GC优化/设计/05-TargetSelector集合分配与LINQ设计.md` | **SDD-0033 已完成基础切片**：已引入 `TargetQueryEngine + TargetQueryResult` ownership / diagnostics；pooled lease、deterministic RNG 和 allocation artifact 后续另起 TargetSelector owner SDD |
 | P2 | `design/ECS框架优化/1.拆箱装箱+GC优化/设计/06-Logger字符串与诊断分配设计.md` | 后续 Logger 热路径局部 SDD：不禁字符串插值，只对每帧热路径补 `IsEnabled` / lazy message / interpolated string handler |
 | P0 | `design/2.Data系统优化/` | **SDD-0012**：Catalog TDD 第一切片，建立 descriptor-first DataDefinitionCatalog 和一次性旧定义审计 |
 | P0 | `design/2.Data系统优化/` | **SDD-0013**：补齐 DataOS descriptor authoring schema、generator、validator 和 snapshot descriptor 契约 |
@@ -63,6 +64,6 @@
 | P1 | `design/Tool/其他Tool/08-2026-06-04-用户裁决后执行前复核.md` + `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` | **建议新建 SDD**：Resource Loading Hard Cutover；迁出 `CommonTool.LoadPackedScene`，ResourceManagement strict lookup，LoadPath source policy，structured result 和 ResourceCatalogDiagnostics；Common Utilities 单独按受约束区域处理 |
 | P1 | `design/Tool/其他Tool/03-Math目标架构与验证.md` | **建议新建 SDD**：Math Formula And Deterministic Random Cutover；拆 MyMath owner，保留 Geometry2D 纯算法，公式归 Capability owner，随机可 seed/RNG 注入 |
 | P1 | `design/Tool/Timer/` + `sdds/017-SDD-0027-timer-scheduler-full-rewrite/execution-prompt.md` | **SDD-0027 blocked**：Timer Scheduler Full Rewrite 已等待当前 BrotatoLike runner/Godot CLI，用于补 TimerStressValidation、scene-gate 和 smoke 证据 |
-| P1 | `design/Tool/ObjectPool/` + `sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover/execution-prompt.md` | **SDD-0028 pending**：ObjectPool Collision ParkedInTree Cutover，按 `ParkedInTree` 默认迁移、runtime state、CollisionLogicGuard、ContactDamage 清理、ObjectPool contract 和 Godot collision validation 一次性收口 |
-| P1 | `design/8.System优化/` + `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md` | **SDD-0029 pending**：System Contract Manifest And Diagnostics Hardening；先补 SystemManifest、SystemPreflight、SystemDiagnosticsSnapshot、SystemLifecycleTrace、DocsAI Runtime/System 同步和 SystemCore artifact，再视证据决定是否进入 typed SystemId 或 schedule phase |
+| Done | `design/Tool/ObjectPool/` + `sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover/execution-prompt.md` | **SDD-0028 done**：ObjectPool Collision ParkedInTree Cutover 已完成；后续对象池改动按 ObjectPool owner 新建小切片 |
+| Done | `design/8.System优化/` + `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md` | **SDD-0029 done**：System Contract Manifest And Diagnostics Hardening 已完成；typed SystemId 或 schedule phase 需新证据再开 SDD |
 | P1 | `design/13-旧ECS框架Event系统问题分析与优化方向.md` | Entity hard cutover 或 Data 当前优先级收口后，再处理 Event 定义事实源与主键优化 |

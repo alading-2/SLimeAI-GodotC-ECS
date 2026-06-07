@@ -36,6 +36,7 @@ Src/ECS/Tools/ObjectPool/Tests/Contracts/ObjectPoolContractRuntimeTest.cs
 | `contract_capacity_discard` | 超过 `MaxSize` 归还时进入 discard，`TotalDiscarded` 可观测。 |
 | `contract_static_return_node` | Node 经 `ObjectPoolName` meta 能静态归还到正确池。 |
 | `contract_static_return_plain_object` | 纯 C# 对象必须从池 `Get()` 后才允许 `ReturnToPool`。 |
+| `contract_manager_runtime_interface` | `ObjectPoolManager.GetRuntimePool()` 返回 `IObjectPoolRuntime`，错误类型 `ReleaseUntyped` 被确定性拒绝，正确类型可归还并更新统计。 |
 | `contract_active_snapshot_is_copy` | `GetActiveSnapshot()` 是快照，不因后续 `Release` 修改枚举状态。 |
 | `contract_manager_pool_isolation` | 测试池名不覆盖真实 `ObjectPoolNames`，退出只清理自己创建的池。 |
 

@@ -60,16 +60,12 @@ public struct ObjectPoolConfig
     public ObjectPoolConfig() { }
 }
 
-// IObjectPool 接口已移除
-// 原因：非泛型接口无法提供类型安全的 Get() 方法
-// 新方案：ObjectPoolManager 使用 Dictionary<string, object> + 泛型方法
-
 /// <summary>
 /// 通用对象池实现
 /// 专门针对 Godot 引擎优化，自动处理 Node 的生命周期和处理模式
 /// </summary>
 /// <typeparam name="T">池化对象类型，必须是引用类型（class）</typeparam>
-public class ObjectPool<T> where T : class
+public class ObjectPool<T> : IObjectPoolRuntime where T : class
 {
     // 使用 Stack 而非 List，因为出池/入池操作在栈顶执行效率最高 (O(1))
     // 且具有更好的 CPU 缓存亲和性 (LIFO - 最近归还的对象最热)
@@ -380,7 +376,21 @@ public class ObjectPool<T> where T : class
         PushToStack(obj);
     }
 
-    // 接口实现已移除（IObjectPool 接口已废弃）
+    /// <summary>
+    /// 非泛型管理边界归还入口。
+    /// ObjectPoolManager 通过该接口管理不同 T 的池，业务侧仍应优先调用 typed Release。
+    /// </summary>
+    public bool ReleaseUntyped(object instance)
+    {
+        if (instance is not T typedInstance)
+        {
+            _log.Warn($"{PoolName}: 非泛型归还类型错误，期望 {typeof(T).Name}，实际 {instance?.GetType().Name ?? "null"}。");
+            return false;
+        }
+
+        Release(typedInstance);
+        return true;
+    }
 
     /// <summary>
     /// 批量归还对象

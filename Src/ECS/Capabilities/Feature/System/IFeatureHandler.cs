@@ -54,12 +54,11 @@ public interface IFeatureHandler
     void OnActivated(FeatureContext context) { }
 
     /// <summary>
-    /// Feature 执行效果并返回结果（Execute 阶段，可选）
+    /// Feature 执行效果（Execute 阶段，可选）
     /// 命令阶段：在 Activated 之后、Ended 之前调用，用于执行具体效果。
-    /// 返回值通过 FeatureContext.ExecuteResult 传递给调用方。
-    /// 返回 null 表示该 Feature 没有执行结果（如被动光环、纯数据 Feature）。
+    /// 执行结果由处理器通过 FeatureContext.SetExecutionResult 写入。
     /// </summary>
-    object? OnExecute(FeatureContext context) => null;
+    void OnExecute(FeatureContext context) { }
 
     /// <summary>
     /// Feature 一次运行结束时调用（Ended 阶段，可选）

@@ -16,8 +16,7 @@ using slime.data.Features;
 /// - ExecuteActions：批量执行 IFeatureAction 列表
 ///
 /// 设计原则：只依赖 IEntity，不引入任何子系统专有类型（无 AbilityEntity / CastContext）。
-/// 调用方（如 AbilitySystem）在调用前自行构建 FeatureContext，将专有数据放入 ActivationData，
-/// 从 ExecuteResult 读取执行结果。
+/// 调用方（如 AbilitySystem）在调用前自行构建 FeatureContext，并通过 typed helper 传入 payload / 读取 result。
 ///
 /// 挂载点（调用方）：
 /// - AbilityInventoryService.AddAbility → OnFeatureGranted
@@ -85,7 +84,7 @@ public static class FeatureSystem
 
     /// <summary>
     /// Feature 一次激活开始时调用。
-    /// 调用方负责构建 FeatureContext（Owner / Feature / ActivationData）。
+    /// 调用方负责构建 FeatureContext（Owner / Feature / typed activation payload）。
     /// 调用顺序：OnActivated（运行开始）→ 发出 Activated 事件 → OnExecute（执行+结果）→ 累计次数 → 发出 Executed 事件
     /// </summary>
     public static void OnFeatureActivated(FeatureContext ctx)
@@ -116,12 +115,12 @@ public static class FeatureSystem
             new GameEventType.Feature.Activated(ctx)
         );
 
-        // 3. 执行阶段（结果写入 ctx.ExecuteResult）
+        // 3. 执行阶段（结果由 handler 写入 FeatureContext typed result）
         if (handler != null)
         {
             try
             {
-                ctx.ExecuteResult = handler.OnExecute(ctx);
+                handler.OnExecute(ctx);
             }
             catch (System.Exception ex)
             {

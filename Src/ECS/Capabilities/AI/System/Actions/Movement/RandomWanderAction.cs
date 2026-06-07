@@ -80,7 +80,7 @@ public class RandomWanderAction : BehaviorNode
     /// </summary>
     private Vector2 PickRingPoint(Node2D selfNode)
     {
-        var results = PositionTargetSelector.Query(new TargetSelectorQuery
+        using var result = TargetQueryEngine.QueryPositions(new TargetSelectorQuery
         {
             Geometry = GeometryType.Ring,
             Origin = selfNode.GlobalPosition,
@@ -89,7 +89,7 @@ public class RandomWanderAction : BehaviorNode
             MaxTargets = 1
         });
 
-        return results[0];
+        return result.Items[0];
     }
 
     /// <inheritdoc/>

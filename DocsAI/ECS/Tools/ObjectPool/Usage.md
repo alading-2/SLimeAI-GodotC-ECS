@@ -6,7 +6,7 @@
 # ObjectPool C# 版本
 
 > 状态：current
-> 更新：2026-06-03
+> 更新：2026-06-07
 > 当前入口：`DocsAI/ECS/Tools/ObjectPool/README.md`
 
 基于 TypeScript 和 GDScript 版本设计的 Godot 4.x C# 高性能对象池实现。专门针对 Godot Node 的生命周期进行了优化，支持自动处理 `ProcessMode` 和 `Visible`。
@@ -29,6 +29,7 @@
 
 - `Core/ObjectPool.cs`: 核心对象池逻辑。
 - `Core/IPoolable.cs`: 池化对象生命周期接口。
+- `Core/IObjectPoolRuntime.cs`: manager 使用的非泛型运行时接口，避免反射管理泛型池。
 - `Management/ObjectPoolManager.cs`: 全局池管理逻辑，负责池的注册、查找与静态归还。
 - `Management/ObjectPoolInit.cs`: 推荐的全局初始化入口（AutoLoad）。
 - `Lifecycle/`: Node 显隐、ProcessMode、parking grid 和 fallback detach 策略。
@@ -53,6 +54,19 @@
 5. Godot validation 必须写 PASS artifact；不能只看 stdout、exit code 或 UI 面板。
 
 ## 重要限制
+
+### 管理器只走 IObjectPoolRuntime
+
+`ObjectPoolManager` 保存的是 `IObjectPoolRuntime`，不是 `object`。因此全局统计、清理、销毁和静态归还都直接调用接口，不通过 `GetMethod(...).Invoke(...)` 反射泛型池方法。
+
+业务侧仍应优先使用 typed API：
+
+```csharp
+var pool = ObjectPoolManager.GetPool<EnemyEntity>(ObjectPoolNames.EnemyPool);
+var enemy = pool?.Get();
+```
+
+`GetRuntimePool(poolName)` 只给管理器、诊断和 contract test 使用；它不提供无类型 `Get`，避免绕过泛型池的类型安全。
 
 ### 静态归还支持 Node 和已映射的纯 C# 对象
 

@@ -49,7 +49,7 @@ public class FindEnemyAction : BehaviorNode
         // 2. 无目标，使用 TargetSelector 搜索最近敌方
 
         float detectionRange = ctx.Entity.Data.Get<float>(GeneratedDataKey.DetectionRange);
-        var targets = EntityTargetSelector.Query(new TargetSelectorQuery
+        using var result = TargetQueryEngine.QueryEntities(new TargetSelectorQuery
         {
             Geometry = GeometryType.Circle,
             Origin = selfNode.GlobalPosition,
@@ -59,8 +59,9 @@ public class FindEnemyAction : BehaviorNode
             Sorting = TargetSorting.HighestThreat,
             MaxTargets = 1
         });
+        var targets = result.Items;
 
-        if (targets != null && targets.Count > 0)
+        if (targets.Count > 0)
         {
             var target = targets[0];
             if (target is Node2D node2D)
