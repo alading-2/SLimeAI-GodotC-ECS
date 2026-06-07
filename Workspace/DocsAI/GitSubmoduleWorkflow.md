@@ -123,3 +123,27 @@ Games/BrotatoLike/SlimeAI/      # 父仓库不跟踪 submodule 内容
 # 游戏仓 Games/BrotatoLike/.gitignore（已存在）
 **/*.uid
 ```
+
+## 资源路径和 ResourceGenerator
+
+游戏仓的 `project.godot` 所在目录就是 `res://` 根。框架作为 submodule 出现在游戏仓时，框架资源路径会是：
+
+```text
+res://SlimeAI/...
+```
+
+游戏自己的资源路径仍属于游戏仓：
+
+```text
+res://assets/...
+res://Scenes/...
+res://Src/Game/...
+```
+
+规则：
+
+- 框架仓 `ResourceGenerator` 默认只生成框架资源 catalog，不应扫描游戏仓并把游戏资源写回框架仓。
+- 游戏仓如果需要资源 catalog，应在游戏仓根运行 game-local generator 或后续支持 `--project-root` / `--output` 的生成器。
+- 移动框架资源：在框架仓改路径、跑 generator、提交框架仓，再更新游戏仓 submodule 指针。
+- 移动游戏资源：在游戏仓根处理路径替换、game catalog 和游戏验证，不改 `Games/<Game>/SlimeAI/` 内容。
+- 移动或重命名资源后，用 `resource-path-migration` skill/script 替换旧 `res://` 引用并运行 `rg` 检查旧路径残留。

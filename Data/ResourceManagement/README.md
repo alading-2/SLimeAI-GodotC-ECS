@@ -1,15 +1,22 @@
 # ResourceManagement - 资源管理系统
 
 ## 概述
-`ResourceManagement` 是项目的统一资源加载入口。它通过 `ResourcePaths.cs`（由 `ResourceGenerator` 自动生成）获取资源路径，并提供统一加载方法。
+`ResourceManagement` 是项目的统一资源加载入口。它通过 `ResourcePaths.cs`（由 `ResourceGenerator` 自动生成）获取当前项目资源 catalog，并提供统一加载方法。
 
-AI-first 目标：让 AI 和运行时从同一个 manifest 查资源，不在业务代码、测试 UI 或预览工具里散落 `res://` 字符串。
+AI-first 目标：让 AI 和运行时从同一个 owner 查资源，不在业务代码、测试 UI 或预览工具里散落裸 `GD.Load("res://...")`。
+
+> [!NOTE]
+> `ResourceManagement` 是资源加载 facade 和 generated manifest 入口，不是 Godot 资源系统替代品。底层仍由 Godot `GD.Load` / `ResourceLoader` 加载资源。
+> `res://` 本身不是问题，它是 Godot project root 路径。移动、重命名或删除资源后，必须通过 resource-path migration workflow 替换旧引用，重新运行 `Tools/ResourceGenerator` 并检查生成结果；当前 manifest 仍保存项目相对资源路径，不能自动修复忘记迁移的 stale path。
 
 ## 核心原则
-1. **禁止硬编码**: 严禁在业务代码中使用 `res://` 开头的字符串路径。统一管理有利于路径变更时的重构。
+1. **禁止裸加载**: 业务代码不要直接 `GD.Load("res://...")` / `ResourceLoader.Load("res://...")`。`res://` 可以作为 DataOS resource ref、`.tscn/.tres` 引用或带 source 的 `LoadPath` 输入。
 2. **统一分类**: 资源必须属于 `ResourceCategory` 中的某一分类；Preset 是独立分类，不等同于 Component。
 3. **类型安全**: 优先使用 `ResourceManagement.Load<T>` 进行加载。
 4. **目录选择**: UI / 编辑器需要“列出可选资源”时，优先使用 `ResourceCatalog`，不要在运行时全盘扫描 `res://`。
+5. **严格加载**: 后续 hard cutover 目标是精确 key / category 查找；找不到资源应暴露结构化失败原因，不应通过相近名称 fallback 静默加载其他资源。
+6. **路径来源**: `LoadPath` 只用于 DataOS resource ref、debug/test 或明确来源的资源引用；业务 Capability 不应直接传裸 `res://` 绕过 manifest。
+7. **路径迁移**: 移动目录后用 `resource-path-migration` skill / script 替换旧路径，并用 `rg` 验证旧路径残留。
 
 ## 使用方法
 
@@ -71,6 +78,17 @@ var allGroups = ResourceCatalog.GetGroups(
 > [!IMPORTANT]
 > **什么时候需要运行生成器？**
 > 当你 **添加、重命名、移动或删除** 了任何 `.tscn` 或 `.tres` 文件时，必须运行生成器更新索引，否则 `ResourceManagement.Load` 将无法找到资源。
+> 如果是移动/重命名，还应先运行路径迁移脚本替换旧引用：
+>
+> ```bash
+> python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py --old "<old>" --new "<new>"
+> ```
+>
+> 如果当前目录是游戏仓，使用框架仓脚本绝对路径并限制 `--root .`：
+>
+> ```bash
+> python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py --root . --old "<old>" --new "<new>"
+> ```
 > 
 > ```bash
 > dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj
@@ -86,3 +104,15 @@ var allGroups = ResourceCatalog.GetGroups(
 - `Src/ECS/Test/**`
 
 不要把 `Src/ECS/Capabilities` 整体理解成 `Component` 分类；分类由 owner 内部目录层决定。
+
+## 后续裁决
+
+ResourceManagement 方向已在 `DocsAI/ECS/Tools/ResourceManagement/README.md` 和 `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/其他Tool/09-2026-06-07-ResourceManagement深度分析.md` 中校准：
+
+- 保留统一资源加载工具；`ResourceManagement` 后续可以简化或重命名为 `ResourceLoading`。
+- 保留 `ResourceCatalog` / `ResourceGenerator` 的轻量 catalog 价值，但不把它们当跨游戏全局资源身份系统。
+- 删除 `Load<T>` 的 contains fallback。
+- 给 `LoadPath` 增加 source policy。
+- 增加 `ResourceLoadResult` / `ResourceCatalogDiagnostics`。
+- 将 `CommonTool.LoadPackedScene` 迁入 ResourceLoading，当前 `CommonTool` 不作为资源加载 owner。
+- 未来框架仓与游戏仓分离后，框架 generator 不默认拥有游戏资源；游戏仓应生成自己的 resource catalog。

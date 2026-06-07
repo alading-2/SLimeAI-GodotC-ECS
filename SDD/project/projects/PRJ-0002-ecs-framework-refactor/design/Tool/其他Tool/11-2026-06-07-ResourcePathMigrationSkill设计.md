@@ -68,7 +68,7 @@ git mv old/path new/path
 
 也可以先在 Godot editor 里移动。skill 不强制负责移动文件本身。
 
-3. dry-run 替换旧路径：
+3. dry-run 替换旧路径。框架仓内可用相对脚本路径：
 
 ```bash
 python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
@@ -76,10 +76,29 @@ python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_
   --new "res://assets/Effect/new"
 ```
 
-4. 确认输出后应用：
+游戏仓内没有 `.ai-config` 时，用框架仓脚本绝对路径，并显式把当前游戏仓作为 `--root`：
+
+```bash
+python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+  --root . \
+  --old "res://assets/Effect/old" \
+  --new "res://assets/Effect/new"
+```
+
+4. 确认输出后应用。框架仓示例：
 
 ```bash
 python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+  --old "res://assets/Effect/old" \
+  --new "res://assets/Effect/new" \
+  --apply
+```
+
+游戏仓示例：
+
+```bash
+python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+  --root . \
   --old "res://assets/Effect/old" \
   --new "res://assets/Effect/new" \
   --apply

@@ -40,6 +40,10 @@ res:// 本身不是问题。
 - `design/Tool/其他Tool/07-2026-06-04-AI-first完全重构校准.md`
 - `design/Tool/其他Tool/08-2026-06-04-用户裁决后执行前复核.md`
 - 调用点搜索：`ResourceManagement.Load`、`LoadPath`、`ResourcePaths`、`CommonTool.LoadPackedScene`、`GD.Load`、`res://`
+- `/home/slime/Code/SlimeAI/SlimeAI-AiFirst/DocsAI/Framework/MultiGameLayout.md`
+- `/home/slime/Code/SlimeAI/SlimeAI-AiFirst/DocsAI/Framework/GodotCSharpConstraints.md`
+- `/home/slime/Code/SlimeAI/Games/BrotatoLikeOld/.gitmodules`
+- `/home/slime/Code/SlimeAI/Games/BrotatoLikeOld/README.md`
 
 Git boundary：
 
@@ -121,9 +125,11 @@ enabled:
   - official-docs
 scope:
   - Resources/Engine/Docs/FrameworkAnalysis/Reports 中 resource/cache/AssetManager/Capability-owned selector 片段
-  - Context7 /godotengine/godot-docs 的 ResourceLoader/PackedScene 加载资料
-  - Context7 /needle-mirror/com.unity.addressables 的 AssetReference/GUID 资料
-  - Web 搜索 Epic Unreal Asset Management 官方文档
+  - Context7 `/godotengine/godot-docs` 的 ResourceLoader/PackedScene、`@export_file` / `uid://` 资料
+  - Godot 官方 `ResourceUID` 文档
+  - Unity Addressables 官方 `AssetReference` / `AssetGUID` 文档
+  - Epic Unreal Asset Management 官方文档
+  - SlimeAI-AiFirst 多游戏 / Godot C# 约束文档和 BrotatoLikeOld submodule 实例
 reason: 判断 SlimeAI 自建资源 manifest 是否是合理轻量方案，以及和主流引擎资源引用机制的差异
 expires: current-task
 copiedCodeOrAssets: none
@@ -131,10 +137,12 @@ copiedCodeOrAssets: none
 
 Evidence：
 
-- Godot 官方文档：C# 可通过 `ResourceLoader.Load<PackedScene>()` 或 `GD.Load<PackedScene>()` 加载 `res://` 路径并实例化；Godot `ResourceUID` 用 `uid://` 维护资源唯一标识，使资源移动/重命名时引用保持稳定。
-- Godot 官方文档还说明 `ProjectSettings.get_global_class_list()` 返回的脚本和图标路径是项目文件系统本地路径，通常以 `res://` 开头。这进一步证明 `res://` 是 Godot API 层的正常事实。
-- Unity Addressables 官方资料：`AssetReference` 是可序列化资源引用，`AssetGUID` 保存 asset GUID，可用 `Addressables.LoadAssetAsync` 加载；Addressables 推荐用 `AssetReference` 替代裸字符串地址，以便延迟加载和编辑器赋值。
-- Unreal 官方 Asset Management：`Asset Manager` 管理 Primary Asset 的发现、加载、卸载和审计；Primary Asset ID 由类型和名称构成，配置可包含扫描目录、排除目录和 redirect。
+- Godot 官方文档：C# 可通过 `ResourceLoader.Load<PackedScene>()` 或 `GD.Load<PackedScene>()` 加载 `res://` 路径并实例化；资料源：`https://github.com/godotengine/godot-docs/blob/master/classes/class_packedscene.md`、`https://github.com/godotengine/godot-docs/blob/master/tutorials/scripting/resources.md`。
+- Godot 官方 `ResourceUID` 文档：Resource UID 是项目内资源唯一标识，可用 `uid://` 访问，并用于文件重命名或移动时保持资源间引用；资料源：`https://docs.godotengine.org/en/4.3/classes/class_resourceuid.html`。
+- Godot 4.4/4.5 迁移资料：`@export_file` 在 4.4 会把 Inspector 指派的文件路径保存/返回为 `uid://`，4.5+ 提供 `@export_file_path` 以显式保留路径格式；资料源：`https://github.com/godotengine/godot-docs/blob/master/tutorials/migrating/upgrading_to_godot_4.4.md`。
+- Unity Addressables 官方资料：`AssetReference` 是可序列化资源引用，`AssetGUID` 保存 asset GUID；资料源：`https://docs.unity.cn/Packages/com.unity.addressables%401.21/manual/asset-reference-intro.html`、`https://docs.unity.cn/Packages/com.unity.addressables%401.18/api/UnityEngine.AddressableAssets.AssetReference.html`。
+- Unreal 官方 Asset Management：`Asset Manager` 管理 Primary Asset 的发现、加载、卸载和审计；Primary Asset ID 由类型和名称构成；资料源：`https://dev.epicgames.com/documentation/unreal-engine/asset-management-in-unreal-engine`。
+- SlimeAI-AiFirst 文档和 BrotatoLikeOld 实例已验证多游戏形态：游戏仓根是 `project.godot` 所在，也就是 `res://` 根；框架以 `SlimeAI/` submodule 进入游戏仓后，框架脚本和场景路径表现为 `res://SlimeAI/...`；`.gitmodules` 中 `path = SlimeAI`、`url = /home/slime/Code/SlimeAI/SlimeAI` 是本地实例证据。
 - 本地 EnTT 报告：EnTT resource cache 的 stable id / loader / handle 模式只能作为 `ResourceCatalog` dump / validation 的参考；SlimeAI 不应替换 Godot 资源系统。
 - 本地综合报告：SlimeAI 应继续保持小 Runtime kernel、manifest、Observation 和 capability-owned selector，不复制外部 ECS runtime 或完整引擎资产系统。
 
@@ -339,23 +347,24 @@ ResourceGenerator 支持 --project-root / --scan-root / --output 参数，可在
 
 ## 11. `uid://` 校准
 
-用户提到的 `.cs.uid` 文件和 Godot `uid://` 不是一回事：
+用户提到的 `.cs.uid` 文件和 Godot `uid://` 同属 Godot UID 体系，但不是同一个使用层：
 
-- `.cs.uid` 是 Godot 4 给脚本文件生成的旁路 UID 文件，本仓已经在 `.gitignore` 中忽略。
-- Godot `ResourceUID` 是资源级 UID 系统，可通过 `uid://` 引用资源，并用于在文件重命名或移动时保持资源间引用。
+- `.cs.uid` 是 Godot 4 给脚本资源生成的旁路 UID metadata 文件，本仓已经在 `.gitignore` 中忽略；它像“脚本资源的 UID 侧车文件”，不等同于业务数据里直接写的路径字符串。
+- `uid://...` 是 Godot Resource UID 的文本引用形式，可被资源路径字段使用，并用于在文件重命名或移动时保持资源间引用。
 
 这说明 `uid://` 对“移动资源不坏”确实有意义，但本轮不建议直接把 DataOS 或 ResourcePaths 全部迁到 `uid://`，原因是：
 
 - 当前 DataOS、ResourceGenerator、ResourceCatalog、Godot C# 加载调用和 submodule 路径都围绕 `res://` 工作。
 - Godot 4.4+ 的导出文件路径行为存在版本差异，`@export_file` 可能写 `uid://`，Godot 4.5+ 又提供保留路径行为的注解。
-- `uid://` 是否能覆盖 C# 代码加载、snapshot JSON、导出包、游戏仓 submodule 和生成器 diff，还要实测。
+- `uid://` 是否能覆盖 C# 代码加载、snapshot JSON、导出包、游戏仓 submodule、文本 diff 可读性和生成器输出，还要实测。
 
 后续建议单独做一个 `Resource UID Adoption Spike`：
 
 1. 创建小资源和场景引用，记录 `res://` 与 `uid://` 的加载行为。
 2. 移动资源目录，验证 `.tscn/.tres`、C# `GD.Load` / `ResourceLoader.Load`、DataOS snapshot 中的引用是否仍可加载。
-3. 在游戏仓 submodule 形态验证 `res://SlimeAI/...` 与 `uid://` 的关系。
-4. 只在证据证明稳定后，考虑让 diagnostics 记录 UID 或允许 DataOS resource ref 接收 `uid://`。
+3. 验证 `.cs.uid` sidecar、`.tscn/.tres` 中 `uid://` 引用、`ResourceUID` path 映射三者的关系，确认哪些文件必须被版本管理。
+4. 在游戏仓 submodule 形态验证 `res://SlimeAI/...` 与 `uid://` 的关系。
+5. 只在证据证明稳定后，考虑让 diagnostics 记录 UID 或允许 DataOS resource ref 接收 `uid://`。
 
 ## 12. Resource Path Migration Skill 设计
 

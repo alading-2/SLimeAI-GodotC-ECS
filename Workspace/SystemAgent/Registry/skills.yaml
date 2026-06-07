@@ -61,6 +61,15 @@ skills:
     category: core
     role: owner-skill-out-of-scope
     status: active
+  - id: resource-path-migration
+    source: .ai-config/skills/core/resource-path-migration/SKILL.md
+    category: core
+    function_category: utility
+    role: maintenance
+    status: active
+    canonical_docs:
+      - SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/其他Tool/11-2026-06-07-ResourcePathMigrationSkill设计.md
+      - DocsAI/ECS/Tools/ResourceManagement/README.md
   - id: skill-test
     source: .ai-config/skills/core/skill-test/SKILL.md
     category: core

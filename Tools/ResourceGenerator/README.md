@@ -1,8 +1,12 @@
 # ResourceGenerator 资源路径生成器
 
-**ResourceGenerator** 是一个 C# 控制台工具，用于自动扫描项目中的资源文件（`.tscn` 和 `.tres`），并生成可检查的路径索引类 `ResourcePaths`。
+**ResourceGenerator** 是一个 C# 控制台工具，用于自动扫描当前 Godot 项目中的资源文件（`.tscn` 和 `.tres`），并生成可检查的资源 catalog 类 `ResourcePaths`。
 
-它的 AI-first 价值不是“自动替 AI 决定架构”，而是把分散在 `Runtime / Capabilities / Tools / UI / Test / assets` 中的 Godot 资源收敛成一个稳定 manifest。这样 AI 和运行时都不需要到处猜 `res://` 路径，也不会因为目录重构后把整个 `Capabilities` 误分类成 `Component`。
+它的 AI-first 价值不是“自动替 AI 决定架构”，而是把分散在当前项目 `Runtime / Capabilities / Tools / UI / Test / assets` 中的 Godot 资源收敛成一个可检查 catalog。这样 AI 和运行时都不需要到处猜资源路径语义，也不会因为目录重构后把整个 `Capabilities` 误分类成 `Component`。
+
+注意：`ResourceGenerator` 不是自动路径修复器。`ResourcePaths.cs` 中仍保存 Godot 项目相对资源路径；移动、重命名或删除资源后，必须先迁移旧引用，再重新运行生成器并检查输出。后续 ResourceLoading hard cutover 会补 `ResourceCatalogDiagnostics`，把 duplicate key、missing path 和 stale generated source 作为可检查 artifact。
+
+`res://` 本身不是问题；它是 Godot project root 路径。问题是旧路径移动后没有自动替换和残留检查。
 
 ## 📖 核心功能
 
@@ -18,7 +22,26 @@
 
 ### 运行生成器
 
-在添加、删除或重命名资源文件后，运行以下命令：
+在添加、删除或重命名资源文件后，运行以下命令。
+
+如果是移动/重命名，先 dry-run 路径替换：
+
+```bash
+python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+  --old "res://assets/Old" \
+  --new "res://assets/New"
+```
+
+如果当前目录是游戏仓，使用框架仓脚本绝对路径并限制 `--root .`：
+
+```bash
+python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+  --root . \
+  --old "res://assets/Old" \
+  --new "res://assets/New"
+```
+
+确认后加 `--apply`，再运行生成器：
 
 ```bash
 dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj
@@ -27,6 +50,8 @@ dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj
 ### 查看生成文件
 
 生成的文件位于 `Data/ResourceManagement/ResourcePaths.cs`。
+
+当前输出是框架仓 catalog。未来游戏仓分离后，游戏仓资源应在游戏仓根生成自己的 catalog，或由 generator 支持 `--project-root` / `--scan-root` / `--output` 参数输出到游戏仓。
 
 ## ⚙️ 配置说明
 
@@ -83,3 +108,18 @@ dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj
 - **手动更改**: **不要手动修改 `ResourcePaths.cs`**，因为每次运行生成器都会覆盖该文件。
 - **运行时加载**: 业务代码不要直接 `GD.Load("res://...")`，统一走 `ResourceManagement.Load<T>`。
 - **何时运行**: 添加、移动、删除或重命名 `.tscn` / `.tres` 后运行生成器，并检查重复资源警告。
+- **路径迁移**: 移动/重命名目录后先用 `resource-path-migration` skill 替换旧引用，再运行生成器；不要靠人工全仓搜索。
+- **严格加载方向**: 后续 `ResourceManagement.Load<T>` 会删除相近名称 fallback；如果精确 key 不存在，应修正资源 key / manifest，而不是让加载器猜测。
+- **DataOS 路径来源**: DataOS snapshot 中保存资源路径时，加载入口必须携带 source/owner/usage；不要把裸 `res://` 扩散到 Capability 业务代码。
+
+## 多游戏仓注意事项
+
+未来框架作为 submodule 放进游戏仓时：
+
+```text
+游戏仓根 = res://
+框架 submodule = res://SlimeAI/
+游戏资源 = res://assets/、res://Scenes/ 等游戏仓目录
+```
+
+框架仓的 `ResourcePaths.cs` 只应表达框架拥有的资源。游戏美术、玩法场景、游戏 DataOS resource refs 应由游戏仓自己的 catalog 或 game-local 输出负责。不要为了方便把游戏专属资源扫描结果写回框架仓。

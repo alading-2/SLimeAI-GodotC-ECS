@@ -55,6 +55,24 @@ Games/BrotatoLike/          (游戏仓根 = project.godot 所在 = res:// 根)
 - **SlimeAI 仓禁止依赖任何游戏专属资源**（禁止出现 BrotatoLike 特有美术路径、特有输入键名）。
 - **场景路径必须用 `res://` 绝对路径**，不用相对路径。相对路径在跨目录实例化时会失效。
 
+## 资源路径与 Catalog 归属
+
+`res://` 是当前 Godot 项目的 project root，不是问题本身。在多游戏架构下，同一套框架代码进入游戏仓后路径会自然变成：
+
+```text
+游戏仓根 = project.godot 所在 = res://
+框架 submodule = res://SlimeAI/
+游戏资源 = res://assets/、res://Scenes/、res://Src/Game/ 等游戏仓自有目录
+```
+
+资源 catalog 归属规则：
+
+- 框架仓只拥有框架资源 catalog，例如通用场景、验证场景、框架 prefab。
+- 游戏仓拥有游戏资源 catalog，例如美术、玩法场景、HUD、游戏 DataOS resource refs。
+- 框架 `ResourceLoading` 可以作为统一加载 facade，但不代表框架 `ResourceGenerator` 默认扫描并写入所有游戏资源。
+- 后续 generator 应支持在游戏仓根运行，输出 game-local catalog；不要把 BrotatoLike 或其他游戏专属资源写入框架仓 `Data/ResourceManagement/ResourcePaths.cs`。
+- 移动资源目录后，用 `resource-path-migration` skill 在当前仓根替换旧路径并检查残留；不要跨框架仓、游戏仓和 `Games/*/SlimeAI/` submodule 混改。
+
 ## 场景归属
 
 | 场景类型 | 放哪里 | 原因 |
