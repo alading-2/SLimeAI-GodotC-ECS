@@ -31,10 +31,8 @@ public partial class RecoveryComponent : Node, IComponent
             _entity = iEntity;
             _data = iEntity.Data;
 
-            // 监听恢复属性变化
-            _entity.Events.On<GameEventType.Data.PropertyChanged>(
-                OnDataPropertyChanged
-            );
+            // 监听 typed Data 变化，避免业务组件依赖 diagnostic object payload。
+            _entity.Events.On<GameEventType.Data.Changed<float>>(OnDataChanged);
         }
 
         // 检查是否需要注册
@@ -45,6 +43,7 @@ public partial class RecoveryComponent : Node, IComponent
     {
         // 注销恢复
         TryUnregister();
+        _entity?.Events.Off<GameEventType.Data.Changed<float>>(OnDataChanged);
 
         _entity = null;
         _data = null;
@@ -128,12 +127,12 @@ public partial class RecoveryComponent : Node, IComponent
     // ================= 事件监听 =================
 
     /// <summary>
-    /// 监听数据属性变化
+    /// 监听恢复相关 typed 数据变化。
     /// </summary>
-    private void OnDataPropertyChanged(GameEventType.Data.PropertyChanged evt)
+    private void OnDataChanged(GameEventType.Data.Changed<float> evt)
     {
         // 只关心恢复属性的变化
-        if (evt.Key != GeneratedDataKey.FinalHpRegen.StableKey && evt.Key != GeneratedDataKey.FinalManaRegen.StableKey)
+        if (evt.Key != GeneratedDataKey.FinalHpRegen && evt.Key != GeneratedDataKey.FinalManaRegen)
             return;
 
         // 动态调整注册状态

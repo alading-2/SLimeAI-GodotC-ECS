@@ -32,7 +32,8 @@ public class ApplyModifierAction : IFeatureAction
             type: Type,
             value: Value,
             priority: Priority,
-            source: ctx.Feature
+            id: null,
+            sourceId: DataModifierSource.FromEntity(ctx.Feature)
         );
         target.Data.AddModifier(DataKeyName, modifier);
     }

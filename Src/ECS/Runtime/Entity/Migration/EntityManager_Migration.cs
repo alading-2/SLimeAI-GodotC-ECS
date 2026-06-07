@@ -147,7 +147,7 @@ public static partial class EntityManager
 
         return new EntityMigrationSnapshot(
             sourceEntityId.Value, // 源实体 Id
-            sourceIEntity.Data.GetAll(), // 基础数据快照；不包含修改器与局部事件
+            sourceIEntity.Data.GetDiagnosticSnapshot(), // diagnostic 基础数据快照；不包含修改器与局部事件
             lifecycleParentId, // 直接生命周期父实体 Id
             parentDestroyPolicy, // 父销毁策略
             position, // 位置快照

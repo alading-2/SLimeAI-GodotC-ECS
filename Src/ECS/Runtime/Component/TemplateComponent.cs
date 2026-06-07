@@ -79,10 +79,10 @@ public partial class TemplateComponent : Node, IComponent
 
             // ✅ 在此订阅事件
 
-            // 示例1:监听 Data 属性变化(响应 Spawn 后设置的初始数据)
+            // 示例1:监听 typed Data 属性变化(响应 Spawn 后设置的初始数据)
             // ⚠️ 关键: 许多数据(如 SkillLevel, Target)是在 Spawn 之后才设置的
-            // 所以必须监听 PropertyChanged 事件,而不是假设它们已经存在
-            _entity.Events.On<GameEventType.Data.PropertyChanged>(
+            // 所以必须监听 Changed<T> 事件,而不是假设它们已经存在
+            _entity.Events.On<GameEventType.Data.Changed<string>>(
                 OnDataChanged);
 
             // 示例2:跨组件通信 - 监听治疗请求事件
@@ -126,9 +126,9 @@ public partial class TemplateComponent : Node, IComponent
     /// <summary>
     /// 示例:监听Data属性变化
     /// </summary>
-    private void OnDataChanged(GameEventType.Data.PropertyChanged evt)
+    private void OnDataChanged(GameEventType.Data.Changed<string> evt)
     {
-        if (evt.Key != GeneratedDataKey.Name.StableKey) return;
+        if (evt.Key != GeneratedDataKey.Name) return;
 
         // 响应数据变化
     }

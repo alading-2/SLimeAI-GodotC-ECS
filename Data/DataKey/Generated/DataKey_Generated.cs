@@ -342,6 +342,16 @@ public static class GeneratedDataKey
     public static readonly DataKey<int> CurrentActiveAbilityIndex = new("CurrentActiveAbilityIndex");
 
     /// <summary>
+    /// CurrentAmmo
+    /// </summary>
+    public static readonly DataKey<float> CurrentAmmo = new("CurrentAmmo");
+
+    /// <summary>
+    /// CurrentEnergy
+    /// </summary>
+    public static readonly DataKey<float> CurrentEnergy = new("CurrentEnergy");
+
+    /// <summary>
     /// CurrentHp
     /// </summary>
     public static readonly DataKey<float> CurrentHp = new("CurrentHp");

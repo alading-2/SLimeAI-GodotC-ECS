@@ -28,6 +28,7 @@ description: 修改 SlimeAI ECS EventBus、GlobalEventBus、Capability 事件或
 - 框架 Runtime event payload 不直接持有 Godot `Vector2 / Rect2 / Node` 等引擎类型；需要这些类型时默认是游戏侧事件。
 - 框架仓 `SlimeAI/` 禁止 `using BrotatoLike`、`BrotatoLike.Game.*` 或其它游戏 namespace 反向依赖。
 - 订阅方必须可清理，不把事件当状态存储。
+- Data 业务变更监听使用 `GameEventType.Data.Changed<T>`；`GameEventType.Data.PropertyChanged(string, object?, object?)` 只允许 TestSystem/debug/migration diagnostic 边界使用。
 
 ## 事件归属判定树
 

@@ -42,7 +42,7 @@ public interface IComponent
     /// 数据访问时序说明:
     ///     - 此时可以访问 EntitySpawnPipeline 已经应用的 runtime snapshot 数据。
     ///     - 运行期后续覆盖或临时目标仍可能在注册后写入。
-    ///     - 如需响应后续数据设置,应在此方法中监听 PropertyChanged 事件。
+    ///     - 如需响应后续数据设置,业务组件应在此方法中监听 GameEventType.Data.Changed&lt;T&gt; 事件。
     ///
     /// 参数注入说明:
     ///     - 组件结构参数应在注册前由代码化 composer 调用 Configure/构造方法注入。

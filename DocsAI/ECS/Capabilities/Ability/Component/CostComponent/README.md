@@ -7,7 +7,7 @@
 
 **文档类型**: 使用指南  
 **目标受众**: 开发人员  
-**最后更新**: 2026-01-21
+**最后更新**: 2026-06-07
 
 ---
 
@@ -44,12 +44,11 @@ var abilityConfig = new Dictionary<string, object>
 |:---|:---|:---|:---|
 | `AbilityCostType.None` | - | 无消耗 | 冲刺、翻滚 |
 | `AbilityCostType.Mana` | `GeneratedDataKey.CurrentMana` | 魔法值 | 火球术、冰霜新星 |
-| `AbilityCostType.Energy` | `CurrentEnergy` | 能量 | 战吼、猛击 |
-| `AbilityCostType.Ammo` | `CurrentAmmo` | 弹药 | 狙击、火箭炮 |
+| `AbilityCostType.Energy` | `GeneratedDataKey.CurrentEnergy` | 能量 | 战吼、猛击 |
+| `AbilityCostType.Ammo` | `GeneratedDataKey.CurrentAmmo` | 弹药 | 狙击、火箭炮 |
 | `AbilityCostType.Health` | `GeneratedDataKey.CurrentHp` | 生命值 | 血祭、狂怒 |
 
-> [!NOTE]
-> `Energy` 和 `Ammo` 系统当前为预留接口,需要未来实现对应的资源系统。
+`Mana`、`Health`、`Energy`、`Ammo` 都必须通过 generated `DataKey<float>` 访问。不要在 CostComponent 或新 Ability 逻辑中使用 `"CurrentEnergy"` / `"CurrentAmmo"` 裸字符串。
 
 ---
 
@@ -64,7 +63,7 @@ sequenceDiagram
 
     Sys->>Ability: Emit(CheckCanUse)
     Ability->>Cost: 检查资源充足性
-    Cost->>Caster: 读取 CurrentMana
+    Cost->>Caster: 读取 typed resource DataKey
     alt 资源不足
         Cost->>Ability: Context.SetFailed("魔法不足")
         Ability-->>Sys: 检查失败
@@ -72,7 +71,7 @@ sequenceDiagram
 
     Sys->>Ability: Emit(ConsumeCost)
     Ability->>Cost: 扣除资源
-    Cost->>Caster: Set(CurrentMana, newValue)
+    Cost->>Caster: Add(resourceDataKey, -CostAmount)
     Cost->>Ability: Emit(CostConsumed)
 ```
 
@@ -168,7 +167,16 @@ var dashConfig = new Dictionary<string, object>
 var caster = AbilityInventoryService.Runtime.GetOwner(_entity as AbilityEntity);
 
 // 读取施法者的资源
-var currentMana = caster.Data.Get<float>(GeneratedDataKey.CurrentMana);
+var currentMana = caster.Data.Get(GeneratedDataKey.CurrentMana);
+```
+
+内部实现按 `AbilityCostType` 映射到 `DataKey<float>`：
+
+```csharp
+AbilityCostType.Mana => GeneratedDataKey.CurrentMana
+AbilityCostType.Health => GeneratedDataKey.CurrentHp
+AbilityCostType.Energy => GeneratedDataKey.CurrentEnergy
+AbilityCostType.Ammo => GeneratedDataKey.CurrentAmmo
 ```
 
 ### 2. 与其他组件的区别

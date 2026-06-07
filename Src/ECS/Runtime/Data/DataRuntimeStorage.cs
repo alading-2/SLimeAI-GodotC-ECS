@@ -18,12 +18,62 @@ public enum DataWriteSource
 }
 
 /// <summary>
-/// Data 字段变更记录。
+/// Data diagnostic 字段变更记录。
+/// 仅用于 TestSystem、debug 和兼容监听；业务代码应订阅 typed DataChangeRecord&lt;T&gt; / GameEventType.Data.Changed&lt;T&gt;。
 /// </summary>
 /// <param name="StableKey">发生变更的 stable key。</param>
-/// <param name="OldValue">变更前有效值。</param>
-/// <param name="NewValue">变更后有效值。</param>
+/// <param name="OldValue">变更前有效值；值类型会装箱。</param>
+/// <param name="NewValue">变更后有效值；值类型会装箱。</param>
 public sealed record DataChangeRecord(string StableKey, object? OldValue, object? NewValue);
+
+/// <summary>
+/// Data typed 字段变更记录。
+/// </summary>
+public interface IDataChangeRecord
+{
+    /// <summary>发生变更的 stable key。</summary>
+    string StableKey { get; }
+
+    /// <summary>typed value 的 CLR 类型。</summary>
+    Type ValueClrType { get; }
+
+    /// <summary>边界诊断用旧值；值类型会装箱。</summary>
+    object? OldValueForDiagnostics { get; }
+
+    /// <summary>边界诊断用新值；值类型会装箱。</summary>
+    object? NewValueForDiagnostics { get; }
+
+    /// <summary>向 Entity.Events 发出对应 typed payload。</summary>
+    void EmitTyped(EventBus events);
+}
+
+/// <summary>
+/// Data typed 字段变更记录。
+/// </summary>
+/// <typeparam name="T">字段值类型。</typeparam>
+/// <param name="Key">descriptor generated DataKey。</param>
+/// <param name="OldValue">变更前 typed 值。</param>
+/// <param name="NewValue">变更后 typed 值。</param>
+public sealed record DataChangeRecord<T>(DataKey<T> Key, T OldValue, T NewValue) : IDataChangeRecord
+{
+    /// <inheritdoc />
+    public string StableKey => Key.StableKey;
+
+    /// <inheritdoc />
+    public Type ValueClrType => typeof(T);
+
+    /// <inheritdoc />
+    public object? OldValueForDiagnostics => DataValueConverter.CloneForBoundary(OldValue);
+
+    /// <inheritdoc />
+    public object? NewValueForDiagnostics => DataValueConverter.CloneForBoundary(NewValue);
+
+    /// <inheritdoc />
+    public void EmitTyped(EventBus events)
+    {
+        events.Emit(new GameEventType.Data.Changed<T>(Key, OldValue, NewValue));
+    }
+}
 
 /// <summary>
 /// Data 写入诊断报告。
@@ -133,11 +183,16 @@ public interface IDataSlot
 
     bool RemoveModifier(string modifierId);
 
-    int RemoveModifiersBySource(object source);
+    int RemoveModifiersBySource(DataModifierSource source);
 
     bool ClearModifiers();
 
     List<DataModifier> GetModifiers();
+
+    /// <summary>
+    /// 发出当前槽位的 typed changed 事件。
+    /// </summary>
+    void PublishChange(DataRuntimeStorage storage, object? oldValueForDiagnostics);
 }
 
 /// <summary>
@@ -147,6 +202,8 @@ public interface IDataSlot
 public sealed class DataSlot<T> : IDataSlot
 {
     private readonly List<DataModifier> _modifiers = new();
+    private readonly T _defaultValue;
+    private readonly bool _hasDefaultValue;
     private T _value = default!;
 
     /// <summary>
@@ -157,6 +214,8 @@ public sealed class DataSlot<T> : IDataSlot
     {
         ArgumentNullException.ThrowIfNull(definition);
         Definition = definition; // descriptor 定义
+        _defaultValue = ConvertToSlotValue(definition.DefaultValue);
+        _hasDefaultValue = definition.DefaultValue != null || typeof(T).IsValueType;
     }
 
     /// <inheritdoc />
@@ -173,8 +232,9 @@ public sealed class DataSlot<T> : IDataSlot
     /// </summary>
     public T GetEffectiveValue()
     {
-        var baseValue = HasValue ? _value : ConvertToSlotValue(Definition.DefaultValue);
-        return _modifiers.Count == 0 ? baseValue : ApplyModifiers(baseValue);
+        var baseValue = HasValue ? _value : _defaultValue;
+        var effective = _modifiers.Count == 0 ? baseValue : ApplyModifiers(baseValue);
+        return CloneIfMutable(effective);
     }
 
     /// <summary>
@@ -188,7 +248,7 @@ public sealed class DataSlot<T> : IDataSlot
             return false;
         }
 
-        _value = value;
+        _value = CloneIfMutable(value);
         HasValue = true;
         return true;
     }
@@ -241,9 +301,14 @@ public sealed class DataSlot<T> : IDataSlot
     }
 
     /// <inheritdoc />
-    public int RemoveModifiersBySource(object source)
+    public int RemoveModifiersBySource(DataModifierSource source)
     {
-        return _modifiers.RemoveAll(modifier => Equals(modifier.Source, source));
+        if (source.IsEmpty)
+        {
+            return 0;
+        }
+
+        return _modifiers.RemoveAll(modifier => modifier.SourceId == source);
     }
 
     /// <inheritdoc />
@@ -267,13 +332,20 @@ public sealed class DataSlot<T> : IDataSlot
     /// <inheritdoc />
     public object? GetEffectiveValueForDiagnostics()
     {
-        return GetEffectiveValue();
+        return DataValueConverter.CloneForBoundary(GetEffectiveValue());
     }
 
     /// <inheritdoc />
     public object? GetStoredValueForDiagnostics()
     {
-        return HasValue ? _value : null;
+        return HasValue ? DataValueConverter.CloneForBoundary(_value) : null;
+    }
+
+    /// <inheritdoc />
+    public void PublishChange(DataRuntimeStorage storage, object? oldValueForDiagnostics)
+    {
+        var oldValue = ConvertToSlotValue(oldValueForDiagnostics);
+        storage.PublishTypedChange(Definition, oldValue, GetEffectiveValue());
     }
 
     private T ApplyModifiers(T baseValue)
@@ -332,8 +404,30 @@ public sealed class DataSlot<T> : IDataSlot
 
     private T ConvertToSlotValue(object? value)
     {
+        if (value == null && !_hasDefaultValue)
+        {
+            return default!;
+        }
+
         var converted = DataValueConverter.ConvertForRead(value, typeof(T), Definition.ValueType);
-        return converted == null ? default! : (T)converted;
+        return converted == null ? default! : CloneIfMutable((T)converted);
+    }
+
+    private static T CloneIfMutable(T value)
+    {
+        if (value is string[] stringArray)
+        {
+            var clone = (string[])stringArray.Clone();
+            return Unsafe.As<string[], T>(ref clone);
+        }
+
+        if (value is FeatureModifierEntryData[] modifierArray)
+        {
+            var clone = (FeatureModifierEntryData[])modifierArray.Clone();
+            return Unsafe.As<FeatureModifierEntryData[], T>(ref clone);
+        }
+
+        return value;
     }
 
     private static bool TryGetNumeric(T value, out double numericValue)
@@ -421,6 +515,20 @@ public sealed class DataSlot<T> : IDataSlot
 public static class DataValueConverter
 {
     private static readonly JsonSerializerOptions ModifierListJsonOptions = CreateModifierListJsonOptions();
+
+    /// <summary>
+    /// 边界诊断用浅拷贝：避免可变数组默认值或存储值被 dump 调用方修改。
+    /// </summary>
+    /// <param name="value">要返回给边界调用方的值。</param>
+    public static object? CloneForBoundary(object? value)
+    {
+        return value switch
+        {
+            string[] stringArray => (string[])stringArray.Clone(),
+            FeatureModifierEntryData[] modifierArray => (FeatureModifierEntryData[])modifierArray.Clone(),
+            _ => value
+        };
+    }
 
     /// <summary>
     /// 检查泛型读取类型是否兼容 descriptor 值类型。
@@ -1390,7 +1498,12 @@ public sealed class DataRuntimeStorage
     }
 
     /// <summary>
-    /// 字段变更事件。
+    /// typed 字段变更事件，业务桥接优先使用。
+    /// </summary>
+    public event Action<IDataChangeRecord>? TypedChanged;
+
+    /// <summary>
+    /// diagnostic 字段变更事件；值类型会装箱，仅用于 TestSystem/debug 兼容。
     /// </summary>
     public event Action<DataChangeRecord>? Changed;
 
@@ -1509,7 +1622,7 @@ public sealed class DataRuntimeStorage
         }
 
         MarkDependentComputedDirty(definition.StableKey);
-        Changed?.Invoke(new DataChangeRecord(definition.StableKey, oldValue, slot.GetEffectiveValueForDiagnostics()));
+        slot.PublishChange(this, oldValue);
         return true;
     }
 
@@ -1592,7 +1705,7 @@ public sealed class DataRuntimeStorage
         }
 
         MarkDependentComputedDirty(definition.StableKey);
-        Changed?.Invoke(new DataChangeRecord(definition.StableKey, oldValue, slot.GetEffectiveValueForDiagnostics()));
+        slot.PublishChange(this, oldValue);
         return true;
     }
 
@@ -1674,7 +1787,7 @@ public sealed class DataRuntimeStorage
         }
 
         MarkDependentComputedDirty(stableKey);
-        Changed?.Invoke(new DataChangeRecord(stableKey, oldValue, slot.GetEffectiveValueForDiagnostics()));
+        slot.PublishChange(this, oldValue);
         return true;
     }
 
@@ -1694,7 +1807,7 @@ public sealed class DataRuntimeStorage
         }
 
         MarkDependentComputedDirty(stableKey);
-        Changed?.Invoke(new DataChangeRecord(stableKey, oldValue, slot.GetEffectiveValueForDiagnostics()));
+        slot.PublishChange(this, oldValue);
         return true;
     }
 
@@ -1702,9 +1815,9 @@ public sealed class DataRuntimeStorage
     /// 按来源移除所有字段修改器。
     /// </summary>
     /// <param name="source">修改器来源。</param>
-    public int RemoveModifiersBySource(object? source)
+    public int RemoveModifiersBySource(DataModifierSource source)
     {
-        if (source == null)
+        if (source.IsEmpty)
         {
             return 0;
         }
@@ -1721,10 +1834,21 @@ public sealed class DataRuntimeStorage
 
             removedTotal += removed;
             MarkDependentComputedDirty(pair.Key);
-            Changed?.Invoke(new DataChangeRecord(pair.Key, oldValue, pair.Value.GetEffectiveValueForDiagnostics()));
+            pair.Value.PublishChange(this, oldValue);
         }
 
         return removedTotal;
+    }
+
+    /// <summary>
+    /// 兼容边界：按旧 object 来源移除修改器。
+    /// 新代码应使用 DataModifierSource，避免依赖任意 object identity。
+    /// </summary>
+    /// <param name="source">旧来源对象。</param>
+    [Obsolete("RemoveModifiersBySource(object?) 是兼容边界；新代码请使用 DataModifierSource。")]
+    public int RemoveModifiersBySource(object? source)
+    {
+        return RemoveModifiersBySource(DataModifierSource.FromLegacyObject(source));
     }
 
     /// <summary>
@@ -1750,7 +1874,7 @@ public sealed class DataRuntimeStorage
 
             removedTotal += removed;
             MarkDependentComputedDirty(pair.Key);
-            Changed?.Invoke(new DataChangeRecord(pair.Key, oldValue, pair.Value.GetEffectiveValueForDiagnostics()));
+            pair.Value.PublishChange(this, oldValue);
         }
 
         return removedTotal;
@@ -1781,7 +1905,7 @@ public sealed class DataRuntimeStorage
         }
 
         MarkDependentComputedDirty(stableKey);
-        Changed?.Invoke(new DataChangeRecord(stableKey, oldValue, slot.GetEffectiveValueForDiagnostics()));
+        slot.PublishChange(this, oldValue);
         return true;
     }
 
@@ -1801,7 +1925,7 @@ public sealed class DataRuntimeStorage
 
             clearedTotal++;
             MarkDependentComputedDirty(pair.Key);
-            Changed?.Invoke(new DataChangeRecord(pair.Key, oldValue, pair.Value.GetEffectiveValueForDiagnostics()));
+            pair.Value.PublishChange(this, oldValue);
         }
 
         return clearedTotal;
@@ -1824,7 +1948,7 @@ public sealed class DataRuntimeStorage
         }
 
         MarkDependentComputedDirty(stableKey);
-        Changed?.Invoke(new DataChangeRecord(stableKey, oldValue, slot.GetEffectiveValueForDiagnostics()));
+        slot.PublishChange(this, oldValue);
         return true;
     }
 
@@ -1841,7 +1965,7 @@ public sealed class DataRuntimeStorage
             if (valueChanged || modifiersChanged)
             {
                 MarkDependentComputedDirty(pair.Key);
-                Changed?.Invoke(new DataChangeRecord(pair.Key, oldValue, pair.Value.GetEffectiveValueForDiagnostics()));
+                pair.Value.PublishChange(this, oldValue);
             }
         }
 
@@ -1851,7 +1975,7 @@ public sealed class DataRuntimeStorage
     /// <summary>
     /// 获取当前已写入基础值副本；仅供 diagnostics/TestSystem dump 使用，值类型会在返回字典中装箱。
     /// </summary>
-    public Dictionary<string, object?> GetAllValues()
+    public Dictionary<string, object?> GetAllValuesForDiagnostics()
     {
         var values = new Dictionary<string, object?>(StringComparer.Ordinal);
         foreach (var pair in _slots)
@@ -1863,6 +1987,16 @@ public sealed class DataRuntimeStorage
         }
 
         return values;
+    }
+
+    /// <summary>
+    /// 兼容边界：获取当前已写入基础值副本。
+    /// 新调用应使用 GetAllValuesForDiagnostics，明确这是 boxed diagnostic dump。
+    /// </summary>
+    [Obsolete("GetAllValues 是 diagnostic 兼容包装；请使用 GetAllValuesForDiagnostics。")]
+    public Dictionary<string, object?> GetAllValues()
+    {
+        return GetAllValuesForDiagnostics();
     }
 
     /// <summary>
@@ -1916,16 +2050,24 @@ public sealed class DataRuntimeStorage
             throw new InvalidOperationException($"Data computed resolver 缺少 Data 上下文：{definition.StableKey}");
         }
 
-        var resolver = _catalog.ComputeRegistry.GetRequired(definition.ComputeId);
-        var rawValue = resolver.Compute(_computeContext, definition);
-        if (!DataValueConverter.TryConvert(rawValue, definition.ValueType, out var computedValue, out var error))
-        {
-            throw new InvalidOperationException($"Data computed resolver 返回值类型不匹配：{definition.StableKey} ({definition.ValueType}) {error}");
-        }
-
-        slot.SetValueFromBoundary(computedValue);
+        var resolver = _catalog.ComputeRegistry.GetRequired<T>(definition.StableKey, definition.ComputeId);
+        var computedValue = resolver.Compute(_computeContext, definition);
+        slot.SetValue(computedValue);
         _dirtyComputedKeys.Remove(definition.StableKey);
         return slot.GetEffectiveValue();
+    }
+
+    /// <summary>
+    /// 从 DataSlot<T> 发布 typed 与 diagnostic 双层变更事件。
+    /// </summary>
+    internal void PublishTypedChange<T>(DataDefinition definition, T oldValue, T newValue)
+    {
+        var record = new DataChangeRecord<T>(new DataKey<T>(definition.StableKey), oldValue, newValue);
+        TypedChanged?.Invoke(record);
+        Changed?.Invoke(new DataChangeRecord(
+            definition.StableKey,
+            record.OldValueForDiagnostics,
+            record.NewValueForDiagnostics));
     }
 
     private DataSlot<T> ReplaceSlot<T>(DataDefinition definition, IDataSlot existing)

@@ -5,7 +5,7 @@
 - **pending**: 0
 - **active**: 0
 - **blocked**: 1
-- **done**: 30
+- **done**: 31
 - **projects**: 2
 
 ## Projects
@@ -63,6 +63,7 @@
 | SDD-0029 | PRJ-0002 | System Contract Manifest And Diagnostics Hardening | 2026-06-03 | SlimeAI | done |
 | SDD-0030 | PRJ-0002 | Component Code Composition And Contract Hardening | 2026-06-04 | SlimeAI | done |
 | SDD-0031 | PRJ-0002 | Data Runtime Generic Slot Hard Cutover | 2026-06-06 | SlimeAI | done |
+| SDD-0032 | PRJ-0002 | Data Runtime Typed Contract Completion | 2026-06-07 | SlimeAI | done |
 
 ## By Scope
 
@@ -89,6 +90,7 @@
 - SDD-0029 — System Contract Manifest And Diagnostics Hardening
 - SDD-0030 — Component Code Composition And Contract Hardening
 - SDD-0031 — Data Runtime Generic Slot Hard Cutover
+- SDD-0032 — Data Runtime Typed Contract Completion
 
 ### Workspace/SDD
 
@@ -179,6 +181,7 @@
 - SDD-0021 — Data No-Compatibility Hard Cutover
 - SDD-0022 — Data Projection Diagnostics Contract Hardening
 - SDD-0031 — Data Runtime Generic Slot Hard Cutover
+- SDD-0032 — Data Runtime Typed Contract Completion
 
 ### data-event-docsai-sync
 
@@ -224,9 +227,14 @@
 
 - SDD-0024 — Entity Relationship Full Rewrite
 
+### event
+
+- SDD-0032 — Data Runtime Typed Contract Completion
+
 ### feature
 
 - SDD-0015 — Data Modifier Runtime and Feature Bridge
+- SDD-0032 — Data Runtime Typed Contract Completion
 
 ### gate
 
@@ -235,6 +243,7 @@
 ### gc
 
 - SDD-0031 — Data Runtime Generic Slot Hard Cutover
+- SDD-0032 — Data Runtime Typed Contract Completion
 
 ### git
 
@@ -365,6 +374,10 @@
 
 - SDD-0026 — Input Contract Manifest And Facade Hardening
 - SDD-0027 — Timer Scheduler Full Rewrite
+
+### typed-contract
+
+- SDD-0032 — Data Runtime Typed Contract Completion
 
 ### workflow
 

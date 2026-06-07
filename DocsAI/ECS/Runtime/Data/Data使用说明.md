@@ -35,8 +35,16 @@ _data.Add(GeneratedDataKey.Score, 10);
 
 ```csharp
 // Feature 通过 Modifier 修改数据
-_data.AddModifier(GeneratedDataKey.MoveSpeed, new Modifier(0.5f, ModifierType.Multiply));
-_data.RemoveModifier(GeneratedDataKey.MoveSpeed, modifier);
+var sourceId = DataModifierSource.FromEntity(featureEntity);
+_data.AddModifier(
+    GeneratedDataKey.MoveSpeed,
+    new DataModifier(
+        ModifierType.Multiplicative,
+        1.5f,
+        priority: 0,
+        id: "feature.move-speed",
+        sourceId: sourceId));
+_data.RemoveModifiersBySource(sourceId);
 ```
 
 ### Computed（计算属性）
@@ -58,9 +66,15 @@ _data.RemoveModifier(GeneratedDataKey.MoveSpeed, modifier);
 // ❌ 旧方式
 _data.On(DataKey.CurrentHp, (old, newVal) => { ... });
 
-// ✅ 新方式：通过 Entity.Events
-_entity.Events.On<GameEventType.Data.PropertyChanged>(
-    evt => { ... });
+// ✅ 新方式：通过 typed Entity.Events
+_entity.Events.On<GameEventType.Data.Changed<float>>(
+    evt =>
+    {
+        if (evt.Key == GeneratedDataKey.CurrentHp)
+        {
+            // 响应 CurrentHp 变化
+        }
+    });
 ```
 
 ## 4. 修改边界
@@ -70,6 +84,7 @@ _entity.Events.On<GameEventType.Data.PropertyChanged>(
 - **禁止手写 const string DataKey**：先写 descriptor
 - **Data 不监听变化**：用 `Entity.Events`
 - **raw string API 不是公开业务 API**
+- **业务监听 typed Data event**：使用 `GameEventType.Data.Changed<T>`；`PropertyChanged` 只给 TestSystem/debug diagnostic 兼容层
 
 ## 5. Debug 入口
 

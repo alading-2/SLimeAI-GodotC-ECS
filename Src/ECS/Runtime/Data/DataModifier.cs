@@ -1,3 +1,5 @@
+using System;
+
 /// <summary>
 /// 修改器类型枚举
 /// 完整公式：
@@ -42,6 +44,92 @@ public enum ModifierType
 }
 
 /// <summary>
+/// Data modifier 的稳定来源标识。
+/// 用于 Feature/Buff/装备回滚时匹配来源，避免长期依赖任意 object identity。
+/// </summary>
+public readonly record struct DataModifierSource(string SourceId)
+{
+    /// <summary>空来源；表示不能按来源回滚。</summary>
+    public static readonly DataModifierSource Empty = new(string.Empty);
+
+    /// <summary>是否为空来源。</summary>
+    public bool IsEmpty => string.IsNullOrWhiteSpace(SourceId);
+
+    /// <summary>
+    /// 从稳定字符串创建来源标识。
+    /// </summary>
+    /// <param name="sourceId">稳定来源字符串。</param>
+    public static DataModifierSource FromString(string? sourceId)
+    {
+        return string.IsNullOrWhiteSpace(sourceId)
+            ? Empty
+            : new DataModifierSource(sourceId);
+    }
+
+    /// <summary>
+    /// 从实体生成 Feature modifier 来源标识。
+    /// 优先使用 Data 中的 Id；缺失时回退到 Godot instance id，确保同一运行期稳定。
+    /// </summary>
+    /// <param name="entity">Feature 或 Buff 实体。</param>
+    public static DataModifierSource FromEntity(IEntity? entity)
+    {
+        if (entity == null)
+        {
+            return Empty;
+        }
+
+        var id = entity.Data.Has(GeneratedDataKey.Id)
+            ? entity.Data.Get(GeneratedDataKey.Id)
+            : string.Empty;
+        if (!string.IsNullOrWhiteSpace(id))
+        {
+            return new DataModifierSource($"entity:{id}");
+        }
+
+        return entity is Godot.Node node
+            ? new DataModifierSource($"node:{node.GetInstanceId()}")
+            : new DataModifierSource($"entity-object:{entity.GetHashCode()}");
+    }
+
+    /// <summary>
+    /// 兼容边界：从旧 object source 生成运行期稳定来源。
+    /// 新业务代码应显式传入 DataModifierSource。
+    /// </summary>
+    /// <param name="source">旧来源对象。</param>
+    public static DataModifierSource FromLegacyObject(object? source)
+    {
+        if (source == null)
+        {
+            return Empty;
+        }
+
+        if (source is DataModifierSource typedSource)
+        {
+            return typedSource;
+        }
+
+        if (source is IEntity entity)
+        {
+            return FromEntity(entity);
+        }
+
+        if (source is string text)
+        {
+            return FromString(text);
+        }
+
+        if (source is Godot.Node node)
+        {
+            return new DataModifierSource($"node:{node.GetInstanceId()}");
+        }
+
+        return new DataModifierSource($"{source.GetType().FullName}:{source.GetHashCode()}");
+    }
+
+    public override string ToString() => SourceId;
+}
+
+/// <summary>
 /// 数据修改器 - 用于 Buff/Debuff 系统
 /// 公式：最终值 = (基础值 + Σ加法) × Π乘法
 /// </summary>
@@ -70,10 +158,16 @@ public class DataModifier
     public int Priority { get; init; }
 
     /// <summary>
-    /// 修改器来源对象（例如：装备 Entity、Buff 实例）
-    /// 用于按来源批量移除修改器
+    /// 修改器稳定来源标识，用于按来源批量移除修改器。
     /// </summary>
-    public object? Source { get; init; }
+    public DataModifierSource SourceId { get; init; }
+
+    /// <summary>
+    /// 兼容边界：旧 object 来源视图。
+    /// 新代码应使用 SourceId，不要继续依赖任意 object identity。
+    /// </summary>
+    [Obsolete("DataModifier.Source 是兼容边界；新代码请使用 SourceId / DataModifierSource。")]
+    public object? Source => SourceId.IsEmpty ? null : SourceId;
 
     /// <summary>
     /// 创建数据修改器
@@ -82,13 +176,26 @@ public class DataModifier
     /// <param name="value">修改值</param>
     /// <param name="priority">优先级（默认 0）</param>
     /// <param name="id">唯一标识符（默认自动生成）</param>
-    /// <param name="source">来源对象（可选）</param>
+    /// <param name="source">旧来源对象（兼容边界，新代码优先使用 sourceId）</param>
     public DataModifier(ModifierType type, float value, int priority = 0, string? id = null, object? source = null)
+        : this(type, value, priority, id, DataModifierSource.FromLegacyObject(source))
+    {
+    }
+
+    /// <summary>
+    /// 创建数据修改器。
+    /// </summary>
+    /// <param name="type">修改器类型。</param>
+    /// <param name="value">修改值。</param>
+    /// <param name="priority">优先级。</param>
+    /// <param name="id">唯一标识符。</param>
+    /// <param name="sourceId">稳定来源标识。</param>
+    public DataModifier(ModifierType type, float value, int priority, string? id, DataModifierSource sourceId)
     {
         Id = id ?? System.Guid.NewGuid().ToString();
         Type = type;
         Value = value;
         Priority = priority;
-        Source = source;
+        SourceId = sourceId;
     }
 }

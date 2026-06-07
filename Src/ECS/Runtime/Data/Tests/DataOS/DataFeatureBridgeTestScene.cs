@@ -83,8 +83,8 @@ public partial class DataFeatureBridgeTestScene : DataSceneTestBase
         data.Set(GeneratedDataKey.AttackBonus, 25f);
         AssertEqual("computed attack bonus", 100f, data.Get<float>(GeneratedDataKey.FinalAttack));
 
-        var source = new object();
-        AssertTrue("feature grants modifier", data.TryAddModifier(GeneratedDataKey.BaseAttack, new DataModifier(ModifierType.Additive, 20f, id: "feature_bonus", source: source)));
+        var source = DataModifierSource.FromString("feature:runtime-test");
+        AssertTrue("feature grants modifier", data.TryAddModifier(GeneratedDataKey.BaseAttack, new DataModifier(ModifierType.Additive, 20f, priority: 0, id: "feature_bonus", sourceId: source)));
         AssertEqual("feature modifier changes computed", 125f, data.Get<float>(GeneratedDataKey.FinalAttack));
         data.RemoveModifiersBySource(source);
         AssertEqual("feature removal rolls back computed", 100f, data.Get<float>(GeneratedDataKey.FinalAttack));

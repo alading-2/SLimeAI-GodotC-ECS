@@ -3,7 +3,7 @@
 > 状态：当前实现说明；旧字符串事件名已迁移为 payload 类型主键。
 > 范围：`Src/ECS/Runtime/Event/`、`Src/ECS/Capabilities/*/Events/`、`Entity.Events`、`GlobalEventBus.Global`。
 > 设计事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/1.Event系统优化/`。
-> 更新：2026-06-01
+> 更新：2026-06-07
 
 ## 1. 一句话定位
 
@@ -252,6 +252,16 @@ Src/ECS/Runtime/Event/Global/GameEventType_Global_GameState.cs
 - 框架事件不依赖具体游戏命名空间、具体 UI、输入动作、资产路径或 Godot Node。
 - payload 需要 Godot `Node` / `Vector2` / `Rect2` 等引擎类型时，默认先判断是否应放到游戏侧或 GodotBridge 协议。
 - 请求型事件如果需要返回值，放 `EventContext` 或领域上下文对象；不要让订阅者反向调用发布者。
+
+### 5.1 Data 变更事件
+
+业务组件监听 Data 变化时使用 typed payload：
+
+```csharp
+entity.Events.On<GameEventType.Data.Changed<float>>(OnHpChanged);
+```
+
+`GameEventType.Data.PropertyChanged(string, object?, object?)` 只保留给 TestSystem、debug dump 和 migration diagnostic 边界。新业务组件不要订阅 `PropertyChanged` 再 cast object payload；需要响应某个字段时按字段类型订阅 `Changed<T>` 并比较 `evt.Key`。
 
 ## 6. 什么时候不用 Event
 

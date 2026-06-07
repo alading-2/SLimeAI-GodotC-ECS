@@ -102,7 +102,7 @@ entity.GetNode<HealthComponent>("HealthComponent");
 var enemy = EntityManager.Spawn<Enemy>(config);
 
 // 2. Configure (设置运行时数据)
-// 这些操作会触发 GameEventType.Data.PropertyChanged,激活 Component 的逻辑
+// 这些操作会触发 GameEventType.Data.Changed<T>,激活 Component 的逻辑
 enemy.Data.Set(GeneratedDataKey.Level, 10);
 enemy.Data.Set(GeneratedDataKey.CurrentHp, 100f);
 ```

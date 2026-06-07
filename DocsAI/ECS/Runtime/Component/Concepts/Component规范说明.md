@@ -35,7 +35,7 @@ public partial class MyComponent : Node, IComponent
         _entity = iEntity;
         _data = iEntity.Data;
 
-        _entity.Events.On<GameEventType.Data.PropertyChanged>(OnDataChanged);
+        _entity.Events.On<GameEventType.Data.Changed<float>>(OnDataChanged);
     }
 
     public void OnComponentUnregistered()

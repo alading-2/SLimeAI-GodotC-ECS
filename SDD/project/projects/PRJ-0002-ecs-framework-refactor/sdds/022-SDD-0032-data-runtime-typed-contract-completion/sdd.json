@@ -1,0 +1,56 @@
+{
+  "id": "SDD-0032",
+  "slug": "data-runtime-typed-contract-completion",
+  "title": "Data Runtime Typed Contract Completion",
+  "status": "done",
+  "type": "refactor",
+  "created_at": "2026-06-06",
+  "updated_at": "2026-06-07",
+  "scope": "SlimeAI",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI/SlimeAI"
+  ],
+  "affected_areas": [
+    "Src/ECS/Runtime/Data",
+    "Data/DataOS",
+    "Src/ECS/Capabilities/Ability",
+    "Src/ECS/Capabilities/Feature",
+    "Src/ECS/Capabilities/Unit"
+  ],
+  "tags": [
+    "data",
+    "typed-contract",
+    "gc",
+    "event",
+    "feature"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 10,
+    "total_tasks": 10,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "本 SDD 修改 Runtime Data 公共协议、Ability cost、Feature modifier、Unit 事件监听和 DataOS generated key，必须用行为场景约束回归。"
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0002",
+  "project_order": 22,
+  "shared_design_refs": [
+    "../../design/INDEX.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-06-07 09:29",
+      "summary": "dotnet build、DataOS validator、SDD validate --all、ai-config sync/skill-test、grep gate 和四个 Godot DataOS 场景均通过；grep gate 仅剩 TestSystem/debug、测试 helper、obsolete wrapper 与 diagnostic metadata 允许边界。"
+    }
+  ]
+}

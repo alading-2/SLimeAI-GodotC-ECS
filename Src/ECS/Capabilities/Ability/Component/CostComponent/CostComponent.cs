@@ -83,15 +83,14 @@ public partial class CostComponent : Node, IComponent
         }
 
         // 检查资源是否充足
-        var resourceKey = GetResourceKey(CostType);
-        if (string.IsNullOrEmpty(resourceKey))
+        if (!TryGetResourceKey(CostType, out var resourceDataKey))
         {
             _log.Error($"未知的消耗类型: {CostType}");
             eventData.Context.SetFailed("未知的消耗类型");
             return;
         }
 
-        var currentResource = caster.Data.Get<float>(resourceKey);
+        var currentResource = caster.Data.Get(resourceDataKey);
         if (currentResource < CostAmount)
         {
             var resourceName = GetResourceName(CostType);
@@ -115,8 +114,7 @@ public partial class CostComponent : Node, IComponent
         }
 
         // 获取资源键
-        var resourceKey = GetResourceKey(CostType);
-        if (string.IsNullOrEmpty(resourceKey))
+        if (!TryGetResourceKey(CostType, out var resourceDataKey))
         {
             _log.Error($"未知的消耗类型: {CostType}");
             eventData.Context.SetFailed("未知的消耗类型");
@@ -124,7 +122,7 @@ public partial class CostComponent : Node, IComponent
         }
 
         // 扣除资源
-        caster.Data.Add(resourceKey, -CostAmount);
+        caster.Data.Add(resourceDataKey, -CostAmount);
 
         // 发送消耗完成事件 (供 UI 监听)
         if (_entity is AbilityEntity abilityEntity)
@@ -135,7 +133,7 @@ public partial class CostComponent : Node, IComponent
         }
 
         var resourceName = GetResourceName(CostType);
-        _log.Debug($"技能 {AbilityName} 消耗: {resourceName} -{CostAmount:F1}, 剩余: {caster.Data.Get<float>(resourceKey):F1}");
+        _log.Debug($"技能 {AbilityName} 消耗: {resourceName} -{CostAmount:F1}, 剩余: {caster.Data.Get(resourceDataKey):F1}");
     }
 
     // ================= 辅助方法 =================
@@ -151,18 +149,19 @@ public partial class CostComponent : Node, IComponent
     }
 
     /// <summary>
-    /// 映射消耗类型到数据键
+    /// 映射消耗类型到 typed 数据键。
     /// </summary>
-    private string GetResourceKey(AbilityCostType type)
+    private bool TryGetResourceKey(AbilityCostType type, out DataKey<float> key)
     {
-        return type switch
+        key = type switch
         {
-            AbilityCostType.Mana => GeneratedDataKey.CurrentMana.StableKey,
-            AbilityCostType.Energy => "CurrentEnergy", // TODO: 等待 Energy 系统定义
-            AbilityCostType.Ammo => "CurrentAmmo",     // TODO: 等待 Ammo 系统定义
-            AbilityCostType.Health => GeneratedDataKey.CurrentHp.StableKey,
-            _ => string.Empty
+            AbilityCostType.Mana => GeneratedDataKey.CurrentMana,
+            AbilityCostType.Energy => GeneratedDataKey.CurrentEnergy,
+            AbilityCostType.Ammo => GeneratedDataKey.CurrentAmmo,
+            AbilityCostType.Health => GeneratedDataKey.CurrentHp,
+            _ => default
         };
+        return !string.IsNullOrEmpty(key.StableKey);
     }
 
     /// <summary>

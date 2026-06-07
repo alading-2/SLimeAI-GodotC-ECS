@@ -32,7 +32,8 @@ description: 修改 SlimeAI ECS Feature Capability、FeatureDefinition、Feature
 - `FeatureAutoTriggerService` 负责 Feature 自身 Periodic / OnEvent 注册，调用方必须持有并 Dispose 注册句柄。
 - `Feature.TriggerChance` 使用 0-100 百分比；新增 DataKey 必须同步 DataOS descriptor / seed / snapshot mirror。
 - Modifier 授予 / 回滚由 `FeatureService` 管理，避免 handler 私自写长期状态。
-- 旧 ECS `Feature.Modifiers` 必须使用 descriptor stable key `Feature.Modifiers`，Granted 只调用 Data modifier API，Removed 只按 feature source 回滚，不接管 computed 计算。
+- 旧 ECS `Feature.Modifiers` 必须使用 descriptor stable key `Feature.Modifiers`，Granted 只调用 Data modifier API，Removed 只按 `DataModifierSource.FromEntity(feature)` 回滚，不接管 computed 计算。
+- 新 Feature / Buff / 装备 modifier 不要传任意 `object source`，也不要调用 `RemoveModifiersBySource(object)`；兼容 object source 只允许边界旧调用。
 - 游戏具体 Feature actions 可以先放游戏仓库 handler，抽象稳定后再上迁框架。
 
 ## 验证

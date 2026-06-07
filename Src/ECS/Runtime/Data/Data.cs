@@ -54,11 +54,13 @@ public class Data
         ArgumentNullException.ThrowIfNull(catalog);
         if (_runtimeStorage != null)
         {
+            _runtimeStorage.TypedChanged -= OnRuntimeTypedDataChanged;
             _runtimeStorage.Changed -= OnRuntimeDataChanged;
         }
 
         _owner = owner;
         _runtimeStorage = new DataRuntimeStorage(catalog, this); // descriptor-first 运行时存储
+        _runtimeStorage.TypedChanged += OnRuntimeTypedDataChanged;
         _runtimeStorage.Changed += OnRuntimeDataChanged;
     }
 
@@ -143,6 +145,47 @@ public class Data
         if (_runtimeStorage != null)
         {
             return _runtimeStorage.TrySet(key, value, out report);
+        }
+
+        throw CreateUnboundDataException(key.StableKey);
+    }
+
+    /// <summary>
+    /// 通过类型安全句柄以 System 来源写入字段值。
+    /// 用于 system_only / runtime_only 字段，避免绕过 DataKey&lt;T&gt;。
+    /// </summary>
+    public bool SetSystem<T>(DataKey<T> key, T value)
+    {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.Set(key, value, DataWriteSource.System);
+        }
+
+        throw CreateUnboundDataException(key.StableKey);
+    }
+
+    /// <summary>
+    /// 通过类型安全句柄以 System 来源写入字段值，并输出结构化诊断。
+    /// </summary>
+    public bool TrySetSystem<T>(DataKey<T> key, T value, out DataWriteReport report)
+    {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.TrySet(key, value, out report, DataWriteSource.System);
+        }
+
+        throw CreateUnboundDataException(key.StableKey);
+    }
+
+    /// <summary>
+    /// 通过类型安全句柄以 Debug 来源写入字段值，并输出结构化诊断。
+    /// 仅用于调试工具，不作为普通业务写入入口。
+    /// </summary>
+    public bool TrySetDebug<T>(DataKey<T> key, T value, out DataWriteReport report)
+    {
+        if (_runtimeStorage != null)
+        {
+            return _runtimeStorage.TrySet(key, value, out report, DataWriteSource.Debug);
         }
 
         throw CreateUnboundDataException(key.StableKey);
@@ -476,11 +519,10 @@ public class Data
     }
 
     /// <summary>
-    /// 根据来源对象移除所有匹配的修改器（跨所有数据键）
-    /// 常用于：卸载装备、移除 Buff
+    /// 根据稳定来源移除所有匹配的修改器（跨所有数据键）。
+    /// 常用于卸载装备、移除 Buff 或 Feature 回滚。
     /// </summary>
-    /// <param name="source">来源对象（如 ItemEntity）</param>
-    public void RemoveModifiersBySource(object source)
+    public void RemoveModifiersBySource(DataModifierSource source)
     {
         if (_runtimeStorage != null)
         {
@@ -489,6 +531,17 @@ public class Data
         }
 
         throw CreateUnboundDataException("*");
+    }
+
+    /// <summary>
+    /// 兼容边界：根据旧来源对象移除所有匹配的修改器。
+    /// 新业务代码应显式使用 DataModifierSource。
+    /// </summary>
+    /// <param name="source">旧来源对象。</param>
+    [Obsolete("RemoveModifiersBySource(object) 是兼容边界；新代码请使用 DataModifierSource。")]
+    public void RemoveModifiersBySource(object source)
+    {
+        RemoveModifiersBySource(DataModifierSource.FromLegacyObject(source));
     }
 
     /// <summary>
@@ -501,7 +554,8 @@ public class Data
     {
         if (sourceData == null || sourceEntity == null) return;
 
-        var allData = sourceData.GetAll();
+        var allData = sourceData.GetDiagnosticSnapshot();
+        var sourceId = DataModifierSource.FromLegacyObject(sourceEntity);
         foreach (var kvp in allData)
         {
             // 仅处理数值类型
@@ -514,7 +568,8 @@ public class Data
                     ModifierType.Additive,
                     value,
                     priority: 0,
-                    source: sourceEntity
+                    id: null,
+                    sourceId: sourceId
                 );
                 AddModifier(kvp.Key, modifier);
             }
@@ -586,8 +641,8 @@ public class Data
     }
 
     // ================= 事件监听 (已移除) =================
-    // 请使用 Entity.Events.On(GameEventType.Data.PropertyChanged, ...)
-    // 数据变更事件负载类型: (string Key, object? OldValue, object? NewValue)
+    // 业务代码请使用 Entity.Events.On<GameEventType.Data.Changed<T>>(...)。
+    // PropertyChanged 只保留给 TestSystem/debug diagnostic 边界。
 
 
     // ================= 工具方法 =================
@@ -607,14 +662,14 @@ public class Data
     }
 
     /// <summary>
-    /// 获取当前所有基础数据的副本。
-    /// 仅供 diagnostics/TestSystem dump 使用，返回 Dictionary 会让值类型装箱。
+    /// 获取当前所有基础数据的 diagnostic 副本。
+    /// 仅供 TestSystem、debug 和 migration 使用；返回 Dictionary 会让值类型装箱。
     /// </summary>
-    public Dictionary<string, object> GetAll()
+    public Dictionary<string, object> GetDiagnosticSnapshot()
     {
         if (_runtimeStorage != null)
         {
-            var runtimeValues = _runtimeStorage.GetAllValues();
+            var runtimeValues = _runtimeStorage.GetAllValuesForDiagnostics();
             var result = new Dictionary<string, object>(runtimeValues.Count);
             foreach (var pair in runtimeValues)
             {
@@ -628,6 +683,16 @@ public class Data
         }
 
         throw CreateUnboundDataException("*");
+    }
+
+    /// <summary>
+    /// 兼容边界：获取当前所有基础数据的副本。
+    /// 新调用请使用 GetDiagnosticSnapshot，明确这是 boxed diagnostic dump。
+    /// </summary>
+    [Obsolete("GetAll 是 diagnostic 兼容包装；请使用 GetDiagnosticSnapshot。")]
+    public Dictionary<string, object> GetAll()
+    {
+        return GetDiagnosticSnapshot();
     }
 
     /// <summary>
@@ -676,9 +741,8 @@ public class Data
     {
         if (_owner != null)
         {
-            // 通过 Entity 事件总线广播数据变更
-            // 下游监听示例: 
-            // entity.Events.On<GameEventType.Data.PropertyChangedEvent>(GameEventType.Data.PropertyChanged, evt => ...);
+            // 通过 Entity 事件总线广播 diagnostic 数据变更。
+            // 业务监听由 OnRuntimeTypedDataChanged 发出 Changed<T>。
             _owner.Events.Emit(new GameEventType.Data.PropertyChanged(key, oldValue, newValue));
         }
     }
@@ -686,6 +750,16 @@ public class Data
     private void OnRuntimeDataChanged(DataChangeRecord change)
     {
         NotifyChanged(change.StableKey, change.OldValue, change.NewValue);
+    }
+
+    private void OnRuntimeTypedDataChanged(IDataChangeRecord change)
+    {
+        if (_owner == null)
+        {
+            return;
+        }
+
+        change.EmitTyped(_owner.Events);
     }
 
     private static InvalidOperationException CreateUnboundDataException(string key)

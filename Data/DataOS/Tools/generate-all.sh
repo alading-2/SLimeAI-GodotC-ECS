@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 db_path="$repo_root/Data/DataOS/Authoring/slimeainew.authoring.db"
 snapshot_path="$repo_root/Data/DataOS/Snapshots/runtime_snapshot.json"
 handle_path="$repo_root/Data/DataKey/Generated/DataKey_Generated.cs"

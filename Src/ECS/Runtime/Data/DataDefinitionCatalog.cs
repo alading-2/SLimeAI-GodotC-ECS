@@ -126,9 +126,14 @@ public sealed class DataDefinitionCatalog
                     throw new InvalidOperationException($"computed DataDefinition 必须声明 compute_id：{definition.StableKey}");
                 }
 
-                if (_computeRegistry != null && !_computeRegistry.Contains(definition.ComputeId))
+                if (_computeRegistry != null)
                 {
-                    throw new InvalidOperationException($"DataDefinition 缺少 resolver：{definition.StableKey} -> {definition.ComputeId}");
+                    if (!_computeRegistry.Contains(definition.ComputeId))
+                    {
+                        throw new InvalidOperationException($"DataDefinition 缺少 resolver：{definition.StableKey} -> {definition.ComputeId}");
+                    }
+
+                    _computeRegistry.ValidateResolver(definition);
                 }
             }
 

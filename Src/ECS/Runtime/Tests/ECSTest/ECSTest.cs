@@ -181,7 +181,7 @@ public partial class ECSTest : Node
         var entityNode2 = _testEntityPool.Get();
         var testEntity2 = entityNode2 as TestEntity;
 
-        Assert(testEntity2.Data.GetAll().Count == 0, "Pool Reset (Data cleared)");
+        Assert(testEntity2.Data.GetDiagnosticSnapshot().Count == 0, "Pool Reset (Data cleared)");
 
         ObjectPoolManager.ReturnToPool(testEntity2);
 

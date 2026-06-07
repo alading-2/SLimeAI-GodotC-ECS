@@ -14,6 +14,6 @@ public class RemoveModifierAction : IFeatureAction
         if (ctx.Feature == null) return;
 
         var target = TargetOwner ? ctx.Owner : ctx.Feature as IEntity;
-        target?.Data.RemoveModifiersBySource(ctx.Feature);
+        target?.Data.RemoveModifiersBySource(DataModifierSource.FromEntity(ctx.Feature));
     }
 }

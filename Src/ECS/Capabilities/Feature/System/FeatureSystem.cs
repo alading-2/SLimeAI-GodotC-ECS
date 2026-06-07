@@ -241,6 +241,7 @@ public static class FeatureSystem
         var modifiers = feature.Data.Get<FeatureModifierEntryData[]>(GeneratedDataKey.FeatureModifiers);
         if (modifiers.Length == 0) return;
 
+        var sourceId = DataModifierSource.FromEntity(feature);
         int applied = 0;
         foreach (var entry in modifiers)
         {
@@ -250,7 +251,8 @@ public static class FeatureSystem
                 type: entry.ModifierType,
                 value: entry.Value,
                 priority: entry.Priority,
-                source: feature
+                id: null,
+                sourceId: sourceId
             );
             owner.Data.AddModifier(entry.DataKeyName, modifier);
             applied++;
@@ -263,7 +265,7 @@ public static class FeatureSystem
     /// <summary>按来源批量回滚修改器（Removed 阶段调用）</summary>
     private static void RemoveModifiers(IEntity feature, IEntity owner)
     {
-        owner.Data.RemoveModifiersBySource(feature);
+        owner.Data.RemoveModifiersBySource(DataModifierSource.FromEntity(feature));
         _log.Debug($"Feature {feature.Data.Get<string>(GeneratedDataKey.Name)} 修改器已回滚");
     }
 }

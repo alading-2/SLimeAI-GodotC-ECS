@@ -56,7 +56,7 @@
 
 - `OnFeatureRemoved(feature, owner)`
   - 调用 `IFeatureHandler.OnRemoved`
-  - 按 `source=feature` 回滚全部 Modifier
+  - 按 `DataModifierSource.FromEntity(feature)` 回滚全部 Modifier
   - 发出 `Feature.Removed`
 
 ---
@@ -173,7 +173,7 @@
 效果：
 
 - 授予时自动把 Modifier 施加到 `owner.Data`
-- 移除时自动按 `source=feature` 整体回滚
+- 移除时自动按 `DataModifierSource.FromEntity(feature)` 整体回滚
 
 ### 2. 数据 + 代码 Feature
 

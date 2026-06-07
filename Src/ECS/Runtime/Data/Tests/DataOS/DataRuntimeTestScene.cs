@@ -15,6 +15,7 @@ public partial class DataRuntimeTestScene : DataSceneTestBase
     protected override void RunTests()
     {
         Data_Get_ShouldReturnDescriptorDefault();
+        Data_Get_ShouldCacheTypedDefaultsAndCloneMutableDefaults();
         Data_Set_ShouldWriteTypedValue();
         Data_TypedHotPath_ShouldCreateGenericSlot();
         Data_Set_ShouldRejectUnknownKey();
@@ -27,13 +28,18 @@ public partial class DataRuntimeTestScene : DataSceneTestBase
         Data_Set_ShouldRespectAllowedValues();
         Data_RemoveAndClear_ShouldReturnDescriptorDefault();
         Data_Set_ShouldPublishPropertyChanged();
+        Data_Set_ShouldPublishTypedChanged();
+        Data_TrySetSystem_ShouldWriteSystemOnlyTargetNode();
+        Data_GetDiagnosticSnapshot_ShouldReturnStoredValuesOnly();
         Data_AddModifier_ShouldRespectModifierPolicy();
         Data_AddModifier_ShouldRejectUnknownTarget();
         Data_AddModifier_ShouldApplyModifierPipeline();
         Data_RemoveModifiersBySource_ShouldOnlyRemoveMatchingSource();
+        Data_RemoveModifiersBySource_ShouldUseTypedSource();
         Data_ModifierChange_ShouldPublishChangeAndDirtyDependents();
         Data_GetComputed_ShouldUseResolverDependenciesAndComputeParams();
         Data_GetComputed_ShouldCacheUntilDependencyChanges();
+        Data_GetComputed_ShouldFailFastOnResolverOutputMismatch();
         Data_ComputedDirty_ShouldPropagateTransitively();
     }
 
@@ -41,6 +47,64 @@ public partial class DataRuntimeTestScene : DataSceneTestBase
     {
         var data = new Data(Bootstrap.Catalog);
         AssertEqual("descriptor default", 10f, data.Get<float>(GeneratedDataKey.BaseHp));
+    }
+
+    private void Data_Get_ShouldCacheTypedDefaultsAndCloneMutableDefaults()
+    {
+        var storage = CreateRuntimeStorage(
+            Definition("Attribute.DefaultFloat", DataValueType.Float, 1.5f),
+            Definition("Attribute.DefaultInt", DataValueType.Int, 2),
+            Definition("Attribute.DefaultBool", DataValueType.Bool, true),
+            Definition("Attribute.DefaultString", DataValueType.String, "slime"),
+            Definition("Attribute.DefaultArray", DataValueType.StringArray, new[] { "idle", "run" }),
+            Definition("Attribute.DefaultResource", DataValueType.ObjectRef, "res://icon.png"),
+            new DataDefinition
+            {
+                StableKey = "Attribute.DefaultObject",
+                ValueType = DataValueType.ObjectRef,
+                RuntimeTypeId = "Godot.Node2D",
+                DefaultValue = null,
+                StoragePolicy = DataStoragePolicy.RuntimeOnly,
+                WritePolicy = DataWritePolicy.SystemOnly
+            },
+            new DataDefinition
+            {
+                StableKey = "Feature.Modifiers",
+                ValueType = DataValueType.ModifierList,
+                RuntimeTypeId = "slime.data.Features.FeatureModifierEntryData[]",
+                DefaultValue = new[]
+                {
+                    new FeatureModifierEntryData
+                    {
+                        DataKeyName = "BaseHp",
+                        ModifierType = ModifierType.Additive,
+                        Value = 5f,
+                        Priority = 0
+                    }
+                },
+                StoragePolicy = DataStoragePolicy.AuthoringBlob,
+                WritePolicy = DataWritePolicy.LoaderOnly
+            });
+
+        AssertEqual("float default", 1.5f, storage.Get<float>("Attribute.DefaultFloat"));
+        AssertEqual("int default", 2, storage.Get<int>("Attribute.DefaultInt"));
+        AssertEqual("bool default", true, storage.Get<bool>("Attribute.DefaultBool"));
+        AssertEqual("string default", "slime", storage.Get<string>("Attribute.DefaultString"));
+        AssertEqual("resource default", new ResourceRef("res://icon.png"), storage.Get<ResourceRef>("Attribute.DefaultResource"));
+        AssertEqual<Node2D?>("object ref default", null, storage.Get<Node2D>("Attribute.DefaultObject"));
+
+        var slot = GetRuntimeSlot(storage, "Attribute.DefaultFloat");
+        AssertEqual("typed default cached", 1.5f, ReadPrivateField<float>(slot, "_defaultValue"));
+
+        var firstArray = storage.Get<string[]>("Attribute.DefaultArray");
+        firstArray[0] = "mutated";
+        var secondArray = storage.Get<string[]>("Attribute.DefaultArray");
+        AssertEqual("string array default cloned", "idle", secondArray[0]);
+
+        var firstModifiers = storage.Get<FeatureModifierEntryData[]>("Feature.Modifiers");
+        firstModifiers[0] = new FeatureModifierEntryData { DataKeyName = "Mutated" };
+        var secondModifiers = storage.Get<FeatureModifierEntryData[]>("Feature.Modifiers");
+        AssertEqual("modifier array default cloned", "BaseHp", secondModifiers[0].DataKeyName);
     }
 
     private void Data_Set_ShouldWriteTypedValue()
@@ -252,6 +316,52 @@ public partial class DataRuntimeTestScene : DataSceneTestBase
         AssertEqual("change new value", 20f, changes[0].NewValue);
     }
 
+    private void Data_Set_ShouldPublishTypedChanged()
+    {
+        var storage = CreateRuntimeStorage(Definition("Attribute.BaseHp", DataValueType.Float, 10f));
+        var changes = new List<DataChangeRecord<float>>();
+        storage.TypedChanged += change =>
+        {
+            if (change is DataChangeRecord<float> typed)
+            {
+                changes.Add(typed);
+            }
+        };
+
+        storage.Set(new DataKey<float>("Attribute.BaseHp"), 20f);
+
+        AssertEqual("typed change count", 1, changes.Count);
+        AssertEqual("typed change key", "Attribute.BaseHp", changes[0].Key.StableKey);
+        AssertEqual("typed change old value", 10f, changes[0].OldValue);
+        AssertEqual("typed change new value", 20f, changes[0].NewValue);
+    }
+
+    private void Data_TrySetSystem_ShouldWriteSystemOnlyTargetNode()
+    {
+        var data = new Data(Bootstrap.Catalog);
+        using var node = new Node2D();
+
+        AssertTrue("system write target node", data.TrySetSystem(GeneratedDataKey.TargetNode, node, out var systemReport));
+        AssertFalse("system report has no errors", systemReport.HasErrors);
+        AssertEqual("target node typed value", node, data.Get(GeneratedDataKey.TargetNode));
+        AssertFalse("runtime source rejects target node", data.TrySet(GeneratedDataKey.TargetNode, node, out var runtimeReport));
+        AssertEqual("target node runtime rejection", "write_policy_rejected", runtimeReport.Errors[0].Code);
+        AssertFalse("wrong type system write rejected", data.TrySetSystem<Node>(new DataKey<Node>(GeneratedDataKey.TargetNode.StableKey), new Node(), out var wrongTypeReport));
+        AssertEqual("target node wrong type code", "wrong_clr_type", wrongTypeReport.Errors[0].Code);
+    }
+
+    private void Data_GetDiagnosticSnapshot_ShouldReturnStoredValuesOnly()
+    {
+        var data = new Data(Bootstrap.Catalog);
+        data.Set(GeneratedDataKey.BaseHp, 20f);
+
+        var snapshot = data.GetDiagnosticSnapshot();
+
+        AssertTrue("diagnostic snapshot has stored value", snapshot.ContainsKey(GeneratedDataKey.BaseHp.StableKey));
+        AssertEqual("diagnostic snapshot stored value", 20f, (float)snapshot[GeneratedDataKey.BaseHp.StableKey]);
+        AssertFalse("diagnostic snapshot omits default-only value", snapshot.ContainsKey(GeneratedDataKey.CurrentMana.StableKey));
+    }
+
     private void Data_AddModifier_ShouldRespectModifierPolicy()
     {
         var storage = CreateRuntimeStorage(
@@ -300,6 +410,19 @@ public partial class DataRuntimeTestScene : DataSceneTestBase
         AssertEqual("removed source count", 1, storage.RemoveModifiersBySource(sourceA));
         AssertEqual("only matching source removed", 17f, storage.Get<float>("Attribute.Speed"));
         AssertEqual("remaining modifier count", 1, storage.GetModifiers("Attribute.Speed").Count);
+    }
+
+    private void Data_RemoveModifiersBySource_ShouldUseTypedSource()
+    {
+        var sourceA = DataModifierSource.FromString("feature:a");
+        var sourceB = DataModifierSource.FromString("feature:b");
+        var storage = CreateRuntimeStorage(Definition("Attribute.Speed", DataValueType.Float, 10f, modifierPolicy: DataModifierPolicy.Numeric));
+        storage.AddModifier("Attribute.Speed", new DataModifier(ModifierType.Additive, 5f, priority: 0, id: "a", sourceId: sourceA));
+        storage.AddModifier("Attribute.Speed", new DataModifier(ModifierType.Additive, 7f, priority: 0, id: "b", sourceId: sourceB));
+
+        AssertEqual("typed source removed count", 1, storage.RemoveModifiersBySource(sourceA));
+        AssertEqual("typed source remaining value", 17f, storage.Get<float>("Attribute.Speed"));
+        AssertEqual("typed source remaining modifier", sourceB, storage.GetModifiers("Attribute.Speed")[0].SourceId);
     }
 
     private void Data_ModifierChange_ShouldPublishChangeAndDirtyDependents()
@@ -374,6 +497,27 @@ public partial class DataRuntimeTestScene : DataSceneTestBase
         AssertEqual("dirty resolver count", 2, resolver.ComputeCount);
     }
 
+    private void Data_GetComputed_ShouldFailFastOnResolverOutputMismatch()
+    {
+        var registry = CreateRegistry(new StringComputeResolver());
+
+        AssertThrowsMessage<InvalidOperationException>(
+            "computed resolver output mismatch",
+            () => BuildCatalogFromDefinitions(
+                registry,
+                new DataDefinition
+                {
+                    StableKey = "Attribute.BadComputed",
+                    ValueType = DataValueType.Float,
+                    DefaultValue = 0f,
+                    StoragePolicy = DataStoragePolicy.Computed,
+                    WritePolicy = DataWritePolicy.ComputedReadonly,
+                    ComputeId = StringComputeResolver.ResolverId,
+                    Dependencies = Array.Empty<string>()
+                }),
+            "Attribute.BadComputed");
+    }
+
     private void Data_ComputedDirty_ShouldPropagateTransitively()
     {
         var registry = CreateRegistry(new ParametricAddResolver(), new CountingAttributeBonusResolver());
@@ -408,5 +552,12 @@ public partial class DataRuntimeTestScene : DataSceneTestBase
         var slots = field.GetValue(storage) as IDictionary
                     ?? throw new InvalidOperationException("DataRuntimeStorage._slots is not an IDictionary");
         return slots[stableKey] ?? throw new InvalidOperationException($"Data slot not found: {stableKey}");
+    }
+
+    private static T ReadPrivateField<T>(object instance, string fieldName)
+    {
+        var field = instance.GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)
+                    ?? throw new InvalidOperationException($"{instance.GetType().Name}.{fieldName} field not found");
+        return (T)field.GetValue(instance)!;
     }
 }

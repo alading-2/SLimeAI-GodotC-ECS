@@ -116,7 +116,7 @@ Granted → Enabled → Activated/Execute/Ended（可重复）→ Disabled → R
 2. `FeatureModifierEntry`
    - 定义一条数据驱动 Modifier
    - 在 `FeatureSystem.OnFeatureGranted` 时转成 `DataModifier` 写入 `owner.Data`
-   - 在 `FeatureSystem.OnFeatureRemoved` 时通过 `RemoveModifiersBySource(feature)` 整体回滚
+   - 在 `FeatureSystem.OnFeatureRemoved` 时通过 `RemoveModifiersBySource(DataModifierSource.FromEntity(feature))` 整体回滚
 
 当前项目里，`EntityManager.AddAbility(owner, featureDefinition)` 会复用 `AbilityEntity` 作为 Feature 的运行时承载实体。
 也就是说：
@@ -246,7 +246,7 @@ EntityManager.AddAbility(owner, featureDefinition)
 EntityManager.RemoveAbility(owner, name)
   └─ FeatureSystem.OnFeatureRemoved(feature, owner)   ← Destroy 之前
        ├─ IFeatureHandler.OnRemoved(ctx)
-       ├─ owner.Data.RemoveModifiersBySource(feature)
+       ├─ owner.Data.RemoveModifiersBySource(DataModifierSource.FromEntity(feature))
        └─ owner.Events.Emit(Feature.Removed)
   └─ EntityManager.Destroy(feature)
   └─ owner.Events.Emit(Ability.Removed)
@@ -311,13 +311,19 @@ public class SpeedBoostHandler : IFeatureHandler
     public void OnGranted(FeatureContext ctx)
     {
         // 永久加速（也可直接用 FeatureDefinition.Modifiers 代替这里）
+        var sourceId = DataModifierSource.FromEntity(ctx.Feature);
         ctx.Owner?.Data.AddModifier(GeneratedDataKey.MoveSpeed,
-            new DataModifier(ModifierType.Multiplicative, 1.3f, source: ctx.Feature));
+            new DataModifier(
+                ModifierType.Multiplicative,
+                1.3f,
+                priority: 0,
+                id: "speed-boost",
+                sourceId: sourceId));
     }
 
     public void OnRemoved(FeatureContext ctx)
     {
-        ctx.Owner?.Data.RemoveModifiersBySource(ctx.Feature);
+        ctx.Owner?.Data.RemoveModifiersBySource(DataModifierSource.FromEntity(ctx.Feature));
     }
 }
 ```

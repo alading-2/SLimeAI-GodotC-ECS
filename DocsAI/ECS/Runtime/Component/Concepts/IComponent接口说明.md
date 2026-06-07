@@ -47,7 +47,7 @@ public partial class MyComponent : Node, IComponent
         _entity = iEntity;
         _data = iEntity.Data;
 
-        _entity.Events.On<GameEventType.Data.PropertyChanged>(OnDataChanged);
+        _entity.Events.On<GameEventType.Data.Changed<float>>(OnDataChanged);
         _entity.Events.On<GameEventType.Unit.HealRequest>(OnHealRequest);
     }
 
@@ -57,9 +57,9 @@ public partial class MyComponent : Node, IComponent
         _data = null;
     }
 
-    private void OnDataChanged(GameEventType.Data.PropertyChanged evt)
+    private void OnDataChanged(GameEventType.Data.Changed<float> evt)
     {
-        if (evt.Key != GeneratedDataKey.CurrentHp.StableKey)
+        if (evt.Key != GeneratedDataKey.CurrentHp)
             return;
 
         // 响应 Data 变化。
@@ -130,7 +130,7 @@ public partial class MyComponent : Node, IComponent
 | 数据类型 | 示例 | 注册时可读 | 正确处理方式 |
 | --- | --- | --- | --- |
 | snapshot 配置 | `MaxHp`、`MoveSpeed`、`VisualScenePath` | 可以 | 直接用 generated `DataKey<T>` 读取 |
-| Spawn 后设置 | `TargetEntityId`、临时目标、技能等级覆盖 | 不保证 | 监听 `GameEventType.Data.PropertyChanged` |
+| Spawn 后设置 | `TargetEntityId`、临时目标、技能等级覆盖 | 不保证 | 监听对应类型的 `GameEventType.Data.Changed<T>` |
 | 组件内部缓存 | 动画节点引用、阶段缓存 | 自行维护 | 私有字段，注销时清理引用 |
 
 ## 查询 owner

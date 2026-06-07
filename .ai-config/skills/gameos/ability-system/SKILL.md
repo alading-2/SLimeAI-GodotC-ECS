@@ -36,6 +36,7 @@ description: 修改 SlimeAI ECS Ability Capability、AbilityDataKeys、目标选
 - Ability → Feature handler flow 使用 typed `FeatureContext.ActivationPayload` 和 `AbilityExecutedResult`，不要再写 raw `ActivationData` 或从 `ExecuteResult` cast。
 - Ability owner 清单统一走 `AbilityInventoryService.Runtime`；新增授予、移除、查询和 UI/AI 消费者不要再调用 `EntityManager.AddAbility/GetAbilities/GetAbilityByName/GetManualAbilities`，兼容 facade 只服务旧调用点。
 - Ability owner projection 由 `AbilityInventoryService.OwnerDescriptor` 注册到 `OwnedReferenceRegistry`，运行时用 `AbilityOwnerEntityId` + `OwnedAbilityIds` 投影；禁止恢复 `EntityRelationshipType.ENTITY_TO_ABILITY`。
+- CostComponent 的资源消耗必须按 `AbilityCostType` 映射到 generated `DataKey<float>`：Mana=`CurrentMana`、Health=`CurrentHp`、Energy=`CurrentEnergy`、Ammo=`CurrentAmmo`；不要新增 `"CurrentEnergy"` / `"CurrentAmmo"` 裸字符串或 `Data.Get<T>(string)` 资源路径。
 - 具体技能效果优先实现为 Feature handler 或游戏侧 handler，不把 BrotatoLike 逻辑写进框架通用 Ability。
 - 技能造成伤害统一走 `DamageTool` / `DamageService`；投射物走 `ProjectileTool`。
 

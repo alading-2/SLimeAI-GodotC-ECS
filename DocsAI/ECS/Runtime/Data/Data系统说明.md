@@ -1,10 +1,11 @@
 # Data 系统说明
 
-> 状态：当前实现说明；SDD-0031 已把 Runtime Data 主链路从 `DataSlot.Value object?` 切到 `DataSlot<T> + IDataSlot`，typed `DataKey<T>` 读写、modifier 和 computed cache 不再以 object 槽位保存业务值。
+> 状态：当前实现说明；SDD-0032 后业务 Data 主链路使用 typed `DataKey<T>`、typed system/debug write、typed computed resolver 和 typed Data changed event。snapshot / loader / TestSystem / migration diagnostic 边界仍可保留 object，但必须通过 API 名称和注释标明边界。
 > 范围：`Src/ECS/Runtime/Data/`、`Data/DataOS/`、`Data/DataKey/Generated/`、`Src/ECS/Capabilities/*/Events/`、`Src/ECS/Runtime/Event/Global/`、`Src/ECS/Runtime/Data/Events/`、`Data/Config/`、`Data/ResourceManagement/`、`Src/ECS/Runtime/Data/Tests/DataOS/`。
 > 设计事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/`。
 > GC/装箱优化事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/021-SDD-0031-data-runtime-generic-slot-hard-cutover/`
-> 更新：2026-06-06
+> typed contract 收口事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/022-SDD-0032-data-runtime-typed-contract-completion/`
+> 更新：2026-06-07
 
 ## 1. 一句话定位
 
@@ -88,13 +89,13 @@ public readonly record struct DataKey<T>(string StableKey)
 
 - 每个字段按需创建 `DataSlot<T>`，跨类型管理只通过 `IDataSlot` 保存 metadata、modifier 操作和 diagnostics 边界。
 - typed `Data.Get<T>(DataKey<T>)` / `Data.Set<T>(DataKey<T>, T)` 是业务主链路，非 computed 字段直接读写 `DataSlot<T>`。
-- 未写入时读取 descriptor default，并在 slot 内转换为 `T`。
+- 未写入时读取 slot 内缓存的 typed descriptor default；`string[]` 和 `FeatureModifierEntryData[]` 默认值会 clone，避免调用方污染默认数组。
 - 写入时执行 `writePolicy`、`allowedValues` 和 `rangePolicy`；typed 写入成功路径返回 `T`，不再回落到 `SetUntyped(... object?)`。
 - modifier 存在 slot 内，并按 Additive / Multiplicative / FinalAdditive / Override / Cap 管线计算 typed 有效值。
-- computed resolver 当前仍返回 `object?` 作为 registry 边界，但 computed cache 保存在 typed slot 内；resolver 返回值只在边界转换一次。
+- computed resolver 使用 `IDataComputeResolver<T>` 返回 typed 值，registry 按 `computeId + T` 校验输出类型；computed cache 保存在 typed slot 内。
 - base value 或 modifier 变化会标脏依赖它的 computed 字段。
 
-`SetUntyped`、`TrySetUntyped` 和 `GetAll` 只保留给 snapshot loader、debug 和 TestSystem dump。值类型进入这些 API 会装箱，新业务代码不要绕过 generated `DataKey<T>` 调用它们。
+`SetUntyped`、`TrySetUntyped` 和 `GetAll` 只保留给 snapshot loader、debug、TestSystem dump 或 obsolete compatibility wrapper。值类型进入这些 API 会装箱，新业务代码不要绕过 generated `DataKey<T>` 调用它们。需要 dump 当前基础值时使用 `GetDiagnosticSnapshot()`，名称明确这是 diagnostic 边界。
 
 默认构造的 `Data` 会绑定 `DataRuntimeBootstrap.Default.Catalog`；需要测试隔离时通过测试基类或显式 catalog-bound helper 创建。运行时 Data 必须始终绑定 `DataDefinitionCatalog`。
 
@@ -111,6 +112,25 @@ FinalAttack
 ```
 
 `AttributeBonusComputeResolver` 负责读取依赖并返回计算结果。Feature 不直接负责 computed；Feature 只通过 modifier 改变输入字段。
+
+Resolver 必须实现 typed 接口：
+
+```csharp
+public sealed class AttributeBonusComputeResolver : IDataComputeResolver<float>
+{
+    public string ComputeId => "AttributeBonus";
+    public Type OutputClrType => typeof(float);
+
+    public float Compute(Data data, DataDefinition definition)
+    {
+        var baseValue = data.Get<float>(definition.Dependencies[0]);
+        var bonus = data.Get<float>(definition.Dependencies[1]);
+        return baseValue * (1f + bonus / 100f);
+    }
+}
+```
+
+`DataDefinitionCatalog.ValidateAndBuildIndexes()` 会在绑定 registry 后校验 resolver 输出类型；不匹配时 fail-fast，错误信息包含 stable key、compute id、expected type 和 actual output type。
 
 ### 2.7 Runtime Snapshot Record
 
@@ -209,6 +229,15 @@ if (report.HasErrors)
 
 不要在业务代码新增 `SetUntyped` / `TrySetUntyped` / `GetAll` 调用；这些入口是 loader/debug/TestSystem 边界，会牺牲 `DataKey<T>` 的编译期契约并让值类型装箱。
 
+系统字段写入不要绕回 stable key string：
+
+```csharp
+// TargetNode 是 runtime_only + system_only object_ref
+entity.Data.TrySetSystem(GeneratedDataKey.TargetNode, targetNode, out var report);
+```
+
+Debug 工具如需写入 debug-only 字段，使用 `TrySetDebug<T>`，不要扩大普通业务 API。
+
 ### 4.4 Modifier
 
 字段只有 `modifierPolicy` 允许时才能加 modifier：
@@ -216,16 +245,23 @@ if (report.HasErrors)
 ```csharp
 data.TryAddModifier(
     GeneratedDataKey.BaseAttack,
-    new DataModifier(ModifierType.Additive, 20f, id: "buff.attack", source: featureInstance));
+    new DataModifier(
+        ModifierType.Additive,
+        20f,
+        priority: 0,
+        id: "buff.attack",
+        sourceId: DataModifierSource.FromEntity(featureEntity)));
 ```
 
 按来源回滚：
 
 ```csharp
-data.RemoveModifiersBySource(featureInstance);
+data.RemoveModifiersBySource(DataModifierSource.FromEntity(featureEntity));
 ```
 
 这会触发依赖 computed 字段重新计算。
+
+`DataModifier.Source` 和 `RemoveModifiersBySource(object)` 只是兼容边界；新 Feature / Buff / 装备代码必须传 `DataModifierSource`，避免长期依赖任意 object identity。
 
 ### 4.5 生命周期和对象池
 
@@ -233,14 +269,20 @@ data.RemoveModifiersBySource(featureInstance);
 
 ## 5. 事件
 
-Data 变更事件统一走 Entity 的事件系统：
+Data 变更事件统一走 Entity 的事件系统。业务代码订阅 typed event：
 
 ```csharp
-entity.Events.On<GameEventType.Data.PropertyChanged>(
-    evt => { /* evt.Key / evt.OldValue / evt.NewValue */ });
+entity.Events.On<GameEventType.Data.Changed<float>>(
+    evt =>
+    {
+        if (evt.Key == GeneratedDataKey.CurrentHp)
+        {
+            GD.Print($"HP: {evt.OldValue} -> {evt.NewValue}");
+        }
+    });
 ```
 
-绑定 catalog 后，`DataRuntimeStorage.Changed` 会被 `Data.OnRuntimeDataChanged` 转成 `GameEventType.Data.PropertyChanged`。触发场景包括：
+绑定 catalog 后，`DataRuntimeStorage.TypedChanged` 会被 `Data.OnRuntimeTypedDataChanged` 转成 `GameEventType.Data.Changed<T>`。同时 runtime 仍会发 `GameEventType.Data.PropertyChanged` 给 TestSystem/debug diagnostic 兼容层。触发场景包括：
 
 - `Set` 成功写入新值。
 - `Remove` / `Clear` 清除运行时值或 modifier。
@@ -248,7 +290,7 @@ entity.Events.On<GameEventType.Data.PropertyChanged>(
 
 读取 computed 不发事件；computed 只在依赖变化时标脏，下一次读取时重新计算。
 
-注意：`PropertyChanged` 的 `OldValue/NewValue object?` 是 Event/diagnostics 边界，本轮 SDD-0031 不改 Event 协议。业务热路径不要因为事件 payload 仍是 object 就恢复 untyped Data 存储。
+注意：`PropertyChanged` 的 `OldValue/NewValue object?` 是 diagnostics 边界。业务组件不要订阅它再 cast object payload；无法订阅泛型事件的 UI/debug 适配层必须在文档或代码注释中标明 diagnostic 用途。
 
 ## 6. 怎么测试
 

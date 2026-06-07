@@ -40,10 +40,7 @@ public partial class MyCustomUI : UIBase
     {
         // 订阅 Entity 的局部事件 (推荐)
         // 注意：这是 entity.Events，不是 GlobalEventBus
-        _entity.Events.On<GameEventType.Data.PropertyChangedEventData>(
-            GameEventType.Data.PropertyChanged,
-            OnDataChanged
-        );
+        _entity.Events.On<GameEventType.Data.Changed<float>>(OnDataChanged);
 
         // 初始刷新
         UpdateDisplay();
@@ -57,7 +54,7 @@ public partial class MyCustomUI : UIBase
     }
 
     // 4. 事件回调
-    private void OnDataChanged(GameEventType.Data.PropertyChangedEventData evt)
+    private void OnDataChanged(GameEventType.Data.Changed<float> evt)
     {
         // 过滤我们关心的 Key
         if (evt.Key == GeneratedDataKey.CurrentHp)

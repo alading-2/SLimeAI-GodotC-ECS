@@ -103,8 +103,8 @@ public partial class LifecycleComponent : Node, IComponent
         // ✅ 全局监听 Kill 事件（通过 Victim 筛选是否是自己）
         GlobalEventBus.Global.On<GameEventType.Unit.Killed>(OnUnitKilled);
 
-        // ✅ 监听数据变化事件（处理 Spawn 后动态设置 MaxLifeTime 的场景）
-        _entity?.Events.On<GameEventType.Data.PropertyChanged>(OnDataChanged);
+        // ✅ 监听 typed Data 变化事件（处理 Spawn 后动态设置 MaxLifeTime 的场景）
+        _entity?.Events.On<GameEventType.Data.Changed<float>>(OnDataChanged);
 
         // ✅ 监听动画播放完毕事件（Hero 死亡动画结束后启动复活，普通单位延迟销毁）
         _entity?.Events.On<GameEventType.Unit.AnimationFinished>(OnAnimationFinished);
@@ -119,9 +119,9 @@ public partial class LifecycleComponent : Node, IComponent
     /// <summary>
     /// 数据变化事件处理：响应 MaxLifeTime 变化
     /// </summary>
-    private void OnDataChanged(GameEventType.Data.PropertyChanged data)
+    private void OnDataChanged(GameEventType.Data.Changed<float> data)
     {
-        if (data.Key == GeneratedDataKey.MaxLifeTime.StableKey)
+        if (data.Key == GeneratedDataKey.MaxLifeTime)
         {
             UpdateLifeTimer();
         }
@@ -156,6 +156,7 @@ public partial class LifecycleComponent : Node, IComponent
     {
         // Cancel global event subscription
         GlobalEventBus.Global.Off<GameEventType.Unit.Killed>(OnUnitKilled);
+        _entity?.Events.Off<GameEventType.Data.Changed<float>>(OnDataChanged);
 
         // 取消计时器
         CancelTimer(ref _lifeTimer, TimerCancelReason.ComponentUnregistered);

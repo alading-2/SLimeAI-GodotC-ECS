@@ -25,6 +25,7 @@ public partial class AbilitySystemPipelineTest : Node
             Test_Dash_UsesLastMoveDirectionWhenVelocityIsZero();
             Test_ParabolaShot_UsesRandomPointInCircleInsteadOfEnemyPosition();
             Test_BoomerangThrow_UsesRandomPointInRingInsteadOfEnemyPosition();
+            Test_CostComponent_UsesTypedResourceKeysForAllCostTypes();
         }
         catch (Exception ex)
         {
@@ -407,6 +408,61 @@ public partial class AbilitySystemPipelineTest : Node
             EntityManager.Destroy(enemy);
             EntityManager.Destroy(caster);
         }
+    }
+
+    /// <summary>
+    /// 回归测试：
+    /// CostComponent 应通过 generated DataKey 处理所有资源消耗，避免回到裸字符串资源键。
+    /// </summary>
+    private void Test_CostComponent_UsesTypedResourceKeysForAllCostTypes()
+    {
+        AssertCostConsumption(AbilityCostType.Mana, GeneratedDataKey.CurrentMana);
+        AssertCostConsumption(AbilityCostType.Health, GeneratedDataKey.CurrentHp);
+        AssertCostConsumption(AbilityCostType.Energy, GeneratedDataKey.CurrentEnergy);
+        AssertCostConsumption(AbilityCostType.Ammo, GeneratedDataKey.CurrentAmmo);
+    }
+
+    private void AssertCostConsumption(AbilityCostType costType, DataKey<float> resourceKey)
+    {
+        var owner = new TestEntity
+        {
+            Name = $"CostOwner_{costType}"
+        };
+        AddChild(owner);
+
+        var ability = new AbilityEntity
+        {
+            Name = $"CostAbility_{costType}"
+        };
+        AddChild(ability);
+
+        owner.Data.Set(GeneratedDataKey.Id, owner.GetInstanceId().ToString());
+        owner.Data.Set(GeneratedDataKey.Name, owner.Name.ToString());
+        owner.Data.Set(resourceKey, 50f);
+
+        ability.Data.Set(GeneratedDataKey.Id, ability.GetInstanceId().ToString());
+        ability.Data.Set(GeneratedDataKey.Name, ability.Name.ToString());
+        ability.Data.Set(GeneratedDataKey.AbilityCostType, costType);
+        ability.Data.Set(GeneratedDataKey.AbilityCostAmount, 12f);
+
+        EntityManager.Register(owner);
+        EntityManager.Register(ability);
+        AbilityInventoryService.Runtime.Attach(owner, ability);
+
+        var component = new CostComponent();
+        EntityManager.AddComponent(ability, component);
+
+        var checkContext = new EventContext();
+        ability.Events.Emit(new GameEventType.Ability.CheckCanUse(checkContext));
+        AssertEqual($"{costType} typed cost check should pass", true, checkContext.Success);
+
+        var consumeContext = new EventContext();
+        ability.Events.Emit(new GameEventType.Ability.ConsumeCost(consumeContext));
+        AssertEqual($"{costType} typed cost consume should pass", true, consumeContext.Success);
+        AssertEqual($"{costType} typed resource should be deducted", 38f, owner.Data.Get(resourceKey));
+
+        EntityManager.Destroy(ability);
+        EntityManager.Destroy(owner);
     }
 
     private void AssertEqual<T>(string name, T expected, T actual)

@@ -66,7 +66,7 @@ public class FindEnemyAction : BehaviorNode
             if (target is Node2D node2D)
             {
                 // TargetNode 是 system_only 运行时黑板字段，AI 系统需要用 System 来源写入。
-                if (!ctx.Entity.Data.TrySetUntyped(GeneratedDataKey.TargetNode.StableKey, node2D, DataWriteSource.System, out var report))
+                if (!ctx.Entity.Data.TrySetSystem(GeneratedDataKey.TargetNode, node2D, out var report))
                 {
                     var firstError = report.Errors.Count > 0 ? report.Errors[0].Code : "unknown";
                     _log.Warn($"[{selfNode.Name}] TargetNode 写入失败: target={node2D.Name}, error={firstError}");
