@@ -39,9 +39,9 @@ def create_project(root: Path, title: str,
         "sdds": [],
         "links": {
             "design_index": "design/INDEX.md",
-            "roadmap": "roadmap.md",
-            "progress": "progress.md",
-            "notes": "notes.md",
+            "roadmap": "Core/roadmap.md",
+            "progress": "Core/progress.md",
+            "notes": "Core/notes.md",
             "sdds": "sdds",
         },
     }
@@ -49,16 +49,17 @@ def create_project(root: Path, title: str,
     if project.exists():
         raise SDDCliError(f"目标项目已存在: {project}")
     (project / "design").mkdir(parents=True)
+    (project / "Core").mkdir(parents=True)
     (project / "sdds").mkdir()
     write_text(project / "README.md", build_project_readme(metadata))
     write_json(project / "project.json", metadata)
     write_text(project / "design" / "INDEX.md",
                template_project_design_index().replace("YYYY-MM-DD", created))
     write_text(project / "design" / "main.md", template_main_design(title))
-    write_text(project / "roadmap.md", build_project_roadmap(metadata))
-    write_text(project / "progress.md",
+    write_text(project / "Core" / "roadmap.md", build_project_roadmap(metadata))
+    write_text(project / "Core" / "progress.md",
                build_project_progress(project_id, title, timestamp))
-    write_text(project / "notes.md", template_notes())
+    write_text(project / "Core" / "notes.md", template_notes())
     write_catalog_and_index(root)
     loaded = load_project(project)
     if loaded is None:

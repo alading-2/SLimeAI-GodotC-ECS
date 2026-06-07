@@ -345,9 +345,9 @@ def validate_project(root: Path,
     links = metadata.get("links", {})
     dynamic_required = {
         "design_index": "design/INDEX.md",
-        "roadmap": "roadmap.md",
-        "progress": "progress.md",
-        "notes": "notes.md",
+        "roadmap": "Core/roadmap.md",
+        "progress": "Core/progress.md",
+        "notes": "Core/notes.md",
     }
     for key, default_rel in dynamic_required.items():
         rel = links.get(key, default_rel)

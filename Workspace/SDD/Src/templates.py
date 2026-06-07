@@ -253,10 +253,10 @@ def build_project_readme(metadata: dict[str, Any]) -> str:
 ## Reading Order
 
 1. `design/INDEX.md` — 项目共享设计索引
-2. `roadmap.md` — 设计文档到 SDD 的映射、执行顺序、依赖和状态
-3. `progress.md` — 项目级关键结论和恢复点
+2. `Core/roadmap.md` — 设计文档到 SDD 的映射、执行顺序、依赖和状态
+3. `Core/progress.md` — 项目级关键结论和恢复点
 4. `sdds/` — 项目内有序 SDD
-5. `notes.md` — 参考与开放问题
+5. `Core/notes.md` — 参考与开放问题
 """
 
 
@@ -293,7 +293,7 @@ def build_project_progress(project_id: str, title: str, timestamp: str) -> str:
 - **Updated**: {timestamp}
 - **Current SDD**: none
 - **Last Conclusion**: {project_id} 已创建，用于组织 {title}。
-- **Next Action**: 阅读 project.json、design/INDEX.md 和 roadmap.md，补充设计到 SDD 的映射后继续推进。
+- **Next Action**: 阅读 project.json、design/INDEX.md 和 Core/roadmap.md，补充设计到 SDD 的映射后继续推进。
 - **Open Blockers**: none
 
 ## Project Status Board

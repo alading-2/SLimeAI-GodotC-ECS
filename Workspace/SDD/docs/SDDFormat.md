@@ -27,12 +27,13 @@ SDD/
 SDD/project/projects/PRJ-0001-project-slug/
 ├── README.md
 ├── project.json
+├── Core/
+│   ├── roadmap.md
+│   ├── progress.md
+│   └── notes.md
 ├── design/
 │   ├── INDEX.md
 │   └── main.md
-├── roadmap.md
-├── progress.md
-├── notes.md
 └── sdds/
     └── 001-SDD-0001-task-slug/
 ```
@@ -77,8 +78,8 @@ SDD/project/projects/PRJ-0001-project-slug/sdds/001-SDD-0001-task-slug/
 | File | Role |
 | --- | --- |
 | `project.json` | 项目级 CLI 元数据源，保存项目 id、slug、title、status、scope、current_sdd 和 sdds。 |
-| `roadmap.md` | 项目执行路线图，以文档为中心追踪每份设计文档的完成情况和对应 SDD，并列出下一步要创建的 SDD。 |
-| 项目根 `progress.md` | 项目级进度事实源，记录项目状态面板、阶段结论、验证摘要和下一步。 |
+| `roadmap.md` | 项目执行路线图（位于 `Core/roadmap.md`），以文档为中心追踪每份设计文档的完成情况和对应 SDD，并列出下一步要创建的 SDD。 |
+| `Core/progress.md` | 项目级进度事实源（位于 `Core/progress.md`），记录项目状态面板、阶段结论、验证摘要和下一步。 |
 | `README.md` | 单个 SDD 的入口卡片，展示状态、范围、影响区域、阅读顺序和恢复点。 |
 | `sdd.json` | CLI 元数据源，保存 id、slug、title、status、scope、tags、progress 和 links。 |
 | `design/` | 完整设计文档集合。 |

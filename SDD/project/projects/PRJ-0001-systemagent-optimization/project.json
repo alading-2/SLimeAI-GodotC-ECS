@@ -77,9 +77,9 @@
   ],
   "links": {
     "design_index": "design/INDEX.md",
-    "roadmap": "roadmap.md",
-    "progress": "progress.md",
-    "notes": "notes.md",
+    "roadmap": "Core/roadmap.md",
+    "progress": "Core/progress.md",
+    "notes": "Core/notes.md",
     "sdds": "sdds"
   }
 }
