@@ -135,30 +135,9 @@ GeometryCalculator 当前只是 TargetSelector 的旧兼容门面。
 - 不建议长期保留 `MyMath` 作为所有业务公式的杂项类。
 - 不建议把 `GeometryCalculator` 作为 current 公开入口继续教给 AI。
 
-## 8. 验证门禁
+## 8. 验收关注点
 
-实现阶段建议：
-
-```bash
-dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
-```
-
-Godot 场景验证：
-
-```bash
-cd /home/slime/Code/SlimeAI/Games/BrotatoLike
-Tools/run-godot-scene.sh run res://SlimeAI/Src/ECS/Tools/Math/Tests/MyMathTest.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/analyze-godot-scene-logs.sh
-```
-
-Grep gate：
-
-```bash
-rg -n "GD\\.Randf\\(|new Random\\(|RandomNumberGenerator" Src/ECS/Tools/Math Src/ECS/Tools/TargetSelector Src/ECS/Capabilities
-rg -n "Geometry2D|GeometryCalculator|TargetSelectorQuery|GeometryType" DocsAI/ECS/Tools/Math DocsAI/ECS/Tools/TargetSelector
-```
-
-BDD 预期：
+完整命令统一放在 [06-实施路线与验证门禁.md](06-实施路线与验证门禁.md)，本功能文档只记录 Math 切片必须证明什么：
 
 - 0%、100%、负概率、超过 100% 概率行为稳定。
 - 固定 seed 下随机采样可复现。

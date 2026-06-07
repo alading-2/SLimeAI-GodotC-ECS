@@ -44,17 +44,15 @@
 25. `sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover/README.md` — ObjectPool / Collision 执行型 SDD 胶囊
 26. `sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover/execution-prompt.md` — ObjectPool / Collision 新会话执行提示词
 27. `design/Tool/其他Tool/README.md` — Input/ObjectPool/Timer 已改且 Log 跳过后的剩余 Tools AI-first 设计包入口
-28. `design/Tool/其他Tool/07-2026-06-04-AI-first完全重构校准.md` — 剩余 Tools 功能优先、可 hard cutover、不保旧 API 长期兼容的执行前 override
-29. `design/Tool/其他Tool/08-2026-06-04-用户裁决后执行前复核.md` — 用户截图和最新答复后的通俗复核；进入剩余 Tools 实施前优先检查
-30. `design/Tool/其他Tool/10-2026-06-07-用户最终确认与执行口径.md` — Common Utilities / NodeLifecycle / TargetSelector 的最终执行口径
-31. `design/Tool/其他Tool/09-2026-06-07-ResourceManagement深度分析.md` — ResourceManagement / ResourceLoading 最新校准：`res://` 不是问题，路径移动交给 migration workflow 和 diagnostics
-32. `design/Tool/其他Tool/11-2026-06-07-ResourcePathMigrationSkill设计.md` — 资源路径移动 skill / workflow 设计
-33. `design/Runtime/7.Component/README.md` — Runtime Component AI-first 优化共享设计包入口
-34. `design/Runtime/7.Component/04-Component代码化组合与参数注入裁决.md` — Component Preset 纯代码化和参数注入裁决
-35. `sdds/020-SDD-0030-component-code-composition-and-contract-hardening/README.md` — Component code composition 执行型 SDD 胶囊
-36. `DocsAI/ECS/Runtime/Component/ComponentManifest.md` — Component current manifest
-37. `design/Runtime/8.System优化/README.md` — Runtime System AI-first 优化共享设计包入口
-38. `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/README.md` — System contract 执行型 SDD 胶囊
-39. `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md` — System contract 新会话执行提示词
-40. `sdds/` — 项目内有序 SDD
-41. `Core/notes.md` — 参考与开放问题
+28. `design/Tool/其他Tool/01-现状证据与AI-first裁决.md` — 剩余 Tools 总体分析、已确认/未确认问题和默认假设
+29. `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` — Common Utilities、ResourceLoading / ResourceManagement、ResourceGenerator 和 resource-path-migration workflow
+30. `design/Tool/其他Tool/06-实施路线与验证门禁.md` — 剩余 Tools 后续执行 SDD 拆分、BDD、grep gate 和验证命令
+31. `design/Runtime/7.Component/README.md` — Runtime Component AI-first 优化共享设计包入口
+32. `design/Runtime/7.Component/04-Component代码化组合与参数注入裁决.md` — Component Preset 纯代码化和参数注入裁决
+33. `sdds/020-SDD-0030-component-code-composition-and-contract-hardening/README.md` — Component code composition 执行型 SDD 胶囊
+34. `DocsAI/ECS/Runtime/Component/ComponentManifest.md` — Component current manifest
+35. `design/Runtime/8.System优化/README.md` — Runtime System AI-first 优化共享设计包入口
+36. `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/README.md` — System contract 执行型 SDD 胶囊
+37. `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md` — System contract 新会话执行提示词
+38. `sdds/` — 项目内有序 SDD
+39. `Core/notes.md` — 参考与开放问题

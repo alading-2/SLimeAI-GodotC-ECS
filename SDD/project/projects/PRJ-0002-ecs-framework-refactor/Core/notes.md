@@ -17,10 +17,11 @@
 - Unity Manual: https://docs.unity3d.com/Manual/performance-managed-memory.html 与 https://docs.unity3d.com/Manual/performance-garbage-collector.html ：managed memory / garbage collector 基础；用于校准减少临时分配和对象复用原则，不作为 SlimeAI 全仓零 GC 目标。
 - Bevy ECS docs: https://docs.rs/bevy/latest/bevy/ecs/component/trait.Component.html 与 https://docs.rs/bevy/latest/bevy/ecs/storage/index.html ：Component 有明确 storage type，ECS storage 区分 table/sparse 等数据结构；用于校准 typed storage / storage policy 方向，不复制 Rust API。
 - Bevy ECS Message docs: https://docs.rs/bevy/latest/bevy/ecs/message/trait.Message.html ：Message 使用 typed `MessageWriter` / `MessageReader` / `Messages<M>`；用于校准 typed payload communication 与 schedule/ownership 边界，不复制 Rust API。
-- Context7 `/godotengine/godot-docs`：Godot C# 通过 `ResourceLoader.Load<PackedScene>()` / `GD.Load<PackedScene>()` 加载并实例化资源；用于校准 `ResourceManagement` 只是 facade，底层仍是 Godot 资源系统。
+- Context7 `/godotengine/godot-docs`：Godot C# 通过 `ResourceLoader.Load<PackedScene>()` / `GD.Load<PackedScene>()` 加载并实例化资源；`res://` 指向 `project.godot` 所在项目根；用于校准 `ResourceLoading` 只是 facade，底层仍是 Godot 资源系统。
 - Godot docs `ResourceUID`：Godot 通过 `uid://` 维护资源唯一标识和 path 映射；用于提示 ResourceManagement 后续可验证 UID，但本轮不直接迁移 DataOS 主存储。
 - Context7 `/godotengine/godot-docs`：`@export_file` 在 Godot 4.4+ 可能保存 `uid://`，Godot 4.5+ 有保留 path 行为的注解；用于说明 `uid://` 有移动资源价值，但版本、C#、snapshot、submodule 链路需要单独验证。
 - Context7 `/needle-mirror/com.unity.addressables`：Unity Addressables `AssetReference` / `AssetGUID` 支持按资源引用加载；用于对照主流引擎通过 GUID/address 管理资源身份，不复制 Addressables 全套远程内容和 async handle 模型。
+- Context7 `/needle-mirror/com.unity.addressables`：`AssetReference` 可替代脚本里的直接资源引用，并通过 Addressables 加载；用于支持“运行时加载入口”和“资源引用/catalog/迁移流程”分离的设计，不复制 Addressables。
 - Epic Unreal Asset Management docs：Unreal `Asset Manager` 管理 Primary Asset 的发现、加载、卸载和审计；用于对照 manifest / diagnostics 思想，不复制 Primary/Secondary Asset、Bundle、Chunking 全套系统。
 - `/home/slime/Code/SlimeAI/SlimeAI-AiFirst/DocsAI/Framework/MultiGameLayout.md` 与 `Workspace/DocsAI/MultiGameLayout.md`：游戏仓根是 `project.godot` 所在目录，也就是 `res://` 根；框架 submodule 在游戏仓中表现为 `res://SlimeAI/...`。
 - `/home/slime/Code/SlimeAI/Games/BrotatoLikeOld/Src/Validation/Game/LegacyResources/README.md`：旧资源迁移用 `ResourceLoader.Exists` 和 artifact 校验 active/missing legacy paths；可作为后续 ResourceCatalogDiagnostics 的参考。
@@ -34,7 +35,8 @@
 - Event / Feature / Ability 非 Data GC hard cutover 已由 SDD-0033 完成；后续不要恢复 `EmitDynamic` / `OnDynamic` / `Action<object>` 主链路，也不要恢复 `object? OnExecute`。
 - ObjectPool manager 反射与 TargetSelector ownership 基础 facade 已由 SDD-0033 完成；后续 pooled lease / deterministic RNG / allocation artifact 必须从 TargetQueryEngine owner 继续。
 - Logger 本轮明确不改；只有 profiler 或明确热路径证据出现后再进入 Logger lazy / interpolated string handler 小切片。
-- ResourceManagement DeepThink 已由 2026-06-07 用户校准：`res://` 本身不是问题；问题是无 owner 裸加载、路径移动后缺自动替换和 diagnostics。统一加载工具可以简化为 ResourceLoading facade，路径移动由 `resource-path-migration` skill + `ResourceGenerator` + `rg` 残留检查处理。
+- ResourceManagement DeepThink 已由 2026-06-07 用户最终校准：`res://` 本身不是问题；问题是无 owner 裸加载、路径移动后缺自动替换和 diagnostics。不保留 ResourceManagement 作为长期“资源管理器”概念，只保留极薄 `ResourceLoading` 统一加载工具；路径移动和目录增删改查由 project directory / `resource-path-migration` skill + `ResourceGenerator` + `rg` 残留检查处理。
+- 目录操作 skill 已确认必要：新增、删除、移动、重命名和检查目录时，必须先确认 git boundary，先 dry-run，必要时用 `--include-variants` 覆盖 `res://`、项目相对路径和当前仓绝对路径，再 apply 和检查旧路径残留。
 - Resource Loading Hard Cutover 前需确认 DataOS resource ref 是否未来迁到 `ResourceKey + Category` 或 `uid://`；默认先不改 DataOS schema。
 - Godot `uid://` 是否纳入下一阶段验证；默认只作为研究项，不作为当前主存储。注意它不是 `.cs.uid` 文件。
 - Resource loading 失败策略需确认：默认 structured result + preflight fail-fast，不在 gameplay 热路径到处抛未捕获异常。

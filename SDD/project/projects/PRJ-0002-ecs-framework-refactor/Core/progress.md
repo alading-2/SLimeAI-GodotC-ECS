@@ -8,8 +8,8 @@
 
 - **Updated**: 2026-06-07
 - **Current SDD**: none
-- **Last Conclusion**: ResourceManagement 已按用户校准更新：`res://` 本身不是问题，真正问题是资源路径 owner、移动后的自动替换和 diagnostics；统一加载工具可以从 `ResourceManagement` 大量简化为 `ResourceLoading` facade，路径移动交给 `resource-path-migration` skill、ResourceGenerator 和 `rg` 残留检查；未来框架/游戏仓分离后，框架 catalog 不默认拥有游戏资源。
-- **Next Action**: 若继续 ResourceLoading，实现前先读 `design/Tool/其他Tool/09-2026-06-07-ResourceManagement深度分析.md`、`11-2026-06-07-ResourcePathMigrationSkill设计.md` 和 `DocsAI/ECS/Tools/ResourceManagement/README.md`，再创建 `Resource Loading Hard Cutover` SDD。若继续其他 Tools，仍先读 `10-2026-06-07-用户最终确认与执行口径.md`。
+- **Last Conclusion**: ResourceManagement 已最终校准：不保留长期“资源管理器”概念，只保留极薄 `ResourceLoading` 统一加载工具，职责是加载、source/owner/usage diagnostics 和错误报告。目录稳定性、目录增删改查、`res://` / 项目相对路径 / 当前仓绝对路径替换和旧路径残留检查交给 project directory / `resource-path-migration` skill、ResourceGenerator 和 diagnostics。
+- **Next Action**: 若继续剩余 Tools，实现前先读 `design/Tool/其他Tool/README.md`、`01-现状证据与AI-first裁决.md` 和对应功能文档；ResourceLoading 读 `02-*` 和 `06-*`，默认创建 `Resource Loading Hard Cutover`，重命名或删除旧 `ResourceManagement` public facade，迁出 `CommonTool.LoadPackedScene`，补 `ResourceLoadSource` / `ResourceLoadResult` / `ResourceCatalogDiagnostics`。
 - **Open Blockers**: none
 
 ## Project Status Board
@@ -32,7 +32,7 @@
 | SDD-0024 | done | `design/Runtime/3.Entity系统优化/` | Entity Relationship Full Rewrite 已完成：typed EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除已收口 |
 | SDD-0025 | done | `design/Runtime/6.ECS框架目录架构大重构/` | 已完成：`Src/ECS/Runtime + Src/ECS/Capabilities` 成为源码主入口；DocsAI 当前入口为 `Runtime + Capabilities + Tools + UI`；`Foundation/Foundations` 已从当前路由删除 |
 | SDD-0026 | done | `design/Tool/Input/` | Input Contract Manifest And Facade Hardening 已完成；Input DocsAI 主入口改为 README，Concept/Usage/InputMap 降为可选辅助分层 |
-| TBD | proposed | `design/Tool/其他Tool/` | 2026-06-07 final confirmation 已完成：剩余 Tools 后续按 RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、CommonUtilities、MathFormula 功能切片 hard cutover；已确认 `/root/SlimeAIRuntime`、资源 strict fail-fast、Common Utilities 放 `Src/ECS/Tools/CommonUtilities/`、NodeLifecycle 迁 Runtime、TargetSelector 不做兼容桥 |
+| TBD | proposed | `design/Tool/其他Tool/` | 2026-06-07 consolidated：current 文档已收敛为 `README.md` + `01~06`；剩余 Tools 后续按 RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、CommonUtilities、MathFormula 功能切片 hard cutover；已确认 `/root/SlimeAIRuntime`、资源 strict fail-fast、Common Utilities 放 `Src/ECS/Tools/CommonUtilities/`、NodeLifecycle 迁 Runtime、TargetSelector 不做兼容桥 |
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
 | SDD-0028 | pending | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已创建执行胶囊；等待按提示词执行 runtime state、parking grid、CollisionLogicGuard、ContactDamage stale attacker cleanup、contract tests、Godot collision validation 和 DocsAI/skill sync |
 | SDD-0029 | done | `design/Runtime/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |
@@ -315,10 +315,10 @@
 
 - **Context**: 用户要求按 AI-first 重新分析 `design/Tool/其他Tool`，明确“需要重构就完全重构绝不兼容”，并指出 `ParentManager` 有用，应统一管理大量 Entity 节点在 tree 中的路径。
 - **Conclusion**: 已将剩余 Tools 设计包从“增量 hardening / 兼容 facade”校准为“功能切片 hard cutover”：`ParentManager` 功能升级为 `RuntimeMountRegistry` / `SceneMountRegistry`，`TargetSelector` 升级为 `TargetQueryEngine` / `TargetQueryResult`，`ResourceManagement` 走 strict loading/source policy/structured result，`MyMath` 按公式 owner 拆分，`NodeLifecycle` 只保底层 registry/diagnostics。该条中 `CommonTool` 与 Must Confirm 口径已被后续 P039 用户复核校准。
-- **Evidence**: `design/Tool/其他Tool/07-2026-06-04-AI-first完全重构校准.md` 新增；`README.md`、`01-现状证据与AI-first裁决.md`、`02-CommonTool与ResourceManagement裁决.md`、`03-Math目标架构与验证.md`、`04-NodeLifecycle与ParentManager边界.md`、`05-TargetSelector查询契约.md`、`06-实施路线与验证门禁.md`、`design/INDEX.md`、`README.md`、`Core/roadmap.md` 和本 `Core/progress.md` 已同步。
+- **Evidence**: 历史输入已合并进 `design/Tool/其他Tool/01-现状证据与AI-first裁决.md`；`README.md`、`02-CommonTool与ResourceManagement裁决.md`、`03-Math目标架构与验证.md`、`04-NodeLifecycle与ParentManager边界.md`、`05-TargetSelector查询契约.md`、`06-实施路线与验证门禁.md`、`design/INDEX.md`、项目 `README.md`、`Core/roadmap.md` 和本 `Core/progress.md` 已同步。
 - **Research Adoption**: externalResources enabled=`engine-framework, official-docs`，scope=`Resources/Engine/Docs/FrameworkAnalysis/Reports` 中 query/resource/hierarchy/SceneTree 片段 + Context7 Godot 4.6 SceneTree/ResourceLoader/PackedScene/RandomNumberGenerator/groups 文档；copiedCodeOrAssets=none；adoption=采纳 mount lifecycle、resource facade、seeded random、capability-owned selector 和 diagnostics 思想，拒绝通用 world query DSL / group gameplay query / 第三方 ECS runtime。
 - **Must Confirm**: 已被 P039 校准，并由 P046 最终关闭。用户已确认 Runtime mount 默认 `/root/SlimeAIRuntime`、ResourceManagement strict fail-fast、Common Utilities 放 `Src/ECS/Tools/CommonUtilities/`、NodeLifecycle 迁 Runtime、TargetSelector 不做兼容桥。
-- **Impact**: 后续执行者不应从旧 `ParentManager.GetOrRegister`、`EntityTargetSelector.Query` list-only、`CommonTool.LoadPackedScene`、`MyMath` 杂项公式或 `NodeLifecycleManager.GetAllNodes` 恢复 current API；应从 `07` override 和对应专题文档进入。
+- **Impact**: 后续执行者不应从旧 `ParentManager.GetOrRegister`、`EntityTargetSelector.Query` list-only、`CommonTool.LoadPackedScene`、`MyMath` 杂项公式或 `NodeLifecycleManager.GetAllNodes` 恢复 current API；应从 `design/Tool/其他Tool/README.md`、`01-现状证据与AI-first裁决.md` 和对应功能文档进入。
 - **Resume**: 若切到剩余 Tools 实施，优先创建 `Runtime Mount Registry Hard Cutover` 或 `Target Query Engine Hard Cutover`，并在 SDD 中写明上述 Must Confirm 的用户裁决或采用默认假设。
 
 ### P038 — 2026-06-04 — sdd-0030-done
@@ -332,11 +332,11 @@
 ### P039 — 2026-06-04 — other-tools-user-review-calibrated
 
 - **Context**: 用户提供 SceneTree 截图并逐项裁决：`ParentManager` 当前规范路径作用成立，默认 `/root/SlimeAIRuntime` 可以；TargetSelector 重构可以但要说明怎么做；资源加载立刻报错；CommonTool 通用工具概念可保留但不应随便堆在 `Tools/`；NodeLifecycle 的统一注册/维护/id 管理本意成立，但要按 AI-first 重新规范。
-- **Conclusion**: 已新增 `08-2026-06-04-用户裁决后执行前复核.md` 并同步其他 Tools 设计包：TargetSelector 改为“找目标报告”契约；CommonTool 裁决从“通用工具概念删除”校准为“迁出当前资源加载方法，保留受约束 Common Utilities”；NodeLifecycle 裁决从 Tools helper 校准为 Runtime registry；ParentManager 保留截图中的可读层级风格并加 `/root/SlimeAIRuntime`、manifest 和 diagnostics。
-- **Evidence**: `design/Tool/其他Tool/08-2026-06-04-用户裁决后执行前复核.md`、`README.md`、`02-CommonTool与ResourceManagement裁决.md`、`04-NodeLifecycle与ParentManager边界.md`、`05-TargetSelector查询契约.md`、`06-实施路线与验证门禁.md`、`07-2026-06-04-AI-first完全重构校准.md`、`design/INDEX.md` 和本 `Core/progress.md` 已同步。
+- **Conclusion**: 用户裁决已合并进当前 `01~06` 文档：TargetSelector 改为“找目标报告”契约；CommonTool 裁决从“通用工具概念删除”校准为“迁出当前资源加载方法，保留受约束 Common Utilities”；NodeLifecycle 裁决从 Tools helper 校准为 Runtime registry；ParentManager 保留截图中的可读层级风格并加 `/root/SlimeAIRuntime`、manifest 和 diagnostics。
+- **Evidence**: `design/Tool/其他Tool/01-现状证据与AI-first裁决.md`、`README.md`、`02-CommonTool与ResourceManagement裁决.md`、`04-NodeLifecycle与ParentManager边界.md`、`05-TargetSelector查询契约.md`、`06-实施路线与验证门禁.md`、`design/INDEX.md` 和本 `Core/progress.md` 已同步。
 - **Research Adoption**: externalResources enabled=`official-docs, engine-framework`，scope=Context7 `/godotengine/godot-docs` 的 PackedScene/root add child/groups 片段 + `Resources/Engine/Docs/FrameworkAnalysis/Reports` 中 Bevy/Flecs/EnTT/DefaultEcs/综合报告关于 capability-owned selector、relationship/hierarchy 和 query DSL 的裁决；copiedCodeOrAssets=none。
-- **Impact**: 后续执行型 SDD 不应把 CommonTool 简单一删了事，也不应把 NodeLifecycle 删除后让各模块各写一套 registry；应按 `08-*` 的默认假设和确认点创建实现任务。
-- **Resume**: 已被 P046 覆盖，不再等待确认。后续剩余 Tools 实施先读 `design/Tool/其他Tool/10-2026-06-07-用户最终确认与执行口径.md`。
+- **Impact**: 后续执行型 SDD 不应把 CommonTool 简单一删了事，也不应把 NodeLifecycle 删除后让各模块各写一套 registry；应按 `README.md`、`01` 和对应功能文档里的默认假设与确认点创建实现任务。
+- **Resume**: 已被 P047 覆盖。后续剩余 Tools 实施先读 `design/Tool/其他Tool/README.md` 和 `01~06`。
 
 ### P040 — 2026-06-06 — gc-boxing-deepthink-design
 
@@ -384,25 +384,42 @@
 
 - **Context**: 用户要求单独分析 `ResourceManagement` 资源路径管理工具，参考 `design/Tool/其他Tool`、`Data/ResourceManagement`、`Tools/ResourceGenerator`、`Resources/Engine/Docs` 和 web/Context7 资料，判断这种做法是否合理，以及是否能防止移动目录后报错，并更新相关文档。
 - **Conclusion**: 已完成 ResourceManagement DeepThink：做法合理，但定位必须校准为“资源加载 facade + generated manifest + catalog diagnostics”，不是 Godot 资源系统替代品，也不是自动路径修复器。移动/重命名/删除资源后仍必须重新运行生成器并检查 diagnostics；后续应保留轻量 manifest，删除 `Load<T>` contains fallback，给 `LoadPath` 增加 source policy，补 structured result 和 `ResourceCatalogDiagnostics`。
-- **Evidence**: 新增 `design/Tool/其他Tool/09-2026-06-07-ResourceManagement深度分析.md`、`DocsAI/ECS/Tools/ResourceManagement/README.md`；同步 `DocsAI/ECS/README.md`、`Data/ResourceManagement/README.md`、`Tools/ResourceGenerator/README.md`、`.ai-config/skills/core/tools/SKILL.md`、`design/Tool/其他Tool/README.md`、`design/INDEX.md`、`Core/roadmap.md`、`Core/notes.md` 和本 `Core/progress.md`。
+- **Evidence**: ResourceManagement 深度分析已合并进 `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md`；`DocsAI/ECS/Tools/ResourceManagement/README.md`、`DocsAI/ECS/README.md`、`Data/ResourceManagement/README.md`、`Tools/ResourceGenerator/README.md`、`.ai-config/skills/core/tools/SKILL.md`、`design/Tool/其他Tool/README.md`、`design/INDEX.md`、`Core/roadmap.md`、`Core/notes.md` 和本 `Core/progress.md` 已同步。
 - **Research Adoption**: externalResources enabled=`engine-framework, official-docs`，scope=`Resources/Engine/Docs/FrameworkAnalysis/Reports` 中 resource/cache/AssetManager/Capability-owned selector 片段 + Context7 Godot ResourceLoader/PackedScene + Context7 Unity Addressables AssetReference/GUID + Epic Unreal Asset Management 官方资料；copiedCodeOrAssets=none；adoption=采纳 stable id/address/soft reference/AssetManager 背后的“业务不依赖物理路径、加载有 manifest/diagnostics”思想，不复制 Unity Addressables / Unreal Asset Manager 全套系统。
 - **Must Confirm**: 1. DataOS resource ref 是否允许未来从 `res://` 迁到 `ResourceKey + Category` 或 `uid://`；2. Godot `uid://` 是否进入下一阶段验证；3. 资源加载失败最终是 throw、structured result，还是 startup preflight fail-fast。默认采用 structured result + preflight fail-fast，不改 DataOS schema。
-- **Impact**: 后续 AI 不应把 `ResourcePaths.cs` 描述成自动抗目录移动；也不应删除 ResourceManagement 回到裸 `GD.Load`。Resource Loading 执行型 SDD 应从本 P045 和 `09-*` 进入。
+- **Impact**: 后续 AI 不应把 `ResourcePaths.cs` 描述成自动抗目录移动；也不应删除 ResourceManagement 回到裸 `GD.Load`。Resource Loading 执行型 SDD 应从 `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` 和 `06-实施路线与验证门禁.md` 进入。
 - **Resume**: PRJ-0002 当前无 active 子 SDD；若继续资源加载，创建 `Resource Loading Hard Cutover`，先做 diagnostics/gate 设计，再迁移 `CommonTool.LoadPackedScene` 和 `LoadPath` 调用点。
 
 ### P046 — 2026-06-07 — other-tools-final-confirmation
 
 - **Context**: 用户补齐 `design/Tool/其他Tool` 剩余确认项：Common 工具放在 `Src/ECS/Tools`；NodeLifecycle 按建议处理；TargetSelector 不做兼任，完全重构，不保兼容桥。
-- **Conclusion**: 已新增 `10-2026-06-07-用户最终确认与执行口径.md` 并同步 Other Tools 设计包。最终口径是：Common Utilities 固定为 `Src/ECS/Tools/CommonUtilities/` + `DocsAI/ECS/Tools/CommonUtilities/`，但不恢复 `CommonTool` 杂物箱；NodeLifecycle 迁到 `Src/ECS/Runtime/NodeLifecycle/`，作为底层 Node registry / diagnostics；TargetSelector 执行型 SDD 不设计 `EntityTargetSelector.Query(query)` 临时桥，调用点直接迁移到 `TargetQueryEngine` / `TargetQueryResult`。
-- **Evidence**: `design/Tool/其他Tool/10-2026-06-07-用户最终确认与执行口径.md`、`README.md`、`01-现状证据与AI-first裁决.md`、`02-CommonTool与ResourceManagement裁决.md`、`05-TargetSelector查询契约.md`、`06-实施路线与验证门禁.md`、`07-2026-06-04-AI-first完全重构校准.md`、`08-2026-06-04-用户裁决后执行前复核.md`、`design/INDEX.md`、`README.md`、`Core/roadmap.md`、`Core/notes.md` 和本 `Core/progress.md` 已同步。
+- **Conclusion**: 最终确认已合并进 `01-现状证据与AI-first裁决.md` 和对应功能文档。最终口径是：Common Utilities 固定为 `Src/ECS/Tools/CommonUtilities/` + `DocsAI/ECS/Tools/CommonUtilities/`，但不恢复 `CommonTool` 杂物箱；NodeLifecycle 迁到 `Src/ECS/Runtime/NodeLifecycle/`，作为底层 Node registry / diagnostics；TargetSelector 执行型 SDD 不设计 `EntityTargetSelector.Query(query)` 临时桥，调用点直接迁移到 `TargetQueryEngine` / `TargetQueryResult`。
+- **Evidence**: `design/Tool/其他Tool/01-现状证据与AI-first裁决.md`、`README.md`、`02-CommonTool与ResourceManagement裁决.md`、`05-TargetSelector查询契约.md`、`06-实施路线与验证门禁.md`、`design/INDEX.md`、项目 `README.md`、`Core/roadmap.md`、`Core/notes.md` 和本 `Core/progress.md` 已同步。
 - **Impact**: 后续执行者不应再询问 Common Utilities 目录、NodeLifecycle Runtime 归属或 TargetSelector 兼容桥问题；也不应把“工具放 Tools”误读为继续把函数放 `Src/ECS/Tools/CommonTool.cs` 根目录杂项入口。
-- **Resume**: PRJ-0002 当前无 active 子 SDD；若继续剩余 Tools，实现前先读 `design/Tool/其他Tool/10-*`，再按 RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、CommonUtilities 拆执行型 SDD。
+- **Resume**: PRJ-0002 当前无 active 子 SDD；若继续剩余 Tools，实现前先读 `design/Tool/其他Tool/README.md` 和 `01~06`，再按 RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、CommonUtilities 拆执行型 SDD。
 
 ### P047 — 2026-06-07 — resource-path-migration-user-calibration
 
 - **Context**: 用户校准 ResourceManagement：`res://` 是 Godot 项目路径，不应被视为问题；路径变更应该通过工具生成和 diagnostics 暴露，不靠人工全仓搜索；当前 `ResourceManagement` 可以删除或大量简化，但仍需要统一资源加载工具；未来框架/游戏仓分离后要重新思考 generator 和 catalog 归属；用户质疑 `uid://` 与 `.cs.uid` 的区别。
 - **Conclusion**: 已更新 ResourceManagement 最终口径：`res://` 合法，问题是无 owner 裸加载、路径迁移缺工具和 diagnostics；统一加载工具后续可简化为 `ResourceLoading` facade，`ResourcePaths` 只是当前项目 generated catalog；新增 `resource-path-migration` skill 和脚本，默认 dry-run，在当前工作目录替换 old/new path 并用 `rg` 检查旧路径残留；未来框架仓只拥有框架资源 catalog，游戏资源 catalog 由游戏仓生成。`uid://` 被校准为 Godot resource-level UID，不等同于 `.cs.uid` 文件，但当前只作为后续验证项，不直接迁移 DataOS 主存储。
-- **Evidence**: `design/Tool/其他Tool/09-2026-06-07-ResourceManagement深度分析.md` 已用户校准；新增 `design/Tool/其他Tool/11-2026-06-07-ResourcePathMigrationSkill设计.md`；新增 `.ai-config/skills/core/resource-path-migration/SKILL.md` 与 `scripts/migrate_resource_path.py`；同步 `DocsAI/ECS/Tools/ResourceManagement/README.md`、`Data/ResourceManagement/README.md`、`Tools/ResourceGenerator/README.md`、`Workspace/DocsAI/MultiGameLayout.md`、`Workspace/DocsAI/GitSubmoduleWorkflow.md`、`.ai-config/skills/core/tools/SKILL.md`、`Workspace/SystemAgent/Registry/skills.yaml`、`design/INDEX.md`、`README.md`、`Core/roadmap.md`、`Core/notes.md` 和本 `Core/progress.md`。
+- **Evidence**: ResourceManagement 与 ResourcePathMigration 设计已合并进 `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` 和 `06-实施路线与验证门禁.md`；新增 `.ai-config/skills/core/resource-path-migration/SKILL.md` 与 `scripts/migrate_resource_path.py`；同步 `DocsAI/ECS/Tools/ResourceManagement/README.md`、`Data/ResourceManagement/README.md`、`Tools/ResourceGenerator/README.md`、`Workspace/DocsAI/MultiGameLayout.md`、`Workspace/DocsAI/GitSubmoduleWorkflow.md`、`.ai-config/skills/core/tools/SKILL.md`、`Workspace/SystemAgent/Registry/skills.yaml`、`design/INDEX.md`、项目 `README.md`、`Core/roadmap.md`、`Core/notes.md` 和本 `Core/progress.md`。
 - **Research Adoption**: externalResources enabled=`official-docs, engine-framework, legacy-game-reference`，scope=Context7 `/godotengine/godot-docs` ResourceLoader / ResourceUID / `@export_file` 4.4+ 资料、Unity Addressables AssetReference/GUID 对照、Unreal Asset Manager 对照、本地 AiFirst `MultiGameLayout.md`、BrotatoLikeOld legacy resource validation；copiedCodeOrAssets=none；adoption=采纳 stable reference / catalog / diagnostics 思想，不复制 Addressables/AssetManager 全套系统。
 - **Impact**: 后续 AI 不应再说 `res://` 本身有问题，也不应把 `ResourceManagement` 当移动目录自动修复器；移动路径要用 skill 或等价脚本 + generator + diagnostics；游戏仓资源不能写入框架仓 generated catalog 作为长期事实源。
 - **Resume**: PRJ-0002 当前无 active 子 SDD；若继续资源加载，创建 `Resource Loading Hard Cutover`，先做 `ResourceLoadSource`、structured result、ResourceCatalogDiagnostics、generator stale check 和 game-local catalog 设计，再迁移 runtime 调用点。
+
+### P048 — 2026-06-07 — other-tools-docs-consolidated
+
+- **Context**: 用户指出 `design/Tool/其他Tool` 每次修改都新增文档导致冗余，要求整合文档：同类问题放一起，已确认和未确认分开，分单功能说明文档和总体分析文档。
+- **Conclusion**: 已将 `其他Tool` current 事实源收敛为入口 `README.md` 加 6 份 current 文档：`01-现状证据与AI-first裁决.md`、`02-CommonTool与ResourceManagement裁决.md`、`03-Math目标架构与验证.md`、`04-NodeLifecycle与ParentManager边界.md`、`05-TargetSelector查询契约.md`、`06-实施路线与验证门禁.md`。原按时间追加的确认文档内容已合并并删除，不再作为 current 入口。
+- **Evidence**: `design/Tool/其他Tool/README.md` 阅读顺序已只列 01~06；`01` 负责总体分析、Confirmed / Must Confirm / Should Confirm / Defaults；`02` 合并 Common、ResourceLoading、ResourceGenerator、resource-path-migration、uid 与框架/游戏仓资源所有权；`06` 合并实施路线、BDD、grep gate 和验证命令；`design/INDEX.md`、项目 `README.md`、`Core/roadmap.md`、`Core/progress.md` 已同步。
+- **Impact**: 后续不再为每次用户确认新增 current 设计文档；确认应回写总览或对应功能文档。AI 恢复时从 `README.md -> 01 -> 对应功能文档 -> 06` 进入。
+- **Resume**: PRJ-0002 当前无 active 子 SDD；若继续剩余 Tools，实现前先读 `design/Tool/其他Tool/README.md` 和 `01~06`，不要从已删除的时间线文档恢复。
+
+### P049 — 2026-06-07 — resource-loading-and-directory-skill-final-calibration
+
+- **Context**: 用户进一步质疑“ResourceManagement 剩下这么点东西只是兼任还有什么用”，提出更明确方向：可以删除当前 ResourceManagement 管理器概念，保留一个统一资源加载工具；路径错误统一 log/error/diagnostics；目录生成、删除、移动、检查和路径替换应由单独 skill 管理，并覆盖全局路径和相对路径。
+- **Conclusion**: 已将 current 口径更新为：不保留 ResourceManagement 作为长期“资源管理器”概念，保留的是极薄 `ResourceLoading` 统一加载工具，职责仅为加载、source/owner/usage diagnostics 和错误报告。目录稳定性不属于 runtime loader，应由 project directory / `resource-path-migration` skill、ResourceGenerator 和 diagnostics 闭环处理。该 skill 必要，因为 AI-first 框架不能靠人工全仓搜索处理目录增删改查、`res://`、项目相对路径和当前仓绝对路径残留。
+- **Evidence**: 已更新 `design/Tool/其他Tool/README.md`、`01-现状证据与AI-first裁决.md`、`02-CommonTool与ResourceManagement裁决.md`、`06-实施路线与验证门禁.md`、`DocsAI/ECS/Tools/ResourceManagement/README.md`、`Data/ResourceManagement/README.md`、`Tools/ResourceGenerator/README.md`、`.ai-config/skills/core/resource-path-migration/SKILL.md`、`.ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py`、`.ai-config/skills/core/tools/SKILL.md`、`Core/roadmap.md`、`Core/notes.md` 和本 `Core/progress.md`。
+- **Research Adoption**: externalResources enabled=`official-docs`，scope=Context7 `/godotengine/godot-docs` `res://` project root / C# `GD.Load` / `ResourceLoader.Load` 资料，以及 Context7 `/needle-mirror/com.unity.addressables` `AssetReference` / reference loading 资料；copiedCodeOrAssets=none；adoption=采纳“运行时加载入口”和“资源引用/catalog/迁移流程”分离思想，不复制 Addressables 或 Godot UID 机制。
+- **Impact**: 后续实现不应再问“是否保留 ResourceManagement 管理器”。默认创建 `Resource Loading Hard Cutover`：重命名或删除旧 public facade、迁出 `CommonTool.LoadPackedScene`、删除 contains fallback、补 `ResourceLoadSource` / `ResourceLoadResult` / `ResourceCatalogDiagnostics`。目录移动或重命名默认先走 project directory / `resource-path-migration` skill dry-run，再 apply，再 `rg` 检查 old path residue。
+- **Resume**: PRJ-0002 当前无 active 子 SDD；若继续实现资源加载，先读 `design/Tool/其他Tool/README.md -> 01 -> 02 -> 06` 和 `DocsAI/ECS/Tools/ResourceManagement/README.md`，并以 P049 覆盖 P045/P047 的较旧措辞。

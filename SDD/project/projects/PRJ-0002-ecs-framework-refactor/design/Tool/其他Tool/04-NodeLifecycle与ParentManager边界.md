@@ -260,22 +260,9 @@ ParentManager.GetOrRegister(name, path)
 - 不建议把 `ParentNames` 扩成业务关系常量表。
 - 不建议长期保留 `ParentManager.GetOrRegister(name, path)` 作为 current API。
 
-## 8. 验证门禁
+## 8. 验收关注点
 
-文档/设计阶段：
-
-```bash
-rg -n "NodeLifecycleManager\\.Register\\(|NodeLifecycleManager\\.GetAllNodes|NodeLifecycleManager\\.GetNodesByInterface|ParentManager\\.GetOrRegister|ParentManager\\.Register|ParentNames" Src/ECS DocsAI/ECS
-python3 Workspace/SDD/sdd.py validate --all
-```
-
-实现阶段：
-
-```bash
-dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
-```
-
-建议新增 diagnostics / hard cutover 验收：
+完整命令统一放在 [06-实施路线与验证门禁.md](06-实施路线与验证门禁.md)，本功能文档只记录 Runtime mount 与 NodeLifecycle 切片必须证明什么：
 
 - NodeLifecycle snapshot 中 invalid node count 为 0。
 - Entity/UI/Component/Test 注册来源可区分。

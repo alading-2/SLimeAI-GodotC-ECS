@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""迁移 Godot 资源路径引用。
+"""迁移项目目录或 Godot 资源路径引用。
 
 默认 dry-run，只报告会修改的文件；传入 --apply 后才写入。
 """
@@ -53,6 +53,14 @@ def parse_args() -> argparse.Namespace:
         help="Write changes. Omit for dry-run.",
     )
     parser.add_argument(
+        "--include-variants",
+        action="store_true",
+        help=(
+            "Also replace obvious path variants under --root: res://, project-relative, "
+            "and absolute paths. Always inspect dry-run before --apply."
+        ),
+    )
+    parser.add_argument(
         "--include-extension",
         action="append",
         default=[],
@@ -65,6 +73,53 @@ def parse_args() -> argparse.Namespace:
         help="Extra directory name to exclude.",
     )
     return parser.parse_args()
+
+
+def normalize_separators(value: str) -> str:
+    return value.replace("\\", "/")
+
+
+def to_res_path(value: str) -> str:
+    normalized = normalize_separators(value).lstrip("/")
+    return normalized if normalized.startswith("res://") else f"res://{normalized}"
+
+
+def to_relative_path(value: str, root: Path) -> str:
+    normalized = normalize_separators(value)
+    if normalized.startswith("res://"):
+        return normalized[6:]
+
+    path = Path(value)
+    if path.is_absolute():
+        try:
+            return normalize_separators(str(path.resolve().relative_to(root)))
+        except ValueError:
+            return normalized
+
+    return normalized.lstrip("./")
+
+
+def build_replacements(old: str, new: str, root: Path, include_variants: bool) -> list[tuple[str, str]]:
+    replacements: list[tuple[str, str]] = [(old, new)]
+    if not include_variants:
+        return replacements
+
+    old_relative = to_relative_path(old, root)
+    new_relative = to_relative_path(new, root)
+    old_res = to_res_path(old_relative)
+    new_res = to_res_path(new_relative)
+    old_absolute = normalize_separators(str((root / old_relative).resolve()))
+    new_absolute = normalize_separators(str((root / new_relative).resolve()))
+
+    for candidate in [
+        (old_res, new_res),
+        (old_relative, new_relative),
+        (old_absolute, new_absolute),
+    ]:
+        if candidate[0] and candidate[0] != candidate[1] and candidate not in replacements:
+            replacements.append(candidate)
+
+    return replacements
 
 
 def should_skip(path: Path, root: Path, excluded_dirs: set[str], extensions: set[str]) -> bool:
@@ -112,26 +167,42 @@ def main() -> int:
     excluded_dirs = DEFAULT_EXCLUDE_DIRS | set(args.exclude_dir)
     extensions = DEFAULT_EXTENSIONS | set(args.include_extension)
 
+    replacements = build_replacements(old, new, root, args.include_variants)
     changed: list[tuple[Path, int]] = []
     scanned = 0
 
     for path in iter_files(root, excluded_dirs, extensions):
         scanned += 1
         text = read_text(path)
-        if text is None or old not in text:
+        if text is None:
             continue
 
-        count = text.count(old)
+        count = 0
+        updated_text = text
+        for old_value, new_value in replacements:
+            match_count = updated_text.count(old_value)
+            if match_count == 0:
+                continue
+            count += match_count
+            updated_text = updated_text.replace(old_value, new_value)
+
+        if count == 0:
+            continue
+
         changed.append((path, count))
 
         if args.apply:
-            path.write_text(text.replace(old, new), encoding="utf-8")
+            path.write_text(updated_text, encoding="utf-8")
 
     mode = "APPLY" if args.apply else "DRY-RUN"
     print(f"resource-path-migration: {mode}")
     print(f"root: {root}")
     print(f"old: {old}")
     print(f"new: {new}")
+    if args.include_variants:
+        print("replacement variants:")
+        for old_value, new_value in replacements:
+            print(f"  {old_value} -> {new_value}")
     print(f"scanned files: {scanned}")
     print(f"matched files: {len(changed)}")
 
