@@ -93,7 +93,7 @@ git status --short
 
 ## T1.1 Readiness Baseline
 
-先只读，不改实现。记录摘要到 `progress.md`，不要复制完整 dirty 列表。
+先只读，不改实现。记录摘要到 `Core/progress.md`，不要复制完整 dirty 列表。
 
 ```bash
 cd /home/slime/Code/SlimeAI/SlimeAI
@@ -126,7 +126,7 @@ python3 Workspace/SDD/sdd.py validate SDD-0027
 10. T1.11 若改 API/流程，同步 `.ai-config` tools skill 并运行 sync/skill-test。
 11. T1.12 跑最终 gates，回填 SDD 和项目进度。
 
-每完成一项任务就更新 `tasks.md` 和 `progress.md`。不要等到最后一次性补状态。
+每完成一项任务就更新 `tasks.md` 和 `Core/progress.md`。不要等到最后一次性补状态。
 
 ## 目标代码形态
 
@@ -325,7 +325,7 @@ Tools/analyze-godot-scene-logs.sh
 ## 完成标准
 
 - `tasks.md` T1.1 到 T1.12 全部完成或有明确 blocker。
-- `progress.md` 有 baseline、核心实现结论、diagnostics、压力场景、验证摘要和 Latest Resume。
+- `Core/progress.md` 有 baseline、核心实现结论、diagnostics、压力场景、验证摘要和 Latest Resume。
 - Timer core 是纯 C#，可脱离 Godot 测试。
 - TimerManager 不再用 `_timerPool.ForEachActive` 更新 timer。
 - 普通 tick no due 不分配，不随 active total 线性增长。

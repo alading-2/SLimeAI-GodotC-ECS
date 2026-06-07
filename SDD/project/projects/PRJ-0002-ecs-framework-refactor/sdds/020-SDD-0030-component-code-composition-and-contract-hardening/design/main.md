@@ -41,7 +41,7 @@
 - `DocsAI/ECS/README.md`
 - `DocsAI/ECS/Runtime/Component/README.md`
 - `.codex/skills/ecs-component/SKILL.md`
-- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/7.Component/*`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/7.Component/*`
 - `Src/ECS/Runtime/Component/IComponent.cs`
 - `Src/ECS/Runtime/Component/TemplateComponent.cs`
 - `Src/ECS/Runtime/Entity/Components/ComponentRegistrar.cs`
@@ -169,4 +169,4 @@ Tools/run-godot-scene.sh run res://Src/ECS/Runtime/Entity/Tests/ComponentRegistr
 Tools/analyze-godot-scene-logs.sh
 ```
 
-如果 Godot runner 不可用，必须在 `progress.md` 记录缺口，不用 smoke 替代专项验收。
+如果 Godot runner 不可用，必须在 `Core/progress.md` 记录缺口，不用 smoke 替代专项验收。

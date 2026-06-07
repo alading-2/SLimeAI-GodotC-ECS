@@ -21,7 +21,7 @@
 
 - **Context**: 用户要求根据 `design/Tool/Timer` 设计包生成 SDD 和执行 SDD 的提示词。
 - **Conclusion**: 本 SDD 已补齐执行级目标、拒绝项、任务拆分、BDD、debug diagnostics、TimerStressValidation 和验证门禁；新增 `execution-prompt.md` 可直接交给新会话执行。
-- **Evidence**: `README.md`、`design/main.md`、`tasks.md`、`bdd.md`、`notes.md`、`execution-prompt.md` 已写入 Timer 完整重构要求。
+- **Evidence**: `README.md`、`design/main.md`、`tasks.md`、`bdd.md`、`Core/notes.md`、`execution-prompt.md` 已写入 Timer 完整重构要求。
 - **Impact**: 后续实现者不需要从聊天上下文恢复 Timer 裁决；应按 SDD-0027 依次完成 scheduler core、TimerManager adapter、callsite migration、diagnostics、stress scene、DocsAI/skill sync 和最终验证。
 - **Resume**: 从 `execution-prompt.md` 的 T1.1 readiness baseline 开始；注意当前框架仓已有大量非本 SDD dirty 改动，禁止回滚或混入无关文件。
 

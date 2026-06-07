@@ -46,7 +46,7 @@
 - `Src/ECS/Runtime/System/SystemManager.cs`
 - `Src/ECS/Runtime/Entity/Manager/EntityManager.cs`
 - `Src/ECS/UI/Core/UIManager.cs`
-- 项目 SDD：`SDD/project/projects/PRJ-0002-ecs-framework-refactor/README.md`、`design/INDEX.md`、`progress.md`
+- 项目 SDD：`SDD/project/projects/PRJ-0002-ecs-framework-refactor/README.md`、`design/INDEX.md`、`Core/progress.md`
 
 ### 2.2 广泛搜索范围
 
@@ -164,29 +164,29 @@
 3. `ResourceLoading`：迁出 `CommonTool.LoadPackedScene`，`ResourceManagement` 变 strict lookup、source policy、structured result、catalog diagnostics。
 4. `MathFormula` / deterministic random：拆 `MyMath` owner，保留 `Geometry2D` 纯算法，概率与采样支持 seed/RNG。
 5. `NodeLifecycleRegistry`：从 Tools helper 语义迁到 Runtime registry，保留统一 Node 注册、注销、id、owner metadata、snapshot diagnostics 和 invalid cleanup；业务查询迁走后删除 public global scan 入口。
-6. `Common Utilities`：保留通用工具区域，但不保留无约束 `CommonTool.SomeHelper()` 杂物箱。
+6. `Common Utilities`：保留通用工具区域，最终放在 `Src/ECS/Tools/CommonUtilities/` + `DocsAI/ECS/Tools/CommonUtilities/`，但不保留无约束 `CommonTool.SomeHelper()` 杂物箱。
 
-## 7. Must Confirm
+## 7. Confirmed Decisions
 
-这些问题不阻塞本轮设计文档，但进入实现型 SDD 前必须确认。注意：这里不再询问“要不要兼容旧 API”，默认不兼容；只确认会影响功能结果的问题。
+2026-06-07 用户已补齐进入实现型 SDD 前的剩余确认项。这里不再询问“要不要兼容旧 API”，默认不兼容。
 
 用户已确认：
 
 - `ParentManager` 默认挂载 scope 采用 `/root/SlimeAIRuntime`。
 - `ResourceManagement` 接受 strict fail-fast：删除 contains fallback，缺精确 key / 缺 `ResourceLoadSource` 直接让验证失败。
-
-进入实现型 SDD 前剩余必须确认：
-
-1. Common Utilities 的最终目录位置：推荐 `Src/ECS/Common/Utilities/`，备选 `Src/ECS/Runtime/Common/`。
-2. `NodeLifecycle` 是否从 `Src/ECS/Tools/NodeLifecycle/` 迁到 `Src/ECS/Runtime/NodeLifecycle/`。
-3. `EntityTargetSelector.Query(query)` 是否只作为执行期临时桥，切片结束前删除或 internal 化。
+- Common Utilities 最终目录为 `Src/ECS/Tools/CommonUtilities/` + `DocsAI/ECS/Tools/CommonUtilities/`。
+- `NodeLifecycle` 从 `Src/ECS/Tools/NodeLifecycle/` 迁到 `Src/ECS/Runtime/NodeLifecycle/`。
+- `TargetSelector` 不做兼容桥；`EntityTargetSelector.Query(query)` 不作为执行期或最终 public/current API 保留，执行型 SDD 应完全迁移到 `TargetQueryEngine`。
 
 ## 8. Should Confirm
 
 - `ParentManager` 执行时是否直接改名为 `RuntimeMountRegistry` / `SceneMountRegistry`。
-- `CommonTool.LoadPackedScene` 迁出后当前 `CommonTool` 是否删除或 internal 化。
 - `MyMath` 是否拆为 `AttributeFormula` / `CooldownFormula` / `DamageFormula` / `ProbabilityTool`。
-- `NodeLifecycleManager.GetAllNodes()` / `GetNodesByInterface<T>()` 是否从业务可见 API 删除。
+
+已不再需要确认：
+
+- `CommonTool.LoadPackedScene` 迁出后当前 `CommonTool` 删除或 internal 化。
+- `NodeLifecycleManager.GetAllNodes()` / `GetNodesByInterface<T>()` 从业务可见 API 删除。
 
 ## 9. Defaults I Will Use
 
@@ -197,7 +197,7 @@
 - `TargetSelector` 先不引入空间索引；先完成 query contract、candidate source、diagnostics 和 deterministic RNG。当目标数量、查询次数或 profiling artifact 证明全局扫描成为瓶颈时再加。
 - `Math` 不引入第三方库，不迁到 `System.Numerics`，继续使用 Godot `Vector2`。
 - `CommonTool.LoadPackedScene` 迁入 `ResourceManagement` / `ResourceLoading`；当前 `CommonTool` 删除或 internal 化。
-- 保留受约束 Common Utilities 区域，但不允许 `CommonTool.SomeHelper()` 杂物箱。
+- 保留受约束 Common Utilities 区域，位置固定为 `Src/ECS/Tools/CommonUtilities/` + `DocsAI/ECS/Tools/CommonUtilities/`，但不允许 `CommonTool.SomeHelper()` 杂物箱。
 - `ResourceManagement.Load<T>` 删除 contains fallback；`LoadPath` 必须携带 `ResourceLoadSource`。
 - `NodeLifecycle` 迁到 Runtime registry 语义，只保底层注册和 diagnostics，不作为新业务查询入口。
 

@@ -2,7 +2,7 @@
 
 ## References
 
-- 设计文档：`../../design/2.Data系统优化/README.md`（§4 采纳方向、§6 需要做什么）
+- 设计文档：`../../design/Runtime/2.Data系统优化/README.md`（§4 采纳方向、§6 需要做什么）
 - 运行时核心：`SlimeAI/Src/ECS/Base/Data/`（DataMeta / DataRegistry / Data / DataModifier）
 - DataKey 定义：`SlimeAI/Data/DataKey/*.cs`（已使用 `DataKey<T>` 格式，底层类型待补齐）
 - DataOS 数据库：`SlimeAI/Data/Data/`（Authoring DB / Schema / Snapshots / Tools）

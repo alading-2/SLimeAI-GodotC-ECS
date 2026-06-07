@@ -27,19 +27,19 @@
 
 ## Reading Order
 
-1. `../../design/06-ECS完全重构执行原则.md` — 项目级 hard cutover 原则
-2. `../../design/3.Entity系统优化/README.md` — Entity 设计包入口
-3. `../../design/3.Entity系统优化/1.初级修改/06-2026-05-31-DataEventDocsAI同步校准.md` — Data/Event/DocsAI current override
-4. `../../design/3.Entity系统优化/2.重构/main.md` — Entity spawn 统一底层管线与业务 facade 当前裁决
+1. `../../design/Foundation/06-ECS完全重构执行原则.md` — 项目级 hard cutover 原则
+2. `../../design/Runtime/3.Entity系统优化/README.md` — Entity 设计包入口
+3. `../../design/Runtime/3.Entity系统优化/1.初级修改/06-2026-05-31-DataEventDocsAI同步校准.md` — Data/Event/DocsAI current override
+4. `../../design/Runtime/3.Entity系统优化/2.重构/main.md` — Entity spawn 统一底层管线与业务 facade 当前裁决
 5. `../../entity-rewrite-execution-prompt.md` — 总执行提示词
 6. `../../../../../DocsAI/ECS/Entity/README.md` — DocsAI Entity current 入口
 7. `design/INDEX.md` — 本 SDD 设计入口
 8. `design/main.md` — 本 SDD 执行设计
 9. `execution-prompt.md` — 可直接交给新执行会话的执行计划提示词
 10. `tasks.md` — 当前任务拆分
-11. `progress.md` — 最近结论和恢复点
+11. `Core/progress.md` — 最近结论和恢复点
 12. `bdd.md` — 行为验收场景
-13. `notes.md` — 参考与开放问题
+13. `Core/notes.md` — 参考与开放问题
 
 ## Current Resume
 

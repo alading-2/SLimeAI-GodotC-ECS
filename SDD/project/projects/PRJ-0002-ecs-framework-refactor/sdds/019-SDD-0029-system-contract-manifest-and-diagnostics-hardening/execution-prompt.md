@@ -20,18 +20,18 @@
 3. `DocsAI/ECS/README.md`
 4. `DocsAI/ECS/Runtime/System/README.md`
 5. `DocsAI/ECS/Runtime/System/Usage.md`
-6. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/8.System优化/README.md`
-7. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/8.System优化/01-现状证据与AI-first裁决.md`
-8. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/8.System优化/02-目标架构与优化路线.md`
-9. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/8.System优化/03-调用点迁移与验证计划.md`
+6. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/8.System优化/README.md`
+7. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/8.System优化/01-现状证据与AI-first裁决.md`
+8. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/8.System优化/02-目标架构与优化路线.md`
+9. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/8.System优化/03-调用点迁移与验证计划.md`
 10. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/README.md`
 11. `tasks.md`
 12. `bdd.md`
-13. `progress.md`
+13. `Core/progress.md`
 
 ## T1.1 Readiness Baseline
 
-Run and record only the useful summary in `progress.md`:
+Run and record only the useful summary in `Core/progress.md`:
 
 ```bash
 git rev-parse --show-toplevel

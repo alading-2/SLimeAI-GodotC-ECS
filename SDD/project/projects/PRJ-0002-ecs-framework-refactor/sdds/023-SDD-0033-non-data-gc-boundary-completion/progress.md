@@ -37,7 +37,7 @@
 
 - **Context**: 用户确认方向并要求更新设计文档、生成 SDD、执行任务。
 - **Conclusion**: SDD-0033 任务边界已冻结：处理 Event dynamic、Feature/Ability typed execute、ObjectPool runtime interface、TargetQueryResult；Logger 本轮跳过。
-- **Evidence**: `design/main.md`、`tasks.md`、`bdd.md`、`notes.md` 已写入执行与验证标准。
+- **Evidence**: `design/main.md`、`tasks.md`、`bdd.md`、`Core/notes.md` 已写入执行与验证标准。
 - **Impact**: 后续进入 TDD；先 RED，再改生产代码。
 - **Resume**: 从 T1.2 写 RED 测试开始。
 

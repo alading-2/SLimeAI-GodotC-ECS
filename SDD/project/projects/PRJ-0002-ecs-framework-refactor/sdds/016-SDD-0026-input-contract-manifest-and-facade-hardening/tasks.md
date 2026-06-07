@@ -27,5 +27,5 @@
   - **Goal**: 检查业务层没有新增裸字符串输入，`project.godot` 和 `InputMap.md` 一致。
   - **Validation**: `rg -n "Input\\.IsAction|Input\\.GetAction|Input\\.GetVector|InputManager\\.IsAction" Src/ECS`; `rg -n "BtnX|BtnY|BtnLB|BtnRB|MoveLeft|StickRight" project.godot DocsAI/ECS/Tools/Input`
 - [x] T1.7 完成验证和恢复记录
-  - **Goal**: 更新本 SDD `progress.md`、项目级 `progress.md`，必要时标记 done。
+  - **Goal**: 更新本 SDD `Core/progress.md`、项目级 `Core/progress.md`，必要时标记 done。
   - **Validation**: `python3 Workspace/SDD/sdd.py validate SDD-0026`

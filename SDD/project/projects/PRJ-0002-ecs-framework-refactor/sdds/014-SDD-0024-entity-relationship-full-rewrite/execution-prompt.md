@@ -15,7 +15,7 @@
 - 按 hard cutover 重建旧 ECS Entity / Relationship runtime。
 - 不保留旧 facade、legacy adapter、双写或 parent-chain fallback。
 - 每个切片先写新行为测试，再改实现。
-- 每完成一个切片，更新 `tasks.md` checkbox、`progress.md` 和必要 DocsAI。
+- 每完成一个切片，更新 `tasks.md` checkbox、`Core/progress.md` 和必要 DocsAI。
 - 最后用 grep gate、build/test、必要 Godot scene smoke 证明旧路径退出。
 
 ## 工作区
@@ -24,7 +24,7 @@
 - **Game Validation Git Boundary**: `/home/slime/Code/SlimeAI/Games/BrotatoLike`
 - **Project**: `SDD/project/projects/PRJ-0002-ecs-framework-refactor/`
 - **Current SDD**: `sdds/014-SDD-0024-entity-relationship-full-rewrite/`
-- **Design Package**: `design/3.Entity系统优化/`
+- **Design Package**: `design/Runtime/3.Entity系统优化/`
 
 执行任何 git 操作前先确认：
 
@@ -43,18 +43,18 @@ git status --short
 2. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/roadmap.md`
 3. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/progress.md`
 4. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/INDEX.md`
-5. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/06-ECS完全重构执行原则.md`
+5. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Foundation/06-ECS完全重构执行原则.md`
 
 再读 Entity 设计包：
 
-1. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/3.Entity系统优化/README.md`
-2. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/3.Entity系统优化/06-2026-05-31-DataEventDocsAI同步校准.md`
-3. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/3.Entity系统优化/00-研究证据与裁决.md`
-4. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/3.Entity系统优化/01-目标架构与模块拆分.md`
-5. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/3.Entity系统优化/02-代码实现说明.md`
-6. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/3.Entity系统优化/03-LifecycleTree与业务引用设计.md`
-7. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/3.Entity系统优化/04-完全重构范围与TDD测试计划.md`
-8. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/3.Entity系统优化/05-源码调用点迁移清单.md`
+1. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/3.Entity系统优化/README.md`
+2. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/3.Entity系统优化/06-2026-05-31-DataEventDocsAI同步校准.md`
+3. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/3.Entity系统优化/00-研究证据与裁决.md`
+4. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/3.Entity系统优化/01-目标架构与模块拆分.md`
+5. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/3.Entity系统优化/02-代码实现说明.md`
+6. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/3.Entity系统优化/03-LifecycleTree与业务引用设计.md`
+7. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/3.Entity系统优化/04-完全重构范围与TDD测试计划.md`
+8. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/3.Entity系统优化/05-源码调用点迁移清单.md`
 
 再读当前框架事实源：
 
@@ -120,7 +120,7 @@ git status --short
 4. 跑目标测试。
 5. 跑当前切片 grep gate。
 6. 更新 `tasks.md` checkbox。
-7. 追加 `progress.md` 记录：Context / Conclusion / Evidence / Impact / Resume。
+7. 追加 `Core/progress.md` 记录：Context / Conclusion / Evidence / Impact / Resume。
 8. 同步 `DocsAI/ECS/Entity/` 或相关 owner 文档。
 9. 不混入 unrelated dirty 文件。
 
@@ -130,7 +130,7 @@ git status --short
 
 - 确认 git boundary 和当前 dirty 范围。
 - 读取 SDD-0024 事实源。
-- 跑旧入口 baseline grep，分桶记录到 `progress.md`。
+- 跑旧入口 baseline grep，分桶记录到 `Core/progress.md`。
 - 不改 runtime 代码。
 
 命令：
@@ -397,8 +397,8 @@ Tools/analyze-godot-scene-logs.sh
 完成时更新：
 
 - `tasks.md` 全部 checkbox。
-- `progress.md` Latest Resume。
-- 项目 `progress.md`。
+- `Core/progress.md` Latest Resume。
+- 项目 `Core/progress.md`。
 - 必要 DocsAI。
 - 验证摘要。
 

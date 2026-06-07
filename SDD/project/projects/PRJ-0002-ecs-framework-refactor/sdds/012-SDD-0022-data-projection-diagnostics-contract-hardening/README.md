@@ -31,9 +31,9 @@
 1. `design/INDEX.md` — 设计文档列表和主设计入口
 2. `tasks.md` — 当前任务拆分
 3. `execution-prompt.md` — 后续执行会话的一次性提示词
-4. `progress.md` — 最近结论和恢复点
+4. `Core/progress.md` — 最近结论和恢复点
 5. `bdd.md` — 行为场景
-6. `notes.md` — 参考与开放问题
+6. `Core/notes.md` — 参考与开放问题
 
 ## Source Design Docs
 
@@ -46,5 +46,5 @@
 
 - **Current Task**: done
 - **Last Conclusion**: T1.2-T1.12 已完成。DataOS final snapshot completeness、descriptor-first projection、runtime diagnostics、typed projection、spawn boundary、catalog freeze、display name query 和 current docs gate 已收口；验证中同步修正 `AbilityDamageBonus` 默认值语义和 Movement demo headless smoke。
-- **Next Action**: PRJ-0002 后续转入 Entity / Relationship hard cutover 主线，从 `design/3.Entity系统优化/README.md` 和 `entity-rewrite-execution-prompt.md` 创建下一条执行 SDD。
+- **Next Action**: PRJ-0002 后续转入 Entity / Relationship hard cutover 主线，从 `design/Runtime/3.Entity系统优化/README.md` 和 `Core/entity-rewrite-execution-prompt.md` 创建下一条执行 SDD。
 - **Open Blockers**: none

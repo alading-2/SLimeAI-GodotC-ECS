@@ -23,8 +23,8 @@
 3. `design/04-Component代码化组合与参数注入裁决.md` — 用户裁决：完全代码化、typed options、禁用 Inspector 默认参数
 4. `tasks.md` — 当前任务拆分
 5. `bdd.md` — 行为场景和标准答案
-6. `progress.md` — 最近结论和恢复点
-7. `notes.md` — 参考与开放问题
+6. `Core/progress.md` — 最近结论和恢复点
+7. `Core/notes.md` — 参考与开放问题
 
 ## Current Resume
 

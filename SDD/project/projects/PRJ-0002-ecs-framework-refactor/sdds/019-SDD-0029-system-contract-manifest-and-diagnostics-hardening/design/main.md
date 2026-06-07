@@ -159,4 +159,4 @@ Tools/run-godot-scene.sh run res://SlimeAI/Src/ECS/Runtime/System/Tests/SystemCo
 Tools/analyze-godot-scene-logs.sh
 ```
 
-如果当前承载游戏 runner 或 Godot CLI 缺失，必须在 `progress.md` 标为 blocked，不得把缺场景证据写成通过。
+如果当前承载游戏 runner 或 Godot CLI 缺失，必须在 `Core/progress.md` 标为 blocked，不得把缺场景证据写成通过。

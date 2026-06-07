@@ -2,7 +2,7 @@
 
 ## References
 
-- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/8.System优化/README.md`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/8.System优化/README.md`
 - `DocsAI/ECS/Runtime/System/README.md`
 - `DocsAI/ECS/Runtime/System/Usage.md`
 - `Src/ECS/Runtime/System/`

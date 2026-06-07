@@ -2,7 +2,7 @@
 
 ## Reference Inputs
 
-- Project shared design: `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/7.Component/`
+- Project shared design: `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/7.Component/`
 - Runtime Component docs: `DocsAI/ECS/Runtime/Component/`
 - Runtime Component source: `Src/ECS/Runtime/Component/`
 - Entity component registrar: `Src/ECS/Runtime/Entity/Components/`

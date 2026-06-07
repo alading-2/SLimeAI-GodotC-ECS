@@ -15,7 +15,7 @@
 
 ### P001 — 2026-05-28 19:28 — sdd-created
 
-- **Context**: 用户要求详读 `design/2.Data系统优化/` 并按所有 Data 重构文档拆成多个执行型 SDD。
+- **Context**: 用户要求详读 `design/Runtime/2.Data系统优化/` 并按所有 Data 重构文档拆成多个执行型 SDD。
 - **Conclusion**: 本 SDD 作为 Data Full Rewrite 序列切片创建，保留 descriptor-first、无长期兼容层、旧路径最终删除的共同约束。
 - **Evidence**: README、sdd.json、design/main.md、tasks.md、bdd.md、notes.md 已按 Data 重构裁决重写。
 - **Impact**: 后续实现可从 T1.1 小步推进，并通过 shared design refs 追溯项目级设计。

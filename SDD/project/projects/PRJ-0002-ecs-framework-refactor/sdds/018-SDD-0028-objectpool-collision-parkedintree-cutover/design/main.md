@@ -88,7 +88,7 @@
 
 **Artifact Updates**
 
-本轮写入：`DocsAI/ECS/Capabilities/Collision/Concepts/`、本 SDD 的 `design/`、`tasks.md`、`bdd.md`、`progress.md`、`notes.md`、`execution-prompt.md`，以及 PRJ-0002 项目索引/路线图/进度。
+本轮写入：`DocsAI/ECS/Capabilities/Collision/Concepts/`、本 SDD 的 `design/`、`tasks.md`、`bdd.md`、`Core/progress.md`、`Core/notes.md`、`execution-prompt.md`，以及 PRJ-0002 项目索引/路线图/进度。
 
 ### 目标模块
 

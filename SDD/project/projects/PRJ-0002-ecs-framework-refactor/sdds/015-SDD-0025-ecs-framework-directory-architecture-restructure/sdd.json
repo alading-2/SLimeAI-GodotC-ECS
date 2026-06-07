@@ -46,7 +46,7 @@
   "project_order": 15,
   "shared_design_refs": [
     "../../design/INDEX.md",
-    "../../design/6.ECS框架目录架构大重构/README.md",
+    "../../design/Runtime/6.ECS框架目录架构大重构/README.md",
     "../../directory-architecture-restructure-execution-prompt.md"
   ],
   "validation": [

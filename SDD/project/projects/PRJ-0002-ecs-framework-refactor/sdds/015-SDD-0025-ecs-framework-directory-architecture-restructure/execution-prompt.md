@@ -19,14 +19,14 @@ DocsAI/ECS/UI
 
 ## 必读
 
-1. `../../design/6.ECS框架目录架构大重构/README.md`
-2. `../../design/6.ECS框架目录架构大重构/01-现状证据与AI-first裁决.md`
-3. `../../design/6.ECS框架目录架构大重构/02-目标目录架构与归属规则.md`
-4. `../../design/6.ECS框架目录架构大重构/03-迁移切片与验证门禁.md`
+1. `../../design/Runtime/6.ECS框架目录架构大重构/README.md`
+2. `../../design/Runtime/6.ECS框架目录架构大重构/01-现状证据与AI-first裁决.md`
+3. `../../design/Runtime/6.ECS框架目录架构大重构/02-目标目录架构与归属规则.md`
+4. `../../design/Runtime/6.ECS框架目录架构大重构/03-迁移切片与验证门禁.md`
 5. `../../directory-architecture-restructure-execution-prompt.md`
 6. `README.md`
 7. `tasks.md`
-8. `progress.md`
+8. `Core/progress.md`
 
 ## 禁止
 
@@ -64,4 +64,4 @@ python3 Workspace/SDD/sdd.py validate SDD-0025
 6. 历史概念材料按 owner `Concepts/` 或 Archive/Thinking 收口。
 7. 最终旧路径清理和全量验证。
 
-每个阶段完成后更新 `tasks.md`、`progress.md` 和项目级 `progress.md`。
+每个阶段完成后更新 `tasks.md`、`Core/progress.md` 和项目级 `Core/progress.md`。

@@ -46,10 +46,10 @@
   "project_order": 19,
   "shared_design_refs": [
     "../../design/INDEX.md",
-    "../../design/8.System优化/README.md",
-    "../../design/8.System优化/01-现状证据与AI-first裁决.md",
-    "../../design/8.System优化/02-目标架构与优化路线.md",
-    "../../design/8.System优化/03-调用点迁移与验证计划.md"
+    "../../design/Runtime/8.System优化/README.md",
+    "../../design/Runtime/8.System优化/01-现状证据与AI-first裁决.md",
+    "../../design/Runtime/8.System优化/02-目标架构与优化路线.md",
+    "../../design/Runtime/8.System优化/03-调用点迁移与验证计划.md"
   ],
   "validation": [
     {

@@ -10,7 +10,7 @@
 
 - [x] T1.1 Readiness baseline
   - **Scope**: 确认当前 Git 边界、迁移后目录、设计文档、旧路径命中和无关 dirty 状态。
-  - **Validation**: `git status --short`、目标路径 `find` / `rg` 摘要记录到 `progress.md`。
+  - **Validation**: `git status --short`、目标路径 `find` / `rg` 摘要记录到 `Core/progress.md`。
 
 - [x] T1.2 重写 `.ai-config/rules/rules.md`
   - **Scope**: 改为 `SlimeAI ECS 框架仓规则`，入口链、事实源边界、Git 边界、ECS 红线、Data 规则和验证入口全部使用框架仓内语义。
@@ -29,7 +29,7 @@
   - **Validation**: sync + skill-test；grep gate 不出现非历史的旧根 / 双层路径 / 已删除 DocsAI 当前入口。
 
 - [x] T1.6 更新项目级 SDD 状态
-  - **Scope**: `project.json` current_sdd、`roadmap.md`、`progress.md` 登记 SDD-0023。
+  - **Scope**: `project.json` current_sdd、`Core/roadmap.md`、`Core/progress.md` 登记 SDD-0023。
   - **Validation**: `python3 Workspace/SDD/sdd.py validate --all`。
 
 - [x] T1.7 最终验证
@@ -37,5 +37,5 @@
   - **Validation**: `bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only`、`python3 Workspace/SDD/sdd.py validate --all`、`git diff --check`。
 
 - [x] T1.8 Handoff
-  - **Scope**: 更新本 SDD `progress.md` Latest Resume；说明已完成、未处理历史区、下一步是否进入 Entity hard cutover。
+  - **Scope**: 更新本 SDD `Core/progress.md` Latest Resume；说明已完成、未处理历史区、下一步是否进入 Entity hard cutover。
   - **Validation**: Latest Resume 可让新会话恢复。

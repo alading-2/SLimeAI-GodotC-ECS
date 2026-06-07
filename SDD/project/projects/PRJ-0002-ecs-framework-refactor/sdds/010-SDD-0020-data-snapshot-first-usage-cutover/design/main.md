@@ -28,9 +28,9 @@ DataOS SQLite authoring
 
 本 SDD 承接以下事实源：
 
-- 项目级设计：`design/2.Data系统优化/README.md`
-- 完整重构裁决：`design/2.Data系统优化/03-完全重构范围与TDD测试计划.md`
-- 现状复查：`design/2.Data系统优化/04-Data系统现状复查与兼任问题.md`
+- 项目级设计：`design/Runtime/2.Data系统优化/README.md`
+- 完整重构裁决：`design/Runtime/2.Data系统优化/03-完全重构范围与TDD测试计划.md`
+- 现状复查：`design/Runtime/2.Data系统优化/04-Data系统现状复查与兼任问题.md`
 - 现有 snapshot runtime：`SlimeAI/Src/ECS/Base/Data/RuntimeSnapshot/`
 - 现有 DataOS generator：`SlimeAI/Data/DataOS/Tools/generate-runtime-snapshot.sh`
 - 现有手写 RuntimeTables：`SlimeAI/Data/DataOS/RuntimeTables/`

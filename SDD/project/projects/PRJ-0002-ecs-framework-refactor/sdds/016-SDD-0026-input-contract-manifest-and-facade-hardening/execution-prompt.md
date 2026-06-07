@@ -29,7 +29,7 @@ project.godot InputMap
 9. `design/main.md`
 10. `tasks.md`
 11. `bdd.md`
-12. `progress.md`
+12. `Core/progress.md`
 
 ## 当前关键事实
 
@@ -65,7 +65,7 @@ sed -n '120,150p' Src/ECS/Capabilities/Unit/Component/TargetingIndicatorControlC
 python3 Workspace/SDD/sdd.py validate SDD-0026
 ```
 
-记录 baseline 摘要到 `progress.md`，不要复制完整 dirty 列表。
+记录 baseline 摘要到 `Core/progress.md`，不要复制完整 dirty 列表。
 
 ## 实现顺序
 

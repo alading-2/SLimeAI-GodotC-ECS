@@ -2,7 +2,7 @@
 
 ## References
 
-- PRJ-0002 project design: `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/ECS框架优化/1.拆箱装箱+GC优化/`
+- PRJ-0002 project design: `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/ECS框架优化/1.拆箱装箱+GC优化/`
 - Runtime Event docs: `DocsAI/ECS/Runtime/Event/Event系统说明.md`
 - Feature docs: `DocsAI/ECS/Capabilities/Feature/README.md`
 - Ability docs: `DocsAI/ECS/Capabilities/Ability/README.md`

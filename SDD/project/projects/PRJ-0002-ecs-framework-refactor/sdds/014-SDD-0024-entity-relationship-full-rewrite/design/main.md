@@ -20,16 +20,16 @@
 
 按顺序阅读：
 
-1. `../../design/06-ECS完全重构执行原则.md`
-2. `../../design/3.Entity系统优化/README.md`
-3. `../../design/3.Entity系统优化/1.初级修改/06-2026-05-31-DataEventDocsAI同步校准.md`
-4. `../../design/3.Entity系统优化/1.初级修改/00-研究证据与裁决.md`
-5. `../../design/3.Entity系统优化/1.初级修改/01-目标架构与模块拆分.md`
-6. `../../design/3.Entity系统优化/1.初级修改/02-代码实现说明.md`
-7. `../../design/3.Entity系统优化/1.初级修改/03-LifecycleTree与业务引用设计.md`
-8. `../../design/3.Entity系统优化/1.初级修改/04-完全重构范围与TDD测试计划.md`
-9. `../../design/3.Entity系统优化/1.初级修改/05-源码调用点迁移清单.md`
-10. `../../design/3.Entity系统优化/2.重构/main.md`
+1. `../../design/Foundation/06-ECS完全重构执行原则.md`
+2. `../../design/Runtime/3.Entity系统优化/README.md`
+3. `../../design/Runtime/3.Entity系统优化/1.初级修改/06-2026-05-31-DataEventDocsAI同步校准.md`
+4. `../../design/Runtime/3.Entity系统优化/1.初级修改/00-研究证据与裁决.md`
+5. `../../design/Runtime/3.Entity系统优化/1.初级修改/01-目标架构与模块拆分.md`
+6. `../../design/Runtime/3.Entity系统优化/1.初级修改/02-代码实现说明.md`
+7. `../../design/Runtime/3.Entity系统优化/1.初级修改/03-LifecycleTree与业务引用设计.md`
+8. `../../design/Runtime/3.Entity系统优化/1.初级修改/04-完全重构范围与TDD测试计划.md`
+9. `../../design/Runtime/3.Entity系统优化/1.初级修改/05-源码调用点迁移清单.md`
+10. `../../design/Runtime/3.Entity系统优化/2.重构/main.md`
 11. `../../entity-rewrite-execution-prompt.md`
 12. `../../../../../DocsAI/ECS/Entity/README.md`
 13. `../../../../../DocsAI/ECS/Data/Data系统说明.md`
@@ -110,7 +110,7 @@ public static partial class GameEventType
 每个切片必须先写 RED tests，再改实现。每完成一个切片：
 
 1. 更新 `tasks.md` checkbox。
-2. 追加 `progress.md` 记录结论和验证。
+2. 追加 `Core/progress.md` 记录结论和验证。
 3. 同步必要 `DocsAI/ECS/Entity/` 或 owner 文档。
 4. 运行该切片验证。
 

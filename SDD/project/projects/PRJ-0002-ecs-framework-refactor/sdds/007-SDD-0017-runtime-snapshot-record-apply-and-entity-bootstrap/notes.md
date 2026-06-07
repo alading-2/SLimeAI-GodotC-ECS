@@ -2,9 +2,9 @@
 
 ## References
 
-- `design/2.Data系统优化/01-代码实现说明.md` §4、§5、§10。
-- `design/2.Data系统优化/03-完全重构范围与TDD测试计划.md` §4.6。
-- `design/2.Data系统优化/03-完全重构范围与TDD测试计划.md` §7 建议的 Data System Full Rewrite 拆分。
+- `design/Runtime/2.Data系统优化/01-代码实现说明.md` §4、§5、§10。
+- `design/Runtime/2.Data系统优化/03-完全重构范围与TDD测试计划.md` §4.6。
+- `design/Runtime/2.Data系统优化/03-完全重构范围与TDD测试计划.md` §7 建议的 Data System Full Rewrite 拆分。
 
 ## Dependencies
 

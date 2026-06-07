@@ -41,10 +41,10 @@
   "shared_design_refs": [
     "../../design/INDEX.md",
     "../../design/main.md",
-    "../../design/2.Data系统优化/README.md",
-    "../../design/2.Data系统优化/01-代码实现说明.md",
-    "../../design/2.Data系统优化/02-DataMeta属性审计与Feature计算边界.md",
-    "../../design/2.Data系统优化/03-完全重构范围与TDD测试计划.md",
-    "../../design/04-优化优先级与SDD拆分建议.md"
+    "../../design/Runtime/2.Data系统优化/README.md",
+    "../../design/Runtime/2.Data系统优化/01-代码实现说明.md",
+    "../../design/Runtime/2.Data系统优化/02-DataMeta属性审计与Feature计算边界.md",
+    "../../design/Runtime/2.Data系统优化/03-完全重构范围与TDD测试计划.md",
+    "../../design/Foundation/04-优化优先级与SDD拆分建议.md"
   ]
 }

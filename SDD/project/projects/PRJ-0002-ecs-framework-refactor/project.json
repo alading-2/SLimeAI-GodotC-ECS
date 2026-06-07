@@ -184,13 +184,20 @@
       "title": "Non-Data GC Boundary Completion",
       "order": 23,
       "status": "done"
+    },
+    {
+      "id": "SDD-0034",
+      "slug": "design-directory-restructure",
+      "title": "Design Directory Restructure",
+      "order": 24,
+      "status": "done"
     }
   ],
   "links": {
     "design_index": "design/INDEX.md",
-    "roadmap": "roadmap.md",
-    "progress": "progress.md",
-    "notes": "notes.md",
+    "roadmap": "Core/roadmap.md",
+    "progress": "Core/progress.md",
+    "notes": "Core/notes.md",
     "sdds": "sdds"
   }
 }

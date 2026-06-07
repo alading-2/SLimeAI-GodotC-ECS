@@ -53,5 +53,5 @@
   - **Validation**: `bash Workspace/Tools/ai-config-sync/sync-ai-config.sh`；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only`。
 
 - [ ] T1.12 Final gates and SDD closeout
-  - **Scope**: 跑 build、Timer tests/benchmark、grep gates、TimerStressValidation、scene-gate、BrotatoLike smoke、SDD validate；回填 `tasks.md`、`progress.md`、项目 `roadmap/progress`。
+  - **Scope**: 跑 build、Timer tests/benchmark、grep gates、TimerStressValidation、scene-gate、BrotatoLike smoke、SDD validate；回填 `tasks.md`、`Core/progress.md`、项目 `roadmap/progress`。
   - **Validation**: `dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly`；`python3 Workspace/SDD/sdd.py validate SDD-0027`；`python3 Workspace/SDD/sdd.py validate --all`；所有 Timer gate 有新鲜证据。

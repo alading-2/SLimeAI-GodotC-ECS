@@ -5,7 +5,7 @@
 - **Updated**: 2026-05-30 08:18
 - **Current Task**: done
 - **Last Conclusion**: Data no-compat hard cutover completed: descriptor is the single field definition source, generated handles use real CLR types, old DataKey/string/RuntimeTables/Resource authoring compatibility routes are removed or migrated out of current facts.
-- **Next Action**: Create and execute Entity Relationship Full Rewrite SDD from PRJ-0002 design/3.Entity系统优化 and entity-rewrite-execution-prompt.md.
+- **Next Action**: Create and execute Entity Relationship Full Rewrite SDD from PRJ-0002 design/Runtime/3.Entity系统优化 and entity-rewrite-execution-prompt.md.
 - **Open Blockers**: none
 ## Timeline
 
@@ -151,4 +151,4 @@
 - **Conclusion**: Data no-compat hard cutover completed: descriptor is the single field definition source, generated handles use real CLR types, old DataKey/string/RuntimeTables/Resource authoring compatibility routes are removed or migrated out of current facts.
 - **Evidence**: DataOS validate passed; snapshot descriptor/record mismatch jq gate produced no output; dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly passed; grep gates returned no non-historical hits; Godot DataOS scenes DataCatalogTestScene/DataRuntimeTestScene/DataSnapshotApplyTestScene/DataFeatureBridgeTestScene passed in .ai-temp/scene-tests/runs/2026-05-30/08-15-52/index.json.
 - **Impact**: 任务已完成并保留归档上下文。
-- **Resume**: Create and execute Entity Relationship Full Rewrite SDD from PRJ-0002 design/3.Entity系统优化 and entity-rewrite-execution-prompt.md.
+- **Resume**: Create and execute Entity Relationship Full Rewrite SDD from PRJ-0002 design/Runtime/3.Entity系统优化 and entity-rewrite-execution-prompt.md.

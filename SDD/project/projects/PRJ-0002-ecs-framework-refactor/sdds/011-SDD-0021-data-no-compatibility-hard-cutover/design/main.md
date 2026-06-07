@@ -27,8 +27,8 @@ DataOS SQLite authoring
 
 上游事实源：
 
-- 项目级总审计：`design/README.md`，来源为 `PRJ-0002/design/2.Data系统优化/06-无兼容完全重构总审计/README.md`。
-- 运行报错复盘：`PRJ-0002/design/2.Data系统优化/05-Data重构运行报错根因分析.md`。
+- 项目级总审计：`design/README.md`，来源为 `PRJ-0002/design/Runtime/2.Data系统优化/06-无兼容完全重构总审计/README.md`。
+- 运行报错复盘：`PRJ-0002/design/Runtime/2.Data系统优化/05-Data重构运行报错根因分析.md`。
 - 当前临时分析：`Workspace/DocsAI/Temp/2-SDD0020后Data类型回归分析.md`。
 - 当前 runtime 源码：`SlimeAI/Src/ECS/Base/Data/`。
 - 当前 DataOS 源码：`SlimeAI/Data/DataOS/`。

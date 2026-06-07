@@ -5,7 +5,7 @@
 - **Updated**: 2026-06-06 18:32
 - **Current Task**: done
 - **Last Conclusion**: Data runtime generic slot hard cutover complete: typed DataKey<T> hot path, modifier effective values and computed cache now use DataSlot<T> + IDataSlot; untyped APIs remain loader/debug/TestSystem boundaries only; Event and Feature object contracts are deferred to later SDDs.
-- **Next Action**: If continuing GC/boxing optimization, create Event Dynamic Object Removal SDD from design/ECS框架优化/1.拆箱装箱+GC优化/设计/02-EventBus动态object禁用设计.md.
+- **Next Action**: If continuing GC/boxing optimization, create Event Dynamic Object Removal SDD from design/Runtime/ECS框架优化/1.拆箱装箱+GC优化/设计/02-EventBus动态object禁用设计.md.
 - **Open Blockers**: none
 ## Timeline
 
@@ -215,4 +215,4 @@
 - **Conclusion**: Data runtime generic slot hard cutover complete: typed DataKey<T> hot path, modifier effective values and computed cache now use DataSlot<T> + IDataSlot; untyped APIs remain loader/debug/TestSystem boundaries only; Event and Feature object contracts are deferred to later SDDs.
 - **Evidence**: dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly => Build succeeded, 960 warnings, 0 errors; DataOS validate slimeainew.authoring.db => passed; SDD validate SDD-0031 and --all => 0 errors, 0 warnings before closeout; DataCatalogTestScene/DataRuntimeTestScene/DataSnapshotApplyTestScene/DataFeatureBridgeTestScene all exited 0; precise grep gate found no old DataRuntimeStorage object slot/computed-cache/typed fallback patterns.
 - **Impact**: 任务已完成并保留归档上下文。
-- **Resume**: If continuing GC/boxing optimization, create Event Dynamic Object Removal SDD from design/ECS框架优化/1.拆箱装箱+GC优化/设计/02-EventBus动态object禁用设计.md.
+- **Resume**: If continuing GC/boxing optimization, create Event Dynamic Object Removal SDD from design/Runtime/ECS框架优化/1.拆箱装箱+GC优化/设计/02-EventBus动态object禁用设计.md.

@@ -22,7 +22,7 @@
 ## Dependencies
 
 - **Previous SDDs**: SDD-0012
-- **Shared design**: `../../design/2.Data系统优化/README.md` and related Data rewrite documents.
+- **Shared design**: `../../design/Runtime/2.Data系统优化/README.md` and related Data rewrite documents.
 - **Boundary**: This SDD must not reintroduce DataMeta/DataRegistry/DataKey static definitions as long-term field-definition sources.
 
 ## Verification

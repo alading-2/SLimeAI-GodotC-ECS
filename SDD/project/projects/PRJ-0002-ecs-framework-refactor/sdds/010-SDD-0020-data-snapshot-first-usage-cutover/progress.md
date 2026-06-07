@@ -51,7 +51,7 @@
 
 - **Context**: 用户指出 Data 要改的地方很多，必须把取用改成最新 Data 系统形式，并要求生成 SDD 任务、深度思考详细分析。
 - **Conclusion**: 已创建 SDD-0020，作为 SDD-0012~SDD-0019 后的 Data 使用层 hard cutover 任务；目标不是继续兼容旧 RuntimeTables，而是用 snapshot query/projection 统一替代所有旧取用点。
-- **Evidence**: `README.md`、`design/main.md`、`tasks.md`、`bdd.md`、`notes.md`、`progress.md` 已写入 SDD-0020。
+- **Evidence**: `README.md`、`design/main.md`、`tasks.md`、`bdd.md`、`Core/notes.md`、`Core/progress.md` 已写入 SDD-0020。
 - **Impact**: 后续 Data 实施应先完成 SDD-0020，再继续 Entity/Event 大改，避免旧 Data 兼任问题扩散到后续系统。
 - **Resume**: 从 T1.1 readiness gate 开始。
 

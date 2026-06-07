@@ -31,8 +31,8 @@
 3. `execution-prompt.md` — 一次性完成 SDD-0020 全任务的执行提示词
 4. `tasks.md` — 当前任务拆分
 5. `bdd.md` — 行为验收场景
-6. `progress.md` — 最近结论和恢复点
-7. `notes.md` — 参考与开放问题
+6. `Core/progress.md` — 最近结论和恢复点
+7. `Core/notes.md` — 参考与开放问题
 
 ## Current Resume
 

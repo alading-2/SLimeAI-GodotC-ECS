@@ -24,7 +24,7 @@
 | `ECS框架优化/1.拆箱装箱+GC优化/设计/05-TargetSelector集合分配与LINQ设计.md` | gc-target-query-allocation | current | 2026-06-06 | TargetQueryEngine / TargetQueryResult ownership 下处理 List、LINQ、Random；不在无 ownership 设计时池化返回 List |
 | `ECS框架优化/1.拆箱装箱+GC优化/设计/06-Logger字符串与诊断分配设计.md` | gc-logger-lazy-message | current | 2026-06-06 | Logger 降为 P2/热路径局部处理；不禁字符串插值，用 IsEnabled / lazy / interpolated string handler 解决必要调用点 |
 | `4.SystemAgent目录更改到SlimeAI里面/README.md` | systemagent-ai-config-root-migration | current | 2026-05-30 | `SDD/`、`Workspace/`、`.ai-config/` 已迁入 `SlimeAI/` 后的规则、路径和同步语义更新设计 |
-| `01-Data系统问题分析.md` | data-analysis-legacy-entry | current | 2026-05-28 | 历史入口；完整 Data 设计已迁移到 `design/2.Data系统优化/` |
+| `01-Data系统问题分析.md` | data-analysis-legacy-entry | current | 2026-05-28 | 历史入口；完整 Data 设计已迁移到 `design/Runtime/2.Data系统优化/` |
 | `2.Data系统优化/README.md` | data-design-index | current | 2026-05-30 | Data 完全重构设计包入口；descriptor-first、policy 分层、Feature/Compute 边界、旧路径删除和 SDD-0021 无兼容收口 |
 | `2.Data系统优化/01-代码实现说明.md` | data-code-explanation | current | 2026-05-28 | DataDefinition 分层、DataDefinitionCatalog、Data.Get/Set、compute resolver、snapshot apply 的目标代码形状 |
 | `2.Data系统优化/02-DataMeta属性审计与Feature计算边界.md` | data-meta-feature-boundary | current | 2026-05-28 | 逐项审计 DataMeta 属性，裁决 Feature 不替代 computed，旧 Data 输入路径不保留 |
@@ -78,7 +78,10 @@
 | `Tool/其他Tool/05-TargetSelector查询契约.md` | target-selector-query-contract | current | 2026-06-04 | 裁决 TargetSelector 升级为 TargetQueryEngine / TargetQueryResult；补 query validation、resolved origin/forward、candidate source、deterministic RNG、safe sorting 和 diagnostics。 |
 | `Tool/其他Tool/06-实施路线与验证门禁.md` | other-tools-roadmap-validation | current | 2026-06-04 | 给出 RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、Common Utilities、MathFormula hard cutover SDD 拆分、BDD、grep gate 和验证命令。 |
 | `Tool/其他Tool/07-2026-06-04-AI-first完全重构校准.md` | other-tools-hard-cutover-override | current | 2026-06-04 | 用户最新裁决落点：AI-first 功能优先、代码可丢弃、必要时完全重构；记录 Must Confirm、默认假设、Research Adoption 和执行前 override。 |
-| `Tool/其他Tool/08-2026-06-04-用户裁决后执行前复核.md` | other-tools-user-review-execution-check | current | 2026-06-04 | 用户截图和最新答复后的通俗复核；确认 `/root/SlimeAIRuntime`、资源 strict fail-fast，补 TargetSelector 重构步骤、Common Utilities 保留规则和 NodeLifecycle Runtime 归属问题。 |
+| `Tool/其他Tool/08-2026-06-04-用户裁决后执行前复核.md` | other-tools-user-review-execution-check | current | 2026-06-07 | 用户截图和最新答复后的通俗复核；确认 `/root/SlimeAIRuntime`、资源 strict fail-fast，补 TargetSelector 重构步骤、Common Utilities 保留规则和 NodeLifecycle Runtime 归属问题；2026-06-07 已由 `10-*` 关闭剩余确认项。 |
+| `Tool/其他Tool/09-2026-06-07-ResourceManagement深度分析.md` | resource-management-deepthink-decision | current | 2026-06-07 | 单独分析 ResourceManagement / ResourceGenerator 做法；用户已校准 `res://` 本身不是问题，后续保留或简化为 ResourceLoading facade + generated catalog + diagnostics，路径移动交给 migration workflow。 |
+| `Tool/其他Tool/10-2026-06-07-用户最终确认与执行口径.md` | other-tools-final-user-confirmation | current | 2026-06-07 | 用户最终确认：Common Utilities 放 `Src/ECS/Tools/CommonUtilities/`，NodeLifecycle 迁 Runtime，TargetSelector 不做兼容桥；后续剩余 Tools 实施优先读取本文件。 |
+| `Tool/其他Tool/11-2026-06-07-ResourcePathMigrationSkill设计.md` | resource-path-migration-skill-design | current | 2026-06-07 | 资源路径移动 workflow / skill 设计；在当前工作目录替换 old/new path，运行 ResourceGenerator 和 `rg` 残留检查，并明确框架仓/游戏仓/submodule 边界。 |
 | `13-旧ECS框架Event系统问题分析与优化方向.md` | event-analysis | current | 2026-05-26 | Event 字符串主键、GameEventType、EventContext、GlobalEventBus 和订阅生命周期问题 |
 | `03-字符串键名统一问题分析.md` | cross-cutting-analysis | current | 2026-05-26 | Data/Event/Relationship/Resource 中字符串变量名不统一的共性问题 |
 | `04-优化优先级与SDD拆分建议.md` | roadmap-input | current | 2026-05-28 | 后续按问题域拆 SDD；Data 第一切片改为 Full Rewrite Catalog TDD |

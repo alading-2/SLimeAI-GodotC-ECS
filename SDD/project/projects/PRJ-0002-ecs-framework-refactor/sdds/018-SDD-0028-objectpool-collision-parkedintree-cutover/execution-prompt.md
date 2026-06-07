@@ -62,8 +62,8 @@ git status --short
 2. `design/main.md`
 3. `tasks.md`
 4. `bdd.md`
-5. `progress.md`
-6. `notes.md`
+5. `Core/progress.md`
+6. `Core/notes.md`
 
 最后读源码：
 
@@ -103,7 +103,7 @@ git status --short
 
 ## T1.1 Readiness Baseline
 
-先只读，不改实现。记录摘要到 `progress.md`，不要复制完整 dirty 列表。
+先只读，不改实现。记录摘要到 `Core/progress.md`，不要复制完整 dirty 列表。
 
 ```bash
 cd /home/slime/Code/SlimeAI/SlimeAI
@@ -138,7 +138,7 @@ python3 Workspace/SDD/sdd.py validate SDD-0028
 10. T1.11 同步 DocsAI 和 skill。
 11. T1.12 跑最终 gates，回填 SDD 和项目状态。
 
-每完成一项任务就更新 `tasks.md` 和 `progress.md`。不要等到最后一次性补状态。
+每完成一项任务就更新 `tasks.md` 和 `Core/progress.md`。不要等到最后一次性补状态。
 
 ## 目标代码形态
 

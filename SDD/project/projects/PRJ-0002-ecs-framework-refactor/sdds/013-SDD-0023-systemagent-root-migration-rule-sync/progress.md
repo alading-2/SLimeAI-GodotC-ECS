@@ -50,8 +50,8 @@
 
 ### P002 — 2026-05-30 21:05 — design-expanded
 
-- **Context**: 用户要求根据 `design/4.SystemAgent目录更改到SlimeAI里面/README.md` 生成执行型 SDD。
+- **Context**: 用户要求根据 `design/Runtime/4.SystemAgent目录更改到SlimeAI里面/README.md` 生成执行型 SDD。
 - **Conclusion**: 已将设计文档转成 SDD-0023 的任务级设计、8 项任务、5 个 BDD 场景和恢复点；本 SDD 聚焦规则同步与路径语义收口，不改 ECS runtime。
-- **Evidence**: `README.md`、`design/main.md`、`tasks.md`、`bdd.md`、`progress.md` 已补齐。
+- **Evidence**: `README.md`、`design/main.md`、`tasks.md`、`bdd.md`、`Core/progress.md` 已补齐。
 - **Impact**: 下一步可以直接开始 rules / sync / skill 路径更新。
 - **Resume**: 从 T1.1 readiness baseline 开始。

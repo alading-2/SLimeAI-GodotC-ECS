@@ -32,7 +32,7 @@
 7. `tasks.md` — 任务拆分和验证要求
 8. `bdd.md` — 行为验收场景
 9. `execution-prompt.md` — 下一轮执行提示词
-10. `progress.md` — 最近结论和恢复点
+10. `Core/progress.md` — 最近结论和恢复点
 
 ## Current Resume
 

@@ -12,7 +12,7 @@
   - **Goal**: 记录 SDD-0021 后仍成立的问题，不再把已删除旧兼容入口列为 P0。
   - **Read**: `design/03-*`、`design/04-*`、`design/05-*`、`design/06-*`。
   - **Checks**: 当前 `DefaultMoveMode` record 覆盖、`field_rows` 投影、runtime projection 裸 key、write failure bool-only、`object_ref` 类型语义、catalog freeze、display name query、current docs 旧入口命中。
-  - **Validation**: baseline 结论写入 `progress.md`，并附关键 grep / jq 摘要。
+  - **Validation**: baseline 结论写入 `Core/progress.md`，并附关键 grep / jq 摘要。
 
 - [x] T1.2 前移 Movement 注册期必需字段
   - **Goal**: `unit.player` / `unit.enemy` records 在 `RegisterComponents()` 前提供正确 `DefaultMoveMode`。

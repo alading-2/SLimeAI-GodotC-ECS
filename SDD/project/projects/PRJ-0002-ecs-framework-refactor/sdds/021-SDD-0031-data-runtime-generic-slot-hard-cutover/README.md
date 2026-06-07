@@ -25,8 +25,8 @@
 3. `design/01-Data运行时object去除设计.md` — Data 方案来源副本
 4. `tasks.md` — 当前任务拆分
 5. `bdd.md` — Data runtime 行为验收
-6. `progress.md` — 最近结论和恢复点
-7. `notes.md` — 参考与开放问题
+6. `Core/progress.md` — 最近结论和恢复点
+7. `Core/notes.md` — 参考与开放问题
 
 ## Current Resume
 

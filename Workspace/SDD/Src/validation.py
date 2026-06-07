@@ -326,17 +326,15 @@ def validate_project(root: Path,
     errors: list[str] = []
     warnings: list[str] = []
     path = item["_path"]
-    required = [
+    # 基础文件（不依赖 project.json）
+    static_required = [
         "README.md",
         "project.json",
-        "design/INDEX.md",
-        "roadmap.md",
-        "progress.md",
-        "notes.md",
     ]
-    for rel in required:
+    for rel in static_required:
         if not (path / rel).exists():
             errors.append(f"ERROR SDD026 missing-project-file: {path / rel}")
+    # 读取 project.json，从 links 获取动态路径
     metadata_path = path / "project.json"
     try:
         metadata = read_json(metadata_path)
@@ -344,6 +342,17 @@ def validate_project(root: Path,
         errors.append(
             f"ERROR SDD026 invalid-project-json: {metadata_path}: {exc}")
         return errors, warnings
+    links = metadata.get("links", {})
+    dynamic_required = {
+        "design_index": "design/INDEX.md",
+        "roadmap": "roadmap.md",
+        "progress": "progress.md",
+        "notes": "notes.md",
+    }
+    for key, default_rel in dynamic_required.items():
+        rel = links.get(key, default_rel)
+        if not (path / rel).exists():
+            errors.append(f"ERROR SDD026 missing-project-file: {path / rel}")
     project_id = metadata.get("id", "")
     if not path.name.startswith(project_id):
         errors.append(

@@ -20,12 +20,12 @@
 
 ## Reading Order
 
-1. `../../design/4.SystemAgent目录更改到SlimeAI里面/README.md` — 项目级迁移后规则更新设计
+1. `../../design/Runtime/4.SystemAgent目录更改到SlimeAI里面/README.md` — 项目级迁移后规则更新设计
 2. `design/main.md` — 本 SDD 执行设计
 3. `tasks.md` — 当前任务拆分、顺序和验证要求
 4. `bdd.md` — 行为验收场景
-5. `progress.md` — 最近结论和恢复点
-6. `notes.md` — 参考、开放问题和 grep 入口
+5. `Core/progress.md` — 最近结论和恢复点
+6. `Core/notes.md` — 参考、开放问题和 grep 入口
 7. `execution-prompt.md` — 可直接交给新会话执行的完整提示词
 
 ## Current Resume

@@ -19,7 +19,7 @@
 
 ### P002 — 2026-05-27 14:36 — tasks-filled
 
-- **Context**: 根据 `design/2.Data系统优化/README.md §6` 填充任务结构。
+- **Context**: 根据 `design/Runtime/2.Data系统优化/README.md §6` 填充任务结构。
 - **Conclusion**: 3 组 8 个任务、BDD 场景、notes 参考资料全部写入。设计已对齐 C#-first 方向（`DataKey<T>` 补齐、`SnapshotLoader` 新建、旧 `RuntimeDataSnapshot.cs` 删除）。
 - **Evidence**: tasks.md 8 任务；bdd.md 3 场景；design/main.md 完整设计；notes.md JSON 格式摘要。
 - **Impact**: 下一步直接开始 T1.1 实施。

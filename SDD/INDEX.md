@@ -5,7 +5,7 @@
 - **pending**: 0
 - **active**: 0
 - **blocked**: 1
-- **done**: 32
+- **done**: 33
 - **projects**: 2
 
 ## Projects
@@ -65,6 +65,7 @@
 | SDD-0031 | PRJ-0002 | Data Runtime Generic Slot Hard Cutover | 2026-06-06 | SlimeAI | done |
 | SDD-0032 | PRJ-0002 | Data Runtime Typed Contract Completion | 2026-06-07 | SlimeAI | done |
 | SDD-0033 | PRJ-0002 | Non-Data GC Boundary Completion | 2026-06-07 | SlimeAI | done |
+| SDD-0034 | PRJ-0002 | Design Directory Restructure | 2026-06-07 | SlimeAI | done |
 
 ## By Scope
 
@@ -93,6 +94,7 @@
 - SDD-0031 — Data Runtime Generic Slot Hard Cutover
 - SDD-0032 — Data Runtime Typed Contract Completion
 - SDD-0033 — Non-Data GC Boundary Completion
+- SDD-0034 — Design Directory Restructure
 
 ### Workspace/SDD
 
@@ -215,6 +217,10 @@
 - SDD-0022 — Data Projection Diagnostics Contract Hardening
 - SDD-0029 — System Contract Manifest And Diagnostics Hardening
 
+### directory
+
+- SDD-0034 — Design Directory Restructure
+
 ### directory-architecture
 
 - SDD-0025 — ECS Framework Directory Architecture Restructure
@@ -318,6 +324,10 @@
 ### relationship
 
 - SDD-0024 — Entity Relationship Full Rewrite
+
+### restructure
+
+- SDD-0034 — Design Directory Restructure
 
 ### role
 

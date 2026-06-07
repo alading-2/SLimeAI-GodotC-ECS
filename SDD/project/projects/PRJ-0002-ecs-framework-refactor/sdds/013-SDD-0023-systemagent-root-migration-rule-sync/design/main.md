@@ -73,7 +73,7 @@ CLAUDE.md
 
 - `DocsNew/README.md` 修正文件名和相对路径。
 - `Workspace/SDD/Src/templates.py` 的默认 Git Boundary 改为 `/home/slime/Code/SlimeAI/SlimeAI`。
-- 项目级 PRJ-0002 `roadmap.md`、`progress.md`、`project.json` 切到 SDD-0023。
+- 项目级 PRJ-0002 `Core/roadmap.md`、`Core/progress.md`、`project.json` 切到 SDD-0023。
 
 ### skill 收口
 

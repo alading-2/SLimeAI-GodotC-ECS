@@ -34,8 +34,8 @@
 7. `tasks.md` — 可执行任务拆分
 8. `bdd.md` — 行为验收场景
 9. `execution-prompt.md` — 可直接交给新执行会话的一次性提示词
-10. `progress.md` — 最近结论和恢复点
-11. `notes.md` — 参考与开放问题
+10. `Core/progress.md` — 最近结论和恢复点
+11. `Core/notes.md` — 参考与开放问题
 
 ## Current Resume
 

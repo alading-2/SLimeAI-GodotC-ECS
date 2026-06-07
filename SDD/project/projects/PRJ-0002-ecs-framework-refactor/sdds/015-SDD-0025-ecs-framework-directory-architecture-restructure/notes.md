@@ -2,10 +2,10 @@
 
 ## References
 
-- `../../design/6.ECS框架目录架构大重构/README.md`
-- `../../design/6.ECS框架目录架构大重构/01-现状证据与AI-first裁决.md`
-- `../../design/6.ECS框架目录架构大重构/02-目标目录架构与归属规则.md`
-- `../../design/6.ECS框架目录架构大重构/03-迁移切片与验证门禁.md`
+- `../../design/Runtime/6.ECS框架目录架构大重构/README.md`
+- `../../design/Runtime/6.ECS框架目录架构大重构/01-现状证据与AI-first裁决.md`
+- `../../design/Runtime/6.ECS框架目录架构大重构/02-目标目录架构与归属规则.md`
+- `../../design/Runtime/6.ECS框架目录架构大重构/03-迁移切片与验证门禁.md`
 - `../../directory-architecture-restructure-execution-prompt.md`
 - `../../../../../DocsAI/ECS框架与AIFirst方向决策.md`
 - `/home/slime/Code/SlimeAI/SlimeAI-AiFirst/GameOS/Capabilities`

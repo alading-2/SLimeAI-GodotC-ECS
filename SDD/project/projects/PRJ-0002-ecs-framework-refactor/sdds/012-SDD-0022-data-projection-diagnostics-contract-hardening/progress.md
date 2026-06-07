@@ -5,7 +5,7 @@
 - **Updated**: 2026-05-30 16:09
 - **Current Task**: done
 - **Last Conclusion**: Data projection diagnostics contract hardening is complete. Projection, final snapshot completeness, runtime diagnostics, object_ref/array/modifier contracts, spawn boundary, catalog freeze, display-name query and docs gates are now hardened.
-- **Next Action**: PRJ-0002 后续转入 Entity / Relationship hard cutover，从 `design/3.Entity系统优化/README.md` 和 `entity-rewrite-execution-prompt.md` 创建下一条执行 SDD。
+- **Next Action**: PRJ-0002 后续转入 Entity / Relationship hard cutover，从 `design/Runtime/3.Entity系统优化/README.md` 和 `Core/entity-rewrite-execution-prompt.md` 创建下一条执行 SDD。
 - **Open Blockers**: none
 ## Timeline
 

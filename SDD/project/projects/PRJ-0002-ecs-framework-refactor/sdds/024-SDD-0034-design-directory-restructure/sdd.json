@@ -1,0 +1,49 @@
+{
+  "id": "SDD-0034",
+  "slug": "design-directory-restructure",
+  "title": "Design Directory Restructure",
+  "status": "done",
+  "type": "refactor",
+  "created_at": "2026-06-07",
+  "updated_at": "2026-06-07",
+  "scope": "SlimeAI",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI/SlimeAI"
+  ],
+  "affected_areas": [
+    "sdd"
+  ],
+  "tags": [
+    "directory",
+    "restructure"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 13,
+    "total_tasks": 13,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "This SDD changes CLI or workflow behavior."
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0002",
+  "project_order": 24,
+  "shared_design_refs": [
+    "../../design/INDEX.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-06-07 16:08",
+      "summary": "python3 Workspace/SDD/sdd.py validate SDD-0034: 0 error, 4 warning"
+    }
+  ]
+}

@@ -24,17 +24,17 @@
 1. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/README.md`
 2. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/roadmap.md`
 3. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/progress.md`
-4. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/README.md`
-5. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/01-代码实现说明.md`
-6. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/02-DataMeta属性审计与Feature计算边界.md`
-7. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/03-完全重构范围与TDD测试计划.md`
-8. 当前 SDD 的 `README.md`、`design/main.md`、`tasks.md`、`bdd.md`、`progress.md`。
+4. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/README.md`
+5. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/01-代码实现说明.md`
+6. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/02-DataMeta属性审计与Feature计算边界.md`
+7. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/03-完全重构范围与TDD测试计划.md`
+8. 当前 SDD 的 `README.md`、`design/main.md`、`tasks.md`、`bdd.md`、`Core/progress.md`。
 
 ## 执行规则
 
 1. 从当前 SDD 的 `tasks.md` 的 `T1.1` 开始，不跳任务。
 2. 行为变更必须 TDD：先 RED，再 GREEN，最后 REFACTOR。
-3. 每完成一个任务，更新该 SDD 的 `tasks.md` checkbox 与 `progress.md`。
+3. 每完成一个任务，更新该 SDD 的 `tasks.md` checkbox 与 `Core/progress.md`。
 4. 改源码前后在对应 git 边界运行 `git status --short`。
 5. 能验证就运行构建/测试；不能验证必须说明原因。
 6. 不要 commit/push，除非用户明确要求。

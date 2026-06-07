@@ -8,7 +8,7 @@
 
 ## Context
 
-- 共享设计文档：`../../design/2.Data系统优化/README.md`（§4 采纳方向、§6 需要做什么）
+- 共享设计文档：`../../design/Runtime/2.Data系统优化/README.md`（§4 采纳方向、§6 需要做什么）
 - 当前运行时核心：`SlimeAI/Src/ECS/Base/Data/`（DataMeta.cs / DataRegistry.cs / Data.cs / DataModifier.cs）
 - DataKey 定义：`SlimeAI/Data/DataKey/*.cs`（已使用 `DataKey<T>` 格式但底层类型不存在）
 - DataOS 数据库：`SlimeAI/Data/Data/`（Authoring DB + Schema + Snapshots + Tools）

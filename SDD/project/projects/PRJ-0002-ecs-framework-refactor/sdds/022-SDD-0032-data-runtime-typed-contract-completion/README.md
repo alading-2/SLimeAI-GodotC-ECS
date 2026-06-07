@@ -26,8 +26,8 @@
 2. `design/main.md` — DeepThink、DesignCritic、范围、取舍和验证门禁
 3. `tasks.md` — 当前任务拆分
 4. `bdd.md` — 行为验收场景
-5. `progress.md` — 最近结论和恢复点
-6. `notes.md` — 参考与开放问题
+5. `Core/progress.md` — 最近结论和恢复点
+6. `Core/notes.md` — 参考与开放问题
 
 ## Current Resume
 

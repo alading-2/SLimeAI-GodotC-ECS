@@ -132,7 +132,7 @@
 - expectedObservations: typed set/get creates `DataSlot<T>` or numeric typed slot; typed path does not increment untyped boundary counter; modifier and computed effective values match previous behavior; loader/debug untyped still converts and reports structured errors.
 - passCriteria: DataRuntimeTestScene covers typed slot contract, modifier pipeline, computed cache, diagnostics and existing DataOS behavior; grep gate shows `DataSlot.Value object?` and `_computedCache Dictionary<string, object?>` removed from Data runtime.
 - failCriteria: typed `DataKey<T>` write still calls `TrySetUntyped`; slot exposes business `object? Value`; modifier/computed behavior regresses; DataOS validator or build fails.
-- artifactPath: `Src/ECS/Runtime/Data/Tests/DataOS/DataRuntimeTestScene.cs` plus command outputs recorded in `progress.md`.
+- artifactPath: `Src/ECS/Runtime/Data/Tests/DataOS/DataRuntimeTestScene.cs` plus command outputs recorded in `Core/progress.md`.
 
 ### Commands
 

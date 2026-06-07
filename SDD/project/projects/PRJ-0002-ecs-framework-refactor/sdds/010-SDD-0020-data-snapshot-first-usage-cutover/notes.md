@@ -2,9 +2,9 @@
 
 ## Shared Design Inputs
 
-- `../../design/2.Data系统优化/README.md`
-- `../../design/2.Data系统优化/03-完全重构范围与TDD测试计划.md`
-- `../../design/2.Data系统优化/04-Data系统现状复查与兼任问题.md`
+- `../../design/Runtime/2.Data系统优化/README.md`
+- `../../design/Runtime/2.Data系统优化/03-完全重构范围与TDD测试计划.md`
+- `../../design/Runtime/2.Data系统优化/04-Data系统现状复查与兼任问题.md`
 - `../../data-rewrite-execution-prompt.md`
 
 ## Current Known Legacy Use Buckets

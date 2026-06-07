@@ -34,18 +34,18 @@ DocsAI/ECS/Runtime + DocsAI/ECS/Capabilities + DocsAI/ECS/Tools + DocsAI/ECS/UI
 
 ## Reading Order
 
-1. `../../design/6.ECS框架目录架构大重构/README.md` — 项目级目录架构设计包入口
-2. `../../design/6.ECS框架目录架构大重构/01-现状证据与AI-first裁决.md` — 当前问题、AiFirst 参考和裁决
-3. `../../design/6.ECS框架目录架构大重构/02-目标目录架构与归属规则.md` — Runtime / Capabilities / Tools / UI 归属规则
-4. `../../design/6.ECS框架目录架构大重构/03-迁移切片与验证门禁.md` — 分阶段迁移计划和验证门禁
+1. `../../design/Runtime/6.ECS框架目录架构大重构/README.md` — 项目级目录架构设计包入口
+2. `../../design/Runtime/6.ECS框架目录架构大重构/01-现状证据与AI-first裁决.md` — 当前问题、AiFirst 参考和裁决
+3. `../../design/Runtime/6.ECS框架目录架构大重构/02-目标目录架构与归属规则.md` — Runtime / Capabilities / Tools / UI 归属规则
+4. `../../design/Runtime/6.ECS框架目录架构大重构/03-迁移切片与验证门禁.md` — 分阶段迁移计划和验证门禁
 5. `../../directory-architecture-restructure-execution-prompt.md` — 可交给新执行会话的总提示词
 6. `execution-prompt.md` — 本 SDD 局部执行提示词
 7. `design/INDEX.md` — 本 SDD 设计入口
 8. `design/main.md` — 本 SDD 执行设计
 9. `tasks.md` — 当前任务拆分
-10. `progress.md` — 最近结论和恢复点
+10. `Core/progress.md` — 最近结论和恢复点
 11. `bdd.md` — 行为验收场景
-12. `notes.md` — 参考与开放问题
+12. `Core/notes.md` — 参考与开放问题
 
 ## Current Resume
 

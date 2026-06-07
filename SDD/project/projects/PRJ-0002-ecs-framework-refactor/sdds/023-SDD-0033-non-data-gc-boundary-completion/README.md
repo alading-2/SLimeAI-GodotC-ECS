@@ -24,9 +24,9 @@ Data runtime 的 generic slot hard cutover 已完成，本 SDD 收口剩余非 D
 
 1. `design/INDEX.md` — 设计文档列表和主设计入口
 2. `tasks.md` — 当前任务拆分
-3. `progress.md` — 最近结论和恢复点
+3. `Core/progress.md` — 最近结论和恢复点
 4. `bdd.md` — 行为场景或不适用说明
-5. `notes.md` — 参考与开放问题
+5. `Core/notes.md` — 参考与开放问题
 
 ## Current Resume
 
