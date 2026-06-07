@@ -2,10 +2,10 @@
   "id": "SDD-0037",
   "slug": "resource-loading-and-common-utilities-hard-cutover",
   "title": "Resource Loading And Common Utilities Hard Cutover",
-  "status": "pending",
+  "status": "done",
   "type": "refactor",
   "created_at": "2026-06-07",
-  "updated_at": "2026-06-07",
+  "updated_at": "2026-06-08",
   "scope": "SlimeAI",
   "git_boundaries": [
     "/home/slime/Code/SlimeAI/SlimeAI"
@@ -20,10 +20,10 @@
     "hard-cutover"
   ],
   "progress": {
-    "current_task": "T1.1",
-    "completed_tasks": 0,
+    "current_task": "done",
+    "completed_tasks": 11,
     "total_tasks": 11,
-    "percent": 0
+    "percent": 100
   },
   "bdd": {
     "required": true,
@@ -41,5 +41,11 @@
   "project_order": 27,
   "shared_design_refs": [
     "../../design/INDEX.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-06-08 01:16",
+      "summary": "dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly => 0 errors; dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj => exit 0, 108 resources, 5 existing duplicate-name warnings skipped in favor of .tscn; bash Data/DataOS/Tools/validate-dataos.sh Data/DataOS/Authoring/slimeainew.authoring.db => passed; python3 Workspace/SDD/sdd.py validate SDD-0037 => 0 error / 0 warning; git diff --check => passed; sync-ai-config => exit 0; skill-test static all => Critical:0 Advisory:3."
+    }
   ]
 }

@@ -1,6 +1,5 @@
 using Godot;
 using System.Collections.Generic;
-using System.Linq;
 
 /// <summary>
 /// 通用 Node 生命周期管理器
@@ -28,18 +27,7 @@ using System.Linq;
 public static class NodeLifecycleManager
 {
     private static readonly Log _log = new("NodeLifecycleManager", LogLevel.Warning);
-
-    // ==================== 核心数据结构 ====================
-
-    /// <summary>
-    /// 全局节点注册表：InstanceId -> Node
-    /// </summary>
-    private static readonly Dictionary<string, Node> _nodes = new();
-
-    /// <summary>
-    /// 分类索引：NodeType -> HashSet<Node>;
-    /// </summary>
-    private static readonly Dictionary<string, HashSet<Node>> _nodesByType = new();
+    private static readonly NodeLifecycleRegistry _registry = new();
 
     // ==================== 注册 ====================
 
@@ -50,22 +38,19 @@ public static class NodeLifecycleManager
     /// <returns>是否成功注册（false 表示已存在）</returns>
     public static bool Register(Node node)
     {
+        return Register(node, NodeLifecycleOwner.Unknown(node.GetInstanceId().ToString()), "legacy");
+    }
+
+    public static bool Register(Node node, NodeLifecycleOwner owner, string source)
+    {
         string id = node.GetInstanceId().ToString();
         string nodeType = node.GetType().Name;
 
-        // 防止重复注册
-        if (_nodes.ContainsKey(id))
+        if (!_registry.Register(node, owner, source))
         {
             _log.Warn($"Node {id} ({nodeType}) 已注册，跳过");
             return false;
         }
-
-        _nodes[id] = node;
-
-        // 更新类型索引
-        if (!_nodesByType.ContainsKey(nodeType))
-            _nodesByType[nodeType] = new HashSet<Node>();
-        _nodesByType[nodeType].Add(node);
 
         _log.Debug($"已注册 Node: {nodeType} (ID: {id})");
         return true;
@@ -76,7 +61,7 @@ public static class NodeLifecycleManager
     /// </summary>
     public static bool IsRegistered(string nodeId)
     {
-        return _nodes.ContainsKey(nodeId);
+        return _registry.IsRegistered(nodeId);
     }
 
     /// <summary>
@@ -106,25 +91,10 @@ public static class NodeLifecycleManager
     /// <returns>是否成功注销</returns>
     public static bool Unregister(string nodeId)
     {
-        if (!_nodes.TryGetValue(nodeId, out var node))
+        if (!_registry.Unregister(nodeId))
         {
             _log.Warn($"Node {nodeId} 未注册，无法注销");
             return false;
-        }
-
-        _nodes.Remove(nodeId);
-
-        // 从类型索引中移除
-        foreach (var set in _nodesByType.Values)
-        {
-            set.Remove(node);
-        }
-
-        // 清理空集合
-        var emptyTypes = _nodesByType.Where(kvp => kvp.Value.Count == 0).Select(kvp => kvp.Key).ToList();
-        foreach (var type in emptyTypes)
-        {
-            _nodesByType.Remove(type);
         }
 
         _log.Debug($"已注销 Node: {nodeId}");
@@ -138,7 +108,7 @@ public static class NodeLifecycleManager
     /// </summary>
     public static Node? GetNodeById(string nodeId)
     {
-        return _nodes.GetValueOrDefault(nodeId);
+        return _registry.GetNodeById(nodeId);
     }
 
     /// <summary>
@@ -146,28 +116,26 @@ public static class NodeLifecycleManager
     /// </summary>
     /// <typeparam name="T">Node 类型</typeparam>
     /// <returns>匹配的节点集合</returns>
-    public static IEnumerable<T> GetNodesByType<T>() where T : Node
+    internal static IReadOnlyList<T> GetNodesByType<T>() where T : Node
     {
-        if (!_nodesByType.TryGetValue(typeof(T).Name, out var set))
-            return Enumerable.Empty<T>();
-        return set.OfType<T>();
+        return _registry.GetNodesByType<T>();
     }
 
     /// <summary>
     /// 获取所有已注册的 Node
     /// </summary>
-    public static IEnumerable<Node> GetAllNodes()
+    internal static IReadOnlyList<Node> GetAllNodes()
     {
-        return _nodes.Values;
+        return _registry.GetAllNodes();
     }
 
     /// <summary>
     /// 获取所有实现指定接口/基类的 Node
     /// </summary>
     /// <typeparam name="T">接口或基类类型</typeparam>
-    public static IEnumerable<T> GetNodesByInterface<T>() where T : class
+    internal static IReadOnlyList<T> GetNodesByInterface<T>() where T : class
     {
-        return _nodes.Values.OfType<T>();
+        return _registry.GetNodesByInterface<T>();
     }
 
     // ==================== 统计与清理 ====================
@@ -177,7 +145,17 @@ public static class NodeLifecycleManager
     /// </summary>
     public static (int TotalNodes, int TypeCount) GetStats()
     {
-        return (_nodes.Count, _nodesByType.Count);
+        return _registry.GetStats();
+    }
+
+    public static NodeLifecycleSnapshot GetSnapshot()
+    {
+        return _registry.GetSnapshot();
+    }
+
+    public static int CleanupInvalid()
+    {
+        return _registry.CleanupInvalid();
     }
 
     /// <summary>
@@ -185,9 +163,8 @@ public static class NodeLifecycleManager
     /// </summary>
     public static void Clear()
     {
-        int count = _nodes.Count;
-        _nodes.Clear();
-        _nodesByType.Clear();
+        int count = _registry.GetStats().TotalNodes;
+        _registry.Clear();
         _log.Info($"NodeLifecycleManager 已清空，共清理 {count} 个 Node");
     }
 
@@ -200,14 +177,15 @@ public static class NodeLifecycleManager
     {
         var sb = new System.Text.StringBuilder();
         sb.AppendLine("=== NodeLifecycleManager 统计信息 ===");
-        sb.AppendLine($"总节点数: {_nodes.Count}");
-        sb.AppendLine($"类型数: {_nodesByType.Count}");
+        var snapshot = _registry.GetSnapshot();
+        sb.AppendLine($"总节点数: {snapshot.TotalCount}");
+        sb.AppendLine($"Invalid: {snapshot.InvalidCount}");
         sb.AppendLine();
 
         sb.AppendLine("=== 按类型统计 ===");
-        foreach (var kvp in _nodesByType)
+        foreach (var entry in snapshot.Entries)
         {
-            sb.AppendLine($"{kvp.Key}: {kvp.Value.Count} 个");
+            sb.AppendLine($"{entry.NodeType}: {entry.NodeId} owner={entry.Owner.Kind}/{entry.Owner.OwnerId} source={entry.Source}");
         }
 
         return sb.ToString();

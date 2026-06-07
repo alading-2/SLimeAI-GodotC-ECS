@@ -83,7 +83,7 @@ internal class SineWaveShotExecutor : AbilityFeatureHandler
     private static Vector2 GetRandomDirectionPoint(
         Node2D casterNode) // 施法者节点
     {
-        var points = PositionTargetSelector.Query(new TargetSelectorQuery
+        using var result = TargetQueryEngine.QueryPositions(new TargetSelectorQuery
         {
             Geometry = GeometryType.Ring, // 查询形状
             Origin = casterNode.GlobalPosition, // 查询中心
@@ -92,9 +92,9 @@ internal class SineWaveShotExecutor : AbilityFeatureHandler
             MaxTargets = 1 // 最大目标数
         });
 
-        if (points.Count > 0)
+        if (result.Items.Count > 0)
         {
-            return points[0];
+            return result.Items[0];
         }
 
         return casterNode.GlobalPosition + Vector2.Right * 160f;

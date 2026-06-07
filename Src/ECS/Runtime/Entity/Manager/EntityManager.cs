@@ -179,7 +179,7 @@ public static partial class EntityManager
             return pooledEntity;
         }
 
-        var scene = ResourceManagement.Load<PackedScene>(typeof(T).Name, ResourceCategory.Entity);
+        var scene = ResourceLoading.Load<PackedScene>(typeof(T).Name, ResourceCategory.Entity);
         if (scene == null)
         {
             _log.Error($"场景加载失败: {typeof(T).Name} (请检查 ResourceGenerator 是否运行)");
@@ -200,7 +200,11 @@ public static partial class EntityManager
 
         string typeName = typeof(T).Name;
         string path = $"ECS/Entity/{typeName}";
-        var parent = ParentManager.GetOrRegister(typeName, path);
+        var parent = RuntimeMountService.GetOrCreate(
+            RuntimeMountIds.EntityType(typeName),
+            path,
+            "Runtime.Entity",
+            $"{typeName} Entity 挂载点");
 
         parent.AddChild(entity);
         _log.Debug($"已将 Entity 添加到场景树: {typeName} -> {path}");
@@ -214,12 +218,9 @@ public static partial class EntityManager
     /// <param name="node">要注册的节点（Entity 或 Component）</param>
     public static void Register(Node node)
     {
-        // 委托给 NodeLifecycleManager
-        NodeLifecycleManager.Register(node);
-
-        // 新 Entity runtime 的 typed registry 与旧 NodeLifecycleManager 并行维护。
-        // 未完成 hard cutover 前，直接 Register 的测试/系统也需要能被 LifecycleTree 查询到。
-        _entityRegistry.Register(ResolveRuntimeEntityId(node), node);
+        var entityId = ResolveRuntimeEntityId(node);
+        NodeLifecycleManager.Register(node, NodeLifecycleOwner.Entity(entityId.Value), "EntityManager.Register");
+        _entityRegistry.Register(entityId, node);
     }
 
     /// <summary>
@@ -231,7 +232,7 @@ public static partial class EntityManager
         string id = entity.GetInstanceId().ToString();
 
         // 检查是否已注册
-        if (!NodeLifecycleManager.IsRegistered(id))
+        if (_entityRegistry.GetEntityId(entity).IsEmpty && !NodeLifecycleManager.IsRegistered(id))
         {
             _log.Warn($"Entity {id} 未注册，无法注销");
             return;
@@ -266,7 +267,11 @@ public static partial class EntityManager
     /// </summary>
     public static Node? GetEntityById(string id)
     {
-        // 委托给 NodeLifecycleManager
+        var typedId = EntityId.From(id);
+        var node = _entityRegistry.GetNode(typedId);
+        if (node != null)
+            return node;
+
         return NodeLifecycleManager.GetNodeById(id);
     }
 
@@ -325,8 +330,7 @@ public static partial class EntityManager
     /// </summary>
     public static IEnumerable<T> GetEntitiesByType<T>() where T : Node
     {
-        // 委托给 NodeLifecycleManager
-        return NodeLifecycleManager.GetNodesByType<T>();
+        return _entityRegistry.GetNodesByType<T>();
     }
 
 
@@ -339,8 +343,7 @@ public static partial class EntityManager
     /// <returns>所有实现 IEntity 接口的节点</returns>
     public static IEnumerable<IEntity> GetAllEntities()
     {
-        // 委托给 NodeLifecycleManager，过滤出 IEntity
-        return NodeLifecycleManager.GetNodesByInterface<IEntity>();
+        return _entityRegistry.GetAllNodes().OfType<IEntity>().ToArray();
     }
 
     // ==================== 生命周期管理 ====================
@@ -516,8 +519,7 @@ public static partial class EntityManager
     /// </summary>
     public static void DestroyAllByType<T>() where T : Node
     {
-        // 从 NodeLifecycleManager 获取该类型所有节点
-        var entities = NodeLifecycleManager.GetNodesByType<T>().ToList();
+        var entities = _entityRegistry.GetNodesByType<T>().ToList();
         if (entities.Count == 0)
             return;
 
@@ -536,8 +538,7 @@ public static partial class EntityManager
     /// </summary>
     public static void Clear()
     {
-        // 从 NodeLifecycleManager 获取所有节点
-        var allNodes = NodeLifecycleManager.GetAllNodes().ToList();
+        var allNodes = _entityRegistry.GetAllNodes().ToList();
         int count = allNodes.Count;
 
         // 使用 Destroy 统一处理，确保逻辑一致

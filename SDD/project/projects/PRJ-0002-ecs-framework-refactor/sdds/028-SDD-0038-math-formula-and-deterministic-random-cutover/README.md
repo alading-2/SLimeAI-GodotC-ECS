@@ -2,9 +2,9 @@
 
 ## Index Card
 
-- **Status**: pending
+- **Status**: done
 - **Created**: 2026-06-07
-- **Updated**: 2026-06-07
+- **Updated**: 2026-06-08
 - **Type**: refactor
 - **Scope**: SlimeAI
 - **Git Boundary**: /home/slime/Code/SlimeAI/SlimeAI
@@ -32,7 +32,7 @@
 
 ## Current Resume
 
-- **Current Task**: T1.1
+- **Current Task**: done
 - **Last Conclusion**: SDD-0038 已生成执行胶囊。默认不引入第三方数学库，不迁到 `System.Numerics`，继续使用 Godot `Vector2`。
 - **Next Action**: 进入实现前先读 `execution-prompt.md`，从 T1.1 readiness baseline 开始。
 - **Open Blockers**: none

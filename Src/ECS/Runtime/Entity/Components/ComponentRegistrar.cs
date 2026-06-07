@@ -75,7 +75,11 @@ public sealed class ComponentRegistrar
             return false;
         }
 
-        NodeLifecycleManager.Register(component);
+        var ownerId = _entityRegistry?.GetEntityId(entity).Value ?? entity.GetInstanceId().ToString();
+        NodeLifecycleManager.Register(
+            component,
+            NodeLifecycleOwner.Component(ownerId, component.GetInstanceId().ToString()),
+            "ComponentRegistrar.RegisterComponent");
 
         if (!_componentsByEntity.TryGetValue(entity, out var components))
         {

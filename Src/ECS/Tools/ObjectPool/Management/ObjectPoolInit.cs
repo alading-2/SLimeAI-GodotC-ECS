@@ -70,7 +70,7 @@ public partial class ObjectPoolInit
         // 初始化 EnemyPool (Node 对象池)
         // 注意：必须使用 ObjectPool<Enemy> 而不是 ObjectPool<Node>，否则 SpawnSystem 无法通过 GetPool<Enemy> 获取
         new ObjectPool<EnemyEntity>(
-            () => (EnemyEntity)ResourceManagement.Load<PackedScene>(typeof(EnemyEntity).Name, ResourceCategory.Entity)
+            () => (EnemyEntity)ResourceLoading.Load<PackedScene>(typeof(EnemyEntity).Name, ResourceCategory.Entity)
                 .Instantiate(),
             new ObjectPoolConfig
             {
@@ -97,7 +97,7 @@ public partial class ObjectPoolInit
 
         // 初始化 EffectPool (特效实体对象池)
         new ObjectPool<EffectEntity>(
-            () => (EffectEntity)ResourceManagement.Load<PackedScene>(typeof(EffectEntity).Name, ResourceCategory.Entity)
+            () => (EffectEntity)ResourceLoading.Load<PackedScene>(typeof(EffectEntity).Name, ResourceCategory.Entity)
                 .Instantiate(),
             new ObjectPoolConfig
             {
@@ -110,7 +110,7 @@ public partial class ObjectPoolInit
 
         // 初始化 HealthBarPool (头顶血条对象池)
         new ObjectPool<HealthBarUI>(
-            () => (HealthBarUI)ResourceManagement.Load<PackedScene>(typeof(HealthBarUI).Name, ResourceCategory.UI)
+            () => (HealthBarUI)ResourceLoading.Load<PackedScene>(typeof(HealthBarUI).Name, ResourceCategory.UI)
                 .Instantiate(),
             new ObjectPoolConfig
             {
@@ -123,7 +123,7 @@ public partial class ObjectPoolInit
 
         // 初始化 DamageNumberUIPool (伤害数字对象池)
         new ObjectPool<DamageNumberUI>(
-            () => (DamageNumberUI)ResourceManagement.Load<PackedScene>(typeof(DamageNumberUI).Name, ResourceCategory.UI)
+            () => (DamageNumberUI)ResourceLoading.Load<PackedScene>(typeof(DamageNumberUI).Name, ResourceCategory.UI)
                 .Instantiate(),
             new ObjectPoolConfig
             {

@@ -134,10 +134,14 @@ public partial class ActiveSkillSlotUI : UIBase
 
         var iconRef = _currentAbility.Data.Get<ResourceRef>(GeneratedDataKey.AbilityIcon);
         Texture2D? iconTexture = iconRef.HasValue
-            ? ResourceManagement.LoadPath<Texture2D>(iconRef.Path)
+            ? ResourceLoading.LoadPath<Texture2D>(
+                iconRef.Path,
+                ResourceLoadSource.DataOS(_currentAbility.Name, GeneratedDataKey.AbilityIcon.StableKey))
             : null;
 
-        _skillIcon.Texture = iconTexture ?? ResourceManagement.LoadPath<Texture2D>(DEFAULT_SKILL_ICON);
+        _skillIcon.Texture = iconTexture ?? ResourceLoading.LoadPath<Texture2D>(
+            DEFAULT_SKILL_ICON,
+            ResourceLoadSource.Runtime(nameof(ActiveSkillSlotUI), "default skill icon"));
 
         // 更新技能名称
         _skillNameLabel.Text = abilityName;
@@ -296,10 +300,14 @@ public partial class ActiveSkillSlotUI : UIBase
 
         var iconRef = ability.Data.Get<ResourceRef>(GeneratedDataKey.AbilityIcon);
         Texture2D? iconTexture = iconRef.HasValue
-            ? ResourceManagement.LoadPath<Texture2D>(iconRef.Path)
+            ? ResourceLoading.LoadPath<Texture2D>(
+                iconRef.Path,
+                ResourceLoadSource.DataOS(ability.Name, GeneratedDataKey.AbilityIcon.StableKey))
             : null;
 
-        _skillIcon.Texture = iconTexture ?? ResourceManagement.LoadPath<Texture2D>("res://icon.svg");
+        _skillIcon.Texture = iconTexture ?? ResourceLoading.LoadPath<Texture2D>(
+            "res://icon.svg",
+            ResourceLoadSource.Runtime(nameof(ActiveSkillSlotUI), "fallback skill icon"));
 
         // 更新技能名称
         _skillNameLabel.Text = abilityName;

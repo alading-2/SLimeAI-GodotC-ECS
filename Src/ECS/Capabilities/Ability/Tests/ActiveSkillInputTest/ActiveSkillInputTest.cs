@@ -175,7 +175,7 @@ namespace Slime.Test.ActiveSkillInputTest
             if (_player == null) return;
 
             // 加载并实例化UI场景
-            var uiScene = ResourceManagement.Load<PackedScene>(nameof(ActiveSkillSlotUI), ResourceCategory.UI);
+            var uiScene = ResourceLoading.Load<PackedScene>(nameof(ActiveSkillSlotUI), ResourceCategory.UI);
             if (uiScene == null)
             {
                 _log.Error("无法加载 ActiveSkillSlotUI.tscn");

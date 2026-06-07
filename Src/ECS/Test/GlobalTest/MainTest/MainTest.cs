@@ -115,7 +115,7 @@ public partial class MainTest : Node
     {
         if (_player == null) return;
 
-        var uiScene = ResourceManagement.Load<PackedScene>(nameof(ActiveSkillBarUI), ResourceCategory.UI);
+        var uiScene = ResourceLoading.Load<PackedScene>(nameof(ActiveSkillBarUI), ResourceCategory.UI);
         if (uiScene == null)
         {
             _log.Error("无法加载 ActiveSkillBarUI.tscn");

@@ -270,7 +270,7 @@ entity.Events.On<GameEventType.Data.Changed<float>>(OnHpChanged);
 | 持久状态、属性、运行时数值 | `Entity.Data` + generated `DataKey<T>` |
 | 伤害、治疗、暴击、闪避管线 | `DamageService` / `HealService` |
 | 目标查询、范围过滤 | `TargetSelector` / TargetingSystem |
-| 资源加载 | `ResourceManagement.Load` |
+| 资源加载 | `ResourceLoading.Load` |
 | 高频对象创建回收 | 对象池 / EntityManager |
 | 明确命令式流程 | 对应 System / Service 的显式 API |
 

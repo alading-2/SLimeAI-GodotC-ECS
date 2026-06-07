@@ -48,7 +48,7 @@ public static partial class EntityManager
         int totalComponentCount = 0;
 
         // 1. 加载所有 Entity 资源
-        var entities = ResourceManagement.LoadAll<PackedScene>(ResourceCategory.Entity);
+        var entities = ResourceLoading.LoadAll<PackedScene>(ResourceCategory.Entity);
 
         foreach (var scene in entities)
         {

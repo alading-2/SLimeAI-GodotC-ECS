@@ -30,7 +30,7 @@ public partial class TimerManager : Node, ISystem
     internal static void Initialize()
     {
         SystemRegistry.Register(nameof(TimerManager),
-            static () => ResourceManagement.Load<PackedScene>(nameof(TimerManager), ResourceCategory.Tools)
+            static () => ResourceLoading.Load<PackedScene>(nameof(TimerManager), ResourceCategory.Tools)
                 .Instantiate());
     }
 

@@ -370,7 +370,7 @@ public partial class AbilitySystemPipelineTest : Node
             AssertEqual(
                 "ParabolaShot 随机落点必须位于施法范围圆内",
                 true, //期望在圆内
-                GeometryCalculator.IsPointInCircle(targetPoint, caster.GlobalPosition, 120f) //实际判定
+                Geometry2D.IsPointInCircle(targetPoint, caster.GlobalPosition, 120f) //实际判定
             );
             AssertEqual(
                 "ParabolaShot 不应再直接使用敌方单位当前位置作为落点",

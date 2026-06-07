@@ -31,7 +31,7 @@ public partial class RecoverySystem : Node, ISystem,
     public static void Initialize()
     {
         SystemRegistry.Register(nameof(RecoverySystem),
-            static () => ResourceManagement.Load<PackedScene>(nameof(RecoverySystem), ResourceCategory.System).Instantiate());
+            static () => ResourceLoading.Load<PackedScene>(nameof(RecoverySystem), ResourceCategory.System).Instantiate());
     }
 
     /// <summary>全局单例访问点</summary>

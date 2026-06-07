@@ -25,7 +25,7 @@
 | 2 | [DodgeProcessor](../../../../../Src/ECS/Capabilities/Damage/System/Processors/DodgeProcessor.cs) | 200 | **生存判定** | 判定闪避。若闪避成功：<br>`IsDodged = true`, `IsEnd = true`, `FinalDamage = 0`<br>**注意**：真实伤害不可闪避 |
 | 3 | [CritProcessor](../../../../../Src/ECS/Capabilities/Damage/System/Processors/CritProcessor.cs) | 300 | **输出修正** | 判定暴击。若暴击：<br>`IsCritical = true`, `FinalDamage *= CritDamageMultiplier` |
 | 4 | [ShieldProcessor](../../../../../Src/ECS/Capabilities/Damage/System/Processors/ShieldProcessor.cs) | 400 | **护盾抵扣** | 优先扣除护盾（**TODO**）<br>护盾承受**原始伤害**（护甲减免前） |
-| 5 | [DefenseProcessor](../../../../../Src/ECS/Capabilities/Damage/System/Processors/DefenseProcessor.cs) | 500 | **受击减免** | 计算护甲减伤<br>公式：`multiplier = MyMath.CalculateArmorDamageMultiplier(Armor)` |
+| 5 | [DefenseProcessor](../../../../../Src/ECS/Capabilities/Damage/System/Processors/DefenseProcessor.cs) | 500 | **受击减免** | 计算护甲减伤<br>公式：`multiplier = DamageFormula.CalculateArmorDamageMultiplier(Armor)` |
 | 6 | [DamageTakenAmplificationProcessor](../../../../../Src/ECS/Capabilities/Damage/System/Processors/DamageTakenAmplificationProcessor.cs) | 600 | **伤害增幅** | 应用受害者的易伤/减伤修正<br>`FinalDamage *= DamageTakenMultiplier` |
 | 7 | [FlatReductionProcessor](../../../../../Src/ECS/Capabilities/Damage/System/Processors/FlatReductionProcessor.cs) | 700 | **受击减免** | 固定数值减伤（**预留**）<br>如"格挡 5 点伤害" |
 | 8 | [LifestealProcessor](../../../../../Src/ECS/Capabilities/Damage/System/Processors/LifestealProcessor.cs) | 800 | **后处理** | 计算吸血逻辑<br>基于 `FinalDamage` 发送治疗请求事件 |
@@ -180,6 +180,7 @@ public void Process(DamageInfo info)
 *   **逻辑**: 通过 `EntityAttributionResolver.ResolveUnit(info.Attacker)` 查找攻击者归属 IUnit，读取 `CritRate` 进行概率判定。
 *   **效果**: 若暴击，`IsCritical = true`, `FinalDamage *= (CritDamage / 100)`。
 *   **数据来源**: `GeneratedDataKey.CritRate`（暴击率）, `GeneratedDataKey.CritDamage`（暴击倍率，如 150）。
+*   **概率入口**: `ProbabilityTool.RollPercent`，概率单位为百分比 0-100，可注入 deterministic RNG。
 
 ### Stage 2: 生存判定 (Survival) - 决定是否命中
 
@@ -188,6 +189,7 @@ public void Process(DamageInfo info)
 *   **效果**: 若闪避成功，`FinalDamage = 0`, `IsDodged = true`, `IsEnd = true`，流程提前终止。
 *   **特殊**: `DamageType.True` (真实伤害) **不可闪避**，直接跳过此判定。
 *   **执行时机**: 在暴击判定之前，可提前终止后续无用计算，提升性能。
+*   **概率入口**: `ProbabilityTool.RollPercent`。
 
 ### Stage 3: 护盾抵扣 (Shield) - 优先消耗
 
@@ -199,9 +201,9 @@ public void Process(DamageInfo info)
 ### Stage 4: 受击减免 (Mitigation) - 最终减伤
 
 #### [DefenseProcessor](../../../../../Src/ECS/Capabilities/Damage/System/Processors/DefenseProcessor.cs) (P:500)
-*   **逻辑**: 读取 `Victim` 的 `Armor`，调用 `MyMath.CalculateArmorDamageMultiplier(armor)`。
+*   **逻辑**: 读取 `Victim` 的 `Armor`，调用 `DamageFormula.CalculateArmorDamageMultiplier(armor)`。
 *   **效果**: 正护甲减伤，负护甲增伤。
-*   **公式**: 参考 Brotato 经典公式（具体实现见 `MyMath` 工具类）。
+*   **公式 owner**: `Src/ECS/Capabilities/Damage/System/Formula/DamageFormula.cs`。
 *   **注意**: 当前代码未检查 `DamageType.True`（已注释），真实伤害仍受护甲影响。
 
 #### [DamageTakenAmplificationProcessor](../../../../../Src/ECS/Capabilities/Damage/System/Processors/DamageTakenAmplificationProcessor.cs) (P:310)
@@ -226,6 +228,7 @@ public void Process(DamageInfo info)
 *   **机制**: 概率判定成功后，基于 `FinalDamage` 计算回血量（当前公式：`FinalDamage * (lifestealChance / 100)`）。
 *   **效果**: 发送 `HealRequest` 事件到 IUnit（由 `HealthComponent` 处理）。
 *   **执行时机**: 在 `HealthExecutionProcessor` 之前，确保获取到最终伤害值。
+*   **概率入口**: `ProbabilityTool.RollPercent`。
 
 #### [StatisticsProcessor](../../../../../Src/ECS/Capabilities/Damage/System/Processors/StatisticsProcessor.cs) (P:700)
 *   **逻辑**: 记录伤害统计。

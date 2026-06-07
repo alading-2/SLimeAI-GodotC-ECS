@@ -1,24 +1,19 @@
-# NodeLifecycle 概念
+# NodeLifecycle 历史说明
 
-> status: current
-> sourcePaths: Src/ECS/Tools/NodeLifecycle/
-> relatedDocs: DocsAI/ECS/Tools/NodeLifecycle/Usage.md
-> lastReviewed: 2026-05-30
+> status: historical
+> current: DocsAI/ECS/Runtime/NodeLifecycle/README.md
+> sourcePaths: Src/ECS/Runtime/NodeLifecycle/
+> lastReviewed: 2026-06-07
 
 ## 1. 一句话定位
 
-通用节点生命周期管理（注册/查询/注销），是 EntityManager 和 UIManager 的基础。单一职责，关系管理委托给其他模块。
+旧 Tools NodeLifecycle 文档仅作迁移追溯。当前 NodeLifecycle 是 Runtime 底层 registry，用于 owner/source metadata、snapshot diagnostics 和 invalid cleanup；业务查询入口不走 NodeLifecycle。
 
 ## 2. 核心概念
 
 ### 核心 API
 
-```csharp
-NodeLifecycleManager.Register(node);
-NodeLifecycleManager.Unregister(node);
-NodeLifecycleManager.GetNode(id);
-NodeLifecycleManager.GetNodesByType(type);
-```
+current 示例见 `DocsAI/ECS/Runtime/NodeLifecycle/README.md`。
 
 ### 设计原则
 
@@ -28,8 +23,8 @@ NodeLifecycleManager.GetNodesByType(type);
 
 ## 3. 职责边界
 
-| NodeLifecycle 做 | NodeLifecycle 不做 |
+| Runtime NodeLifecycle 做 | Runtime NodeLifecycle 不做 |
 | ---- | ---- |
-| 节点注册/查询/注销 | Entity 特化逻辑（归 EntityManager） |
-| 类型索引 | 关系管理（归 `LifecycleTree` / `ComponentRegistrar` / capability service） |
+| 节点注册/注销和 diagnostics | Entity 特化查询（归 EntityManager / TargetQueryEngine） |
+| owner/source metadata | 关系管理（归 `LifecycleTree` / `ComponentRegistrar` / capability service） |
 | 基础生命周期 | 对象池管理 |

@@ -1,21 +1,24 @@
 ﻿using Godot;
 using System;
 
-public partial class MyMathTest : Node
+public partial class MathRuntimeTest : Node
 {
-    private static readonly Log _log = new Log("MyMathTest");
+    private static readonly Log _log = new Log("MathRuntimeTest");
+    private int _failedCount;
 
     public override void _Ready()
     {
         Run();
-        GetTree().Quit();
+        GetTree().Quit(_failedCount == 0 ? 0 : 1);
     }
 
     public void Run()
     {
         _log.Info("开始测试 Math 工具...");
 
-        TestCheckProbability();
+        TestProbabilityTool_ClampsPercentBounds();
+        TestProbabilityTool_ReplaysSeededSequence();
+        TestGeometry2D_SeededSamplingIsReproducible();
         TestEllipseArc2D();
         TestParabola2D();
         TestCircularArc2D();
@@ -26,33 +29,43 @@ public partial class MyMathTest : Node
         _log.Info("Math 工具测试完成");
     }
 
-    private void TestCheckProbability()
+    private void TestProbabilityTool_ClampsPercentBounds()
     {
-        bool result0 = MyMath.CheckProbability(0);
-        AssertFalse(result0, "0% 概率不应触发");
+        var rng = DeterministicRandom.Create(20260607);
 
-        bool result100 = MyMath.CheckProbability(100);
-        AssertTrue(result100, "100% 概率应触发");
+        AssertFalse(ProbabilityTool.RollPercent(0f, rng), "0% 概率不应触发");
+        AssertTrue(ProbabilityTool.RollPercent(100f, rng), "100% 概率应触发");
+        AssertTrue(ProbabilityTool.RollPercent(150f, rng), "超过 100% 概率应按 100% 触发");
+        AssertFalse(ProbabilityTool.RollPercent(-10f, rng), "负概率应按 0% 不触发");
+    }
 
-        bool result150 = MyMath.CheckProbability(150);
-        AssertTrue(result150, "超过 100% 概率应触发");
+    private void TestProbabilityTool_ReplaysSeededSequence()
+    {
+        var first = DeterministicRandom.Create(12345);
+        var second = DeterministicRandom.Create(12345);
 
-        bool resultNeg = MyMath.CheckProbability(-10);
-        AssertFalse(resultNeg, "负概率不应触发");
-
-        int successCount = 0;
-        int totalTests = 10000;
-        for (int i = 0; i < totalTests; i++)
+        for (int i = 0; i < 16; i++)
         {
-            if (MyMath.CheckProbability(50))
-            {
-                successCount++;
-            }
+            bool firstRoll = ProbabilityTool.RollPercent(37.5f, first);
+            bool secondRoll = ProbabilityTool.RollPercent(37.5f, second);
+            AssertTrue(firstRoll == secondRoll, $"固定 seed 概率序列应复现 index={i}");
         }
+    }
 
-        float rate = (float)successCount / totalTests;
-        bool isReasonable = rate > 0.45f && rate < 0.55f;
-        AssertTrue(isReasonable, $"50% 概率统计测试结果: {rate:P2}");
+    private void TestGeometry2D_SeededSamplingIsReproducible()
+    {
+        var first = DeterministicRandom.Create(98765);
+        var second = DeterministicRandom.Create(98765);
+
+        for (int i = 0; i < 8; i++)
+        {
+            Vector2 firstPoint = Geometry2D.GetRandomPointInRing(Vector2.Zero, 20f, 80f, first);
+            Vector2 secondPoint = Geometry2D.GetRandomPointInRing(Vector2.Zero, 20f, 80f, second);
+
+            AssertNear(firstPoint, secondPoint, 0.0001f, $"固定 seed 几何采样应复现 index={i}");
+            float distance = firstPoint.Length();
+            AssertTrue(distance >= 20f && distance <= 80f, $"圆环采样应落在边界内 distance={distance:F2}");
+        }
     }
 
     private void TestEllipseArc2D()
@@ -182,6 +195,7 @@ public partial class MyMathTest : Node
         else
         {
             _log.Error($"[失败] {message}");
+            _failedCount++;
         }
     }
 

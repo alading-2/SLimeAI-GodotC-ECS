@@ -25,7 +25,7 @@ public partial class MouseSelectionSystem : Node
     internal static void Initialize()
     {
         SystemRegistry.Register(nameof(MouseSelectionSystem),
-            static () => ResourceManagement.Load<PackedScene>(nameof(MouseSelectionSystem), ResourceCategory.System).Instantiate());
+            static () => ResourceLoading.Load<PackedScene>(nameof(MouseSelectionSystem), ResourceCategory.System).Instantiate());
     }
 
     public override void _EnterTree()

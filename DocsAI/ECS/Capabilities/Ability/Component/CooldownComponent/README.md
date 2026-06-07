@@ -12,6 +12,7 @@
 *   **精准计时**：利用 `TimerManager` 进行毫秒级冷却管理。
 *   **属性封装**：提供 `IsOnCooldown` 属性供快速访问。
 *   **自动处理**：支持全局冷却缩减 (Cooldown Reduction) 统计属性。
+*   **公式 owner**：最终冷却时间由 `AbilityFormula.CalculateFinalCooldownTime(baseTime, reductionPercent)` 计算，单位为秒，缩减单位为百分比 0-100。
 
 ## 事件交互
 12: 1.  **`CheckCanUse` (IN)**:
@@ -27,7 +28,7 @@
 | DataKey | 类型 | 描述 |
 | :--- | :--- | :--- |
 | `AbilityCooldown` | `float` (Stat) | 基础冷却时间 |
-| `CooldownReduction` | `float` (Stat) | 缩减百分比 (0.0 - 1.0) |
+| `CooldownReduction` | `float` (Stat) | 缩减百分比 (0-100) |
 
 ---
 

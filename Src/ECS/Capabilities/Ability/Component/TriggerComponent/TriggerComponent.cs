@@ -210,7 +210,7 @@ public partial class TriggerComponent : Node, IComponent
         // 1. 检查触发概率 (AbilityTriggerChance)
         // 规则：概率统一为 0-100
         float chance = _data.Get<float>(GeneratedDataKey.AbilityTriggerChance);
-        if (!MyMath.CheckProbability(chance))
+        if (!ProbabilityTool.RollPercent(chance))
         {
             return;
         }

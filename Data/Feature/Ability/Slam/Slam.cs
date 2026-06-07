@@ -44,7 +44,10 @@ internal class SlamExecutor : AbilityFeatureHandler
             Range = abilityRange, // 半径：选点半径
             MaxTargets = 1 // 只取一个随机点
         };
-        var randomPoint = PositionTargetSelector.Query(pointQuery)[0];
+        using var pointResult = TargetQueryEngine.QueryPositions(pointQuery);
+        var randomPoint = pointResult.Items.Count > 0
+            ? pointResult.Items[0]
+            : casterNode.GlobalPosition;
 
         // 3. 获取特效场景
         var effectScenePath = ability.Data.Get<string>(GeneratedDataKey.EffectScene); // 特效场景路径

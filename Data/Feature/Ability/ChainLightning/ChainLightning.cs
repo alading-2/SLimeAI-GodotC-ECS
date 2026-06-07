@@ -98,7 +98,7 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
         float castRange = ability.Data.Get<float>(GeneratedDataKey.AbilityCastRange); //索敌半径
         if (castRange <= 0f) return null;
 
-        var targets = EntityTargetSelector.Query(new TargetSelectorQuery
+        using var result = TargetQueryEngine.QueryEntities(new TargetSelectorQuery
         {
             Geometry = GeometryType.Circle, //查询形状
             Origin = casterNode.GlobalPosition, //查询中心
@@ -109,7 +109,7 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
             MaxTargets = 1 //最大目标数
         });
 
-        return targets.Count > 0 ? targets[0] : null;
+        return result.Items.Count > 0 ? result.Items[0] : null;
     }
 
     /// <summary>
@@ -160,9 +160,9 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
             // 绘制特效
             if (!string.IsNullOrWhiteSpace(context.LineScenePath))
             {
-                var lineScene = CommonTool.LoadPackedScene(
+                var lineScene = ResourceLoading.LoadPackedScenePath(
                     context.LineScenePath, // 链式闪电连线场景路径
-                    "链式闪电连线特效"); // 日志用途名称
+                    ResourceLoadSource.DataOS(global::FeatureId.Ability.Active.ChainLightning, "链式闪电连线特效")); // 来源诊断
                 if (lineScene != null)
                 {
                     var effectNode = lineScene.Instantiate<Node2D>();
@@ -251,8 +251,9 @@ internal class ChainLightningExecutor : AbilityFeatureHandler
             MaxTargets = -1 // 搜索所有候选者以进行手动去重，由于 TargetSelector 不直接支持排除列表，此处先获取候选集
         };
 
-        // 执行查询
-        var candidates = EntityTargetSelector.Query(query);
+        // 执行查询，保留 diagnostics 便于后续分析弹跳中断原因。
+        using var result = TargetQueryEngine.QueryEntities(query);
+        var candidates = result.Items;
         _log.Debug(
             $"[TargetQuery] 在 {searchOrigin} 半径 {context.Range} 内搜到 {candidates.Count} 个候选者, TeamFilter={context.TeamFilter}");
 

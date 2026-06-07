@@ -1,0 +1,99 @@
+{
+  "scanned": 41,
+  "rules": {
+    "R001": {
+      "name": "frontmatter-required-fields",
+      "pass": 41,
+      "fail": 0,
+      "violations": []
+    },
+    "R002": {
+      "name": "references-exist",
+      "pass": 41,
+      "fail": 0,
+      "violations": []
+    },
+    "R003": {
+      "name": "source-of-truth-alignment",
+      "pass": 41,
+      "fail": 0,
+      "violations": []
+    },
+    "R004": {
+      "name": "sync-targets-up-to-date",
+      "pass": 32,
+      "fail": 9,
+      "violations": [
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/tools/SKILL.md",
+          "kind": "sync-mismatch",
+          "detail": "副本与源不一致: .claude/skills/tools/SKILL.md；请跑 sync-ai-config.sh",
+          "severity": "advisory"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/tools/SKILL.md",
+          "kind": "sync-mismatch",
+          "detail": "副本与源不一致: .devin/skills/tools/SKILL.md；请跑 sync-ai-config.sh",
+          "severity": "advisory"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/tools/SKILL.md",
+          "kind": "sync-mismatch",
+          "detail": "副本与源不一致: .trae/skills/tools/SKILL.md；请跑 sync-ai-config.sh",
+          "severity": "advisory"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/ecs/ecs-component/SKILL.md",
+          "kind": "sync-mismatch",
+          "detail": "副本与源不一致: .claude/skills/ecs-component/SKILL.md；请跑 sync-ai-config.sh",
+          "severity": "advisory"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/ecs/ecs-component/SKILL.md",
+          "kind": "sync-mismatch",
+          "detail": "副本与源不一致: .devin/skills/ecs-component/SKILL.md；请跑 sync-ai-config.sh",
+          "severity": "advisory"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/ecs/ecs-component/SKILL.md",
+          "kind": "sync-mismatch",
+          "detail": "副本与源不一致: .trae/skills/ecs-component/SKILL.md；请跑 sync-ai-config.sh",
+          "severity": "advisory"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/ecs/ecs-entity/SKILL.md",
+          "kind": "sync-mismatch",
+          "detail": "副本与源不一致: .claude/skills/ecs-entity/SKILL.md；请跑 sync-ai-config.sh",
+          "severity": "advisory"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/ecs/ecs-entity/SKILL.md",
+          "kind": "sync-mismatch",
+          "detail": "副本与源不一致: .devin/skills/ecs-entity/SKILL.md；请跑 sync-ai-config.sh",
+          "severity": "advisory"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/ecs/ecs-entity/SKILL.md",
+          "kind": "sync-mismatch",
+          "detail": "副本与源不一致: .trae/skills/ecs-entity/SKILL.md；请跑 sync-ai-config.sh",
+          "severity": "advisory"
+        }
+      ]
+    },
+    "R005": {
+      "name": "catalog-coverage",
+      "pass": 41,
+      "fail": 0,
+      "violations": []
+    },
+    "R006": {
+      "name": "no-direct-copy-edits",
+      "pass": 41,
+      "fail": 0,
+      "violations": []
+    }
+  },
+  "criticalFailures": 0,
+  "advisoryWarnings": 9,
+  "exitCode": 0
+}

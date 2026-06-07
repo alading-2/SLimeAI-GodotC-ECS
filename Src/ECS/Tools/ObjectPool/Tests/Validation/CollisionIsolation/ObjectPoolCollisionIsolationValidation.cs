@@ -31,7 +31,7 @@ public partial class ObjectPoolCollisionIsolationValidation : Node
         try
         {
             AddChild(new Node { Name = "Pools" });
-            ParentManager.Init(this);
+            RuntimeMountService.Initialize(this);
             ObjectPoolRuntimeStateStore.Clear();
             ObjectPoolObservability.Clear();
 

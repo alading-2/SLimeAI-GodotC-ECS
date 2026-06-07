@@ -113,7 +113,7 @@ public sealed class EntitySpawnPipeline
             }
 
             registered = true;
-            NodeLifecycleManager.Register(entity);
+            NodeLifecycleManager.Register(entity, NodeLifecycleOwner.Entity(entityId.Value), "EntitySpawnPipeline.Spawn");
             ComponentComposer.Compose(entity);
             _componentRegistrar.RegisterComponents(entity);
             componentsRegistered = true;
@@ -192,7 +192,9 @@ public sealed class EntitySpawnPipeline
         if (scene == null && TryReadRecordString(record, GeneratedDataKey.VisualScenePath.StableKey, out var recordPath)
             && !string.IsNullOrWhiteSpace(recordPath))
         {
-            scene = CommonTool.LoadPackedScene(recordPath, $"{entity.Name} 视觉");
+            scene = ResourceLoading.LoadPackedScenePath(
+                recordPath,
+                ResourceLoadSource.DataOS(record.Id, $"{entity.Name} 视觉"));
         }
 
         var existingVisual = entity.GetNodeOrNull("VisualRoot");

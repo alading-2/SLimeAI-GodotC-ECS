@@ -41,7 +41,7 @@
 启动顺序固定为：
 
 1. Godot 先实例化 `SystemManager`
-2. `SystemManager._EnterTree()` 初始化 `ParentManager`
+2. `SystemManager._EnterTree()` 初始化 `RuntimeMountService`
 3. `SystemManager._Ready()` 加载 `system.config` / `system.preset` snapshot records，创建 Host 并启动被配置选中的系统
 4. 主场景随后进入 `_Ready()`
 

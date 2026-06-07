@@ -34,7 +34,8 @@ description: 修改 SlimeAI ECS Ability Capability、AbilityDataKeys、目标选
 - 自动索敌通过 `AbilityTargetingTool` 显式准备 `AbilityCastContext`；候选目标由 `IAbilityTargetQuery` 注入，`RuntimeAbilityTargetQuery` 只是纯 Runtime 全量扫描回退。
 - `AbilityService` 构造注入 `TimerManager`，可注入 `FeatureService` / `DamageService`；测试和 scoped world 必须用独立实例，不依赖 `Default / Instance`。
 - Ability → Feature handler flow 使用 typed `FeatureContext.SetActivationPayload(CastContext)` 和 `TryGetExecutionResult<AbilityExecutedResult>()`；不要再写 raw `ActivationData` 或从 `ExecuteResult` cast。
-- 实体目标查询优先使用 `TargetQueryEngine.QueryEntities` 和 `TargetQueryResult` diagnostics；`EntityTargetSelector.Query` 只作为旧 facade。
+- 实体目标查询必须使用 `TargetQueryEngine.QueryEntities` 和 `TargetQueryResult` diagnostics；旧 `EntityTargetSelector.Query` facade 已删除，不要恢复。
+- 冷却/充能公式归 `AbilityFormula`；触发概率用 `ProbabilityTool.RollPercent`，概率单位为百分比 0-100。
 - Ability owner 清单统一走 `AbilityInventoryService.Runtime`；新增授予、移除、查询和 UI/AI 消费者不要再调用 `EntityManager.AddAbility/GetAbilities/GetAbilityByName/GetManualAbilities`，兼容 facade 只服务旧调用点。
 - Ability owner projection 由 `AbilityInventoryService.OwnerDescriptor` 注册到 `OwnedReferenceRegistry`，运行时用 `AbilityOwnerEntityId` + `OwnedAbilityIds` 投影；禁止恢复 `EntityRelationshipType.ENTITY_TO_ABILITY`。
 - CostComponent 的资源消耗必须按 `AbilityCostType` 映射到 generated `DataKey<float>`：Mana=`CurrentMana`、Health=`CurrentHp`、Energy=`CurrentEnergy`、Ammo=`CurrentAmmo`；不要新增 `"CurrentEnergy"` / `"CurrentAmmo"` 裸字符串或 `Data.Get<T>(string)` 资源路径。

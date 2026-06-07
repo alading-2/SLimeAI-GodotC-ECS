@@ -19,6 +19,7 @@ description: 修改 SlimeAI ECS Runtime Component 契约、IComponent、Template
 - `Src/ECS/Runtime/Component/`（`IComponent` / `TemplateComponent`）
 - `Src/ECS/Runtime/Component/ComponentComposition.cs`（`IComponentCompositionProvider` / `ComponentComposer` / `ComponentCompositionProfile`）
 - `Src/ECS/Runtime/Entity/Components/`（`ComponentRegistrar` / EntityManager component partial）
+- `Src/ECS/Runtime/NodeLifecycle/`（Component 底层 Node 注册 diagnostics）
 - `Src/ECS/Runtime/Entity/`
 - `Src/ECS/Runtime/Event/`
 - `Src/ECS/Runtime/System/`
@@ -35,6 +36,7 @@ description: 修改 SlimeAI ECS Runtime Component 契约、IComponent、Template
 - `IComponent` 是 SlimeAI 自定义 Component 接入 Runtime Entity 的生命周期契约；新组件优先实现它，旧命名兼容只作为过渡。
 - Component 注册初始化只使用 `OnComponentRegistered`，注销清理只使用 `OnComponentUnregistered`；不要用 Godot `_EnterTree()` / `_Ready()` 初始化 Entity、Data 或 Event。
 - Component owner 反查走 `EntityManager.GetEntityByComponent` / `ComponentRegistrar`，不要恢复旧 Entity relationship 常量。
+- Component 注册到 NodeLifecycle 时必须由 `ComponentRegistrar` 写入 `NodeLifecycleOwner.Component(ownerId, componentId)` 和 source；业务代码不要通过 NodeLifecycle 全局扫描找 Component。
 - 具体业务组件放 `Src/ECS/Capabilities/<owner>/Component/`；Runtime/Component 只放接口、模板和通用规则。
 - Component 组合目标是纯代码化 `ComponentCompositionProfile` / `ComponentComposer`；旧 Preset `.tscn` 只作为迁移期对照，不新增 Component Preset。
 - `EntitySpawnPipeline` 和 `EntityManager.RegisterComponents(entity)` 都必须在 `ComponentRegistrar.RegisterComponents` 前调用 `ComponentComposer.Compose(entity)`；composition provider 路径不得依赖预热缓存，否则新建组件可能漏注册。

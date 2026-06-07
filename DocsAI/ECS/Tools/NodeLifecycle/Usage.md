@@ -3,7 +3,7 @@
 > 迁移来源：`Src/ECS/Tools/NodeLifecycle/NodeLifecycleManager.md`
 > 迁移说明：本文主体从原 `Src/ECS` 文档迁入 `DocsAI` 统一管理；原 `Src/ECS` Markdown 文件已删除。
 
-# NodeLifecycleManager - 使用指南
+# NodeLifecycleManager 历史迁移说明
 
 **文档类型**：API 文档 + 使用指南  
 **目标受众**：开发者  
@@ -13,7 +13,12 @@
 
 ## 概述
 
-`NodeLifecycleManager` 是一个通用的 Node 生命周期管理工具，提供底层的注册、查询、注销功能。
+`NodeLifecycleManager` 现在只是 Runtime NodeLifecycle 的薄底层入口。current 文档见：
+
+```text
+DocsAI/ECS/Runtime/NodeLifecycle/README.md
+Src/ECS/Runtime/NodeLifecycle/
+```
 
 **设计理念**：
 - **底层抽象**：`EntityManager` 和 `UIManager` 都基于此类构建
@@ -27,28 +32,13 @@
 ### 注册 Node
 
 ```csharp
-// 注册节点
-NodeLifecycleManager.Register(node, "Enemy");
-
-// 检查是否已注册
-bool exists = NodeLifecycleManager.IsRegistered(nodeId);
+NodeLifecycleManager.Register(node, NodeLifecycleOwner.Entity(entityId.Value), "EntitySpawnPipeline.Spawn");
+NodeLifecycleSnapshot snapshot = NodeLifecycleManager.GetSnapshot();
 ```
 
 ### 查询 Node
 
-```csharp
-// 按 ID 查询
-Node? node = NodeLifecycleManager.GetNodeById(nodeId);
-
-// 按类型查询
-var enemies = NodeLifecycleManager.GetNodesByType<Enemy>("Enemy");
-
-// 按接口查询
-var entities = NodeLifecycleManager.GetNodesByInterface<IEntity>();
-
-// 获取所有节点
-var allNodes = NodeLifecycleManager.GetAllNodes();
-```
+Entity、UI、Component 和 TargetSelector 查询必须走各自 owner facade，不再把 NodeLifecycle 全局扫描作为 current API 示例。
 
 ### 注销 Node
 
@@ -67,7 +57,7 @@ NodeLifecycleManager.Unregister(nodeId);
 ### Register
 
 ```csharp
-bool Register(Node node, string nodeType)
+bool Register(Node node, NodeLifecycleOwner owner, string source)
 ```
 
 注册 Node 到管理器。
@@ -117,7 +107,7 @@ Node? GetNodeById(string nodeId)
 ### GetNodesByType
 
 ```csharp
-IEnumerable<T> GetNodesByType<T>(string nodeType) where T : Node
+internal IReadOnlyList<T> GetNodesByType<T>() where T : Node
 ```
 
 按类型名称查询所有匹配的 Node。
@@ -127,7 +117,7 @@ IEnumerable<T> GetNodesByType<T>(string nodeType) where T : Node
 ### GetNodesByInterface
 
 ```csharp
-IEnumerable<T> GetNodesByInterface<T>() where T : class
+internal IReadOnlyList<T> GetNodesByInterface<T>() where T : class
 ```
 
 获取所有实现指定接口/基类的 Node。
@@ -137,7 +127,7 @@ IEnumerable<T> GetNodesByInterface<T>() where T : class
 ### GetAllNodes
 
 ```csharp
-IEnumerable<Node> GetAllNodes()
+internal IReadOnlyList<Node> GetAllNodes()
 ```
 
 获取所有已注册的 Node。

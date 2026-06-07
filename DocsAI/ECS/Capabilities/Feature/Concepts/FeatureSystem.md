@@ -385,7 +385,7 @@ if (feature != null)
 |:---|:---|
 | `DamageSystem` | 伤害计算仍走 DamageService，Feature 可在 OnActivated 触发 |
 | `TargetSelector` | Ability Handler 在 `ExecuteAbility` 中按需直接调用 |
-| `ResourceManagement` | 资源加载仍走 ResourceManagement.Load |
+| `ResourceLoading` | 资源加载走 ResourceLoading.Load |
 | `TimerManager` | Feature 内定时器需在 OnGranted 注册、OnRemoved 取消 |
 | `AbilitySystem` | FeatureSystem 是通用核心；AbilitySystem 只是适配层，负责透传完整 `FeatureHandlerId` 并在 Activated/Ended 阶段传入 CastContext |
 | `TestSystem` | TestSystem 是调试 UI 前台，不能让测试模块实现 `IFeatureHandler` 或伪造 FeatureEntity；调试 Feature / Ability 时通过 `FeatureDebugService` 转发到正式 `EntityManager / FeatureSystem / AbilitySystem` |

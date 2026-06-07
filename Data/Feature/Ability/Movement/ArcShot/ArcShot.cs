@@ -82,7 +82,7 @@ internal class ArcShotExecutor : AbilityFeatureHandler
     {
         float castRange = ability.Data.Get<float>(GeneratedDataKey.AbilityCastRange); //索敌半径
 
-        var targets = EntityTargetSelector.Query(new TargetSelectorQuery
+        using var result = TargetQueryEngine.QueryEntities(new TargetSelectorQuery
         {
             Geometry = GeometryType.Circle, //查询形状
             Origin = casterNode.GlobalPosition, //查询中心
@@ -93,7 +93,7 @@ internal class ArcShotExecutor : AbilityFeatureHandler
             MaxTargets = 1 //最大目标数
         });
 
-        return targets.Count > 0 ? targets[0] : null;
+        return result.Items.Count > 0 ? result.Items[0] : null;
     }
 
     private static void OnArcShotStop(

@@ -108,7 +108,7 @@ public static partial class EffectTool
         ApplyInitialTransform(entity, position, options, isAttached);
 
         // 注册 Entity / Component（对象池复用后需要重新注册）
-        if (!NodeLifecycleManager.IsRegistered(effectId))
+        if (EntityManager.ResolveEntityNode(EntityId.From(effectId)) == null)
         {
             EntityManager.Register(entity);
         }
@@ -274,9 +274,9 @@ public static partial class EffectTool
         EffectEntity entity, // 特效实体
         string visualScenePath) // 特效视觉场景路径
     {
-        var visualScene = CommonTool.LoadPackedScene(
+        var visualScene = ResourceLoading.LoadPackedScenePath(
             visualScenePath, // res:// 场景路径
-            "特效视觉"); // 日志用途名称
+            ResourceLoadSource.DataOS("Effect.VisualScene", "特效视觉")); // 来源诊断
         if (visualScene == null)
         {
             return false;

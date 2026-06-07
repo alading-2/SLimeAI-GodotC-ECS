@@ -26,7 +26,7 @@ public static class PoolNodeLifecycleStrategy
             return;
         }
 
-        var parent = ParentManager.GetParent(poolName);
+        var parent = RuntimeMountService.Current.GetExisting(RuntimeMountIds.Pool(poolName));
         parent?.AddChild(node);
     }
 

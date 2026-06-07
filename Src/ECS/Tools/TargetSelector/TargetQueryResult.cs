@@ -22,6 +22,12 @@ public sealed class TargetQueryResult<T> : IDisposable
     /// <summary>本次查询诊断。</summary>
     public TargetQueryDiagnostics Diagnostics { get; }
 
+    /// <summary>是否有返回项。</summary>
+    public bool HasItems => _items.Count > 0;
+
+    /// <summary>实体查询语义别名。</summary>
+    public bool HasTargets => HasItems;
+
     /// <summary>释放查询结果所有权；当前无池化资源需要释放。</summary>
     public void Dispose()
     {

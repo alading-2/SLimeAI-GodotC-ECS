@@ -138,10 +138,14 @@ public class ObjectPool<T> : IObjectPoolRuntime where T : class
 
         ObjectPoolObservability.RegisterMetadata(config);
 
-        // 自动注册父节点
+        // 自动注册对象池挂载点，挂载状态由 RuntimeMountService diagnostics 暴露。
         if (!string.IsNullOrEmpty(_config.Name) && !string.IsNullOrEmpty(_config.ParentPath))
         {
-            ParentManager.Register(_config.Name, _config.ParentPath);
+            RuntimeMountService.GetOrCreate(
+                RuntimeMountIds.Pool(_config.Name),
+                _config.ParentPath,
+                "Tools.ObjectPool",
+                $"{_config.Name} 对象池挂载点");
         }
 
         // 构造时直接预热，将性能开销放在初始化阶段

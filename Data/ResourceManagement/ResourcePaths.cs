@@ -128,10 +128,11 @@ public static class ResourcePaths
     // --- Tools ---
     public const string Tools_InputTest = "InputTest";
     public const string Tools_LogTest = "LogTest";
-    public const string Tools_MyMathTest = "MyMathTest";
+    public const string Tools_MathRuntimeTest = "MathRuntimeTest";
     public const string Tools_ObjectPoolCollisionIsolationValidation = "ObjectPoolCollisionIsolationValidation";
     public const string Tools_ObjectPoolContractRuntimeTest = "ObjectPoolContractRuntimeTest";
     public const string Tools_ObjectPoolInit = "ObjectPoolInit";
+    public const string Tools_ResourceLoadingRuntimeTest = "ResourceLoadingRuntimeTest";
     public const string Tools_TargetSelectorTest = "TargetSelectorTest";
     public const string Tools_TimerManager = "TimerManager";
     public const string Tools_TimerStressValidation = "TimerStressValidation";
@@ -294,10 +295,11 @@ public static class ResourcePaths
             {
                 { Tools_InputTest, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/Input/Tests/InputTest.tscn") },
                 { Tools_LogTest, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/Logger/Tests/LogTest.tscn") },
-                { Tools_MyMathTest, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/Math/Tests/MyMathTest.tscn") },
+                { Tools_MathRuntimeTest, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/Math/Tests/MathRuntimeTest.tscn") },
                 { Tools_ObjectPoolCollisionIsolationValidation, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/ObjectPool/Tests/Validation/CollisionIsolation/ObjectPoolCollisionIsolationValidation.tscn") },
                 { Tools_ObjectPoolContractRuntimeTest, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/ObjectPool/Tests/Contracts/ObjectPoolContractRuntimeTest.tscn") },
                 { Tools_ObjectPoolInit, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/ObjectPool/Management/ObjectPoolInit.tscn") },
+                { Tools_ResourceLoadingRuntimeTest, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/ResourceLoading/Tests/ResourceLoadingRuntimeTest.tscn") },
                 { Tools_TargetSelectorTest, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/TargetSelector/Tests/TargetSelectorTest.tscn") },
                 { Tools_TimerManager, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/Timer/TimerManager.tscn") },
                 { Tools_TimerStressValidation, new ResourceData(ResourceCategory.Tools, "res://Src/ECS/Tools/Timer/Tests/TimerStressValidation.tscn") },

@@ -71,4 +71,14 @@ public sealed class EntityRegistry
     {
         return _nodesById.ToDictionary(pair => pair.Key, pair => pair.Value);
     }
+
+    public IReadOnlyList<Node> GetAllNodes()
+    {
+        return _nodesById.Values.ToArray();
+    }
+
+    public IReadOnlyList<T> GetNodesByType<T>() where T : Node
+    {
+        return _nodesById.Values.OfType<T>().ToArray();
+    }
 }

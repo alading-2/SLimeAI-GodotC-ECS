@@ -20,7 +20,7 @@ public partial class SpawnSystem : Node, ISystem,
     public static void Initialize()
     {
         SystemRegistry.Register(nameof(SpawnSystem),
-            static () => ResourceManagement.Load<PackedScene>(nameof(SpawnSystem), ResourceCategory.System)
+            static () => ResourceLoading.Load<PackedScene>(nameof(SpawnSystem), ResourceCategory.System)
                 .Instantiate());
     }
 

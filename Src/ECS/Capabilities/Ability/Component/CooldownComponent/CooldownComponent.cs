@@ -151,10 +151,8 @@ public partial class CooldownComponent : Node, IComponent
     {
         if (_data == null) return 0f;
 
-        // 获取基础冷却时间 (支持修改器)
-        // 获取冷却缩减 (支持修改器)
-        // 使用 MyMath 统一公式
-        return MyMath.CalculateFinalCooldownTime(BaseCooldown, CooldownReduction);
+        // 冷却公式归 Ability owner，避免 Math 成为业务公式杂项入口。
+        return AbilityFormula.CalculateFinalCooldownTime(BaseCooldown, CooldownReduction);
     }
 
     // ================= 私有方法 =================

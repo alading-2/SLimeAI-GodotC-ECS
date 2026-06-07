@@ -21,7 +21,7 @@ public class DodgeProcessor : IDamageProcessor
 
         float dodgeChance = info.Victim!.Data.Get<float>(GeneratedDataKey.DodgeChance);
 
-        if (MyMath.CheckProbability(dodgeChance))
+        if (ProbabilityTool.RollPercent(dodgeChance))
         {
             // 闪避成功，伤害归零，结束伤害流程
             info.IsDodged = true;

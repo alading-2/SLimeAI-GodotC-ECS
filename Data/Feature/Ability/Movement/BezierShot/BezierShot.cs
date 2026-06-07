@@ -130,7 +130,7 @@ internal class BezierShotExecutor : AbilityFeatureHandler
         float castRange) // 技能施法距离
     {
         float effectiveRange = castRange > 0f ? castRange : DefaultFallbackRange; // 查询半径
-        var targets = EntityTargetSelector.Query(new TargetSelectorQuery
+        using var result = TargetQueryEngine.QueryEntities(new TargetSelectorQuery
         {
             Geometry = GeometryType.Circle, // 查询形状
             Origin = casterNode.GlobalPosition, // 查询中心
@@ -140,9 +140,9 @@ internal class BezierShotExecutor : AbilityFeatureHandler
             Sorting = TargetSorting.Nearest, // 排序方式：最近敌人
             MaxTargets = 1 // 最大目标数
         });
-        if (targets.Count > 0 && targets[0] is Node2D targetNode)
+        if (result.Items.Count > 0 && result.Items[0] is Node2D targetNode)
         {
-            return (targets[0], targetNode);
+            return (result.Items[0], targetNode);
         }
 
         return null;

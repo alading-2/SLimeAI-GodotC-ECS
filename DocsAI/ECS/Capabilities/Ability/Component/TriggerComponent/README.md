@@ -12,6 +12,7 @@
 1.  **意图生成**：当条件满足时，发送 `TryTrigger` 事件。
 2.  **多模式支持**：支持手动、事件、周期、自动等多种触发模式。
 3.  **纯粹性**：不扣除消耗，不启动冷却，只负责"想不想放"。
+4.  **概率入口**：事件触发概率统一用 `ProbabilityTool.RollPercent`，概率单位为百分比 0-100，可注入 deterministic RNG 进行测试。
 
 ## 触发模式 (AbilityTriggerMode)
 *   **Manual**: 响应代码调用 `TryManualTrigger`。
@@ -28,6 +29,7 @@
 | :--- | :--- | :--- |
 | `AbilityTriggerMode` | `int` (Flags) | 触发模式掩码 |
 | `AbilityTriggerEvent` | `string` | 监听的事件名 |
+| `AbilityTriggerChance` | `float` | 触发概率，单位为百分比 0-100 |
 
 ---
 

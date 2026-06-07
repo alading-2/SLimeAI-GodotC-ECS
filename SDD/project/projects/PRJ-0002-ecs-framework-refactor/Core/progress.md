@@ -8,8 +8,8 @@
 
 - **Updated**: 2026-06-07
 - **Current SDD**: none
-- **Last Conclusion**: `design/Tool/其他Tool/` 已从设计确认进入执行准备：已创建 4 个 pending 执行型 SDD 和对应 `execution-prompt.md`，分别覆盖 Runtime mount + NodeLifecycle、TargetQueryEngine、ResourceLoading + CommonUtilities、MathFormula + deterministic RNG。全部按 hard cutover 执行，不为旧 API 做长期兼容。
-- **Next Action**: 按顺序执行 SDD-0035 -> SDD-0036 -> SDD-0037 -> SDD-0038。下一步先进入 `sdds/025-SDD-0035-runtime-mount-and-node-lifecycle-hard-cutover/execution-prompt.md`，从 T1.1 readiness baseline 开始；当前只生成 SDD/提示词，未改运行时代码。
+- **Last Conclusion**: SDD-0035 至 SDD-0038 已按顺序完成剩余 Tools hard cutover：Runtime mount + NodeLifecycle、TargetQueryEngine、ResourceLoading + CommonUtilities、Math formula + deterministic RNG 均已完成，旧 `ParentManager`/`ParentNames`、`EntityTargetSelector`/`PositionTargetSelector`、`CommonTool`、`MyMath`、`GeometryCalculator` current 入口已退出。
+- **Next Action**: 后续继续 PRJ-0002 时，优先从仍 blocked 的 SDD-0027 Timer scene validation 或新的 profiler/owner 证据驱动小切片恢复；剩余 Tools 设计包不再作为 pending 实施入口。
 - **Open Blockers**: none
 
 ## Project Status Board
@@ -32,10 +32,10 @@
 | SDD-0024 | done | `design/Runtime/3.Entity系统优化/` | Entity Relationship Full Rewrite 已完成：typed EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除已收口 |
 | SDD-0025 | done | `design/Runtime/6.ECS框架目录架构大重构/` | 已完成：`Src/ECS/Runtime + Src/ECS/Capabilities` 成为源码主入口；DocsAI 当前入口为 `Runtime + Capabilities + Tools + UI`；`Foundation/Foundations` 已从当前路由删除 |
 | SDD-0026 | done | `design/Tool/Input/` | Input Contract Manifest And Facade Hardening 已完成；Input DocsAI 主入口改为 README，Concept/Usage/InputMap 降为可选辅助分层 |
-| SDD-0035 | pending | `design/Tool/其他Tool/04-NodeLifecycle与ParentManager边界.md` | Runtime Mount And Node Lifecycle Hard Cutover 已创建执行胶囊；默认先做 `/root/SlimeAIRuntime` manifest mount 和 Runtime NodeLifecycle registry，再让后续 TargetSelector 脱离 NodeLifecycle 全局扫描 |
-| SDD-0036 | pending | `design/Tool/其他Tool/05-TargetSelector查询契约.md` | Target Query Engine Hard Cutover 已创建执行胶囊；用户已确认完全重构，不保 `EntityTargetSelector.Query(query)` 兼容桥 |
-| SDD-0037 | pending | `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` | Resource Loading And Common Utilities Hard Cutover 已创建执行胶囊；保留极薄 ResourceLoading，删除 contains fallback，迁出 `CommonTool.LoadPackedScene`，Common Utilities 受 owner 边界约束 |
-| SDD-0038 | pending | `design/Tool/其他Tool/03-Math目标架构与验证.md` | Math Formula And Deterministic Random Cutover 已创建执行胶囊；保留 Math 功能但拆开 `MyMath` 杂项公式，随机支持 seed/RNG 注入 |
+| SDD-0035 | done | `design/Tool/其他Tool/04-NodeLifecycle与ParentManager边界.md` | Runtime Mount And NodeLifecycle Hard Cutover 已完成：`RuntimeMountService` 默认 `/root/SlimeAIRuntime`，`ParentManager`/`ParentNames` 删除；NodeLifecycle 迁 Runtime registry，注册带 owner/source，业务全局扫描清零 |
+| SDD-0036 | done | `design/Tool/其他Tool/05-TargetSelector查询契约.md` | Target Query Engine Hard Cutover 已完成；`TargetQueryEngine` / diagnostics / candidate source / deterministic RNG 成为 current API，旧 list-only facade 删除 |
+| SDD-0037 | done | `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` | Resource Loading And Common Utilities Hard Cutover 已完成；`ResourceLoading` current facade、strict lookup、source diagnostics、ResourceCatalogDiagnostics 和 CommonUtilities 边界已收口 |
+| SDD-0038 | done | `design/Tool/其他Tool/03-Math目标架构与验证.md` | Math Formula And Deterministic Random Cutover 已完成；`ProbabilityTool` / `DeterministicRandom` 接管概率随机，Damage/Ability 公式归 owner，`MyMath` / `GeometryCalculator` 删除 |
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
 | SDD-0028 | done | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已完成；后续对象池改动按 ObjectPool owner 新建小切片 |
 | SDD-0029 | done | `design/Runtime/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |

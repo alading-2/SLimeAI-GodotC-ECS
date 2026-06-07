@@ -148,7 +148,7 @@ public partial class ChargeComponent : Node, IComponent
         // 充能回复速度某种意义上也是冷却时间，但跟冷却时间是不同的概念
         float baseChargeTime = _data.Get<float>(GeneratedDataKey.AbilityChargeTime);
         float reduction = _data.Get<float>(GeneratedDataKey.CooldownReduction);
-        float chargeTime = MyMath.CalculateFinalCooldownTime(baseChargeTime, reduction);
+        float chargeTime = AbilityFormula.CalculateFinalCooldownTime(baseChargeTime, reduction);
 
         // 如果充能时间间隔<=0，不启动充能恢复计时器
         if (chargeTime <= 0f) return;

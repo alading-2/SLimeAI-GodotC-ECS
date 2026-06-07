@@ -1,20 +1,20 @@
-# ResourceManagement - 当前资源加载 facade
+# ResourceLoading - 当前资源加载 facade
 
 ## 概述
-`ResourceManagement` 当前是项目的统一资源加载入口。它通过 `ResourcePaths.cs`（由 `ResourceGenerator` 自动生成）获取当前项目资源 catalog，并提供统一加载方法。
+`ResourceLoading` 是项目的统一资源加载入口。它通过 `ResourcePaths.cs`（由 `ResourceGenerator` 自动生成）获取当前项目资源 catalog，并提供 strict lookup、source/owner/usage diagnostics 和结构化 `ResourceLoadResult`。
 
 AI-first 目标：让 AI 和运行时从同一个 owner 查资源，不在业务代码、测试 UI 或预览工具里散落裸 `GD.Load("res://...")`。
 
 > [!NOTE]
-> `ResourceManagement` 只是当前旧名；后续 hard cutover 应收敛为极薄 `ResourceLoading`。它不是 Godot 资源系统替代品，也不是跨职责资源管理器。底层仍由 Godot `GD.Load` / `ResourceLoader` 加载资源。
+> `ResourceManagement` 只是迁移期薄转发；current public 心智是极薄 `ResourceLoading`。它不是 Godot 资源系统替代品，也不是跨职责资源管理器。底层仍由 Godot `GD.Load` / `ResourceLoader` 加载资源。
 > `res://` 本身不是问题，它是 Godot project root 路径。移动、重命名或删除资源后，必须通过 project directory / resource-path migration workflow 替换旧引用，重新运行 `Tools/ResourceGenerator` 并检查生成结果；当前 manifest 仍保存项目相对资源路径，不能自动修复忘记迁移的 stale path。
 
 ## 核心原则
 1. **禁止裸加载**: 业务代码不要直接 `GD.Load("res://...")` / `ResourceLoader.Load("res://...")`。`res://` 可以作为 DataOS resource ref、`.tscn/.tres` 引用或带 source 的 `LoadPath` 输入。
 2. **统一分类**: 资源必须属于 `ResourceCategory` 中的某一分类；Preset 是独立分类，不等同于 Component。
-3. **类型安全**: 当前代码使用 `ResourceManagement.Load<T>`；目标态使用 `ResourceLoading.Load<T>`。
+3. **类型安全**: current 代码使用 `ResourceLoading.Load<T>`。
 4. **目录选择**: UI / 编辑器需要“列出可选资源”时，优先使用 `ResourceCatalog`，不要在运行时全盘扫描 `res://`。
-5. **严格加载**: 后续 hard cutover 目标是精确 key / category 查找；找不到资源应暴露结构化失败原因，不应通过相近名称 fallback 静默加载其他资源。
+5. **严格加载**: 精确 key / category 查找；找不到资源会暴露结构化失败原因，不通过相近名称 fallback 静默加载其他资源。
 6. **路径来源**: `LoadPath` 只用于 DataOS resource ref、debug/test 或明确来源的资源引用；业务 Capability 不应直接传裸 `res://` 绕过 manifest。
 7. **路径迁移**: 移动、重命名、删除或检查目录后用 `resource-path-migration` skill / script 替换旧路径，并用 `rg` 验证旧路径残留。
 
@@ -24,12 +24,12 @@ AI-first 目标：让 AI 和运行时从同一个 owner 查资源，不在业务
 推荐使用 `typeof(T).Name` 进行类型安全的加载，确保代码重构（如类更名）时能自动保持同步。
 ```csharp
 // 自动匹配类型名作为资源名
-var scene = ResourceManagement.Load<PackedScene>(typeof(PlayerEntity).Name, ResourceCategory.Entity);
+var scene = ResourceLoading.Load<PackedScene>(typeof(PlayerEntity).Name, ResourceCategory.Entity);
 ```
 
 ### 2. 加载 UI
 ```csharp
-var uiScene = ResourceManagement.Load<PackedScene>("HealthBarUI", ResourceCategory.UI);
+var uiScene = ResourceLoading.Load<PackedScene>("HealthBarUI", ResourceCategory.UI);
 ```
 
 ### 3. 构建资源选择列表
@@ -57,7 +57,7 @@ var allGroups = ResourceCatalog.GetGroups(
 );
 ```
 
-目录服务只负责发现与展示分组；真正加载仍通过 `ResourceManagement.Load<T>(entry.ResourceKey, entry.Category)` 完成。独立视觉预览场景位于 `Src/ECS/Test/GlobalTest/VisualPreview/`，它直接基于 `ResourcePaths.Resources` 收集全部 `Asset*` 分类并批量生成可选中的预览 Entity。
+目录服务只负责发现与展示分组；真正加载仍通过 `ResourceLoading.Load<T>(entry.ResourceKey, entry.Category)` 完成。独立视觉预览场景位于 `Src/ECS/Test/GlobalTest/VisualPreview/`，它直接基于 `ResourcePaths.Resources` 收集全部 `Asset*` 分类并批量生成可选中的预览 Entity。
 
 ## 最佳实践
 
@@ -77,7 +77,7 @@ var allGroups = ResourceCatalog.GetGroups(
 
 > [!IMPORTANT]
 > **什么时候需要运行生成器？**
-> 当你 **添加、重命名、移动或删除** 了任何 `.tscn` 或 `.tres` 文件时，必须运行生成器更新索引，否则当前 `ResourceManagement.Load` / 目标 `ResourceLoading.Load` 将无法找到资源。
+> 当你 **添加、重命名、移动或删除** 了任何 `.tscn` 或 `.tres` 文件时，必须运行生成器更新索引，否则当前 `ResourceLoading.Load` 将无法找到资源。
 > 如果是移动/重命名，还应先运行路径迁移脚本替换旧引用：
 >
 > ```bash
@@ -115,10 +115,10 @@ var allGroups = ResourceCatalog.GetGroups(
 
 Resource loading 方向已在 `DocsAI/ECS/Tools/ResourceManagement/README.md` 和 `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` 中校准：
 
-- 保留统一资源加载工具；`ResourceManagement` 不作为长期“资源管理器”概念保留，后续应简化或重命名为 `ResourceLoading`。
+- 保留统一资源加载工具；`ResourceManagement` 不作为长期“资源管理器”概念保留，只作为迁移期薄转发。
 - 保留 `ResourceCatalog` / `ResourceGenerator` 的轻量 catalog 价值，但不把它们当跨游戏全局资源身份系统。
-- 删除 `Load<T>` 的 contains fallback。
-- 给 `LoadPath` 增加 source policy。
-- 增加 `ResourceLoadResult` / `ResourceCatalogDiagnostics`。
-- 将 `CommonTool.LoadPackedScene` 迁入 ResourceLoading，当前 `CommonTool` 不作为资源加载 owner。
+- `Load<T>` 的 contains fallback 已删除。
+- `LoadPath` 必须携带 source policy。
+- 已增加 `ResourceLoadResult` / `ResourceCatalogDiagnostics`。
+- `CommonTool.LoadPackedScene` 已迁入 ResourceLoading，`CommonTool` current 入口已删除。
 - 未来框架仓与游戏仓分离后，框架 generator 不默认拥有游戏资源；游戏仓应生成自己的 resource catalog。

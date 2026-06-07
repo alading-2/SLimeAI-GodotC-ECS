@@ -21,7 +21,7 @@ public partial class DamageStatisticsSystem : Node, ISystem
     public static void Initialize()
     {
         SystemRegistry.Register(nameof(DamageStatisticsSystem),
-            static () => ResourceManagement.Load<PackedScene>(nameof(DamageStatisticsSystem), ResourceCategory.System)
+            static () => ResourceLoading.Load<PackedScene>(nameof(DamageStatisticsSystem), ResourceCategory.System)
                 .Instantiate());
     }
 

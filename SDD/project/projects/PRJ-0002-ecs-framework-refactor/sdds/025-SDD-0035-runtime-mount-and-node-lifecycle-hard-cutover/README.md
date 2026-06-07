@@ -2,7 +2,7 @@
 
 ## Index Card
 
-- **Status**: pending
+- **Status**: done
 - **Created**: 2026-06-07
 - **Updated**: 2026-06-07
 - **Type**: refactor
@@ -32,7 +32,7 @@
 
 ## Current Resume
 
-- **Current Task**: T1.1
+- **Current Task**: done
 - **Last Conclusion**: SDD-0035 已生成执行胶囊。默认顺序是先完成 Runtime mount 和 NodeLifecycle 底座，再执行 TargetQueryEngine。
 - **Next Action**: 进入实现前先读 `execution-prompt.md`，从 T1.1 readiness baseline 开始；不要直接修改源码。
 - **Open Blockers**: none

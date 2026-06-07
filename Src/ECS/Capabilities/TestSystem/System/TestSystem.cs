@@ -123,7 +123,7 @@ public partial class TestSystem : CanvasLayer
     internal static void Initialize()
     {
         SystemRegistry.Register(nameof(TestSystem),
-            static () => ResourceManagement.Load<PackedScene>(nameof(TestSystem), ResourceCategory.System).Instantiate());
+            static () => ResourceLoading.Load<PackedScene>(nameof(TestSystem), ResourceCategory.System).Instantiate());
     }
 
     /// <summary>
@@ -429,7 +429,7 @@ public partial class TestSystem : CanvasLayer
 
         try
         {
-            var scene = ResourceManagement.Load<PackedScene>(moduleScene.SceneResourceKey, ResourceCategory.System);
+            var scene = ResourceLoading.Load<PackedScene>(moduleScene.SceneResourceKey, ResourceCategory.System);
             var currentModule = TestSceneHelper.InstantiateScene<TestModuleBase>(scene, moduleScene.SceneResourceKey);
             PrepareModuleRoot(currentModule);
             _moduleViewport.AddChild(currentModule);

@@ -31,7 +31,7 @@ public class LifestealProcessor : IDamageProcessor
         float lifestealChance = targetUnit.Data.Get<float>(GeneratedDataKey.LifeSteal);
 
         // Brotato 逻辑：LifeSteal 是触发回血 1 点的概率
-        if (MyMath.CheckProbability(lifestealChance))
+        if (ProbabilityTool.RollPercent(lifestealChance))
         {
             // float LifeSteal = 1;
             float LifeSteal = info.FinalDamage * (lifestealChance / 100);

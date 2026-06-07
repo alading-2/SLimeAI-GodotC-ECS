@@ -21,6 +21,8 @@ using System.Runtime.CompilerServices;
 public partial class UIManager : Node
 {
     private static readonly Log _log = new Log("UIManager");
+    private static readonly Dictionary<string, UIBase> _uiById = new();
+    private static readonly Dictionary<System.Type, HashSet<UIBase>> _uiByType = new();
 
     /// <summary>
     /// 模块初始化：向统一系统注册表注册
@@ -29,7 +31,7 @@ public partial class UIManager : Node
     public static void Initialize()
     {
         SystemRegistry.Register(nameof(UIManager),
-            static () => ResourceManagement.Load<PackedScene>(nameof(UIManager), ResourceCategory.UI).Instantiate());
+            static () => ResourceLoading.Load<PackedScene>(nameof(UIManager), ResourceCategory.UI).Instantiate());
     }
 
     // ============================================================
@@ -56,7 +58,7 @@ public partial class UIManager : Node
     /// </summary>
     public static void Register(UIBase ui)
     {
-        NodeLifecycleManager.Register(ui);
+        RegisterUiNode(ui, "UIManager.Register");
     }
 
     /// <summary>
@@ -64,7 +66,7 @@ public partial class UIManager : Node
     /// </summary>
     public static void Unregister(UIBase ui)
     {
-        NodeLifecycleManager.Unregister(ui);
+        UnregisterUiNode(ui);
     }
 
     // ============================================================
@@ -105,9 +107,9 @@ public partial class UIManager : Node
         else
         {
             // 从 ResourceManagement 实例化
-            // 使用 ResourceManagement.Load 直接加载 PackedScene，避免手动 GetPath + Load
+            // 使用 ResourceLoading.Load 直接加载 PackedScene，避免手动 GetPath + Load
             // 使用 typeof(T).Name 作为资源名称，确保类型和资源名一致
-            var scene = ResourceManagement.Load<PackedScene>(typeof(T).Name, ResourceCategory.UI);
+            var scene = ResourceLoading.Load<PackedScene>(typeof(T).Name, ResourceCategory.UI);
             if (scene == null)
             {
                 _log.Error($"UI场景加载失败: {typeof(T).Name} (请检查 ResourcePaths)");
@@ -122,8 +124,8 @@ public partial class UIManager : Node
             return null;
         }
 
-        // 2. 注册到 NodeLifecycleManager
-        NodeLifecycleManager.Register(ui);
+        // 2. 注册到 UIManager 和底层 NodeLifecycleRegistry
+        RegisterUiNode(ui, "UIManager.BindUI");
 
         // 3. 调用绑定
         ui.Bind(entity);
@@ -169,7 +171,7 @@ public partial class UIManager : Node
         ui.Unbind();
 
         // 注销
-        NodeLifecycleManager.Unregister(ui);
+        UnregisterUiNode(ui);
 
         // 归还对象池或销毁
         if (ui is IPoolable)
@@ -222,8 +224,7 @@ public partial class UIManager : Node
 
         foreach (var uiId in uiIds)
         {
-            var uiNode = NodeLifecycleManager.GetNodeById(uiId);
-            if (uiNode is UIBase ui)
+            if (_uiById.TryGetValue(uiId, out var ui))
             {
                 yield return ui;
             }
@@ -243,7 +244,11 @@ public partial class UIManager : Node
     /// </summary>
     public static IEnumerable<T> GetAllUI<T>() where T : UIBase
     {
-        return NodeLifecycleManager.GetNodesByType<T>();
+        var type = typeof(T);
+        if (!_uiByType.TryGetValue(type, out var values))
+            return System.Array.Empty<T>();
+
+        return values.OfType<T>().ToArray();
     }
 
     // ============================================================
@@ -255,12 +260,12 @@ public partial class UIManager : Node
     /// </summary>
     public static void ClearAllUI()
     {
-        var allUI = NodeLifecycleManager.GetNodesByInterface<UIBase>().ToList();
+        var allUI = _uiById.Values.ToList();
 
         foreach (var ui in allUI)
         {
             ui.Unbind();
-            NodeLifecycleManager.Unregister(ui);
+            UnregisterUiNode(ui);
 
             if (ui is IPoolable)
             {
@@ -273,5 +278,36 @@ public partial class UIManager : Node
         }
 
         _log.Info($"UIManager 已清空，共清理 {allUI.Count} 个 UI");
+    }
+
+    private static void RegisterUiNode(UIBase ui, string source)
+    {
+        var uiId = ui.GetInstanceId().ToString();
+        _uiById[uiId] = ui;
+
+        var type = ui.GetType();
+        if (!_uiByType.TryGetValue(type, out var values))
+        {
+            values = new HashSet<UIBase>();
+            _uiByType[type] = values;
+        }
+
+        values.Add(ui);
+        NodeLifecycleManager.Register(ui, NodeLifecycleOwner.UI(uiId), source);
+    }
+
+    private static void UnregisterUiNode(UIBase ui)
+    {
+        var uiId = ui.GetInstanceId().ToString();
+        _uiById.Remove(uiId);
+
+        foreach (var pair in _uiByType.ToArray())
+        {
+            pair.Value.Remove(ui);
+            if (pair.Value.Count == 0)
+                _uiByType.Remove(pair.Key);
+        }
+
+        NodeLifecycleManager.Unregister(ui);
     }
 }

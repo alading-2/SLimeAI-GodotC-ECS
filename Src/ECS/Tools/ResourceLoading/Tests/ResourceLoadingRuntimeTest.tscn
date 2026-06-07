@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Src/ECS/Tools/ResourceLoading/Tests/ResourceLoadingRuntimeTest.cs" id="1_resource_loading_test"]
+
+[node name="ResourceLoadingRuntimeTest" type="Node"]
+script = ExtResource("1_resource_loading_test")

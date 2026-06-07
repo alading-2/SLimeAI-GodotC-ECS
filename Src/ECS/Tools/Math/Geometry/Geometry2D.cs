@@ -118,8 +118,9 @@ public static class Geometry2D
     /// </summary>
     public static Vector2 GetRandomPointInRing(Vector2 center, float innerRadius, float outerRadius, RandomNumberGenerator? rng = null)
     {
-        float randomAngle = (rng?.Randf() ?? GD.Randf()) * Mathf.Tau;
-        float radiusRandom = rng?.Randf() ?? GD.Randf();
+        rng ??= DeterministicRandom.Shared;
+        float randomAngle = rng.Randf() * Mathf.Tau;
+        float radiusRandom = rng.Randf();
 
         float innerSquared = innerRadius * innerRadius;
         float outerSquared = outerRadius * outerRadius;
@@ -135,7 +136,8 @@ public static class Geometry2D
     /// </summary>
     public static Vector2 GetRandomPointOnPerimeter(Vector2 center, float radius, RandomNumberGenerator? rng = null)
     {
-        float angle = (rng?.Randf() ?? GD.Randf()) * Mathf.Tau;
+        rng ??= DeterministicRandom.Shared;
+        float angle = rng.Randf() * Mathf.Tau;
         return center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
     }
 
@@ -145,11 +147,12 @@ public static class Geometry2D
     /// <param name="center">矩形中心点。</param>
     public static Vector2 GetRandomPointInBox(Vector2 center, Vector2 forward, float width, float length, RandomNumberGenerator? rng = null)
     {
+        rng ??= DeterministicRandom.Shared;
         forward = forward.Normalized();
         Vector2 right = new Vector2(-forward.Y, forward.X);
 
-        float randomLength = Mathf.Lerp(-length * 0.5f, length * 0.5f, rng?.Randf() ?? GD.Randf());
-        float randomWidth = Mathf.Lerp(-width * 0.5f, width * 0.5f, rng?.Randf() ?? GD.Randf());
+        float randomLength = Mathf.Lerp(-length * 0.5f, length * 0.5f, rng.Randf());
+        float randomWidth = Mathf.Lerp(-width * 0.5f, width * 0.5f, rng.Randf());
 
         return center + forward * randomLength + right * randomWidth;
     }
@@ -159,8 +162,9 @@ public static class Geometry2D
     /// </summary>
     public static Vector2 GetRandomPointInCone(Vector2 origin, Vector2 forward, float range, float angle, RandomNumberGenerator? rng = null)
     {
-        float randomAngle = rng?.Randf() ?? GD.Randf();
-        float radiusRandom = rng?.Randf() ?? GD.Randf();
+        rng ??= DeterministicRandom.Shared;
+        float randomAngle = rng.Randf();
+        float radiusRandom = rng.Randf();
 
         float startAngle = forward.Angle() - Mathf.DegToRad(angle * 0.5f);
         float sampleAngle = startAngle + randomAngle * Mathf.DegToRad(angle);
@@ -175,9 +179,10 @@ public static class Geometry2D
     /// </summary>
     public static Vector2 GetRandomPointInAABB(Rect2 rect, RandomNumberGenerator? rng = null)
     {
+        rng ??= DeterministicRandom.Shared;
         return new Vector2(
-            Mathf.Lerp(rect.Position.X, rect.End.X, rng?.Randf() ?? GD.Randf()),
-            Mathf.Lerp(rect.Position.Y, rect.End.Y, rng?.Randf() ?? GD.Randf()));
+            Mathf.Lerp(rect.Position.X, rect.End.X, rng.Randf()),
+            Mathf.Lerp(rect.Position.Y, rect.End.Y, rng.Randf()));
     }
 
     /// <summary>
@@ -186,6 +191,7 @@ public static class Geometry2D
     /// </summary>
     public static Vector2 GetRandomPointInHollowBox(Rect2 outerBox, Rect2 innerBox, RandomNumberGenerator? rng = null)
     {
+        rng ??= DeterministicRandom.Shared;
         // 确保边界正确
         float outerLeft = Mathf.Min(outerBox.Position.X, innerBox.Position.X);
         float outerRight = Mathf.Max(outerBox.End.X, innerBox.End.X);
@@ -211,9 +217,9 @@ public static class Geometry2D
         }
 
         // 按面积权重随机选择一个子区域
-        float regionPick = (rng?.Randf() ?? GD.Randf()) * totalArea;
-        float rand1 = rng?.Randf() ?? GD.Randf();
-        float rand2 = rng?.Randf() ?? GD.Randf();
+        float regionPick = rng.Randf() * totalArea;
+        float rand1 = rng.Randf();
+        float rand2 = rng.Randf();
 
         if (regionPick < areaTop)
         {

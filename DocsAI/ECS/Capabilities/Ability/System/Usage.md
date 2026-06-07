@@ -106,7 +106,7 @@ Src/ECS/Capabilities/Ability/System/
 - 管理指示器输入与确认/取消
 - 确认后发正式 `Ability.TryTrigger`
 
-当前实现已删除 `AbilityTargetSelectionComponent`。实体目标查询直接写在具体 Handler 内部，优先使用 `TargetQueryEngine.QueryEntities(...)`；旧 `EntityTargetSelector.Query(...)` 只作为兼容 facade。
+当前实现已删除 `AbilityTargetSelectionComponent`。实体目标查询直接写在具体 Handler 内部，必须使用 `TargetQueryEngine.QueryEntities(...)` 和 `TargetQueryResult.Diagnostics`；旧 `EntityTargetSelector.Query(...)` facade 已删除。
 
 ---
 

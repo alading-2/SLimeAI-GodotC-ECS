@@ -1,9 +1,10 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 /// <summary>
 /// TargetSelector 查询参数载体。
-/// 统一描述几何范围、过滤、排序和数量限制，可被 EntityTargetSelector 与 PositionTargetSelector 复用。
+/// 统一描述几何范围、过滤、排序、随机源和数量限制，供 TargetQueryEngine 执行查询。
 /// </summary>
 public readonly record struct TargetSelectorQuery
 {
@@ -39,6 +40,12 @@ public readonly record struct TargetSelectorQuery
     /// Box / Line / Cone 需要朝向，不传时通常默认使用 Vector2.Right。
     /// </summary>
     public Vector2? Forward { get; init; }
+
+    /// <summary>
+    /// 查询方向提供器（可选）。
+    /// 非 null 时优先使用，用于跟随施法者朝向的持续查询。
+    /// </summary>
+    public Func<Vector2>? ForwardProvider { get; init; }
 
     /// <summary>
     /// 半径或最大距离（可选）。
@@ -105,7 +112,50 @@ public readonly record struct TargetSelectorQuery
     public int MaxTargets { get; init; } = -1;
 
     /// <summary>
+    /// 显式候选来源。设置后不扫描默认 EntityManager source。
+    /// </summary>
+    public IReadOnlyList<IEntity>? ExplicitCandidates { get; init; }
+
+    /// <summary>
+    /// 显式单体目标，用于 Single 查询。
+    /// </summary>
+    public IEntity? ExplicitTarget { get; init; }
+
+    /// <summary>
+    /// 可复现随机 seed。Random sorting 和位置采样必须优先使用该 seed。
+    /// </summary>
+    public int? RandomSeed { get; init; }
+
+    /// <summary>
+    /// 可注入随机源。优先级高于 RandomSeed；调用方负责其生命周期。
+    /// </summary>
+    public Random? RandomSource { get; init; }
+
+    /// <summary>
     /// 解析本次查询应使用的原点。
     /// </summary>
     public Vector2 ResolveOrigin() => OriginProvider?.Invoke() ?? Origin;
+
+    /// <summary>
+    /// 解析本次查询应使用的方向。
+    /// </summary>
+    public Vector2 ResolveForward()
+    {
+        var forward = ForwardProvider?.Invoke() ?? Forward ?? Vector2.Right;
+        return forward.LengthSquared() > 0f ? forward.Normalized() : Vector2.Right;
+    }
+
+    /// <summary>
+    /// 使用已解析 origin/forward 生成快照 query，避免后续阶段重复读取 provider。
+    /// </summary>
+    public TargetSelectorQuery Resolve()
+    {
+        return this with
+        {
+            Origin = ResolveOrigin(),
+            OriginProvider = null,
+            Forward = ResolveForward(),
+            ForwardProvider = null
+        };
+    }
 }

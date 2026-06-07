@@ -29,7 +29,7 @@ public class CritProcessor : IDamageProcessor
         float critChance = attackerEntity.Data.Get<float>(GeneratedDataKey.CritRate);
 
         // 执行随机判定
-        if (MyMath.CheckProbability(critChance))
+        if (ProbabilityTool.RollPercent(critChance))
         {
             // 获取暴击伤害
             float critMultiplier = attackerEntity.Data.Get<float>(GeneratedDataKey.CritDamage);

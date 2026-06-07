@@ -128,7 +128,7 @@ public override void _Ready()
 {
     // 使用 ObjectPoolNames 常量避免字符串硬编码
     new ObjectPool<EnemyEntity>(
-        () => (EnemyEntity)ResourceManagement.LoadScene<EnemyEntity>().Instantiate(),
+        () => (EnemyEntity)ResourceLoading.Load<PackedScene>(typeof(EnemyEntity).Name, ResourceCategory.Entity).Instantiate(),
         new ObjectPoolConfig
         {
             Name = ObjectPoolNames.EnemyPool,

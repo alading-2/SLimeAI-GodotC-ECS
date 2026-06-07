@@ -6,7 +6,7 @@ using slime.data.Systems;
 
 /// <summary>
 /// 系统运行时管理器。
-/// <para>作为项目唯一 autoload 入口，负责初始化 ParentManager、实例化系统、管理启停并按项目状态重算运行资格。</para>
+/// <para>作为项目唯一 autoload 入口，负责初始化 RuntimeMountService、实例化系统、管理启停并按项目状态重算运行资格。</para>
 /// </summary>
 public partial class SystemManager : Node
 {
@@ -38,12 +38,12 @@ public partial class SystemManager : Node
     {
         // 约定同一时刻只存在一个活动 SystemManager。
         Instance = this;
-        ParentManager.Init(GetTree().Root); // 系统树与对象池/UI/Entity 父节点统一共用 Root
+        RuntimeMountService.Initialize(GetTree().Root); // 系统树与对象池/UI/Entity 父节点统一共用 Runtime root
     }
 
     // ─────────────────────────────────────────────────────────────
     // 生命周期总览：
-    //   _EnterTree  → 挂树、设单例、初始化 ParentManager
+    //   _EnterTree  → 挂树、设单例、初始化 RuntimeMountService
     //   _Ready      → 触发 Initialize + BootstrapRegisteredSystems
     //   _ExitTree   → 反注册全部系统、清空条目、置空单例
     //

@@ -106,7 +106,7 @@ internal class ParabolaBombardmentExecutor : AbilityFeatureHandler
     {
         _ = caster; // 当前随机选点逻辑只依赖施法者位置，保留参数以维持既有方法签名。
         float effectiveRange = castRange > 0f ? castRange : DefaultFallbackRange; // 随机选点半径
-        return GeometryCalculator.GetRandomPointInCircle(
+        return Geometry2D.GetRandomPointInCircle(
             casterNode.GlobalPosition, // 圆心
             effectiveRange // 半径
         );

@@ -2,10 +2,10 @@
   "id": "SDD-0038",
   "slug": "math-formula-and-deterministic-random-cutover",
   "title": "Math Formula And Deterministic Random Cutover",
-  "status": "pending",
+  "status": "done",
   "type": "refactor",
   "created_at": "2026-06-07",
-  "updated_at": "2026-06-07",
+  "updated_at": "2026-06-08",
   "scope": "SlimeAI",
   "git_boundaries": [
     "/home/slime/Code/SlimeAI/SlimeAI"
@@ -20,10 +20,10 @@
     "hard-cutover"
   ],
   "progress": {
-    "current_task": "T1.1",
-    "completed_tasks": 0,
+    "current_task": "done",
+    "completed_tasks": 10,
     "total_tasks": 10,
-    "percent": 0
+    "percent": 100
   },
   "bdd": {
     "required": true,
@@ -41,5 +41,11 @@
   "project_order": 28,
   "shared_design_refs": [
     "../../design/INDEX.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-06-08 01:53",
+      "summary": "dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly: 0 error; dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj: 108 resources, 5 existing duplicate-name warnings; sync-ai-config: exit 0; skill-test static all: Critical 0 / Advisory 0; Godot scene blocked because BrotatoLike is not a git repo, runner missing, and godot CLI unavailable."
+    }
   ]
 }

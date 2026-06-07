@@ -42,7 +42,7 @@ public static partial class EntityManager
         }
 
         var sourceEntityId = ResolveRuntimeEntityId(sourceEntity); // 源实体 Id
-        if (sourceEntityId.IsEmpty || !NodeLifecycleManager.IsRegistered(sourceEntityId.Value))
+        if (sourceEntityId.IsEmpty || ResolveEntityNode(sourceEntityId) == null)
         {
             _log.Error($"迁移失败：源实体未注册或无法解析 Id，node={sourceEntity.Name}");
             return null;

@@ -19,7 +19,7 @@ public partial class PauseMenuSystem : CanvasLayer, ISystem
     internal static void Initialize()
     {
         SystemRegistry.Register(nameof(PauseMenuSystem),
-            static () => ResourceManagement.Load<PackedScene>(nameof(PauseMenuSystem), ResourceCategory.System)
+            static () => ResourceLoading.Load<PackedScene>(nameof(PauseMenuSystem), ResourceCategory.System)
                 .Instantiate());
     }
 

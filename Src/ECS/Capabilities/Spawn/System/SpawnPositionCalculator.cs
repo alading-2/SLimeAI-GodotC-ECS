@@ -89,17 +89,21 @@ public static class SpawnPositionCalculator
     /// <param name="parameters">包含计算所需参数的对象（如半径、边界、间距等）</param>
     /// <param name="viewport">视口引用。在使用 Offscreen（屏幕外）策略时必须提供，用于获取相机位置和屏幕尺寸</param>
     /// <returns>计算出的全局 Vector2 坐标。如果策略未知或缺少必要引用，通常返回 Vector2.Zero</returns>
-    public static Vector2 GetSpawnPosition(SpawnPositionStrategy strategy, SpawnPositionParams parameters, Viewport? viewport = null)
+    public static Vector2 GetSpawnPosition(
+        SpawnPositionStrategy strategy,
+        SpawnPositionParams parameters,
+        Viewport? viewport = null,
+        RandomNumberGenerator? rng = null)
     {
         return strategy switch
         {
-            SpawnPositionStrategy.Rectangle => GetRandomRectanglePosition(parameters),
-            SpawnPositionStrategy.Circle => GetRandomCirclePosition(parameters),
-            SpawnPositionStrategy.Perimeter => GetPerimeterPosition(parameters),
-            SpawnPositionStrategy.Offscreen => GetOffscreenHollowPosition(parameters, viewport),
+            SpawnPositionStrategy.Rectangle => GetRandomRectanglePosition(parameters, rng),
+            SpawnPositionStrategy.Circle => GetRandomCirclePosition(parameters, rng),
+            SpawnPositionStrategy.Perimeter => GetPerimeterPosition(parameters, rng),
+            SpawnPositionStrategy.Offscreen => GetOffscreenHollowPosition(parameters, viewport, rng),
             SpawnPositionStrategy.Grid => GetGridPosition(parameters, viewport),
             SpawnPositionStrategy.Spiral => GetSpiralPosition(parameters, viewport),
-            SpawnPositionStrategy.Cluster => GetClusterPosition(parameters, viewport), // 单次调用 Cluster 会退化为随机散布
+            SpawnPositionStrategy.Cluster => GetClusterPosition(parameters, viewport, rng), // 单次调用 Cluster 会退化为随机散布
             _ => Vector2.Zero
         };
     }
@@ -112,9 +116,15 @@ public static class SpawnPositionCalculator
     /// <param name="parameters">生成参数</param>
     /// <param name="viewport">视口引用</param>
     /// <returns>包含 count 个坐标点的列表</returns>
-    public static List<Vector2> GetSpawnPositions(SpawnPositionStrategy strategy, int count, SpawnPositionParams parameters, Viewport? viewport = null)
+    public static List<Vector2> GetSpawnPositions(
+        SpawnPositionStrategy strategy,
+        int count,
+        SpawnPositionParams parameters,
+        Viewport? viewport = null,
+        RandomNumberGenerator? rng = null)
     {
         var results = new List<Vector2>(count);
+        rng ??= DeterministicRandom.Shared;
 
         // 特殊策略处理：Cluster (扎堆生成)
         // 逻辑：使用 BaseStrategy 确定一个“母点”，然后在其周围随机散布子点
@@ -122,15 +132,15 @@ public static class SpawnPositionCalculator
         {
             // 1. 确定中心点：根据 ClusterBaseStrategy 计算
             // 注意：这里递归调用 GetSpawnPosition 获取中心点
-            var center = GetSpawnPosition(parameters.ClusterBaseStrategy, parameters, viewport);
+            var center = GetSpawnPosition(parameters.ClusterBaseStrategy, parameters, viewport, rng);
 
             // 2. 在中心点周围随机散布
             for (int i = 0; i < count; i++)
             {
                 // 使用极坐标转笛卡尔坐标实现圆内随机散布
-                float angle = GD.Randf() * Mathf.Tau; // Tau = 2 * PI
+                float angle = rng.Randf() * Mathf.Tau; // Tau = 2 * PI
                 // 使用 sqrt 保证在圆内均匀分布，否则会聚集在圆心
-                float dist = Mathf.Sqrt(GD.Randf()) * parameters.ClusterRadius;
+                float dist = Mathf.Sqrt(rng.Randf()) * parameters.ClusterRadius;
                 results.Add(center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist);
             }
         }
@@ -150,7 +160,7 @@ public static class SpawnPositionCalculator
                     // 所以这里的 parameters.GridIndex++ 修改的是当前方法作用域内的副本，是有效的。
                 }
 
-                results.Add(GetSpawnPosition(strategy, parameters, viewport));
+                results.Add(GetSpawnPosition(strategy, parameters, viewport, rng));
             }
         }
 
@@ -160,33 +170,33 @@ public static class SpawnPositionCalculator
     /// <summary>
     /// 矩形区域内随机生成。
     /// </summary>
-    private static Vector2 GetRandomRectanglePosition(SpawnPositionParams p)
+    private static Vector2 GetRandomRectanglePosition(SpawnPositionParams p, RandomNumberGenerator? rng)
     {
         var rect = new Rect2(p.MinX, p.MinY, p.MaxX - p.MinX, p.MaxY - p.MinY);
-        return Geometry2D.GetRandomPointInAABB(rect);
+        return Geometry2D.GetRandomPointInAABB(rect, rng);
     }
 
     /// <summary>
     /// 圆形区域内随机生成 (实心圆)。
     /// </summary>
-    private static Vector2 GetRandomCirclePosition(SpawnPositionParams p)
+    private static Vector2 GetRandomCirclePosition(SpawnPositionParams p, RandomNumberGenerator? rng)
     {
-        return Geometry2D.GetRandomPointInCircle(p.Center, p.Radius);
+        return Geometry2D.GetRandomPointInCircle(p.Center, p.Radius, rng);
     }
 
     /// <summary>
     /// 圆周上随机生成 (空心圆环边缘)。
     /// </summary>
-    private static Vector2 GetPerimeterPosition(SpawnPositionParams p)
+    private static Vector2 GetPerimeterPosition(SpawnPositionParams p, RandomNumberGenerator? rng)
     {
-        return Geometry2D.GetRandomPointOnPerimeter(p.Center, p.Radius);
+        return Geometry2D.GetRandomPointOnPerimeter(p.Center, p.Radius, rng);
     }
 
     /// <summary>
     /// 屏幕外生成逻辑 (Hollow Rectangle)。
     /// 在 [Min, Max] 定义的大矩形内，挖去 Viewport 定义的小矩形。
     /// </summary>
-    private static Vector2 GetOffscreenHollowPosition(SpawnPositionParams p, Viewport? viewport)
+    private static Vector2 GetOffscreenHollowPosition(SpawnPositionParams p, Viewport? viewport, RandomNumberGenerator? rng)
     {
         if (viewport == null) return Vector2.Zero;
 
@@ -207,7 +217,7 @@ public static class SpawnPositionCalculator
         // 外部大矩形
         var outerRect = new Rect2(p.MinX, p.MinY, p.MaxX - p.MinX, p.MaxY - p.MinY);
 
-        return Geometry2D.GetRandomPointInHollowBox(outerRect, innerRect);
+        return Geometry2D.GetRandomPointInHollowBox(outerRect, innerRect, rng);
     }
 
     /// <summary>
@@ -250,13 +260,13 @@ public static class SpawnPositionCalculator
     /// <summary>
     /// 单个 Cluster 模式位置 (退化为基于 BaseStrategy 的单点偏移)。
     /// </summary>
-    private static Vector2 GetClusterPosition(SpawnPositionParams p, Viewport? viewport)
+    private static Vector2 GetClusterPosition(SpawnPositionParams p, Viewport? viewport, RandomNumberGenerator? rng)
     {
+        rng ??= DeterministicRandom.Shared;
         // 如果直接调用 GetSpawnPosition(Cluster)，我们只能随机选一个中心点，然后偏离一点
-        var center = GetSpawnPosition(p.ClusterBaseStrategy, p, viewport);
-        float angle = GD.Randf() * Mathf.Tau;
-        float dist = Mathf.Sqrt(GD.Randf()) * p.ClusterRadius;
+        var center = GetSpawnPosition(p.ClusterBaseStrategy, p, viewport, rng);
+        float angle = rng.Randf() * Mathf.Tau;
+        float dist = Mathf.Sqrt(rng.Randf()) * p.ClusterRadius;
         return center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
     }
 }
-

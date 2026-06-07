@@ -72,7 +72,7 @@ public partial class ECSTest : Node
         // Setup a local object pool
         if (_testEntityScene == null)
         {
-            _testEntityScene = ResourceManagement.Load<PackedScene>(nameof(TestEntity), ResourceCategory.Entity);
+            _testEntityScene = ResourceLoading.Load<PackedScene>(nameof(TestEntity), ResourceCategory.Entity);
         }
 
         if (_testEntityScene == null)

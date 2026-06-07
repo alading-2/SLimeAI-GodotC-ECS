@@ -84,7 +84,7 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
         _ = caster; // 当前随机落点逻辑只依赖施法者位置，保留参数以兼容既有测试签名
         float effectiveRange = castRange > 0f ? castRange : DefaultFallbackRange; // 外半径
         float innerRange = effectiveRange * InnerRingRatio; // 内半径，避免目标点离自己过近
-        var targets = PositionTargetSelector.Query(new TargetSelectorQuery
+        using var result = TargetQueryEngine.QueryPositions(new TargetSelectorQuery
         {
             Geometry = GeometryType.Ring, //圆环
             Origin = casterNode.GlobalPosition, //查询中心
@@ -92,8 +92,8 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
             Range = effectiveRange, //外半径
             MaxTargets = 1 //最大目标数
         });
-        if (targets.Count > 0)
-            return targets[0];
+        if (result.Items.Count > 0)
+            return result.Items[0];
         return casterNode.GlobalPosition + Vector2.Right * FallbackForwardDistance;
     }
 

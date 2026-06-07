@@ -1,13 +1,13 @@
-# ResourceManagement
+# ResourceLoading
 
 > 状态：current
-> sourcePaths: `Data/ResourceManagement/`, `Tools/ResourceGenerator/`
+> sourcePaths: `Src/ECS/Tools/ResourceLoading/`, `Data/ResourceManagement/`, `Tools/ResourceGenerator/`
 > relatedDesign: `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md`
 > lastReviewed: 2026-06-07
 
 ## 一句话定位
 
-`ResourceManagement` 当前只是 SlimeAI 的资源加载 facade；后续应重命名或收敛为极薄 `ResourceLoading`。`ResourceGenerator` 生成当前项目的 `ResourcePaths` catalog；`ResourceCatalog` 给 UI、TestSystem 和 AI 提供可检查资源目录。
+`ResourceLoading` 是 SlimeAI 的极薄资源加载 facade：strict key/category lookup、`LoadPath` source/owner/usage diagnostics、结构化 `ResourceLoadResult`。`ResourceGenerator` 生成当前项目的 `ResourcePaths` catalog；`ResourceCatalog` 给 UI、TestSystem 和 AI 提供可检查资源目录。
 
 它不是 Godot 资源系统替代品，也不是自动路径修复器。底层仍由 Godot `ResourceLoader` / `GD.Load` 加载 `res://` 或未来验证后的 `uid://` 资源引用。
 
@@ -39,7 +39,7 @@ SlimeAI 需要一个 AI 可读、可检查的资源加载入口：
 | --- | --- | --- |
 | `ResourceGenerator` | 扫描当前项目 `.tscn` / `.tres`，按规则生成 `ResourcePaths.cs` | 不自动迁移 DataOS resource ref；不默认拥有外部游戏仓资源 |
 | `ResourcePaths` | 记录 category、key、path 的 generated catalog | 不代表真实资源生命周期；不作为跨游戏全局资源身份 |
-| `ResourceLoading` / current `ResourceManagement` | 统一加载入口、source/owner/usage diagnostics、错误报告 | 不让 Capability 直接绕过 facade 加载资源；不做目录移动或跨游戏资源管理 |
+| `ResourceLoading` | 统一加载入口、source/owner/usage diagnostics、错误报告 | 不让 Capability 直接绕过 facade 加载资源；不做目录移动或跨游戏资源管理 |
 | `ResourceCatalog` | 为 UI/Test/AI 构建资源目录和分组 | 不进入 gameplay 热路径全量刷新 |
 | project directory / `resource-path-migration` skill | 新增、删除、重命名、移动或检查目录后的路径替换和旧路径残留检查 | 不替代 Godot 资源系统；不默认跨 git boundary 改文件 |
 
@@ -49,13 +49,13 @@ SlimeAI 需要一个 AI 可读、可检查的资源加载入口：
 
 后续 Resource Loading hard cutover 的默认方向：
 
-- `ResourceManagement` 名称默认改为 `ResourceLoading`，或至少让 public 文档和示例只暴露 ResourceLoading 语义。
-- `Load<T>(key, category)` 必须 strict lookup，精确 key 不存在就失败。
-- 删除 `Contains` fallback，避免静默加载相近资源。
+- public current API 是 `ResourceLoading`；旧 `ResourceManagement` 只作为迁移期薄转发，不作为文档入口。
+- `Load<T>(key, category)` strict lookup，精确 key 不存在就失败。
+- `Contains` fallback 已删除，避免静默加载相近资源。
 - `LoadPath<T>` 只给 DataOS resource ref、debug/test 或明确来源使用，并必须携带 source/owner/usage。
-- 新增 structured result，失败要能说明 category、key/path、source、owner 和 error code。
-- 新增 `ResourceCatalogDiagnostics`，至少覆盖 duplicate key、missing path、stale generated source、DataOS selected refs loadable。
-- `CommonTool.LoadPackedScene` 迁入 ResourceLoading；当前 `CommonTool` 不作为资源加载入口。
+- `ResourceLoadResult` 失败会说明 category、key/path、source、owner 和 error code。
+- `ResourceCatalogDiagnostics` 覆盖 duplicate key、missing path、stale generated source、DataOS selected refs loadable。
+- `CommonTool.LoadPackedScene` 已迁入 ResourceLoading；`CommonTool` current 入口已删除。
 - 目录 / 路径移动使用 project directory / `resource-path-migration` skill 做 dry-run、替换和 `rg` 残留检查。
 
 ## 多游戏仓边界
@@ -95,7 +95,9 @@ var scene = ResourceLoading.Load<PackedScene>(
 
 ```csharp
 // DataOS snapshot 中保存资源路径时，后续应通过带 source 的 LoadPath 入口加载。
-var scene = ResourceLoading.LoadPath<PackedScene>(path, source);
+var scene = ResourceLoading.LoadPath<PackedScene>(
+    path,
+    ResourceLoadSource.DataOS("unit.player/player", "VisualScenePath"));
 ```
 
 禁止：

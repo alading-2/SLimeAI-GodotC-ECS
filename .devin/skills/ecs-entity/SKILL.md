@@ -16,6 +16,8 @@ description: 修改 SlimeAI ECS Runtime Entity 身份容器、EntityManager、Li
 
 - `Src/ECS/Runtime/Entity/Identity/`（`EntityId / EntityIdList` typed runtime identity）
 - `Src/ECS/Runtime/Entity/Registry/`（`EntityRegistry`）
+- `Src/ECS/Runtime/Mount/`（Entity runtime mount，默认 `/root/SlimeAIRuntime/ECS/Entity`）
+- `Src/ECS/Runtime/NodeLifecycle/`（底层 Node 注册 diagnostics，不是 Entity 查询事实源）
 - `Src/ECS/Runtime/Entity/Spawn/`（`EntitySpawnPipeline / EntitySpawnRequest / EntitySpawnResult`）
 - `Src/ECS/Runtime/Entity/Lifecycle/`（`LifecycleTree / LifecycleLink / ParentDestroyPolicy / EntityDestroyPipeline`）
 - `Src/ECS/Runtime/Entity/Components/`（`ComponentRegistrar / EntityManager_Component*`）
@@ -36,6 +38,8 @@ description: 修改 SlimeAI ECS Runtime Entity 身份容器、EntityManager、Li
 ## 规则
 
 - 创建实体走 `EntityManager.Spawn/Register`；`EntityManager.Spawn<T>` 当前是 `EntitySpawnPipeline` 的薄 facade，底层阶段顺序是 create -> data -> visual -> transform -> registry -> component -> lifecycle -> activate -> spawned event。
+- 非对象池 Entity 加入 SceneTree 走 `RuntimeMountService` / `RuntimeMountRegistry`，不要恢复 `ParentManager.GetOrRegister(name, path)` 或按 `typeof(T).Name` 临时创建自由字符串 parent。
+- Entity 查询走 `EntityRegistry` / `EntityManager` / `TargetQueryEngine`；不要把 `NodeLifecycleManager.GetAllNodes()` 或 `GetNodesByInterface<IEntity>()` 当业务查询入口。
 - 销毁实体走 `EntityManager.Destroy`；新销毁顺序事实源是 `EntityDestroyPipeline`：recursive lifecycle children -> detach links -> owner cleanup -> component unregister -> Data/Events clear -> registry unregister -> pool return / `QueueFree`。
 - `IEntity` 是运行时对象身份容器，只暴露 `Data`、`Events`，不是 archetype entity 或行为继承根。
 - `IComponent` 是 Godot 可挂节点接入 Entity 注册/注销生命周期的契约；Component owner 反查走 `ComponentRegistrar` 内部索引。

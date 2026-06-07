@@ -3,13 +3,16 @@
 > 迁移来源：`Src/ECS/Tools/ParentManager/README.md`
 > 迁移说明：本文主体从原 `Src/ECS` 文档迁入 `DocsAI` 统一管理；原 `Src/ECS` Markdown 文件已删除。
 
-# ParentManager 层级管理器
+# ParentManager 历史迁移说明
 
 ## 概述
 
-**路径**: `Src/Tools/ParentManager/ParentManager.cs`
+旧路径 `Src/ECS/Tools/ParentManager/` 已退出 current 源码入口。当前入口是：
 
-负责管理游戏运行时的节点层级结构，特别是对象池生成的对象挂载点。
+```text
+DocsAI/ECS/Runtime/Mount/README.md
+Src/ECS/Runtime/Mount/
+```
 
 ## 核心职责
 
@@ -19,4 +22,4 @@
 
 ## 配合对象池使用
 
-在 `ObjectPool` 中，如果配置了 `ParentPath`，`ParentManager` 会负责解析路径并确保父节点存在。
+在 `ObjectPool` 中，如果配置了 `ParentPath`，`RuntimeMountService` 会负责解析路径并确保父节点存在，并通过 `RuntimeMountSnapshot` 暴露 pending / in-tree / invalid diagnostics。

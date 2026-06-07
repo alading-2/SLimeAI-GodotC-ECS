@@ -9,15 +9,12 @@
 
 `TargetSelector` 负责统一“范围查询”和“随机落点”逻辑，避免业务层反复手写距离遍历、角度判断与随机采样。
 
-当前结构分为三层：
+当前结构分为两层 owner：
 
 1. `Geometry2D`
    - 通用二维几何算法层
    - 提供形状判定、距离计算、随机采样
-2. `GeometryCalculator`
-   - 兼容门面
-   - 保留旧 API，内部转调 `Geometry2D`
-3. `TargetQueryEngine`
+2. `TargetQueryEngine`
    - 目标选择领域层
    - 负责实体过滤、排序、数量裁剪、位置批量生成、结果 ownership 和 diagnostics
 
@@ -32,12 +29,14 @@ using var result = TargetQueryEngine.QueryEntities(new TargetSelectorQuery
     Origin = caster.GlobalPosition,
     Range = 250f,
     CenterEntity = caster,
-    TeamFilter = AbilityTargetTeamFilter.Enemy,
+    TeamFilter = TeamFilter.Enemy,
     Sorting = TargetSorting.Nearest,
     MaxTargets = 5,
+    RandomSeed = 1234,
 });
 var targets = result.Items;
 var wasTruncated = result.Diagnostics.Truncated;
+var geometryHits = result.Diagnostics.GeometryHitCount;
 ```
 
 ### 生成位置
@@ -50,6 +49,7 @@ using var result = TargetQueryEngine.QueryPositions(new TargetSelectorQuery
     InnerRange = 120f,
     Range = 280f,
     MaxTargets = 3,
+    RandomSeed = 1234,
 });
 var points = result.Items;
 ```
@@ -61,18 +61,12 @@ bool inCone = Geometry2D.IsPointInCone(targetPos, casterPos, facing, 300f, 60f);
 Vector2 random = Geometry2D.GetRandomPointInCircle(casterPos, 150f);
 ```
 
-兼容旧代码时也可以继续使用：
-
-```csharp
-bool inCone = GeometryCalculator.IsPointInCone(targetPos, casterPos, facing, 300f, 60f);
-```
-
 ## 边界说明
 
 - `Geometry2D` 只做纯算法，不依赖 `IEntity`
 - `GeometryType`、`TargetSelectorQuery`、`TargetQueryResult<T>` 和 `TargetQueryDiagnostics` 仍留在 `TargetSelector` 域。
-- `EntityTargetSelector` / `PositionTargetSelector` 只作为旧兼容 facade；业务主链路优先使用 `TargetQueryEngine`。
-- `GeometryCalculator` 现阶段不删除，避免一次性打断旧调用。
+- `EntityTargetSelector` / `PositionTargetSelector` 旧 list-only facade 已删除；业务主链路必须使用 `TargetQueryEngine`。
+- `GeometryCalculator` 旧门面已删除；只需要纯几何时直接调用 `Geometry2D`。
 
 ## 当前支持的几何语义
 
@@ -88,4 +82,5 @@ bool inCone = GeometryCalculator.IsPointInCone(targetPos, casterPos, facing, 300
 
 1. 不要在业务里直接 `GetTree().GetNodesInGroup(...)` 再手写几何判断。
 2. 只需要纯几何能力时，优先调用 `Geometry2D`。
-3. 只需要目标选择语义时，优先使用 `TargetQueryEngine.QueryEntities` 或 `TargetQueryEngine.QueryPositions`。
+3. 只需要目标选择语义时，使用 `TargetQueryEngine.QueryEntities` 或 `TargetQueryEngine.QueryPositions`。
+4. 随机排序和位置采样需要复现时传 `RandomSeed` 或 `RandomSource`。

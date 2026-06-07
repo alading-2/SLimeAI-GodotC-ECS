@@ -17,6 +17,8 @@
 | Data | [Data/](Data/) | `Src/ECS/Runtime/Data/` 与 `Data/DataOS/` |
 | Event | [Event/](Event/) | `Src/ECS/Runtime/Event/` |
 | System | [System/](System/) | `Src/ECS/Runtime/System/` |
+| Mount | [Mount/](Mount/) | `Src/ECS/Runtime/Mount/` |
+| NodeLifecycle | [NodeLifecycle/](NodeLifecycle/) | `Src/ECS/Runtime/NodeLifecycle/` |
 
 ## 当前状态
 
@@ -29,4 +31,6 @@ SDD-0025 后，`Src/ECS/Base/` 不再保留当前源码入口。具体 Entity、
 - Runtime 不承载具体玩法流程。
 - Runtime 不定义功能域事件 payload，除非它是生命周期或内核协议。
 - Runtime/Component 不承载具体业务组件；业务组件归 Capability owner。
+- Runtime/Mount 只管理运行时 SceneTree 挂载点，不管理 Entity 生命周期或对象池状态。
+- Runtime/NodeLifecycle 只做底层 Node 注册与 diagnostics，不作为 gameplay 全局查询 API。
 - Runtime 改动必须按共享基础设施影响面运行构建和测试。

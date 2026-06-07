@@ -20,7 +20,7 @@ public partial class DamageService : Node
     public static void Initialize()
     {
         SystemRegistry.Register(nameof(DamageService),
-            static () => ResourceManagement.Load<PackedScene>(nameof(DamageService), ResourceCategory.System).Instantiate());
+            static () => ResourceLoading.Load<PackedScene>(nameof(DamageService), ResourceCategory.System).Instantiate());
     }
 
     private static DamageService? _instance;

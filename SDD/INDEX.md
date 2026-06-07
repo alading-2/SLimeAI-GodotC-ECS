@@ -2,10 +2,10 @@
 
 ## Summary
 
-- **pending**: 4
+- **pending**: 0
 - **active**: 0
 - **blocked**: 1
-- **done**: 33
+- **done**: 37
 - **projects**: 2
 
 ## Projects
@@ -17,12 +17,7 @@
 
 ## Pending
 
-| ID | Project | Title | Updated | Scope | Current Task |
-| --- | --- | --- | --- | --- | --- |
-| SDD-0035 | PRJ-0002 | Runtime Mount And Node Lifecycle Hard Cutover | 2026-06-07 | SlimeAI | T1.1 |
-| SDD-0036 | PRJ-0002 | Target Query Engine Hard Cutover | 2026-06-07 | SlimeAI | T1.1 |
-| SDD-0037 | PRJ-0002 | Resource Loading And Common Utilities Hard Cutover | 2026-06-07 | SlimeAI | T1.1 |
-| SDD-0038 | PRJ-0002 | Math Formula And Deterministic Random Cutover | 2026-06-07 | SlimeAI | T1.1 |
+无。
 
 ## Active
 
@@ -71,6 +66,10 @@
 | SDD-0032 | PRJ-0002 | Data Runtime Typed Contract Completion | 2026-06-07 | SlimeAI | done |
 | SDD-0033 | PRJ-0002 | Non-Data GC Boundary Completion | 2026-06-07 | SlimeAI | done |
 | SDD-0034 | PRJ-0002 | Design Directory Restructure | 2026-06-07 | SlimeAI | done |
+| SDD-0035 | PRJ-0002 | Runtime Mount And Node Lifecycle Hard Cutover | 2026-06-07 | SlimeAI | done |
+| SDD-0036 | PRJ-0002 | Target Query Engine Hard Cutover | 2026-06-08 | SlimeAI | done |
+| SDD-0037 | PRJ-0002 | Resource Loading And Common Utilities Hard Cutover | 2026-06-08 | SlimeAI | done |
+| SDD-0038 | PRJ-0002 | Math Formula And Deterministic Random Cutover | 2026-06-08 | SlimeAI | done |
 
 ## By Scope
 
