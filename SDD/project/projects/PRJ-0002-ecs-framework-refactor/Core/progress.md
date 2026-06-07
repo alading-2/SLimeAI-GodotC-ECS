@@ -8,8 +8,8 @@
 
 - **Updated**: 2026-06-07
 - **Current SDD**: none
-- **Last Conclusion**: ResourceManagement 已最终校准：不保留长期“资源管理器”概念，只保留极薄 `ResourceLoading` 统一加载工具，职责是加载、source/owner/usage diagnostics 和错误报告。目录稳定性、目录增删改查、`res://` / 项目相对路径 / 当前仓绝对路径替换和旧路径残留检查交给 project directory / `resource-path-migration` skill、ResourceGenerator 和 diagnostics。
-- **Next Action**: 若继续剩余 Tools，实现前先读 `design/Tool/其他Tool/README.md`、`01-现状证据与AI-first裁决.md` 和对应功能文档；ResourceLoading 读 `02-*` 和 `06-*`，默认创建 `Resource Loading Hard Cutover`，重命名或删除旧 `ResourceManagement` public facade，迁出 `CommonTool.LoadPackedScene`，补 `ResourceLoadSource` / `ResourceLoadResult` / `ResourceCatalogDiagnostics`。
+- **Last Conclusion**: `design/Tool/其他Tool/` 已从设计确认进入执行准备：已创建 4 个 pending 执行型 SDD 和对应 `execution-prompt.md`，分别覆盖 Runtime mount + NodeLifecycle、TargetQueryEngine、ResourceLoading + CommonUtilities、MathFormula + deterministic RNG。全部按 hard cutover 执行，不为旧 API 做长期兼容。
+- **Next Action**: 按顺序执行 SDD-0035 -> SDD-0036 -> SDD-0037 -> SDD-0038。下一步先进入 `sdds/025-SDD-0035-runtime-mount-and-node-lifecycle-hard-cutover/execution-prompt.md`，从 T1.1 readiness baseline 开始；当前只生成 SDD/提示词，未改运行时代码。
 - **Open Blockers**: none
 
 ## Project Status Board
@@ -32,9 +32,12 @@
 | SDD-0024 | done | `design/Runtime/3.Entity系统优化/` | Entity Relationship Full Rewrite 已完成：typed EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除已收口 |
 | SDD-0025 | done | `design/Runtime/6.ECS框架目录架构大重构/` | 已完成：`Src/ECS/Runtime + Src/ECS/Capabilities` 成为源码主入口；DocsAI 当前入口为 `Runtime + Capabilities + Tools + UI`；`Foundation/Foundations` 已从当前路由删除 |
 | SDD-0026 | done | `design/Tool/Input/` | Input Contract Manifest And Facade Hardening 已完成；Input DocsAI 主入口改为 README，Concept/Usage/InputMap 降为可选辅助分层 |
-| TBD | proposed | `design/Tool/其他Tool/` | 2026-06-07 consolidated：current 文档已收敛为 `README.md` + `01~06`；剩余 Tools 后续按 RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、CommonUtilities、MathFormula 功能切片 hard cutover；已确认 `/root/SlimeAIRuntime`、资源 strict fail-fast、Common Utilities 放 `Src/ECS/Tools/CommonUtilities/`、NodeLifecycle 迁 Runtime、TargetSelector 不做兼容桥 |
+| SDD-0035 | pending | `design/Tool/其他Tool/04-NodeLifecycle与ParentManager边界.md` | Runtime Mount And Node Lifecycle Hard Cutover 已创建执行胶囊；默认先做 `/root/SlimeAIRuntime` manifest mount 和 Runtime NodeLifecycle registry，再让后续 TargetSelector 脱离 NodeLifecycle 全局扫描 |
+| SDD-0036 | pending | `design/Tool/其他Tool/05-TargetSelector查询契约.md` | Target Query Engine Hard Cutover 已创建执行胶囊；用户已确认完全重构，不保 `EntityTargetSelector.Query(query)` 兼容桥 |
+| SDD-0037 | pending | `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` | Resource Loading And Common Utilities Hard Cutover 已创建执行胶囊；保留极薄 ResourceLoading，删除 contains fallback，迁出 `CommonTool.LoadPackedScene`，Common Utilities 受 owner 边界约束 |
+| SDD-0038 | pending | `design/Tool/其他Tool/03-Math目标架构与验证.md` | Math Formula And Deterministic Random Cutover 已创建执行胶囊；保留 Math 功能但拆开 `MyMath` 杂项公式，随机支持 seed/RNG 注入 |
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
-| SDD-0028 | pending | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已创建执行胶囊；等待按提示词执行 runtime state、parking grid、CollisionLogicGuard、ContactDamage stale attacker cleanup、contract tests、Godot collision validation 和 DocsAI/skill sync |
+| SDD-0028 | done | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已完成；后续对象池改动按 ObjectPool owner 新建小切片 |
 | SDD-0029 | done | `design/Runtime/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |
 | SDD-0030 | done | `design/Runtime/7.Component/` | Component Code Composition And Contract Hardening 已完成：默认组件组合迁到 C# profile / composer，Entity root scene 停止 instance Component Preset，ComponentManifest / DocsAI / ecs-component skill 已同步 |
 | SDD-0031 | done | `design/Runtime/ECS框架优化/1.拆箱装箱+GC优化/` | Data Runtime Generic Slot Hard Cutover 已完成；非 Data 部分已重新裁决为 Event + Feature/Ability typed execution boundary 同批收口，ObjectPool / TargetSelector / Logger 降为 P1/P2 独立切片 |
@@ -423,3 +426,11 @@
 - **Research Adoption**: externalResources enabled=`official-docs`，scope=Context7 `/godotengine/godot-docs` `res://` project root / C# `GD.Load` / `ResourceLoader.Load` 资料，以及 Context7 `/needle-mirror/com.unity.addressables` `AssetReference` / reference loading 资料；copiedCodeOrAssets=none；adoption=采纳“运行时加载入口”和“资源引用/catalog/迁移流程”分离思想，不复制 Addressables 或 Godot UID 机制。
 - **Impact**: 后续实现不应再问“是否保留 ResourceManagement 管理器”。默认创建 `Resource Loading Hard Cutover`：重命名或删除旧 public facade、迁出 `CommonTool.LoadPackedScene`、删除 contains fallback、补 `ResourceLoadSource` / `ResourceLoadResult` / `ResourceCatalogDiagnostics`。目录移动或重命名默认先走 project directory / `resource-path-migration` skill dry-run，再 apply，再 `rg` 检查 old path residue。
 - **Resume**: PRJ-0002 当前无 active 子 SDD；若继续实现资源加载，先读 `design/Tool/其他Tool/README.md -> 01 -> 02 -> 06` 和 `DocsAI/ECS/Tools/ResourceManagement/README.md`，并以 P049 覆盖 P045/P047 的较旧措辞。
+
+### P050 — 2026-06-07 — other-tools-execution-sdds-created
+
+- **Context**: 用户确认 `design/Tool/其他Tool/` 设计文档已完善且方向已定，要求生成 SDD 和执行提示词；SDD 数量和顺序由本轮决定。
+- **Conclusion**: 已创建 4 个执行型 SDD：SDD-0035 Runtime Mount And Node Lifecycle Hard Cutover、SDD-0036 Target Query Engine Hard Cutover、SDD-0037 Resource Loading And Common Utilities Hard Cutover、SDD-0038 Math Formula And Deterministic Random Cutover。拆分原因是 Runtime mount/NodeLifecycle 是运行时节点底座，TargetSelector 影响 Ability/AI/Feature 查询面，ResourceLoading/CommonUtilities 共享资源与通用工具边界，Math/随机相对独立且应在 TargetSelector ownership 明确后执行。
+- **Evidence**: `sdds/025-SDD-0035-runtime-mount-and-node-lifecycle-hard-cutover/`、`sdds/026-SDD-0036-target-query-engine-hard-cutover/`、`sdds/027-SDD-0037-resource-loading-and-common-utilities-hard-cutover/`、`sdds/028-SDD-0038-math-formula-and-deterministic-random-cutover/` 均包含 README、design、tasks、bdd、progress、notes 和 `execution-prompt.md`；`project.json`、`Core/roadmap.md`、本文件和项目 README 已登记。
+- **Impact**: 后续实现不应再从聊天记忆或“建议新建 SDD”恢复；每个执行会话直接读对应 SDD 的 `execution-prompt.md` 并按 tasks 小步推进。当前没有运行时代码改动。
+- **Resume**: 推荐执行顺序固定为 SDD-0035 -> SDD-0036 -> SDD-0037 -> SDD-0038；下一步从 SDD-0035 T1.1 readiness baseline 开始。

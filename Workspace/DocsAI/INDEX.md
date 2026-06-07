@@ -11,6 +11,7 @@
 | [GitSubmoduleWorkflow.md](GitSubmoduleWorkflow.md) | git submodule 操作唯一指南，含故障排查 |
 | [OpenWorkspace.md](OpenWorkspace.md) | 工作区打开方式与目录结构说明 |
 | [MultiGameLayout.md](MultiGameLayout.md) | 多游戏架构与工作流（从框架 DocsAI 迁移） |
+| [思考/2026-06-07-游戏开发SystemAgent流程Agent深度分析.md](思考/2026-06-07-游戏开发SystemAgent流程Agent深度分析.md) | 游戏开发 SystemAgent 流程 Agent 深度分析，含 Codex session ledger / research branch / worktree work package 方向 |
 | [SlimeAINewReorientation/00-README.md](SlimeAINewReorientation/00-README.md) | SlimeAINew 旧 ECS 框架回归主线与新 GameOS 冻结参考的规划文档包 |
 | [Reviews/2026-05-18-systemagent-mvp-consolidation-analysis.md](Reviews/2026-05-18-systemagent-mvp-consolidation-analysis.md) | SystemAgent MVP 统一收敛分析记录 |
 | [Reviews/2026-05-14-openspec-first-round-refactor-review.md](Reviews/2026-05-14-openspec-first-round-refactor-review.md) | OpenSpec 第一轮 AI-first 重构计划质量评审 |

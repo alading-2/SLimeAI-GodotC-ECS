@@ -2,7 +2,7 @@
 
 ## Summary
 
-- **pending**: 0
+- **pending**: 4
 - **active**: 0
 - **blocked**: 1
 - **done**: 33
@@ -17,7 +17,12 @@
 
 ## Pending
 
-无。
+| ID | Project | Title | Updated | Scope | Current Task |
+| --- | --- | --- | --- | --- | --- |
+| SDD-0035 | PRJ-0002 | Runtime Mount And Node Lifecycle Hard Cutover | 2026-06-07 | SlimeAI | T1.1 |
+| SDD-0036 | PRJ-0002 | Target Query Engine Hard Cutover | 2026-06-07 | SlimeAI | T1.1 |
+| SDD-0037 | PRJ-0002 | Resource Loading And Common Utilities Hard Cutover | 2026-06-07 | SlimeAI | T1.1 |
+| SDD-0038 | PRJ-0002 | Math Formula And Deterministic Random Cutover | 2026-06-07 | SlimeAI | T1.1 |
 
 ## Active
 
@@ -95,6 +100,10 @@
 - SDD-0032 — Data Runtime Typed Contract Completion
 - SDD-0033 — Non-Data GC Boundary Completion
 - SDD-0034 — Design Directory Restructure
+- SDD-0035 — Runtime Mount And Node Lifecycle Hard Cutover
+- SDD-0036 — Target Query Engine Hard Cutover
+- SDD-0037 — Resource Loading And Common Utilities Hard Cutover
+- SDD-0038 — Math Formula And Deterministic Random Cutover
 
 ### Workspace/SDD
 
@@ -129,6 +138,7 @@
 - SDD-0028 — ObjectPool Collision ParkedInTree Cutover
 - SDD-0029 — System Contract Manifest And Diagnostics Hardening
 - SDD-0030 — Component Code Composition And Contract Hardening
+- SDD-0036 — Target Query Engine Hard Cutover
 
 ### bootstrap
 
@@ -161,6 +171,10 @@
 ### collision
 
 - SDD-0028 — ObjectPool Collision ParkedInTree Cutover
+
+### common-utilities
+
+- SDD-0037 — Resource Loading And Common Utilities Hard Cutover
 
 ### component
 
@@ -211,6 +225,10 @@
 ### design-discovery
 
 - SDD-0009 — DesignDiscovery and DesignCritic Capability
+
+### deterministic-random
+
+- SDD-0038 — Math Formula And Deterministic Random Cutover
 
 ### diagnostics
 
@@ -272,6 +290,10 @@
 
 - SDD-0024 — Entity Relationship Full Rewrite
 - SDD-0031 — Data Runtime Generic Slot Hard Cutover
+- SDD-0035 — Runtime Mount And Node Lifecycle Hard Cutover
+- SDD-0036 — Target Query Engine Hard Cutover
+- SDD-0037 — Resource Loading And Common Utilities Hard Cutover
+- SDD-0038 — Math Formula And Deterministic Random Cutover
 
 ### hook
 
@@ -280,6 +302,10 @@
 ### input
 
 - SDD-0026 — Input Contract Manifest And Facade Hardening
+
+### math
+
+- SDD-0038 — Math Formula And Deterministic Random Cutover
 
 ### migration
 
@@ -293,6 +319,10 @@
 
 - SDD-0021 — Data No-Compatibility Hard Cutover
 - SDD-0022 — Data Projection Diagnostics Contract Hardening
+
+### node-lifecycle
+
+- SDD-0035 — Runtime Mount And Node Lifecycle Hard Cutover
 
 ### objectpool
 
@@ -325,6 +355,10 @@
 
 - SDD-0024 — Entity Relationship Full Rewrite
 
+### resource-loading
+
+- SDD-0037 — Resource Loading And Common Utilities Hard Cutover
+
 ### restructure
 
 - SDD-0034 — Design Directory Restructure
@@ -340,6 +374,10 @@
 - SDD-0016 — Data Compute Resolver Runtime
 - SDD-0029 — System Contract Manifest And Diagnostics Hardening
 - SDD-0030 — Component Code Composition And Contract Hardening
+
+### runtime-mount
+
+- SDD-0035 — Runtime Mount And Node Lifecycle Hard Cutover
 
 ### runtime_snapshot
 
@@ -385,6 +423,7 @@
 ### target-selector
 
 - SDD-0033 — Non-Data GC Boundary Completion
+- SDD-0036 — Target Query Engine Hard Cutover
 
 ### tdd
 
@@ -398,6 +437,10 @@
 
 - SDD-0026 — Input Contract Manifest And Facade Hardening
 - SDD-0027 — Timer Scheduler Full Rewrite
+- SDD-0035 — Runtime Mount And Node Lifecycle Hard Cutover
+- SDD-0036 — Target Query Engine Hard Cutover
+- SDD-0037 — Resource Loading And Common Utilities Hard Cutover
+- SDD-0038 — Math Formula And Deterministic Random Cutover
 
 ### typed-contract
 

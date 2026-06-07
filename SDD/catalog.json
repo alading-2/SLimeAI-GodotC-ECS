@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-07 16:08",
+  "generated_at": "2026-06-07 23:00",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -844,6 +844,94 @@
       "project_order": 24,
       "current_task": "done",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/024-SDD-0034-design-directory-restructure"
+    },
+    {
+      "id": "SDD-0035",
+      "slug": "runtime-mount-and-node-lifecycle-hard-cutover",
+      "title": "Runtime Mount And Node Lifecycle Hard Cutover",
+      "status": "pending",
+      "type": "refactor",
+      "updated_at": "2026-06-07",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "ecs/runtime/node-lifecycle"
+      ],
+      "tags": [
+        "tools",
+        "runtime-mount",
+        "node-lifecycle",
+        "hard-cutover"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 25,
+      "current_task": "T1.1",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/025-SDD-0035-runtime-mount-and-node-lifecycle-hard-cutover"
+    },
+    {
+      "id": "SDD-0036",
+      "slug": "target-query-engine-hard-cutover",
+      "title": "Target Query Engine Hard Cutover",
+      "status": "pending",
+      "type": "refactor",
+      "updated_at": "2026-06-07",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "ecs/tools/target-selector"
+      ],
+      "tags": [
+        "tools",
+        "target-selector",
+        "ai-first",
+        "hard-cutover"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 26,
+      "current_task": "T1.1",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/026-SDD-0036-target-query-engine-hard-cutover"
+    },
+    {
+      "id": "SDD-0037",
+      "slug": "resource-loading-and-common-utilities-hard-cutover",
+      "title": "Resource Loading And Common Utilities Hard Cutover",
+      "status": "pending",
+      "type": "refactor",
+      "updated_at": "2026-06-07",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "ecs/tools/resource-loading"
+      ],
+      "tags": [
+        "tools",
+        "resource-loading",
+        "common-utilities",
+        "hard-cutover"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 27,
+      "current_task": "T1.1",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/027-SDD-0037-resource-loading-and-common-utilities-hard-cutover"
+    },
+    {
+      "id": "SDD-0038",
+      "slug": "math-formula-and-deterministic-random-cutover",
+      "title": "Math Formula And Deterministic Random Cutover",
+      "status": "pending",
+      "type": "refactor",
+      "updated_at": "2026-06-07",
+      "scope": "SlimeAI",
+      "affected_areas": [
+        "ecs/tools/math"
+      ],
+      "tags": [
+        "tools",
+        "math",
+        "deterministic-random",
+        "hard-cutover"
+      ],
+      "project_id": "PRJ-0002",
+      "project_order": 28,
+      "current_task": "T1.1",
+      "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/028-SDD-0038-math-formula-and-deterministic-random-cutover"
     }
   ]
 }
