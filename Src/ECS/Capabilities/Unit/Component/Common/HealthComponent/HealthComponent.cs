@@ -132,9 +132,12 @@ public partial class HealthComponent : Node, IComponent
 
         float oldHp = CurrentHp;
         float newHp = Mathf.Max(0f, oldHp - amount);
+        float actualDamage = oldHp - newHp;
+        if (actualDamage <= 0f) return;
 
         // 修改 HP
         _data.Set(GeneratedDataKey.CurrentHp, newHp);
+        info.ActualDamage = actualDamage; // 供 DamageService 领域结果判断是否真的扣血
 
         // 统计伤害
         _data.Add(GeneratedDataKey.TotalDamageTaken, amount);

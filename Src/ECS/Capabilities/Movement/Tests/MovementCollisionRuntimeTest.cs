@@ -70,6 +70,7 @@ namespace Slime.Test
                 TestMigrateReplacesSourceAndInheritsLifecycleParent();
                 TestMigrateProfileFiltersDataAndDoesNotCopyEvents();
                 TestCollisionPolicyCountsAndFilters();
+                TestCollisionPolicyUnlimitedCountAcceptsMultipleEnemies();
                 TestCollisionPolicyUsesOwnerUnitForTeamFilter();
                 TestCollisionPolicyTrackedTargetOnly();
                 TestCollisionPolicyRejectsPooledSourceAndTarget();
@@ -337,6 +338,51 @@ namespace Slime.Test
             enemyA.QueueFree();
             enemyB.QueueFree();
             friendly.QueueFree();
+        }
+
+        private void TestCollisionPolicyUnlimitedCountAcceptsMultipleEnemies()
+        {
+            var source = new MockEntity("UnlimitedSource", Team.Player, EntityType.Projectile);
+            var enemyA = new MockEntity("UnlimitedEnemyA", Team.Enemy, EntityType.Unit);
+            var enemyB = new MockEntity("UnlimitedEnemyB", Team.Enemy, EntityType.Unit);
+            var enemyC = new MockEntity("UnlimitedEnemyC", Team.Enemy, EntityType.Unit);
+
+            AddChild(source);
+            AddChild(enemyA);
+            AddChild(enemyB);
+            AddChild(enemyC);
+
+            var policy = new MovementCollisionPolicy();
+            var @params = new MovementParams
+            {
+                Mode = MoveMode.SineWave,
+                CollisionParams = new MovementCollisionParams
+                {
+                    TeamFilter = TeamFilter.Enemy, // 只接受敌方
+                    EntityTypeFilter = EntityType.Unit, // 只接受单位
+                    StopAfterCollisionCount = -1 // 不限制碰撞数量
+                }
+            };
+            policy.Reset(@params);
+
+            bool firstAccepted = policy.TryAccept(source, MoveMode.SineWave, @params, enemyA, out var firstContext);
+            bool duplicateAccepted = policy.TryAccept(source, MoveMode.SineWave, @params, enemyA, out _);
+            bool secondAccepted = policy.TryAccept(source, MoveMode.SineWave, @params, enemyB, out var secondContext);
+            bool thirdAccepted = policy.TryAccept(source, MoveMode.SineWave, @params, enemyC, out var thirdContext);
+
+            AssertEqual("无限碰撞第1个敌人应接受", true, firstAccepted);
+            AssertEqual("无限碰撞同一目标仍应去重", false, duplicateAccepted);
+            AssertEqual("无限碰撞第2个敌人应接受", true, secondAccepted);
+            AssertEqual("无限碰撞第3个敌人应接受", true, thirdAccepted);
+            AssertEqual("无限碰撞第1次不应停止", false, firstContext.WillStop);
+            AssertEqual("无限碰撞第2次不应停止", false, secondContext.WillStop);
+            AssertEqual("无限碰撞第3次不应停止", false, thirdContext.WillStop);
+            AssertEqual("无限碰撞计数应累计到3", 3, thirdContext.CollisionCount);
+
+            source.QueueFree();
+            enemyA.QueueFree();
+            enemyB.QueueFree();
+            enemyC.QueueFree();
         }
 
         /// <summary>

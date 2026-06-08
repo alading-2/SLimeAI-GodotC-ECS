@@ -30,6 +30,7 @@ description: 修改 SlimeAI ECS Damage Capability、DamageInfo、处理器管线
 - 新伤害修正写成 `IDamageProcessor` 并明确优先级。
 - framework 统计命名使用 total / encounter / combat / session 等中性词；不要新增 BrotatoLike wave-specific DataKey。旧 `Damage.Wave*` 已按 Bucket C 改为 `Damage.Encounter*`。
 - 接触、攻击、技能、投射物只组装 `DamageInfo`，不要绕过 `DamageService` 直接写 `CurrentHp`。
+- `DamageService` 命令执行成功不等于实际扣血；`DamageProcessResult.Processed` 表示管线处理完成，`AppliedDamage / ActualDamage` 才表示 HealthComponent 实际扣血。`DamageTool.ApplyToList` 和技能命中计数必须只把 `AppliedDamage=true` 算作实际命中。
 - `DamageInfo.Attacker` 是直接来源；暴击、吸血、统计和击杀归属通过 `EntityAttributionResolver.ResolveUnit/ResolveChain` 读取 Projectile / Effect / Source / Origin projection。不要恢复 `EntityRelationshipTraversal.FindAncestorOfType` 或 parent-chain attribution。
 - `GodotContactDamageComponent` 是 GodotBridge Adapter legacy class name，`DamageService` / `TimerManager` 可替换；默认进程级入口只允许在 adapter boundary 使用。
 

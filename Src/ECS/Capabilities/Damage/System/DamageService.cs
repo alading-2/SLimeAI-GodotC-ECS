@@ -117,6 +117,8 @@ public partial class DamageService : Node
             return new DamageProcessResult(false, "无效的伤害信息或受害者");
         }
 
+        info.ActualDamage = 0f; // 每次进入管线都重置实际扣血结果，避免复用 DamageInfo 时沿用旧值
+
         // 执行伤害处理管道
         // 遍历所有处理器，每个处理器都会修改 info 对象中的数据
         foreach (var processor in _processors)
@@ -134,6 +136,12 @@ public partial class DamageService : Node
             _log.Info($"伤害系统日志 {info.Id}: {string.Join(" -> ", info.Logs)}");
         }
 
-        return new DamageProcessResult(true, string.Empty);
+        return new DamageProcessResult(
+            true,
+            string.Empty,
+            info.ActualDamage > 0f,
+            info.ActualDamage,
+            info.FinalDamage,
+            info.IsDodged);
     }
 }

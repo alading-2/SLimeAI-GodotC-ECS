@@ -32,6 +32,7 @@ namespace Slime.Test.DamageSystemTest
             TestLifesteal();
             TestStatistics();
             TestSimulationMode();
+            TestDamageProcessResultReportsActualHpChange();
             _log.Success("所有测试完成！");
         }
 
@@ -415,6 +416,62 @@ namespace Slime.Test.DamageSystemTest
             attacker.QueueFree();
         }
 
+        private void TestDamageProcessResultReportsActualHpChange()
+        {
+            _log.Info("Test 9: 伤害处理结果应报告实际扣血");
+
+            var victim = CreateDummyUnit("Victim_ResultApplied");
+            var attacker = CreateDummyUnit("Attacker_ResultApplied");
+
+            var hitInfo = new DamageInfo
+            {
+                Attacker = attacker,
+                Victim = victim,
+                Damage = 25,
+                Type = DamageType.Physical
+            };
+            var hitResult = ProcessDamage(hitInfo);
+
+            if (hitResult.Processed && hitResult.AppliedDamage && Mathf.IsEqualApprox(hitResult.ActualDamage, 25f))
+            {
+                _log.Success("  PASS: 成功伤害应报告实际扣血");
+            }
+            else
+            {
+                _log.Error($"  FAIL: 成功伤害结果错误. Processed={hitResult.Processed}, Applied={hitResult.AppliedDamage}, Actual={hitResult.ActualDamage}");
+            }
+
+            var invulnerable = CreateDummyUnit("Victim_ResultBlocked");
+            invulnerable.Data.Set(GeneratedDataKey.IsInvulnerable, true);
+            float beforeHp = invulnerable.Data.Get<float>(GeneratedDataKey.CurrentHp);
+
+            var blockedInfo = new DamageInfo
+            {
+                Attacker = attacker,
+                Victim = invulnerable,
+                Damage = 25,
+                Type = DamageType.Physical
+            };
+            var blockedResult = ProcessDamage(blockedInfo);
+            float afterHp = invulnerable.Data.Get<float>(GeneratedDataKey.CurrentHp);
+
+            if (blockedResult.Processed
+                && !blockedResult.AppliedDamage
+                && Mathf.IsEqualApprox(blockedResult.ActualDamage, 0f)
+                && Mathf.IsEqualApprox(beforeHp, afterHp))
+            {
+                _log.Success("  PASS: 未实际扣血的伤害不应报告命中");
+            }
+            else
+            {
+                _log.Error($"  FAIL: 阻断伤害结果错误. Processed={blockedResult.Processed}, Applied={blockedResult.AppliedDamage}, Actual={blockedResult.ActualDamage}, Hp={beforeHp}->{afterHp}");
+            }
+
+            victim.QueueFree();
+            invulnerable.QueueFree();
+            attacker.QueueFree();
+        }
+
         private TestUnit CreateDummyUnit(string name)
         {
             var unit = new TestUnit();
@@ -434,11 +491,14 @@ namespace Slime.Test.DamageSystemTest
             return unit;
         }
 
-        private static void ProcessDamage(DamageInfo info)
+        private static DamageProcessResult ProcessDamage(DamageInfo info)
         {
-            SystemManager.Instance?.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(
-                new DamageProcessRequest(info) // 测试伤害请求
-            );
+            if (DamageService.Instance is ISystemCommandHandler<DamageProcessRequest, DamageProcessResult> service)
+            {
+                return service.Execute(new DamageProcessRequest(info)); // 测试伤害请求
+            }
+
+            return new DamageProcessResult(false, "DamageService.Instance 不存在");
         }
 
         // 简单的 IUnit 实现用于测试

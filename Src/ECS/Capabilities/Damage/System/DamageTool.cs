@@ -81,6 +81,19 @@ internal static class DamageTool
                 continue;
             }
 
+            if (result.Value is not { Processed: true } damageResult)
+            {
+                _log.Debug($"DamageService 未处理伤害，跳过命中计数: Target={GetTargetName(target)}");
+                continue;
+            }
+
+            if (!damageResult.AppliedDamage)
+            {
+                _log.Debug(
+                    $"DamageService 已处理但未实际扣血: Target={GetTargetName(target)}, FinalDamage={damageResult.FinalDamage}, ActualDamage={damageResult.ActualDamage}, Dodged={damageResult.WasDodged}, Message={damageResult.Message}");
+                continue;
+            }
+
             count++;
         }
 
@@ -182,4 +195,11 @@ internal static class DamageTool
     /// 创建命中注册表（用于"整个施法周期内每目标只命中一次"的场景）。
     /// </summary>
     public static HashSet<ulong> CreateHitRegistry() => new HashSet<ulong>();
+
+    private static string GetTargetName(IEntity target)
+    {
+        return target is Node node
+            ? node.Name.ToString()
+            : target.Data.Get<string>(GeneratedDataKey.Name);
+    }
 }

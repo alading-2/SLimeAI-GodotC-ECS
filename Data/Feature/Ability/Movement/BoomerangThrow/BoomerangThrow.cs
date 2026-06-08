@@ -156,6 +156,9 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
             MaxTargets = 1 // 只需要一个去程目标
         });
 
+        _log.Debug(
+            $"锁敌查询: Range={effectiveRange}, {FormatDiagnostics(result.Diagnostics)}, Target={FormatTarget(result.Items.Count > 0 ? result.Items[0] : null)}");
+
         return result.Items.Count > 0 && result.Items[0] is Node2D targetNode
             ? (result.Items[0], targetNode)
             : null;
@@ -177,9 +180,19 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
         Node2D casterNode,
         float damage)
     {
-        if (!CanApplyDamage(targetEntity, casterNode)) return false;
-        if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return false;
+        if (!CanApplyDamage(targetEntity, casterNode, out var blockedReason))
+        {
+            _log.Debug($"伤害跳过: Target={FormatTarget(targetEntity)}, Reason={blockedReason}");
+            return false;
+        }
 
+        if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy))
+        {
+            _log.Debug($"伤害跳过: Target={FormatTarget(targetEntity)}, Reason=TeamFilter");
+            return false;
+        }
+
+        string beforeHp = FormatHp(targetEntity);
         var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions
         {
             Targets = new[] { targetEntity },
@@ -191,20 +204,56 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
                 Attacker = casterNode // 伤害来源
             }
         });
-        return result.TargetsHit > 0;
+        string afterHp = FormatHp(targetEntity);
+        bool applied = result.TargetsHit > 0;
+        _log.Debug(
+            $"伤害结算: Target={FormatTarget(targetEntity)}, Damage={damage}, Applied={applied}, HitCount={result.TargetsHit}, Hp={beforeHp}->{afterHp}");
+        return applied;
     }
 
-    private static bool CanApplyDamage(IEntity targetEntity, Node2D casterNode)
+    private static bool CanApplyDamage(IEntity targetEntity, Node2D casterNode, out string reason)
     {
-        if (!GodotObject.IsInstanceValid(casterNode) || casterNode.IsQueuedForDeletion()) return false;
+        reason = string.Empty;
+        if (!GodotObject.IsInstanceValid(casterNode) || casterNode.IsQueuedForDeletion())
+        {
+            reason = "CasterInvalid";
+            return false;
+        }
+
         if (targetEntity is Node targetNode
             && (!GodotObject.IsInstanceValid(targetNode) || targetNode.IsQueuedForDeletion()))
         {
+            reason = "TargetInvalid";
             return false;
         }
 
         // 完成兜底是延迟回调，目标可能在弹道飞行期间死亡或被销毁。
-        return !targetEntity.Data.Has(GeneratedDataKey.IsDead)
+        bool canApply = !targetEntity.Data.Has(GeneratedDataKey.IsDead)
             || !targetEntity.Data.Get<bool>(GeneratedDataKey.IsDead);
+        if (!canApply)
+        {
+            reason = "TargetDead";
+        }
+
+        return canApply;
+    }
+
+    private static string FormatDiagnostics(TargetQueryDiagnostics diagnostics)
+    {
+        return $"Candidates={diagnostics.CandidateCount}, Geometry={diagnostics.GeometryHitCount}, TeamFiltered={diagnostics.FilteredByTeamCount}, TypeFiltered={diagnostics.FilteredByTypeCount}, LifecycleFiltered={diagnostics.FilteredByLifecycleCount}, Returned={diagnostics.ReturnedCount}, Truncated={diagnostics.Truncated}";
+    }
+
+    private static string FormatTarget(IEntity? entity)
+    {
+        return entity is Node node
+            ? node.Name.ToString()
+            : entity?.Data.Get<string>(GeneratedDataKey.Name) ?? "None";
+    }
+
+    private static string FormatHp(IEntity entity)
+    {
+        return entity.Data.Has(GeneratedDataKey.CurrentHp)
+            ? entity.Data.Get<float>(GeneratedDataKey.CurrentHp).ToString("F1")
+            : "n/a";
     }
 }

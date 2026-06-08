@@ -39,8 +39,11 @@ BaseDamage → Dodge → Crit → Shield → Defense → Amplification
 ### 使用入口
 
 ```csharp
-DamageService.Instance.Process(damageInfo);
+var result = SystemManager.Instance.Execute<DamageService, DamageProcessRequest, DamageProcessResult>(
+    new DamageProcessRequest(damageInfo));
 ```
+
+`SystemExecuteResult.Success` 只表示通过 SystemCore 门禁并进入系统命令；领域层是否真的扣血看 `result.Value.Processed`、`result.Value.AppliedDamage` 和 `result.Value.ActualDamage`。
 
 ## 3. 职责边界
 

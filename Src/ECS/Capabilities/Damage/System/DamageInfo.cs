@@ -66,6 +66,12 @@ public class DamageInfo
     /// </summary>
     public float FinalDamage { get; set; }
 
+    /// <summary>
+    /// 本次伤害实际扣除的生命值。
+    /// <para>DamageService 命令执行成功不等于实际扣血，调用方应以该值判断是否真的命中。</para>
+    /// </summary>
+    public float ActualDamage { get; set; }
+
     // === 标签与类型 ===
     public DamageType Type { get; set; }
     public DamageTags Tags { get; set; }

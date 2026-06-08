@@ -43,13 +43,21 @@
 - `Type`: 伤害性质分类，当前使用 `Physical / Magical / True`。
 - `Tags`: 伤害来源/表现标签，当前使用 `Attack / Ability / Melee / Ranged / Area / Persistent / Explosion / Engineering`。
 - `FinalDamage`: 流转过程中的最终结算伤害值。
+- `ActualDamage`: `HealthComponent` 实际扣除的生命值。`DamageService` 命令执行成功不等于实际扣血，技能、投射物、碰撞桥要用 `DamageProcessResult.AppliedDamage / ActualDamage` 判断是否真的造成伤害。
 
-### 3.2 DamageType 与 DamageTags 分工
+### 3.2 DamageProcessResult
+- `Processed`: 请求进入并完成 Damage pipeline。`false` 表示请求无效或未处理。
+- `AppliedDamage`: 本次处理是否实际扣除生命值。目标死亡、无敌、闪避、模拟模式、最终伤害为 0 或缺少有效 `HealthComponent` 时可能为 `false`。
+- `ActualDamage`: 实际扣除的生命值，用于区分“命中命令执行成功”和“真的扣血”。
+- `FinalDamage`: pipeline 计算出的最终伤害。
+- `WasDodged`: 本次伤害是否被闪避。
+
+### 3.3 DamageType 与 DamageTags 分工
 - `DamageType` 负责数值语义：物理、魔法、真实等，用于护甲、闪避、抗性等数值分支。
 - `DamageTags` 负责来源/表现语义：普通攻击、技能、近战、范围、持续等，用于流程规则分支。
 - 当前系统约定：`BaseDamageProcessor` 仅在 **`Attacker` 自身已死亡** 且标签包含 `Attack` 时阻断伤害；不会因为拥有者、父节点或归属单位死亡而额外阻断，也不会统一阻断 `Ability` 标签伤害。
 
-### 3.3 [IUnit](../../../../../Src/ECS/Capabilities/Damage/System/IUnit.cs)
+### 3.4 [IUnit](../../../../../Src/ECS/Capabilities/Damage/System/IUnit.cs)
 所有具备战斗属性的主体（玩家、敌人）必须实现的接口。
 - `FactionId`: 用于区分阵营（友伤判定）。
 
@@ -150,6 +158,7 @@ public void Process(DamageInfo info)
     - 注意：这是**直接来源**；统计、暴击、吸血等归属解析统一通过 `EntityAttributionResolver.ResolveUnit/ResolveChain(Attacker)`，读取 Projectile / Effect / Source / Origin projection，不再沿旧 parent-chain 查找。
   - `Victim`: 受害者实体（必须实现 IUnit）。
   - `FinalDamage`: 流转过程中的最终结算伤害值。
+  - `ActualDamage`: 由 `HealthComponent.ApplyDamage(info)` 写回的实际扣血量。
   - `IsEnd`: 标记伤害流程是否应提前终止（由主循环检查）。
   - `IsSimulation`: 模拟模式标记。若为 `true`，`HealthExecutionProcessor` 将跳过实际扣血，仅记录日志。
     - **用途**：伤害预测、技能说明面板（显示"预计造成 XXX 伤害"）等
