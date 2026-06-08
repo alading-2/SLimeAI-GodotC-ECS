@@ -2,7 +2,7 @@
 
 > 更新：2026-06-07
 > 状态：current consolidated feature design
-> 裁决：`CommonTool.LoadPackedScene` 不应继续留在杂项入口，应迁入 `ResourceLoading`；但用户确认“通用工具区域”概念可保留，且仍属于 `Src/ECS/Tools`。执行型 SDD 应删除或 internal 化当前 `CommonTool` 类，不保留无约束杂物箱；Common Utilities 最终位置为 `Src/ECS/Tools/CommonUtilities/` + `DocsAI/ECS/Tools/CommonUtilities/`，必须有 manifest、禁止项和测试。2026-06-07 用户校准：`res://` 不是问题，路径移动后的替换和残留检查由 project directory / `resource-path-migration` workflow 负责。`ResourceManagement` 不应作为长期“资源管理器”概念保留，最终只保极薄 `ResourceLoading` 统一加载工具。
+> 裁决：`CommonTool.LoadPackedScene` 不应继续留在杂项入口，应迁入 `ResourceLoading`；但用户确认“通用工具区域”概念可保留，且仍属于 `Src/ECS/Tools`。执行型 SDD 应删除或 internal 化当前 `CommonTool` 类，不保留无约束杂物箱；Common Utilities 最终位置为 `Src/ECS/Tools/CommonUtilities/` + `DocsAI/ECS/Tools/CommonUtilities/`，必须有 manifest、禁止项和测试。2026-06-07 用户校准：`res://` 不是问题，路径移动后的替换和残留检查由 project directory / `project-filesystem` workflow 负责。`ResourceManagement` 不应作为长期“资源管理器”概念保留，最终只保极薄 `ResourceLoading` 统一加载工具。
 
 ## 1. 当前证据
 
@@ -111,7 +111,7 @@ LoadPackedScene(string path, string usageName)
 | `TryLoad<T>(request, out result)` | 输出结构化加载结果 | 不只靠 log 说明失败 |
 | `ResourceCatalog` | 提供选择目录、分组、搜索、snapshot/data asset 投影 | 不直接实例化业务对象 |
 | `ResourceCatalogDiagnostics` | 输出目录覆盖、重复 key、missing path、stale generated source | 不参与 gameplay 热路径 |
-| project directory / `resource-path-migration` skill | 新增、删除、重命名、移动、检查目录后的 old/new path 替换和 `rg` 残留检查 | 不替代 runtime loader，不跨 git boundary 混改 |
+| project directory / `project-filesystem` skill | 新增、删除、重命名、移动、检查目录后的 old/new path 替换和 `rg` 残留检查 | 不替代 runtime loader，不跨 git boundary 混改 |
 
 命名裁决：
 
@@ -222,7 +222,7 @@ git status --short
 4. dry-run 替换旧路径：
 
 ```bash
-python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+python3 .ai-config/skills/core/project-filesystem/scripts/migrate_resource_path.py \
   --old "res://assets/Effect/old" \
   --new "res://assets/Effect/new"
 ```
@@ -230,7 +230,7 @@ python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_
 游戏仓内运行时，显式使用框架仓脚本并传 `--root .`：
 
 ```bash
-python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/project-filesystem/scripts/migrate_resource_path.py \
   --root . \
   --old "res://assets/Effect/old" \
   --new "res://assets/Effect/new"
@@ -239,7 +239,7 @@ python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/resource-path-mi
 如果同一次目录移动同时存在 `res://`、项目相对路径和当前仓绝对路径残留，可先 dry-run 变体替换：
 
 ```bash
-python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+python3 .ai-config/skills/core/project-filesystem/scripts/migrate_resource_path.py \
   --old "res://assets/Effect/old" \
   --new "res://assets/Effect/new" \
   --include-variants

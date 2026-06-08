@@ -24,7 +24,7 @@ And diagnostics can identify the record or field that requested it
 ### Scenario: Resource path migration verifies old path residue
 
 Given a resource directory moved from old path to new path
-When resource-path-migration runs with apply mode
+When project-filesystem runs with apply mode
 Then current runtime code, DataOS refs, generated catalog and current DocsAI use the new path
 And every old path residue from rg is classified or removed
 

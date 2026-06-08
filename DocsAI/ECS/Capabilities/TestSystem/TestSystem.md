@@ -162,7 +162,7 @@
 - `System/SystemInfoTestModule.cs` 负责系统监控模块的筛选、列表、详情和按钮状态；模块不直接绕过服务层操作 `SystemManager`
 - 视觉预览不再作为 TestSystem 模块存在；独立入口为 `Src/ECS/Test/GlobalTest/VisualPreview/VisualPreviewScene.tscn`
 
-运行时测试面板不要全盘扫描 `res://` 作为主数据源；新增 `.tres` / `.tscn` 后应运行 `Tools/ResourceGenerator` 更新 `ResourcePaths.cs`。
+运行时测试面板不要全盘扫描 `res://` 作为主数据源；新增 `.tres` / `.tscn` 后应运行 `Workspace/Tools/ResourceGenerator` 更新 `ResourcePaths.cs`。
 
 ## 4.2 核心原则
 

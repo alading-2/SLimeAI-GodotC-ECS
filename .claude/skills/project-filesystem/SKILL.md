@@ -1,9 +1,9 @@
 ---
-name: resource-path-migration
+name: project-filesystem
 description: 新增、删除、重命名、移动或检查项目目录/Godot 资源目录后，用于迁移 res://、项目相对路径或当前仓绝对路径引用，重新生成资源 catalog，检查旧路径残留，并处理框架仓/游戏仓/submodule git 边界。
 ---
 
-# Project Directory And Resource Path Migration
+# Project Filesystem
 
 用于新增、删除、重命名、移动或检查项目目录，尤其是 Godot 资源文件、`.tscn`、`.tres`、贴图、音频或资源目录变更后，迁移旧路径引用并验证旧路径是否残留。
 
@@ -67,7 +67,7 @@ rg -n "Src/ECS/Tools/OldDirectory|res://Src/ECS/Tools/OldDirectory" .
 5. 先 dry-run 路径替换。框架仓内可用相对脚本路径：
 
 ```bash
-python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+python3 .ai-config/skills/core/project-filesystem/scripts/migrate_resource_path.py \
   --old "res://assets/Effect/old" \
   --new "res://assets/Effect/new"
 ```
@@ -75,7 +75,7 @@ python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_
 游戏仓内没有 `.ai-config` 时，用框架仓脚本绝对路径，并显式把当前游戏仓作为 `--root`：
 
 ```bash
-python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/project-filesystem/scripts/migrate_resource_path.py \
   --root . \
   --old "res://assets/Effect/old" \
   --new "res://assets/Effect/new"
@@ -84,7 +84,7 @@ python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/resource-path-mi
 如果同一次目录移动同时留下 `res://`、项目相对路径和当前仓绝对路径引用，可以 dry-run 变体替换：
 
 ```bash
-python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+python3 .ai-config/skills/core/project-filesystem/scripts/migrate_resource_path.py \
   --old "res://assets/Effect/old" \
   --new "res://assets/Effect/new" \
   --include-variants
@@ -93,7 +93,7 @@ python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_
 6. 确认影响范围后应用。框架仓示例：
 
 ```bash
-python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+python3 .ai-config/skills/core/project-filesystem/scripts/migrate_resource_path.py \
   --old "res://assets/Effect/old" \
   --new "res://assets/Effect/new" \
   --apply
@@ -102,7 +102,7 @@ python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_
 游戏仓示例：
 
 ```bash
-python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/project-filesystem/scripts/migrate_resource_path.py \
   --root . \
   --old "res://assets/Effect/old" \
   --new "res://assets/Effect/new" \

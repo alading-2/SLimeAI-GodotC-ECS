@@ -45,7 +45,7 @@
 26. `sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover/execution-prompt.md` — ObjectPool / Collision 新会话执行提示词
 27. `design/Tool/其他Tool/README.md` — Input/ObjectPool/Timer 已改且 Log 跳过后的剩余 Tools AI-first 设计包入口
 28. `design/Tool/其他Tool/01-现状证据与AI-first裁决.md` — 剩余 Tools 总体分析、已确认/未确认问题和默认假设
-29. `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` — Common Utilities、ResourceLoading / ResourceManagement、ResourceGenerator 和 resource-path-migration workflow
+29. `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` — Common Utilities、ResourceLoading / ResourceManagement、ResourceGenerator 和 project-filesystem workflow
 30. `design/Tool/其他Tool/06-实施路线与验证门禁.md` — 剩余 Tools 后续执行 SDD 拆分、BDD、grep gate 和验证命令
 31. `sdds/025-SDD-0035-runtime-mount-and-node-lifecycle-hard-cutover/README.md` — Runtime mount + NodeLifecycle 执行型 SDD 胶囊
 32. `sdds/025-SDD-0035-runtime-mount-and-node-lifecycle-hard-cutover/execution-prompt.md` — SDD-0035 新会话执行提示词

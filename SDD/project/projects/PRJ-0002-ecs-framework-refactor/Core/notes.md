@@ -35,7 +35,7 @@
 - Event / Feature / Ability 非 Data GC hard cutover 已由 SDD-0033 完成；后续不要恢复 `EmitDynamic` / `OnDynamic` / `Action<object>` 主链路，也不要恢复 `object? OnExecute`。
 - ObjectPool manager 反射与 TargetSelector ownership 基础 facade 已由 SDD-0033 完成；后续 pooled lease / deterministic RNG / allocation artifact 必须从 TargetQueryEngine owner 继续。
 - Logger 本轮明确不改；只有 profiler 或明确热路径证据出现后再进入 Logger lazy / interpolated string handler 小切片。
-- ResourceManagement DeepThink 已由 2026-06-07 用户最终校准：`res://` 本身不是问题；问题是无 owner 裸加载、路径移动后缺自动替换和 diagnostics。不保留 ResourceManagement 作为长期“资源管理器”概念，只保留极薄 `ResourceLoading` 统一加载工具；路径移动和目录增删改查由 project directory / `resource-path-migration` skill + `ResourceGenerator` + `rg` 残留检查处理。
+- ResourceManagement DeepThink 已由 2026-06-07 用户最终校准：`res://` 本身不是问题；问题是无 owner 裸加载、路径移动后缺自动替换和 diagnostics。不保留 ResourceManagement 作为长期“资源管理器”概念，只保留极薄 `ResourceLoading` 统一加载工具；路径移动和目录增删改查由 project directory / `project-filesystem` skill + `ResourceGenerator` + `rg` 残留检查处理。
 - 目录操作 skill 已确认必要：新增、删除、移动、重命名和检查目录时，必须先确认 git boundary，先 dry-run，必要时用 `--include-variants` 覆盖 `res://`、项目相对路径和当前仓绝对路径，再 apply 和检查旧路径残留。
 - Resource Loading Hard Cutover 前需确认 DataOS resource ref 是否未来迁到 `ResourceKey + Category` 或 `uid://`；默认先不改 DataOS schema。
 - Godot `uid://` 是否纳入下一阶段验证；默认只作为研究项，不作为当前主存储。注意它不是 `.cs.uid` 文件。

@@ -28,7 +28,7 @@
 - `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md`
 - `design/Tool/其他Tool/06-实施路线与验证门禁.md`
 - `DocsAI/ECS/Tools/ResourceManagement/README.md`
-- `design/resource-path-migration-boundary.md`
+- `design/project-filesystem-boundary.md`
 - `Data/ResourceManagement/**`
 - `Tools/ResourceGenerator/**`
 - `Src/ECS/Tools/CommonTool.cs`
@@ -71,7 +71,7 @@ hard cutover 口径：
 - `LegacyContainsFallback` 不允许作为最终行为。
 - `CommonTool.LoadPackedScene` 不作为 current API。
 - 能归入明确 owner 的 helper 不允许进入 Common Utilities。
-- 资源移动必须走 `resource-path-migration` 或等价脚本 + ResourceGenerator + `rg` 残留分类。
+- 资源移动必须走 `project-filesystem` 或等价脚本 + ResourceGenerator + `rg` 残留分类。
 
 ## Verification
 
@@ -93,5 +93,5 @@ rg -n "LegacyContainsFallback|Contains\\(name, StringComparison\\.OrdinalIgnoreC
 resource path workflow smoke：
 
 ```bash
-python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py --old "<old>" --new "<new>"
+python3 .ai-config/skills/core/project-filesystem/scripts/migrate_resource_path.py --old "<old>" --new "<new>"
 ```

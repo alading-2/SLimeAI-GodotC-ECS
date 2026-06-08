@@ -25,7 +25,10 @@ public partial class AbilitySystemPipelineTest : Node
             Test_FeatureContext_UsesTypedAbilityExecutionBoundary();
             Test_Dash_UsesLastMoveDirectionWhenVelocityIsZero();
             Test_ParabolaShot_UsesRandomPointInCircleInsteadOfEnemyPosition();
-            Test_BoomerangThrow_UsesRandomPointInRingInsteadOfEnemyPosition();
+            Test_BoomerangThrow_PrefersEnemyDirectionAndFallsBackToRandomRing();
+            Test_SineWaveShot_PrefersEnemyDirectionTarget();
+            Test_BoomerangThrow_LockedTargetExtendsThroughEnemy();
+            Test_SineWaveShot_LockedTargetKeepsPiercingDistance();
             Test_CostComponent_UsesTypedResourceKeysForAllCostTypes();
         }
         catch (Exception ex)
@@ -387,9 +390,10 @@ public partial class AbilitySystemPipelineTest : Node
 
     /// <summary>
     /// 回归测试：
-    /// BoomerangThrow 应改为以施法者为圆心，在施法范围圆环内随机选择去程目标点，而不是直接取敌方单位当前位置。
+    /// BoomerangThrow 是伤害技能，有敌人时必须优先使用最近敌人的方向作为去程方向；
+    /// 只有找不到敌方单位时，才退回随机圆环点来保留 Boomerang 运动模式演示语义。
     /// </summary>
-    private void Test_BoomerangThrow_UsesRandomPointInRingInsteadOfEnemyPosition()
+    private void Test_BoomerangThrow_PrefersEnemyDirectionAndFallsBackToRandomRing()
     {
         var caster = new AbilityPipelineTargetPointTestEntity
         {
@@ -433,16 +437,27 @@ public partial class AbilitySystemPipelineTest : Node
 
             if (result is not Vector2 targetPoint) return;
 
-            float distance = targetPoint.DistanceTo(caster.GlobalPosition); // 与施法者的距离
             AssertEqual(
-                "BoomerangThrow 随机目标点必须位于施法范围圆环内",
-                true, //期望在圆环内
-                distance >= 90f && distance <= 200f //实际判定
+                "BoomerangThrow 有敌人时应优先沿最近敌人方向投掷",
+                true, //期望锁敌定向
+                targetPoint.Normalized().IsEqualApprox(enemy.GlobalPosition.Normalized()) //实际是否沿敌人方向
             );
             AssertEqual(
-                "BoomerangThrow 不应再直接使用敌方单位当前位置作为去程目标点",
-                true, //期望不是敌人位置
-                !targetPoint.IsEqualApprox(enemy.GlobalPosition) //实际是否仍锁定敌人位置
+                "BoomerangThrow 锁敌时不应把最近敌人位置作为唯一终点",
+                true, //期望延伸到更远端
+                targetPoint.DistanceTo(caster.GlobalPosition) > enemy.GlobalPosition.DistanceTo(caster.GlobalPosition) //实际是否截短
+            );
+
+            enemy.Data.Set(GeneratedDataKey.Team, Team.Player); // 变成友方，验证无敌方目标时走随机兜底
+
+            result = method?.Invoke(null, new object[] { caster, caster, 200f });
+            if (result is not Vector2 fallbackPoint) return;
+
+            AssertEqual(
+                "BoomerangThrow 无敌人时随机目标点必须位于施法范围圆环内",
+                true, //期望在圆环内
+                fallbackPoint.DistanceTo(caster.GlobalPosition) >= 90f
+                    && fallbackPoint.DistanceTo(caster.GlobalPosition) <= 200f //实际判定
             );
         }
         finally
@@ -450,6 +465,143 @@ public partial class AbilitySystemPipelineTest : Node
             EntityManager.Destroy(enemy);
             EntityManager.Destroy(caster);
         }
+    }
+
+    /// <summary>
+    /// 回归测试：
+    /// SineWaveShot 是伤害技能，有敌人时必须解析最近敌方单位作为方向目标，避免随机方向导致释放成功但无伤害。
+    /// </summary>
+    private void Test_SineWaveShot_PrefersEnemyDirectionTarget()
+    {
+        var caster = new AbilityPipelineTargetPointTestEntity
+        {
+            Name = "SineWaveCaster",
+            GlobalPosition = Vector2.Zero
+        };
+        AddChild(caster);
+
+        var enemy = new AbilityPipelineTargetPointTestEntity
+        {
+            Name = "SineWaveEnemy",
+            GlobalPosition = new Vector2(120f, 0f)
+        };
+        AddChild(enemy);
+
+        caster.Data.Set(GeneratedDataKey.Id, caster.GetInstanceId().ToString());
+        caster.Data.Set(GeneratedDataKey.Team, Team.Player);
+        caster.Data.Set(GeneratedDataKey.EntityType, EntityType.Unit);
+
+        enemy.Data.Set(GeneratedDataKey.Id, enemy.GetInstanceId().ToString());
+        enemy.Data.Set(GeneratedDataKey.Team, Team.Enemy);
+        enemy.Data.Set(GeneratedDataKey.EntityType, EntityType.Unit);
+
+        EntityManager.Register(caster);
+        EntityManager.Register(enemy);
+
+        try
+        {
+            var executorType = typeof(AbilitySystemPipelineTest).Assembly.GetType("SineWaveShotExecutor");
+            var method = executorType?.GetMethod(
+                "FindNearestEnemy",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic
+            );
+            var result = method?.Invoke(null, new object[] { caster, caster, 200f });
+            var targetNode = ExtractTupleNode(result);
+
+            AssertEqual(
+                "SineWaveShot 应能通过反射找到最近敌方目标",
+                true, //期望存在敌方目标
+                targetNode != null //实际是否找到
+            );
+
+            AssertEqual(
+                "SineWaveShot 有敌人时应优先使用最近敌人作为方向目标",
+                enemy.GetInstanceId(), //期望敌人节点
+                targetNode?.GetInstanceId() ?? 0 //实际锁定节点
+            );
+        }
+        finally
+        {
+            EntityManager.Destroy(enemy);
+            EntityManager.Destroy(caster);
+        }
+    }
+
+    /// <summary>
+    /// 回归测试：
+    /// BoomerangThrow 的锁敌只用于决定投掷方向，不能把最近敌人位置当作唯一终点；
+    /// 否则回旋镖会过早返程，沿途无限碰撞命中语义被实际截短成近似单目标。
+    /// </summary>
+    private void Test_BoomerangThrow_LockedTargetExtendsThroughEnemy()
+    {
+        var casterPosition = Vector2.Zero;
+        var lockedEnemyPosition = new Vector2(80f, 0f);
+
+        var executorType = typeof(AbilitySystemPipelineTest).Assembly.GetType("BoomerangThrowExecutor");
+        var method = executorType?.GetMethod(
+            "ResolveThrowTargetPoint",
+            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic
+        );
+        var result = method?.Invoke(null, new object[] { casterPosition, lockedEnemyPosition, 200f });
+
+        AssertEqual(
+            "BoomerangThrow 应能通过反射找到远端去程点解析逻辑",
+            true, //期望存在该方法
+            result is Vector2 //实际是否成功拿到结果
+        );
+
+        if (result is not Vector2 throwTarget) return;
+
+        AssertEqual(
+            "BoomerangThrow 锁敌时去程点应穿过敌人延伸到施法范围远端",
+            true, //期望远端点超过最近敌人
+            throwTarget.DistanceTo(casterPosition) > lockedEnemyPosition.DistanceTo(casterPosition) //实际是否被截断
+        );
+        AssertEqual(
+            "BoomerangThrow 锁敌时去程点仍应落在施法范围内",
+            true, //期望不超过范围
+            throwTarget.DistanceTo(casterPosition) <= 200f //实际是否超出范围
+        );
+    }
+
+    /// <summary>
+    /// 回归测试：
+    /// SineWaveShot 锁敌只负责朝向，不能把 MaxDistance 收缩到最近敌人距离；
+    /// 否则第一目标附近完成运动，后续目标没有机会被 MovementCollision 命中。
+    /// </summary>
+    private void Test_SineWaveShot_LockedTargetKeepsPiercingDistance()
+    {
+        var spawnPosition = new Vector2(20f, 0f);
+        var lockedEnemyPosition = new Vector2(120f, 0f);
+
+        var executorType = typeof(AbilitySystemPipelineTest).Assembly.GetType("SineWaveShotExecutor");
+        var method = executorType?.GetMethod(
+            "ResolveMaxDistance",
+            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic
+        );
+        var result = method?.Invoke(null, new object[] { spawnPosition, lockedEnemyPosition, true });
+
+        AssertEqual(
+            "SineWaveShot 应能通过反射找到最大飞行距离解析逻辑",
+            true, //期望存在该方法
+            result is float //实际是否成功拿到结果
+        );
+
+        if (result is not float maxDistance) return;
+
+        AssertEqual(
+            "SineWaveShot 锁敌时仍应保持远距离穿透飞行",
+            true, //期望不是最近敌人距离
+            maxDistance > spawnPosition.DistanceTo(lockedEnemyPosition) //实际是否被截断
+        );
+    }
+
+    private static Node2D? ExtractTupleNode(object? tupleResult)
+    {
+        if (tupleResult == null) return null;
+
+        // 反射拿 ValueTuple<IEntity, Node2D> 的第二项，避免测试公开 handler 私有 API。
+        return tupleResult.GetType().GetField("Item2")?.GetValue(tupleResult) as Node2D;
     }
 
     /// <summary>

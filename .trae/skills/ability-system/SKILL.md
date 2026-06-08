@@ -35,6 +35,7 @@ description: 修改 SlimeAI ECS Ability Capability、AbilityDataKeys、目标选
 - `AbilityService` 构造注入 `TimerManager`，可注入 `FeatureService` / `DamageService`；测试和 scoped world 必须用独立实例，不依赖 `Default / Instance`。
 - Ability → Feature handler flow 使用 typed `FeatureContext.SetActivationPayload(CastContext)` 和 `TryGetExecutionResult<AbilityExecutedResult>()`；不要再写 raw `ActivationData` 或从 `ExecuteResult` cast。
 - 实体目标查询必须使用 `TargetQueryEngine.QueryEntities` 和 `TargetQueryResult` diagnostics；旧 `EntityTargetSelector.Query` facade 已删除，不要恢复。
+- 伤害型投射物 Handler 如果支持无目标释放，仍必须先尝试 `TargetQueryEngine.QueryEntities` 软锁敌方单位；无敌人才允许随机点、默认方向或打空。锁定目标只作为瞄准/兜底参考，不得截短弹道生命周期、最大距离或 `StopAfterCollisionCount=-1` 的无限碰撞语义。锁定目标后可用 `MovementCollisionParams.OnCollision` 结算沿途命中，并用 `MovementParams.OnStop(Completed)` 对未触发任何有效碰撞的锁定目标兜底结算一次。异步投射物返回的 `AbilityExecutedResult.TargetsHit` 不得被当成后续碰撞伤害上限。
 - 冷却/充能公式归 `AbilityFormula`；触发概率用 `ProbabilityTool.RollPercent`，概率单位为百分比 0-100。
 - Ability owner 清单统一走 `AbilityInventoryService.Runtime`；新增授予、移除、查询和 UI/AI 消费者不要再调用 `EntityManager.AddAbility/GetAbilities/GetAbilityByName/GetManualAbilities`，兼容 facade 只服务旧调用点。
 - Ability owner projection 由 `AbilityInventoryService.OwnerDescriptor` 注册到 `OwnedReferenceRegistry`，运行时用 `AbilityOwnerEntityId` + `OwnedAbilityIds` 投影；禁止恢复 `EntityRelationshipType.ENTITY_TO_ABILITY`。

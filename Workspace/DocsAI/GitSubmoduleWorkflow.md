@@ -146,4 +146,4 @@ res://Src/Game/...
 - 游戏仓如果需要资源 catalog，应在游戏仓根运行 game-local generator 或后续支持 `--project-root` / `--output` 的生成器。
 - 移动框架资源：在框架仓改路径、跑 generator、提交框架仓，再更新游戏仓 submodule 指针。
 - 移动游戏资源：在游戏仓根处理路径替换、game catalog 和游戏验证，不改 `Games/<Game>/SlimeAI/` 内容。
-- 移动或重命名资源后，用 `resource-path-migration` skill/script 替换旧 `res://` 引用并运行 `rg` 检查旧路径残留。
+- 移动或重命名资源后，用 `project-filesystem` skill/script 替换旧 `res://` 引用并运行 `rg` 检查旧路径残留。

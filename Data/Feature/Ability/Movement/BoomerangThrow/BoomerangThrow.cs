@@ -3,7 +3,7 @@ using Godot;
 
 /// <summary>
 /// 回旋镖技能执行器 - 验证 Boomerang 运动模式
-/// 在施法者周围圆环内随机选择一个去程目标点，投掷回旋镖后自动返回，过程中碰撞造成伤害
+/// 优先用最近敌方单位决定去程方向，找不到敌人时退回随机圆环点，过程中可碰撞多个敌人造成伤害
 /// </summary>
 internal class BoomerangThrowExecutor : AbilityFeatureHandler
 {
@@ -28,7 +28,12 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
 
         var damage = ability.Data.Get<float>(GeneratedDataKey.FinalAbilityDamage); // 最终技能伤害
 
-        var throwTarget = GetThrowTarget(caster, casterNode, ability.Data.Get<float>(GeneratedDataKey.AbilityCastRange));
+        float castRange = ability.Data.Get<float>(GeneratedDataKey.AbilityCastRange);
+        float effectiveRange = castRange > 0f ? castRange : DefaultFallbackRange; // 实际索敌/选点范围
+        var lockedTarget = FindNearestEnemy(caster, casterNode, effectiveRange); // 本次锁定目标，失败时允许随机兜底
+        var throwTarget = lockedTarget.HasValue
+            ? ResolveThrowTargetPoint(casterNode.GlobalPosition, lockedTarget.Value.Node.GlobalPosition, effectiveRange)
+            : GetRandomThrowTarget(casterNode, effectiveRange);
         var projectileScenePath = ability.Data.Get<string>(GeneratedDataKey.ProjectileScene); // 投射物场景路径
 
         var projectile = ProjectileTool.Spawn(
@@ -39,13 +44,14 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
         );
         if (projectile == null) return new AbilityExecutedResult { TargetsHit = 0 };
 
+        bool hasAppliedDamage = false; // 防止碰撞命中后完成回调对同一锁定目标重复结算
         projectile.Events.Emit(
             new GameEventType.Unit.MovementStarted(
                 MoveMode.Boomerang,
                 new MovementParams
                 {
                     Mode = MoveMode.Boomerang,
-                    TargetPoint = throwTarget, // 去程随机目标点
+                    TargetPoint = throwTarget, // 去程目标点：有敌人时沿敌人方向延伸到远端，无敌人时使用随机点
                     TargetNode = casterNode, // 显式指定返程宿主，避免策略退回到不可靠的祖先回溯
                     ActionSpeed = 460f, // 去程基础速度
                     BoomerangArcHeight = 160f, // 更大的轨迹弧高
@@ -59,8 +65,20 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
                         EntityTypeFilter = EntityType.Unit, //实体类型过滤
                         StopAfterCollisionCount = -1, //只通知不停止
                         DestroyOnStop = false, //不因碰撞销毁
-                        OnCollision = collisionCtx => OnHit(collisionCtx, caster, casterNode, damage) //命中回调
+                        OnCollision = collisionCtx =>
+                        {
+                            if (ApplyCollisionDamage(collisionCtx, caster, casterNode, damage))
+                            {
+                                hasAppliedDamage = true;
+                            }
+                        } //命中回调
                     },
+                    OnStop = stopContext =>
+                    {
+                        if (hasAppliedDamage || lockedTarget == null) return;
+                        if (stopContext.Reason != MovementStopReason.Completed) return;
+                        hasAppliedDamage = ApplyDirectDamage(lockedTarget.Value.Entity, caster, casterNode, damage);
+                    }, // 如果弹道未触发碰撞，完成时对本次锁定目标兜底结算一次
                     RotateToVelocity = false, // root 最终旋转改由朝向组件接管
                     Orientation = new OrientationParams
                     {
@@ -76,13 +94,40 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
         );
 
         _log.Info($"回旋镖投掷: 目标={throwTarget}");
-        return new AbilityExecutedResult { TargetsHit = 1 };
+        return new AbilityExecutedResult { TargetsHit = 1 }; // 异步投射物：这里只表示成功生成 1 枚，不代表伤害命中上限
     }
 
     private static Vector2 GetThrowTarget(IEntity caster, Node2D casterNode, float castRange)
     {
-        _ = caster; // 当前随机落点逻辑只依赖施法者位置，保留参数以兼容既有测试签名
         float effectiveRange = castRange > 0f ? castRange : DefaultFallbackRange; // 外半径
+
+        var targetInfo = FindNearestEnemy(caster, casterNode, effectiveRange);
+        if (targetInfo.HasValue)
+        {
+            return ResolveThrowTargetPoint(casterNode.GlobalPosition, targetInfo.Value.Node.GlobalPosition, effectiveRange);
+        }
+
+        return GetRandomThrowTarget(casterNode, effectiveRange);
+    }
+
+    private static Vector2 ResolveThrowTargetPoint(
+        Vector2 casterPosition,
+        Vector2 lockedTargetPosition,
+        float effectiveRange)
+    {
+        float range = effectiveRange > 0f ? effectiveRange : DefaultFallbackRange; // 目标方向上的远端距离
+        Vector2 direction = lockedTargetPosition - casterPosition;
+        if (direction.LengthSquared() < 0.001f)
+        {
+            return casterPosition + Vector2.Right * range;
+        }
+
+        // 锁敌只负责决定投掷方向，不把最近敌人当成唯一终点，避免截短无限碰撞命中。
+        return casterPosition + direction.Normalized() * range;
+    }
+
+    private static Vector2 GetRandomThrowTarget(Node2D casterNode, float effectiveRange)
+    {
         float innerRange = effectiveRange * InnerRingRatio; // 内半径，避免目标点离自己过近
         using var result = TargetQueryEngine.QueryPositions(new TargetSelectorQuery
         {
@@ -97,16 +142,45 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
         return casterNode.GlobalPosition + Vector2.Right * FallbackForwardDistance;
     }
 
-    private static void OnHit(MovementCollisionContext collisionCtx,
+    private static (IEntity Entity, Node2D Node)? FindNearestEnemy(IEntity caster, Node2D casterNode, float effectiveRange)
+    {
+        using var result = TargetQueryEngine.QueryEntities(new TargetSelectorQuery
+        {
+            Geometry = GeometryType.Circle, // 搜索施法范围内敌人
+            Origin = casterNode.GlobalPosition, // 以施法者为圆心
+            Range = effectiveRange, // 搜索半径
+            CenterEntity = caster, // 阵营判断基准
+            TeamFilter = TeamFilter.Enemy, // 只选敌方
+            TypeFilter = EntityType.Unit, // 只选单位
+            Sorting = TargetSorting.Nearest, // 优先最近敌人，降低投射物空放概率
+            MaxTargets = 1 // 只需要一个去程目标
+        });
+
+        return result.Items.Count > 0 && result.Items[0] is Node2D targetNode
+            ? (result.Items[0], targetNode)
+            : null;
+    }
+
+    private static bool ApplyCollisionDamage(MovementCollisionContext collisionCtx,
         IEntity caster,
         Node2D casterNode,
         float damage)
     {
-        if (collisionCtx.TargetEntity == null) return;
+        if (collisionCtx.TargetEntity == null) return false;
         var targetEntity = collisionCtx.TargetEntity;
-        if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return;
+        return ApplyDirectDamage(targetEntity, caster, casterNode, damage);
+    }
 
-        AbilityImpactTool.Execute(caster, new AbilityImpactOptions
+    private static bool ApplyDirectDamage(
+        IEntity targetEntity,
+        IEntity caster,
+        Node2D casterNode,
+        float damage)
+    {
+        if (!CanApplyDamage(targetEntity, casterNode)) return false;
+        if (!AbilityTool.MatchesTeamFilter(caster, targetEntity, TeamFilter.Enemy)) return false;
+
+        var result = AbilityImpactTool.Execute(caster, new AbilityImpactOptions
         {
             Targets = new[] { targetEntity },
             Damage = new DamageApplyOptions
@@ -117,5 +191,20 @@ internal class BoomerangThrowExecutor : AbilityFeatureHandler
                 Attacker = casterNode // 伤害来源
             }
         });
+        return result.TargetsHit > 0;
+    }
+
+    private static bool CanApplyDamage(IEntity targetEntity, Node2D casterNode)
+    {
+        if (!GodotObject.IsInstanceValid(casterNode) || casterNode.IsQueuedForDeletion()) return false;
+        if (targetEntity is Node targetNode
+            && (!GodotObject.IsInstanceValid(targetNode) || targetNode.IsQueuedForDeletion()))
+        {
+            return false;
+        }
+
+        // 完成兜底是延迟回调，目标可能在弹道飞行期间死亡或被销毁。
+        return !targetEntity.Data.Has(GeneratedDataKey.IsDead)
+            || !targetEntity.Data.Get<bool>(GeneratedDataKey.IsDead);
     }
 }

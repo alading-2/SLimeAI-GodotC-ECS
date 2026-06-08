@@ -7,7 +7,7 @@
 - `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md`
 - `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/其他Tool/06-实施路线与验证门禁.md`
 - `DocsAI/ECS/Tools/ResourceManagement/README.md`
-- `.ai-config/skills/core/resource-path-migration/SKILL.md`
+- `.ai-config/skills/core/project-filesystem/SKILL.md`
 
 ## Open Questions
 

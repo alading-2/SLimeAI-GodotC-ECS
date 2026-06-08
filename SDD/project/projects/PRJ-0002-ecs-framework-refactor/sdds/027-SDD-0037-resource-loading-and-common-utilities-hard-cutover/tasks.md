@@ -9,7 +9,7 @@
 ## Task List
 
 - [x] T1.1 Readiness baseline
-  - **Scope**: 记录当前 `ResourceManagement`、`ResourceCatalog`、`ResourceGenerator`、`CommonTool.LoadPackedScene` 调用点、direct load grep、resource-path-migration skill 状态。
+  - **Scope**: 记录当前 `ResourceManagement`、`ResourceCatalog`、`ResourceGenerator`、`CommonTool.LoadPackedScene` 调用点、direct load grep、project-filesystem skill 状态。
   - **Validation**: `git status --short`；resource grep gates；`python3 Workspace/SDD/sdd.py validate SDD-0037`。
 
 - [x] T1.2 Resource loading contract tests first
@@ -41,7 +41,7 @@
   - **Validation**: Common Utilities 中没有资源加载、Entity 查询、Timer、TargetSelector 等 owner 功能。
 
 - [x] T1.9 DocsAI and skill sync
-  - **Scope**: 更新 ResourceManagement/ResourceLoading、CommonUtilities、ResourceGenerator、resource-path-migration 文档和 `tools` skill。
+  - **Scope**: 更新 ResourceManagement/ResourceLoading、CommonUtilities、ResourceGenerator、project-filesystem 文档和 `tools` skill。
   - **Validation**: `bash Workspace/Tools/ai-config-sync/sync-ai-config.sh`；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only`。
 
 - [x] T1.10 Build and migration smoke

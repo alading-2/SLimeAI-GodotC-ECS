@@ -85,7 +85,7 @@ AnimatedSprite2D "豺狼人"
 
 运行时 `EntityManager.SyncAndRemoveCollisionTemplate` 读取此节点的形状并同步到实体根节点的 `CollisionShape2D`，然后删除该模板节点，VisualRoot 只保留视觉内容。
 
-`Tools/ResourceGenerator` 现在只负责生成资源路径索引，不再生成碰撞语义注册表。`Unit/`、`Effect/`、`Sensor/` 目录中的模板仅作为视觉场景的碰撞形状来源，不再依赖 `(layer, mask) -> CollisionType` 的反查链路。
+`Workspace/Tools/ResourceGenerator` 现在只负责生成资源路径索引，不再生成碰撞语义注册表。`Unit/`、`Effect/`、`Sensor/` 目录中的模板仅作为视觉场景的碰撞形状来源，不再依赖 `(layer, mask) -> CollisionType` 的反查链路。
 
 > **智能更新规则**：重新生成时若场景已有 `CollisionShape2D`（含旧结构 CharacterBody2D/Area2D 包裹的形式），插件自动保存其 `shape / transform / disabled` 并在重建后恢复，不会覆盖手动调整结果。
 

@@ -26,6 +26,7 @@ description: 修改 SlimeAI ECS Projectile / Effect Capability、投射物命中
 
 - Runtime 只保存 `res://` 场景路径，不在纯 Runtime 加载 Godot 资源。
 - 投射物命中通过 MovementCollision 转 `DamageService` 请求。
+- 对已锁定敌方目标的伤害型投射物，`MovementCollision` 负责沿途命中；锁定目标只作为瞄准/兜底参考，不得截短弹道生命周期、最大距离或 `StopAfterCollisionCount=-1` 的无限碰撞语义。若弹道自然完成但未收到任何有效碰撞，可在 `MovementParams.OnStop(Completed)` 对锁定目标兜底结算一次，防止释放成功但无伤害。异步投射物返回的 `AbilityExecutedResult.TargetsHit` 不代表后续碰撞伤害上限。无敌人时才走随机/默认方向降级。
 - 穿透、最大命中数、生命周期统一读 `ProjectileDataKeys` / `ProjectileMovementOptions`。
 - 视觉实例化和动画播放放 GodotBridge 或游戏侧，不写进纯 Runtime。
 - **Source / target / spawned-id 引用 public API 走 typed `EntityId / EntityIdList`**。当前 DataOS 尚未原生生成 `DataKey<EntityId?> / DataKey<EntityIdList>`，因此 owner projection 暂通过 ownership service 封装 generated `DataKey<string>` / `DataKey<string[]>`；不要在业务 API 暴露 raw string。

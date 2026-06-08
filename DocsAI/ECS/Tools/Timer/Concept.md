@@ -85,7 +85,7 @@ TimerManager.Instance.ExportTimerDiagnosticsJson(
 纯 C# scheduler：
 
 ```bash
-dotnet run --project Tools/TimerSchedulerTdd/TimerSchedulerTdd.csproj
+dotnet run --project Workspace/Tools/TimerSchedulerTdd/TimerSchedulerTdd.csproj
 ```
 
 框架 build：

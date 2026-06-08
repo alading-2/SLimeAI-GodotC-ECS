@@ -346,7 +346,7 @@ TestSystem.Instance?.SetSelectedEntity(entity);
 
 - 不扫描 `res://`
 - 不加载或实例化资源内容，只验证目录索引和分类结果
-- 如果新增、移动、重命名资源后这里看不到，优先检查是否运行过 `Tools/ResourceGenerator`
+- 如果新增、移动、重命名资源后这里看不到，优先检查是否运行过 `Workspace/Tools/ResourceGenerator`
 
 ## 8. 系统监控怎么用
 
@@ -563,7 +563,7 @@ TestSystem UI 控件统一使用以下日志级别：
 - 单位视觉 Asset 会按 `ResourceCategory.AssetUnitEnemy / AssetUnitPlayer` 推导到 `AssetUnit.Enemy / AssetUnit.Player`
 - 独立视觉预览场景不走 `ResourceCatalog` 前缀过滤，而是直接收集 `ResourcePaths.Resources` 中全部 `Asset*` 分类
 - 路径中的 `Resource` 目录只表示存放位置，不参与分类
-- 新增资产或场景资源后必须运行 `Tools/ResourceGenerator`
+- 新增资产或场景资源后必须运行 `Workspace/Tools/ResourceGenerator`
 - 不要让运行时测试面板全盘扫描目录作为主数据源
 - 具体模块只消费自己允许的目录前缀，例如敌人生成只消费 `Unit.Enemy`
 

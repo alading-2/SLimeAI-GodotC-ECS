@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\Data\ResourceManagement\ResourceCategory.cs" Link="ResourceCategory.cs" />
+    <Compile Include="..\..\..\Data\ResourceManagement\ResourceCategory.cs" Link="ResourceCategory.cs" />
   </ItemGroup>
 
 </Project>

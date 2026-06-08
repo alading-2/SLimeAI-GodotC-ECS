@@ -10,7 +10,7 @@
 
 - `sdd-workflow` / `sdd-management`：恢复和更新 SDD。
 - `tools`：ResourceLoading、Common Utilities 属于 ECS Tools owner。
-- `resource-path-migration`：资源路径移动或验证旧路径残留。
+- `project-filesystem`：资源路径移动或验证旧路径残留。
 - `data-authoring` / `ecs-data`：如果触及 DataOS resource refs。
 - `test-system`：diagnostics / CLI / scene validation。
 - `ai-config-management` / `skill-test`：如果修改 `.ai-config` skill 源。
@@ -39,7 +39,7 @@ git status --short
 7. `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md`
 8. `design/Tool/其他Tool/06-实施路线与验证门禁.md`
 9. `DocsAI/ECS/Tools/ResourceManagement/README.md`
-10. `.ai-config/skills/core/resource-path-migration/SKILL.md`
+10. `.ai-config/skills/core/project-filesystem/SKILL.md`
 11. 本 SDD 的 `README.md`、`design/main.md`、`tasks.md`、`bdd.md`、`progress.md`
 
 ## 核心裁决

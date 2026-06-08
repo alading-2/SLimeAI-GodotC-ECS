@@ -33,6 +33,6 @@
 ## Current Resume
 
 - **Current Task**: done
-- **Last Conclusion**: SDD-0037 已生成执行胶囊。默认实现 ResourceLoading strict facade、ResourceCatalogDiagnostics、resource-path-migration gate 和 Common Utilities 受约束 owner。
+- **Last Conclusion**: SDD-0037 已生成执行胶囊。默认实现 ResourceLoading strict facade、ResourceCatalogDiagnostics、project-filesystem gate 和 Common Utilities 受约束 owner。
 - **Next Action**: 进入实现前先读 `execution-prompt.md`，从 T1.1 readiness baseline 开始。
 - **Open Blockers**: none

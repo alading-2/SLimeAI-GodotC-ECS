@@ -23,11 +23,12 @@ run_step() {
     fi
 }
 
-# 1. 框架 build
-run_step "framework-build" bash -c "cd /home/slime/Code/SlimeAI/SlimeAI && Tools/run-build.sh"
+# 1. 框架 build（TODO: 框架/游戏仓分离后创建 Workspace/Tools/run-build.sh）
+# run_step "framework-build" bash -c "cd /home/slime/Code/SlimeAI/SlimeAI && Tools/run-build.sh"
+run_step "framework-build" bash -c "cd /home/slime/Code/SlimeAI/SlimeAI && dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly"
 
-# 2. 框架 tests
-run_step "framework-tests" bash -c "cd /home/slime/Code/SlimeAI/SlimeAI && Tools/run-tests.sh"
+# 2. 框架 tests（TODO: 框架/游戏仓分离后创建 Workspace/Tools/run-tests.sh）
+# run_step "framework-tests" bash -c "cd /home/slime/Code/SlimeAI/SlimeAI && Tools/run-tests.sh"
 
 # 3. 游戏 build
 run_step "game-build" bash -c "cd /home/slime/Code/SlimeAI/Games/BrotatoLike && Tools/run-build.sh"

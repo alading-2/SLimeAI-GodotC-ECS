@@ -142,7 +142,7 @@ GameTimer legacy = TimerManager.Instance.Delay(0.5f)
 ## 验证
 
 ```bash
-dotnet run --project Tools/TimerSchedulerTdd/TimerSchedulerTdd.csproj
+dotnet run --project Workspace/Tools/TimerSchedulerTdd/TimerSchedulerTdd.csproj
 dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
 ```
 

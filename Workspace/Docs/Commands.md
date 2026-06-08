@@ -47,11 +47,12 @@ bash Data/DataOS/Tools/validate-dataos.sh Data/DataOS/Authoring/slimeainew.autho
 ```bash
 cd /home/slime/Code/SlimeAI/SlimeAI
 
-# 构建
-Tools/run-build.sh
+# 构建（TODO: 框架/游戏仓分离后创建 Workspace/Tools/run-build.sh）
+# Tools/run-build.sh
+dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
 
-# 测试
-Tools/run-tests.sh
+# 测试（TODO: 框架/游戏仓分离后创建 Workspace/Tools/run-tests.sh）
+# Tools/run-tests.sh
 ```
 
 ## SDD / AI 配置验证

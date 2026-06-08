@@ -98,6 +98,8 @@ Src/ECS/Capabilities/Ability/System/
 - 在 `ExecuteAbility` 中读取 `CastContext`
 - 自行查询目标、读取点位、生成投射物或结算伤害
 - 自行决定无目标时返回 0 命中、朝默认方向释放、打空或执行降级逻辑
+- 伤害型投射物如果允许“无目标也释放”，仍应先尝试 `TargetQueryEngine.QueryEntities(...)` 解析可命中的敌方单位；锁定目标只作为瞄准/兜底参考，不得截短弹道生命周期、最大距离或碰撞次数上限；只有查不到目标时才走随机点、默认方向等演示/降级路径
+- 异步投射物 Handler 返回的 `AbilityExecutedResult.TargetsHit` 可表示本次生成数量或同步执行结果，不得被当成后续 `MovementCollision` 伤害命中上限
 
 ### TargetingManager 负责
 
@@ -134,6 +136,7 @@ Src/ECS/Capabilities/Ability/System/
 
 - 直接走正式 `TryTrigger`
 - 在 `ExecuteAbility` 里自行做“有目标更好、没目标也能继续”的逻辑
+- 对伤害型投射物，推荐模式是“先软锁最近敌人作为本次瞄准参考，再生成仍可穿透/多命中的弹道；碰撞命中先结算，若锁定目标但弹道未触发任何有效碰撞，可在 `OnStop(Completed)` 对锁定目标兜底结算一次”
 
 ---
 

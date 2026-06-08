@@ -29,7 +29,7 @@
 如果是移动/重命名，先 dry-run 路径替换：
 
 ```bash
-python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+python3 .ai-config/skills/core/project-filesystem/scripts/migrate_resource_path.py \
   --old "res://assets/Old" \
   --new "res://assets/New"
 ```
@@ -37,7 +37,7 @@ python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_
 如果当前目录是游戏仓，使用框架仓脚本绝对路径并限制 `--root .`：
 
 ```bash
-python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/project-filesystem/scripts/migrate_resource_path.py \
   --root . \
   --old "res://assets/Old" \
   --new "res://assets/New"
@@ -58,7 +58,7 @@ dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj
 如果同一次目录移动同时留下 `res://`、项目相对路径和当前仓绝对路径引用，可先 dry-run：
 
 ```bash
-python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py \
+python3 .ai-config/skills/core/project-filesystem/scripts/migrate_resource_path.py \
   --old "res://assets/Old" \
   --new "res://assets/New" \
   --include-variants
@@ -119,7 +119,7 @@ python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_
 - **手动更改**: **不要手动修改 `ResourcePaths.cs`**，因为每次运行生成器都会覆盖该文件。
 - **运行时加载**: 业务代码不要直接 `GD.Load("res://...")`，当前统一走 `ResourceManagement.Load<T>`，目标统一走 `ResourceLoading.Load<T>`。
 - **何时运行**: 添加、移动、删除或重命名 `.tscn` / `.tres` 后运行生成器，并检查重复资源警告。
-- **路径迁移**: 移动/重命名目录后先用 project directory / `resource-path-migration` skill 替换旧引用，再运行生成器；不要靠人工全仓搜索。
+- **路径迁移**: 移动/重命名目录后先用 project directory / `project-filesystem` skill 替换旧引用，再运行生成器；不要靠人工全仓搜索。
 - **严格加载方向**: 后续 `ResourceLoading.Load<T>` 会删除相近名称 fallback；如果精确 key 不存在，应修正资源 key / manifest，而不是让加载器猜测。
 - **DataOS 路径来源**: DataOS snapshot 中保存资源路径时，加载入口必须携带 source/owner/usage；不要把裸 `res://` 扩散到 Capability 业务代码。
 

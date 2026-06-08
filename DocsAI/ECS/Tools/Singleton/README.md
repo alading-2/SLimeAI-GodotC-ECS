@@ -85,6 +85,6 @@ Singleton Guard 不做：
 ## 验证
 
 ```bash
-dotnet run --project Tools/SingletonGuardTdd/SingletonGuardTdd.csproj
+dotnet run --project Workspace/Tools/SingletonGuardTdd/SingletonGuardTdd.csproj
 dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
 ```

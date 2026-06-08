@@ -1,7 +1,7 @@
 # ResourceLoading
 
 > 状态：current
-> sourcePaths: `Src/ECS/Tools/ResourceLoading/`, `Data/ResourceManagement/`, `Tools/ResourceGenerator/`
+> sourcePaths: `Src/ECS/Tools/ResourceLoading/`, `Data/ResourceManagement/`, `Workspace/Tools/ResourceGenerator/`
 > relatedDesign: `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md`
 > lastReviewed: 2026-06-07
 
@@ -41,7 +41,7 @@ SlimeAI 需要一个 AI 可读、可检查的资源加载入口：
 | `ResourcePaths` | 记录 category、key、path 的 generated catalog | 不代表真实资源生命周期；不作为跨游戏全局资源身份 |
 | `ResourceLoading` | 统一加载入口、source/owner/usage diagnostics、错误报告 | 不让 Capability 直接绕过 facade 加载资源；不做目录移动或跨游戏资源管理 |
 | `ResourceCatalog` | 为 UI/Test/AI 构建资源目录和分组 | 不进入 gameplay 热路径全量刷新 |
-| project directory / `resource-path-migration` skill | 新增、删除、重命名、移动或检查目录后的路径替换和旧路径残留检查 | 不替代 Godot 资源系统；不默认跨 git boundary 改文件 |
+| project directory / `project-filesystem` skill | 新增、删除、重命名、移动或检查目录后的路径替换和旧路径残留检查 | 不替代 Godot 资源系统；不默认跨 git boundary 改文件 |
 
 ## 设计裁决
 
@@ -56,7 +56,7 @@ SlimeAI 需要一个 AI 可读、可检查的资源加载入口：
 - `ResourceLoadResult` 失败会说明 category、key/path、source、owner 和 error code。
 - `ResourceCatalogDiagnostics` 覆盖 duplicate key、missing path、stale generated source、DataOS selected refs loadable。
 - `CommonTool.LoadPackedScene` 已迁入 ResourceLoading；`CommonTool` current 入口已删除。
-- 目录 / 路径移动使用 project directory / `resource-path-migration` skill 做 dry-run、替换和 `rg` 残留检查。
+- 目录 / 路径移动使用 project directory / `project-filesystem` skill 做 dry-run、替换和 `rg` 残留检查。
 
 ## 多游戏仓边界
 
@@ -109,7 +109,7 @@ ResourceLoader.Load<PackedScene>("res://...");
 
 例外：
 
-- `Tools/ResourceGenerator` 生成 catalog 时可以构造 `res://`。
+- `Workspace/Tools/ResourceGenerator` 生成 catalog 时可以构造 `res://`。
 - `.tscn` / `.tres` 内部 `ext_resource path="res://..."` 是 Godot 场景格式事实，不按 C# 业务加载入口处理。
 - 验证 artifact 写入时使用 `ProjectSettings.GlobalizePath("res://")` 不属于资源加载。
 
@@ -118,16 +118,16 @@ ResourceLoader.Load<PackedScene>("res://...");
 资源变更后运行：
 
 ```bash
-python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py --old "<old>" --new "<new>"
-python3 .ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py --old "<old>" --new "<new>" --include-variants
-dotnet run --project Tools/ResourceGenerator/ResourceGenerator.csproj
+python3 .ai-config/skills/core/project-filesystem/scripts/migrate_resource_path.py --old "<old>" --new "<new>"
+python3 .ai-config/skills/core/project-filesystem/scripts/migrate_resource_path.py --old "<old>" --new "<new>" --include-variants
+dotnet run --project Workspace/Tools/ResourceGenerator/ResourceGenerator.csproj
 dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
 ```
 
 如果当前目录是游戏仓，使用框架仓脚本绝对路径并限制 `--root .`：
 
 ```bash
-python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/resource-path-migration/scripts/migrate_resource_path.py --root . --old "<old>" --new "<new>"
+python3 /home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/project-filesystem/scripts/migrate_resource_path.py --root . --old "<old>" --new "<new>"
 ```
 
 设计阶段检查：

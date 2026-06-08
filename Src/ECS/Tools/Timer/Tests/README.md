@@ -38,4 +38,4 @@ Tools/run-godot-scene.sh run res://SlimeAI/Src/ECS/Tools/Timer/Tests/TimerStress
 Tools/analyze-godot-scene-logs.sh
 ```
 
-当前 `Games/BrotatoLike` 尚未初始化 Godot project / runner 时，不能声明 scene-gate 通过；只能使用框架 `dotnet build` 和纯 C# `Tools/TimerSchedulerTdd` 作为临时证据。
+当前 `Games/BrotatoLike` 尚未初始化 Godot project / runner 时，不能声明 scene-gate 通过；只能使用框架 `dotnet build` 和纯 C# `Workspace/Tools/TimerSchedulerTdd` 作为临时证据。

@@ -132,7 +132,7 @@ SQLite Authoring DB（seed + migration）
   -> RuntimeDataSnapshot Loader 按 DataKey<T> apply 到 Entity.Data
 ```
 
-游戏数值通过 DataOS 修改，经 validator 检查后才进入 runtime。AI 修改数据后，验证命令是固定的（`Tools/run-dataos-validate.sh`）。
+游戏数值通过 DataOS 修改，经 validator 检查后才进入 runtime。AI 修改数据后，验证命令是固定的（`bash Data/DataOS/Tools/validate-dataos.sh`）。
 
 ---
 
@@ -395,8 +395,8 @@ Assert.That(entity.Data.Get<float>(DamageDataKeys.CurrentHp), Is.LessThan(100f))
 
 1. **路由优先**：修改前先查 `DocsAI/INDEX.md` 和 `CapabilityIndex.md`，确定修改归哪个 Capability 管
 2. **owner skill**：每个 Capability 有 owner skill（如 `damage-system`、`movement-system`），修改后检查对应 skill 路由
-3. **验证命令**：每次改动必须说明验证命令（`Tools/run-build.sh`、`Tools/run-tests.sh`、Godot scene smoke）
-4. **DataKey 同步**：新增/修改 DataKey 后，必须同步 DataOS descriptor，否则 `Tools/run-dataos-validate.sh` 会失败
+3. **验证命令**：每次改动必须说明验证命令（`dotnet build`、Godot scene smoke；<!-- TODO: 框架/游戏仓分离后创建 Workspace/Tools/run-build.sh 和 run-tests.sh -->）
+4. **DataKey 同步**：新增/修改 DataKey 后，必须同步 DataOS descriptor，否则 `bash Data/DataOS/Tools/validate-dataos.sh` 会失败
 5. **不要新增全局 query**：Capabiilty-owned selector 可注入，不要写 `EntityManager.GetAll()` 扫描
 
 ---

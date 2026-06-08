@@ -71,7 +71,7 @@ Games/BrotatoLike/          (游戏仓根 = project.godot 所在 = res:// 根)
 - 游戏仓拥有游戏资源 catalog，例如美术、玩法场景、HUD、游戏 DataOS resource refs。
 - 框架 `ResourceLoading` 可以作为统一加载 facade，但不代表框架 `ResourceGenerator` 默认扫描并写入所有游戏资源。
 - 后续 generator 应支持在游戏仓根运行，输出 game-local catalog；不要把 BrotatoLike 或其他游戏专属资源写入框架仓 `Data/ResourceManagement/ResourcePaths.cs`。
-- 移动资源目录后，用 `resource-path-migration` skill 在当前仓根替换旧路径并检查残留；不要跨框架仓、游戏仓和 `Games/*/SlimeAI/` submodule 混改。
+- 移动资源目录后，用 `project-filesystem` skill 在当前仓根替换旧路径并检查残留；不要跨框架仓、游戏仓和 `Games/*/SlimeAI/` submodule 混改。
 
 ## 场景归属
 
