@@ -2,7 +2,7 @@
 
 ## Summary
 
-- **pending**: 0
+- **pending**: 1
 - **active**: 0
 - **blocked**: 1
 - **done**: 38
@@ -17,7 +17,9 @@
 
 ## Pending
 
-无。
+| ID | Project | Title | Updated | Scope | Current Task |
+| --- | --- | --- | --- | --- | --- |
+| SDD-0040 | PRJ-0002 | Log AI-first Observation Hard Cutover | 2026-06-09 | SlimeAI | T1.1 |
 
 ## Active
 
@@ -104,6 +106,7 @@
 - SDD-0036 — Target Query Engine Hard Cutover
 - SDD-0037 — Resource Loading And Common Utilities Hard Cutover
 - SDD-0038 — Math Formula And Deterministic Random Cutover
+- SDD-0040 — Log AI-first Observation Hard Cutover
 
 ### Workspace/SDD
 
@@ -140,6 +143,7 @@
 - SDD-0029 — System Contract Manifest And Diagnostics Hardening
 - SDD-0030 — Component Code Composition And Contract Hardening
 - SDD-0036 — Target Query Engine Hard Cutover
+- SDD-0040 — Log AI-first Observation Hard Cutover
 
 ### bootstrap
 
@@ -295,6 +299,7 @@
 - SDD-0036 — Target Query Engine Hard Cutover
 - SDD-0037 — Resource Loading And Common Utilities Hard Cutover
 - SDD-0038 — Math Formula And Deterministic Random Cutover
+- SDD-0040 — Log AI-first Observation Hard Cutover
 
 ### hook
 
@@ -303,6 +308,10 @@
 ### input
 
 - SDD-0026 — Input Contract Manifest And Facade Hardening
+
+### log
+
+- SDD-0040 — Log AI-first Observation Hard Cutover
 
 ### math
 
@@ -329,6 +338,10 @@
 
 - SDD-0028 — ObjectPool Collision ParkedInTree Cutover
 - SDD-0033 — Non-Data GC Boundary Completion
+
+### observation
+
+- SDD-0040 — Log AI-first Observation Hard Cutover
 
 ### openspec-retirement
 
@@ -447,6 +460,7 @@
 - SDD-0036 — Target Query Engine Hard Cutover
 - SDD-0037 — Resource Loading And Common Utilities Hard Cutover
 - SDD-0038 — Math Formula And Deterministic Random Cutover
+- SDD-0040 — Log AI-first Observation Hard Cutover
 
 ### typed-contract
 

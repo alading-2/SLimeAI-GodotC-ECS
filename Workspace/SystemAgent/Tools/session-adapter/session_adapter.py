@@ -21,6 +21,10 @@ DEFAULT_CHAT_ROOT = REPO_ROOT / "Workspace/DocsAI/ChatHistory"
 DEFAULT_CODEX_MONTH_ROOT = Path("~/.codex/sessions/2026/06").expanduser()
 SUPPORTED_SOURCE_TOOLS = {"claude", "claude-ext", "codex", "opencode"}
 ENCRYPTED_PLACEHOLDER_KEYS = {"encrypted_content"}
+TRANSCRIPT_HEADING_TIMESTAMP_RE = re.compile(
+    r"^(### \d{6})\s+\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z(\s+.+)$",
+    re.MULTILINE,
+)
 
 
 class SessionAdapterError(RuntimeError):
@@ -246,6 +250,11 @@ def compact_text(text: str, limit: int = 48) -> str:
     return cleaned[:limit].rstrip() if len(cleaned) > limit else cleaned
 
 
+def strip_transcript_heading_timestamps(text: str) -> str:
+    """去掉可见 transcript 标题里的逐条时间戳，保留编号和记录类型。"""
+    return TRANSCRIPT_HEADING_TIMESTAMP_RE.sub(r"\1\2", text)
+
+
 def is_bootstrap_message(text: str) -> bool:
     stripped = (text or "").lstrip()
     return (
@@ -279,7 +288,10 @@ def choose_fence(text: str) -> str:
 
 
 def fenced(text: Any, language: str = "text") -> str:
-    rendered = text if isinstance(text, str) else json.dumps(text, ensure_ascii=False, indent=2)
+    if isinstance(text, str):
+        rendered = strip_transcript_heading_timestamps(text)
+    else:
+        rendered = json.dumps(sanitize_hidden_payload(text), ensure_ascii=False, indent=2)
     fence = choose_fence(rendered)
     return f"{fence}{language}\n{rendered}\n{fence}"
 
@@ -311,12 +323,14 @@ def sanitize_hidden_payload(value: Any) -> Any:
         return sanitized
     if isinstance(value, list):
         return [sanitize_hidden_payload(item) for item in value]
+    if isinstance(value, str):
+        return strip_transcript_heading_timestamps(value)
     return value
 
 
 def render_content(content: Any) -> str:
     if isinstance(content, str):
-        return content
+        return strip_transcript_heading_timestamps(content)
     if not isinstance(content, list):
         return fenced(sanitize_hidden_payload(content), "json")
 
@@ -328,7 +342,7 @@ def render_content(content: Any) -> str:
         item_type = str(item.get("type") or f"part-{index}")
         text = item.get("text")
         if isinstance(text, str):
-            sections.append(text)
+            sections.append(strip_transcript_heading_timestamps(text))
             continue
         sections.append(f"Content part `{item_type}`:\n\n{fenced(sanitize_hidden_payload(item), 'json')}")
     return "\n\n".join(sections)
@@ -685,11 +699,11 @@ def render_codex_record(index: int, record: dict[str, Any]) -> str:
 
     if record_type == "event_msg" and payload_type == "agent_message":
         phase = payload.get("phase") or ""
-        message = str(payload.get("message") or "")
+        message = strip_transcript_heading_timestamps(str(payload.get("message") or ""))
         return f"{header} `{phase}`\n\n{message}"
 
     if record_type == "event_msg" and payload_type == "user_message":
-        message = str(payload.get("message") or "")
+        message = strip_transcript_heading_timestamps(str(payload.get("message") or ""))
         return f"{header}\n\n{message}"
 
     return render_json_record(header, payload)
