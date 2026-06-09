@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-06-09T13:33:21+08:00",
+  "entries": [
+    {
+      "id": "codex:019eaab6-bfe7-74f2-9c22-61a43ce362c2",
+      "source_tool": "codex",
+      "source_adapter": "codbash",
+      "session_id": "019eaab6-bfe7-74f2-9c22-61a43ce362c2",
+      "title": "游戏开发流程Agent",
+      "slug": "游戏开发流程agent",
+      "cwd": "/home/slime/Code/SlimeAI/SlimeAI",
+      "started_at": "2026-06-09T12:49:24+08:00",
+      "updated_at": "2026-06-09T13:33:16+08:00",
+      "chat_history_path": "Workspace/DocsAI/ChatHistory/2026-06-09-1249-codex-游戏开发流程agent-019eaab6.md",
+      "source_path": "/home/slime/.codex/sessions/2026/06/09/rollout-2026-06-09T12-49-23-019eaab6-bfe7-74f2-9c22-61a43ce362c2.jsonl",
+      "evidence_level": "summary",
+      "tags": [
+        "systemagent",
+        "session-adapter"
+      ]
+    }
+  ]
+}

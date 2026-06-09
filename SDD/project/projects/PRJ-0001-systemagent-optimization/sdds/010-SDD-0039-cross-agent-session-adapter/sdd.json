@@ -1,0 +1,51 @@
+{
+  "id": "SDD-0039",
+  "slug": "cross-agent-session-adapter",
+  "title": "Cross-agent Session Adapter",
+  "status": "done",
+  "type": "workflow",
+  "created_at": "2026-06-09",
+  "updated_at": "2026-06-09",
+  "scope": "Workspace/SystemAgent",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI/SlimeAI"
+  ],
+  "affected_areas": [
+    "Workspace/SystemAgent/Tools/session-adapter",
+    "Workspace/DocsAI/ChatHistory",
+    "SDD/project/projects/PRJ-0001-systemagent-optimization"
+  ],
+  "tags": [
+    "systemagent",
+    "session-adapter"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 10,
+    "total_tasks": 10,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "本 SDD 新增 SystemAgent CLI 工具行为，需要可观察的输入、输出和失败标准。"
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0001",
+  "project_order": 10,
+  "shared_design_refs": [
+    "../../design/INDEX.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-06-09 13:38",
+      "summary": "python3 Workspace/SystemAgent/Tools/session-adapter/session_adapter.py --help: passed; python3 Workspace/SystemAgent/Tools/session-adapter/session_adapter.py list --repo . --limit 5: listed current repo sessions; python3 Workspace/SystemAgent/Tools/session-adapter/session_adapter.py summarize --session 019eaab6-bfe7: generated Workspace/DocsAI/ChatHistory/index.json and sidecar; python3 -m py_compile Workspace/SystemAgent/Tools/session-adapter/session_adapter.py: passed; python3 Workspace/SDD/sdd.py validate SDD-0039: 0 error / 0 warning; python3 Workspace/SDD/sdd.py validate --root SDD/project/projects/PRJ-0001-systemagent-optimization --all: 0 error / 0 warning; git diff --check scoped files: passed"
+    }
+  ]
+}

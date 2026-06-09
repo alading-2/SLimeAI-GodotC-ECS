@@ -5,14 +5,14 @@
 - **pending**: 0
 - **active**: 0
 - **blocked**: 1
-- **done**: 37
+- **done**: 38
 - **projects**: 2
 
 ## Projects
 
 | ID | Title | Status | Bucket | Current SDD | Path |
 | --- | --- | --- | --- | --- | --- |
-| PRJ-0001 | SystemAgent Optimization | active | projects | SDD-0008 | SDD/project/projects/PRJ-0001-systemagent-optimization |
+| PRJ-0001 | SystemAgent Optimization | active | projects | SDD-0039 | SDD/project/projects/PRJ-0001-systemagent-optimization |
 | PRJ-0002 | ECS Framework Optimization | active | projects | none | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
 
 ## Pending
@@ -43,6 +43,7 @@
 | SDD-0008 | PRJ-0001 | Workflow Skill Role Layered Execution | 2026-05-25 | Workspace/SystemAgent | done |
 | SDD-0009 | PRJ-0001 | DesignDiscovery and DesignCritic Capability | 2026-05-25 | Workspace/SystemAgent | done |
 | SDD-0010 | PRJ-0001 | Git Worktree Subagent Safety Strategy | 2026-05-25 | Workspace/SystemAgent | completed |
+| SDD-0039 | PRJ-0001 | Cross-agent Session Adapter | 2026-06-09 | Workspace/SystemAgent | done |
 | SDD-0011 | PRJ-0002 | DataKey Type Safety and Runtime Snapshot Loader | 2026-05-27 | SlimeAI | done |
 | SDD-0012 | PRJ-0002 | Data System Full Rewrite - Catalog TDD Slice | 2026-05-28 | SlimeAI | done |
 | SDD-0013 | PRJ-0002 | DataOS Descriptor Authoring and Snapshot Schema | 2026-05-28 | SlimeAI | done |
@@ -119,6 +120,7 @@
 - SDD-0008 — Workflow Skill Role Layered Execution
 - SDD-0009 — DesignDiscovery and DesignCritic Capability
 - SDD-0010 — Git Worktree Subagent Safety Strategy
+- SDD-0039 — Cross-agent Session Adapter
 
 ## By Tag
 
@@ -391,6 +393,10 @@
 - SDD-0005 — SDD CLI Source Modularization
 - SDD-0023 — SystemAgent Root Migration Rule Sync
 
+### session-adapter
+
+- SDD-0039 — Cross-agent Session Adapter
+
 ### skill
 
 - SDD-0008 — Workflow Skill Role Layered Execution
@@ -417,6 +423,7 @@
 - SDD-0008 — Workflow Skill Role Layered Execution
 - SDD-0009 — DesignDiscovery and DesignCritic Capability
 - SDD-0010 — Git Worktree Subagent Safety Strategy
+- SDD-0039 — Cross-agent Session Adapter
 - SDD-0023 — SystemAgent Root Migration Rule Sync
 
 ### target-selector

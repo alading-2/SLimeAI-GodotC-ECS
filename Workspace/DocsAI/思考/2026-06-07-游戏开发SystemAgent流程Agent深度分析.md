@@ -5,6 +5,8 @@
 > 位置：Workspace 级思考文档，不是 SystemAgent 正文规则。
 > 结论摘要：SystemAgent 可以做成，但不应该从零做一个 Warp/IDE 替代品。更稳的路线是把 Codex 作为执行基座，把 SlimeAI 的 SDD、DocsAI、git boundary、验证、复盘和会话索引做成项目内 SystemAgent 控制层。
 
+> 2026-06-08 更新：本文是历史长分析，保留证据和上下文。当前精简裁决见 `SDD/project/projects/PRJ-0001-systemagent-optimization/design/优化/2026-06-08-SystemAgent工作流内化与会话记录优化.md`。后续不要把本文中的 Warp / 外层 orchestrator / LangGraph 扩展讨论当作当前执行建议。
+
 ## Goal
 
 本轮要判断的问题：

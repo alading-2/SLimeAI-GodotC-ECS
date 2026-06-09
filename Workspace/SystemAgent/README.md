@@ -22,7 +22,7 @@ README → 选 Route → 按 Route phase 读 Actors / Rules → 用 Tools 验
 | Routes/ | 6 个执行路由 |
 | Actors/ | 13 个执行者 + DeepThink 方向确认能力 |
 | Rules/ | 行为约束：ReviewGates、VerdictVocabulary、Git、Subagent、AIConfig、Boundary、TDD、Philosophy、Documentation |
-| Tools/ | skill-test lint、hook smoke、BDD 场景格式 |
+| Tools/ | skill-test lint、hook smoke、BDD 场景格式、session-adapter 会话整理 |
 | Registry/ | 机器索引（manifest、catalog）+ 运行配置 |
 
 ## 边界

@@ -1,17 +1,35 @@
-# Logger 设计文档 (高级 C# 版)
+# Logger 设计文档 (legacy 高级 C# 版)
 
-**核心理念**：专业级游戏开发日志系统。支持实例初始化、分级过滤、按类过滤、格式配置，最大化开发效率。
+> status: legacy-reference
+> currentEntry: `DocsAI/ECS/Tools/Logger/README.md`
+> currentDesign: `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/README.md`
+> lastReviewed: 2026-06-09
+
+**历史核心理念**：专业级游戏开发日志系统。支持实例初始化、分级过滤、按类过滤、格式配置，最大化开发效率。
+
+本文保留旧人工调试方案，不再作为 AI-first Log 目标架构。当前裁决是：AI-first 默认使用 C# stdout summary + buffered JSONL file；`GD.PrintRich` / `GD.PushWarning` / `GD.PushError` 只作为可选 `GodotEditorSink`。
 
 ---
 
 ## 1. 为什么选择此方案？
 
-### 1.1 为什么包装 `GD.PrintRich` 而不是使用标准 C# Console？
+### 1.1 历史方案为什么包装 `GD.PrintRich`？
 
 在 Godot 开发环境中，编辑器的 **Output (输出)** 面板是开发者最常查看的窗口。
 
 - **Godot 的 `GD.PrintRich`**：支持 **BBCode** 颜色标签。这意味着我们可以让 `ERROR` 显示为红色，`SUCCESS` 显示为绿色，`DEBUG` 显示为青色。这种视觉区分能极大地提高阅读日志的效率。
 - **标准 C# `Console.WriteLine`**：在 Godot 编辑器中显示为单色纯文本，无法快速区分重要信息。
+
+这个判断只适用于“人类在 Godot editor 里看彩色日志”的场景。AI-first 场景需要结构化 JSONL、artifact 和稳定 stdout 摘要，不需要 BBCode 颜色。因此后续实现不应继续把 `GD.PrintRich` 当默认输出。
+
+当前 sink 裁决：
+
+| Sink | 默认 | 说明 |
+| --- | --- | --- |
+| `jsonl-buffered-file` | 开 | AI 详细事实源。 |
+| `stdout-summary` | 开 | runner 摘要和关键错误。 |
+| `memory/artifact` | 开 | Validation 和 scene gate。 |
+| `godot-editor` | 关 | 人工 editor debug，可选调用 Godot API。 |
 
 ### 1.2 为什么需要实例和过滤？
 
@@ -107,6 +125,8 @@ private static readonly Log Log = new Log("CriticalSystem", LogLevel.Trace);
 
 ## 4. 最佳实践
 
+以下最佳实践只适用于 legacy API。新 Log hard cutover 时应以 PRJ-0002 Log 设计包为准。
+
 1.  **开发阶段**：将 `GlobalLevel` 设为 `Debug` 或 `Trace`。
 2.  **发布阶段**：无需修改代码，`Trace` 和 `Debug` 调用会被编译器自动移除。建议将 `GlobalLevel` 设为 `Info` 或 `Warning` 以防万一。
 3.  **调试特定 Bug**：
@@ -117,6 +137,8 @@ private static readonly Log Log = new Log("CriticalSystem", LogLevel.Trace);
 ---
 
 ## 5. 性能与优化
+
+以下性能说明只覆盖 legacy `Trace/Debug` 条件编译和等级过滤，不代表高密度 AI-first 日志的完整性能策略。新策略要求 `IsEnabled` / lazy fields / buffered JSONL / stdout summary，不能把详细日志逐条刷 `Console.WriteLine`。
 
 ### 5.1 Release 模式零损耗
 

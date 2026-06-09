@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-08 01:53",
+  "generated_at": "2026-06-09 13:38",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -18,12 +18,12 @@
       "slug": "systemagent-optimization",
       "title": "SystemAgent Optimization",
       "status": "active",
-      "updated_at": "2026-05-25",
+      "updated_at": "2026-06-09",
       "scope": "Workspace/SystemAgent",
       "tags": [
         "systemagent"
       ],
-      "current_sdd": "SDD-0008",
+      "current_sdd": "SDD-0039",
       "bucket": "projects",
       "path": "SDD/project/projects/PRJ-0001-systemagent-optimization"
     },
@@ -281,6 +281,28 @@
       "project_order": 9,
       "current_task": "completed",
       "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/009-SDD-0010-git-worktree-subagent-safety-strategy"
+    },
+    {
+      "id": "SDD-0039",
+      "slug": "cross-agent-session-adapter",
+      "title": "Cross-agent Session Adapter",
+      "status": "done",
+      "type": "workflow",
+      "updated_at": "2026-06-09",
+      "scope": "Workspace/SystemAgent",
+      "affected_areas": [
+        "Workspace/SystemAgent/Tools/session-adapter",
+        "Workspace/DocsAI/ChatHistory",
+        "SDD/project/projects/PRJ-0001-systemagent-optimization"
+      ],
+      "tags": [
+        "systemagent",
+        "session-adapter"
+      ],
+      "project_id": "PRJ-0001",
+      "project_order": 10,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/010-SDD-0039-cross-agent-session-adapter"
     },
     {
       "id": "SDD-0011",

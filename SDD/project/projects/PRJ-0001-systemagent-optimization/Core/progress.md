@@ -6,10 +6,10 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-05-25 14:16
+- **Updated**: 2026-06-09 13:40
 - **Current SDD**: none
-- **Last Conclusion**: PRJ-0001 的 SystemAgent 优化子 SDD 队列已完成：SDD-0006 到 SDD-0010 均为 done，默认入口、Hook/Gate、Workflow/Skill/Role 分层、DesignDiscovery/DesignCritic、Git/worktree/subagent 策略已落地。
-- **Next Action**: 如需继续做物理目录合并、写入型 subagent dispatcher、更多 capability 正文或 workspace hygiene，应新建独立 SDD，不混入本项目完成态。
+- **Last Conclusion**: `SDD-0039 Cross-agent Session Adapter` 已完成。第一版只读 `list/index/summarize` 可用，默认通过本地 `codbash` 读取 Claude/Codex 会话并生成 `Workspace/DocsAI/ChatHistory/index.json` 和 Markdown sidecar；OpenCode 保留支持路径但不要求本机真实样例。
+- **Next Action**: 后续增强另建 SDD：Claude/OpenCode 高保真导出、`codlogs --include-tool-results` 自动化、retrospective 可选接入，或只读资料 subagent pilot。
 - **Open Blockers**: none
 ## Project Status Board
 
@@ -25,6 +25,7 @@
 | SDD-0008 | done | `02-Workflow与Skill触发优化方案.md`, `09-WorkflowSkillRole分层模型.md` | Workflow / Skill / Role 分层执行完成 |
 | SDD-0009 | done | `07-DesignDiscovery与DesignCritic方案.md`, `09-WorkflowSkillRole分层模型.md` | DesignDiscovery capability 与 DesignCritic 条件角色已落地 |
 | SDD-0010 | done | `04-Git与Worktree策略.md`, `10-Subagent使用场景与采纳策略.md` | Git / Worktree / Subagent 安全策略已落地 |
+| SDD-0039 | done | `优化/2026-06-08-SystemAgent工作流内化与会话记录优化.md`, `优化/2026-06-08-AI会话管理工具选型分析.md`, `会话记录适配器参考设计/2026-06-09-参考项目驱动的Cross-agent-Session-Adapter设计.md` | 第一版 Cross-agent Session Adapter 已完成；只读 `list/index/summarize` 可用，OpenCode 支持路径不阻塞 |
 
 ## Timeline
 
@@ -124,3 +125,59 @@
 - **Evidence**: 6 个 `Workspace/SystemAgent/Workflows/*.md` 均包含 Route/task_size/SDD strategy/Phases；`Catalog/workflow-catalog.yaml` 新增 route_contract 并把非启动事实源移入 conditional_read；`.ai-config/skills/systemagent` wrapper 检查未发现 workflow 正文类 heading 膨胀；最终验证见 SDD-0008 `progress.md`。
 - **Impact**: SystemAgent 目录不再被解释成启动必读清单，后续任务可以从短 route 输出、选定 workflow 和当前 SDD 恢复上下文。
 - **Resume**: PRJ-0001 进入完成态；后续新增 dispatcher、写入型 subagent 或更大 IA 合并需新建独立 SDD。
+
+### P013 — 2026-06-08 15:40 — analysis
+
+- **Context**: 用户复盘 2026-06-07 游戏开发 SystemAgent 流程 Agent 长分析，指出外层 agent / Warp 改造方向已经过时，真正重点是完善当前项目内 SystemAgent。
+- **Conclusion**: 新增 `design/优化/2026-06-08-SystemAgent工作流内化与会话记录优化.md`，裁决为：不做外层 AI CLI 管理 agent；不魔改 Warp；会话记录先做只读索引和摘要；资料搜索可用只读 subagent；任务拆分继续由设计交流和 SDD 承担。会话范围已被 P016 扩展为 Claude Code / Codex / OpenCode。
+- **Evidence**: Codex manual 本地缓存已刷新为 current；`codex --version` 为 `codex-cli 0.137.0`；当前仓存在 `.codex/skills/` 但没有 `.codex/agents/` / `.codex/hooks.json`；`Workspace/DocsAI/ChatHistory/` 当前为空。
+- **Impact**: 后续 SystemAgent 优化收敛为小型 `session-ledger + read-only research subagent pilot`，避免误入外层 orchestrator、hook 重任务或写入型 dispatcher。
+- **Resume**: 已被 P016 修正：第一阶段不再是 Codex-only，默认覆盖 Claude Code / Codex / OpenCode；仍不接 hook 自动抓取。
+
+### P014 — 2026-06-08 17:20 — external-research
+
+- **Context**: 用户指出抓取并管理 AI 对话记录很可能已有现成工具，要求搜索 web、Context7 和 GitHub，避免重复造轮子。
+- **Conclusion**: 已更新 `design/优化/2026-06-08-SystemAgent工作流内化与会话记录优化.md`：会话管理第一阶段改为复用现成工具，不从零写 transcript parser。当时默认优先评估并包装 `codlogs`，该默认值已被 P016 修正为 `codbash` 跨工具入口 + SlimeAI 薄脚本；`claude-replay` 作为可选 HTML replay / 人工审查工具；`Langfuse` / `Phoenix` 等 LLM observability 平台只作为自建 agent trace 参考。
+- **Evidence**: GitHub / web 查到 `tobitege/codlogs`、`es617/claude-replay`、`jazzyalex/agent-sessions`、`pugliatechs/polpo`、`graykode/abtop`、`entireio/cli`、`langfuse/langfuse`、`Arize-ai/phoenix` 等项目；Context7 命中 `Langfuse` 和 `Arize Phoenix` 高信誉文档；本机只读执行 `node /tmp/systemagent-session-research-KUK6Bz/codlogs/codlogs-sessions.cjs /home/slime/Code/SlimeAI/SlimeAI --json`，扫描到当前仓 76 个 Codex sessions。
+- **Impact**: 后续候选 SDD 从 `session-ledger` 自研脚本改为 session tool adapter + read-only research pilot，重点是 adapter、摘要字段、ChatHistory 落盘协议和安全边界。
+- **Resume**: 已被 P016 修正：默认第一阶段覆盖 Claude Code / Codex / OpenCode；只读调用现成工具，不接 hook 自动抓取，不写入原始 session 存储，不复制完整原始记录。
+
+### P015 — 2026-06-08 20:18 — tool-selection
+
+- **Context**: 用户要求继续深度分析已发现项目，按 Linux、实用、能满足需求和 stars/活跃度综合排序，并新建专项文档。
+- **Conclusion**: 新增 `design/优化/2026-06-08-AI会话管理工具选型分析.md`。当时结论为：如果只能选一个工具先试，推荐 `codbash`；SystemAgent 机器 adapter 仍推荐候选 `codlogs`。该 adapter 默认值已被 P016 修正为跨工具 `codbash` + SlimeAI 薄脚本，`codlogs` 只作 Codex 专项补充。
+- **Evidence**: 通过 GitHub CLI 检查 `codbash`、`codlogs`、`tracebase`、`claude-replay`、`abtop`、`llm-wiki`、`openai/euphony`、`memento`、`entire`、`agent-sessions`、`polpo`、`codeg` 等项目的 README、stars、updated、license、language、Linux/CLI 支持；浅克隆 `codbash` 检查 `package.json`、CLI 命令和 Codex session 数据源实现。
+- **Impact**: 后续候选 SDD 应拆成“获取 / 搜索 / handoff”和“整理 / 命名 / 落盘”两层：统一入口先试 `codbash`，`codlogs` 仅作 Codex 专项补充；`claude-replay` 仅作 replay artifact，`abtop` 仅作运行态监控，`tracebase` / `llm-wiki` 后置。
+- **Resume**: 已被 P016 修正：默认第一阶段覆盖 Claude Code / Codex / OpenCode，不启用 `codbash` 删除/launch 类操作，不接 hook，不改变 git workflow。
+
+### P016 — 2026-06-08 22:00 — requirement-correction
+
+- **Context**: 用户补充指出此前 Codex-only 边界错误，第一阶段必须跨 Claude Code / Codex / OpenCode；对话记录文件名要改但不需要一次性处理全部历史；询问是否需要改上游源码，以及获取和整理是否应拆成两层。
+- **Conclusion**: 已同步 `design/优化/2026-06-08-SystemAgent工作流内化与会话记录优化.md` 和 `design/优化/2026-06-08-AI会话管理工具选型分析.md`：`codbash` 是第一阶段统一入口；SlimeAI 自己写薄层 `session-adapter` 负责统一 schema、命名和 `Workspace/DocsAI/ChatHistory/` sidecar；`codlogs` 只作 Codex 专项补充；不改 Claude Code / Codex / OpenCode 原始 session 文件名。
+- **Evidence**: Context7 官方 OpenCode 文档确认 `opencode session list` 和 `opencode export [sessionID]`；`codbash` README 与源码确认 Claude Code / Codex / OpenCode 支持、OpenCode SQLite 数据源和 `codbash handoff <id> --out=file.md`；GitHub CLI 复核 `codbash` stars 219、MIT、2026-06-08 更新，`codlogs` stars 16、MIT、2026-06-08 更新，`claude-replay` stars 709、MIT、2026-06-04 更新，`abtop` stars 2577、MIT、2026-06-08 更新。
+- **Impact**: 后续实现命名为 Cross-agent Session Adapter；增量处理当前 repo 最近 N 个、指定 session id / 文件路径或当前任务完成后的单个 session，不做全量历史导入，不改上游源码，不接 hook 自动抓取。
+- **Resume**: 用户确认后创建独立 SDD；默认强制支持 Claude Code / Codex / OpenCode，获取交给 `codbash` / 官方 CLI / `codlogs`，整理由 SlimeAI 薄脚本完成，原始 session 只记录来源和路径。
+
+### P017 — 2026-06-09 12:30 — design
+
+- **Context**: 用户补充“更准确的说法是参考这些项目”，要求在 PRJ-0001 design 下新建文件夹并生成详细设计文档，基于 `Workspace/Resources/tool` 中已 clone 的 `codbash`、`codlogs`、`tracebase`。
+- **Conclusion**: 新增 `design/会话记录适配器参考设计/`。设计裁决从“是否魔改 `codbash`”收敛为“参考项目能力，SlimeAI 实现薄层 adapter”：`codbash` 只作为跨 Claude Code / Codex / OpenCode 的发现 / 搜索 / handoff 参考；`codlogs` 作为 Codex 大 session / tool result / Markdown-HTML 导出的高保真参考；`tracebase` 只作为后续 failure、context waste、scorecard、redacted export 的复盘维度参考。
+- **Evidence**: 本机运行 `node Workspace/Resources/tool/codbash/bin/cli.js stats` 扫到 446 sessions，其中 Claude 152、Codex 294；`codbash list 5` 能列出当前仓最近会话；`codlogs-sessions.cjs --help` 确认 `--json`、`--md`、`--html`、`--include-tool-results`；`tracebase/bin/traces.js --help` 因缺 `jszip` 失败，证明它不是零接入第一阶段工具。源码证据显示 `codbash loadSessionDetail` 和 `handoff` 有消息/内容截断，因此不能作为最终复盘保真来源。
+- **Impact**: 后续实现 SDD 可以直接按设计文档的 Layer 1-5、统一 schema、ChatHistory sidecar、阶段验收推进；默认仍不 fork 上游、不改原始 session、不接 hook、不全量导入历史、不复制完整 transcript。
+- **Resume**: 下一步如用户确认实现，创建独立 SDD，目标为 `Workspace/SystemAgent/Tools/session-adapter/`，先交付 `list/index/summarize` 三个只读命令和 `Workspace/DocsAI/ChatHistory/index.json` + Markdown sidecar。
+
+### P018 — 2026-06-09 13:25 — planning
+
+- **Context**: 用户确认“OpenCode 只是支持，暂时没用 OpenCode”，并要求按推荐方案生成 SDD 并执行。
+- **Conclusion**: 已创建 `SDD-0039 Cross-agent Session Adapter` 并冻结第一版范围：手动触发、只读、三命令 `list/index/summarize`；OpenCode 缺真实样例不阻塞第一版验收。
+- **Evidence**: `python3 Workspace/SDD/sdd.py new "Cross-agent Session Adapter" --project PRJ-0001 ...` 生成 `sdds/010-SDD-0039-cross-agent-session-adapter`；已补充 SDD 设计、任务、BDD、notes 和 progress。
+- **Impact**: PRJ-0001 当前执行入口切到 SDD-0039；实现范围限定为 `Workspace/SystemAgent/Tools/session-adapter/`、`Workspace/DocsAI/ChatHistory/` 和 SDD/项目状态文档。
+- **Resume**: 从 SDD-0039 T2.1 继续实现工具入口；保持不改参考项目源码、不接 hook、不复制完整 transcript。
+
+### P019 — 2026-06-09 13:40 — validation
+
+- **Context**: 完成 `SDD-0039 Cross-agent Session Adapter`。
+- **Conclusion**: 第一版只读 `session-adapter` 已落地：`list` 可列出当前仓 Claude/Codex sessions，`index/summarize` 可生成 ChatHistory sidecar 和 `index.json`；OpenCode 保留支持路径，不要求本机样例。
+- **Evidence**: `session_adapter.py --help` 通过；`list --repo . --limit 5` 输出当前仓 5 个 session；`summarize --session 019eaab6-bfe7` 生成 `Workspace/DocsAI/ChatHistory/2026-06-09-1249-codex-游戏开发流程agent-019eaab6.md` 和 `index.json`；`python3 -m py_compile ...` 通过；`python3 Workspace/SDD/sdd.py validate SDD-0039` 为 0 error / 0 warning；`python3 Workspace/SDD/sdd.py validate --root SDD/project/projects/PRJ-0001-systemagent-optimization --all` 为 0 error / 0 warning。
+- **Impact**: PRJ-0001 会话管理方向已有可用最小工具；后续不应再讨论魔改 `codbash` 作为第一阶段路线。
+- **Resume**: 后续增强另建 SDD：Claude/OpenCode 高保真导出、`codlogs --include-tool-results` 自动化、retrospective 可选接入或只读资料 subagent pilot。

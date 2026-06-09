@@ -66,6 +66,13 @@
 | `Tool/Input/01-现状证据与AI-first裁决.md` | input-research-decision | current | 2026-06-01 | 当前 InputManager、project.godot、调用点分散、DocsAI 漂移和外部输入框架对照裁决 |
 | `Tool/Input/02-目标架构与优化路线.md` | input-architecture-roadmap | current | 2026-06-01 | InputActionId、InputManifest、InputContext、typed facade 和分阶段优化路线 |
 | `Tool/Input/03-调用点迁移与验证计划.md` | input-migration-test-plan | current | 2026-06-01 | Gameplay/UI/Debug/Test 输入调用点分层、grep gate、构建测试和 Godot 场景验证计划 |
+| `Tool/10.Log/README.md` | log-design-index | current | 2026-06-09 | Log AI-first Observation 设计包入口；裁决 Log 是结构化观测入口，不是字符串打印工具，默认 sink 为 C# stdout summary + buffered JSONL file，Godot editor sink 默认关闭 |
+| `Tool/10.Log/01-现状分析与AI-first裁决.md` | log-research-decision | current | 2026-06-09 | 基于当前 `Log.cs`、测试 PASS/FAIL 分裂、runner 字符串扫描、AiFirst Observation 原型、Context7/Web 资料的现实检查和 AI-first 裁决 |
+| `Tool/10.Log/02-目标架构与数据契约.md` | log-architecture-contract | current | 2026-06-09 | 定义 `LogEntry`、severity/outcome/validationStatus、phase、`OperationTrace`、C# stdout/file sink、optional Godot editor sink、analyzer 输出和字段禁用规则 |
+| `Tool/10.Log/03-控制面与CLI设计.md` | log-control-cli | current | 2026-06-09 | 定义 `Config/Log` profile/rules/overrides、sink 控制、`logctl` 临时覆盖、AI 建议回写、预算和环境变量注入 |
+| `Tool/10.Log/04-测试统一与Observation接入.md` | log-validation-observation | current | 2026-06-08 | 定义 ValidationSession、CheckResult、artifact 主事实源、runner resultSource 和 `GD.PushError` sink 边界 |
+| `Tool/10.Log/05-调用点迁移与验证计划.md` | log-migration-test-plan | current | 2026-06-08 | 定义 Logger core、Validation helper、runner analyzer、业务 flow、owner Log 文档、BDD 和 grep gate |
+| `Tool/10.Log/06-功能OwnerLog文档与分析流程.md` | log-owner-analysis-template | current | 2026-06-08 | 定义每个 owner 的 `Log.md` 模板、flow 聚合规则、analyzer 目录和 AI 固定分析流程 |
 | `Tool/Timer/README.md` | timer-design-index | current | 2026-06-02 | Timer 最终架构裁决入口；保留 TimerManager facade，内部改纯 C# scheduler，补 debug diagnostics 和压力场景门禁 |
 | `Tool/Timer/01-现状证据与AI-first裁决.md` | timer-research-decision | current | 2026-06-02 | 当前 TimerManager/GameTimer 热路径、Debug/压力验证缺口、外部计时器资料对照和采纳/拒绝裁决 |
 | `Tool/Timer/02-目标架构与优化路线.md` | timer-architecture-roadmap | current | 2026-06-02 | 纯 C# TimerScheduler、min-heap、handle、owner/purpose、clock、主线程派发、debug diagnostics 和 timing wheel 后续触发条件 |

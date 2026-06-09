@@ -6,10 +6,10 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-07
+- **Updated**: 2026-06-09
 - **Current SDD**: none
-- **Last Conclusion**: SDD-0035 至 SDD-0038 已按顺序完成剩余 Tools hard cutover：Runtime mount + NodeLifecycle、TargetQueryEngine、ResourceLoading + CommonUtilities、Math formula + deterministic RNG 均已完成，旧 `ParentManager`/`ParentNames`、`EntityTargetSelector`/`PositionTargetSelector`、`CommonTool`、`MyMath`、`GeometryCalculator` current 入口已退出。
-- **Next Action**: 后续继续 PRJ-0002 时，优先从仍 blocked 的 SDD-0027 Timer scene validation 或新的 profiler/owner 证据驱动小切片恢复；剩余 Tools 设计包不再作为 pending 实施入口。
+- **Last Conclusion**: 用户已确认“C# 输出链路更适合 AI-first 默认主链路”的分析，但裁决不是把所有日志逐条改成 `Console.WriteLine`，而是以 C# structured sink 为默认：C# buffered JSONL file 作为详细事实源、C# stdout summary 作为 runner 摘要、memory/artifact 作为 Validation 事实源；`GD.PrintRich` / Godot Output 面板只作为可选人工 editor debug sink，默认关闭。新测试和 Godot scene gate 规则要求 artifact / structured-log 为主事实源，旧 PASS/FAIL stdout marker 只作 fallback。当前只改设计文档和 skill 文档，不改源码/runner。
+- **Next Action**: 若用户确认“按推荐执行”，创建 `Log AI-first Observation Hard Cutover` 执行型 SDD；第一批应同批改 Logger core、Validation helper、runner analyzer 和测试 PASS/FAIL 事实源。若暂不执行，则本设计包作为后续 Log/Test/Debug/Observation 项目级入口。
 - **Open Blockers**: none
 
 ## Project Status Board
@@ -36,6 +36,7 @@
 | SDD-0036 | done | `design/Tool/其他Tool/05-TargetSelector查询契约.md` | Target Query Engine Hard Cutover 已完成；`TargetQueryEngine` / diagnostics / candidate source / deterministic RNG 成为 current API，旧 list-only facade 删除 |
 | SDD-0037 | done | `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` | Resource Loading And Common Utilities Hard Cutover 已完成；`ResourceLoading` current facade、strict lookup、source diagnostics、ResourceCatalogDiagnostics 和 CommonUtilities 边界已收口 |
 | SDD-0038 | done | `design/Tool/其他Tool/03-Math目标架构与验证.md` | Math Formula And Deterministic Random Cutover 已完成；`ProbabilityTool` / `DeterministicRandom` 接管概率随机，Damage/Ability 公式归 owner，`MyMath` / `GeometryCalculator` 删除 |
+| TBD | proposed | `design/Tool/10.Log/` | Log AI-first Observation hard cutover：结构化日志、flow 聚合、C# stdout summary + buffered JSONL file、Godot editor sink optional、profile/CLI、Validation artifact、runner analyzer、owner Log 文档和固定 AI 分析流程；等待用户确认后创建执行型 SDD |
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
 | SDD-0028 | done | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已完成；后续对象池改动按 ObjectPool owner 新建小切片 |
 | SDD-0029 | done | `design/Runtime/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |
@@ -434,3 +435,24 @@
 - **Evidence**: `sdds/025-SDD-0035-runtime-mount-and-node-lifecycle-hard-cutover/`、`sdds/026-SDD-0036-target-query-engine-hard-cutover/`、`sdds/027-SDD-0037-resource-loading-and-common-utilities-hard-cutover/`、`sdds/028-SDD-0038-math-formula-and-deterministic-random-cutover/` 均包含 README、design、tasks、bdd、progress、notes 和 `execution-prompt.md`；`project.json`、`Core/roadmap.md`、本文件和项目 README 已登记。
 - **Impact**: 后续实现不应再从聊天记忆或“建议新建 SDD”恢复；每个执行会话直接读对应 SDD 的 `execution-prompt.md` 并按 tasks 小步推进。当前没有运行时代码改动。
 - **Resume**: 推荐执行顺序固定为 SDD-0035 -> SDD-0036 -> SDD-0037 -> SDD-0038；下一步从 SDD-0035 T1.1 readiness baseline 开始。
+
+### P051 — 2026-06-08 — log-ai-first-observation-deepthink
+
+- **Context**: 用户要求以 AI-first ECS 思想重新深度分析 Log 工具，广泛参考 `SlimeAI-AiFirst/GameOS/Observation`、DocsAI 方向文档、`design/Tool/10.Log`、godot-scene-test skill、当前 ECS Log/Test 代码、Web 和 Context7 资料；允许完全重构，不考虑兼任。
+- **Conclusion**: 已完成 Log 设计包升级：Log 不再定位为字符串打印工具，而是 AI-first Observation 入口。目标架构包含结构化 `LogEntry`、`severity/outcome/validationStatus` 拆分、`runElapsedMs/frame/physicsFrame/phase` 时间语义、`OperationTrace` flow 聚合、`Config/Log` profile + CLI override、Validation artifact、runner analyzer 分目录、owner `Log.md` 模板和固定 AI 分析流程。测试 PASS/FAIL 不再依赖 `GD.Print` / `GD.PushError` / `[PASS]` / `[FAIL]` 文本作为主事实源。
+- **Evidence**: `design/Tool/10.Log/README.md`、`01-现状分析与AI-first裁决.md`、`02-目标架构与数据契约.md`、`03-控制面与CLI设计.md`、`04-测试统一与Observation接入.md`、`05-调用点迁移与验证计划.md`、`06-功能OwnerLog文档与分析流程.md`、`design/INDEX.md`、项目 `README.md`、`Core/roadmap.md`、本 `Core/progress.md`、`Core/notes.md`、`DocsAI/ECS/Tools/Logger/README.md` 已同步。
+- **Research Adoption**: externalResources enabled=`official-docs, web, local-aifirst-reference`，scope=Context7 `/godotengine/godot-docs` `GD.PushError` / `GD.PushWarning` / `Engine.GetProcessFrames` / `Engine.GetPhysicsFrames` / `Time.GetTicksMsec` / `Time.GetTicksUsec`，OpenTelemetry Logs Data Model，Microsoft .NET logging category/filter/structured logging/high-performance logging，Google Cloud structured logging，本地 `SlimeAI-AiFirst/GameOS/Observation`；copiedCodeOrAssets=none；adoption=采纳结构化字段、category/filter、correlation、JSONL/artifact、phase/frame/run elapsed、日志预算和 analyzer 分层，不复制外部 exporter/collector 或 `ILogger` API。
+- **Must Confirm**: 1. 是否创建一个执行型 SDD 同批 hard cutover Logger core、Validation helper 和 runner analyzer；默认是。2. 是否采用 `Config/Log/` 作为 profile/rules/overrides 事实源；默认是。3. 是否把 `Success` 从 severity 删除，改为 `outcome=Succeeded` / `validationStatus=pass`；默认是。
+- **Impact**: 后续 AI 不应再建议只提高全局 Log level 或只给 `Log.cs` 加颜色/timestamp；也不应把全量 stdout 直接交给 AI 分析。所有新增高频日志前必须有 owner Log 文档或 README `## Log` 规则。
+- **Resume**: PRJ-0002 当前无 active 子 SDD；若用户确认执行，创建 `Log AI-first Observation Hard Cutover`，从 `design/Tool/10.Log/README.md -> 01 -> 02 -> 03 -> 04 -> 05 -> 06` 进入。
+
+### P052 — 2026-06-09 — log-sink-csharp-stdout-jsonl-decision
+
+- **Context**: 用户指出当前日志通过 Godot API 打印是为了 Godot editor 颜色显示；现在目标是 AI 分析，不需要颜色，应重新思考是否使用 C# stdout/file 输出。
+- **Conclusion**: 已补充 sink 裁决：AI-first 默认 sink 应从 Godot rich print 迁出。详细结构化事实默认写 C# buffered JSONL file；runner 可见摘要默认写 C# stdout summary；Validation 使用 memory/artifact sink；`GD.PrintRich` / `GD.PushWarning` / `GD.PushError` 只由可选 `GodotEditorSink` 调用，profile 默认关闭。不能简单把所有日志改成每条 `Console.WriteLine`，因为 stdout IO 仍可能成为瓶颈；高密度数据必须 buffered file + 摘要输出。
+- **User Confirmation**: 用户确认本分析成立：C# 输出链路比 Godot API 默认打印更适合 AI-first，但应落实为 C# structured sink，而不是全量 `Console.WriteLine`。
+- **Evidence**: `design/Tool/10.Log/README.md`、`01-现状分析与AI-first裁决.md`、`02-目标架构与数据契约.md`、`03-控制面与CLI设计.md`、`04-测试统一与Observation接入.md`、`05-调用点迁移与验证计划.md`、`06-功能OwnerLog文档与分析流程.md`、`design/INDEX.md`、`DocsAI/ECS/Tools/Logger/README.md`、`.ai-config/skills/core/test-system/SKILL.md`、`.ai-config/skills/godot/godot-scene-test/SKILL.md` 和本 `Core/progress.md` 已同步；AI config sync 已生成各工具 skill 副本。
+- **Research Adoption**: externalResources enabled=`official-docs`，scope=Context7 `/dotnet/docs` Console/stdout/custom console logger/high-performance logging + Microsoft Learn `Console.WriteLine` / high-performance logging，Context7 `/godotengine/godot-docs` `print_rich` / output panel / standard output + Godot `@GlobalScope` / logging docs；copiedCodeOrAssets=none；adoption=采纳 C# stdout/file sink、`IsEnabled` 后输出、Godot rich print 是 editor/human display 的边界，不复制 `ILogger` 或外部 logging provider。
+- **Validation**: `git diff --check` 通过；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static changed --no-fail` 对本轮 2 个 skill Critical 0 / Advisory 2，advisory 来自既有 catalog `project-filesystem` / `resource-path-migration` 名称漂移；`python3 Workspace/SDD/sdd.py validate --all` 仍失败于既有 `SDD-0034-design-directory-restructure` 的 `SDD015 template-residue-in-done` 和 `SDD025 thin-design-in-done`，非本轮 Log 文档引入。
+- **Impact**: 后续实现不应把 `GD.PrintRich` 当默认 sink，也不应把所有详细日志刷到 stdout。默认 profile 应启用 `jsonl-buffered-file`、`stdout-summary`、`memory`、`artifact`，关闭 `godot-editor`。测试/scene runner 后续不应再新增裸 `GD.Print("PASS")`、`GD.PushError("FAIL")`、`[PASS]`、`[FAIL]` 作为断言事实。
+- **Resume**: 若创建 Log hard cutover SDD，第一阶段 Logger core 设计必须先实现 sink abstraction，并把 `GodotEditorSink` 做成可选 sink，而不是在 `LogInternal` 里直接调用 Godot API。
