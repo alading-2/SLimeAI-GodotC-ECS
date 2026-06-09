@@ -12,7 +12,7 @@
 
 | ID | Title | Status | Bucket | Current SDD | Path |
 | --- | --- | --- | --- | --- | --- |
-| PRJ-0001 | SystemAgent Optimization | active | projects | SDD-0039 | SDD/project/projects/PRJ-0001-systemagent-optimization |
+| PRJ-0001 | SystemAgent Optimization | active | projects | none | SDD/project/projects/PRJ-0001-systemagent-optimization |
 | PRJ-0002 | ECS Framework Optimization | active | projects | none | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
 
 ## Pending

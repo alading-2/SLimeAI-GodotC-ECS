@@ -27,3 +27,12 @@ Given 当前本机没有 OpenCode session
 When 用户运行 `list` 或 `index`
 Then 工具不因为 OpenCode 样例缺失而失败
 And 文档和 metadata 保留 `opencode` 作为支持的 source tool
+
+### Scenario: Export Codex month into date-partitioned visible transcripts
+
+Given `/home/slime/.codex/sessions/2026/06` 存在 Codex `rollout-*.jsonl`
+When 用户运行 `python3 Workspace/SystemAgent/Tools/session-adapter/session_adapter.py export-codex-month --source-root /home/slime/.codex/sessions/2026/06`
+Then 工具按 `Workspace/DocsAI/ChatHistory/2026/06/DD/` 创建 Markdown transcript
+And `Workspace/DocsAI/ChatHistory/index.json` 为每个导出的 Codex session 记录 `evidence_level=visible-transcript`
+And 导出的 Markdown 包含 `Source SHA256`、`Event Counts`、`function_call_output` tool output 和隐藏推理占位
+And 工具不复制原始 JSONL 到仓库

@@ -86,17 +86,22 @@ ValidationSession.Start(scene, owner, phase=Validation)
 | `GameOSLogEntry` | `context + message + values` 的结构化雏形 | 增加 owner、channel、operation、correlation、budget、severity/outcome 拆分。 |
 | `SceneValidationSession` | check、failureReasons、artifact、memory sink | 把 `Pass/Fail` 从 log level 拆到 validation status，补 expected/actual/reasonCode。 |
 
-## 5. Runner 接入
+## 5. Runner 与 Log CLI 接入
 
-scene runner 的职责应是：
+scene runner 的职责应保持很薄：
 
 - 注入环境变量。
 - 收集 JSONL / artifact / stdout。
 - 判断 exit code。
-- 生成 gate report。
-- 根据 artifact 和 structured logs 判断 pass/fail。
+- 生成最小 run metadata / gate report。
+- 调用 `logctl analyze` 生成分析目录。
+
+Log CLI 的职责是：
+
+- 根据 artifact 和 structured logs 判断 pass/fail 的事实来源。
 - 把 raw log 拆成 `by-owner`、`by-phase`、`flows`、`failures`、`noise`、`missing-fields`。
 - 生成 AI 分析入口 `ai-context.md`。
+- 支持 `logctl query` 对已整理 run 做二次筛选。
 
 runner 不应该再依赖散乱的 `PASS` / `FAIL` 文本作为主判断。
 
@@ -113,6 +118,8 @@ sink 规则：
 - runner 默认读取 artifact / JSONL 判定结果。
 - stdout 只承载 `[VALIDATION:<status>]` 摘要、关键 warn/error 和 flow summary。
 - Godot editor sink 默认关闭；只有人工 editor 调试 profile 能打开，且必须写入 run metadata。
+
+边界裁决：**日志整理和分析不属于 `godot-scene-test` skill 的长期职责；测试 skill 只负责运行场景、保存 run dir、调用 `logctl analyze/query`，不自己维护业务日志拆分规则。**
 
 ## 6. 测试 helper 迁移
 
@@ -136,7 +143,7 @@ sink 规则：
 | `Src/ECS/Runtime/System/Tests/SystemCore/SystemCoreRuntimeTest.cs` | `_log.Info("[PASS]")` / `_log.Error("[FAIL]")` | PASS/FAIL 改 `ValidationStatus`，日志只承载事实。 |
 | `Src/ECS/Tools/Timer/Tests/TimerStressValidation.cs` | 已写 artifact，但仍用 `GD.Print("PASS ...")` / `GD.PushError("FAIL ...")` | artifact 作为主事实源，stdout marker 降为 fallback。 |
 | `Src/ECS/Tools/ObjectPool/Tests/Validation/CollisionIsolation/ObjectPoolCollisionIsolationValidation.cs` | 已有 checks/artifact，但 PASS/FAIL marker 仍是 stdout 主线 | 迁入统一 Validation helper，保留 collision flow summaries。 |
-| `.ai-config/skills/godot/godot-scene-test/scripts/godot-scene-runner.mjs` | `FAILURE_PATTERNS` 字符串扫描 | 优先读 result artifact 和 JSONL，pattern 只做 fallback。 |
+| `.ai-config/skills/godot/godot-scene-test/scripts/godot-scene-runner.mjs` | `FAILURE_PATTERNS` 字符串扫描 | runner 只保留 gate fallback；结构化判断和分析交给 `logctl analyze`。 |
 
 ## 7. 结果约束
 

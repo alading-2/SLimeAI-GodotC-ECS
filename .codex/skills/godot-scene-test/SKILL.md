@@ -18,7 +18,7 @@ cd /home/slime/Code/SlimeAI/Games/<GameWithRunner>
 - `Src/ECS/Test/**` 旁 README — 框架级验证场景说明
 - `/home/slime/Code/SlimeAI/Games/<GameWithRunner>/DocsAI/GameProjectState.md`
 - `/home/slime/Code/SlimeAI/Games/<GameWithRunner>/Tools/run-godot-scene.sh`
-- `/home/slime/Code/SlimeAI/Games/<GameWithRunner>/Tools/analyze-godot-scene-logs.sh`
+- `/home/slime/Code/SlimeAI/Games/<GameWithRunner>/Tools/analyze-godot-scene-logs.sh`（过渡 wrapper；AI-first Log hard cutover 后应调用 `logctl analyze`）
 
 ## 常用命令
 
@@ -28,19 +28,23 @@ Tools/run-godot-scene.sh list
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://Scenes/Main.tscn --build --timeout 3 --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
+# AI-first Log hard cutover 后：
+# logctl analyze --run-dir <latest-run-dir> --out <latest-run-dir>/analysis
+# logctl query --analysis-dir <latest-run-dir>/analysis owner=Ability
 ```
 
 ## 脚本入口
 
 - `scripts/run-test.sh`
-- `scripts/analyze-logs.sh`
+- `scripts/analyze-logs.sh`（过渡 wrapper；长期日志拆分规则属于 Log CLI）
 - `scripts/godot-scene-runner.mjs`
 
 ## 当前事实源
 
 - runner 源：`.ai-config/skills/godot/godot-scene-test/scripts/godot-scene-runner.mjs`
-- analyzer 源：`.ai-config/skills/godot/godot-scene-test/scripts/analyze-logs.sh`
-- 目标游戏若提供 `Tools/run-godot-scene.sh` / `Tools/analyze-godot-scene-logs.sh`，应作为 runner / analyzer 的薄封装。
+- analyzer 过渡 wrapper 源：`.ai-config/skills/godot/godot-scene-test/scripts/analyze-logs.sh`
+- Log hard cutover 后，日志整理和 AI 分析入口属于 `logctl analyze/query`；`godot-scene-test` 只负责运行 Godot、保存 run dir、调用 Log CLI、读取 gate report。
+- 目标游戏若提供 `Tools/run-godot-scene.sh` / `Tools/analyze-godot-scene-logs.sh`，应作为 runner / Log CLI 的薄封装。
 - 游戏仓里的 `SlimeAI/` 是框架仓 git submodule 镜像。框架仓新增或修改 `Src/Validation` 后，跑 Godot 前必须先选定承载游戏；当前初始开发阶段默认用 BrotatoLike，并直接同步到 `Games/BrotatoLike/SlimeAI/` 工作树。
 - 不默认同步所有游戏仓。后续多游戏 / 成品阶段按每个游戏的框架版本策略更新 submodule 指针，再选择对应游戏跑验证。
 - 承载游戏 wrapper 的 scan roots 必须包含游戏自身 `Src` 和框架镜像 `SlimeAI/Src`，否则框架侧验证场景不会出现在 `list/run-all`。
@@ -58,7 +62,8 @@ Tools/analyze-godot-scene-logs.sh
 - 跑框架级 Godot 场景前，当前阶段先直接同步到本轮承载游戏的 submodule 镜像，例如 BrotatoLike：`cp -a SlimeAI/Src/Validation/... Games/BrotatoLike/SlimeAI/Src/Validation/...` 和 `cp -a SlimeAI/Src/Validation/... Games/BrotatoLike/SlimeAI/Src/Validation/...`；以后多游戏版本管理成熟后再改成按游戏更新 submodule 指针。
 - 承载游戏的 `.csproj` 需要排除框架源码但重新包含 `SlimeAI/Src/Validation/**/*.cs`，否则 submodule 场景脚本会因未编译而无法实例化。
 - `Tools/run-godot-smoke.sh` 只是兼容入口，优先用统一 runner。
-- 日志和截图 artifacts 保持在 `.ai-temp/scene-tests/runs`，优先读取 `index.json`、`result.json`、scene artifact 和 `artifacts/logs/scene-log.jsonl`；`combined.log` 只作为摘要和 fallback 排查入口。
+- 日志和截图 artifacts 保持在 `.ai-temp/scene-tests/runs`，优先读取 `index.json`、`result.json`、scene artifact、`artifacts/logs/scene-log.jsonl` 和 `analysis/ai-context.md`；`combined.log` 只作为摘要和 fallback 排查入口。
+- 需要筛选某个 owner / sourceFile / operation / entityId 时，不要复制 console 文本给 AI；调用 `logctl query --analysis-dir <run>/analysis ...`。
 
 ## UnitComposition 专项场景
 

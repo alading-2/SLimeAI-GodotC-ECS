@@ -3,7 +3,7 @@
 ## Progress
 
 - **Status**: done
-- **Completed**: 10/10
+- **Completed**: 12/12
 - **Current**: done
 
 ## Task List
@@ -28,3 +28,7 @@
   - **Validation**: `list/index/summarize` + `python3 Workspace/SDD/sdd.py validate SDD-0039`
 - [x] T4.1 更新 tasks/progress/roadmap，完成 SDD
   - **Validation**: `python3 Workspace/SDD/sdd.py validate SDD-0039`
+- [x] T5.1 新增 `export-codex-month`，按 `Workspace/DocsAI/ChatHistory/YYYY/MM/DD/` 导出 Codex 可见完整 transcript
+  - **Validation**: `python3 Workspace/SystemAgent/Tools/session-adapter/session_adapter.py --chat-root /tmp/slimeai-chat-export-test export-codex-month --source-root /home/slime/.codex/sessions/2026/06 --limit 1`
+- [x] T5.2 导出 `/home/slime/.codex/sessions/2026/06` 全部 63 个 Codex session，并刷新 `ChatHistory/index.json`
+  - **Validation**: `python3 Workspace/SystemAgent/Tools/session-adapter/session_adapter.py export-codex-month --source-root /home/slime/.codex/sessions/2026/06`

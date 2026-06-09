@@ -228,6 +228,19 @@ node Workspace/Resources/tool/tracebase/bin/traces.js --help
 
 ## Key Decision
 
+### 2026-06-09 补充裁决：summary 不等于完整复盘证据
+
+用户指出第一版 ChatHistory sidecar 截断过多，这个问题真实存在。修正后的证据分层：
+
+- `summary`：恢复入口，只保留摘要、source locator 和关键结论，不适合作完整 AI 复盘。
+- `visible-transcript`：Codex 可见 transcript 导出，保留可见 message、tool call、tool output、event payload 和 turn context，不做摘要截断。
+
+边界仍然成立：
+
+- 不复制原始 JSONL 到仓库。
+- 不还原或伪造 `encrypted_content` 中的隐藏推理；只记录 bytes 和 sha256。
+- Claude / OpenCode 高保真导出后续另行补充，不用 Codex 专项逻辑冒充跨工具完整方案。
+
 ### D1：参考项目，不 fork 项目
 
 裁决：Adopt。
@@ -288,6 +301,7 @@ SlimeAI `session-adapter` 是薄层协议和脚本，不是 `codbash` fork。它
 Workspace/DocsAI/ChatHistory/
   index.json
   2026-06-09-1249-codex-游戏开发流程agent-019eaab6.md
+  YYYY/MM/DD/YYYY-MM-DD-HHmm-codex-<slug>-<short-session-id>.md
 ```
 
 不保存：
@@ -295,7 +309,6 @@ Workspace/DocsAI/ChatHistory/
 - 完整原始 JSONL。
 - OpenCode SQLite 副本。
 - Claude / Codex / OpenCode 私有内部索引。
-- 大量 tool output 原文。
 - 私有 chain-of-thought。
 
 保存：
@@ -310,6 +323,7 @@ Workspace/DocsAI/ChatHistory/
 - 设计决策。
 - 未解决问题。
 - 后续恢复提示。
+- Codex `visible-transcript` 导出中的可见 tool output 原文。
 
 ## Adapter Architecture
 

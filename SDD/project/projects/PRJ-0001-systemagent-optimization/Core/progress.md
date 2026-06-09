@@ -6,10 +6,10 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-09 13:40
+- **Updated**: 2026-06-09 15:05
 - **Current SDD**: none
-- **Last Conclusion**: `SDD-0039 Cross-agent Session Adapter` 已完成。第一版只读 `list/index/summarize` 可用，默认通过本地 `codbash` 读取 Claude/Codex 会话并生成 `Workspace/DocsAI/ChatHistory/index.json` 和 Markdown sidecar；OpenCode 保留支持路径但不要求本机真实样例。
-- **Next Action**: 后续增强另建 SDD：Claude/OpenCode 高保真导出、`codlogs --include-tool-results` 自动化、retrospective 可选接入，或只读资料 subagent pilot。
+- **Last Conclusion**: `SDD-0039 Cross-agent Session Adapter` 已完成并补充 Codex 月度导出。`export-codex-month` 已把 `/home/slime/.codex/sessions/2026/06` 的 63 个 Codex session 导出到 `Workspace/DocsAI/ChatHistory/2026/06/DD/`；逐条 transcript 标题已去掉时间戳，只保留编号和类型。
+- **Next Action**: 后续增强另建 SDD：Claude/OpenCode 高保真导出、ChatHistory prune/归档策略、retrospective 可选接入，或只读资料 subagent pilot。
 - **Open Blockers**: none
 ## Project Status Board
 
@@ -25,7 +25,7 @@
 | SDD-0008 | done | `02-Workflow与Skill触发优化方案.md`, `09-WorkflowSkillRole分层模型.md` | Workflow / Skill / Role 分层执行完成 |
 | SDD-0009 | done | `07-DesignDiscovery与DesignCritic方案.md`, `09-WorkflowSkillRole分层模型.md` | DesignDiscovery capability 与 DesignCritic 条件角色已落地 |
 | SDD-0010 | done | `04-Git与Worktree策略.md`, `10-Subagent使用场景与采纳策略.md` | Git / Worktree / Subagent 安全策略已落地 |
-| SDD-0039 | done | `优化/2026-06-08-SystemAgent工作流内化与会话记录优化.md`, `优化/2026-06-08-AI会话管理工具选型分析.md`, `会话记录适配器参考设计/2026-06-09-参考项目驱动的Cross-agent-Session-Adapter设计.md` | 第一版 Cross-agent Session Adapter 已完成；只读 `list/index/summarize` 可用，OpenCode 支持路径不阻塞 |
+| SDD-0039 | done | `优化/2026-06-08-SystemAgent工作流内化与会话记录优化.md`, `优化/2026-06-08-AI会话管理工具选型分析.md`, `会话记录适配器参考设计/2026-06-09-参考项目驱动的Cross-agent-Session-Adapter设计.md` | Cross-agent Session Adapter 已完成；`list/index/summarize` 可用，Codex 2026-06 已导出为分日 visible transcript |
 
 ## Timeline
 
@@ -181,3 +181,11 @@
 - **Evidence**: `session_adapter.py --help` 通过；`list --repo . --limit 5` 输出当前仓 5 个 session；`summarize --session 019eaab6-bfe7` 生成 `Workspace/DocsAI/ChatHistory/2026-06-09-1249-codex-游戏开发流程agent-019eaab6.md` 和 `index.json`；`python3 -m py_compile ...` 通过；`python3 Workspace/SDD/sdd.py validate SDD-0039` 为 0 error / 0 warning；`python3 Workspace/SDD/sdd.py validate --root SDD/project/projects/PRJ-0001-systemagent-optimization --all` 为 0 error / 0 warning。
 - **Impact**: PRJ-0001 会话管理方向已有可用最小工具；后续不应再讨论魔改 `codbash` 作为第一阶段路线。
 - **Resume**: 后续增强另建 SDD：Claude/OpenCode 高保真导出、`codlogs --include-tool-results` 自动化、retrospective 可选接入或只读资料 subagent pilot。
+
+### P020 — 2026-06-09 15:05 — enhancement
+
+- **Context**: 用户要求导出 2026 年 6 月 Codex 对话记录，并指出现有 ChatHistory 根目录扁平、summary sidecar 截断过多，不足以支撑 AI 复盘。
+- **Conclusion**: 已新增并执行 `export-codex-month`：按 `Workspace/DocsAI/ChatHistory/YYYY/MM/DD/` 输出 Codex 可见完整 transcript Markdown；原始 JSONL 不复制进仓库；隐藏推理不可读，只记录 `encrypted_content` 的 bytes/sha256。
+- **Evidence**: `python3 Workspace/SystemAgent/Tools/session-adapter/session_adapter.py export-codex-month --source-root /home/slime/.codex/sessions/2026/06` 导出 63 个 session；`find` 统计分日目录为 01/02/03/04/06/07/08/09；Markdown 总大小约 103.6 MB；抽查 2026-06-09 导出文件包含 `Source SHA256`、`Evidence Level: visible-transcript`、`function_call_output` 和 `Encrypted Content` 占位。
+- **Impact**: ChatHistory 现在区分 summary 恢复入口与 visible transcript 复盘证据；后续分析 6 月 Codex 会话优先读分日导出。
+- **Resume**: 继续增强时先处理 Claude/OpenCode 高保真导出与 ChatHistory 体积治理；不接 hook、不改原始 session、不 push。

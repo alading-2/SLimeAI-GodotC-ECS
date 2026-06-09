@@ -24,7 +24,7 @@
 - `index`：为指定 session 生成 `Workspace/DocsAI/ChatHistory/index.json` entry 和 Markdown sidecar。
 - `summarize`：输出或刷新指定 session 的 ChatHistory sidecar。
 
-边界：不改原始 session 文件名，不复制完整 transcript，不接自动 hook，不 fork 上游工具。OpenCode 第一版只保留支持路径，不要求本机真实样例。
+边界：不改原始 session 文件名，不复制原始 JSONL，不接自动 hook，不 fork 上游工具。`index/summarize` 只生成摘要恢复入口；`export-codex-month` 可导出 Codex 可见 transcript，但不还原隐藏推理。OpenCode 第一版只保留支持路径，不要求本机真实样例。
 
 ## Reading Order
 
@@ -38,6 +38,6 @@
 ## Current Resume
 
 - **Current Task**: done
-- **Last Conclusion**: Cross-agent Session Adapter 第一版完成：只读 `list/index/summarize` 可用，默认通过本地 `codbash` 读取 Claude/Codex 会话并生成 ChatHistory sidecar；OpenCode 保留支持路径但不要求本机真实样例。
-- **Next Action**: 后续增强另建 SDD：Claude/OpenCode 高保真导出、`codlogs --include-tool-results` 自动化、retrospective 可选接入，或只读资料 subagent pilot。
+- **Last Conclusion**: 已补 Codex 月度高保真导出：`export-codex-month` 将 `/home/slime/.codex/sessions/2026/06` 的 63 个 Codex session 导出到 `Workspace/DocsAI/ChatHistory/2026/06/DD/`，逐条 transcript 标题已去掉时间戳；旧 summary sidecar 只适合作恢复入口，不足以完整 AI 复盘。
+- **Next Action**: 后续增强另建 SDD：Claude/OpenCode 高保真导出、ChatHistory prune/归档策略、retrospective 可选接入。
 - **Open Blockers**: none

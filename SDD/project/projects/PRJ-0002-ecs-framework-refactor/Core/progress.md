@@ -8,7 +8,7 @@
 
 - **Updated**: 2026-06-09
 - **Current SDD**: none
-- **Last Conclusion**: 用户已确认“C# 输出链路更适合 AI-first 默认主链路”的分析，但裁决不是把所有日志逐条改成 `Console.WriteLine`，而是以 C# structured sink 为默认：C# buffered JSONL file 作为详细事实源、C# stdout summary 作为 runner 摘要、memory/artifact 作为 Validation 事实源；`GD.PrintRich` / Godot Output 面板只作为可选人工 editor debug sink，默认关闭。新测试和 Godot scene gate 规则要求 artifact / structured-log 为主事实源，旧 PASS/FAIL stdout marker 只作 fallback。当前只改设计文档和 skill 文档，不改源码/runner。
+- **Last Conclusion**: 已进一步确认 Log CLI 边界：`logctl` 不只是运行时开关，也必须支持对已产生日志的 `analyze/query/ingest`；预算是日志输出/记录/展开/展示的限流和摘要策略，不是限制游戏代码执行次数；日志整理与 AI 分析应归 Log CLI，`godot-scene-test` 只负责运行场景、保存 run dir、调用 Log CLI 和读取 gate report。当前只改设计文档和 skill 文档，不改源码/runner。
 - **Next Action**: 若用户确认“按推荐执行”，创建 `Log AI-first Observation Hard Cutover` 执行型 SDD；第一批应同批改 Logger core、Validation helper、runner analyzer 和测试 PASS/FAIL 事实源。若暂不执行，则本设计包作为后续 Log/Test/Debug/Observation 项目级入口。
 - **Open Blockers**: none
 
@@ -456,3 +456,13 @@
 - **Validation**: `git diff --check` 通过；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static changed --no-fail` 对本轮 2 个 skill Critical 0 / Advisory 2，advisory 来自既有 catalog `project-filesystem` / `resource-path-migration` 名称漂移；`python3 Workspace/SDD/sdd.py validate --all` 仍失败于既有 `SDD-0034-design-directory-restructure` 的 `SDD015 template-residue-in-done` 和 `SDD025 thin-design-in-done`，非本轮 Log 文档引入。
 - **Impact**: 后续实现不应把 `GD.PrintRich` 当默认 sink，也不应把所有详细日志刷到 stdout。默认 profile 应启用 `jsonl-buffered-file`、`stdout-summary`、`memory`、`artifact`，关闭 `godot-editor`。测试/scene runner 后续不应再新增裸 `GD.Print("PASS")`、`GD.PushError("FAIL")`、`[PASS]`、`[FAIL]` 作为断言事实。
 - **Resume**: 若创建 Log hard cutover SDD，第一阶段 Logger core 设计必须先实现 sink abstraction，并把 `GodotEditorSink` 做成可选 sink，而不是在 `LogInternal` 里直接调用 Godot API。
+
+### P053 — 2026-06-09 — log-cli-analysis-budget-boundary
+
+- **Context**: 用户追问 Log CLI 是否应该支持对已经整理好的日志继续操作、预算规则到底是什么意思、日志整理是否应由 Log 而不是 godot-scene-test 负责，以及用户主动运行游戏后如何把日志交给 AI。
+- **Conclusion**: 已更新裁决：`logctl` 分为运行控制和离线分析两类职责。运行控制负责 profile / overrides / sink；离线分析负责 `analyze/query/top/suggest/ingest`，能对 run dir、JSONL、analysis dir、legacy stdout fallback 做二次筛选，例如 owner、sourceFile、operation、entityId、severity、时间窗口。预算不是限制代码执行次数，而是限制日志输出/记录/展开/展示：代码照常执行，日志超预算后转为 sample / counter / suppressed summary，保留 `suppressedCount` 和 `budgetKey`。日志整理不再归 godot-scene-test；测试 skill 只运行 Godot、保存 run dir、调用 `logctl analyze/query`。
+- **Evidence**: `design/Tool/10.Log/03-控制面与CLI设计.md` 新增 CLI 离线查询、预算解释和用户主动运行流程；`04-测试统一与Observation接入.md`、`05-调用点迁移与验证计划.md`、`06-功能OwnerLog文档与分析流程.md` 已把 runner/analyzer 边界改为 Log CLI；`DocsAI/ECS/Tools/Logger/README.md` 和 `.ai-config/skills/godot/godot-scene-test/SKILL.md` 已同步。
+- **Research Adoption**: externalResources enabled=`official-docs`，scope=Grafana Loki `logcli` query/static file/stdin/filter/limit、OpenTelemetry Collector processors/filter/transform、Datadog log indexes/exclusion filters/sampling；copiedCodeOrAssets=none；adoption=采纳“日志产生后仍可查询/过滤/限量/后处理”的现实需求，不复制外部平台。
+- **Validation**: `git diff --check` 通过；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static changed --no-fail` 对本轮 `godot-scene-test` skill Critical 0 / Advisory 2，advisory 来自既有 catalog `project-filesystem` / `resource-path-migration` 名称漂移；`python3 Workspace/SDD/sdd.py validate --all` 仍失败于既有 `SDD-0034-design-directory-restructure` 的 `SDD015 template-residue-in-done` 和 `SDD025 thin-design-in-done`，非本轮 Log 文档引入。
+- **Impact**: 后续实现不应把 `godot-scene-test/scripts/analyze-logs.sh` 作为长期业务日志分析事实源；它只能是过渡 wrapper。用户手动运行游戏时也不应复制整段 console 给 AI，应保留 run dir 后执行 `logctl analyze`，旧 console 文本只能走 `logctl ingest --source legacy-stdout` 并标低可信 fallback。
+- **Resume**: 创建 Log hard cutover SDD 时，T3 应命名为 `Log CLI analyzer/query`，先实现 `logctl analyze --run-dir`、`logctl query --analysis-dir/--file` 和 `logctl ingest --stdin` 的最小版本，再让 godot-scene-test wrapper 调用它。

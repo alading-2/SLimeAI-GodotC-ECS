@@ -17,7 +17,8 @@
 - 不自动抓取。
 - 不接 hook/watch/MCP/dashboard。
 - 不改 Claude Code / Codex / OpenCode 原始 session 文件名或索引。
-- 不复制完整原始 transcript。
+- 默认 `index/summarize` 不复制完整 transcript；按需 `export-codex-month` 可导出 Codex 可见 transcript。
+- 不复制原始 JSONL，不还原或伪造隐藏推理。
 - 不还原或推断私有 chain-of-thought。
 - 不 fork `codbash` / `codlogs` / `tracebase`。
 
@@ -66,9 +67,11 @@ Workspace/SystemAgent/Tools/session-adapter/
 python3 Workspace/SystemAgent/Tools/session-adapter/session_adapter.py list --repo . --limit 20
 python3 Workspace/SystemAgent/Tools/session-adapter/session_adapter.py index --session <id>
 python3 Workspace/SystemAgent/Tools/session-adapter/session_adapter.py summarize --session <id>
+python3 Workspace/SystemAgent/Tools/session-adapter/session_adapter.py export-codex-month --source-root /home/slime/.codex/sessions/2026/06
 ```
 
 `summarize` 是 `index` 的可读摘要入口，默认生成或刷新 sidecar 和 index entry。
+`export-codex-month` 是 Codex 专项高保真入口，按 `Workspace/DocsAI/ChatHistory/YYYY/MM/DD/` 输出可见 transcript Markdown。
 
 ### Source Strategy
 
@@ -80,8 +83,9 @@ Discovery：
 
 Codex high-fidelity：
 
-- 第一版提供 `--codex-file <path>` 或在能定位 source path 时调用/提示 `codlogs-sessions --md <file> --include-tool-results`。
-- 若不能定位 Codex JSONL，仍生成 summary-level sidecar，标记 `Evidence Level: summary`。
+- `export-codex-month` 流式读取 Codex JSONL，导出可见 message、tool call、tool output、event payload 和 turn context。
+- 隐藏推理以 `encrypted_content` 存储时不可读；导出只记录 bytes 和 sha256，不把它当成完整思考过程。
+- `index/summarize` 仍生成 summary-level sidecar，标记 `Evidence Level: summary`。
 
 OpenCode：
 
@@ -93,6 +97,7 @@ OpenCode：
 Workspace/DocsAI/ChatHistory/
   index.json
   2026-06-09-1249-codex-游戏开发流程agent-019eaab6.md
+  2026/06/09/2026-06-09-1249-codex-游戏开发流程agent-019eaab6bfe77.md
 ```
 
 Index entry 最小字段：
@@ -110,6 +115,11 @@ Index entry 最小字段：
 - `source_path`
 - `evidence_level`
 - `tags`
+
+`evidence_level` 枚举：
+
+- `summary`：摘要级恢复入口，会截取长内容。
+- `visible-transcript`：Codex 可见 transcript Markdown，不对可见 message / tool output 做摘要截断。
 
 Markdown sidecar 最小段落：
 
@@ -153,4 +163,5 @@ python3 Workspace/SDD/sdd.py validate --root SDD/project/projects/PRJ-0001-syste
 - `list` 能列出当前仓至少一个 Claude 或 Codex 会话，或在无会话时输出明确诊断。
 - `index/summarize` 能创建/更新 `Workspace/DocsAI/ChatHistory/index.json` 和一个 Markdown sidecar。
 - sidecar 不包含完整原始 transcript，只包含摘要和 source locator。
+- `export-codex-month` 导出的 Markdown 包含 `Evidence Level: visible-transcript`、`Source SHA256`、事件统计、tool output 和隐藏推理占位。
 - `SDD-0039` 专项校验通过。

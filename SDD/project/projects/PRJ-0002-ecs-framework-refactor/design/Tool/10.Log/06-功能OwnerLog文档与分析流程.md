@@ -7,7 +7,7 @@
 
 Log 重构不能只改 `Log.cs`。每个 Runtime / Capability / Tools / UI owner 都必须说明自己“打什么日志、为什么打、怎么分析、哪些默认关闭”。否则后续 AI 仍会在代码里随手加日志，最后又变成全量 stdout 交给 AI 猜。
 
-本文件定义 owner 级 `Log.md` 模板和 runner/analyzer 输出后的固定 AI 分析流程。
+本文件定义 owner 级 `Log.md` 模板和 `logctl analyze/query` 输出后的固定 AI 分析流程。
 
 ## 2. Owner Log 文档位置
 
@@ -153,7 +153,7 @@ AI 分析失败时优先看这些字段，不优先读 message。
 
 ## 5. Analyzer 目录
 
-runner 或 `logctl analyze` 输出目录应固定：
+`logctl analyze` 输出目录应固定：
 
 ```text
 <run>/analysis/
@@ -192,6 +192,16 @@ AI 默认只读：
 
 这能避免“把所有打印信息放进一个文档再丢给 AI”。
 
+`logctl query` 必须能在该目录上做二次筛选：
+
+```text
+logctl query --analysis-dir <run>/analysis owner=Ability
+logctl query --analysis-dir <run>/analysis sourceFile=Src/ECS/Capabilities/Ability/System/AbilitySystem.cs
+logctl query --analysis-dir <run>/analysis operation=DamageProcess severity>=Warn
+```
+
+二次筛选输出不替代 `ai-context.md`，它用于在已有分析结果上缩小范围。AI 仍必须先读 summary / ai-context，再按 owner Log.md 判断。
+
 ## 6. AI 分析流程
 
 固定分析顺序：
@@ -214,7 +224,8 @@ AI 分析时必须使用固定分类：
 | Code issue | 结构化日志足以证明代码行为不符合预期 | 定位 owner 源码并修复。 |
 | Test issue | 代码行为正确，但测试 expected/actual 或场景输入错误 | 修测试或测试数据。 |
 | Log gap | 现有日志不足以判断 | 补 owner `Log.md` 和对应字段/flow，再复跑。 |
-| Runner issue | artifact/JSONL/stdout 收集或判定错误 | 修 runner/analyzer。 |
+| Runner issue | Godot 场景运行、artifact 收集、exit code 或 run dir 保存错误 | 修 runner / godot-scene-test wrapper。 |
+| Log CLI issue | `logctl analyze/query` 拆分、筛选或 gate report 生成错误 | 修 Log CLI / analyzer。 |
 | Profile issue | 有价值日志被关闭或噪声压制策略错误 | 调整 profile/overrides。 |
 | Unknown | 证据不足且无法安全推断 | 明确缺口，不猜。 |
 

@@ -54,8 +54,23 @@ SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/README.m
 - `Config/Log` profile + CLI override。
 - C# stdout summary + buffered JSONL file 作为默认 sink。
 - Validation artifact 作为测试主事实源。
-- runner analyzer 先拆分日志目录，再给 AI 分析。
+- `logctl analyze` 先拆分日志目录，再给 AI 分析。
+- `logctl query` 对已整理 run 做二次筛选，例如 owner / sourceFile / operation / entityId / severity。
 - 每个 owner 写 `Log.md` 或 README `## Log`，固定怎么打、怎么分析、哪些默认关闭。
+
+## CLI 边界
+
+`logctl` 不只是运行时开关，也负责已产生日志的整理和查询：
+
+| 类别 | 作用 |
+| --- | --- |
+| 运行控制 | profile、sink、owner/context/operation 开关、override snapshot。 |
+| 离线分析 | `analyze --run-dir` 生成 `analysis/raw/by-owner/by-phase/flows/failures/noise/missing-fields/ai-context.md`。 |
+| 二次查询 | `query --analysis-dir` 或 `query --file` 按 owner、sourceFile、operation、entityId、severity 过滤。 |
+
+Godot scene runner 只负责运行场景、保存 run dir 和调用 Log CLI；不要在 godot-scene-test skill 中长期维护日志拆分规则。
+
+用户手动运行游戏时，不应复制整段 console 给 AI。应保留 `SLIMEAI_LOG_RUN_DIR` 下的 JSONL / artifact，然后执行 `logctl analyze`；只有旧日志文本才用 `logctl ingest --stdin --source legacy-stdout` 降级处理。
 
 ## 阅读顺序
 

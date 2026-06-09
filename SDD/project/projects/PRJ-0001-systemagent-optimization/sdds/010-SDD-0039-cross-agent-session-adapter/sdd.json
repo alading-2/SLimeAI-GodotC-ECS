@@ -21,8 +21,8 @@
   ],
   "progress": {
     "current_task": "done",
-    "completed_tasks": 10,
-    "total_tasks": 10,
+    "completed_tasks": 12,
+    "total_tasks": 12,
     "percent": 100
   },
   "bdd": {
@@ -46,6 +46,10 @@
     {
       "at": "2026-06-09 13:38",
       "summary": "python3 Workspace/SystemAgent/Tools/session-adapter/session_adapter.py --help: passed; python3 Workspace/SystemAgent/Tools/session-adapter/session_adapter.py list --repo . --limit 5: listed current repo sessions; python3 Workspace/SystemAgent/Tools/session-adapter/session_adapter.py summarize --session 019eaab6-bfe7: generated Workspace/DocsAI/ChatHistory/index.json and sidecar; python3 -m py_compile Workspace/SystemAgent/Tools/session-adapter/session_adapter.py: passed; python3 Workspace/SDD/sdd.py validate SDD-0039: 0 error / 0 warning; python3 Workspace/SDD/sdd.py validate --root SDD/project/projects/PRJ-0001-systemagent-optimization --all: 0 error / 0 warning; git diff --check scoped files: passed"
+    },
+    {
+      "at": "2026-06-09 15:11",
+      "summary": "python3 -m py_compile Workspace/SystemAgent/Tools/session-adapter/session_adapter.py: passed; export-codex-month --limit 1 to /tmp: passed; export-codex-month 2026/06: exported 63 visible-transcript Markdown files; ChatHistory index schema_version=2 entries=63 missing_paths=0; python3 Workspace/SDD/sdd.py validate SDD-0039: rerun after this note; python3 Workspace/SDD/sdd.py validate --root SDD/project/projects/PRJ-0001-systemagent-optimization --all: 0 error / 0 warning"
     }
   ]
 }
