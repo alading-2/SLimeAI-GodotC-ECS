@@ -1,4 +1,0 @@
-interface:
-  display_name: "AI Feature Development"
-  short_description: "SlimeAI AI-first 新功能开发入口"
-  default_prompt: "Use $ai-feature-development to plan and implement a SlimeAI feature with AI-first routing, OpenSpec SDD, acceptance-first validation, documentation updates, and retrospective workflow closure."

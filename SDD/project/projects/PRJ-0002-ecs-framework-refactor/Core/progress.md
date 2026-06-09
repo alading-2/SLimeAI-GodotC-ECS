@@ -7,9 +7,9 @@
 ## Latest Resume
 
 - **Updated**: 2026-06-09
-- **Current SDD**: none
-- **Last Conclusion**: 已进一步确认 Log CLI 边界：`logctl` 不只是运行时开关，也必须支持对已产生日志的 `analyze/query/ingest`；预算是日志输出/记录/展开/展示的限流和摘要策略，不是限制游戏代码执行次数；日志整理与 AI 分析应归 Log CLI，`godot-scene-test` 只负责运行场景、保存 run dir、调用 Log CLI 和读取 gate report。当前只改设计文档和 skill 文档，不改源码/runner。
-- **Next Action**: 若用户确认“按推荐执行”，创建 `Log AI-first Observation Hard Cutover` 执行型 SDD；第一批应同批改 Logger core、Validation helper、runner analyzer 和测试 PASS/FAIL 事实源。若暂不执行，则本设计包作为后续 Log/Test/Debug/Observation 项目级入口。
+- **Current SDD**: SDD-0040
+- **Last Conclusion**: 已创建 `SDD-0040 Log AI-first Observation Hard Cutover`，并把 `design/Tool/10.Log/` 全套设计导入子 SDD；主设计包含 DeepThink 确认包和 DesignCritic 审查，任务拆成 Logger core、sink、ValidationSession、Log CLI/analyzer、godot-scene-test wrapper、owner flow、owner Log 文档、AI 配置同步和最终验证 10 步。
+- **Next Action**: 从 `sdds/029-SDD-0040-log-ai-first-observation-hard-cutover/execution-prompt.md` 的 T1.1 Readiness Baseline 开始；先只读和记录证据，再进入 Logger core TDD。
 - **Open Blockers**: none
 
 ## Project Status Board
@@ -36,7 +36,7 @@
 | SDD-0036 | done | `design/Tool/其他Tool/05-TargetSelector查询契约.md` | Target Query Engine Hard Cutover 已完成；`TargetQueryEngine` / diagnostics / candidate source / deterministic RNG 成为 current API，旧 list-only facade 删除 |
 | SDD-0037 | done | `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` | Resource Loading And Common Utilities Hard Cutover 已完成；`ResourceLoading` current facade、strict lookup、source diagnostics、ResourceCatalogDiagnostics 和 CommonUtilities 边界已收口 |
 | SDD-0038 | done | `design/Tool/其他Tool/03-Math目标架构与验证.md` | Math Formula And Deterministic Random Cutover 已完成；`ProbabilityTool` / `DeterministicRandom` 接管概率随机，Damage/Ability 公式归 owner，`MyMath` / `GeometryCalculator` 删除 |
-| TBD | proposed | `design/Tool/10.Log/` | Log AI-first Observation hard cutover：结构化日志、flow 聚合、C# stdout summary + buffered JSONL file、Godot editor sink optional、profile/CLI、Validation artifact、runner analyzer、owner Log 文档和固定 AI 分析流程；等待用户确认后创建执行型 SDD |
+| SDD-0040 | pending | `design/Tool/10.Log/` | Log AI-first Observation hard cutover SDD 已创建；后续按 execution prompt 同批收口 Logger core、Validation helper、Log CLI/analyzer、godot-scene-test wrapper、owner flow 和 owner Log 文档 |
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
 | SDD-0028 | done | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已完成；后续对象池改动按 ObjectPool owner 新建小切片 |
 | SDD-0029 | done | `design/Runtime/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |

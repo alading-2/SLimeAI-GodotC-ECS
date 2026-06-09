@@ -4,16 +4,16 @@
 
 - **Status**: active
 - **Created**: 2026-05-25
-- **Updated**: 2026-06-07
+- **Updated**: 2026-06-09
 - **Scope**: SlimeAI
-- **Current SDD**: none
+- **Current SDD**: SDD-0040
 - **Tags**: ecs, optimization, data, event, entity, component, relationship, directory-architecture, capability, docsai, tools, timer, objectpool, collision, system
 
 ## What This Project Is About
 
 本项目用于重新梳理 `Src/ECS` 旧 ECS 框架的真实问题，并形成“保留旧 ECS 主线、按问题域优化完善”的设计事实源。当前框架仓和 SDD 均位于 `/home/slime/Code/SlimeAI/SlimeAI`；外层 `/home/slime/Code/SlimeAI` 只作为包含游戏仓、Resources 和框架仓的父目录。
 
-当前方向已经纠偏：不再把旧 ECS 作为迁移输入，不再以整体替换或复制外部参考结构为目标。旧框架整体可保留；Data 子系统已按 SDD-0012 至 SDD-0022 完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 收口，并按 SDD-0031 / SDD-0032 完成 runtime generic slot hard cutover 和 typed contract completion：typed `DataKey<T>` 主链路、modifier 和 computed cache 现在使用 `DataSlot<T> + IDataSlot`，业务 Capability 和 AI 可调用 Data 协议不再使用 string key / untyped write / object payload 作为主链路。Data 完成后的 GC/装箱优化已按 SDD-0033 完成非 Data 边界收口：Event dynamic object 主链路删除，Feature / Ability Execute 边界改为 typed payload/result helper，ObjectPoolManager 改 `IObjectPoolRuntime` 非泛型管理接口，TargetSelector 新增 `TargetQueryEngine + TargetQueryResult` ownership / diagnostics facade；其中 Logger 热路径 GC 小切片当时保持 profiler 驱动。2026-06-09 已新增并校准 `design/Tool/10.Log/`，把 Log 作为 AI-first Observation 入口重新设计：结构化 envelope、flow 聚合、C# stdout summary + buffered JSONL file、optional Godot editor sink、profile/CLI、Validation artifact、runner analyzer 和 owner `Log.md` 必须同批考虑，后续建议创建 Log hard cutover SDD。Entity / Relationship 已按 SDD-0024 完成 hard cutover。SDD-0025 已把 ECS 物理目录和 DocsAI 路由重构为 `Runtime + Capabilities + Tools + UI`，同时保留 ECS 语义；`design/Tool/其他Tool/` 已按 2026-06-04 至 2026-06-07 用户复核更新为功能优先 hard cutover：RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、Common Utilities、MathFormula 后续只保功能，不保旧 API 长期兼容；已确认 `/root/SlimeAIRuntime`、资源 strict fail-fast、Common Utilities 放 `Src/ECS/Tools/CommonUtilities/`、NodeLifecycle 迁 Runtime、TargetSelector 不做兼容桥。SDD-0035 至 SDD-0038 已完成剩余 Tools hard cutover：Runtime mount + NodeLifecycle、TargetQueryEngine、ResourceLoading + CommonUtilities、Math formula + deterministic RNG 均已完成并同步 DocsAI/skill。SDD-0026 已完成 Input Contract 业务语义 facade、调用点迁移和验证闭环。SDD-0027 Timer 重构已完成可执行代码/文档主链路但被当前 BrotatoLike runner/Godot CLI 缺失阻塞在场景验证。SDD-0028 已完成 ObjectPool / Collision ParkedInTree cutover。SDD-0029 已完成 Runtime System manifest / preflight / diagnostics / trace 收口。SDD-0030 已完成 Component 默认组合从 `.tscn` Preset 到 C# profile / composer 的切换，并补齐 Component manifest、DocsAI 和 owner skill 规则。
+当前方向已经纠偏：不再把旧 ECS 作为迁移输入，不再以整体替换或复制外部参考结构为目标。旧框架整体可保留；Data 子系统已按 SDD-0012 至 SDD-0022 完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 收口，并按 SDD-0031 / SDD-0032 完成 runtime generic slot hard cutover 和 typed contract completion：typed `DataKey<T>` 主链路、modifier 和 computed cache 现在使用 `DataSlot<T> + IDataSlot`，业务 Capability 和 AI 可调用 Data 协议不再使用 string key / untyped write / object payload 作为主链路。Data 完成后的 GC/装箱优化已按 SDD-0033 完成非 Data 边界收口：Event dynamic object 主链路删除，Feature / Ability Execute 边界改为 typed payload/result helper，ObjectPoolManager 改 `IObjectPoolRuntime` 非泛型管理接口，TargetSelector 新增 `TargetQueryEngine + TargetQueryResult` ownership / diagnostics facade；其中 Logger 热路径 GC 小切片当时保持 profiler 驱动。2026-06-09 已新增并校准 `design/Tool/10.Log/`，把 Log 作为 AI-first Observation 入口重新设计；`SDD-0040` 已创建为 Log hard cutover 执行胶囊，范围包含结构化 envelope、flow 聚合、C# stdout summary + buffered JSONL file、optional Godot editor sink、profile/CLI、Validation artifact、runner analyzer 和 owner `Log.md`。Entity / Relationship 已按 SDD-0024 完成 hard cutover。SDD-0025 已把 ECS 物理目录和 DocsAI 路由重构为 `Runtime + Capabilities + Tools + UI`，同时保留 ECS 语义；`design/Tool/其他Tool/` 已按 2026-06-04 至 2026-06-07 用户复核更新为功能优先 hard cutover：RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、Common Utilities、MathFormula 后续只保功能，不保旧 API 长期兼容；已确认 `/root/SlimeAIRuntime`、资源 strict fail-fast、Common Utilities 放 `Src/ECS/Tools/CommonUtilities/`、NodeLifecycle 迁 Runtime、TargetSelector 不做兼容桥。SDD-0035 至 SDD-0038 已完成剩余 Tools hard cutover：Runtime mount + NodeLifecycle、TargetQueryEngine、ResourceLoading + CommonUtilities、Math formula + deterministic RNG 均已完成并同步 DocsAI/skill。SDD-0026 已完成 Input Contract 业务语义 facade、调用点迁移和验证闭环。SDD-0027 Timer 重构已完成可执行代码/文档主链路但被当前 BrotatoLike runner/Godot CLI 缺失阻塞在场景验证。SDD-0028 已完成 ObjectPool / Collision ParkedInTree cutover。SDD-0029 已完成 Runtime System manifest / preflight / diagnostics / trace 收口。SDD-0030 已完成 Component 默认组合从 `.tscn` Preset 到 C# profile / composer 的切换，并补齐 Component manifest、DocsAI 和 owner skill 规则。
 
 ## Reading Order
 
@@ -37,31 +37,33 @@
 18. `sdds/012-SDD-0022-data-projection-diagnostics-contract-hardening/progress.md` — Data residual contract hardening 已完成记录
 19. `Core/roadmap.md` — 设计文档到 SDD 的映射、执行顺序、依赖和状态
 20. `Core/progress.md` — 项目级关键结论和恢复点
-21. `design/Tool/10.Log/README.md` — Log AI-first Observation 设计包入口；先读它再决定是否创建 Log hard cutover SDD
-21. `design/Tool/Timer/README.md` — Timer 当前共享设计包入口
-22. `sdds/017-SDD-0027-timer-scheduler-full-rewrite/README.md` — Timer 执行型 SDD 胶囊
-23. `sdds/017-SDD-0027-timer-scheduler-full-rewrite/execution-prompt.md` — Timer 新会话执行提示词
-24. `design/Tool/ObjectPool/README.md` — ObjectPool 当前共享设计包入口
-25. `sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover/README.md` — ObjectPool / Collision 执行型 SDD 胶囊
-26. `sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover/execution-prompt.md` — ObjectPool / Collision 新会话执行提示词
-27. `design/Tool/其他Tool/README.md` — Input/ObjectPool/Timer 已改且 Log 跳过后的剩余 Tools AI-first 设计包入口
-28. `design/Tool/其他Tool/01-现状证据与AI-first裁决.md` — 剩余 Tools 总体分析、已确认/未确认问题和默认假设
-29. `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` — Common Utilities、ResourceLoading / ResourceManagement、ResourceGenerator 和 project-filesystem workflow
-30. `design/Tool/其他Tool/06-实施路线与验证门禁.md` — 剩余 Tools 后续执行 SDD 拆分、BDD、grep gate 和验证命令
-31. `sdds/025-SDD-0035-runtime-mount-and-node-lifecycle-hard-cutover/README.md` — Runtime mount + NodeLifecycle 执行型 SDD 胶囊
-32. `sdds/025-SDD-0035-runtime-mount-and-node-lifecycle-hard-cutover/execution-prompt.md` — SDD-0035 新会话执行提示词
-33. `sdds/026-SDD-0036-target-query-engine-hard-cutover/README.md` — TargetQueryEngine 执行型 SDD 胶囊
-34. `sdds/026-SDD-0036-target-query-engine-hard-cutover/execution-prompt.md` — SDD-0036 新会话执行提示词
-35. `sdds/027-SDD-0037-resource-loading-and-common-utilities-hard-cutover/README.md` — ResourceLoading + CommonUtilities 执行型 SDD 胶囊
-36. `sdds/027-SDD-0037-resource-loading-and-common-utilities-hard-cutover/execution-prompt.md` — SDD-0037 新会话执行提示词
-37. `sdds/028-SDD-0038-math-formula-and-deterministic-random-cutover/README.md` — MathFormula + deterministic RNG 执行型 SDD 胶囊
-38. `sdds/028-SDD-0038-math-formula-and-deterministic-random-cutover/execution-prompt.md` — SDD-0038 新会话执行提示词
-39. `design/Runtime/7.Component/README.md` — Runtime Component AI-first 优化共享设计包入口
-40. `design/Runtime/7.Component/04-Component代码化组合与参数注入裁决.md` — Component Preset 纯代码化和参数注入裁决
-41. `sdds/020-SDD-0030-component-code-composition-and-contract-hardening/README.md` — Component code composition 执行型 SDD 胶囊
-42. `DocsAI/ECS/Runtime/Component/ComponentManifest.md` — Component current manifest
-43. `design/Runtime/8.System优化/README.md` — Runtime System AI-first 优化共享设计包入口
-44. `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/README.md` — System contract 执行型 SDD 胶囊
-45. `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md` — System contract 新会话执行提示词
-46. `sdds/` — 项目内有序 SDD
-47. `Core/notes.md` — 参考与开放问题
+21. `design/Tool/10.Log/README.md` — Log AI-first Observation 设计包入口
+22. `sdds/029-SDD-0040-log-ai-first-observation-hard-cutover/README.md` — Log hard cutover 执行型 SDD 胶囊
+23. `sdds/029-SDD-0040-log-ai-first-observation-hard-cutover/execution-prompt.md` — SDD-0040 新会话执行提示词
+24. `design/Tool/Timer/README.md` — Timer 当前共享设计包入口
+25. `sdds/017-SDD-0027-timer-scheduler-full-rewrite/README.md` — Timer 执行型 SDD 胶囊
+26. `sdds/017-SDD-0027-timer-scheduler-full-rewrite/execution-prompt.md` — Timer 新会话执行提示词
+27. `design/Tool/ObjectPool/README.md` — ObjectPool 当前共享设计包入口
+28. `sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover/README.md` — ObjectPool / Collision 执行型 SDD 胶囊
+29. `sdds/018-SDD-0028-objectpool-collision-parkedintree-cutover/execution-prompt.md` — ObjectPool / Collision 新会话执行提示词
+30. `design/Tool/其他Tool/README.md` — Input/ObjectPool/Timer 已改且 Log 跳过后的剩余 Tools AI-first 设计包入口
+31. `design/Tool/其他Tool/01-现状证据与AI-first裁决.md` — 剩余 Tools 总体分析、已确认/未确认问题和默认假设
+32. `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` — Common Utilities、ResourceLoading / ResourceManagement、ResourceGenerator 和 project-filesystem workflow
+33. `design/Tool/其他Tool/06-实施路线与验证门禁.md` — 剩余 Tools 后续执行 SDD 拆分、BDD、grep gate 和验证命令
+34. `sdds/025-SDD-0035-runtime-mount-and-node-lifecycle-hard-cutover/README.md` — Runtime mount + NodeLifecycle 执行型 SDD 胶囊
+35. `sdds/025-SDD-0035-runtime-mount-and-node-lifecycle-hard-cutover/execution-prompt.md` — SDD-0035 新会话执行提示词
+36. `sdds/026-SDD-0036-target-query-engine-hard-cutover/README.md` — TargetQueryEngine 执行型 SDD 胶囊
+37. `sdds/026-SDD-0036-target-query-engine-hard-cutover/execution-prompt.md` — SDD-0036 新会话执行提示词
+38. `sdds/027-SDD-0037-resource-loading-and-common-utilities-hard-cutover/README.md` — ResourceLoading + CommonUtilities 执行型 SDD 胶囊
+39. `sdds/027-SDD-0037-resource-loading-and-common-utilities-hard-cutover/execution-prompt.md` — SDD-0037 新会话执行提示词
+40. `sdds/028-SDD-0038-math-formula-and-deterministic-random-cutover/README.md` — MathFormula + deterministic RNG 执行型 SDD 胶囊
+41. `sdds/028-SDD-0038-math-formula-and-deterministic-random-cutover/execution-prompt.md` — SDD-0038 新会话执行提示词
+42. `design/Runtime/7.Component/README.md` — Runtime Component AI-first 优化共享设计包入口
+43. `design/Runtime/7.Component/04-Component代码化组合与参数注入裁决.md` — Component Preset 纯代码化和参数注入裁决
+44. `sdds/020-SDD-0030-component-code-composition-and-contract-hardening/README.md` — Component code composition 执行型 SDD 胶囊
+45. `DocsAI/ECS/Runtime/Component/ComponentManifest.md` — Component current manifest
+46. `design/Runtime/8.System优化/README.md` — Runtime System AI-first 优化共享设计包入口
+47. `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/README.md` — System contract 执行型 SDD 胶囊
+48. `sdds/019-SDD-0029-system-contract-manifest-and-diagnostics-hardening/execution-prompt.md` — System contract 新会话执行提示词
+49. `sdds/` — 项目内有序 SDD
+50. `Core/notes.md` — 参考与开放问题

@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-09 15:36",
+  "generated_at": "2026-06-09 15:52",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -32,7 +32,7 @@
       "slug": "ecs-framework-optimization",
       "title": "ECS Framework Optimization",
       "status": "active",
-      "updated_at": "2026-06-07",
+      "updated_at": "2026-06-09",
       "scope": "SlimeAI",
       "tags": [
         "ecs",
@@ -50,7 +50,7 @@
         "collision",
         "system"
       ],
-      "current_sdd": "none",
+      "current_sdd": "SDD-0040",
       "bucket": "projects",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor"
     }

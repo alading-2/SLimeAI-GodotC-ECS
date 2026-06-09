@@ -23,12 +23,12 @@
   "progress": {
     "current_task": "T1.1",
     "completed_tasks": 0,
-    "total_tasks": 1,
+    "total_tasks": 10,
     "percent": 0
   },
   "bdd": {
     "required": true,
-    "reason": "This SDD changes CLI or workflow behavior."
+    "reason": "本 SDD 改 Log runtime、Validation artifact、Godot scene runner 分析和 AI 调试流程，必须用行为场景约束结果来源、结构化字段和降噪策略。"
   },
   "links": {
     "design_index": "design/INDEX.md",

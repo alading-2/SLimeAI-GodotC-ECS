@@ -1,0 +1,36 @@
+{
+  "_comment": "ai-config-sync 同步目标配置。修改此文件即可控制同步目标，无需改脚本。",
+
+  "skills": [
+    {
+      "target": ".codex/skills",
+      "exclude": []
+    },
+    {
+      "target": ".claude/skills",
+      "exclude": []
+    },
+    {
+      "target": ".trae/skills",
+      "exclude": []
+    }
+  ],
+
+  "rules": [
+    {
+      "source": ".ai-config/rules/rules.md",
+      "target": "AGENTS.md",
+      "prepend": []
+    },
+    {
+      "source": ".ai-config/rules/rules.md",
+      "target": "CLAUDE.md",
+      "prepend": []
+    },
+    {
+      "source": ".ai-config/rules/rules.md",
+      "target": ".trae/rules/rules.md",
+      "prepend": []
+    }
+  ]
+}

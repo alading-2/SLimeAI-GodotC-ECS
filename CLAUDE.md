@@ -41,14 +41,14 @@ SystemAgent 不作为 ECS 业务事实源第一入口；它只作为流程工具
 - `DocsAI/`：框架文档统一入口，AI-first 设计。默认按 `Runtime / Capabilities / Tools / UI` 聚合；owner 文档优先有清晰 `README.md` 或完整事实源文档，Concept / Usage / Tests / InputMap 等只是可选分层，不强制拆分。旧 `System/`、`Component/`、`Entity/`、`Data/`、`Event/` 只作为迁移追溯，不作为新任务入口。
 - `SDD/`：中大型任务设计、进度、执行记忆。项目级 SDD 在 `SDD/project/projects/`。
 - `Src/ECS/**`：源码入口；框架 Markdown 文档统一由 `DocsAI/ECS/` 管理，`Src/ECS` 不保留框架文档。
-- `.ai-config/skills/*`：唯一可维护 skill 源，保存 skill 路由、命令、reference 和脚本入口。
+- `.ai-config/skills/*`：唯一可维护 skill 源，保存 skill 路由、reference 和脚本入口；`.ai-config/sync-targets.json` 定义同步目标。
 - `.ai-config/rules/rules.md`：rule 源。
-- `.claude/.codex.devin.trae/skills`、`AGENTS.md`、`CLAUDE.md`、`.devin/rules/devinrules.md`：同步副本，不直接维护。
+- `.claude/.codex/.devin/.trae/.opencode/skills`、`AGENTS.md`、`CLAUDE.md`、`.devin/rules/devinrules.md`、`.trae/rules/rules.md`、`.opencode/rules.md`：同步副本，不直接维护。
 - `.claude/settings.json`、`.claude/agents/`、`.codex/hooks.json`、`.codex/agents/`、`.codex/config.toml`：hook/subagent 运行配置，直接维护，不走 `.ai-config` 同步。
 - `Workspace/SystemAgent/`：流程、角色、gate、hook、skill-test 工具。
 - `Workspace/SDD/`：SDD CLI、模板和校验规则。
 - `Workspace/DocsAI/`：工作区级文档（Git submodule、多游戏架构、AI 流程），与框架文档分离。
-- `openspec/`：仅保留历史资产和显式兼容维护入口，不作为默认计划或执行入口。
+- `openspec/`：历史资产，已不再维护兼容入口。
 
 ## 修改规则
 
@@ -81,21 +81,20 @@ SystemAgent 不作为 ECS 业务事实源第一入口；它只作为流程工具
 
 ## AI 配置统一源
 
-本仓同时维护 Claude、Codex、Devin、Trae 的 skill、rule、command、hook 和 subagent。**skill/rule/command 使用 `.ai-config` 统一源；hook/subagent 直接写工具项目配置。**
+本仓同时维护 Claude、Codex、Devin、Trae、OpenCode 的 skill 和 rule。**同步目标由 `.ai-config/sync-targets.json` 配置，修改配置即可增减目标，无需改脚本。**
 
 | 类型 | 维护位置 | 副本位置 | 同步方式 |
 | ---- | ------ | -------- | -------- |
 | Skill | `.ai-config/skills/<category>/<name>/SKILL.md` | `.codex/skills/`、`.claude/skills/`、`.devin/skills/`、`.trae/skills/`（打平） | `bash Workspace/Tools/ai-config-sync/sync-ai-config.sh` |
-| Rule | `.ai-config/rules/rules.md` | `AGENTS.md`、`CLAUDE.md`、`.devin/rules/devinrules.md`（Trae 共用 AGENTS.md） | 同上（Devin 副本由脚本自动追加 frontmatter） |
-| Command | `.ai-config/skills/<category>/<name>/SKILL.md` | `.claude/commands/opsx/*.md`（仅兼容命令需要时生成） | 同上（脚本自动转换格式） |
+| Rule | `.ai-config/rules/rules.md` | `AGENTS.md`、`CLAUDE.md`、`.devin/rules/devinrules.md`、`.trae/rules/rules.md`、`.opencode/rules.md` | 同上（目标和 frontmatter 差异由配置文件定义） |
 | Claude hook | `.claude/settings.json` | 无副本 | 直接维护 |
 | Claude subagent | `.claude/agents/*.md` | 无副本 | 直接维护 |
 | Codex hook | `.codex/hooks.json` | 无副本 | 直接维护 |
 | Codex subagent | `.codex/agents/*.toml`、`.codex/config.toml` | 无副本 | 直接维护 |
 
-**skill/rule/command 只改 `.ai-config/`，不改副本**。脚本通过遍历实现，不硬编码分类名；`.ai-config/skills/` 下一层目录作为分类，skill 目录在分类下，同步时自动打平到各工具顶层。
+**skill/rule 只改 `.ai-config/`，不改副本**。同步目标和排除规则定义在 `.ai-config/sync-targets.json`；脚本读取配置动态执行，不硬编码目标。
 
-**禁止直接修改同步副本**：`.codex/skills/`、`.claude/skills/`、`.devin/skills/`、`.trae/skills/`、`.claude/commands/opsx/`、`AGENTS.md`、`CLAUDE.md`、`.devin/rules/devinrules.md`。
+**禁止直接修改同步副本**：`.codex/skills/`、`.claude/skills/`、`.devin/skills/`、`.trae/skills/`、`AGENTS.md`、`CLAUDE.md`、`.devin/rules/devinrules.md`、`.trae/rules/rules.md`、`.opencode/rules.md`。
 改完后**必须**运行 `bash Workspace/Tools/ai-config-sync/sync-ai-config.sh`，否则副本会被下次同步覆盖。
 
 **允许直接修改项目运行配置**：`.claude/settings.json`、`.claude/agents/`、`.codex/hooks.json`、`.codex/agents/`、`.codex/config.toml`。这些不是 `.ai-config` 同步副本。
