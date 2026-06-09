@@ -1,0 +1,34 @@
+{
+  "rules": [
+    {
+      "owner": "Ability",
+      "minimumSeverity": "Info",
+      "budgetPerSecond": 80
+    },
+    {
+      "owner": "Damage",
+      "minimumSeverity": "Info",
+      "budgetPerSecond": 80
+    },
+    {
+      "owner": "Movement",
+      "minimumSeverity": "Warn",
+      "budgetPerSecond": 40
+    },
+    {
+      "owner": "ObjectPool",
+      "minimumSeverity": "Info",
+      "budgetPerSecond": 80
+    },
+    {
+      "owner": "Timer",
+      "minimumSeverity": "Warn",
+      "budgetPerSecond": 40
+    },
+    {
+      "owner": "TargetSelector",
+      "minimumSeverity": "Info",
+      "budgetPerSecond": 80
+    }
+  ]
+}

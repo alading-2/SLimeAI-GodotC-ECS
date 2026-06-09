@@ -5,16 +5,17 @@
 
 # Log 日志系统
 
-> 当前文档描述 legacy API。AI-first Log / Observation 重构入口见 `README.md` 和 `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/README.md`。
+> 当前文档描述 structured API。旧 `LogLevel` / `Log.Success(...)` 只作为兼容入口。
 
 ## 概述
 
 **路径**: `Src/ECS/Tools/Logger/Log.cs`
 
 **核心价值**:
-- 统一的调试输出接口
-- 分级过滤（Trace/Debug/Info/Success/Warning/Error）
-- 条件编译优化（Release 版本零性能损耗）
+- 统一的 structured observation envelope
+- 默认 stdout summary + buffered JSONL + memory + artifact sinks
+- `severity / outcome / validationStatus` 拆分
+- `OperationTrace` 和 `ValidationSession` 主事实源
 
 ## 快速开始
 
@@ -24,13 +25,44 @@ private static readonly Log _log = new Log("ClassName");
 
 public void MyMethod()
 {
-    _log.Trace("细粒度追踪");  // [Conditional("DEBUG")]
-    _log.Debug("调试信息");    // [Conditional("DEBUG")]
-    _log.Info("普通信息");
-    _log.Success("成功提示");
-    _log.Warn("警告");         // 自动推送到 Debugger 面板
-    _log.Error("错误");        // 自动推送到 Debugger 面板
+    _log.Info(
+        "普通信息",
+        outcome: LogOutcome.Completed,
+        fields: new LogFields { ["entityId"] = entityId.Value },
+        operation: "MyOperation");
+
+    _log.Warn(
+        "警告",
+        fields: new LogFields { ["reasonCode"] = "MY-WARN-001" },
+        operation: "MyOperation");
 }
+```
+
+长过程使用 `OperationTrace`：
+
+```csharp
+using var trace = Log.BeginTrace("Damage", nameof(DamageService), "DamageProcess", "Combat");
+trace.Complete(LogOutcome.Completed, "DamageProcess completed", new LogFields
+{
+    ["appliedDamage"] = result.AppliedDamage,
+    ["actualDamage"] = result.ActualDamage
+});
+```
+
+验证场景使用 `ValidationSession`，不要输出 `[PASS]` / `[FAIL]`：
+
+```csharp
+var session = ValidationSession.Start("owner-smoke", "OwnerSmoke", new ValidationSessionOptions
+{
+    ExpectedInputs = new[] { "fixture" },
+    ExpectedObservations = new[] { "structured checks" },
+    PassCriteria = new[] { "all checks pass" },
+    FailCriteria = new[] { "any required check fails" },
+    ArtifactPath = ".ai-temp/scene-tests/artifacts/owner-smoke.json"
+});
+
+session.Check("check-id", "检查说明", actual, expected, passed);
+session.Complete();
 ```
 
 ## 全局配置
@@ -43,22 +75,56 @@ Log.GlobalLevel = LogLevel.Info;
 Log.SetLevel("ClassName", LogLevel.Debug);
 ```
 
-## 设计亮点
+默认配置文件：
 
-```csharp
-// 实例化设计，每个类独立上下文
-private static readonly Log Log = new Log("Player");
-
-// 条件编译，DEBUG 模式外完全移除
-[Conditional("DEBUG")]
-public void Debug(object message) { }
+```text
+Config/Log/log.profile.json
+Config/Log/log.rules.json
+Config/Log/log.overrides.json
 ```
 
-## 使用场景
+默认运行时会读取这些文件并写入：
 
-- **开发阶段**：追踪游戏逻辑流程
-- **性能分析**：记录关键操作耗时
-- **错误排查**：定位 Bug 来源
+```text
+<runDir>/metadata/log-profile.json
+```
+
+常用环境变量：
+
+```bash
+SLIMEAI_LOG_RUN_DIR=.ai-temp/log-runs/manual/20260609
+SLIMEAI_LOG_PROFILE=ai-default
+SLIMEAI_LOG_OVERRIDES=Config/Log/log.overrides.json
+```
+
+代码中需要显式加载其他配置目录时：
+
+```csharp
+var options = Log.LoadOptionsFromConfig("Config/Log", ".ai-temp/log-runs/manual");
+Log.Configure(options);
+```
+
+预算规则只限制日志输出，不限制游戏逻辑执行。重复日志超过 profile 或 rule 的 `budgetPerSecond` 后，会写 `operation=SuppressedSummary`，并保留 `budgetKey / suppressedCount / budgetPerSecond` 字段。
+
+Godot editor sink 默认关闭。只有人工 editor debug 才显式配置：
+
+```csharp
+Log.Configure(new LogOptions
+{
+    RunDirectory = ".ai-temp/log-runs/manual",
+    EnableGodotEditorSink = true
+});
+```
+
+## logctl
+
+```bash
+Workspace/Tools/logctl/logctl profile show --config-dir Config/Log
+Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/manual --out .ai-temp/log-runs/manual/analysis
+Workspace/Tools/logctl/logctl query --analysis-dir .ai-temp/log-runs/manual/analysis owner=Damage operation=DamageProcess
+Workspace/Tools/logctl/logctl ingest --stdin --source legacy-stdout --out .ai-temp/log-ingest/manual
+Workspace/Tools/logctl/logctl suggest --run-dir .ai-temp/log-runs/manual --dry-run
+```
 
 ## 迁移提醒
 

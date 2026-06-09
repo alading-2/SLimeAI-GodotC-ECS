@@ -1,118 +1,282 @@
 using Godot;
-using Slime;
+using System;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
 
 namespace Slime.Test
 {
     public partial class LogTest : Node
     {
-        // 1. 标准实例
-        private static readonly Log Log = new Log("LogTest");
-
-        // 2. 模拟另一个系统的实例 (例如模拟 战斗系统)
-        private static readonly Log CombatLog = new Log("CombatSystem");
-
-        // 3. 模拟 UI 系统的实例
-        private static readonly Log UiLog = new Log("UISystem");
-
         public override void _Ready()
         {
-            // 稍微延迟一下以确保输出顺序清晰
             CallDeferred(nameof(RunTests));
         }
 
         private void RunTests()
         {
-            GD.PrintRich("\n[b][color=magenta]=== 开始 Log.cs 功能测试 ===[/color][/b]");
-
-            TestBasicLogging();
-            TestInstanceLevelOverride();
-            TestContextFiltering();
-            TestGlobalFiltering();
-            TestCrossClassLogging();
-
-            GD.PrintRich("[b][color=magenta]=== 测试结束 ===[/color][/b]\n");
+            TestStructuredEntrySplitsSeverityOutcomeAndValidation();
+            TestDefaultSinksWriteSummaryAndJsonlWithoutGodotEditorSink();
+            TestValidationSessionWritesArtifactAndStructuredChecks();
+            TestProfileLoadsConfigAndWritesMetadata();
+            TestBudgetSuppressesRepeatedEntriesAndWritesSummary();
         }
 
-        private void TestBasicLogging()
+        private static void TestStructuredEntrySplitsSeverityOutcomeAndValidation()
         {
-            Log.Info("\n[u]--- 1. 测试基础日志等级 (显示所有等级) ---[/u]");
+            Log.ResetForTests();
+            Log.Configure(new LogOptions
+            {
+                ProfileName = "test",
+                MinimumSeverity = LogSeverity.Trace,
+                EnableStdoutSummary = false,
+                EnableJsonlFile = false,
+                EnableMemorySink = true,
+                EnableGodotEditorSink = false,
+            });
 
-            // 临时将全局等级设为 Trace，以便测试所有输出
-            var originalLevel = Log.GlobalLevel;
-            Log.GlobalLevel = LogLevel.Trace;
+            var log = new Log("LoggerContract", owner: "Tools.Logger", operation: "Contract");
+            log.Info(
+                "structured entry",
+                outcome: LogOutcome.Succeeded,
+                validationStatus: LogValidationStatus.Pass,
+                fields: new LogFields
+                {
+                    ["entityId"] = "logger-test",
+                    ["reasonCode"] = "contract-check"
+                });
 
-            Log.Trace("这是一条 Trace 日志 (最细粒度)");
-            Log.Debug("这是一条 Debug 日志 (调试用)");
-            Log.Info("这是一条 Info 日志 (普通信息)");
-            Log.Success("这是一条 Success 日志 (操作成功)");
-            Log.Warn("这是一条 Warning 日志 (警告)");
-            Log.Error("这是一条 Error 日志 (错误)");
+            var entries = Log.GetMemoryEntries();
+            AssertTrue(entries.Count == 1, "memory sink captures one structured entry");
 
-            // 恢复原始等级
-            Log.GlobalLevel = originalLevel;
+            var entry = entries[0];
+            AssertTrue(entry.Severity == LogSeverity.Info, "severity is independent from success/pass");
+            AssertTrue(entry.Outcome == LogOutcome.Succeeded, "outcome records operation result");
+            AssertTrue(entry.ValidationStatus == LogValidationStatus.Pass, "validation status records PASS/FAIL semantics");
+            AssertTrue(entry.Owner == "Tools.Logger", "owner is preserved");
+            AssertTrue(entry.Operation == "Contract", "operation is preserved");
+            AssertTrue(entry.RunElapsedMs >= 0, "run elapsed is monotonic field");
+            AssertTrue(entry.Frame >= 0, "process frame field exists");
+            AssertTrue(entry.PhysicsFrame >= 0, "physics frame field exists");
+            AssertTrue(entry.Fields["entityId"]?.ToString() == "logger-test", "structured field is preserved");
         }
 
-        private void TestInstanceLevelOverride()
+        private static void TestDefaultSinksWriteSummaryAndJsonlWithoutGodotEditorSink()
         {
-            Log.Info("\n[u]--- 2. 测试实例等级覆盖 (Instance Level Override) ---[/u]");
+            Log.ResetForTests();
 
-            Log.Info($">> 当前全局等级: {Log.GlobalLevel} (通常屏蔽 Trace/Debug)");
+            var runDir = Path.Combine(".ai-temp", "logger-tests", Guid.NewGuid().ToString("N"));
+            var stdout = new StringWriter();
+            Log.Configure(new LogOptions
+            {
+                ProfileName = "test-default-sinks",
+                RunDirectory = runDir,
+                Stdout = stdout,
+                MinimumSeverity = LogSeverity.Trace,
+                EnableStdoutSummary = true,
+                EnableJsonlFile = true,
+                EnableMemorySink = true,
+                EnableGodotEditorSink = false,
+            });
 
-            // 创建一个强制开启 Trace 的实例
-            Log traceLogger = new Log("TraceSystem", LogLevel.Trace);
+            var log = new Log("LoggerSink", owner: "Tools.Logger", operation: "SinkContract");
+            log.Warn("warn summary", outcome: LogOutcome.Completed, fields: new LogFields { ["budgetKey"] = "logger-test" });
+            Log.Flush();
 
-            traceLogger.Trace("TraceSystem: 虽然全局等级高，但我强制显示 Trace！");
-            traceLogger.Info("TraceSystem: Info 正常显示");
+            var stdoutText = stdout.ToString();
+            AssertTrue(stdoutText.Contains("[WARN][Tools.Logger][LoggerSink]"), "stdout summary contains owner/context/severity");
+            AssertTrue(stdoutText.Contains("operation=SinkContract"), "stdout summary contains operation");
+            AssertTrue(!stdoutText.Contains("[PASS]"), "stdout summary does not use PASS marker");
+
+            var jsonlPath = Path.Combine(runDir, "raw", "scene-log.jsonl");
+            AssertTrue(File.Exists(jsonlPath), "jsonl sink writes raw scene log");
+
+            var firstLine = File.ReadAllLines(jsonlPath)[0];
+            using var document = JsonDocument.Parse(firstLine);
+            var root = document.RootElement;
+            AssertTrue(root.GetProperty("severity").GetString() == "Warn", "jsonl records severity");
+            AssertTrue(root.GetProperty("outcome").GetString() == "Completed", "jsonl records outcome");
+            AssertTrue(root.GetProperty("owner").GetString() == "Tools.Logger", "jsonl records owner");
+            AssertTrue(root.GetProperty("fields").GetProperty("budgetKey").GetString() == "logger-test", "jsonl records fields");
         }
 
-        private void TestContextFiltering()
+        private static void TestValidationSessionWritesArtifactAndStructuredChecks()
         {
-            Log.Info("\n[u]--- 3. 测试上下文过滤 (Context Filtering) ---[/u]");
+            Log.ResetForTests();
 
-            // 默认情况下所有日志都显示
-            CombatLog.Info("CombatSystem: 战斗开始 (未过滤)");
-            UiLog.Info("UISystem: UI 初始化 (未过滤)");
+            var runDir = Path.Combine(".ai-temp", "validation-tests", Guid.NewGuid().ToString("N"));
+            Log.Configure(new LogOptions
+            {
+                ProfileName = "validation-test",
+                RunDirectory = runDir,
+                MinimumSeverity = LogSeverity.Trace,
+                EnableStdoutSummary = false,
+                EnableJsonlFile = true,
+                EnableMemorySink = true,
+                EnableGodotEditorSink = false,
+            });
 
-            // 过滤掉 CombatSystem 的 Info 及以下日志，只显示 Warning/Error
-            Log.Info(">> [color=yellow]操作: 设置 CombatSystem 最低等级为 Warning[/color]");
-            Log.SetLevel("CombatSystem", LogLevel.Warning);
+            using var session = ValidationSession.Start(new ValidationSessionOptions
+            {
+                Name = "LoggerValidationContract",
+                Owner = "Tools.Logger",
+                ArtifactPath = Path.Combine(runDir, "artifacts", "logger-validation.json"),
+                ExpectedInputs = "one passing check and one skipped check",
+                ExpectedObservations = "checks are stored in artifact and structured log",
+                PassCriteria = "all required checks pass",
+                FailCriteria = "required check failure marks session failed",
+            });
 
-            CombatLog.Info("CombatSystem: 玩家攻击 (这条不应该显示)");
-            CombatLog.Warn("CombatSystem: 武器过热 (这条应该显示)");
+            session.Check("required-pass", true, expected: "true", actual: "true", reasonCode: "required-pass");
+            session.Skip("optional-skip", reasonCode: "not-needed");
+            var artifact = session.Complete();
+            Log.Flush();
 
-            // 恢复
-            Log.SetLevel("CombatSystem", LogLevel.Debug);
-            Log.Info(">> [color=green]操作: 恢复 CombatSystem 等级为 Debug[/color]");
-            CombatLog.Info("CombatSystem: 冷却恢复 (这条应该显示)");
+            AssertTrue(artifact.ValidationStatus == LogValidationStatus.Pass, "validation session status is pass");
+            AssertTrue(artifact.Checks.Count == 2, "artifact keeps check list");
+            AssertTrue(File.Exists(artifact.ArtifactPath), "validation artifact is written");
+
+            var json = File.ReadAllText(artifact.ArtifactPath);
+            AssertTrue(json.Contains("\"expectedInputs\""), "artifact includes expected inputs");
+            AssertTrue(json.Contains("\"expectedObservations\""), "artifact includes expected observations");
+            AssertTrue(json.Contains("\"passCriteria\""), "artifact includes pass criteria");
+            AssertTrue(json.Contains("\"failCriteria\""), "artifact includes fail criteria");
+            AssertTrue(json.Contains("\"checks\""), "artifact includes checks");
+            AssertTrue(json.Contains("\"failures\""), "artifact includes failures");
+
+            var entries = Log.GetMemoryEntries();
+            AssertTrue(entries.Any(entry => entry.Channel == LogChannel.Validation && entry.ValidationStatus == LogValidationStatus.Pass), "validation pass is structured log field");
         }
 
-        private void TestGlobalFiltering()
+        private static void TestProfileLoadsConfigAndWritesMetadata()
         {
-            Log.Info("\n[u]--- 4. 测试全局过滤 (Global Filtering) ---[/u]");
+            Log.ResetForTests();
 
-            // 保存当前全局等级
-            var previousLevel = Log.GlobalLevel;
+            var root = Path.Combine(".ai-temp", "logger-profile-tests", Guid.NewGuid().ToString("N"));
+            var configDir = Path.Combine(root, "Config", "Log");
+            var runDir = Path.Combine(root, "run");
+            Directory.CreateDirectory(configDir);
 
-            Log.Info($">> 当前全局等级: {Log.GlobalLevel}");
-            Log.Info(">> [color=yellow]操作: 将全局等级设置为 Error (屏蔽 Info/Warn/Success)[/color]");
+            File.WriteAllText(Path.Combine(configDir, "log.profile.json"), """
+            {
+              "profile": "profile-contract",
+              "defaultSeverity": "Warn",
+              "sinks": {
+                "stdoutSummary": false,
+                "jsonlFile": true,
+                "memory": true,
+                "artifact": true,
+                "godotEditor": false
+              },
+              "budget": {
+                "enabled": true,
+                "defaultPerSecond": 20
+              },
+              "rules": [
+                {
+                  "owner": "Tools.Logger",
+                  "context": "LoggerProfile",
+                  "operation": "ProfileDebug",
+                  "minimumSeverity": "Debug",
+                  "budgetPerSecond": 5
+                }
+              ]
+            }
+            """);
 
-            Log.GlobalLevel = LogLevel.Error;
+            File.WriteAllText(Path.Combine(configDir, "log.rules.json"), """
+            {
+              "rules": [
+                {
+                  "owner": "Tools.Logger",
+                  "context": "LoggerProfile",
+                  "operation": "RulesInfo",
+                  "minimumSeverity": "Info"
+                }
+              ]
+            }
+            """);
 
-            Log.Info("这条 Info 日志不应该显示");
-            Log.Warn("这条 Warn 日志不应该显示");
-            Log.Error("这条 Error 日志应该显示");
+            File.WriteAllText(Path.Combine(configDir, "log.overrides.json"), """
+            {
+              "profile": "profile-contract-override",
+              "reason": "logger profile contract test"
+            }
+            """);
 
-            // 恢复
-            Log.GlobalLevel = previousLevel;
-            Log.Info($">> [color=green]操作: 全局等级已恢复为: {Log.GlobalLevel}[/color]");
+            var options = Log.LoadOptionsFromConfig(configDir, runDir);
+            Log.Configure(options);
+
+            var log = new Log("LoggerProfile", owner: "Tools.Logger", operation: "ProfileDebug");
+            log.Write(LogSeverity.Debug, "profile debug allowed by rule", operation: "ProfileDebug");
+            log.Write(LogSeverity.Debug, "rules debug filtered", operation: "RulesInfo");
+            log.Write(LogSeverity.Info, "rules info allowed", operation: "RulesInfo");
+            Log.Flush();
+
+            var entries = Log.GetMemoryEntries();
+            AssertTrue(entries.Any(entry => entry.Message == "profile debug allowed by rule"), "profile rule opens debug for selected operation");
+            AssertTrue(!entries.Any(entry => entry.Message == "rules debug filtered"), "rules file minimum severity filters debug");
+            AssertTrue(entries.Any(entry => entry.Message == "rules info allowed"), "rules file allows info");
+
+            var metadataPath = Path.Combine(runDir, "metadata", "log-profile.json");
+            AssertTrue(File.Exists(metadataPath), "log profile metadata is written to run dir");
+
+            using var metadata = JsonDocument.Parse(File.ReadAllText(metadataPath));
+            var rootElement = metadata.RootElement;
+            AssertTrue(rootElement.GetProperty("profile").GetString() == "profile-contract-override", "override profile is reflected in metadata");
+            AssertTrue(rootElement.GetProperty("sinks").GetProperty("godotEditor").GetBoolean() == false, "godot editor sink remains disabled by profile");
+            AssertTrue(rootElement.GetProperty("budget").GetProperty("enabled").GetBoolean(), "budget config is reflected in metadata");
+
+            var jsonlPath = Path.Combine(runDir, "raw", "scene-log.jsonl");
+            using var jsonl = JsonDocument.Parse(File.ReadAllLines(jsonlPath).First());
+            AssertTrue(jsonl.RootElement.TryGetProperty("runElapsedMs", out _), "jsonl uses camelCase envelope fields");
         }
 
-        private void TestCrossClassLogging()
+        private static void TestBudgetSuppressesRepeatedEntriesAndWritesSummary()
         {
-            Log.Info("\n[u]--- 5. 测试跨类日志 (Cross Class Logging) ---[/u]");
-            var child = new LogTestChild();
-            AddChild(child);
-            child.DoSomething();
+            Log.ResetForTests();
+
+            var runDir = Path.Combine(".ai-temp", "logger-budget-tests", Guid.NewGuid().ToString("N"));
+            Log.Configure(new LogOptions
+            {
+                ProfileName = "budget-test",
+                RunDirectory = runDir,
+                MinimumSeverity = LogSeverity.Trace,
+                EnableStdoutSummary = false,
+                EnableJsonlFile = true,
+                EnableMemorySink = true,
+                EnableArtifactSink = true,
+                EnableGodotEditorSink = false,
+                Budget = new LogBudgetOptions { Enabled = true, DefaultPerSecond = 1 },
+            });
+
+            var log = new Log("LoggerBudget", owner: "Tools.Logger", operation: "BudgetedOperation");
+            for (var index = 0; index < 4; index += 1)
+            {
+                log.Info(
+                    "budgeted repeated entry",
+                    fields: new LogFields { ["budgetKey"] = "logger-budget-contract" },
+                    operation: "BudgetedOperation");
+            }
+
+            Log.Flush();
+
+            var entries = Log.GetMemoryEntries();
+            var repeatedEntries = entries.Where(entry => entry.Message == "budgeted repeated entry").ToList();
+            var summaries = entries.Where(entry => entry.Operation == "SuppressedSummary").ToList();
+
+            AssertTrue(repeatedEntries.Count == 1, "budget keeps only first repeated entry in one-second window");
+            AssertTrue(summaries.Count >= 1, "budget writes suppressed summary");
+            AssertTrue(summaries.Any(entry => Convert.ToInt32(entry.Fields["suppressedCount"]) >= 1), "suppressed summary includes count");
+            AssertTrue(summaries.All(entry => entry.Fields["budgetKey"]?.ToString() == "logger-budget-contract"), "suppressed summary keeps budget key");
+        }
+
+        private static void AssertTrue(bool condition, string message)
+        {
+            if (!condition)
+            {
+                throw new InvalidOperationException($"LogTest assertion failed: {message}");
+            }
         }
     }
 }

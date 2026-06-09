@@ -2,7 +2,7 @@
   "id": "SDD-0040",
   "slug": "log-ai-first-observation-hard-cutover",
   "title": "Log AI-first Observation Hard Cutover",
-  "status": "pending",
+  "status": "blocked",
   "type": "refactor",
   "created_at": "2026-06-09",
   "updated_at": "2026-06-09",
@@ -21,10 +21,10 @@
     "hard-cutover"
   ],
   "progress": {
-    "current_task": "T1.1",
-    "completed_tasks": 0,
-    "total_tasks": 10,
-    "percent": 0
+    "current_task": "done",
+    "completed_tasks": 12,
+    "total_tasks": 12,
+    "percent": 100
   },
   "bdd": {
     "required": true,
@@ -42,5 +42,8 @@
   "project_order": 29,
   "shared_design_refs": [
     "../../design/INDEX.md"
+  ],
+  "blockers": [
+    "Godot scene smoke blocked: 当前没有可验证本框架工作树的承载游戏 runner。Games/BrotatoLike 不是 git 仓，且缺少 Tools/run-godot-scene.sh 与 SlimeAI；Games/BrotatoLikeOld 虽有 runner，但 wrapper 指向缺失的 /home/slime/Code/SlimeAI/.codex/... 和 /home/slime/Code/SlimeAI/SlimeAI/GameOS/SlimeAI.GameOS.csproj，且 SlimeAI submodule commit 与当前框架工作树不一致。已通过非 Godot 门禁，未伪造场景验证通过。"
   ]
 }

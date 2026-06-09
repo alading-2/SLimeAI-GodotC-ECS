@@ -40,6 +40,9 @@ description: 修改 SlimeAI ECS 测试、Validation、Observation、日志分析
 - 新 Godot 验证场景遵守 scene gate 规则：`Src/Validation/...`、旁置 `README.md`、JSON artifact 和结构化日志是主事实源；旧 PASS/FAIL marker 只允许作为 runner 过渡 fallback。
 - 新或改动 Godot 验证场景必须通过 scene gate：README 包含 `expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath`，最近 PASS run 的 `index.json`、`result.json` 和 scene artifact 存在且 artifact 标准答案五字段非空。
 - 新测试不要用裸 `GD.Print("PASS")`、`GD.PushError("FAIL")`、`[PASS]`、`[FAIL]` 作为断言事实；断言结果必须进入 Validation artifact / structured log，Godot editor sink 默认关闭。
+- 新 Runtime / Capability / Godot validation 断言优先使用 `ValidationSession` / `CheckResult`；artifact 和 structured log 是 runner 判定主事实源，stdout pattern 只能是 `stdout-pattern-fallback`。
+- Log profile 默认事实源是 `Config/Log/log.profile.json`、`Config/Log/log.rules.json`、`Config/Log/log.overrides.json`；排查测试前可先跑 `Workspace/Tools/logctl/logctl profile show --config-dir Config/Log` 确认可用 sink、budget 和 rules。
+- 排查场景日志时先运行 `Workspace/Tools/logctl/logctl analyze --run-dir <run> --out <run>/analysis`，再用 `logctl query` 按 `owner / operation / validationStatus / severity` 缩小范围，不把全量 stdout 直接交给 AI。
 - ObjectPool 专项验证当前分层位于 `Src/ECS/Tools/ObjectPool/Tests/Contracts/` 和 `Src/ECS/Tools/ObjectPool/Tests/Validation/CollisionIsolation/`；`ObjectPoolCollisionIsolationValidation` 必须输出 `.ai-temp/scene-tests/artifacts/objectpool-collision-isolation-validation.json`，artifact 至少包含标准答案五字段、`checks[]`、`poolStats`、`nodeStates`、`collisionEvents`、`businessCollisionEvents` 和 `failureReasons`，并用 `collision_guard_event_oracle` 证明 raw callback 未直接等同于业务事件。
 - 框架仓新增 / 修改 Godot validation scene 后，跑 Godot runner 前必须选定提供 runner 的承载游戏，并按该游戏的框架版本策略同步 submodule 指针或工作树镜像；后续多游戏 / 成品阶段不默认同步所有游戏。
 
@@ -47,11 +50,13 @@ description: 修改 SlimeAI ECS 测试、Validation、Observation、日志分析
 
 ```bash
 dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
+Workspace/Tools/logctl/logctl profile show --config-dir Config/Log
 # 如果承载游戏提供 runner，再执行专项场景和 smoke：
 # cd /home/slime/Code/SlimeAI/Games/<GameWithRunner>
 # Tools/run-godot-scene.sh run res://Src/Validation/Game/UnitComposition/BrotatoLikeUnitCompositionValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 # Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 # Tools/analyze-godot-scene-logs.sh
+# Workspace/Tools/logctl/logctl analyze --run-dir <latest-run-dir> --out <latest-run-dir>/analysis
 ```
 
 ## guard 测试模式 + sandbox world

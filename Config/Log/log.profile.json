@@ -1,0 +1,27 @@
+{
+  "profile": "ai-default",
+  "defaultSeverity": "Debug",
+  "sinks": {
+    "stdoutSummary": true,
+    "jsonlFile": true,
+    "memory": true,
+    "artifact": true,
+    "godotEditor": false
+  },
+  "budget": {
+    "enabled": true,
+    "defaultPerSecond": 200
+  },
+  "rules": [
+    {
+      "owner": "Validation",
+      "minimumSeverity": "Trace",
+      "budgetPerSecond": 1000
+    },
+    {
+      "owner": "Tools.Logger",
+      "minimumSeverity": "Debug",
+      "budgetPerSecond": 200
+    }
+  ]
+}
