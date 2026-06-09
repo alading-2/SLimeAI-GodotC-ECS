@@ -84,6 +84,56 @@ fi
 
 echo "Scene test run: $target_dir"
 
+resolve_logctl() {
+    local candidates=()
+    if [ -n "${LOGCTL:-}" ]; then
+        candidates+=("$LOGCTL")
+    fi
+    candidates+=(
+        "Workspace/Tools/logctl/logctl"
+        "Workspace/Tools/logctl/logctl.mjs"
+        "SlimeAI/Workspace/Tools/logctl/logctl"
+        "SlimeAI/Workspace/Tools/logctl/logctl.mjs"
+    )
+
+    local candidate
+    for candidate in "${candidates[@]}"; do
+        if [ -f "$candidate" ]; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+if [ -f "$target_dir/analysis/gate-report.json" ]; then
+    echo "Format: logctl analysis"
+    jq -r '"Status: \(.status) resultSource=\(.resultSource) entries=\(.counts.entries) artifacts=\(.counts.artifacts) failures=\(.failures | length)"' "$target_dir/analysis/gate-report.json"
+    if [ -f "$target_dir/analysis/ai-context.md" ]; then
+        echo
+        sed -n '1,80p' "$target_dir/analysis/ai-context.md"
+    fi
+    exit 0
+fi
+
+if logctl_path="$(resolve_logctl)"; then
+    if [ "$logctl_path" = "${logctl_path%.mjs}" ]; then
+        "$logctl_path" analyze --run-dir "$target_dir" --out "$target_dir/analysis" >/dev/null || true
+    else
+        node "$logctl_path" analyze --run-dir "$target_dir" --out "$target_dir/analysis" >/dev/null || true
+    fi
+    if [ -f "$target_dir/analysis/gate-report.json" ]; then
+        echo "Format: logctl analysis"
+        jq -r '"Status: \(.status) resultSource=\(.resultSource) entries=\(.counts.entries) artifacts=\(.counts.artifacts) failures=\(.failures | length)"' "$target_dir/analysis/gate-report.json"
+        if [ -f "$target_dir/analysis/ai-context.md" ]; then
+            echo
+            sed -n '1,80p' "$target_dir/analysis/ai-context.md"
+        fi
+        exit 0
+    fi
+fi
+
 write_gate_report() {
     local run_dir="$1"
     local manifest="$2"
@@ -393,12 +443,13 @@ marker_status_for_combined() {
     fi
 }
 
-error_marker_for_combined() {
+stdout_pattern_fallback_for_combined() {
     local combined_file="$1"
     if [ ! -f "$combined_file" ]; then
         return
     fi
 
+    # legacy stdout-pattern-fallback only; logctl gate report is the primary source.
     rg -n -m 1 "ERROR:|\\[ERROR\\]|\\[FAIL\\]|FAIL:|Exception|Cannot instantiate|Failed to load|scene not found" "$combined_file" || true
 }
 
@@ -427,7 +478,7 @@ if [ -f "$target_dir/index.json" ]; then
         fi
 
         marker_status="$(marker_status_for_combined "$combined_file")"
-        error_marker="$(error_marker_for_combined "$combined_file")"
+        error_marker="$(stdout_pattern_fallback_for_combined "$combined_file")"
 
         if [ -n "$artifact_dir" ] && [ -f "$artifact_dir/logs/scene-log.jsonl" ]; then
             jsonl_count="$(wc -l < "$artifact_dir/logs/scene-log.jsonl" | tr -d ' ')"
@@ -523,10 +574,10 @@ else
     echo "Artifacts: not found"
 fi
 
-matches="$(rg -n -m 40 "ERROR:|\\[ERROR\\]|\\[FAIL\\]|FAIL:|Exception|Cannot instantiate|Failed to load|scene not found" "$target_dir" || true)"
+matches="$(rg -n -m 40 "ERROR:|\\[ERROR\\]|\\[FAIL\\]|FAIL:|Exception|Cannot instantiate|Failed to load|scene not found" "$target_dir" || true)" # legacy stdout-pattern-fallback only
 if [ -n "$matches" ]; then
     echo
-    echo "First error markers:"
+    echo "First stdout-pattern-fallback markers:"
     printf '%s\n' "$matches"
 else
     echo "Error markers: none"

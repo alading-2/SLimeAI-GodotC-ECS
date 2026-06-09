@@ -1,0 +1,9 @@
+[
+  {
+    "owner": "Tools.Logger",
+    "context": "LoggerBudget",
+    "operation": "BudgetedOperation",
+    "message": "budgeted repeated entry",
+    "count": 11
+  }
+]

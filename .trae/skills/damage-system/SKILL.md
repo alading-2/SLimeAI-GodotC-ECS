@@ -33,6 +33,9 @@ description: 修改 SlimeAI ECS Damage Capability、DamageInfo、处理器管线
 - `DamageService` 命令执行成功不等于实际扣血；`DamageProcessResult.Processed` 表示管线处理完成，`AppliedDamage / ActualDamage` 才表示 HealthComponent 实际扣血。`DamageTool.ApplyToList` 和技能命中计数必须只把 `AppliedDamage=true` 算作实际命中。
 - `DamageInfo.Attacker` 是直接来源；暴击、吸血、统计和击杀归属通过 `EntityAttributionResolver.ResolveUnit/ResolveChain` 读取 Projectile / Effect / Source / Origin projection。不要恢复 `EntityRelationshipTraversal.FindAncestorOfType` 或 parent-chain attribution。
 - `GodotContactDamageComponent` 是 GodotBridge Adapter legacy class name，`DamageService` / `TimerManager` 可替换；默认进程级入口只允许在 adapter boundary 使用。
+- Damage process flow 使用 `owner=Damage`、`operation=DamageProcess`，关键字段是 `processed / appliedDamage / actualDamage / finalDamage / isDodged / processorCount`。
+- `DamageProcessResult.Processed` 不等于实际扣血；日志、测试和命中计数必须以 `AppliedDamage / ActualDamage` 区分。
+- Damage 测试断言走 `ValidationSession` / artifact / structured log，不新增 `[PASS]` / `[FAIL]`。
 
 ## 验证
 
@@ -41,4 +44,5 @@ dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
 # 如果承载游戏提供 runner，再执行 Godot smoke:
 # cd /home/slime/Code/SlimeAI/Games/<GameWithRunner>
 # Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
+# Workspace/Tools/logctl/logctl query --analysis-dir <run>/analysis owner=Damage operation=DamageProcess
 ```

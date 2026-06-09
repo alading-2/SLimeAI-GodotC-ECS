@@ -239,11 +239,11 @@ public partial class ECSTest : Node
     {
         if (condition)
         {
-            _log.Debug($"[PASS] {message}");
+            _log.Debug(message, outcome: LogOutcome.Succeeded, validationStatus: LogValidationStatus.Pass, channel: LogChannel.Validation);
         }
         else
         {
-            _log.Error($"[FAIL] {message}");
+            _log.Error(message, outcome: LogOutcome.Failed, validationStatus: LogValidationStatus.Fail, channel: LogChannel.Validation);
             _failCount++;
             throw new Exception($"Assertion failed: {message}");
         }

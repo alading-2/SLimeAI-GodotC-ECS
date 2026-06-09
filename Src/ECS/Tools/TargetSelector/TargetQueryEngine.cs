@@ -14,14 +14,21 @@ public static class TargetQueryEngine
     /// <summary>查询实体目标。</summary>
     public static TargetQueryResult<IEntity> QueryEntities(TargetSelectorQuery query)
     {
+        using var trace = Log.BeginTrace("TargetSelector", nameof(TargetQueryEngine), "TargetQueryEntities", "Targeting");
         var resolved = query.Resolve();
         var warnings = new List<string>();
         var errors = ValidateQuery(resolved, forPositions: false);
         if (errors.Count > 0)
         {
-            return new TargetQueryResult<IEntity>(
+            var failed = new TargetQueryResult<IEntity>(
                 Array.Empty<IEntity>(),
                 CreateDiagnostics(resolved, 0, 0, 0, 0, 0, 0, resolved.MaxTargets, false, false, warnings, errors));
+            trace.Complete(LogOutcome.Failed, "TargetQueryEntities validation failed", new LogFields
+            {
+                ["errorCount"] = errors.Count,
+                ["maxTargets"] = resolved.MaxTargets
+            });
+            return failed;
         }
 
         var source = ResolveCandidateSource(resolved);
@@ -55,20 +62,35 @@ public static class TargetQueryEngine
             warnings,
             errors);
 
+        trace.Complete(LogOutcome.Completed, "TargetQueryEntities completed", new LogFields
+        {
+            ["sourceCandidates"] = sourceCandidates.Count,
+            ["geometryHits"] = geometryHits.Count,
+            ["returned"] = returned.Count,
+            ["truncated"] = truncated,
+            ["warningCount"] = warnings.Count
+        });
         return new TargetQueryResult<IEntity>(returned, diagnostics);
     }
 
     /// <summary>查询或生成位置目标。</summary>
     public static TargetQueryResult<Vector2> QueryPositions(TargetSelectorQuery query)
     {
+        using var trace = Log.BeginTrace("TargetSelector", nameof(TargetQueryEngine), "TargetQueryPositions", "Targeting");
         var resolved = query.Resolve();
         var warnings = new List<string>();
         var errors = ValidateQuery(resolved, forPositions: true);
         if (errors.Count > 0)
         {
-            return new TargetQueryResult<Vector2>(
+            var failed = new TargetQueryResult<Vector2>(
                 Array.Empty<Vector2>(),
                 CreateDiagnostics(resolved, 0, 0, 0, 0, 0, 0, resolved.MaxTargets, false, false, warnings, errors));
+            trace.Complete(LogOutcome.Failed, "TargetQueryPositions validation failed", new LogFields
+            {
+                ["errorCount"] = errors.Count,
+                ["maxTargets"] = resolved.MaxTargets
+            });
+            return failed;
         }
 
         var results = new List<Vector2>();
@@ -95,6 +117,12 @@ public static class TargetQueryEngine
             warnings,
             errors);
 
+        trace.Complete(LogOutcome.Completed, "TargetQueryPositions completed", new LogFields
+        {
+            ["returned"] = results.Count,
+            ["maxTargets"] = resolved.MaxTargets,
+            ["warningCount"] = warnings.Count
+        });
         return new TargetQueryResult<Vector2>(results, diagnostics);
     }
 

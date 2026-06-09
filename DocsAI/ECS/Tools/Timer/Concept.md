@@ -64,7 +64,7 @@
 var snapshot = TimerManager.Instance.GetTimerDiagnostics(
     new TimerDiagnosticsFilter(Purpose: TimerPurpose.DoT, MaxEntries: 20));
 
-GD.Print(TimerManager.Instance.FormatTimerSummary(snapshot));
+TimerManager.Instance.PrintTimerSummary(topN: 5);
 TimerManager.Instance.ExportTimerDiagnosticsJson(
     ".ai-temp/timer-diagnostics.json",
     new TimerDiagnosticsFilter(MaxEntries: 100));

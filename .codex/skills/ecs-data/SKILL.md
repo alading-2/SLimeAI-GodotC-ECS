@@ -31,6 +31,8 @@ description: 修改 SlimeAI ECS Runtime Data、DataKey、DataCatalog、RuntimeDa
 - Data 业务变更通知通过 `GameEventType.Data.Changed<T>`；`PropertyChanged(string, object?, object?)` 只允许 TestSystem/debug diagnostic 兼容层使用。
 - DataOS SQLite 只在生成 / 校验 / snapshot 阶段使用，运行时热路径读取 `RuntimeDataSnapshot`；snapshot loader 对 unknown key、wrong type、descriptor drift 必须报错。
 - Runtime Data 变更至少补纯 C# Runtime tests；若影响 Godot Node / 场景加载 / 游戏胶水，追加独立 Godot 验证场景。
+- Data owner 使用 `owner=Data`；Data runtime 热路径不默认为每次 `Get/Set` 写日志，snapshot loader / descriptor 校验 / record apply / DataOS validation 才写 artifact 和 structured log。
+- Data 测试断言走 `ValidationSession` / artifact / structured log，不新增 `[PASS]` / `[FAIL]` 或裸 stdout marker。
 - PRJ-0002 旧 ECS Data 完整重构按 `SDD-0012` → `SDD-0019` 顺序执行；`runtime_snapshot.json.descriptors` 是字段定义事实源，旧 `DataMeta` / `DataRegistry` / 手写 `DataKey` 只允许作为一次性审计输入，不新增长期 adapter 或 runtime fallback。
 - 旧 ECS `DataDefinitionCatalog` 切片只做 descriptor catalog、compute resolver 绑定校验和 `LegacyDataAuditReport`；records apply、Entity bootstrap、Feature modifier bridge 和旧路径删除分别留给后续 SDD。
 - 旧 ECS `DataRuntimeStorage` 切片负责 descriptor default、typed `DataKey<T>`、write/range/allowed values policy、unknown key fail-fast 和 Data changed 事件桥接；未绑定 catalog 的旧 `Data()` 调用只作为迁移期旧路径保留，不作为新字段入口。
@@ -53,4 +55,5 @@ $GODOT --headless --path . --scene res://Src/ECS/Runtime/Data/Tests/DataOS/DataC
 $GODOT --headless --path . --scene res://Src/ECS/Runtime/Data/Tests/DataOS/DataRuntimeTestScene.tscn
 $GODOT --headless --path . --scene res://Src/ECS/Runtime/Data/Tests/DataOS/DataSnapshotApplyTestScene.tscn
 $GODOT --headless --path . --scene res://Src/ECS/Runtime/Data/Tests/DataOS/DataFeatureBridgeTestScene.tscn
+# Workspace/Tools/logctl/logctl query --analysis-dir <run>/analysis owner=Data
 ```

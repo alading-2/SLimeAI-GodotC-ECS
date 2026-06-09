@@ -237,7 +237,9 @@ public class ObjectPool<T> : IObjectPoolRuntime where T : class
     /// <returns>获取到的对象实例</returns>
     public T Get(bool activateNode = true)
     {
+        using var trace = Log.BeginTrace("ObjectPool", nameof(ObjectPool<T>), "ObjectPoolAcquire", "Runtime");
         T obj;
+        var reused = _stack.Count > 0;
         if (_stack.Count > 0)
         {
             obj = _stack.Pop();
@@ -274,6 +276,15 @@ public class ObjectPool<T> : IObjectPoolRuntime where T : class
             OnInstanceAcquire?.Invoke(obj);
         }
 
+        trace.Complete(LogOutcome.Completed, "ObjectPoolAcquire completed", new LogFields
+        {
+            ["poolName"] = PoolName,
+            ["reused"] = reused,
+            ["activeCount"] = _stats.ActiveCount,
+            ["idleCount"] = _stats.Count,
+            ["activateNode"] = activateNode,
+            ["budgetKey"] = $"ObjectPool.{PoolName}.Acquire"
+        });
         return obj;
     }
 
@@ -333,12 +344,18 @@ public class ObjectPool<T> : IObjectPoolRuntime where T : class
     /// <param name="obj">要归还的对象（如果为 null 则忽略）</param>
     public void Release(T obj)
     {
+        using var trace = Log.BeginTrace("ObjectPool", nameof(ObjectPool<T>), "ObjectPoolRelease", "Runtime");
         if (obj == null) return;
 
         // 1. 检查是否已经在池中 (对标 GDScript 的 meta 检查)
         if (obj is Node node && PoolNodeLifecycleStrategy.IsMarkedInPool(node))
         {
             _log.Warn($"{PoolName}: 实例 {obj} 已在池中。已忽略。");
+            trace.Complete(LogOutcome.Skipped, "ObjectPoolRelease skipped: already in pool", new LogFields
+            {
+                ["poolName"] = PoolName,
+                ["budgetKey"] = $"ObjectPool.{PoolName}.Release"
+            });
             return;
         }
 
@@ -346,6 +363,11 @@ public class ObjectPool<T> : IObjectPoolRuntime where T : class
         if (!_activeItems.Contains(obj))
         {
             _log.Warn($"{PoolName}: 实例 {obj} 不在活跃集合中。已忽略。");
+            trace.Complete(LogOutcome.Skipped, "ObjectPoolRelease skipped: not active", new LogFields
+            {
+                ["poolName"] = PoolName,
+                ["budgetKey"] = $"ObjectPool.{PoolName}.Release"
+            });
             return;
         }
 
@@ -374,10 +396,25 @@ public class ObjectPool<T> : IObjectPoolRuntime where T : class
         {
             _stats.TotalDiscarded++;
             Discard(obj);
+            trace.Complete(LogOutcome.Completed, "ObjectPoolRelease discarded by capacity", new LogFields
+            {
+                ["poolName"] = PoolName,
+                ["activeCount"] = _stats.ActiveCount,
+                ["idleCount"] = _stats.Count,
+                ["maxSize"] = _config.MaxSize,
+                ["budgetKey"] = $"ObjectPool.{PoolName}.Release"
+            });
             return;
         }
 
         PushToStack(obj);
+        trace.Complete(LogOutcome.Completed, "ObjectPoolRelease completed", new LogFields
+        {
+            ["poolName"] = PoolName,
+            ["activeCount"] = _stats.ActiveCount,
+            ["idleCount"] = _stats.Count,
+            ["budgetKey"] = $"ObjectPool.{PoolName}.Release"
+        });
     }
 
     /// <summary>

@@ -143,7 +143,19 @@ namespace Slime.Test
                 _sddSmokeElapsed += delta;
                 if (_sddSmokeElapsed >= 1.0d)
                 {
-                    GD.Print("PASS MovementComponentTestScene.sdd smoke");
+                    using var validation = ValidationSession.Start(new ValidationSessionOptions
+                    {
+                        Name = "MovementComponentTestScene.sdd smoke",
+                        Owner = "Movement",
+                        ArtifactPath = ".ai-temp/scene-tests/artifacts/movement-component-smoke.json",
+                        ExpectedInputs = "sdd smoke mode runs MovementComponentTestScene for at least one second",
+                        ExpectedObservations = "scene stays alive without movement setup exceptions",
+                        PassCriteria = "scene reaches smoke timeout and exits with code 0",
+                        FailCriteria = "scene throws before smoke timeout or exits non-zero"
+                    });
+                    validation.Check("movement-smoke-timeout", true, expected: ">=1s", actual: _sddSmokeElapsed.ToString("0.000"), reasonCode: "movement-smoke-pass");
+                    validation.Complete();
+                    Log.Flush();
                     GetTree().Quit(0);
                     return;
                 }

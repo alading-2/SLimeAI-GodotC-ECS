@@ -673,13 +673,13 @@ public partial class AbilitySystemPipelineTest : Node
     private void Pass(string message)
     {
         _passedCount++;
-        _log.Success($"[PASS] {message}");
+        _log.Success(message, outcome: LogOutcome.Succeeded, validationStatus: LogValidationStatus.Pass, channel: LogChannel.Validation);
     }
 
     private void Fail(string message)
     {
         _failedCount++;
-        _log.Error($"[FAIL] {message}");
+        _log.Error(message, outcome: LogOutcome.Failed, validationStatus: LogValidationStatus.Fail, channel: LogChannel.Validation);
     }
 }
 

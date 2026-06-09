@@ -14,7 +14,19 @@
 
 ## Output shape
 
-conclusion、verdict、findings、actionItems、verificationEvidence、processUpdates、followUpCandidates。
+conclusion、verdict、findings、actionItems、verificationEvidence、processUpdates、followUpCandidates、efficiencyInsights。
+
+## Efficiency Analysis
+
+当 ChatHistory 中有当前会话的 digest 时，检查 `derived/efficiency.md`：
+
+- 验证循环次数是否过多（>5 个循环）或偏高（>3 个循环）。
+- 文件读放大是否严重（>5 次读取同一文件）。
+- 平均每次 edit 触发的验证次数是否 >2.5。
+
+效率问题记录在 `efficiencyInsights` 中，作为 followUpCandidates 的输入：
+- 验证循环过多 → 建议后续会话采用"批量修改后统一验证"模式。
+- 文件读放大 → 建议在 DeepThink/Retrospective 切换时引用已读文件路径而非重新读取。
 
 ## Role Category
 

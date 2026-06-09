@@ -28,6 +28,8 @@ description: 修改 SlimeAI ECS Movement Capability、MovementDataKeys、Movemen
 - `Unit` 的 `DefaultMoveMode` 是注册期必需配置；`Projectile` / `Effect` 可保持 `None`，通过 `MovementStarted` 进入临时策略。
 - `MovementCollisionPolicy.TryAccept` 必须先经过 `CollisionLogicGuard`，回池 source/target 或未到 `CollisionReadyPhysicsFrame` 的节点不得进入碰撞计数、事件派发或停止请求。
 - 新策略通过 `IMovementStrategy` / `MovementStrategyRegistry` 接入，并补 Runtime 测试和 BrotatoLike smoke。
+- Movement owner 使用 `owner=Movement`；每帧位置更新不写默认日志，只在 start/stop/collision decision 或 validation diagnostics 写 summary。
+- Movement 测试断言走 `ValidationSession` / artifact / structured log，不新增 `[PASS]` / `[FAIL]`。
 
 ## 验证
 
@@ -36,4 +38,5 @@ dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
 # 如果承载游戏提供 runner，再执行 Godot smoke:
 # cd /home/slime/Code/SlimeAI/Games/<GameWithRunner>
 # Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
+# Workspace/Tools/logctl/logctl query --analysis-dir <run>/analysis owner=Movement
 ```

@@ -40,6 +40,8 @@ description: 修改 SlimeAI ECS Runtime System Core、SystemManager、SystemRegi
 - `SystemDiagnosticsSnapshot` 只读 config / registry / runtime / ProjectState；TestSystem、Godot validation 和 AI debug 应共享这个合同，不要新增第二套展示事实源。
 - 自动验证和 BDD 优先断言 `SystemBlockedReasonCode`，中文 `blockedReason` 只作为日志和 UI 文案。
 - `SystemLifecycleTrace` 是轻量 ring buffer，不默认长期写文件；场景验证按需 dump 到 `.ai-temp/scene-tests/artifacts/system-core-diagnostics.json`。
+- System preflight / diagnostics summary 使用 `owner=System`、`operation=SystemPreflight|SystemDiagnosticsSnapshot`；关键字段包括 config/descriptor/loaded/running/blocked/disabled/preflight error/warning counts。
+- 自动验证和 AI 分析先查 `SystemPreflightIssue.RuleId`、`SystemPreflightSeverity`、`SystemBlockedReasonCode` 和 structured fields，不把中文 `blockedReason` 当机器事实源。
 - 修改 Runtime System 实现、接口、生命周期、配置、preflight、diagnostics、trace 或验证方式时，必须同步 `DocsAI/ECS/Runtime/System/` 和本 skill 源。
 - 不做 typed `SystemId` hard cutover，不引入第三方 ECS scheduler，不恢复旧四维 phase；这些属于单独设计范围。
 

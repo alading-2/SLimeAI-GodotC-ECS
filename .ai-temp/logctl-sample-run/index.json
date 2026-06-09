@@ -1,0 +1,13 @@
+{
+  "entries": [
+    {
+      "scene": "res://Sample.tscn",
+      "status": "passed",
+      "resultSource": "artifact",
+      "failed": false,
+      "logFiles": {
+        "result": ".ai-temp/logctl-sample-run/001_sample_attempt1/result.json"
+      }
+    }
+  ]
+}

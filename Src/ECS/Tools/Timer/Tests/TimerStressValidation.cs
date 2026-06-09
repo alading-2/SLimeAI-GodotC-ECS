@@ -19,6 +19,7 @@ public partial class TimerStressValidation : Node
     private const string FailCriteria = "any timer callback count, owner cancel, pause clock, diagnostics or main-thread dispatch expectation fails";
 
     private readonly List<TimerStressCheck> _checks = new();
+    private readonly Log _log = new("TimerStressValidation", owner: "Timer", operation: "TimerStressValidation");
 
     public override void _Ready()
     {
@@ -44,17 +45,35 @@ public partial class TimerStressValidation : Node
         catch (Exception ex)
         {
             passed = false;
-            GD.PushError($"TimerStressValidation artifact write failed: {ex}");
+            _log.Error(
+                "TimerStressValidation artifact write failed",
+                fields: new LogFields { ["exception"] = ex.ToString() },
+                channel: LogChannel.Validation,
+                operation: "TimerStressValidation");
         }
 
-        if (passed)
+        using var validation = ValidationSession.Start(new ValidationSessionOptions
         {
-            GD.Print("PASS TimerStressValidation");
-        }
-        else
+            Name = "TimerStressValidation",
+            Owner = "Timer",
+            ArtifactPath = ArtifactPath,
+            ExpectedInputs = ExpectedInputs,
+            ExpectedObservations = ExpectedObservations,
+            PassCriteria = PassCriteria,
+            FailCriteria = FailCriteria
+        });
+        foreach (var check in _checks)
         {
-            GD.PushError("FAIL TimerStressValidation");
+            validation.Check(
+                check.Name,
+                check.Passed,
+                expected: "pass",
+                actual: check.Passed ? "pass" : check.Message,
+                reasonCode: check.Passed ? "timer-check-pass" : "timer-check-fail",
+                message: check.Message);
         }
+        validation.Complete();
+        Log.Flush();
 
         GetTree().Quit(passed ? 0 : 1);
     }

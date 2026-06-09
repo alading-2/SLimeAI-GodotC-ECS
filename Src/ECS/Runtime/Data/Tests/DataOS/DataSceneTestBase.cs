@@ -13,6 +13,7 @@ public abstract partial class DataSceneTestBase : Node
 {
     private int _passedCount;
     private int _failedCount;
+    private ValidationSession? _validationSession;
 
     protected DataRuntimeBootstrap Bootstrap => DataRuntimeBootstrap.Default;
 
@@ -23,6 +24,18 @@ public abstract partial class DataSceneTestBase : Node
 
     public override void _Ready()
     {
+        var typeName = GetType().Name;
+        _validationSession = ValidationSession.Start(new ValidationSessionOptions
+        {
+            Name = typeName,
+            Owner = "Data",
+            ArtifactPath = Path.Combine(".ai-temp", "scene-tests", "artifacts", $"{typeName}.json"),
+            ExpectedInputs = "DataOS runtime scene assertions",
+            ExpectedObservations = "DataOS checks are written to validation artifact and structured log",
+            PassCriteria = "all DataOS checks pass",
+            FailCriteria = "any DataOS assertion fails or throws unexpectedly"
+        });
+
         try
         {
             RunTests();
@@ -32,6 +45,8 @@ public abstract partial class DataSceneTestBase : Node
             Fail($"测试过程中发生异常: {ex}");
         }
 
+        _validationSession.Complete();
+        Log.Flush();
         GetTree().Quit(_failedCount == 0 ? 0 : 1);
     }
 
@@ -250,12 +265,23 @@ public abstract partial class DataSceneTestBase : Node
     private void Pass(string label)
     {
         _passedCount++;
-        GD.Print($"PASS {GetType().Name}.{label}");
+        _validationSession?.Check(
+            $"{GetType().Name}.{label}",
+            true,
+            expected: "pass",
+            actual: "pass",
+            reasonCode: "dataos-check-pass");
     }
 
     protected void Fail(string message)
     {
         _failedCount++;
-        GD.PushError($"FAIL {GetType().Name}: {message}");
+        _validationSession?.Check(
+            $"{GetType().Name}.failure",
+            false,
+            expected: "pass",
+            actual: message,
+            reasonCode: "dataos-check-fail",
+            message: message);
     }
 }

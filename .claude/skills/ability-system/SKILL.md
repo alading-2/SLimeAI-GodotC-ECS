@@ -42,6 +42,8 @@ description: 修改 SlimeAI ECS Ability Capability、AbilityDataKeys、目标选
 - CostComponent 的资源消耗必须按 `AbilityCostType` 映射到 generated `DataKey<float>`：Mana=`CurrentMana`、Health=`CurrentHp`、Energy=`CurrentEnergy`、Ammo=`CurrentAmmo`；不要新增 `"CurrentEnergy"` / `"CurrentAmmo"` 裸字符串或 `Data.Get<T>(string)` 资源路径。
 - 具体技能效果优先实现为 Feature handler 或游戏侧 handler，不把 BrotatoLike 逻辑写进框架通用 Ability。
 - 技能造成伤害统一走 `DamageTool` / `DamageService`；投射物走 `ProjectileTool`。
+- Ability trigger flow 使用 `owner=Ability`、`operation=AbilityTryTrigger`；冷却、充能、消耗和目标选择阻断写 `outcome=Failed` 与 `reason` 字段，不把 `Success` 当 severity。
+- Ability 测试断言走 `ValidationSession` / artifact / structured log，不新增 `[PASS]` / `[FAIL]` 或裸 `GD.Print("PASS")`。
 
 ## 运行时 DataKey（AbilityDataKeys）
 
@@ -70,4 +72,5 @@ dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
 # 如果承载游戏提供 runner，再执行 Godot smoke:
 # cd /home/slime/Code/SlimeAI/Games/<GameWithRunner>
 # Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
+# Workspace/Tools/logctl/logctl query --analysis-dir <run>/analysis owner=Ability operation=AbilityTryTrigger
 ```

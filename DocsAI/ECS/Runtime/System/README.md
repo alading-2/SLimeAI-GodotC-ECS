@@ -33,6 +33,25 @@ SDD-0029 的首切片只做 SystemManifest、SystemPreflight、SystemDiagnostics
 | `blockedReasonCode` | `SystemBlockedReasonCode` | 稳定机器原因码；中文 `blockedReason` 只作 UI / 日志说明。 |
 | SystemCore artifact | `.ai-temp/scene-tests/artifacts/system-core-diagnostics.json` | Godot 场景验证输出，包含标准答案字段和 diagnostics snapshot。 |
 
+## Log
+
+System owner 使用 `owner=System`。当前第一批 flow 已覆盖：
+
+| operation | phase | outcome | 关键字段 |
+| --- | --- | --- | --- |
+| `SystemPreflight` | `Preflight` | `Completed` / `Failed` | `configCount`、`registeredDescriptorCount`、`activePresetName`、`errorCount`、`warningCount` |
+| `SystemDiagnosticsSnapshot` | `Diagnostics` | `Completed` | `configCount`、`registeredDescriptorCount`、`loadedCount`、`runningCount`、`blockedCount`、`disabledCount`、`preflightErrorCount`、`preflightWarningCount` |
+
+规则：
+
+- 机器判断用 `SystemBlockedReasonCode`、`SystemPreflightIssue.RuleId` 和 `Severity`；中文 `blockedReason` 只作 UI / 日志说明。
+- `SystemLifecycleTrace` 仍是 ring buffer；不默认长期写文件。需要场景证据时 dump 到 validation artifact。
+- `SystemPreflight` 只读 config / registry / preset；日志也只记录检查结果，不写回配置。
+
+```bash
+Workspace/Tools/logctl/logctl query --analysis-dir <run>/analysis owner=System operation=SystemPreflight
+```
+
 ## 源码
 
 ```text

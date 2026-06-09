@@ -1,0 +1,25 @@
+{
+  "dryRun": true,
+  "runDir": ".ai-temp/logctl-profile-sample",
+  "generatedAtUtc": "2026-06-09T13:53:44.669Z",
+  "suggestions": [
+    {
+      "owner": "Tools.Logger",
+      "context": "LoggerBudget",
+      "operation": "BudgetedOperation",
+      "suggestion": "consider budget/sample or summary-only stdout",
+      "count": 11,
+      "profilePatch": {
+        "rules": [
+          {
+            "owner": "Tools.Logger",
+            "context": "LoggerBudget",
+            "operation": "BudgetedOperation",
+            "budgetPerSecond": 2,
+            "minimumSeverity": "Info"
+          }
+        ]
+      }
+    }
+  ]
+}

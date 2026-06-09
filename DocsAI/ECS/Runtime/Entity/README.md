@@ -61,7 +61,30 @@
 - 让 current 文档或新代码重新指向 `DocsNew`、`Src/ECS/**.md` 作为框架文档入口。
 - 把具体 Entity、Component 或 Preset 放回旧 `Src/ECS/Base` 或 DocsAI 顶层技术分类。
 
-## 5. 验证入口
+## 5. Log
+
+Entity owner 使用 `owner=Entity`。当前 hard cutover 覆盖 Entity runtime scene tests 的 `ValidationSession`；Entity 高频 registry lookup 不默认打逐次日志。
+
+建议 operation 命名：
+
+| operation | phase | 关键字段 |
+| --- | --- | --- |
+| `EntitySpawn` | `Runtime` | `entityId`、`template`、`recordId`、`spawnStage`、`outcome` |
+| `EntityDestroy` | `Runtime` | `entityId`、`recursiveChildCount`、`ownerCleanupCount`、`poolReturned` |
+| `EntityLifecycleAttach` | `Runtime` | `parentEntityId`、`childEntityId`、`destroyPolicy` |
+| `EntityOwnedReferenceCleanup` | `Runtime` | `ownerEntityId`、`childEntityId`、`descriptorId` |
+
+规则：
+
+- spawn/destroy pipeline 的验证事实进入 artifact；stdout 只保留 flow completion 或失败摘要。
+- public API 中 `entityId` 字段统一写 typed `EntityId.Value`，不要混入 raw string 参数语义。
+- 排查 Damage / Movement 归因时，应同时查询 Entity owner cleanup 和对应 capability owner flow。
+
+```bash
+Workspace/Tools/logctl/logctl query --analysis-dir <run>/analysis owner=Entity operation=EntitySpawn
+```
+
+## 6. 验证入口
 
 优先使用当前框架仓门禁：
 

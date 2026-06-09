@@ -1,0 +1,16 @@
+[
+  {
+    "owner": "Ability",
+    "context": "AbilitySystemPipelineTest",
+    "operation": "AbilityCast",
+    "message": "ability check passed",
+    "count": 1
+  },
+  {
+    "owner": "Damage",
+    "context": "DamageService",
+    "operation": "DamageProcess",
+    "message": "damage flow summary",
+    "count": 1
+  }
+]

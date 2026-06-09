@@ -1,0 +1,63 @@
+{
+  "generatedAtUtc": "2026-06-09T14:33:11.4716552+00:00",
+  "profile": "ai-default",
+  "configDirectory": "Config/Log",
+  "profilePath": "Config/Log/log.profile.json",
+  "rulesPath": "Config/Log/log.rules.json",
+  "overridesPath": "Config/Log/log.overrides.json",
+  "sinks": {
+    "stdoutSummary": true,
+    "jsonlFile": true,
+    "memory": true,
+    "artifact": true,
+    "godotEditor": false
+  },
+  "minimumSeverity": "Debug",
+  "budget": {
+    "enabled": true,
+    "defaultPerSecond": 200
+  },
+  "rules": [
+    {
+      "owner": "Validation",
+      "budgetPerSecond": 1000,
+      "minimumSeverity": "Trace"
+    },
+    {
+      "owner": "Tools.Logger",
+      "budgetPerSecond": 200,
+      "minimumSeverity": "Debug"
+    },
+    {
+      "owner": "Ability",
+      "budgetPerSecond": 80,
+      "minimumSeverity": "Info"
+    },
+    {
+      "owner": "Damage",
+      "budgetPerSecond": 80,
+      "minimumSeverity": "Info"
+    },
+    {
+      "owner": "Movement",
+      "budgetPerSecond": 40,
+      "minimumSeverity": "Warn"
+    },
+    {
+      "owner": "ObjectPool",
+      "budgetPerSecond": 80,
+      "minimumSeverity": "Info"
+    },
+    {
+      "owner": "Timer",
+      "budgetPerSecond": 40,
+      "minimumSeverity": "Warn"
+    },
+    {
+      "owner": "TargetSelector",
+      "budgetPerSecond": 80,
+      "minimumSeverity": "Info"
+    }
+  ],
+  "warnings": []
+}

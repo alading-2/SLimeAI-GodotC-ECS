@@ -1,0 +1,16 @@
+{
+  "generatedAtUtc": "2026-06-09T14:36:35.549Z",
+  "runDir": ".ai-temp/logctl-sample-run",
+  "resultSource": "artifact",
+  "status": "passed",
+  "counts": {
+    "entries": 2,
+    "validationEntries": 1,
+    "artifacts": 1,
+    "artifactPasses": 1,
+    "artifactFailures": 0,
+    "structuredFailures": 0,
+    "stdoutFallbackFiles": 0
+  },
+  "failures": []
+}

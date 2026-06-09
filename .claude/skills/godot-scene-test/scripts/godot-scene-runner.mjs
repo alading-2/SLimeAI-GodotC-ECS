@@ -4,8 +4,10 @@ import { access, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promise
 import { constants } from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 const PROJECT_ROOT = path.resolve(process.env.GODOT_SCENE_TEST_PROJECT_ROOT ?? process.cwd());
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_SCAN_ROOTS = (process.env.GODOT_SCENE_TEST_SCAN_ROOTS ?? "Scenes,Src")
   .split(/[,:]/)
   .map((value) => value.trim())
@@ -18,17 +20,24 @@ const DEFAULT_ATTEMPTS = 1;
 const MAX_ATTEMPTS = 3;
 const DEFAULT_LOG_RETENTION_DAYS = 1;
 const DEFAULT_VALIDATION_MANIFEST = "DocsAI/ValidationManifest.json";
-const FAILURE_PATTERNS = [
-  { pattern: "C# Script Error", reason: "CSharpScriptError" },
-  { pattern: "Cannot instantiate C# script", reason: "CannotInstantiateCSharpScript" },
-  { pattern: "Unhandled exception", reason: "UnhandledException" },
-  { pattern: "Exception", reason: "Exception" },
-  { pattern: "[FAIL]", reason: "TestFailMarker" },
-  { pattern: "FAIL:", reason: "TestFailMarker" },
-  { pattern: "[失败]", reason: "TestFailMarker" },
-  { pattern: "Failed to load", reason: "FailedToLoad" },
-  { pattern: "scene not found", reason: "SceneNotFound" },
+const STDOUT_PATTERN_FALLBACKS = [
+  { pattern: "C# Script Error", reason: "stdout-pattern-fallback:CSharpScriptError" },
+  { pattern: "Cannot instantiate C# script", reason: "stdout-pattern-fallback:CannotInstantiateCSharpScript" },
+  { pattern: "Unhandled exception", reason: "stdout-pattern-fallback:UnhandledException" },
+  { pattern: "Exception", reason: "stdout-pattern-fallback:Exception" },
+  { pattern: "[FAIL]", reason: "stdout-pattern-fallback:TestFailMarker" },
+  { pattern: "FAIL:", reason: "stdout-pattern-fallback:TestFailMarker" },
+  { pattern: "[失败]", reason: "stdout-pattern-fallback:TestFailMarker" },
+  { pattern: "Failed to load", reason: "stdout-pattern-fallback:FailedToLoad" },
+  { pattern: "scene not found", reason: "stdout-pattern-fallback:SceneNotFound" },
 ];
+const LOGCTL_CANDIDATES = [
+  process.env.LOGCTL,
+  path.resolve(PROJECT_ROOT, "Workspace/Tools/logctl/logctl.mjs"),
+  path.resolve(PROJECT_ROOT, "SlimeAI/Workspace/Tools/logctl/logctl.mjs"),
+  path.resolve(SCRIPT_DIR, "../../../../../Workspace/Tools/logctl/logctl.mjs"),
+  path.resolve(SCRIPT_DIR, "../../../../Workspace/Tools/logctl/logctl.mjs"),
+].filter(Boolean);
 
 function printUsage() {
   console.error(`Usage:
@@ -579,7 +588,7 @@ function findFirstError(stdout, stderr) {
   const combined = `${stdout}\n${stderr}`;
   const lines = combined.split(/\r?\n/);
 
-  for (const { pattern, reason } of FAILURE_PATTERNS) {
+  for (const { pattern, reason } of STDOUT_PATTERN_FALLBACKS) {
     const lineIndex = lines.findIndex((candidate) => candidate.includes(pattern));
     if (lineIndex >= 0) {
       return {
@@ -592,6 +601,127 @@ function findFirstError(stdout, stderr) {
   }
 
   return null;
+}
+
+function normalizeResultStatus(value) {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (["pass", "passed", "success", "succeeded", "ok"].includes(normalized)) {
+    return "passed";
+  }
+  if (["fail", "failed", "error"].includes(normalized)) {
+    return "failed";
+  }
+  return null;
+}
+
+function inferArtifactStatus(data) {
+  const direct = normalizeResultStatus(data?.validationStatus ?? data?.status ?? data?.result ?? data?.outcome);
+  if (direct) {
+    return direct;
+  }
+
+  if (Array.isArray(data?.failures) && data.failures.length > 0) {
+    return "failed";
+  }
+
+  if (Array.isArray(data?.checks)) {
+    const hasFailure = data.checks.some((check) => normalizeResultStatus(check.status ?? check.validationStatus) === "failed" || check.passed === false);
+    if (hasFailure) {
+      return "failed";
+    }
+    if (data.checks.length > 0) {
+      return "passed";
+    }
+  }
+
+  return null;
+}
+
+async function readJsonMaybe(filePath) {
+  try {
+    return JSON.parse(await readFile(filePath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+async function evaluateArtifacts(sceneLogContext) {
+  if (!sceneLogContext) {
+    return null;
+  }
+
+  const files = await collectFilesRecursive(sceneLogContext.artifactDir);
+  const jsonFiles = files.filter((file) => file.endsWith(".json"));
+  const evaluations = [];
+  for (const file of jsonFiles) {
+    const absolute = path.resolve(PROJECT_ROOT, file);
+    const data = await readJsonMaybe(absolute);
+    if (!data) {
+      continue;
+    }
+
+    const status = inferArtifactStatus(data);
+    if (status) {
+      evaluations.push({
+        path: file,
+        status,
+        failureCount: Array.isArray(data.failures) ? data.failures.length : 0,
+      });
+    }
+  }
+
+  if (evaluations.length === 0) {
+    return null;
+  }
+
+  return {
+    resultSource: "artifact",
+    status: evaluations.some((item) => item.status === "failed") ? "failed" : "passed",
+    evaluations,
+  };
+}
+
+async function evaluateStructuredLog(sceneLogContext) {
+  if (!sceneLogContext) {
+    return null;
+  }
+
+  const rawDir = path.join(sceneLogContext.sceneDir, "raw");
+  const files = await collectFilesRecursive(rawDir);
+  const jsonlFiles = files.filter((file) => file.endsWith(".jsonl"));
+  if (jsonlFiles.length === 0) {
+    return null;
+  }
+
+  let entries = 0;
+  let failures = 0;
+  for (const file of jsonlFiles) {
+    const text = await readFile(path.resolve(PROJECT_ROOT, file), "utf8");
+    for (const line of text.split(/\r?\n/)) {
+      if (!line.trim()) {
+        continue;
+      }
+      entries += 1;
+      try {
+        const entry = JSON.parse(line);
+        const validation = String(entry.validationStatus ?? "").toLowerCase();
+        const severity = String(entry.severity ?? "").toLowerCase();
+        if (validation === "fail" || severity === "error" || severity === "fatal") {
+          failures += 1;
+        }
+      } catch {
+        failures += 1;
+      }
+    }
+  }
+
+  return {
+    resultSource: "structured-log",
+    status: failures > 0 ? "failed" : "passed",
+    entries,
+    failures,
+    files: jsonlFiles,
+  };
 }
 
 function getErrorContext(stdout, stderr, firstError, contextRadius = 4) {
@@ -607,11 +737,11 @@ function getErrorContext(stdout, stderr, firstError, contextRadius = 4) {
 }
 
 function isErrorLine(line) {
-  return FAILURE_PATTERNS.some(({ pattern }) => line.includes(pattern))
+  return STDOUT_PATTERN_FALLBACKS.some(({ pattern }) => line.includes(pattern))
     || line.includes("ERROR:")
     || line.includes("[ERROR]")
-    || line.includes("[FAIL]")
-    || line.includes("FAIL:");
+    || line.includes("[FAIL]") // stdout-pattern-fallback
+    || line.includes("FAIL:"); // stdout-pattern-fallback
 }
 
 function summarizeLogs(stdout, stderr, maxLogLines, errorsOnly) {
@@ -626,7 +756,7 @@ function summarizeLogs(stdout, stderr, maxLogLines, errorsOnly) {
     return isErrorLine(line)
       || line.includes("WARNING:")
       || line.includes("[WARNING]")
-      || line.includes("[PASS]")
+      || line.includes("[PASS]") // stdout-pattern-fallback
       || line.includes("[OK]")
       || line.includes("[成功]");
   });
@@ -656,7 +786,9 @@ function getFailureReason(result, firstError) {
   }
 
   if (firstError) {
-    return firstError.reason;
+    return firstError.reason.startsWith("stdout-pattern-fallback:")
+      ? firstError.reason
+      : `stdout-pattern-fallback:${firstError.reason}`;
   }
 
   return null;
@@ -679,6 +811,49 @@ async function buildProject(timeoutMs) {
   if (result.exitCode !== 0 || result.timedOut) {
     throw new Error(`dotnet build failed: ${JSON.stringify(result, null, 2)}`);
   }
+}
+
+async function resolveLogctl() {
+  for (const candidate of LOGCTL_CANDIDATES) {
+    if (await pathExists(candidate)) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+async function runLogctlAnalyze(logRun, timeoutMs) {
+  if (!logRun) {
+    return null;
+  }
+
+  const logctl = await resolveLogctl();
+  if (!logctl) {
+    return {
+      skipped: true,
+      reason: "logctl-not-found",
+      tried: LOGCTL_CANDIDATES.map((candidate) => toProjectRelative(candidate)),
+    };
+  }
+
+  const outDir = path.join(logRun.runDir, "analysis");
+  const result = await runProcess(
+    "node",
+    [logctl, "analyze", "--run-dir", logRun.runDir, "--out", outDir],
+    { timeoutMs },
+  );
+
+  return {
+    skipped: false,
+    exitCode: result.exitCode,
+    timedOut: result.timedOut,
+    failed: result.exitCode !== 0 || result.timedOut,
+    stdout: stripAnsi(result.stdout).trim(),
+    stderr: stripAnsi(result.stderr).trim(),
+    analysisDir: toProjectRelative(outDir),
+    gateReport: toProjectRelative(path.join(outDir, "gate-report.json")),
+  };
 }
 
 async function cleanupOldLogDays(logRoot, retentionDays) {
@@ -826,6 +1001,7 @@ async function prepareSceneLogContext(logRun, scene, attempt) {
       GODOT_SCENE_TEST_SCREENSHOT_DIR_REL: artifactDirs.screenshots,
       GODOT_SCENE_TEST_ARTIFACT_DIR: normalizeSlashes(artifactDir),
       GODOT_SCENE_TEST_ARTIFACT_DIR_REL: artifactDirs.artifacts,
+      SLIMEAI_LOG_RUN_DIR: normalizeSlashes(sceneDir),
     },
   };
 }
@@ -947,6 +1123,20 @@ async function writeLogIndex(logRun, payload) {
   return toProjectRelative(indexPath);
 }
 
+async function finalizeLogRun(logRun, payload, options) {
+  const logIndex = await writeLogIndex(logRun, payload);
+  if (logIndex) {
+    payload.logIndex = logIndex;
+  }
+
+  const analysis = await runLogctlAnalyze(logRun, options.timeoutMs);
+  if (analysis) {
+    payload.logAnalysis = analysis;
+  }
+
+  return payload;
+}
+
 async function runScene(scene, options, attempt = 1) {
   const resolvedScene = await resolveScene(scene);
   const godot = await resolveGodot(options.godot);
@@ -963,18 +1153,43 @@ async function runScene(scene, options, attempt = 1) {
     )],
     { timeoutMs: options.timeoutMs, env: sceneLogContext?.env },
   );
+  const artifactEvaluation = await evaluateArtifacts(sceneLogContext);
+  const structuredEvaluation = await evaluateStructuredLog(sceneLogContext);
   const firstError = findFirstError(result.stdout, result.stderr);
-  const failureReason = getFailureReason(result, firstError);
+  const stdoutFailureReason = getFailureReason(result, firstError);
+
+  let resultSource = "exit-code";
+  let failureReason = null;
+  if (artifactEvaluation) {
+    resultSource = artifactEvaluation.resultSource;
+    failureReason = artifactEvaluation.status === "failed" ? "ArtifactValidationFailed" : null;
+  } else if (structuredEvaluation) {
+    resultSource = structuredEvaluation.resultSource;
+    failureReason = structuredEvaluation.status === "failed" ? "StructuredLogValidationFailed" : null;
+  } else if (result.timedOut) {
+    resultSource = "exit-code";
+    failureReason = "TimedOut";
+  } else if (result.exitCode !== 0) {
+    resultSource = "exit-code";
+    failureReason = `ExitCodeNonZero:${result.exitCode}`;
+  } else if (stdoutFailureReason) {
+    resultSource = "stdout-pattern-fallback";
+    failureReason = stdoutFailureReason;
+  }
+
   const status = getStatus(result, failureReason);
 
   const sceneResult = {
     scene: resolvedScene,
     status,
+    resultSource,
     attempt,
     exitCode: result.exitCode,
     timedOut: result.timedOut,
     failed: failureReason !== null,
     failureReason,
+    artifactEvaluation,
+    structuredEvaluation,
     stdout: formatRawLog(result.stdout, options.maxLogLines, options.fullLogs),
     stderr: formatRawLog(result.stderr, options.maxLogLines, options.fullLogs),
     stdoutLineCount: splitLines(result.stdout).length,
@@ -1132,10 +1347,7 @@ async function main() {
     }
 
     const result = await runSceneWithAttempts(options.scene, { ...options, build: false });
-    const logIndex = await writeLogIndex(options.logRun, result);
-    if (logIndex) {
-      result.logIndex = logIndex;
-    }
+    await finalizeLogRun(options.logRun, result, options);
 
     await printAndMaybeWrite(result, options.output);
     process.exitCode = result.failed ? 1 : 0;
@@ -1150,10 +1362,7 @@ async function main() {
     options.logRun = await prepareLogRun(options.logDir, options.logRetentionDays);
     attachRunMetadata(options.logRun, options, options.scenes);
     const payload = await runScenesSequential(options.scenes, options);
-    const logIndex = await writeLogIndex(options.logRun, payload);
-    if (logIndex) {
-      payload.logIndex = logIndex;
-    }
+    await finalizeLogRun(options.logRun, payload, options);
 
     await printAndMaybeWrite(payload, options.output);
     process.exitCode = payload.failed ? 1 : 0;
@@ -1179,10 +1388,7 @@ async function main() {
     options.logRun = await prepareLogRun(options.logDir, options.logRetentionDays);
     attachRunMetadata(options.logRun, options, scenes);
     const payload = await runScenesSequential(scenes, options);
-    const logIndex = await writeLogIndex(options.logRun, payload);
-    if (logIndex) {
-      payload.logIndex = logIndex;
-    }
+    await finalizeLogRun(options.logRun, payload, options);
 
     await printAndMaybeWrite(payload, options.output);
     process.exitCode = payload.failed ? 1 : 0;

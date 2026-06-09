@@ -11,6 +11,7 @@ public static class SystemPreflight
 {
     public static SystemPreflightReport Run(SystemPreflightOptions? options = null)
     {
+        using var trace = Log.BeginTrace("System", nameof(SystemPreflight), "SystemPreflight", "Preflight");
         options ??= SystemPreflightOptions.Default();
         SystemConfigService.Initialize();
         SystemPresetService.Initialize();
@@ -35,13 +36,22 @@ public static class SystemPreflight
         CheckDescriptorOnly(descriptors, configById, options, issues);
         CheckPriorityCollisions(configs, issues);
 
-        return new SystemPreflightReport
+        var report = new SystemPreflightReport
         {
             ConfigCount = configs.Count,
             RegisteredDescriptorCount = descriptors.Count,
             ActivePresetName = activePreset?.PresetName ?? string.Empty,
             Issues = issues
         };
+        trace.Complete(report.HasErrors ? LogOutcome.Failed : LogOutcome.Completed, "System preflight completed", new LogFields
+        {
+            ["configCount"] = report.ConfigCount,
+            ["registeredDescriptorCount"] = report.RegisteredDescriptorCount,
+            ["activePresetName"] = report.ActivePresetName,
+            ["errorCount"] = report.ErrorCount,
+            ["warningCount"] = report.WarningCount
+        });
+        return report;
     }
 
     private static void CheckConfigBasics(

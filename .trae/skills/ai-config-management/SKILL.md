@@ -2,20 +2,20 @@
 name: ai-config-management
 description: 修改 AI 工具配置（skill、rule、command）时使用。确保统一源一致、同步正确、不引入格式漂移。
 license: MIT
-compatibility: All AI tools (Claude, Codex, Devin, Trae)
+compatibility: Claude, Codex, Trae
 metadata:
   author: SlimeAI
   version: "1.1"
 ---
 
-管理 Claude、Codex、Devin、Trae 的 skill、rule 和 command 的统一源。hook / subagent 是工具项目运行配置，不属于 `.ai-config` 同步源。
+管理 Claude、Codex、Trae 的 skill、rule 和 command 的统一源。hook / subagent 是工具项目运行配置，不属于 `.ai-config` 同步源。
 
 ## 统一源位置
 
 | 类型            | 统一源                                         | 同步目标                                                         |
 | --------------- | ---------------------------------------------- | ---------------------------------------------------------------- |
-| Skill           | `.ai-config/skills/<category>/<name>/SKILL.md` | `.codex/skills/`、`.claude/skills/`、`.devin/skills/`、`.trae/skills/`（打平） |
-| Rule            | `.ai-config/rules/rules.md`                    | `AGENTS.md`、`CLAUDE.md`、`.devin/rules/devinrules.md`（Trae 共用 AGENTS.md） |
+| Skill           | `.ai-config/skills/<category>/<name>/SKILL.md` | `.codex/skills/`、`.claude/skills/`、`.trae/skills/`（打平） |
+| Rule            | `.ai-config/rules/rules.md`                    | `AGENTS.md`、`CLAUDE.md`、`.trae/rules/rules.md` |
 | Command         | `.ai-config/skills/<category>/<name>/SKILL.md` | `.claude/commands/opsx/*.md`（兼容命令按脚本转换）               |
 | Claude hook     | Claude 项目 settings 文件（当前仓为 `.claude/settings.local.json`） | 无副本，直接运行                                                 |
 | Claude subagent | Claude 项目 agents 目录（存在时直接维护）       | 无副本，直接运行                                                 |
@@ -29,7 +29,7 @@ metadata:
 - 改 command → 只改 `.ai-config/skills/<category>/<name>/SKILL.md`
 - 改 Claude hook/subagent → 直接改当前仓实际存在的 Claude settings 或 agents 配置
 - 改 Codex hook/subagent → 直接改当前仓实际存在的 Codex hook、agents 或 config 配置
-- 永远不要直接修改 `.codex/skills/`、`.claude/skills/`、`.devin/skills/`、`.trae/skills/`、`CLAUDE.md`、`.devin/rules/devinrules.md`
+- 永远不要直接修改 `.codex/skills/`、`.claude/skills/`、`.trae/skills/`、`AGENTS.md`、`CLAUDE.md`、`.trae/rules/rules.md`
 
 ## 修改流程
 
@@ -42,7 +42,7 @@ metadata:
 
 ## 禁止行为
 
-- **不要**直接修改 `.codex/skills/`、`.claude/skills/`、`.devin/skills/`、`.trae/skills/`、`.claude/commands/opsx/`、`CLAUDE.md`、`.devin/rules/devinrules.md`
+- **不要**直接修改 `.codex/skills/`、`.claude/skills/`、`.trae/skills/`、`.claude/commands/opsx/`、`AGENTS.md`、`CLAUDE.md`、`.trae/rules/rules.md`
 - **不要**在 skill 中引入 per-tool 差异；所有差异由同步脚本处理
 - **不要**遗漏 `bash Workspace/Tools/ai-config-sync/sync-ai-config.sh`，否则下次同步会覆盖手工改动
 - **不要**把 hook/subagent 放进 `.ai-config` 等待同步；它们必须直接落在 `.claude/.codex`
@@ -63,7 +63,7 @@ metadata:
 1. 在 `.ai-config/skills/<category>/<kebab-name>/` 创建 `SKILL.md`
    - `category` 为任意一层目录名，脚本不硬编码
 2. 运行 `bash Workspace/Tools/ai-config-sync/sync-ai-config.sh`
-3. 提交时确保四份（`.codex/`、`.claude/`、`.devin/`、`.trae/`）同时出现
+3. 提交时确保三份（`.codex/`、`.claude/`、`.trae/`）同时出现
 
 ## 验证命令
 
@@ -75,5 +75,5 @@ comm -12 <(find .ai-config/skills/ -mindepth 2 -name SKILL.md | xargs -I{} basen
 # 检查 rules 是否一致
 diff .ai-config/rules/rules.md AGENTS.md
 diff .ai-config/rules/rules.md CLAUDE.md
-tail -n +5 .devin/rules/devinrules.md | diff .ai-config/rules/rules.md -
+diff .ai-config/rules/rules.md .trae/rules/rules.md
 ```

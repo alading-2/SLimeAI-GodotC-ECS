@@ -24,6 +24,7 @@ public partial class ObjectPoolCollisionIsolationValidation : Node
     private readonly List<string> _collisionEvents = new();
     private readonly List<string> _businessCollisionEvents = new();
     private readonly List<Action> _cleanupActions = new();
+    private readonly Log _log = new("ObjectPoolCollisionIsolationValidation", owner: "ObjectPool", operation: "CollisionIsolationValidation");
 
     public override void _Ready()
     {
@@ -55,7 +56,11 @@ public partial class ObjectPoolCollisionIsolationValidation : Node
         catch (Exception ex)
         {
             passed = false;
-            GD.PushError($"ObjectPoolCollisionIsolationValidation artifact write failed: {ex}");
+            _log.Error(
+                "ObjectPoolCollisionIsolationValidation artifact write failed",
+                fields: new LogFields { ["exception"] = ex.ToString() },
+                channel: LogChannel.Validation,
+                operation: "CollisionIsolationValidation");
         }
         finally
         {
@@ -64,14 +69,28 @@ public partial class ObjectPoolCollisionIsolationValidation : Node
             ObjectPoolObservability.Clear();
         }
 
-        if (passed)
+        using var validation = ValidationSession.Start(new ValidationSessionOptions
         {
-            GD.Print("PASS ObjectPoolCollisionIsolationValidation");
-        }
-        else
+            Name = "ObjectPoolCollisionIsolationValidation",
+            Owner = "ObjectPool",
+            ArtifactPath = ArtifactPath,
+            ExpectedInputs = ExpectedInputs,
+            ExpectedObservations = ExpectedObservations,
+            PassCriteria = PassCriteria,
+            FailCriteria = FailCriteria
+        });
+        foreach (var check in _checks)
         {
-            GD.PushError("FAIL ObjectPoolCollisionIsolationValidation");
+            validation.Check(
+                check.Name,
+                check.Passed,
+                expected: "pass",
+                actual: check.Passed ? "pass" : check.Message,
+                reasonCode: check.Passed ? "objectpool-check-pass" : "objectpool-check-fail",
+                message: check.Message);
         }
+        validation.Complete();
+        Log.Flush();
 
         GetTree().Quit(passed ? 0 : 1);
     }
@@ -455,7 +474,10 @@ public partial class ObjectPoolCollisionIsolationValidation : Node
             }
             catch (Exception ex)
             {
-                GD.PushWarning($"ObjectPoolCollisionIsolationValidation cleanup failed: {ex.Message}");
+                _log.Warn(
+                    "ObjectPoolCollisionIsolationValidation cleanup failed",
+                    fields: new LogFields { ["exception"] = ex.Message },
+                    operation: "Cleanup");
             }
         }
 

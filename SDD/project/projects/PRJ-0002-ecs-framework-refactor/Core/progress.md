@@ -8,9 +8,9 @@
 
 - **Updated**: 2026-06-09
 - **Current SDD**: SDD-0040
-- **Last Conclusion**: 已创建 `SDD-0040 Log AI-first Observation Hard Cutover`，并把 `design/Tool/10.Log/` 全套设计导入子 SDD；主设计包含 DeepThink 确认包和 DesignCritic 审查，任务拆成 Logger core、sink、ValidationSession、Log CLI/analyzer、godot-scene-test wrapper、owner flow、owner Log 文档、AI 配置同步和最终验证 10 步。
-- **Next Action**: 从 `sdds/029-SDD-0040-log-ai-first-observation-hard-cutover/execution-prompt.md` 的 T1.1 Readiness Baseline 开始；先只读和记录证据，再进入 Logger core TDD。
-- **Open Blockers**: none
+- **Last Conclusion**: `SDD-0040 Log AI-first Observation Hard Cutover` 的 T1.1~T1.10 已执行完成：Logger core、structured sinks、ValidationSession、`logctl`、godot-scene-test wrapper、第一批 owner flow、DocsAI 和 skill 同步均已落地；可用非 Godot 门禁已通过。
+- **Next Action**: 恢复或提供能验证当前框架工作树的承载游戏 runner 后，运行 Godot scene smoke、`logctl analyze/query` 和 gate report；通过后再解除 SDD-0040 blocked 并收口为 done。
+- **Open Blockers**: Godot scene smoke blocked：当前没有可验证本框架工作树的承载游戏 runner。`Games/BrotatoLike` 不是 git 仓，且缺少 `Tools/run-godot-scene.sh` 与 `SlimeAI`；`Games/BrotatoLikeOld` 虽有 runner，但 wrapper 指向缺失路径且 `SlimeAI` submodule commit 与当前框架工作树不一致。
 
 ## Project Status Board
 
@@ -36,7 +36,7 @@
 | SDD-0036 | done | `design/Tool/其他Tool/05-TargetSelector查询契约.md` | Target Query Engine Hard Cutover 已完成；`TargetQueryEngine` / diagnostics / candidate source / deterministic RNG 成为 current API，旧 list-only facade 删除 |
 | SDD-0037 | done | `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` | Resource Loading And Common Utilities Hard Cutover 已完成；`ResourceLoading` current facade、strict lookup、source diagnostics、ResourceCatalogDiagnostics 和 CommonUtilities 边界已收口 |
 | SDD-0038 | done | `design/Tool/其他Tool/03-Math目标架构与验证.md` | Math Formula And Deterministic Random Cutover 已完成；`ProbabilityTool` / `DeterministicRandom` 接管概率随机，Damage/Ability 公式归 owner，`MyMath` / `GeometryCalculator` 删除 |
-| SDD-0040 | pending | `design/Tool/10.Log/` | Log AI-first Observation hard cutover SDD 已创建；后续按 execution prompt 同批收口 Logger core、Validation helper、Log CLI/analyzer、godot-scene-test wrapper、owner flow 和 owner Log 文档 |
+| SDD-0040 | blocked | `design/Tool/10.Log/` | Log AI-first Observation hard cutover 实现任务已完成；可用构建、DataOS、SDD、AI 配置、Node 脚本和 diff check 门禁已通过；Godot scene smoke blocked 于当前无有效承载游戏 runner |
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
 | SDD-0028 | done | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已完成；后续对象池改动按 ObjectPool owner 新建小切片 |
 | SDD-0029 | done | `design/Runtime/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |
@@ -466,3 +466,11 @@
 - **Validation**: `git diff --check` 通过；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static changed --no-fail` 对本轮 `godot-scene-test` skill Critical 0 / Advisory 2，advisory 来自既有 catalog `project-filesystem` / `resource-path-migration` 名称漂移；`python3 Workspace/SDD/sdd.py validate --all` 仍失败于既有 `SDD-0034-design-directory-restructure` 的 `SDD015 template-residue-in-done` 和 `SDD025 thin-design-in-done`，非本轮 Log 文档引入。
 - **Impact**: 后续实现不应把 `godot-scene-test/scripts/analyze-logs.sh` 作为长期业务日志分析事实源；它只能是过渡 wrapper。用户手动运行游戏时也不应复制整段 console 给 AI，应保留 run dir 后执行 `logctl analyze`，旧 console 文本只能走 `logctl ingest --source legacy-stdout` 并标低可信 fallback。
 - **Resume**: 创建 Log hard cutover SDD 时，T3 应命名为 `Log CLI analyzer/query`，先实现 `logctl analyze --run-dir`、`logctl query --analysis-dir/--file` 和 `logctl ingest --stdin` 的最小版本，再让 godot-scene-test wrapper 调用它。
+
+### P054 — 2026-06-09 — sdd-0040-implementation-blocked
+
+- **Context**: 用户要求继续执行 `SDD-0040 Log AI-first Observation Hard Cutover` 到完成。
+- **Conclusion**: SDD-0040 T1.1~T1.10 已执行完成；Logger core、structured sinks、ValidationSession、`logctl analyze/query/ingest/suggest`、godot-scene-test wrapper、第一批 owner flow、DocsAI owner Log 文档和 skill 同步均已落地。SDD 保持 blocked，因为当前没有能验证本框架工作树的承载游戏 runner，Godot scene smoke 未运行且未伪造通过。
+- **Evidence**: `sdds/029-SDD-0040-log-ai-first-observation-hard-cutover/` 的 tasks/progress/README/sdd.json 已更新；项目 `project.json`、`Core/roadmap.md`、`Core/progress.md` 和 README 已同步 SDD-0040 blocked 状态。
+- **Impact**: 后续恢复不应再从 T1.1 或“只创建 SDD”开始；只能在恢复有效承载游戏 runner 后补 Godot scene smoke、`logctl analyze/query` 和 gate report。
+- **Resume**: 恢复或提供能验证当前框架工作树的承载游戏 runner 后，运行 Godot scene smoke、`logctl analyze/query` 和 gate report；通过后再解除 SDD-0040 blocked 并收口为 done。

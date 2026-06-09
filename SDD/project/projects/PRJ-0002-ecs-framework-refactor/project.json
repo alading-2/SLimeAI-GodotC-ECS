@@ -197,35 +197,35 @@
       "slug": "runtime-mount-and-node-lifecycle-hard-cutover",
       "title": "Runtime Mount And Node Lifecycle Hard Cutover",
       "order": 25,
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "SDD-0036",
       "slug": "target-query-engine-hard-cutover",
       "title": "Target Query Engine Hard Cutover",
       "order": 26,
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "SDD-0037",
       "slug": "resource-loading-and-common-utilities-hard-cutover",
       "title": "Resource Loading And Common Utilities Hard Cutover",
       "order": 27,
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "SDD-0038",
       "slug": "math-formula-and-deterministic-random-cutover",
       "title": "Math Formula And Deterministic Random Cutover",
       "order": 28,
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "SDD-0040",
       "slug": "log-ai-first-observation-hard-cutover",
       "title": "Log AI-first Observation Hard Cutover",
       "order": 29,
-      "status": "pending"
+      "status": "blocked"
     }
   ],
   "links": {

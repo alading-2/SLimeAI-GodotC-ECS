@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-09 15:52",
+  "generated_at": "2026-06-09 22:37",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -959,7 +959,7 @@
       "id": "SDD-0040",
       "slug": "log-ai-first-observation-hard-cutover",
       "title": "Log AI-first Observation Hard Cutover",
-      "status": "pending",
+      "status": "blocked",
       "type": "refactor",
       "updated_at": "2026-06-09",
       "scope": "SlimeAI",
@@ -975,7 +975,7 @@
       ],
       "project_id": "PRJ-0002",
       "project_order": 29,
-      "current_task": "T1.1",
+      "current_task": "done",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/029-SDD-0040-log-ai-first-observation-hard-cutover"
     }
   ]

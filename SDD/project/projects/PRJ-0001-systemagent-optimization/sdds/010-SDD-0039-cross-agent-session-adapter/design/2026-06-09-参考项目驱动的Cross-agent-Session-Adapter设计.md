@@ -31,8 +31,8 @@
 - `SDD/project/projects/PRJ-0001-systemagent-optimization/design/INDEX.md`
 - `SDD/project/projects/PRJ-0001-systemagent-optimization/Core/roadmap.md`
 - `SDD/project/projects/PRJ-0001-systemagent-optimization/Core/progress.md`
-- `SDD/project/projects/PRJ-0001-systemagent-optimization/design/优化/2026-06-08-SystemAgent工作流内化与会话记录优化.md`
-- `SDD/project/projects/PRJ-0001-systemagent-optimization/design/优化/2026-06-08-AI会话管理工具选型分析.md`
+- `SDD/project/projects/PRJ-0001-systemagent-optimization/design/优化/2026-06-08-SystemAgent工作流内化与核心优化裁决.md`
+- `SDD/project/projects/PRJ-0001-systemagent-optimization/design/会话记录适配器参考设计/2026-06-08-AI会话管理工具选型分析.md`
 - `Workspace/SystemAgent/Actors/DeepThink.md`
 - `Workspace/SystemAgent/Actors/DesignCritic.md`
 

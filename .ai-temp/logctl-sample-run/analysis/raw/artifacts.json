@@ -1,0 +1,21 @@
+[
+  {
+    "path": ".ai-temp/logctl-sample-run/001_sample_attempt1/artifacts/validation.json",
+    "data": {
+      "status": "PASS",
+      "expectedInputs": "sample",
+      "expectedObservations": "sample entries",
+      "passCriteria": "all checks pass",
+      "failCriteria": "any failure",
+      "artifactPath": "validation.json",
+      "checks": [
+        {
+          "name": "sample",
+          "status": "Pass"
+        }
+      ],
+      "failures": []
+    },
+    "status": "pass"
+  }
+]

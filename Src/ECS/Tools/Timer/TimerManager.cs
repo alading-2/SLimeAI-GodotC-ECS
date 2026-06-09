@@ -256,16 +256,29 @@ public partial class TimerManager : Node, ISystem
 
     public void PrintTimerSummary(int topN = 10)
     {
-        GD.Print(FormatTimerSummary(GetTimerDiagnostics(new TimerDiagnosticsFilter(MaxEntries: 0)), topN));
+        var snapshot = GetTimerDiagnostics(new TimerDiagnosticsFilter(MaxEntries: 0));
+        _log.Info(
+            FormatTimerSummary(snapshot, topN),
+            outcome: LogOutcome.Completed,
+            fields: CreateTimerDiagnosticsFields(snapshot),
+            channel: LogChannel.Diagnostics,
+            operation: "TimerDiagnosticsSummary");
     }
 
     public void PrintTimerDump(TimerDiagnosticsFilter? filter = null)
     {
-        GD.Print(FormatTimerDump(GetTimerDiagnostics(filter)));
+        var snapshot = GetTimerDiagnostics(filter);
+        _log.Info(
+            FormatTimerDump(snapshot),
+            outcome: LogOutcome.Completed,
+            fields: CreateTimerDiagnosticsFields(snapshot),
+            channel: LogChannel.Diagnostics,
+            operation: "TimerDiagnosticsDump");
     }
 
     public Error ExportTimerDiagnosticsJson(string path, TimerDiagnosticsFilter? filter = null)
     {
+        using var trace = Log.BeginTrace("Timer", nameof(TimerManager), "ExportTimerDiagnosticsJson", "Diagnostics");
         try
         {
             var snapshot = GetTimerDiagnostics(filter);
@@ -281,11 +294,26 @@ public partial class TimerManager : Node, ISystem
             }
 
             File.WriteAllText(absolutePath, json);
+            var fields = CreateTimerDiagnosticsFields(snapshot);
+            fields["path"] = path;
+            trace.Complete(LogOutcome.Completed, "Timer diagnostics export completed", fields);
             return Error.Ok;
         }
         catch (Exception ex)
         {
-            GD.PushError($"Timer diagnostics export failed: {ex.Message}");
+            _log.Error(
+                "Timer diagnostics export failed",
+                fields: new LogFields
+                {
+                    ["path"] = path,
+                    ["exception"] = ex.Message
+                },
+                operation: "ExportTimerDiagnosticsJson");
+            trace.Complete(LogOutcome.Failed, "Timer diagnostics export failed", new LogFields
+            {
+                ["path"] = path,
+                ["exception"] = ex.Message
+            });
             return Error.Failed;
         }
     }
@@ -408,6 +436,17 @@ public partial class TimerManager : Node, ISystem
                     Category = "调度"
                 }
             }
+        };
+    }
+
+    private static LogFields CreateTimerDiagnosticsFields(TimerDiagnosticsSnapshot snapshot)
+    {
+        return new LogFields
+        {
+            ["activeCount"] = snapshot.ActiveCount,
+            ["dispatchQueueCount"] = snapshot.DispatchQueueCount,
+            ["perFrameUpdateCount"] = snapshot.PerFrameUpdateCount,
+            ["entriesCount"] = snapshot.Entries.Count
         };
     }
 

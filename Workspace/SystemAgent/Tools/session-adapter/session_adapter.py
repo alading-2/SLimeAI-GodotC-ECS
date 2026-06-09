@@ -9,7 +9,7 @@ import json
 import re
 import subprocess
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -25,6 +25,38 @@ TRANSCRIPT_HEADING_TIMESTAMP_RE = re.compile(
     r"^(### \d{6})\s+\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z(\s+.+)$",
     re.MULTILINE,
 )
+PROCESS_EXIT_RE = re.compile(r"Process exited with code\s+(-?\d+)", re.IGNORECASE)
+EXIT_CODE_RE = re.compile(r"\bExit code:?\s*(-?\d+)", re.IGNORECASE)
+FAILED_TEXT_RE = re.compile(
+    r"\b(traceback|exception|failed|failure|timeout|timed out|protocol mismatch|invalid syntax|syntax error)\b|"
+    r"\b(error|fatal):",
+    re.IGNORECASE,
+)
+SUCCESS_TEXT_RE = re.compile(
+    r"Process exited with code 0|Exit code:?\s*0\b|0 error / 0 warning|"
+    r"\b(success|passed|validated|exported|generated|created|updated)\b",
+    re.IGNORECASE,
+)
+VALIDATION_RE = re.compile(
+    r"py_compile|pytest|unittest|dotnet build|validate|validation|"
+    r"git diff|git status|git log|"
+    r"run-godot-scene|analyze-godot|build-solutions|sdd\.py validate",
+    re.IGNORECASE,
+)
+CODE_EDIT_RE = re.compile(
+    r"apply_patch|Update File:|Add File:|Delete File:|Move to:|"
+    r"\b(cat\s+>|tee\s+|write_text|open\(.*['\"]w|sed\s+-i|python3 .*sdd\.py\b)",
+    re.IGNORECASE,
+)
+FINAL_CONCLUSION_RE = re.compile(
+    r"完成|已更新|已修改|已生成|验证|结果|总结|未完成|blocked|complete|implemented|validation|failed",
+    re.IGNORECASE,
+)
+PATH_RE = re.compile(
+    r"(?:(?:Workspace|SDD|DocsAI|Src|Data|Games|Tools|\.ai-config|\.codex|\.claude|\.devin|\.trae|"
+    r"\.opencode|Brotato_my\.csproj)[\w./@+=:,~\-\u4e00-\u9fff]*|"
+    r"[\w./@+=:,~\-\u4e00-\u9fff]+\.(?:py|md|cs|json|toml|yaml|yml|sh|csproj|ts|tsx|js|mjs|gd|tscn|uid))"
+)
 
 
 class SessionAdapterError(RuntimeError):
@@ -36,6 +68,69 @@ class AdapterPaths:
     repo_root: Path
     codbash_root: Path
     chat_root: Path
+
+
+@dataclass
+class CodexToolCall:
+    call_id: str
+    tool_name: str
+    arguments: Any
+    command: str
+    event_index: int
+    raw_ref: str
+    status: str = "unknown"
+    output: str = ""
+    output_event_index: int = 0
+    output_raw_ref: str = ""
+    failure_reason: str = ""
+    validation_signal: bool = False
+    code_edit_signal: bool = False
+    files_read: set[str] = field(default_factory=set)
+    files_modified: set[str] = field(default_factory=set)
+    files_inferred: set[str] = field(default_factory=set)
+
+
+@dataclass
+class CodexDigestAnalysis:
+    metadata: dict[str, Any]
+    source_path: Path
+    source_sha256: str
+    source_bytes: int
+    source_lines: int
+    records: list[dict[str, Any]]
+    events: list[dict[str, Any]]
+    tool_calls_detail: list[CodexToolCall]
+    user_requests: list[dict[str, Any]]
+    assistant_messages_detail: list[dict[str, Any]]
+    validation_commands: list[dict[str, Any]]
+    file_entries: dict[str, dict[str, Any]]
+    sdd_ids: list[str]
+    topics: list[str]
+    meaningful_user_turns: int
+    assistant_messages: int
+    tool_calls: int
+    tool_outputs: int
+    tool_success_count: int
+    tool_failed_count: int
+    tool_unknown_count: int
+    turn_aborted_count: int
+    thread_rolled_back_count: int
+    interrupted: bool
+    code_edit_signals: dict[str, int]
+    validation_signals: int
+    final_conclusion: bool
+    duration_seconds: int
+    noise_ratio_estimate: float
+    digest_status: str
+    priority: str
+    skip_reasons: list[str]
+    digest_reasons: list[str]
+    topic_slug: str
+    # 效率指标
+    verification_loops: int = 0
+    file_read_counts: dict[str, int] = field(default_factory=dict)
+    repeated_reads_gt3: list[str] = field(default_factory=list)
+    avg_validation_per_edit: float = 0.0
 
 
 def run_command(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
@@ -545,10 +640,1183 @@ def upsert_index_entry(chat_root: Path, entry: dict[str, Any]) -> None:
     entries = [item for item in data["entries"] if item.get("id") != entry.get("id")]
     entries.append(entry)
     entries.sort(key=lambda item: item.get("updated_at", item.get("started_at", "")), reverse=True)
-    data["schema_version"] = max(int(data.get("schema_version") or 1), 2)
+    data["schema_version"] = max(int(data.get("schema_version") or 1), int(entry.get("schema_version") or 2))
     data["entries"] = entries
     data["updated_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
     index_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def relative_chat_path(path: Path, chat_root: Path) -> str:
+    """ChatHistory index 固定写 repo 相对路径，临时根用于测试时仍保持同样形状。"""
+    try:
+        relative = path.resolve().relative_to(chat_root.resolve())
+        return str(Path("Workspace/DocsAI/ChatHistory") / relative)
+    except ValueError:
+        return repo_relative(path)
+
+
+def short_session_id(session_id: str) -> str:
+    # Codex UUID 前 8 位可能在同一分钟连续会话中重复；13 位保持可读且避免 folder 覆盖。
+    return re.sub(r"[^0-9a-zA-Z]", "", session_id)[:13] or "unknown"
+
+
+def parse_tool_arguments(arguments: Any) -> Any:
+    if isinstance(arguments, str):
+        text = arguments.strip()
+        if not text:
+            return ""
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            return arguments
+    return arguments
+
+
+def tool_command(tool_name: str, arguments: Any) -> str:
+    parsed = parse_tool_arguments(arguments)
+    if isinstance(parsed, dict):
+        cmd = parsed.get("cmd") or parsed.get("command")
+        if isinstance(cmd, str) and cmd.strip():
+            return cmd.strip()
+        if tool_name == "apply_patch":
+            return "apply_patch"
+        compact = json.dumps(parsed, ensure_ascii=False, sort_keys=True)
+        return clean_snippet(compact, 240)
+    if isinstance(parsed, str):
+        if tool_name == "apply_patch":
+            first = next((line for line in parsed.splitlines() if line.startswith("*** ")), "")
+            return first or "apply_patch"
+        return clean_snippet(parsed, 240)
+    return clean_snippet(str(parsed), 240)
+
+
+def extract_text_from_payload(payload: dict[str, Any]) -> str:
+    payload_type = str(payload.get("type") or "")
+    if payload_type in {"user_message", "agent_message"}:
+        return str(payload.get("message") or "")
+    if payload_type == "message":
+        return extract_content_text(payload.get("content"))
+    if payload_type == "function_call_output":
+        return str(payload.get("output") or "")
+    if payload_type in {"function_call", "custom_tool_call"}:
+        return tool_command(str(payload.get("name") or payload.get("tool_name") or "unknown"), payload.get("arguments"))
+    return ""
+
+
+def is_meaningful_user_text(text: str) -> bool:
+    stripped = (text or "").strip()
+    if not stripped:
+        return False
+    if stripped.startswith("<turn_aborted>"):
+        return False
+    return not is_bootstrap_message(stripped)
+
+
+def detect_tool_status(tool_name: str, output: str) -> tuple[str, str]:
+    text = output or ""
+    if not text.strip():
+        return "unknown", "no output"
+    if "[truncated" in text.lower() or "output truncated" in text.lower():
+        return "unknown", "output truncated"
+    for regex in (PROCESS_EXIT_RE, EXIT_CODE_RE):
+        match = regex.search(text)
+        if match:
+            code = int(match.group(1))
+            if code == 0:
+                return "success", "exit code 0"
+            return "failed", f"exit code {code}"
+    if FAILED_TEXT_RE.search(text):
+        return "failed", clean_snippet(FAILED_TEXT_RE.search(text).group(0), 120)  # type: ignore[union-attr]
+    if SUCCESS_TEXT_RE.search(text):
+        return "success", "success marker"
+    return "unknown", "no stable status marker"
+
+
+def classify_phase(text: str, payload_type: str) -> str:
+    lower = (text or "").lower()
+    if is_bootstrap_message(text) or payload_type in {"session_meta", "turn_context"}:
+        return "bootstrap"
+    if "deepthink" in lower or "深度思考" in text:
+        return "deepthink"
+    if "plan" in lower or "计划" in text or "design" in lower:
+        return "planning"
+    if "validate" in lower or "py_compile" in lower or "验证" in text:
+        return "validation"
+    if "apply_patch" in lower or "修改" in text or "实现" in text:
+        return "implementation"
+    if payload_type in {"turn_aborted", "thread_rolled_back"}:
+        return "interrupted"
+    return "unknown"
+
+
+def extract_paths(text: str) -> set[str]:
+    paths: set[str] = set()
+    for match in PATH_RE.finditer(text or ""):
+        value = match.group(0).strip("`'\"()[]{}<>.,;:")
+        if len(value) < 3:
+            continue
+        if value.startswith("http"):
+            continue
+        paths.add(value)
+    return paths
+
+
+def extract_sdd_ids(text: str) -> set[str]:
+    return {match.upper() for match in re.findall(r"\bSDD-\d{4}\b", text or "", re.IGNORECASE)}
+
+
+def add_file_entry(files: dict[str, dict[str, Any]], path: str, access: str, evidence: str, raw_ref: str) -> None:
+    item = files.setdefault(path, {"path": path, "read": 0, "modified": 0, "inferred": 0, "evidence": []})
+    if access == "read":
+        item["read"] += 1
+    elif access == "modified":
+        item["modified"] += 1
+    elif access == "inferred":
+        item["inferred"] += 1
+    if len(item["evidence"]) < 5:
+        item["evidence"].append({"access": access, "evidence": evidence, "raw_ref": raw_ref})
+
+
+def derive_topics(title: str, texts: list[str], files: set[str], sdd_ids: set[str]) -> list[str]:
+    joined = " ".join([title, *texts[:8], " ".join(sorted(files)[:20])]).lower()
+    topics: list[str] = []
+    candidates = [
+        ("systemagent", ["systemagent", "workspace/systemagent"]),
+        ("session-adapter", ["session-adapter", "chat-history", "chathistory"]),
+        ("sdd", ["sdd-", "workspace/sdd", "sdd/project"]),
+        ("docsai", ["docsai"]),
+        ("ecs", ["src/ecs", "ecs/"]),
+        ("dataos", ["dataos"]),
+        ("log", ["logger", "logctl", "10.log"]),
+        ("godot", ["godot", ".tscn"]),
+        ("codex", ["codex", ".codex"]),
+    ]
+    for topic, markers in candidates:
+        if any(marker in joined for marker in markers):
+            topics.append(topic)
+    for sdd_id in sorted(sdd_ids):
+        topics.append(sdd_id.lower())
+    return list(dict.fromkeys(topics))[:12]
+
+
+def choose_topic_slug(title: str, topics: list[str], sdd_ids: list[str], files: set[str]) -> str:
+    if sdd_ids:
+        tail = ""
+        if "log" in topics:
+            tail = "-log"
+        elif "session-adapter" in topics:
+            tail = "-session-adapter"
+        return slugify(f"{sdd_ids[0].lower()}{tail}", 48)
+    if "session-adapter" in topics:
+        return "chat-history-digest"
+    for path in sorted(files):
+        if "session-adapter" in path:
+            return "chat-history-digest"
+        if "10.Log" in path or "Logger" in path:
+            return "log"
+    return slugify(title, 48)
+
+
+def event_summary(text: str, fallback: str) -> str:
+    return clean_snippet(text, 220) or fallback
+
+
+def build_base_event(
+    *,
+    metadata: dict[str, Any],
+    event_index: int,
+    record_type: str,
+    payload_type: str,
+    event_kind: str,
+    role: str = "",
+    text: str = "",
+    tool_name: str = "",
+    tool_status: str = "not_applicable",
+    evidence_level: str = "explicit",
+) -> dict[str, Any]:
+    raw_ref = f"raw/transcript.visible.md#{event_index:06d}"
+    return {
+        "schema_version": 1,
+        "session_id": metadata["session_id"],
+        "event_index": event_index,
+        "source_record_type": record_type,
+        "source_payload_type": payload_type,
+        "role": role,
+        "event_kind": event_kind,
+        "phase": classify_phase(text, payload_type),
+        "summary": event_summary(text, event_kind),
+        "text_ref": raw_ref,
+        "tool_name": tool_name,
+        "tool_status": tool_status,
+        "evidence_level": evidence_level,
+    }
+
+
+def find_codex_session(session_or_path: str, source_root: Path = DEFAULT_CODEX_MONTH_ROOT) -> Path:
+    candidate = Path(session_or_path).expanduser()
+    if candidate.exists():
+        return candidate.resolve()
+    search_root = source_root.expanduser().resolve()
+    if not search_root.exists():
+        raise SessionAdapterError(f"Codex source root 不存在：{search_root}")
+    matches = sorted(search_root.glob(f"**/*{session_or_path}*.jsonl"))
+    if not matches:
+        matches = sorted(path for path in search_root.glob("**/rollout-*.jsonl") if session_or_path in path.stem)
+    if not matches:
+        raise SessionAdapterError(f"找不到 Codex session：{session_or_path}")
+    if len(matches) > 1:
+        exact = [path for path in matches if path.stem.endswith(session_or_path)]
+        if len(exact) == 1:
+            return exact[0].resolve()
+        raise SessionAdapterError(f"Codex session 匹配多个文件，请传完整路径或更长 id：{session_or_path}")
+    return matches[0].resolve()
+
+
+def legacy_paths_for_session(chat_root: Path, metadata: dict[str, Any]) -> list[str]:
+    legacy: list[str] = []
+    session_id = metadata["session_id"]
+    short = re.sub(r"[^0-9a-zA-Z]", "", session_id)[:13]
+    for path in sorted(chat_root.glob(f"**/*{short}*.md")):
+        if "/raw/" in str(path) or "/derived/" in str(path):
+            continue
+        legacy.append(relative_chat_path(path, chat_root))
+    return legacy
+
+
+def detect_verification_loops(tool_calls_detail: list[CodexToolCall]) -> int:
+    """检测验证循环次数：edit 后连续 2+ 个 validation signal 算一个循环。"""
+    loops = 0
+    validation_since_edit = 0
+    has_pending_edit = False
+
+    for call in tool_calls_detail:
+        if call.code_edit_signal:
+            if has_pending_edit and validation_since_edit >= 2:
+                loops += 1
+            has_pending_edit = True
+            validation_since_edit = 0
+        elif call.validation_signal and has_pending_edit:
+            validation_since_edit += 1
+
+    if has_pending_edit and validation_since_edit >= 2:
+        loops += 1
+
+    return loops
+
+
+def detect_file_read_amplification(
+    tool_calls_detail: list[CodexToolCall],
+) -> tuple[dict[str, int], list[str]]:
+    """统计每个文件的读取次数，返回 (读取次数 dict, 读取>3次的文件列表)。"""
+    read_counts: dict[str, int] = {}
+
+    for call in tool_calls_detail:
+        if call.code_edit_signal:
+            continue
+        for path in call.files_read:
+            read_counts[path] = read_counts.get(path, 0) + 1
+
+    repeated = sorted(
+        [p for p, c in read_counts.items() if c > 3],
+        key=lambda p: read_counts[p],
+        reverse=True,
+    )
+    return read_counts, repeated
+
+
+def analyze_codex_digest(source_path: Path, *, skip_interrupted: bool = False) -> CodexDigestAnalysis:
+    metadata = scan_codex_session_metadata(source_path)
+    source_sha = sha256_file(source_path)
+    source_bytes = source_path.stat().st_size
+    source_lines = int(metadata["line_count"])
+    records: list[dict[str, Any]] = []
+    events: list[dict[str, Any]] = []
+    calls_by_id: dict[str, CodexToolCall] = {}
+    tool_calls_detail: list[CodexToolCall] = []
+    user_requests: list[dict[str, Any]] = []
+    assistant_messages_detail: list[dict[str, Any]] = []
+    validation_commands: list[dict[str, Any]] = []
+    file_entries: dict[str, dict[str, Any]] = {}
+    sdd_ids: set[str] = set()
+    all_texts: list[str] = []
+    noise_bytes = 0
+    visible_bytes = 0
+    turn_aborted_count = 0
+    thread_rolled_back_count = 0
+    tool_outputs = 0
+    assistant_messages = 0
+    final_conclusion = False
+    last_assistant_text = ""
+
+    with source_path.open("r", encoding="utf-8", errors="replace") as stream:
+        for event_index, line in enumerate(stream, 1):
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError as exc:
+                record = {"type": "json_decode_error", "payload": {"type": "json_decode_error", "message": str(exc)}}
+            records.append(record)
+            record_type = str(record.get("type") or "unknown")
+            payload = record.get("payload")
+            if not isinstance(payload, dict):
+                events.append(
+                    build_base_event(
+                        metadata=metadata,
+                        event_index=event_index,
+                        record_type=record_type,
+                        payload_type=record_type,
+                        event_kind="unknown",
+                    )
+                )
+                continue
+
+            payload_type = str(payload.get("type") or record_type)
+            text = extract_text_from_payload(payload)
+            if text:
+                all_texts.append(text)
+                visible_bytes += len(text.encode("utf-8", errors="replace"))
+                sdd_ids.update(extract_sdd_ids(text))
+            if (
+                record_type == "session_meta"
+                or payload_type == "turn_context"
+                or is_bootstrap_message(text)
+                or "base_instructions" in payload
+            ):
+                noise_bytes += len(line.encode("utf-8", errors="replace"))
+
+            if payload_type == "turn_aborted" or text.strip().startswith("<turn_aborted>"):
+                turn_aborted_count += 1
+                events.append(
+                    build_base_event(
+                        metadata=metadata,
+                        event_index=event_index,
+                        record_type=record_type,
+                        payload_type=payload_type,
+                        event_kind="interruption",
+                        text=text or "turn_aborted",
+                    )
+                )
+                continue
+            if payload_type == "thread_rolled_back":
+                thread_rolled_back_count += 1
+                events.append(
+                    build_base_event(
+                        metadata=metadata,
+                        event_index=event_index,
+                        record_type=record_type,
+                        payload_type=payload_type,
+                        event_kind="rollback",
+                        text=text or "thread_rolled_back",
+                    )
+                )
+                continue
+
+            if payload_type == "user_message":
+                if is_meaningful_user_text(text):
+                    user_requests.append({"event_index": event_index, "text": text, "raw_ref": f"raw/transcript.visible.md#{event_index:06d}"})
+                events.append(
+                    build_base_event(
+                        metadata=metadata,
+                        event_index=event_index,
+                        record_type=record_type,
+                        payload_type=payload_type,
+                        event_kind="user_request" if is_meaningful_user_text(text) else "noise",
+                        role="user",
+                        text=text,
+                        evidence_level="explicit" if is_meaningful_user_text(text) else "weak",
+                    )
+                )
+                continue
+
+            if payload_type == "message":
+                role = str(payload.get("role") or "")
+                if role == "user":
+                    if is_meaningful_user_text(text):
+                        user_requests.append(
+                            {"event_index": event_index, "text": text, "raw_ref": f"raw/transcript.visible.md#{event_index:06d}"}
+                        )
+                    event_kind = "user_request" if is_meaningful_user_text(text) else "noise"
+                elif role == "assistant":
+                    assistant_messages += 1
+                    last_assistant_text = text
+                    assistant_messages_detail.append(
+                        {"event_index": event_index, "text": text, "raw_ref": f"raw/transcript.visible.md#{event_index:06d}"}
+                    )
+                    event_kind = "assistant_message"
+                    if FINAL_CONCLUSION_RE.search(text or ""):
+                        final_conclusion = True
+                        event_kind = "assistant_final"
+                else:
+                    event_kind = "unknown"
+                events.append(
+                    build_base_event(
+                        metadata=metadata,
+                        event_index=event_index,
+                        record_type=record_type,
+                        payload_type=payload_type,
+                        event_kind=event_kind,
+                        role=role,
+                        text=text,
+                    )
+                )
+                for path in extract_paths(text):
+                    add_file_entry(file_entries, path, "inferred" if role == "assistant" else "read", "message reference", f"raw/transcript.visible.md#{event_index:06d}")
+                continue
+
+            if payload_type == "agent_message":
+                assistant_messages += 1
+                last_assistant_text = text
+                assistant_messages_detail.append(
+                    {"event_index": event_index, "text": text, "raw_ref": f"raw/transcript.visible.md#{event_index:06d}"}
+                )
+                event_kind = "assistant_message"
+                if FINAL_CONCLUSION_RE.search(text or ""):
+                    final_conclusion = True
+                    event_kind = "assistant_final"
+                events.append(
+                    build_base_event(
+                        metadata=metadata,
+                        event_index=event_index,
+                        record_type=record_type,
+                        payload_type=payload_type,
+                        event_kind=event_kind,
+                        role="assistant",
+                        text=text,
+                    )
+                )
+                for path in extract_paths(text):
+                    add_file_entry(file_entries, path, "inferred", "assistant reference", f"raw/transcript.visible.md#{event_index:06d}")
+                continue
+
+            if payload_type in {"function_call", "custom_tool_call"}:
+                tool_name = str(payload.get("name") or payload.get("tool_name") or "unknown")
+                call_id = str(payload.get("call_id") or payload.get("id") or f"call-{event_index}")
+                command = tool_command(tool_name, payload.get("arguments"))
+                raw_ref = f"raw/transcript.visible.md#{event_index:06d}"
+                call = CodexToolCall(
+                    call_id=call_id,
+                    tool_name=tool_name,
+                    arguments=payload.get("arguments"),
+                    command=command,
+                    event_index=event_index,
+                    raw_ref=raw_ref,
+                    validation_signal=bool(VALIDATION_RE.search(command)),
+                    code_edit_signal=tool_name == "apply_patch" or bool(CODE_EDIT_RE.search(command)),
+                )
+                paths = extract_paths(command)
+                if call.code_edit_signal:
+                    call.files_modified.update(paths)
+                    for path in paths:
+                        add_file_entry(file_entries, path, "modified", f"{tool_name} call", raw_ref)
+                else:
+                    call.files_read.update(paths)
+                    for path in paths:
+                        add_file_entry(file_entries, path, "read", f"{tool_name} call", raw_ref)
+                calls_by_id[call_id] = call
+                tool_calls_detail.append(call)
+                if call.validation_signal:
+                    validation_commands.append({"event_index": event_index, "tool": tool_name, "command": command, "status": "unknown", "raw_ref": raw_ref})
+                sdd_ids.update(extract_sdd_ids(command))
+                events.append(
+                    build_base_event(
+                        metadata=metadata,
+                        event_index=event_index,
+                        record_type=record_type,
+                        payload_type=payload_type,
+                        event_kind="tool_call",
+                        role="assistant",
+                        text=command,
+                        tool_name=tool_name,
+                        tool_status="unknown",
+                    )
+                )
+                continue
+
+            if payload_type in {"function_call_output", "custom_tool_call_output"}:
+                tool_outputs += 1
+                call_id = str(payload.get("call_id") or payload.get("id") or "")
+                output = str(payload.get("output") or "")
+                status, reason = detect_tool_status("", output)
+                raw_ref = f"raw/transcript.visible.md#{event_index:06d}"
+                call = calls_by_id.get(call_id)
+                tool_name = call.tool_name if call else "unknown"
+                if call is not None:
+                    call.output = output
+                    call.status = status
+                    call.failure_reason = reason if status == "failed" else ""
+                    call.output_event_index = event_index
+                    call.output_raw_ref = raw_ref
+                    if call.validation_signal:
+                        for item in reversed(validation_commands):
+                            if item["event_index"] == call.event_index:
+                                item["status"] = status
+                                item["failure_reason"] = call.failure_reason
+                                item["output_raw_ref"] = raw_ref
+                                break
+                    output_paths = extract_paths(output)
+                    if call.code_edit_signal and output_paths:
+                        call.files_modified.update(output_paths)
+                        for path in output_paths:
+                            add_file_entry(file_entries, path, "modified", "tool output", raw_ref)
+                events.append(
+                    build_base_event(
+                        metadata=metadata,
+                        event_index=event_index,
+                        record_type=record_type,
+                        payload_type=payload_type,
+                        event_kind="tool_output",
+                        role="tool",
+                        text=output,
+                        tool_name=tool_name,
+                        tool_status=status,
+                    )
+                )
+                sdd_ids.update(extract_sdd_ids(output))
+                continue
+
+            event_kind = "session_meta" if record_type == "session_meta" else "noise" if payload_type == "turn_context" else "unknown"
+            events.append(
+                build_base_event(
+                    metadata=metadata,
+                    event_index=event_index,
+                    record_type=record_type,
+                    payload_type=payload_type,
+                    event_kind=event_kind,
+                    text=text,
+                    evidence_level="weak" if event_kind == "noise" else "explicit",
+                )
+            )
+
+    for call in tool_calls_detail:
+        if call.output_event_index == 0:
+            call.status = "unknown"
+            call.failure_reason = "missing output"
+        for event in events:
+            if event["event_kind"] == "tool_call" and event["event_index"] == call.event_index:
+                event["tool_status"] = call.status
+                break
+
+    tool_success_count = sum(1 for call in tool_calls_detail if call.status == "success")
+    tool_failed_count = sum(1 for call in tool_calls_detail if call.status == "failed")
+    tool_unknown_count = sum(1 for call in tool_calls_detail if call.status == "unknown")
+    code_edit_explicit = sum(1 for call in tool_calls_detail if call.code_edit_signal and call.status in {"success", "unknown", "failed"})
+    inferred_edits = sum(
+        1
+        for message in assistant_messages_detail
+        if re.search(r"已修改|已更新|已生成|modified|updated|generated", message["text"], re.IGNORECASE)
+    )
+    validation_signals = sum(1 for call in tool_calls_detail if call.validation_signal)
+    interrupted = turn_aborted_count > 0 or thread_rolled_back_count > 0
+    meaningful_user_turns = len(user_requests)
+    duration_seconds = 0
+    if metadata["started"] and metadata["updated"]:
+        duration_seconds = max(0, int((metadata["updated"] - metadata["started"]).total_seconds()))
+    total_signal_bytes = max(1, visible_bytes + noise_bytes)
+    noise_ratio = round(min(1.0, noise_bytes / total_signal_bytes), 2)
+    topics = derive_topics(metadata["title"], all_texts, set(file_entries), sdd_ids)
+    sdd_id_list = sorted(sdd_ids)
+    topic_slug = choose_topic_slug(metadata["title"], topics, sdd_id_list, set(file_entries))
+
+    skip_reasons: list[str] = []
+    digest_reasons: list[str] = []
+    if (
+        meaningful_user_turns < 2
+        and len(tool_calls_detail) < 5
+        and code_edit_explicit == 0
+        and validation_signals == 0
+        and not final_conclusion
+    ):
+        skip_reasons.append("too_short")
+    if skip_interrupted and interrupted and not final_conclusion and code_edit_explicit == 0 and validation_signals == 0:
+        skip_reasons.extend(reason for reason in ["interrupted", "no_final_conclusion"] if reason not in skip_reasons)
+
+    if tool_calls_detail:
+        digest_reasons.append("has_tool_calls")
+    if sdd_id_list:
+        digest_reasons.append("has_sdd_reference")
+    if final_conclusion:
+        digest_reasons.append("has_final_conclusion")
+    if validation_signals:
+        digest_reasons.append("has_validation_signal")
+    if code_edit_explicit:
+        digest_reasons.append("has_code_edit_signal")
+    if interrupted:
+        digest_reasons.append("has_interruption_risk")
+
+    digest_status = "locator-only" if skip_reasons else "digest"
+    if code_edit_explicit and (validation_signals or final_conclusion):
+        priority = "high"
+    elif final_conclusion or len(tool_calls_detail) >= 5:
+        priority = "normal"
+    else:
+        priority = "low"
+    if interrupted and not final_conclusion:
+        priority = "low"
+
+    # 效率指标
+    verification_loops = detect_verification_loops(tool_calls_detail)
+    file_read_counts, repeated_reads_gt3 = detect_file_read_amplification(tool_calls_detail)
+    avg_val_per_edit = round(validation_signals / max(1, code_edit_explicit), 1) if code_edit_explicit > 0 else 0.0
+
+    return CodexDigestAnalysis(
+        metadata=metadata,
+        source_path=source_path,
+        source_sha256=source_sha,
+        source_bytes=source_bytes,
+        source_lines=source_lines,
+        records=records,
+        events=events,
+        tool_calls_detail=tool_calls_detail,
+        user_requests=user_requests,
+        assistant_messages_detail=assistant_messages_detail,
+        validation_commands=validation_commands,
+        file_entries=file_entries,
+        sdd_ids=sdd_id_list,
+        topics=topics,
+        meaningful_user_turns=meaningful_user_turns,
+        assistant_messages=assistant_messages,
+        tool_calls=len(tool_calls_detail),
+        tool_outputs=tool_outputs,
+        tool_success_count=tool_success_count,
+        tool_failed_count=tool_failed_count,
+        tool_unknown_count=tool_unknown_count,
+        turn_aborted_count=turn_aborted_count,
+        thread_rolled_back_count=thread_rolled_back_count,
+        interrupted=interrupted,
+        code_edit_signals={"explicit": code_edit_explicit, "inferred": inferred_edits, "unknown": 0},
+        validation_signals=validation_signals,
+        final_conclusion=final_conclusion,
+        duration_seconds=duration_seconds,
+        noise_ratio_estimate=noise_ratio,
+        digest_status=digest_status,
+        priority=priority,
+        skip_reasons=skip_reasons,
+        digest_reasons=digest_reasons,
+        topic_slug=topic_slug,
+        verification_loops=verification_loops,
+        file_read_counts=file_read_counts,
+        repeated_reads_gt3=repeated_reads_gt3[:10],
+        avg_validation_per_edit=avg_val_per_edit,
+    )
+
+
+def codex_digest_folder(chat_root: Path, analysis: CodexDigestAnalysis) -> Path:
+    started: datetime = analysis.metadata["started"]
+    name = (
+        f"{started:%Y-%m-%d-%H-%M}-codex-"
+        f"{analysis.topic_slug}-{short_session_id(analysis.metadata['session_id'])}"
+    )
+    return chat_root / f"{started:%Y}" / f"{started:%m}" / f"{started:%d}" / name
+
+
+def markdown_list(items: list[str], empty: str = "- none") -> list[str]:
+    return items if items else [empty]
+
+
+def render_source_locator(analysis: CodexDigestAnalysis) -> str:
+    lines = [
+        "# Source Locator",
+        "",
+        f"- Source Tool: `codex`",
+        f"- Session ID: `{analysis.metadata['session_id']}`",
+        f"- Source Path: `{analysis.source_path}`",
+        f"- Source SHA256: `{analysis.source_sha256}`",
+        f"- Source Bytes: {analysis.source_bytes}",
+        f"- Source Lines: {analysis.source_lines}",
+        f"- Started: {analysis.metadata['started'].isoformat(timespec='seconds')}",
+        f"- Updated: {analysis.metadata['updated'].isoformat(timespec='seconds')}",
+        "",
+        "## Notes",
+        "",
+        "- 原始 Codex JSONL 不复制进仓库。",
+        "- `raw/transcript.visible.md` 只保留 Codex JSONL 中可见内容。",
+        "- `encrypted_content` 不会被解密；需要字节级证据时读取 Source Path。",
+    ]
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_ai_context(analysis: CodexDigestAnalysis, entry: dict[str, Any]) -> str:
+    latest_user = analysis.user_requests[-1]["text"] if analysis.user_requests else analysis.metadata.get("first_user", "")
+    latest_assistant = analysis.assistant_messages_detail[-1]["text"] if analysis.assistant_messages_detail else ""
+    failure_line = (
+        f"- Tool failures: {analysis.tool_failed_count} -> `{entry.get('tool_failure_path')}`"
+        if analysis.tool_failed_count
+        else "- Tool failures: 0"
+    )
+    interruption = (
+        f"- Interrupted: yes, turn_aborted={analysis.turn_aborted_count}, "
+        f"thread_rolled_back={analysis.thread_rolled_back_count}"
+        if analysis.interrupted
+        else "- Interrupted: no"
+    )
+    lines = [
+        f"# {analysis.metadata['title']}",
+        "",
+        "## Verdict",
+        "",
+        f"- digest_status: `{analysis.digest_status}`",
+        f"- priority: `{analysis.priority}`",
+        f"- skip_reasons: {', '.join(analysis.skip_reasons) or 'none'}",
+        f"- digest_reasons: {', '.join(analysis.digest_reasons) or 'none'}",
+        "",
+        "## User Goal",
+        "",
+        truncate(latest_user or "not recorded", 800),
+        "",
+        "## Outcome",
+        "",
+        truncate(latest_assistant or "no final conclusion", 900),
+        "",
+        "## Files / SDD / DocsAI",
+        "",
+        *markdown_list([f"- `{path}`" for path in list(analysis.file_entries)[:12]]),
+        *([f"- SDD IDs: {', '.join(analysis.sdd_ids)}"] if analysis.sdd_ids else []),
+        "",
+        "## Tool And Validation Evidence",
+        "",
+        f"- Tool calls: {analysis.tool_calls} success={analysis.tool_success_count} failed={analysis.tool_failed_count} unknown={analysis.tool_unknown_count}",
+        f"- Validation signals: {analysis.validation_signals}",
+        failure_line,
+        "",
+        "## Interruptions",
+        "",
+        interruption,
+        "",
+        "## Resume Prompt",
+        "",
+        "继续该会话时，先读本文件，再读 `derived/summary.md`、`derived/validation.md` 和必要的失败工具摘要；只有需要完整证据时才读 raw transcript。",
+    ]
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_summary(analysis: CodexDigestAnalysis) -> str:
+    timeline: list[str] = []
+    for item in analysis.user_requests[:6]:
+        timeline.append(f"- user #{item['event_index']:06d}: {clean_snippet(item['text'], 180)}")
+    for item in analysis.assistant_messages_detail[-4:]:
+        timeline.append(f"- assistant #{item['event_index']:06d}: {clean_snippet(item['text'], 180)}")
+    lines = [
+        f"# {analysis.metadata['title']}",
+        "",
+        "## Metadata",
+        "",
+        f"- Session ID: `{analysis.metadata['session_id']}`",
+        f"- Source: `{analysis.source_path}`",
+        f"- Started: {analysis.metadata['started'].isoformat(timespec='seconds')}",
+        f"- Updated: {analysis.metadata['updated'].isoformat(timespec='seconds')}",
+        f"- Duration Seconds: {analysis.duration_seconds}",
+        "",
+        "## Digest Gate",
+        "",
+        f"- Status: `{analysis.digest_status}`",
+        f"- Priority: `{analysis.priority}`",
+        f"- Skip Reasons: {', '.join(analysis.skip_reasons) or 'none'}",
+        f"- Digest Reasons: {', '.join(analysis.digest_reasons) or 'none'}",
+        "",
+        "## Counts",
+        "",
+        f"- Meaningful User Turns: {analysis.meaningful_user_turns}",
+        f"- Assistant Messages: {analysis.assistant_messages}",
+        f"- Tool Calls: {analysis.tool_calls}",
+        f"- Tool Outputs: {analysis.tool_outputs}",
+        f"- Tool Status: success={analysis.tool_success_count}, failed={analysis.tool_failed_count}, unknown={analysis.tool_unknown_count}",
+        f"- Validation Signals: {analysis.validation_signals}",
+        f"- Code Edit Signals: {analysis.code_edit_signals}",
+        "",
+        "## Timeline",
+        "",
+        *markdown_list(timeline),
+        "",
+        "## Open Risk",
+        "",
+        "- 中断会话可能缺少最终交接；详见 `derived/interruptions.md`。",
+        "- 工具输出只在 raw transcript 保留完整内容，digest 文件只写摘要和 raw ref。",
+    ]
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_user_requests(analysis: CodexDigestAnalysis) -> str:
+    lines = ["# User Requests", ""]
+    for item in analysis.user_requests:
+        lines.extend([f"## #{item['event_index']:06d}", "", f"- Raw Ref: `{item['raw_ref']}`", "", truncate(item["text"], 1200), ""])
+    if not analysis.user_requests:
+        lines.append("- none")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_assistant_results(analysis: CodexDigestAnalysis) -> str:
+    lines = ["# Assistant Results", ""]
+    for item in analysis.assistant_messages_detail[-12:]:
+        kind = "final-like" if FINAL_CONCLUSION_RE.search(item["text"] or "") else "message"
+        lines.extend(
+            [
+                f"## #{item['event_index']:06d} `{kind}`",
+                "",
+                f"- Raw Ref: `{item['raw_ref']}`",
+                "",
+                truncate(item["text"], 1000),
+                "",
+            ]
+        )
+    if not analysis.assistant_messages_detail:
+        lines.append("- none")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_tools(analysis: CodexDigestAnalysis) -> str:
+    lines = [
+        "# Tools",
+        "",
+        "## Summary",
+        "",
+        f"- Tool Calls: {analysis.tool_calls}",
+        f"- Tool Outputs: {analysis.tool_outputs}",
+        f"- Success: {analysis.tool_success_count}",
+        f"- Failed: {analysis.tool_failed_count}",
+        f"- Unknown: {analysis.tool_unknown_count}",
+        "",
+        "## Calls",
+        "",
+        "| Event | Tool | Status | Command / Action | Raw Ref |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for call in analysis.tool_calls_detail:
+        lines.append(
+            f"| {call.event_index:06d} | `{call.tool_name}` | `{call.status}` | "
+            f"{clean_snippet(call.command, 120)} | `{call.raw_ref}` |"
+        )
+    if not analysis.tool_calls_detail:
+        lines.append("| - | - | - | - | - |")
+    lines.extend(["", "## Notes", "", "- 完整 output 保留在 `raw/transcript.visible.md`；本文件不复制大段输出。"])
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_tool_failures(analysis: CodexDigestAnalysis) -> str:
+    lines = [
+        "# Tool Failures",
+        "",
+        "## Summary",
+        "",
+        f"- Failed: {analysis.tool_failed_count}",
+        f"- Unknown: {analysis.tool_unknown_count}",
+        "",
+        "## Failures",
+        "",
+        "| Event | Tool | Command / Action | Exit / Error | Recovered | Raw Ref |",
+        "| --- | --- | --- | --- | --- | --- |",
+    ]
+    for call in analysis.tool_calls_detail:
+        if call.status != "failed":
+            continue
+        recovered = "unknown"
+        error_summary = call.failure_reason
+        output_summary = clean_snippet(call.output, 120)
+        if output_summary and output_summary not in error_summary:
+            error_summary = f"{error_summary}; {output_summary}" if error_summary else output_summary
+        lines.append(
+            f"| {call.output_event_index or call.event_index:06d} | `{call.tool_name}` | "
+            f"{clean_snippet(call.command, 100)} | {clean_snippet(error_summary, 140)} | "
+            f"{recovered} | `{call.output_raw_ref or call.raw_ref}` |"
+        )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_files(analysis: CodexDigestAnalysis) -> str:
+    lines = [
+        "# Files",
+        "",
+        "| Path | Read | Modified Explicit | Inferred | Evidence |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for path, item in sorted(analysis.file_entries.items()):
+        evidence = "; ".join(f"{ev['access']} {ev['raw_ref']}" for ev in item["evidence"][:3])
+        lines.append(
+            f"| `{path}` | {item['read']} | {item['modified']} | {item['inferred']} | {clean_snippet(evidence, 160)} |"
+        )
+    if not analysis.file_entries:
+        lines.append("| - | 0 | 0 | 0 | none |")
+    lines.extend(
+        [
+            "",
+            "## Classification",
+            "",
+            "- `explicit`: apply_patch、明确写入命令或工具输出显示文件更新。",
+            "- `inferred`: assistant/message 提到文件或修改，但缺少直接写入证据。",
+            "- `unknown`: 当前 Codex JSONL 无法判断。",
+        ]
+    )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_validation(analysis: CodexDigestAnalysis) -> str:
+    lines = [
+        "# Validation",
+        "",
+        f"- Validation Signals: {analysis.validation_signals}",
+        "",
+        "| Event | Tool | Status | Command | Failure Summary | Raw Ref |",
+        "| --- | --- | --- | --- | --- | --- |",
+    ]
+    for item in analysis.validation_commands:
+        lines.append(
+            f"| {item['event_index']:06d} | `{item['tool']}` | `{item.get('status', 'unknown')}` | "
+            f"{clean_snippet(item['command'], 120)} | {clean_snippet(item.get('failure_reason', ''), 100)} | "
+            f"`{item.get('output_raw_ref') or item['raw_ref']}` |"
+        )
+    if not analysis.validation_commands:
+        lines.append("| - | - | - | not recorded | - | - |")
+    if analysis.validation_signals == 0:
+        lines.extend(["", "## Unverified", "", "- 未在 Codex JSONL 中检测到稳定验证命令。"])
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_interruptions(analysis: CodexDigestAnalysis) -> str:
+    interrupted_events = [event for event in analysis.events if event["event_kind"] in {"interruption", "rollback"}]
+    lines = [
+        "# Interruptions",
+        "",
+        f"- Interrupted: {str(analysis.interrupted).lower()}",
+        f"- turn_aborted_count: {analysis.turn_aborted_count}",
+        f"- thread_rolled_back_count: {analysis.thread_rolled_back_count}",
+        f"- final_conclusion: {str(analysis.final_conclusion).lower()}",
+        f"- code_edit_signals: {analysis.code_edit_signals}",
+        f"- validation_signals: {analysis.validation_signals}",
+        "",
+        "## Events",
+        "",
+    ]
+    lines.extend(
+        markdown_list(
+            [
+                f"- #{event['event_index']:06d} `{event['event_kind']}` {event['summary']} -> `{event['text_ref']}`"
+                for event in interrupted_events[:20]
+            ]
+        )
+    )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_noise(analysis: CodexDigestAnalysis) -> str:
+    noise_events = [event for event in analysis.events if event["event_kind"] in {"noise", "session_meta", "system_context"}]
+    lines = [
+        "# Noise",
+        "",
+        f"- noise_ratio_estimate: {analysis.noise_ratio_estimate}",
+        f"- noise_events: {len(noise_events)}",
+        "",
+        "## Detected Noise",
+        "",
+        "- `session_meta.base_instructions`",
+        "- AGENTS / developer / skill 注入",
+        "- `turn_context` 环境上下文",
+        "- encrypted reasoning placeholder",
+        "- 超大 tool output，完整内容只在 raw transcript 中按需读取",
+        "",
+        "## Raw Ranges",
+        "",
+    ]
+    lines.extend(markdown_list([f"- #{event['event_index']:06d} `{event['source_payload_type']}`" for event in noise_events[:30]]))
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_efficiency(analysis: CodexDigestAnalysis) -> str:
+    """生成 derived/efficiency.md：会话效率分析。"""
+    code_edit_count = analysis.code_edit_signals.get("explicit", 0)
+    # 验证循环明细：找出每个 edit 后的验证序列
+    loop_details: list[str] = []
+    validation_since_edit = 0
+    has_pending_edit = False
+    last_edit_event = 0
+    last_edit_target = ""
+
+    for call in analysis.tool_calls_detail:
+        if call.code_edit_signal:
+            if has_pending_edit and validation_since_edit >= 2:
+                target = last_edit_target if last_edit_target and last_edit_target != "None" else "apply_patch"
+                loop_details.append(
+                    f"| {last_edit_event:06d} | {clean_snippet(target, 80)} | "
+                    f"{validation_since_edit} | verification loop |"
+                )
+            has_pending_edit = True
+            validation_since_edit = 0
+            last_edit_event = call.event_index
+            last_edit_target = call.command if call.command and call.command != "None" else call.tool_name
+        elif call.validation_signal and has_pending_edit:
+            validation_since_edit += 1
+
+    if has_pending_edit and validation_since_edit >= 2:
+        target = last_edit_target if last_edit_target and last_edit_target != "None" else "apply_patch"
+        loop_details.append(
+            f"| {last_edit_event:06d} | {clean_snippet(target, 80)} | "
+            f"{validation_since_edit} | verification loop |"
+        )
+
+    # 文件读放大明细
+    read_detail_lines: list[str] = []
+    for path in analysis.repeated_reads_gt3[:10]:
+        count = analysis.file_read_counts.get(path, 0)
+        read_detail_lines.append(f"| `{path}` | {count} | — | — |")
+
+    # 效率等级标注
+    loop_label = "过多" if analysis.verification_loops > 5 else "偏高" if analysis.verification_loops > 3 else "正常"
+    read_label = "严重" if len(analysis.repeated_reads_gt3) > 5 else "偏高" if len(analysis.repeated_reads_gt3) > 3 else "正常"
+    ratio_label = "过高" if analysis.avg_validation_per_edit > 2.5 else "偏高" if analysis.avg_validation_per_edit > 1.5 else "正常"
+
+    lines = [
+        "# Efficiency Analysis",
+        "",
+        "## Summary",
+        "",
+        f"- Edit Count: {code_edit_count}",
+        f"- Validation Count: {analysis.validation_signals}",
+        f"- Avg Validation Per Edit: {analysis.avg_validation_per_edit} ({ratio_label})",
+        f"- Verification Loops: {analysis.verification_loops} ({loop_label})",
+        f"- Repeated File Reads (>3): {len(analysis.repeated_reads_gt3)} ({read_label})",
+        "",
+        "## Verification Loops",
+        "",
+        '以下 edit 触发了 2+ 次连续验证，可能可以合并为"批量修改后统一验证"：',
+        "",
+        "| Edit Event | Edit Target | Validation Count | Note |",
+        "| --- | --- | --- | --- |",
+        *markdown_list(loop_details, empty="| - | - | - | 无验证循环 |"),
+        "",
+        "## File Read Amplification",
+        "",
+        "以下文件被读取超过 3 次：",
+        "",
+        "| File | Read Count | Read Ranges | Note |",
+        "| --- | --- | --- | --- |",
+        *markdown_list(read_detail_lines, empty="| - | 0 | - | 无读放大 |"),
+        "",
+        "## Thresholds",
+        "",
+        "| 指标 | 正常 | 警告 | 异常 |",
+        "| --- | --- | --- | --- |",
+        "| 验证循环次数 | 0-3 | 3-5 | >5 |",
+        "| 同文件读取次数 | 1-3 | 4-5 | >5 |",
+        "| 平均验证/编辑比 | 1.0-1.5 | 1.5-2.5 | >2.5 |",
+        "",
+        "## Notes",
+        "",
+        "- 验证循环不一定是问题：SDD 设计文档等场景确实需要逐步验证。",
+        "- 文件读放大不一定是问题：context switch 时重新读取是合理的，但 >5 次值得检查。",
+        "- 本文件只记录事实，不做自动优化建议。",
+    ]
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def build_codex_digest_entry(
+    analysis: CodexDigestAnalysis,
+    chat_root: Path,
+    folder: Path | None,
+    legacy_paths: list[str],
+) -> dict[str, Any]:
+    entry: dict[str, Any] = {
+        "schema_version": 3,
+        "id": f"codex:{analysis.metadata['session_id']}",
+        "source_tool": "codex",
+        "source_adapter": "session-adapter.codex-digest",
+        "session_id": analysis.metadata["session_id"],
+        "title": analysis.metadata["title"],
+        "topic_slug": analysis.topic_slug,
+        "legacy_paths": legacy_paths,
+        "digest_status": analysis.digest_status,
+        "priority": analysis.priority,
+        "skip_reasons": analysis.skip_reasons,
+        "digest_reasons": analysis.digest_reasons,
+        "meaningful_user_turns": analysis.meaningful_user_turns,
+        "assistant_messages": analysis.assistant_messages,
+        "tool_calls": analysis.tool_calls,
+        "tool_outputs": analysis.tool_outputs,
+        "tool_success_count": analysis.tool_success_count,
+        "tool_failed_count": analysis.tool_failed_count,
+        "tool_unknown_count": analysis.tool_unknown_count,
+        "tool_failure_path": "",
+        "turn_aborted_count": analysis.turn_aborted_count,
+        "thread_rolled_back_count": analysis.thread_rolled_back_count,
+        "interrupted": analysis.interrupted,
+        "code_edit_signals": analysis.code_edit_signals,
+        "validation_signals": analysis.validation_signals,
+        "final_conclusion": analysis.final_conclusion,
+        "duration_seconds": analysis.duration_seconds,
+        "noise_ratio_estimate": analysis.noise_ratio_estimate,
+        "recommended_reading_order": [
+            "derived/ai-context.md",
+            "derived/summary.md",
+            "derived/validation.md",
+            "derived/tools.md",
+            "raw/transcript.visible.md",
+        ],
+        "topics": analysis.topics,
+        "sdd_ids": analysis.sdd_ids,
+        "files_mentioned": list(sorted(analysis.file_entries))[:80],
+        "source_path": str(analysis.source_path),
+        "source_sha256": analysis.source_sha256,
+        "source_bytes": analysis.source_bytes,
+        "source_lines": analysis.source_lines,
+        "cwd": analysis.metadata["session_meta"].get("cwd", ""),
+        "started_at": analysis.metadata["started"].isoformat(timespec="seconds"),
+        "updated_at": analysis.metadata["updated"].isoformat(timespec="seconds"),
+        "tags": ["systemagent", "session-adapter", "codex", "digest"],
+        "efficiency": {
+            "verification_loops": analysis.verification_loops,
+            "repeated_file_reads": analysis.repeated_reads_gt3[:10],
+            "avg_validation_per_edit": analysis.avg_validation_per_edit,
+            "edit_count": analysis.code_edit_signals.get("explicit", 0),
+            "validation_count": analysis.validation_signals,
+        },
+    }
+    if folder is not None:
+        entry["folder_path"] = relative_chat_path(folder, chat_root)
+        entry["digest_path"] = relative_chat_path(folder / "derived/ai-context.md", chat_root)
+        entry["raw_transcript_path"] = relative_chat_path(folder / "raw/transcript.visible.md", chat_root)
+        if analysis.tool_failed_count > 0:
+            entry["tool_failure_path"] = relative_chat_path(folder / "derived/tool-failures.md", chat_root)
+    return entry
+
+
+def write_codex_digest(source_path: Path, chat_root: Path, *, skip_interrupted: bool = False) -> dict[str, Any]:
+    chat_root.mkdir(parents=True, exist_ok=True)
+    analysis = analyze_codex_digest(source_path, skip_interrupted=skip_interrupted)
+    legacy_paths = legacy_paths_for_session(chat_root, analysis.metadata)
+    folder = codex_digest_folder(chat_root, analysis) if analysis.digest_status == "digest" else None
+    entry = build_codex_digest_entry(analysis, chat_root, folder, legacy_paths)
+
+    if folder is None:
+        upsert_index_entry(chat_root, entry)
+        return entry
+
+    raw_dir = folder / "raw"
+    derived_dir = folder / "derived"
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    derived_dir.mkdir(parents=True, exist_ok=True)
+
+    manifest = {
+        "schema_version": 1,
+        "generator": "session-adapter.codex-digest",
+        "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "entry": entry,
+    }
+    (folder / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    write_codex_full_markdown(source_path, raw_dir / "transcript.visible.md", chat_root)
+    (raw_dir / "source-locator.md").write_text(render_source_locator(analysis), encoding="utf-8")
+    with (derived_dir / "events.jsonl").open("w", encoding="utf-8", newline="\n") as out:
+        for event in analysis.events:
+            out.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
+    (derived_dir / "ai-context.md").write_text(render_ai_context(analysis, entry), encoding="utf-8")
+    (derived_dir / "summary.md").write_text(render_summary(analysis), encoding="utf-8")
+    (derived_dir / "user-requests.md").write_text(render_user_requests(analysis), encoding="utf-8")
+    (derived_dir / "assistant-results.md").write_text(render_assistant_results(analysis), encoding="utf-8")
+    (derived_dir / "tools.md").write_text(render_tools(analysis), encoding="utf-8")
+    (derived_dir / "files.md").write_text(render_files(analysis), encoding="utf-8")
+    (derived_dir / "validation.md").write_text(render_validation(analysis), encoding="utf-8")
+    (derived_dir / "interruptions.md").write_text(render_interruptions(analysis), encoding="utf-8")
+    (derived_dir / "noise.md").write_text(render_noise(analysis), encoding="utf-8")
+    (derived_dir / "efficiency.md").write_text(render_efficiency(analysis), encoding="utf-8")
+    if analysis.tool_failed_count > 0:
+        (derived_dir / "tool-failures.md").write_text(render_tool_failures(analysis), encoding="utf-8")
+    upsert_index_entry(chat_root, entry)
+    return entry
 
 
 def scan_codex_session_metadata(source_path: Path) -> dict[str, Any]:
@@ -849,6 +2117,106 @@ def command_export_codex_month(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_digest_codex(args: argparse.Namespace) -> int:
+    chat_root = args.chat_root.expanduser().resolve()
+    source_root = args.source_root.expanduser().resolve()
+    source_path = find_codex_session(args.session, source_root=source_root)
+    entry = write_codex_digest(source_path, chat_root, skip_interrupted=bool(args.skip_interrupted))
+    if entry["digest_status"] == "digest":
+        print(f"digest {entry['id']} -> {entry['folder_path']}")
+    else:
+        print(f"locator-only {entry['id']} skip={','.join(entry['skip_reasons'])}")
+    print(f"ChatHistory index: {repo_relative(chat_root / 'index.json')}")
+    return 0
+
+
+def command_digest_codex_month(args: argparse.Namespace) -> int:
+    source_root = args.source_root.expanduser().resolve()
+    chat_root = args.chat_root.expanduser().resolve()
+    if not source_root.exists():
+        raise SessionAdapterError(f"Codex month source root 不存在：{source_root}")
+    files = sorted(source_root.glob("**/rollout-*.jsonl"))
+    if args.limit:
+        files = files[: args.limit]
+    if not files:
+        raise SessionAdapterError(f"没有找到 Codex JSONL：{source_root}/**/rollout-*.jsonl")
+
+    digest_count = 0
+    locator_count = 0
+    failed_tools_count = 0
+    for source_path in files:
+        entry = write_codex_digest(source_path, chat_root, skip_interrupted=bool(args.skip_interrupted))
+        if entry["digest_status"] == "digest":
+            digest_count += 1
+            print(f"digest {entry['id']} -> {entry.get('folder_path', '')}")
+        else:
+            locator_count += 1
+            print(f"locator-only {entry['id']} skip={','.join(entry.get('skip_reasons', []))}")
+        if int(entry.get("tool_failed_count") or 0) > 0:
+            failed_tools_count += 1
+
+    print(
+        f"Digested {len(files)} Codex session(s): "
+        f"digest={digest_count} locator-only={locator_count} failed-tools={failed_tools_count}"
+    )
+    print(f"ChatHistory index: {repo_relative(chat_root / 'index.json')}")
+    return 0
+
+
+def entry_matches_topic(entry: dict[str, Any], topic: str) -> bool:
+    if not topic:
+        return True
+    needle = topic.lower()
+    haystacks = [
+        str(entry.get("title") or ""),
+        str(entry.get("topic_slug") or ""),
+        " ".join(str(item) for item in entry.get("topics") or []),
+        " ".join(str(item) for item in entry.get("sdd_ids") or []),
+        " ".join(str(item) for item in entry.get("files_mentioned") or []),
+    ]
+    return any(needle in text.lower() for text in haystacks)
+
+
+def command_list_digests(args: argparse.Namespace) -> int:
+    chat_root = args.chat_root.expanduser().resolve()
+    data = read_index(chat_root / "index.json")
+    entries = [entry for entry in data.get("entries", []) if isinstance(entry, dict)]
+    if args.status:
+        entries = [entry for entry in entries if entry.get("digest_status") == args.status]
+    if args.priority:
+        entries = [entry for entry in entries if entry.get("priority") == args.priority]
+    if args.failed_tools:
+        entries = [entry for entry in entries if int(entry.get("tool_failed_count") or 0) > 0]
+    if args.interrupted:
+        entries = [entry for entry in entries if bool(entry.get("interrupted"))]
+    if args.topic:
+        entries = [entry for entry in entries if entry_matches_topic(entry, args.topic)]
+    if args.efficiency_loop > 0:
+        entries = [
+            entry for entry in entries
+            if int((entry.get("efficiency") or {}).get("verification_loops") or 0) >= args.efficiency_loop
+        ]
+    if args.json:
+        print(json.dumps({"schema_version": data.get("schema_version"), "entries": entries}, ensure_ascii=False, indent=2))
+        return 0
+    print(f"Found {len(entries)} digest entry(s)")
+    for entry in entries[: args.limit]:
+        status = entry.get("digest_status", "")
+        priority = entry.get("priority", "")
+        failed = int(entry.get("tool_failed_count") or 0)
+        interrupted = " interrupted" if entry.get("interrupted") else ""
+        eff = entry.get("efficiency") or {}
+        loops = int(eff.get("verification_loops") or 0)
+        loop_tag = f" loops={loops}" if loops > 0 else ""
+        print(
+            f"{status:<12} {priority:<6} failed={failed:<2} "
+            f"{str(entry.get('session_id', ''))[:13]:<13} "
+            f"{entry.get('topic_slug') or entry.get('slug') or ''}  "
+            f"{clean_snippet(str(entry.get('title') or ''), 80)}{interrupted}{loop_tag}"
+        )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="SlimeAI Cross-agent Session Adapter")
     parser.add_argument("--codbash-root", type=Path, default=DEFAULT_CODBASH_ROOT, help="本地 codbash 源码根目录")
@@ -872,6 +2240,31 @@ def build_parser() -> argparse.ArgumentParser:
     export_parser.add_argument("--source-root", type=Path, default=DEFAULT_CODEX_MONTH_ROOT, help="Codex 月度 sessions 目录")
     export_parser.add_argument("--limit", type=int, default=0, help="最多导出文件数量，0 表示全部")
     export_parser.set_defaults(func=command_export_codex_month)
+
+    digest_parser = sub.add_parser("digest-codex", help="生成单个 Codex JSONL 的 AI-first digest")
+    digest_parser.add_argument("--session", required=True, help="Codex session id、前缀或 JSONL 路径")
+    digest_parser.add_argument("--source-root", type=Path, default=DEFAULT_CODEX_MONTH_ROOT, help="按 id 查找时使用的 Codex sessions 根目录")
+    interrupt = digest_parser.add_mutually_exclusive_group()
+    interrupt.add_argument("--include-interrupted", dest="skip_interrupted", action="store_false", help="包含中断会话（单会话默认）")
+    interrupt.add_argument("--skip-interrupted", dest="skip_interrupted", action="store_true", help="跳过无结论、无代码、无验证的中断会话")
+    digest_parser.set_defaults(func=command_digest_codex, skip_interrupted=False)
+
+    digest_month_parser = sub.add_parser("digest-codex-month", help="批量生成 Codex 月度 AI-first digest")
+    digest_month_parser.add_argument("--source-root", type=Path, default=DEFAULT_CODEX_MONTH_ROOT, help="Codex 月度 sessions 目录")
+    digest_month_parser.add_argument("--limit", type=int, default=0, help="最多处理文件数量，0 表示全部")
+    digest_month_parser.add_argument("--skip-interrupted", action="store_true", help="跳过无结论、无代码、无验证的中断会话")
+    digest_month_parser.set_defaults(func=command_digest_codex_month)
+
+    list_digest_parser = sub.add_parser("list-digests", help="筛选 ChatHistory digest index")
+    list_digest_parser.add_argument("--status", choices=["digest", "locator-only"], help="按 digest_status 过滤")
+    list_digest_parser.add_argument("--priority", choices=["low", "normal", "high"], help="按 priority 过滤")
+    list_digest_parser.add_argument("--failed-tools", action="store_true", help="只列出有失败工具调用的 digest")
+    list_digest_parser.add_argument("--interrupted", action="store_true", help="只列出有中断或回滚的会话")
+    list_digest_parser.add_argument("--efficiency-loop", type=int, default=0, metavar="N", help="只列出验证循环次数 >= N 的会话")
+    list_digest_parser.add_argument("--topic", default="", help="按 title/topic/files 文本过滤")
+    list_digest_parser.add_argument("--limit", type=int, default=50, help="最多输出数量")
+    list_digest_parser.add_argument("--json", action="store_true", help="输出 JSON")
+    list_digest_parser.set_defaults(func=command_list_digests)
     return parser
 
 

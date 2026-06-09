@@ -13,6 +13,7 @@ public partial class SystemManager
     /// </summary>
     public SystemDiagnosticsSnapshot GetDiagnosticsSnapshot(SystemPreflightOptions? preflightOptions = null)
     {
+        using var trace = Log.BeginTrace("System", nameof(SystemManager), "SystemDiagnosticsSnapshot", "Diagnostics");
         SystemConfigService.Initialize();
         SystemPresetService.Initialize();
 
@@ -38,7 +39,7 @@ public partial class SystemManager
         }
 
         var preflight = SystemPreflight.Run(preflightOptions);
-        return new SystemDiagnosticsSnapshot
+        var snapshot = new SystemDiagnosticsSnapshot
         {
             ProjectState = SystemProjectStateDiagnostics.From(ProjectState.Snapshot),
             ActivePreset = SystemPresetService.GetActivePreset()?.PresetName ?? string.Empty,
@@ -53,6 +54,18 @@ public partial class SystemManager
             PreflightIssues = preflight.Issues,
             RecentTrace = _lifecycleTrace.GetEntries()
         };
+        trace.Complete(LogOutcome.Completed, "System diagnostics snapshot completed", new LogFields
+        {
+            ["configCount"] = snapshot.ConfigCount,
+            ["registeredDescriptorCount"] = snapshot.RegisteredDescriptorCount,
+            ["loadedCount"] = snapshot.LoadedCount,
+            ["runningCount"] = snapshot.RunningCount,
+            ["blockedCount"] = snapshot.BlockedCount,
+            ["disabledCount"] = snapshot.DisabledCount,
+            ["preflightErrorCount"] = preflight.ErrorCount,
+            ["preflightWarningCount"] = preflight.WarningCount
+        });
+        return snapshot;
     }
 
     private SystemDiagnosticsEntry BuildDiagnosticsEntry(string systemId)

@@ -1,0 +1,106 @@
+{
+  "scanned": 37,
+  "rules": {
+    "R001": {
+      "name": "frontmatter-required-fields",
+      "pass": 37,
+      "fail": 0,
+      "violations": []
+    },
+    "R002": {
+      "name": "references-exist",
+      "pass": 33,
+      "fail": 4,
+      "violations": [
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/ai-config-management/SKILL.md",
+          "kind": "missing-reference",
+          "detail": "引用不存在: .devin/rules/devinrules.md",
+          "severity": "critical"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/ai-config-management/SKILL.md",
+          "kind": "missing-reference",
+          "detail": "引用不存在: .devin/rules/devinrules.md",
+          "severity": "critical"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/ai-config-management/SKILL.md",
+          "kind": "missing-reference",
+          "detail": "引用不存在: .devin/rules/devinrules.md",
+          "severity": "critical"
+        },
+        {
+          "file": "/home/slime/Code/SlimeAI/SlimeAI/.ai-config/skills/core/tools/SKILL.md",
+          "kind": "missing-reference",
+          "detail": "引用不存在: .ai-config/skills/core/resource-path-migration/SKILL.md",
+          "severity": "critical"
+        }
+      ]
+    },
+    "R003": {
+      "name": "source-of-truth-alignment",
+      "pass": 37,
+      "fail": 0,
+      "violations": []
+    },
+    "R004": {
+      "name": "sync-targets-up-to-date",
+      "pass": 37,
+      "fail": 0,
+      "violations": []
+    },
+    "R005": {
+      "name": "catalog-coverage",
+      "pass": 31,
+      "fail": 6,
+      "violations": [
+        {
+          "file": "Workspace/SystemAgent/Registry/skills.yaml",
+          "kind": "missing-in-catalog",
+          "detail": "实际 skill 未在 catalog 中登记: project-filesystem",
+          "severity": "advisory"
+        },
+        {
+          "file": "Workspace/SystemAgent/Registry/skills.yaml",
+          "kind": "extra-in-catalog",
+          "detail": "catalog 登记了不存在的 skill: openspec-apply-change",
+          "severity": "advisory"
+        },
+        {
+          "file": "Workspace/SystemAgent/Registry/skills.yaml",
+          "kind": "extra-in-catalog",
+          "detail": "catalog 登记了不存在的 skill: openspec-archive-change",
+          "severity": "advisory"
+        },
+        {
+          "file": "Workspace/SystemAgent/Registry/skills.yaml",
+          "kind": "extra-in-catalog",
+          "detail": "catalog 登记了不存在的 skill: openspec-explore",
+          "severity": "advisory"
+        },
+        {
+          "file": "Workspace/SystemAgent/Registry/skills.yaml",
+          "kind": "extra-in-catalog",
+          "detail": "catalog 登记了不存在的 skill: openspec-propose",
+          "severity": "advisory"
+        },
+        {
+          "file": "Workspace/SystemAgent/Registry/skills.yaml",
+          "kind": "extra-in-catalog",
+          "detail": "catalog 登记了不存在的 skill: resource-path-migration",
+          "severity": "advisory"
+        }
+      ]
+    },
+    "R006": {
+      "name": "no-direct-copy-edits",
+      "pass": 37,
+      "fail": 0,
+      "violations": []
+    }
+  },
+  "criticalFailures": 4,
+  "advisoryWarnings": 6,
+  "exitCode": 1
+}

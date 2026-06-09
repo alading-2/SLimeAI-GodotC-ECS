@@ -55,10 +55,13 @@ description: 修改 SlimeAI ECS Runtime Entity 身份容器、EntityManager、Li
 - Projectile / Effect / Ability owner 不直接调用 `AddOwnedReference`；优先使用 `ProjectileOwnershipService.Runtime`、`EffectOwnershipService.Runtime`、`AbilityInventoryService.Runtime`。Damage / Movement 归因读取走 `EntityAttributionResolver`，不要沿旧 parent-chain 或 `EntityRelationshipTraversal` 猜 owner。
 - `LegacyRelationship/` 下旧代码只允许用于兼容清理和历史审计；新增业务、测试和文档示例不得引用 `EntityRelationshipManager / EntityRelationshipType / EntityRelationshipTraversal`。
 - AI 不允许在 capability API 用 raw string 表达 entity-id；也不允许用 `DataKey<List<string>>` 表达 entity-id 多引用。新增 public API 必须 `EntityId` / `EntityIdList` 参数类型；只有 DataOS projection helper 内可见 `string` / `string[]`。
+- Entity owner 使用 `owner=Entity`；spawn/destroy/lifecycle/owned-reference cleanup 的日志字段使用 `EntityId.Value` 作为投影，但 public API 仍必须是 typed `EntityId` / `EntityIdList`。
+- Entity runtime tests 断言走 `ValidationSession` / artifact / structured log，不新增 `[PASS]` / `[FAIL]` 或裸 stdout marker。
 
 ## 验证
 
 ```bash
 dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
 python3 Workspace/SDD/sdd.py validate SDD-0024
+# Workspace/Tools/logctl/logctl query --analysis-dir <run>/analysis owner=Entity
 ```

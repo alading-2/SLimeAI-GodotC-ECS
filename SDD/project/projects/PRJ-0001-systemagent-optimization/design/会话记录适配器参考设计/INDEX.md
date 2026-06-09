@@ -2,13 +2,16 @@
 
 > 状态：current
 > 日期：2026-06-09
-> 定位：PRJ-0001 补充设计；从 `Workspace/Resources/tool` 中的 `codbash`、`codlogs`、`tracebase` 提炼 Cross-agent Session Adapter 的实现边界。
+> 定位：PRJ-0001 补充设计；沉淀会话记录工具选型，并从 `Workspace/Resources/tool` 中的 `codbash`、`codlogs`、`tracebase` 提炼 Cross-agent Session Adapter 的实现边界。
 
 ## Documents
 
 | File | Role | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
+| `2026-06-08-AI会话管理工具选型分析.md` | research | reference-current | 2026-06-09 | 从 `优化/` 移入本目录并简化；保留工具排序和采纳边界：`codbash` 发现入口、`codlogs` Codex 高保真补充、`tracebase` 复盘维度参考。 |
 | `2026-06-09-参考项目驱动的Cross-agent-Session-Adapter设计.md` | design | current | 2026-06-09 | 参考 `codbash` / `codlogs` / `tracebase`，设计 SlimeAI 薄层 session adapter；不 fork 上游，不改原始 session，不接自动 hook。 |
+| `2026-06-09-ChatHistory-AI-first整理与价值评分设计.md` | design | current | 2026-06-09 | 在 `visible-transcript` 之上新增 AI-first digest 层；定义每 session 文件夹、结构化事件、Digest Gate、短会话 locator-only、中断可选跳过、工具失败单独记录和 index v3。 |
+| `效率指标设计.md` | design | draft | 2026-06-09 | 分析 6/8-6/9 会话后发现验证循环、文件读放大等效率问题；新增 `derived/efficiency.md`、index.json 效率字段、VALIDATION_RE 扩展和 Retrospective 集成。 |
 
 ## Conclusion
 
@@ -19,3 +22,5 @@
 - `tracebase`：参考后续失败分析、context waste、scorecard、redacted export 的复盘模型，但不作为第一阶段运行依赖。
 
 SlimeAI 自己只实现薄层 `session-adapter`：消费现成工具或官方 CLI 输出，生成统一 schema、可读文件名、`Workspace/DocsAI/ChatHistory/index.json` 和 Markdown sidecar。
+
+`SDD-0039` 已完成第一层 `visible-transcript`。下一步推荐进入 `ChatHistory AI-first Session Digest`：先用简单 `Digest Gate` 判断是否生成整理文档；短会话默认只写 `locator-only` index entry，不生成 folder / derived 文件；批量整理时中断且无结论/无代码/无验证的会话可用 `--skip-interrupted` 跳过。通过 gate 的 session 再建 folder，保留 raw transcript，新增 `derived/ai-context.md`、`summary.md`、`events.jsonl`；工具调用必须统计成功 / 失败 / 未知，失败单独写 `derived/tool-failures.md`。

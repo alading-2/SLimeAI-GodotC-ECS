@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "expectedInputs": "sample",
+  "expectedObservations": "sample entries",
+  "passCriteria": "all checks pass",
+  "failCriteria": "any failure",
+  "artifactPath": "validation.json",
+  "checks": [
+    {
+      "name": "sample",
+      "status": "Pass"
+    }
+  ],
+  "failures": []
+}

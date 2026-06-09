@@ -1,11 +1,18 @@
 # SystemAgent 优化补充设计索引
 
 > 状态：current
-> 定位：PRJ-0001 完成后的补充优化裁决，记录新发现的关键问题和后续 SDD 候选。
+> 日期：2026-06-09
+> 定位：PRJ-0001 完成后的 SystemAgent 核心优化裁决入口；工具选型细节已移入 `../会话记录适配器参考设计/`。
 
 ## Documents
 
 | File | Role | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
-| `2026-06-08-SystemAgent工作流内化与会话记录优化.md` | design | current | 2026-06-08 | 取消外层 agent / Warp 改造方向，聚焦 SystemAgent 内化、跨 Claude Code / Codex / OpenCode 会话整理和只读资料 subagent |
-| `2026-06-08-AI会话管理工具选型分析.md` | research | current | 2026-06-08 | 对比 `codbash`、`codlogs`、`tracebase`、`claude-replay` 等工具；推荐 `codbash` 作为跨工具入口，`codlogs` 仅作 Codex 专项补充 |
+| `2026-06-08-SystemAgent工作流内化与核心优化裁决.md` | design | current | 2026-06-09 | 当前主裁决：不做外层 AI CLI manager，不魔改 Warp；SystemAgent 聚焦项目内 workflow、SDD、ChatHistory、只读资料 subagent、hook 边界和任务拆分协议 |
+
+## Reference Handoff
+
+会话管理工具选型不再放在 `优化/` 主入口。需要查看 `codbash`、`codlogs`、`tracebase`、`claude-replay` 等工具取舍时，读：
+
+- `../会话记录适配器参考设计/2026-06-08-AI会话管理工具选型分析.md`
+- `../会话记录适配器参考设计/2026-06-09-参考项目驱动的Cross-agent-Session-Adapter设计.md`

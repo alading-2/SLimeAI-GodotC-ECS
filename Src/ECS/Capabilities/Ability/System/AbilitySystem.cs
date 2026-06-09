@@ -42,19 +42,26 @@ public static class AbilitySystem
     private static TriggerResult TryTriggerAbilityWithContext(CastContext abilityContext)
     {
         if (abilityContext.Ability == null || abilityContext.Caster == null) return TriggerResult.Failed;
+        using var trace = Log.BeginTrace("Ability", nameof(AbilitySystem), "AbilityTryTrigger", "Ability");
 
         // 拦截已死亡角色的技能请求，防止周期性光环等技能死后继续触发新一轮伤害判定。
         if (abilityContext.Caster != null && abilityContext.Caster.Data.Get<bool>(GeneratedDataKey.IsDead))
         {
             _log.Debug($"技能触发失败: 施法者已阵亡");
+            trace.Complete(LogOutcome.Failed, "AbilityTryTrigger blocked: caster is dead");
             return TriggerResult.Failed;
         }
 
         var ability = abilityContext.Ability;
+        var abilityName = ability.Data.Get<string>(GeneratedDataKey.Name);
 
         // 事件驱动：就绪检查
         if (!CanUseAbility(ability))
         {
+            trace.Complete(LogOutcome.Failed, "AbilityTryTrigger blocked: CanUseAbility failed", new LogFields
+            {
+                ["abilityName"] = abilityName
+            });
             return TriggerResult.Failed;
         }
 
@@ -72,6 +79,11 @@ public static class AbilitySystem
         if (!consumeContext.Success)
         {
             _log.Debug($"消耗资源失败: {consumeContext.FailReason}");
+            trace.Complete(LogOutcome.Failed, "AbilityTryTrigger blocked: charge consume failed", new LogFields
+            {
+                ["abilityName"] = abilityName,
+                ["reason"] = consumeContext.FailReason
+            });
             return TriggerResult.Failed;
         }
 
@@ -98,6 +110,11 @@ public static class AbilitySystem
         if (!costContext.Success)
         {
             _log.Debug($"消耗成本失败: {costContext.FailReason}");
+            trace.Complete(LogOutcome.Failed, "AbilityTryTrigger blocked: cost consume failed", new LogFields
+            {
+                ["abilityName"] = abilityName,
+                ["reason"] = costContext.FailReason
+            });
             return TriggerResult.Failed;
         }
 
@@ -123,8 +140,12 @@ public static class AbilitySystem
         // Feature 生命周期钩子：Ended（同步技能同帧完成；异步/引导型能力后续可延迟调用）
         FeatureSystem.OnFeatureEnded(featureCtx, FeatureEndReason.Completed);
 
-        var name = ability.Data.Get<string>(GeneratedDataKey.Name);
-        _log.Debug($"激活技能: {name}");
+        _log.Debug($"激活技能: {abilityName}");
+        trace.Complete(LogOutcome.Succeeded, "AbilityTryTrigger completed", new LogFields
+        {
+            ["abilityName"] = abilityName,
+            ["triggerMode"] = triggerMode.ToString()
+        });
         return TriggerResult.Success;
     }
 

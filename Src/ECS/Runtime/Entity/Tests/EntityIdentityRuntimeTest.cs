@@ -130,12 +130,12 @@ public partial class EntityIdentityRuntimeTest : Node
     private void Pass(string message)
     {
         _passedCount++;
-        _log.Info($"[PASS] {message}");
+        _log.Info(message, outcome: LogOutcome.Succeeded, validationStatus: LogValidationStatus.Pass, channel: LogChannel.Validation);
     }
 
     private void Fail(string message)
     {
         _failedCount++;
-        _log.Error($"[FAIL] {message}");
+        _log.Error(message, outcome: LogOutcome.Failed, validationStatus: LogValidationStatus.Fail, channel: LogChannel.Validation);
     }
 }

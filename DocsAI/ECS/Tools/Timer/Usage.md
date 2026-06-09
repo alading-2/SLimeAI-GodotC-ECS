@@ -110,8 +110,8 @@ if (TimerManager.Instance.TryGetProgress(handle, out var progress))
 var snapshot = TimerManager.Instance.GetTimerDiagnostics(
     new TimerDiagnosticsFilter(Owner: owner, MaxEntries: 20));
 
-GD.Print(TimerManager.Instance.FormatTimerSummary(snapshot, topN: 5));
-GD.Print(TimerManager.Instance.FormatTimerDump(snapshot));
+TimerManager.Instance.PrintTimerSummary(topN: 5);
+TimerManager.Instance.PrintTimerDump(new TimerDiagnosticsFilter(Owner: owner, MaxEntries: 20));
 
 TimerManager.Instance.ExportTimerDiagnosticsJson(
     ".ai-temp/timer-diagnostics.json",

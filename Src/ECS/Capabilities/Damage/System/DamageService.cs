@@ -117,6 +117,7 @@ public partial class DamageService : Node
             return new DamageProcessResult(false, "无效的伤害信息或受害者");
         }
 
+        using var trace = Log.BeginTrace("Damage", nameof(DamageService), "DamageProcess", "Combat");
         info.ActualDamage = 0f; // 每次进入管线都重置实际扣血结果，避免复用 DamageInfo 时沿用旧值
 
         // 执行伤害处理管道
@@ -136,12 +137,22 @@ public partial class DamageService : Node
             _log.Info($"伤害系统日志 {info.Id}: {string.Join(" -> ", info.Logs)}");
         }
 
-        return new DamageProcessResult(
+        var result = new DamageProcessResult(
             true,
             string.Empty,
             info.ActualDamage > 0f,
             info.ActualDamage,
             info.FinalDamage,
             info.IsDodged);
+        trace.Complete(LogOutcome.Completed, "DamageProcess completed", new LogFields
+        {
+            ["processed"] = result.Processed,
+            ["appliedDamage"] = result.AppliedDamage,
+            ["actualDamage"] = result.ActualDamage,
+            ["finalDamage"] = result.FinalDamage,
+            ["isDodged"] = result.WasDodged,
+            ["processorCount"] = _processors.Count
+        });
+        return result;
     }
 }

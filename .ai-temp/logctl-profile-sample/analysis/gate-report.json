@@ -1,0 +1,16 @@
+{
+  "generatedAtUtc": "2026-06-09T14:36:43.286Z",
+  "runDir": ".ai-temp/logctl-profile-sample",
+  "resultSource": "structured-log",
+  "status": "passed",
+  "counts": {
+    "entries": 11,
+    "validationEntries": 0,
+    "artifacts": 0,
+    "artifactPasses": 0,
+    "artifactFailures": 0,
+    "structuredFailures": 0,
+    "stdoutFallbackFiles": 0
+  },
+  "failures": []
+}

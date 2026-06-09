@@ -51,6 +51,25 @@ Src/ECS/Runtime/Entity/Manager/EntityManager.cs
 | Collision Capability | `Area2D` 信号桥接、组件退场、事件过滤、pool runtime state guard、layer/mask 约定、场景结构门禁 | 对象复用、池容量、节点创建 |
 | Damage / Movement | 伤害结算、有效碰撞解释、移动停止/销毁策略 | 池化节点物理退场 |
 
+## Log
+
+ObjectPool owner 使用 `owner=ObjectPool`。当前 `ObjectPool<T>.Get` / `Release` 写 `OperationTrace`：
+
+| operation | phase | outcome | 关键字段 |
+| --- | --- | --- | --- |
+| `ObjectPoolAcquire` | `Runtime` | `Completed` | `poolName`、`reused`、`activeCount`、`idleCount`、`activateNode`、`budgetKey` |
+| `ObjectPoolRelease` | `Runtime` | `Completed` / `Skipped` | `poolName`、`activeCount`、`idleCount`、`maxSize`、`budgetKey` |
+
+规则：
+
+- `budgetKey` 固定为 `ObjectPool.<PoolName>.Acquire` 或 `ObjectPool.<PoolName>.Release`，用于后续预算和 suppressed summary 聚合。
+- 池化碰撞验证主事实仍是 scene artifact；ObjectPool 日志只证明池生命周期，不证明 Damage / Movement 业务命中。
+- 重复归还、非 active 归还用 `outcome=Skipped`，不要写成成功或失败 severity。
+
+```bash
+Workspace/Tools/logctl/logctl query --analysis-dir <run>/analysis owner=ObjectPool operation=ObjectPoolRelease
+```
+
 ## 设计原则
 
 - 根节点是 `CollisionObject2D` 的池化对象默认 `ParkedInTree`，不脱树、不关碰撞、不改 layer/mask/shape。
