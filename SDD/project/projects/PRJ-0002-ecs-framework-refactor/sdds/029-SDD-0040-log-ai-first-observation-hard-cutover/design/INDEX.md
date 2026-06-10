@@ -8,6 +8,8 @@
 
 | File | Role | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
+| `07-当前样本日志问题与整理方案.md` | current-t2-design | current | 2026-06-10 | 来源：SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/07-当前样本日志问题与整理方案.md；T2 analyzer/owner 整理闭环当前执行设计 |
+| `source-request.md` | source-request | current | 2026-06-10 | 来源：SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/source-request.md；T2 用户原始问题和去重后的不可丢失约束 |
 | `06-功能OwnerLog文档与分析流程.md` | reference | current | 2026-06-09 | 来源：SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/06-功能OwnerLog文档与分析流程.md；owner Log.md 模板与 analyzer 固定分析流程来源 |
 | `05-调用点迁移与验证计划.md` | reference | current | 2026-06-09 | 来源：SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/05-调用点迁移与验证计划.md；任务切片、迁移优先级、BDD 与验证门禁来源 |
 | `04-测试统一与Observation接入.md` | reference | current | 2026-06-09 | 来源：SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/04-测试统一与Observation接入.md；ValidationSession、artifact 与 runner resultSource 来源 |

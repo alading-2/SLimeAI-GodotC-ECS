@@ -37,6 +37,32 @@ When AI 分析问题
 Then AI 先读 `summary.md`、`ai-context.md`、owner `Log.md` 和目标 flow/failure
 And 只有证据不足时才读取 `raw/scene-log.jsonl`。
 
+### Scenario: Run without validation artifact is not reported as passed
+
+Given 一个 run 只有 structured JSONL
+And `validationEntries=0`
+And `artifacts=0`
+When `logctl analyze` 生成 gate report
+Then status 不是 `passed`
+And report 明确标记为 `no-failure-observed` 或包含 invalid-input warning
+And `summary.md` 说明“没有发现失败”不等于“行为验证通过”。
+
+### Scenario: Analyzer exposes semantic log gaps
+
+Given raw JSONL 中存在大量 `fields:{}` 或 `operation == context`
+When `logctl analyze` 生成 `missing-fields/index.md`
+Then missing-fields 不只检查 envelope required fields
+And 按 owner/context/operation 输出 `Log gap` 任务
+And 至少指出缺 `entityId`、`reasonCode`、`durationMs` 或稳定 operation 的 owner。
+
+### Scenario: Flow index excludes ordinary operations
+
+Given raw JSONL 每条 entry 都有 `operation`
+When `logctl analyze` 生成 `flows/index.md`
+Then 普通 runtime operation 不自动进入 flow
+And flow 只来自 `channel=Flow`、明确 `entryType` 或完整 OperationTrace 契约
+And 高频成功 flow 以 summary / sample / aggregate 呈现，不让 AI 默认读全部 completion。
+
 ### Scenario: Query existing logs without rerun
 
 Given 用户只想看某个 owner、sourceFile、operation 或 entityId 的日志

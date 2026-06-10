@@ -2,11 +2,11 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-10 10:23
-- **Current Task**: done
-- **Last Conclusion**: 2026-06-10 样本复查确认：结构化 Log 主链路已存在，但 `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 仍证明 raw JSONL 不能作为 AI 默认入口；后续需要补 `summary.md`、更强 `ai-context.md`、noise/missing-fields markdown digest、正确 flow 边界和 Validation artifact 状态区分。项目级 current 设计已更新，SDD 内 `design/` 快照标记为历史。
-- **Next Action**: 若要解除 blocked，提供可验证当前框架工作树的 Godot runner 后运行 scene smoke、logctl analysis 和 gate report；后续 analyzer follow-up 按项目级 `design/Tool/10.Log/07-当前样本日志问题与整理方案.md` 执行。
-- **Open Blockers**: Godot scene smoke blocked: 当前没有可验证本框架工作树的承载游戏 runner。Games/BrotatoLike 不是 git 仓，且缺少 Tools/run-godot-scene.sh 与 SlimeAI；Games/BrotatoLikeOld 虽有 runner，但 wrapper 指向缺失的 /home/slime/Code/SlimeAI/.codex/... 和 /home/slime/Code/SlimeAI/SlimeAI/GameOS/SlimeAI.GameOS.csproj，且 SlimeAI submodule commit 与当前框架工作树不一致。已通过非 Godot 门禁，未伪造场景验证通过。
+- **Updated**: 2026-06-10 15:17
+- **Current Task**: T2.1 analyzer digest contract
+- **Last Conclusion**: 用户关于“需求写出来但 Log 重构仍没有完成打印信息整理”的质疑成立。T1 完成了 `LogEntry`、sink、profile、budget、`OperationTrace`、`ValidationSession` 和最小 `logctl` 管道，但当前样本仍缺 `summary.md`、强 `ai-context.md`、noise/missing-fields markdown digest、正确 flow 边界、semantic missing-fields、owner hot-spot cleanup 和 Validation artifact 状态区分；原 `12/12 done` 表达失真，已修正为 `12/19`。执行提示词已改为 T2 版本，并把 `source-request.md` 与 `07-当前样本日志问题与整理方案.md` 导入本 SDD `design/`。
+- **Next Action**: 按 `execution-prompt.md` 执行 T2.1：先改 `Workspace/Tools/logctl/logctl.mjs`，让 `.ai-temp/log-runs/20260610-013907` 生成可读 digest，并将无 artifact / Validation 的 run 从 `passed` 降为 `no-failure-observed` 或带 invalid-input warning。
+- **Open Blockers**: 最终 Godot scene smoke blocked：当前没有可验证本框架工作树的承载游戏 runner。该 blocker 不阻止 T2.1~T2.5 在现有样本和本地 CLI 上推进。
 ## Timeline
 
 ### P001 — 2026-06-09 15:33 — resume
@@ -232,3 +232,19 @@
 - **Evidence**: `Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-check` 输出 entries=4915、validationEntries=0、artifacts=0；`bash Workspace/Tools/ai-config-sync/sync-ai-config.sh` 成功；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only` 输出 Critical:0 / Advisory:13；`git diff --check -- SDD/project/projects/PRJ-0002-ecs-framework-refactor DocsAI/ECS/Tools/Logger .ai-config/skills/godot/godot-scene-test` 通过。
 - **Impact**: 后续恢复不能把 raw JSONL 或 SDD-0040 旧设计快照当作 AI 默认入口；必须先看 `analysis/summary.md` / `ai-context.md`，不足时分类为 `Log CLI issue` / `Log gap`，再用 `logctl query` 缩小范围。
 - **Resume**: 按项目级 `design/Tool/10.Log/07-当前样本日志问题与整理方案.md` 执行 analyzer follow-up；Godot scene smoke 仍需有效承载游戏 runner 后再验证。
+
+### P029 — 2026-06-10 14:51 — design-correction
+
+- **Context**: 用户继续追问为什么需求写出来后 Log 重构仍没有完成打印信息整理，并指出 `07-当前样本日志问题与整理方案.md` 不够完整。
+- **Conclusion**: 复盘后确认原完成态失真：T1 只做成结构化记录管道和最小 analyzer，未完成 analyzer digest / semantic missing-fields / flow 边界 / owner hot-spot cleanup / Validation gate。已把 SDD-0040 从 `12/12 done` 修正为 `12/19`，新增 T2.1~T2.7 follow-up，并在项目级 `07` 写清“做了什么、没做什么、为什么偏离、下一步怎么实现和怎么验收”。
+- **Evidence**: 本轮重新解析 `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl`：4915 行、4914 条可解析、1 条 invalid JSONL、1109 条 `fields:{}`、1109 条 `operation==context`、3730 条 `channel=Flow`、`validationEntries=0`、`artifacts=0`；`logctl.mjs` 当前 flow 规则为 `channel=flow || entry.operation`，`ai-context.md` 只含 metadata 和 query 示例。
+- **Impact**: 后续不能再以“只剩 Godot runner blocker”恢复 Log 工作；应先实施 T2 analyzer/owner follow-up，再做最终 scene smoke。
+- **Resume**: 从 T2.1 开始修改 `Workspace/Tools/logctl/logctl.mjs`，用当前样本生成 `summary.md`、强 `ai-context.md` 和 gate 状态修正。
+
+### P030 — 2026-06-10 15:17 — design-sync
+
+- **Context**: 用户确认设计说明和解决方向已讲清，要求生成 SDD + 提示词。
+- **Conclusion**: 已把 `source-request.md` 和 `07-当前样本日志问题与整理方案.md` 导入 `SDD-0040/design/`，并将 `execution-prompt.md` 改写为 T2 版本，明确 T2.1~T2.7、T2.1~T2.4 的执行优先级、gate 语义、flow 边界和 semantic missing-fields 产物契约。
+- **Evidence**: `SDD-0040/design/INDEX.md` 已包含 `source-request.md` 与 `07-当前样本日志问题与整理方案.md`；`README.md` 阅读顺序已补齐；`execution-prompt.md` 已改为 T2 版。
+- **Impact**: 新会话可直接从 SDD-0040 恢复 T2 analyzer/owner follow-up，不会再误读为 T1 旧提示词。
+- **Resume**: 从 `execution-prompt.md` 的 T2.1 开始执行。

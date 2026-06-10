@@ -1,0 +1,42 @@
+{
+  "id": "SDD-0041",
+  "slug": "session-adapter-digest-accuracy-and-retrospective-handoff",
+  "title": "Session Adapter Digest Accuracy and Retrospective Handoff",
+  "status": "pending",
+  "type": "workflow",
+  "created_at": "2026-06-10",
+  "updated_at": "2026-06-10",
+  "scope": "Workspace/SystemAgent",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI/SlimeAI"
+  ],
+  "affected_areas": [
+    "Workspace/SystemAgent/Tools/session-adapter"
+  ],
+  "tags": [
+    "systemagent"
+  ],
+  "progress": {
+    "current_task": "T1.1",
+    "completed_tasks": 0,
+    "total_tasks": 1,
+    "percent": 0
+  },
+  "bdd": {
+    "required": true,
+    "reason": "This SDD changes CLI or workflow behavior."
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0001",
+  "project_order": 11,
+  "shared_design_refs": [
+    "../../design/INDEX.md"
+  ]
+}

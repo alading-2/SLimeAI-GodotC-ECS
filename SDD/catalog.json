@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-09 22:37",
+  "generated_at": "2026-06-10 15:29",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -303,6 +303,25 @@
       "project_order": 10,
       "current_task": "done",
       "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/010-SDD-0039-cross-agent-session-adapter"
+    },
+    {
+      "id": "SDD-0041",
+      "slug": "session-adapter-digest-accuracy-and-retrospective-handoff",
+      "title": "Session Adapter Digest Accuracy and Retrospective Handoff",
+      "status": "pending",
+      "type": "workflow",
+      "updated_at": "2026-06-10",
+      "scope": "Workspace/SystemAgent",
+      "affected_areas": [
+        "Workspace/SystemAgent/Tools/session-adapter"
+      ],
+      "tags": [
+        "systemagent"
+      ],
+      "project_id": "PRJ-0001",
+      "project_order": 11,
+      "current_task": "T1.1",
+      "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/011-SDD-0041-session-adapter-digest-accuracy-and-retrospective-handoff"
     },
     {
       "id": "SDD-0011",
@@ -961,7 +980,7 @@
       "title": "Log AI-first Observation Hard Cutover",
       "status": "blocked",
       "type": "refactor",
-      "updated_at": "2026-06-09",
+      "updated_at": "2026-06-10",
       "scope": "SlimeAI",
       "affected_areas": [
         "ecs/tools/logger"
@@ -975,7 +994,7 @@
       ],
       "project_id": "PRJ-0002",
       "project_order": 29,
-      "current_task": "done",
+      "current_task": "T2.1 analyzer digest contract",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/029-SDD-0040-log-ai-first-observation-hard-cutover"
     }
   ]

@@ -59,6 +59,13 @@ SystemAgent 不作为 ECS 业务事实源第一入口；它只作为流程工具
 - 不随意加依赖、大重构。AI 可自动 commit 和 push（需先 `git status --short` + 明确 message）。
 - 不覆盖、回滚、删除用户已有改动。
 
+## 重构原则
+
+- 需要重构时，按目标架构完整替换，不为了兼容旧实现、旧接口、旧目录、旧数据格式而保留长期过渡层。
+- 确需临时迁移窗口时，必须写入 SDD，明确兼容范围、删除条件和截止点；不允许把临时兼容变成默认架构。
+- Session-adapter、SDD、SystemAgent、ECS 框架内部工具和流程同样适用：要改就按新契约重建 schema、index、digest、workflow、skill 或 actor，不维护旧格式 fallback。
+- 旧产物只作为只读证据或一次性迁移输入；迁移完成后从默认路径、默认入口和默认读取流程中移除。
+
 ## Efficiency
 
 - 同一轮任务中编辑多个文件时，全部编辑完成后再统一验证（build + validate + git status）；不要每改一个文件就跑一次完整验证。

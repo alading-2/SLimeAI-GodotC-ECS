@@ -6,11 +6,11 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-09 18:06
+- **Updated**: 2026-06-10 15:20
 - **Current SDD**: none
-- **Last Conclusion**: PRJ-0001 SystemAgent 设计入口已重构：`优化/2026-06-08-SystemAgent工作流内化与核心优化裁决.md` 成为当前主裁决；会话工具选型已移到 `会话记录适配器参考设计/2026-06-08-AI会话管理工具选型分析.md` 并简化为参考资料。当前主线仍是先做 `ChatHistory AI-first Session Digest`，再考虑只读资料 subagent pilot。
-- **Next Action**: 用户确认后新建 PRJ-0001 子 SDD `ChatHistory AI-first Session Digest`；默认 Codex first、index v3、Digest Gate、旧 Markdown 不删除不移动，只有通过 gate 的 session 才生成 folder。
-- **Open Blockers**: 等待用户确认是否进入执行型 SDD；Claude / OpenCode 中断事件结构和工具失败字段尚未实测。
+- **Last Conclusion**: 已完成 session-adapter 二次审查，并根据用户最新裁决补充“重构就完整重构，不维护旧兼容”的项目规则。`transcript.visible.md` 作为 Codex 可见证据层方向成立，但 digest 层仍有关键缺口：`sdd.py validate/show` 被误判为 edit 导致 `verification_loops` 高估；ChatHistory 当前缺 6/10 digest，6/9 也缺 2 个 late session；`ai-context.md` 的 title/goal/outcome 会被 resume boilerplate、`continue` 和中间状态污染；Retrospective 只有“如果存在就读 efficiency.md”，缺 current digest 定位协议；SystemAgent GitPolicy / actor 仍有“不 push”旧约束，和顶层规则冲突。
+- **Next Action**: 建议创建 PRJ-0001 子 SDD `Session Adapter Digest Accuracy and Retrospective Handoff`，按新契约完整重构 digest 准确性、stale report、tool failure 根因分类和 Retrospective / DeepThink 会话证据协议；允许破坏性升级 index / digest schema，不维护旧格式 fallback；暂不接自动 hook。
+- **Open Blockers**: 等待用户确认是否进入执行型 SDD；10 日 digest 目前只在 `/tmp/slimeai-chat-2026-06-10` 临时生成，尚未写入仓库。
 ## Project Status Board
 
 | SDD | Status | Design Docs | Current Result |
@@ -27,6 +27,7 @@
 | SDD-0010 | done | `04-Git与Worktree策略.md`, `10-Subagent使用场景与采纳策略.md` | Git / Worktree / Subagent 安全策略已落地 |
 | SDD-0039 | done | `优化/2026-06-08-SystemAgent工作流内化与核心优化裁决.md`, `会话记录适配器参考设计/2026-06-08-AI会话管理工具选型分析.md`, `会话记录适配器参考设计/2026-06-09-参考项目驱动的Cross-agent-Session-Adapter设计.md` | Cross-agent Session Adapter 已完成；`list/index/summarize` 可用，Codex 2026-06 已导出为分日 visible transcript |
 | next | pending | `会话记录适配器参考设计/2026-06-09-ChatHistory-AI-first整理与价值评分设计.md` | 建议创建 `ChatHistory AI-first Session Digest`，补 Digest Gate、locator-only skip、工具失败记录、index v3 和 per-session digest |
+| next | pending | `会话记录适配器参考设计/2026-06-10-Session-Adapter二次审查与会话分析流程设计.md` | 建议创建 `Session Adapter Digest Accuracy and Retrospective Handoff`，完整重构 efficiency 误判、ChatHistory stale、tool failure 分类和 Retrospective current digest 定位；允许破坏性 schema/digest 重建 |
 
 ## Timeline
 
@@ -214,3 +215,11 @@
 - **Evidence**: 已同步 `design/INDEX.md`、`design/优化/INDEX.md`、`design/会话记录适配器参考设计/INDEX.md`、`Core/roadmap.md` 和 SDD-0039 设计引用；`python3 Workspace/SDD/sdd.py validate SDD-0039` 为 0 error / 0 warning；`python3 Workspace/SDD/sdd.py validate --root SDD/project/projects/PRJ-0001-systemagent-optimization --all` 为 0 error / 0 warning；scoped `git diff --check` 通过。
 - **Impact**: PRJ-0001 当前恢复入口更清晰：SystemAgent 总体方向读 `优化/2026-06-08-SystemAgent工作流内化与核心优化裁决.md`；会话工具取舍读 `会话记录适配器参考设计/`。后续不应再把工具选型报告当主设计入口。
 - **Resume**: 下一步仍是创建 `ChatHistory AI-first Session Digest` SDD；默认先做 Codex digest prototype，再做只读资料 subagent pilot。
+
+### P024 — 2026-06-10 15:20 — design-review
+
+- **Context**: 用户要求检查最新生成的 session-adapter / ChatHistory 模式是否真的有利于 AI 分析，并继续分析 6 月 8-10 日对话中的 git diff 过多和其他流程问题。
+- **Conclusion**: 新增 `会话记录适配器参考设计/2026-06-10-Session-Adapter二次审查与会话分析流程设计.md`。结论是：`transcript.visible.md` 方向成立，但 digest 层仍需要二次修正；当前 efficiency 指标会把 `sdd.py validate/show` 误判为 edit，ChatHistory 缺 6/10 和 6/9 late sessions，Retrospective 缺 current digest 定位协议，SystemAgent GitPolicy / actor 仍有旧 push 约束残留。
+- **Evidence**: 8/9 当前仓 digest + 10 日临时 digest 共 18 个样本；`verification_loops >= 3` 的会话有 9 个，最高 25；10 日临时 digest 4 个 session 合计约 4.6 MB，尚未写入仓库；`Workspace/SystemAgent/Rules/Git.md` 和多个 actor 仍命中“不 push”。
+- **Impact**: 下一步应先按新契约完整重构 digest 准确性和 actor/skill 消费协议，而不是先接自动 hook。建议后续 SDD 名为 `Session Adapter Digest Accuracy and Retrospective Handoff`；session-adapter 不维护旧格式 fallback。
+- **Resume**: 等待用户确认是否创建执行型 SDD；默认不改 `/home/slime/.codex/AGENTS.md`，不把 10 日临时 digest 写入仓库。

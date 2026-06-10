@@ -2,7 +2,7 @@
 
 ## Summary
 
-- **pending**: 0
+- **pending**: 1
 - **active**: 0
 - **blocked**: 2
 - **done**: 38
@@ -17,7 +17,9 @@
 
 ## Pending
 
-无。
+| ID | Project | Title | Updated | Scope | Current Task |
+| --- | --- | --- | --- | --- | --- |
+| SDD-0041 | PRJ-0001 | Session Adapter Digest Accuracy and Retrospective Handoff | 2026-06-10 | Workspace/SystemAgent | T1.1 |
 
 ## Active
 
@@ -28,7 +30,7 @@
 | ID | Project | Title | Updated | Scope | Current Task |
 | --- | --- | --- | --- | --- | --- |
 | SDD-0027 | PRJ-0002 | Timer Scheduler Full Rewrite | 2026-06-03 | SlimeAI | T1.8 |
-| SDD-0040 | PRJ-0002 | Log AI-first Observation Hard Cutover | 2026-06-09 | SlimeAI | done |
+| SDD-0040 | PRJ-0002 | Log AI-first Observation Hard Cutover | 2026-06-10 | SlimeAI | T2.1 analyzer digest contract |
 
 ## Done
 
@@ -123,6 +125,7 @@
 - SDD-0009 — DesignDiscovery and DesignCritic Capability
 - SDD-0010 — Git Worktree Subagent Safety Strategy
 - SDD-0039 — Cross-agent Session Adapter
+- SDD-0041 — Session Adapter Digest Accuracy and Retrospective Handoff
 
 ## By Tag
 
@@ -436,6 +439,7 @@
 - SDD-0009 — DesignDiscovery and DesignCritic Capability
 - SDD-0010 — Git Worktree Subagent Safety Strategy
 - SDD-0039 — Cross-agent Session Adapter
+- SDD-0041 — Session Adapter Digest Accuracy and Retrospective Handoff
 - SDD-0023 — SystemAgent Root Migration Rule Sync
 
 ### target-selector
