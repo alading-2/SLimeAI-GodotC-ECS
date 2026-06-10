@@ -2,24 +2,22 @@
 
 ## Summary
 
-- **pending**: 1
+- **pending**: 0
 - **active**: 0
 - **blocked**: 2
-- **done**: 38
+- **done**: 39
 - **projects**: 2
 
 ## Projects
 
 | ID | Title | Status | Bucket | Current SDD | Path |
 | --- | --- | --- | --- | --- | --- |
-| PRJ-0001 | SystemAgent Optimization | active | projects | none | SDD/project/projects/PRJ-0001-systemagent-optimization |
+| PRJ-0001 | SystemAgent Optimization | active | projects | SDD-0041 | SDD/project/projects/PRJ-0001-systemagent-optimization |
 | PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0040 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
 
 ## Pending
 
-| ID | Project | Title | Updated | Scope | Current Task |
-| --- | --- | --- | --- | --- | --- |
-| SDD-0041 | PRJ-0001 | Session Adapter Digest Accuracy and Retrospective Handoff | 2026-06-10 | Workspace/SystemAgent | T1.1 |
+无。
 
 ## Active
 
@@ -30,7 +28,7 @@
 | ID | Project | Title | Updated | Scope | Current Task |
 | --- | --- | --- | --- | --- | --- |
 | SDD-0027 | PRJ-0002 | Timer Scheduler Full Rewrite | 2026-06-03 | SlimeAI | T1.8 |
-| SDD-0040 | PRJ-0002 | Log AI-first Observation Hard Cutover | 2026-06-10 | SlimeAI | T2.1 analyzer digest contract |
+| SDD-0040 | PRJ-0002 | Log AI-first Observation Hard Cutover | 2026-06-10 | SlimeAI | T2.5 owner hot-spot cleanup |
 
 ## Done
 
@@ -47,6 +45,7 @@
 | SDD-0009 | PRJ-0001 | DesignDiscovery and DesignCritic Capability | 2026-05-25 | Workspace/SystemAgent | done |
 | SDD-0010 | PRJ-0001 | Git Worktree Subagent Safety Strategy | 2026-05-25 | Workspace/SystemAgent | completed |
 | SDD-0039 | PRJ-0001 | Cross-agent Session Adapter | 2026-06-09 | Workspace/SystemAgent | done |
+| SDD-0041 | PRJ-0001 | Session Adapter Digest Accuracy and Retrospective Handoff | 2026-06-10 | Workspace/SystemAgent | done |
 | SDD-0011 | PRJ-0002 | DataKey Type Safety and Runtime Snapshot Loader | 2026-05-27 | SlimeAI | done |
 | SDD-0012 | PRJ-0002 | Data System Full Rewrite - Catalog TDD Slice | 2026-05-28 | SlimeAI | done |
 | SDD-0013 | PRJ-0002 | DataOS Descriptor Authoring and Snapshot Schema | 2026-05-28 | SlimeAI | done |

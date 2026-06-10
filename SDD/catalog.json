@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-10 15:29",
+  "generated_at": "2026-06-10 16:19",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -18,12 +18,12 @@
       "slug": "systemagent-optimization",
       "title": "SystemAgent Optimization",
       "status": "active",
-      "updated_at": "2026-06-09",
+      "updated_at": "2026-06-10",
       "scope": "Workspace/SystemAgent",
       "tags": [
         "systemagent"
       ],
-      "current_sdd": "none",
+      "current_sdd": "SDD-0041",
       "bucket": "projects",
       "path": "SDD/project/projects/PRJ-0001-systemagent-optimization"
     },
@@ -308,19 +308,24 @@
       "id": "SDD-0041",
       "slug": "session-adapter-digest-accuracy-and-retrospective-handoff",
       "title": "Session Adapter Digest Accuracy and Retrospective Handoff",
-      "status": "pending",
+      "status": "done",
       "type": "workflow",
       "updated_at": "2026-06-10",
       "scope": "Workspace/SystemAgent",
       "affected_areas": [
-        "Workspace/SystemAgent/Tools/session-adapter"
+        "Workspace/SystemAgent/Tools/session-adapter",
+        "Workspace/SystemAgent/Actors",
+        "Workspace/SystemAgent/Rules",
+        ".ai-config/skills/systemagent-skill",
+        ".ai-config/rules",
+        "SDD/project/projects/PRJ-0001-systemagent-optimization"
       ],
       "tags": [
         "systemagent"
       ],
       "project_id": "PRJ-0001",
       "project_order": 11,
-      "current_task": "T1.1",
+      "current_task": "done",
       "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/011-SDD-0041-session-adapter-digest-accuracy-and-retrospective-handoff"
     },
     {
@@ -983,7 +988,10 @@
       "updated_at": "2026-06-10",
       "scope": "SlimeAI",
       "affected_areas": [
-        "ecs/tools/logger"
+        "ecs/tools/logger",
+        "ecs/capabilities/damage",
+        "ecs/ui",
+        "ai-config/skills"
       ],
       "tags": [
         "tools",
@@ -994,7 +1002,7 @@
       ],
       "project_id": "PRJ-0002",
       "project_order": 29,
-      "current_task": "T2.1 analyzer digest contract",
+      "current_task": "T2.5 owner hot-spot cleanup",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/029-SDD-0040-log-ai-first-observation-hard-cutover"
     }
   ]

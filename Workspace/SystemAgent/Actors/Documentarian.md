@@ -34,5 +34,5 @@ README、INDEX、相关 docs、SDD、grep 旧路径结果。
 - 默认中文输出；命令、代码、错误信息保留原文。
 - 先读事实源，不凭记忆改。
 - 不覆盖用户已有改动。
-- 不 push；commit 仅在用户或当前策略明确允许且 git status 范围干净时进行。
+- commit/push 按顶层 Git Safety 与当前 SDD/任务策略执行；禁止 force push、历史改写、跨 git 边界提交或混入用户改动。
 - 输出必须包含路径、证据和不确定性。

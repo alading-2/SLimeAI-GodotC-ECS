@@ -66,8 +66,8 @@
 
 ## Hooks / Subagent / MCP / Git
 
-- hooks：直接维护 `.claude/settings.json` 和 `.codex/hooks.json`；第一阶段只做 advisory，不自动改文件、不 commit、不 push。启用阻断型 hook 必须单独 SDD。
+- hooks：直接维护 `.claude/settings.json` 和 `.codex/hooks.json`；第一阶段只做 advisory，不自动改文件、不自动提交或推送。启用阻断型 hook 必须单独 SDD。
 - subagent：直接维护 `.claude/agents/*.md` 和 `.codex/agents/*.toml`；适合并行研究、测试设计和审查，不默认接管关键路径实现。
 - `.ai-config`：只管理 skill、rule、command，同步副本；不要把 hook/subagent 放进 `.ai-config`。
 - 外部资源：默认不预加载 `Resources/*`；需要时按 `Workspace/SystemAgent/Policies/ExternalResources.md` 记录 resource-id、scope、reason、expires。Context7 是 IDE/CLI 工具能力，不属于 SystemAgent 本地资源策略。
-- git：见 `Workspace/SystemAgent/Policies/GitPolicy.md`；AI 可按规则自动 commit，push 必须用户明确确认。
+- git：见顶层 Git Safety 与 `Workspace/SystemAgent/Rules/Git.md`；AI 可按规则自动 commit/push，禁止 force push、历史改写、跨 git 边界提交或混入用户改动。

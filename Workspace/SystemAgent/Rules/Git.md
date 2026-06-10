@@ -16,15 +16,15 @@
 
 ## Allowed actions
 
-- AI 可在策略和用户任务允许时自动 commit，但必须先确认范围、写清 What/Why/来源 SDD（如有），并且不混入用户既有改动。
+- AI 可按顶层 Git Safety、当前 SDD 和用户任务边界自动 commit/push，但必须先确认范围、写清 What/Why/来源 SDD（如有），并且不混入用户既有改动。
 - 文档和配置治理默认只在 `/home/slime/Code/SlimeAI` 根仓处理。
 - 中大型、高风险、实验性或主工作区 dirty 的任务，可以建议使用 worktree；小修、只读审计和低风险文档修改不强制。
 - clean worktree 完成验证后可以建议 `git worktree remove` 和 `git worktree prune`；dirty worktree 只报告状态，不自动删除。
 
 ## Forbidden actions
 
-- 默认不 push。
 - 禁止 `git push --force`、`git reset --hard`、`git clean -fd`、历史改写等高风险操作，除非用户明确要求并说明预案。
+- 禁止普通 push 混入用户既有改动、跨 git 边界提交或在验证证据不足时伪装完成。
 - 禁止跨 git 边界 add/commit。
 - 禁止在工作区根或嵌套仓误执行 `git init`。
 - 禁止为了创建或清理 worktree 而删除、覆盖或 stash 用户既有改动。
