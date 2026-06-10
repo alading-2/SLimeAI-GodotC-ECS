@@ -108,6 +108,8 @@ components:
       path: Workspace/SystemAgent/Rules/Philosophy.md
     - id: documentation
       path: Workspace/SystemAgent/Rules/Documentation.md
+    - id: design-document
+      path: Workspace/SystemAgent/Rules/DesignDocument.md
   gates:
     catalog: Workspace/SystemAgent/Rules/ReviewGates.md
     vocabulary: Workspace/SystemAgent/Rules/VerdictVocabulary.md

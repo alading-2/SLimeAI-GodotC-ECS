@@ -28,7 +28,7 @@ small 默认不创建 SDD；medium 可选，用户要求深度分析、后续继
 - 用户原始请求与验收条件。
 - 当前 git boundary 的 `git status --short`。
 - worktree 使用判断：`none`、已在 worktree、建议创建或用户要求不使用，并记录原因。
-- `Workspace/SystemAgent/README.md` 与 `Workspace/SystemAgent/README.md`。
+- `Workspace/SystemAgent/README.md`。
 - `Workspace/SystemAgent/Registry/workflow-catalog.yaml#workflows.new_feature`。
 
 ## Required roles
@@ -47,7 +47,7 @@ Conditional senior roles: when the change touches multi-system gameplay, GodotBr
 
 SDD tasks/progress、Runtime/DataOS/Godot/文档验证证据、必要时 BDD 场景。若当前任务使用 SDD，应提供 `progress.md` Latest Resume 和最近一次更新的证据。
 
-DeepThink 输出的确认包、默认假设、Must Confirm 和 Artifact Updates 必须写入当前 SDD 的 `design/`、`progress.md`、`tasks.md`、`bdd.md` 或 `notes.md`，不得只保留在聊天中。确认问题写在设计文档的 `## Must Confirm`、`## Should Confirm`、`## Defaults I Will Use` 标题下；用户裁决和采用的默认假设写入 `progress.md`。
+DeepThink 输出的是方向分析，不是设计文档模板。使用 SDD 时，关键结论、默认假设和必须确认的问题不得只保留在聊天中；用户裁决和采用的默认假设写入 `progress.md`。如需要写入 `design/`，按 `Workspace/SystemAgent/Rules/DesignDocument.md` / `systemagent-design-document` 保留用户原始问题、问题分析和解决思路，不把 DeepThink 内部检查点原样写成标题。
 
 Validation scope must be reported separately from pass/fail as `owner`、`interaction`、`feature-slice` or `release-batch`.
 

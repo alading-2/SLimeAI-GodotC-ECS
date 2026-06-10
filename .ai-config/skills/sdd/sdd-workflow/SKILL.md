@@ -25,7 +25,7 @@ description: SlimeAI SDD 中大型任务流程入口。用户要求使用 SDD、
 
 1. 判断任务是否需要 SDD；小修、拼写、一次性排查不强制创建。
 2. 读取或创建匹配的项目 / SDD 实例；优先使用 `project-list`、`list`、`project-show` 和 `show` 恢复上下文。
-3. 若任务尚无设计，先调用 `systemagent-deepthink` 形成目标、约束、方案、风险和确认包；确认后再把关键结论落入当前 SDD artifact。
+3. 若任务尚无设计，先调用 `systemagent-deepthink` 形成问题分析、解决思路、确认点和默认假设；需要写设计文档时使用 `systemagent-design-document` 保证保留用户原始问题并避免模板化冗余。
 4. 项目级共享设计写入项目 `design/`；任务级设计、任务、进度、BDD 和验证要求写入当前 SDD。
 5. 实现前检查 readiness：目标和边界明确、design 非模板、tasks 可执行、BDD 有场景或不适用原因、Latest Resume 有恢复价值、目标 SDD validate 无 error。
 6. 实施时按 `tasks.md` 小步推进，并在每个任务组后只记录关键结论、核心影响面和验证摘要。

@@ -2,7 +2,7 @@
 
 ## Responsibility
 
-在任务方向冻结前，把零散需求、上下文、约束和隐含假设转成可审查、可确认、可落盘的方向确认包，避免因为没有向用户确认关键问题而走错实现方向。
+在任务方向冻结前，把零散需求、上下文、约束和隐含假设转成可审查、可确认的方向分析，避免因为没有向用户确认关键问题而走错实现方向。
 
 默认假设：用户输入通常是不完整的，可能缺目标、事实、边界、成功标准、优先级、反例或约束。DeepThink 的职责不是立刻把用户的想法包装成计划，而是先帮助用户看清：
 
@@ -41,25 +41,11 @@
 6. **生成追问**：一次性列出必须确认和建议确认的问题；每个问题都要能被用户直接回答，并说明为什么问、会影响什么、默认值是什么。
 7. **提出方案**：给出 2-3 个方案，至少包含一个更小、更易验证的方案；说明推荐方案、风险和不建议方向。
 
-## Output shape
+## Output guidance
 
-```text
-DeepThink:
-- Goal:
-- Context Read:
-- Evidence / Search Coverage:
-- Problem Reality Check:
-- Idea Check:
-- Problem Shape:
-- Main Risks:
-- Options:
-- Recommendation:
-- Must Confirm:
-- Should Confirm:
-- Defaults I Will Use:
-- Not Recommended:
-- Artifact Updates:
-```
+DeepThink 的输出不强制固定标题。必须覆盖的思考点是：用户原始请求、真实问题、用户思路是否成立、必要证据、问题形状、关键缺口、可选方案、推荐方向、必须确认的问题和默认假设。
+
+输出给用户或 workflow 时应压缩成当前任务需要的自然结构；不要把内部检查点机械写成长期设计文档标题。
 
 ## Confirmation policy
 
@@ -67,17 +53,17 @@ DeepThink:
 - `Should Confirm` 是建议确认的问题；如果用户不回答，可以用 `Defaults I Will Use` 推进。
 - `Must Confirm` 必须按类型分组：`思路问题`、`信息缺口`、`决策未定`。没有某类问题时写“暂无”。
 - 追问必须通俗具体，避免“你想怎么做？”这类空泛问题。推荐格式是：`问题 -> 为什么要问 -> 不回答时默认值 / 对实现影响`。
-- 不使用 SDD 时，最终回复用 `需要确认` 小节承载问题。
-- 使用 SDD 或已有设计文档时，把问题写入设计文档标题：`## Must Confirm`、`## Should Confirm`、`## Defaults I Will Use`。用户裁决和采用的默认假设写入 `progress.md`，不要创建单独的“问题清单”文档。
+- 不使用 SDD 时，最终回复用 `需要确认` 小节承载必须确认的问题。
+- 使用 SDD 或已有设计文档时，DeepThink 只提供分析结论、确认点和默认假设；设计文档写作质量交给 `Workspace/SystemAgent/Rules/DesignDocument.md` / `systemagent-design-document`。用户裁决和采用的默认假设仍写入 `progress.md`。
 
 ## Role Category
 
 `function_category: authoring`
 
 **Rubric（PASS/FAIL）**：
-- **DD-R1 Evidence before options**：输出方案前必须列出已读事实源、搜索覆盖、未读上下文和不确定性。
+- **DD-R1 Evidence before options**：输出方案前必须说明支撑判断的关键证据、未覆盖上下文和不确定性；不要求保留搜索流水账。
 - **DD-R2 Confirmation clarity**：必须区分 `Must Confirm`、`Should Confirm` 和 `Defaults I Will Use`；`Must Confirm` 必须按思路问题、信息缺口、决策未定分组。
-- **DD-R3 Artifact boundary**：如果任务使用 SDD，必须说明确认包写入哪些 SDD 文件；如果不用 SDD，必须说明只在聊天中输出的原因。
+- **DD-R3 Artifact boundary**：如果任务使用 SDD，必须说明 DeepThink 结论建议落到哪些 SDD artifact；设计文档正文不得原样复制 DeepThink 内部检查点。
 - **DD-R4 Problem and idea audit**：必须判断问题是否真实存在、用户思路是否成立、方案是否值得做；不能默认用户提出的方案一定正确。
 - **DD-R5 Plain questions**：必须把追问写成用户能直接回答的短问题，并说明为什么问和默认假设。
 
@@ -97,7 +83,8 @@ DeepThink:
 - 不把不确定推断写成事实。
 - 不把用户未说明的目标、范围、验收标准当成已确认事实。
 - 不用空泛追问代替缺口分析。
-- 不逐问逐答阻塞用户；优先一次性输出确认包。
-- 不强制 small 任务进入完整确认包。
+- 不逐问逐答阻塞用户；优先一次性输出分析结论和确认点。
+- 不强制 small 任务进入完整 DeepThink 分析。
 - 不新增 hook 自动触发。
 - 不把“广泛搜索”理解成无边界研究；搜索范围必须服务于当前决策风险。
+- 不规定长期设计文档格式；需要写设计文档时使用 DesignDocument 规则。

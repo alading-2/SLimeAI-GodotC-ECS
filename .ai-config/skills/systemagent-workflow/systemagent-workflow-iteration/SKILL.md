@@ -19,6 +19,7 @@ description: SystemAgent 流程迭代短入口。用于分析 AI 流程缺口并
 - `Workspace/SystemAgent/Actors/Implementer.md`
 - `Workspace/SystemAgent/Actors/Reviewer.md`
 - `Workspace/SystemAgent/Actors/Documentarian.md`
+- `Workspace/SystemAgent/Rules/DesignDocument.md`（写设计文档时）
 - `Workspace/SystemAgent/Rules/VerdictVocabulary.md`
 
 ## 输出要求
@@ -29,5 +30,5 @@ description: SystemAgent 流程迭代短入口。用于分析 AI 流程缺口并
 
 - 不复制 `Workspace/SystemAgent/Routes/`、`Roles/`、`Gates/` 或 `Policies/` 正文。
 - 不直接修改 `.codex/skills/`、`.claude/skills/`、`.windsurf/skills/` 同步副本作为源。
-- 不把 owner capability skill 迁入 `.ai-config/skills/systemagent/`。
+- 不把 owner capability skill 迁入 `.ai-config/skills/systemagent-skill/` 或 `.ai-config/skills/systemagent-workflow/`。
 - 不把 DeepThink capability 正文复制进 wrapper；正文以 `Workspace/SystemAgent/Actors/DeepThink.md` 为准。

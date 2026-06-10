@@ -222,8 +222,8 @@ skills:
       - Workspace/SDD/docs/CLI.md
       - Workspace/SDD/docs/ValidationRules.md
   - id: systemagent-deepthink
-    source: .ai-config/skills/systemagent/systemagent-deepthink/SKILL.md
-    category: systemagent
+    source: .ai-config/skills/systemagent-skill/systemagent-deepthink/SKILL.md
+    category: systemagent-skill
     function_category: authoring
     role: capability
     status: active
@@ -232,63 +232,71 @@ skills:
       - Workspace/SystemAgent/Actors/DesignCritic.md
       - Workspace/SDD/docs/SDDFormat.md
       - Workspace/SDD/docs/CLI.md
+  - id: systemagent-design-document
+    source: .ai-config/skills/systemagent-skill/systemagent-design-document/SKILL.md
+    category: systemagent-skill
+    function_category: authoring
+    role: capability
+    status: active
+    canonical_docs:
+      - Workspace/SystemAgent/Rules/DesignDocument.md
   - id: systemagent-config-maintenance-workflow
-    source: .ai-config/skills/systemagent/systemagent-config-maintenance-workflow/SKILL.md
-    category: systemagent
+    source: .ai-config/skills/systemagent-workflow/systemagent-config-maintenance-workflow/SKILL.md
+    category: systemagent-workflow
     role: systemagent-wrapper
     status: active
     canonical_docs:
       - Workspace/SystemAgent/Routes/ConfigMaintenance.md
       - Workspace/SystemAgent/Rules/AIConfigBoundary.md
   - id: systemagent-debug-fix-workflow
-    source: .ai-config/skills/systemagent/systemagent-debug-fix-workflow/SKILL.md
-    category: systemagent
+    source: .ai-config/skills/systemagent-workflow/systemagent-debug-fix-workflow/SKILL.md
+    category: systemagent-workflow
     role: systemagent-wrapper
     status: active
     canonical_docs:
       - Workspace/SystemAgent/Routes/DebugFix.md
   - id: systemagent-new-feature-workflow
-    source: .ai-config/skills/systemagent/systemagent-new-feature-workflow/SKILL.md
-    category: systemagent
+    source: .ai-config/skills/systemagent-workflow/systemagent-new-feature-workflow/SKILL.md
+    category: systemagent-workflow
     role: systemagent-wrapper
     status: active
     canonical_docs:
       - Workspace/SystemAgent/Routes/NewFeature.md
       - Workspace/SystemAgent/Actors/DeepThink.md
   - id: systemagent-research-adoption-workflow
-    source: .ai-config/skills/systemagent/systemagent-research-adoption-workflow/SKILL.md
-    category: systemagent
+    source: .ai-config/skills/systemagent-workflow/systemagent-research-adoption-workflow/SKILL.md
+    category: systemagent-workflow
     role: systemagent-wrapper
     status: active
     canonical_docs:
       - Workspace/SystemAgent/Routes/ResearchAdoption.md
       - Workspace/SystemAgent/Rules/ExternalResources.md
   - id: systemagent-retrospective
-    source: .ai-config/skills/systemagent/systemagent-retrospective/SKILL.md
-    category: systemagent
+    source: .ai-config/skills/systemagent-skill/systemagent-retrospective/SKILL.md
+    category: systemagent-skill
     role: systemagent-wrapper
     status: active
     canonical_docs:
       - Workspace/SystemAgent/Actors/Retrospective.md
       - Workspace/SystemAgent/Rules/VerdictVocabulary.md
   - id: systemagent-skill-test
-    source: .ai-config/skills/systemagent/systemagent-skill-test/SKILL.md
-    category: systemagent
+    source: .ai-config/skills/systemagent-skill/systemagent-skill-test/SKILL.md
+    category: systemagent-skill
     role: systemagent-wrapper
     status: active
     canonical_docs:
       - Workspace/SystemAgent/Tools/skill-test/README.md
       - Workspace/SystemAgent/Skills/WrapperSkillPolicy.md
   - id: systemagent-validation-release-workflow
-    source: .ai-config/skills/systemagent/systemagent-validation-release-workflow/SKILL.md
-    category: systemagent
+    source: .ai-config/skills/systemagent-workflow/systemagent-validation-release-workflow/SKILL.md
+    category: systemagent-workflow
     role: systemagent-wrapper
     status: active
     canonical_docs:
       - Workspace/SystemAgent/Routes/ValidationRelease.md
   - id: systemagent-workflow-iteration
-    source: .ai-config/skills/systemagent/systemagent-workflow-iteration/SKILL.md
-    category: systemagent
+    source: .ai-config/skills/systemagent-workflow/systemagent-workflow-iteration/SKILL.md
+    category: systemagent-workflow
     role: systemagent-wrapper
     status: active
     canonical_docs:
