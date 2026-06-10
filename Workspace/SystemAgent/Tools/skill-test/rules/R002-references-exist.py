@@ -57,7 +57,6 @@ def check(
                 "SlimeAI/",
                 "Games/",
                 ".ai-config/",
-                "openspec/",
                 "Resources/",
                 ".claude/",
                 ".codex/",

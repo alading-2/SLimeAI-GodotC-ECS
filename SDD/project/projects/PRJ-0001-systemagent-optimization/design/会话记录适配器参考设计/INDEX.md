@@ -11,7 +11,9 @@
 | `2026-06-08-AI会话管理工具选型分析.md` | research | reference-current | 2026-06-09 | 从 `优化/` 移入本目录并简化；保留工具排序和采纳边界：`codbash` 发现入口、`codlogs` Codex 高保真补充、`tracebase` 复盘维度参考。 |
 | `2026-06-09-参考项目驱动的Cross-agent-Session-Adapter设计.md` | design | current | 2026-06-09 | 参考 `codbash` / `codlogs` / `tracebase`，设计 SlimeAI 薄层 session adapter；不 fork 上游，不改原始 session，不接自动 hook。 |
 | `2026-06-09-ChatHistory-AI-first整理与价值评分设计.md` | design | current | 2026-06-09 | 在 `visible-transcript` 之上新增 AI-first digest 层；定义每 session 文件夹、结构化事件、Digest Gate、短会话 locator-only、中断可选跳过、工具失败单独记录和 index v3。 |
-| `效率指标设计.md` | design | draft | 2026-06-09 | 分析 6/8-6/9 会话后发现验证循环、文件读放大等效率问题；新增 `derived/efficiency.md`、index.json 效率字段、VALIDATION_RE 扩展和 Retrospective 集成。 |
+| `效率指标设计.md` | design | current (implemented) | 2026-06-09 | 分析 6/8-6/9 会话后发现验证循环、文件读放大等效率问题；新增 `derived/efficiency.md`、index.json 效率字段、VALIDATION_RE 扩展和 Retrospective 集成。 |
+| `2026-06-10-会话效率与自动化流程问题分析.md` | design | superseded | 2026-06-10 | 全局规则已改但副本未同步；OpenSpec 残留 20+ 处；效率指标无人消费；SDD 自动化流程不完整。给出四批修改清单。 |
+| `2026-06-10-Session-Adapter效率优化与自动化流程改进.md` | design | current | 2026-06-10 | 完整记录：用户原始问题、问题分析（验证循环 vs git diff）、五项解决方案、修改文件清单、效率数据。 |
 
 ## Conclusion
 

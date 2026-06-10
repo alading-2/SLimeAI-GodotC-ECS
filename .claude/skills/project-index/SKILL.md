@@ -41,4 +41,3 @@ python3 Workspace/SDD/sdd.py validate --all
 - 游戏资产、游戏特定场景和 BrotatoLike 玩法胶水默认放到 `Games/BrotatoLike`。
 - **子模块禁区**：`Games/*/SlimeAI/` 是框架仓的只读镜像（git submodule），**禁止在其中直接修改**。所有框架代码修改必须在当前框架仓内完成。
 - `DocsAI/` 是当前框架文档事实源；`Src/ECS/` 不保留框架 Markdown 文档。
-- `openspec/` 仅保留历史资产，不作为默认入口。

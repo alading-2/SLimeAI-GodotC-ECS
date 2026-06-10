@@ -182,26 +182,6 @@ skills:
     category: godot
     role: owner-skill-out-of-scope
     status: active
-  - id: openspec-apply-change
-    source: .ai-config/skills/openspec/openspec-apply-change/SKILL.md
-    category: openspec
-    role: legacy-compatibility-entry
-    status: active
-  - id: openspec-archive-change
-    source: .ai-config/skills/openspec/openspec-archive-change/SKILL.md
-    category: openspec
-    role: legacy-compatibility-closeout
-    status: active
-  - id: openspec-explore
-    source: .ai-config/skills/openspec/openspec-explore/SKILL.md
-    category: openspec
-    role: legacy-compatibility-entry
-    status: active
-  - id: openspec-propose
-    source: .ai-config/skills/openspec/openspec-propose/SKILL.md
-    category: openspec
-    role: legacy-compatibility-entry
-    status: active
   - id: sdd-workflow
     source: .ai-config/skills/sdd/sdd-workflow/SKILL.md
     category: sdd

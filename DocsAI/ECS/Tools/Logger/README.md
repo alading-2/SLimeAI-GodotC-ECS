@@ -2,7 +2,7 @@
 
 > 状态：current
 > 定位：ECS Tools/Logger owner 入口。
-> 更新：2026-06-09
+> 更新：2026-06-10
 
 ## 一句话定位
 
@@ -22,6 +22,33 @@
 - legacy `LogLevel.Success` 和 `Log.Success(...)` 仍作为兼容入口存在，但映射为 `severity=Info` + `outcome=Succeeded`，不要把 `Success` 当新 severity 使用。
 
 日志默认 run dir 来自 `SLIMEAI_LOG_RUN_DIR`；未设置时写入 `.ai-temp/log-runs/<timestamp>/`。`SLIMEAI_LOG_PROFILE` 可选择 profile 名称，`SLIMEAI_LOG_OVERRIDES` 可指定临时 override 文件。
+
+## 2026-06-10 样本复查
+
+`.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 证明：JSONL 是必要基础，但不是 AI 分析入口本身。
+
+当前问题集中在：
+
+- raw JSONL 约 4914 行，AI 不能默认直接读 raw。
+- `TargetSelector/TargetQueryEngine/TargetQueryEntities` 单项约 3041 条，说明 owner/operation 预算和 flow summary 仍要补强。
+- 约 1109 条 `fields:{}`，约 1109 条 `operation == context`，说明很多日志还缺业务字段和稳定 operation。
+- 当前 `logctl analyze` 已能输出 `by-owner` / `by-phase` / `noise` / `missing-fields`，但 `ai-context.md` 仍太薄，缺 `summary.md`、top noise、missing-fields markdown digest、flow digest 和 owner 文档链接。
+
+后续 Log 分析必须遵循：
+
+```text
+raw/scene-log.jsonl
+  -> logctl analyze
+  -> analysis/summary.md + ai-context.md + noise + missing-fields + flows
+  -> AI 按 owner Log.md 分析
+  -> 证据不足时才 query/raw
+```
+
+完整设计入口：
+
+```text
+SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/07-当前样本日志问题与整理方案.md
+```
 
 ## Sink 裁决
 
@@ -68,13 +95,15 @@ SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/README.m
 | 类别 | 作用 |
 | --- | --- |
 | 运行控制 | `profile show` 查看 `Config/Log` 有效 profile；后续扩展 sink、owner/context/operation 开关和 override snapshot。 |
-| 离线分析 | `analyze --run-dir` 生成 `analysis/raw/by-owner/by-phase/flows/failures/noise/missing-fields/ai-context.md`。 |
+| 离线分析 | `analyze --run-dir` 生成 `analysis/raw/by-owner/by-phase/flows/failures/noise/missing-fields/summary.md/ai-context.md`。 |
 | 二次查询 | `query --analysis-dir` 或 `query --file` 按 owner、sourceFile、operation、entityId、severity 过滤。 |
 | 建议 | `suggest --run-dir --dry-run` 输出 noisy context 和可审查 `profilePatch`，不直接静默改配置。 |
 
 Godot scene runner 只负责运行场景、保存 run dir 和调用 Log CLI；不要在 godot-scene-test skill 中长期维护日志拆分规则。
 
 用户手动运行游戏时，不应复制整段 console 给 AI。应保留 `SLIMEAI_LOG_RUN_DIR` 下的 JSONL / artifact，然后执行 `logctl analyze`；只有旧日志文本才用 `logctl ingest --stdin --source legacy-stdout` 降级处理。
+
+如果某次分析目录缺 `summary.md` 或 `ai-context.md` 信息不足，应把结论分类为 `Log CLI issue` 或 `Log gap`，不要退回“把整份 raw JSONL 交给 AI 猜”。
 
 ## Log
 

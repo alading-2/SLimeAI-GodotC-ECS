@@ -2,10 +2,10 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-09 22:37
+- **Updated**: 2026-06-10 10:23
 - **Current Task**: done
-- **Last Conclusion**: Fresh closeout passed available gates after removing the failing temporary `Tools/LoggerValidation` project. Logger profile/runtime/logctl scope is implemented; no Godot scene pass is claimed.
-- **Next Action**: 若要解除 blocked，提供可验证当前框架工作树的 Godot runner 后运行 scene smoke、logctl analysis 和 gate report。
+- **Last Conclusion**: 2026-06-10 样本复查确认：结构化 Log 主链路已存在，但 `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 仍证明 raw JSONL 不能作为 AI 默认入口；后续需要补 `summary.md`、更强 `ai-context.md`、noise/missing-fields markdown digest、正确 flow 边界和 Validation artifact 状态区分。项目级 current 设计已更新，SDD 内 `design/` 快照标记为历史。
+- **Next Action**: 若要解除 blocked，提供可验证当前框架工作树的 Godot runner 后运行 scene smoke、logctl analysis 和 gate report；后续 analyzer follow-up 按项目级 `design/Tool/10.Log/07-当前样本日志问题与整理方案.md` 执行。
 - **Open Blockers**: Godot scene smoke blocked: 当前没有可验证本框架工作树的承载游戏 runner。Games/BrotatoLike 不是 git 仓，且缺少 Tools/run-godot-scene.sh 与 SlimeAI；Games/BrotatoLikeOld 虽有 runner，但 wrapper 指向缺失的 /home/slime/Code/SlimeAI/.codex/... 和 /home/slime/Code/SlimeAI/SlimeAI/GameOS/SlimeAI.GameOS.csproj，且 SlimeAI submodule commit 与当前框架工作树不一致。已通过非 Godot 门禁，未伪造场景验证通过。
 ## Timeline
 
@@ -224,3 +224,11 @@
 - **Evidence**: note command
 - **Impact**: 作为后续恢复上下文。
 - **Resume**: Fresh closeout after user challenge: removed the temporary Tools/LoggerValidation project because dotnet run on that Godot project reference crashed with exit 139 and must not be kept as validation evidence. Fresh gates passed: dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly; DataOS validate; node --check Workspace/Tools/logctl/logctl.mjs; Workspace/Tools/logctl/logctl profile show --config-dir Config/Log; logctl analyze/query/suggest --dry-run on synthetic sample and profile sample, including profilePatch suggestion; python3 Workspace/SDD/sdd.py validate SDD-0040; git diff --check. SDD remains blocked only by unavailable valid Godot scene runner for the current framework worktree.
+
+### P028 — 2026-06-10 10:23 — design-update
+
+- **Context**: 用户要求 deepthink 分析 `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl`，指出当前 JSONL 信息没有整理、信息更多更麻烦，并要求更新 Log 设计文档和 godot-scene-test 指导。
+- **Conclusion**: 已把项目级 current Log 设计更新为 analyzer-first：新增 `source-request.md` 保存原始问题与去重提示，新增 `07-当前样本日志问题与整理方案.md` 分析 4914 行 raw JSONL、top noise、空 fields、`operation == context`、flow 识别过宽、Validation artifact 缺失和 `ai-context.md` 太薄的问题；同步更新 README、01、06、INDEX、DocsAI Logger、godot-scene-test skill、PRJ README/roadmap/progress/notes。SDD 内 `design/` 目录标记为 2026-06-09 历史快照。
+- **Evidence**: `Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-check` 输出 entries=4915、validationEntries=0、artifacts=0；`bash Workspace/Tools/ai-config-sync/sync-ai-config.sh` 成功；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only` 输出 Critical:0 / Advisory:13；`git diff --check -- SDD/project/projects/PRJ-0002-ecs-framework-refactor DocsAI/ECS/Tools/Logger .ai-config/skills/godot/godot-scene-test` 通过。
+- **Impact**: 后续恢复不能把 raw JSONL 或 SDD-0040 旧设计快照当作 AI 默认入口；必须先看 `analysis/summary.md` / `ai-context.md`，不足时分类为 `Log CLI issue` / `Log gap`，再用 `logctl query` 缩小范围。
+- **Resume**: 按项目级 `design/Tool/10.Log/07-当前样本日志问题与整理方案.md` 执行 analyzer follow-up；Godot scene smoke 仍需有效承载游戏 runner 后再验证。

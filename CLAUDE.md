@@ -48,16 +48,22 @@ SystemAgent 不作为 ECS 业务事实源第一入口；它只作为流程工具
 - `Workspace/SystemAgent/`：流程、角色、gate、hook、skill-test 工具。
 - `Workspace/SDD/`：SDD CLI、模板和校验规则。
 - `Workspace/DocsAI/`：工作区级文档（Git submodule、多游戏架构、AI 流程），与框架文档分离。
-- `openspec/`：历史资产，已不再维护兼容入口。
 
 ## 修改规则
 
 - 默认中文回答；命令、代码、错误信息保留原文。
-- 改文件前先读相关文件；涉及文件修改时前后运行 `git status --short`。
+- 改文件前先读相关文件。
+- 同一轮任务中编辑多个文件时，编辑完成后再统一运行 `git status --short` 确认范围；不要每次单文件修改后都检查。
 - 大型功能、架构变更、跨模块重构、长期设计决策优先使用 SDD。
 - 不要把 BrotatoLike 专属玩法、UI、资产路径上提为框架默认。
-- 不随意加依赖、大重构。AI 可自动 commit（需先 `git status --short` + 明确 message）；push 需确认。
+- 不随意加依赖、大重构。AI 可自动 commit 和 push（需先 `git status --short` + 明确 message）。
 - 不覆盖、回滚、删除用户已有改动。
+
+## Efficiency
+
+- 同一轮任务中编辑多个文件时，全部编辑完成后再统一验证（build + validate + git status）；不要每改一个文件就跑一次完整验证。
+- DeepThink 或 Retrospective 切换时，如果 5 分钟内刚读过同一文件，引用路径即可，不要重新读取全文。
+- 已读取的 skill 文件在同一会话中不需要重新加载。
 
 ## Git 操作约束
 
@@ -106,7 +112,9 @@ SystemAgent 不作为 ECS 业务事实源第一入口；它只作为流程工具
 - 探索阶段可普通分析，只读代码和文档，不直接改实现；深度思考 / 需求确认使用 `systemagent-deepthink`。只有需要任务落盘、跨会话恢复或正式执行记忆时，才进入 `sdd-workflow` / `sdd-management`。
 - 创建和管理任务使用 `sdd-workflow` / `sdd-management`，并维护 `README.md`、`design/`、`tasks.md`、`progress.md`、`bdd.md`。
 - 执行中每完成一批任务，及时更新对应 `tasks.md` checkbox 和 `progress.md` Latest Resume，并同步必要的 `DocsAI/ECS/`、SDD design 或游戏侧状态文档。
-- 完成后按影响面运行验证；文档类至少检查 `python3 Workspace/SDD/sdd.py validate <sdd-id>` 和目标文件清单，代码类按下方验证入口执行。
+- 完成 SDD task 时，更新 tasks.md / progress.md + commit + push 是默认动作，不再要求用户单独授权。
+- 完成后按影响面运行验证；文档类至少检查 `python3 Workspace/SDD/sdd.py validate <sdd-id>` 和目标文件清单，代码类按下方验证入口执行。验证通过后再 commit + push。
+- 如涉及框架仓改动，push 后提醒用户更新游戏仓 submodule。
 - 极小修复、拼写、链接、注释、临时排查和一次性脚本不强制使用 SDD；必要时仍更新相关状态文档。
 
 ## ECS 架构红线

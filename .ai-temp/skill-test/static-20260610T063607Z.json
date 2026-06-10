@@ -1,0 +1,99 @@
+{
+  "scanned": 20,
+  "rules": {
+    "R001": {
+      "name": "frontmatter-required-fields",
+      "pass": 20,
+      "fail": 0,
+      "violations": []
+    },
+    "R002": {
+      "name": "references-exist",
+      "pass": 20,
+      "fail": 0,
+      "violations": []
+    },
+    "R003": {
+      "name": "source-of-truth-alignment",
+      "pass": 20,
+      "fail": 0,
+      "violations": []
+    },
+    "R004": {
+      "name": "sync-targets-up-to-date",
+      "pass": 20,
+      "fail": 0,
+      "violations": []
+    },
+    "R005": {
+      "name": "catalog-coverage",
+      "pass": 11,
+      "fail": 9,
+      "violations": [
+        {
+          "file": "Workspace/SystemAgent/Registry/skills.yaml",
+          "kind": "missing-in-catalog",
+          "detail": "实际 skill 未在 catalog 中登记: project-filesystem",
+          "severity": "advisory"
+        },
+        {
+          "file": "Workspace/SystemAgent/Registry/skills.yaml",
+          "kind": "missing-in-catalog",
+          "detail": "实际 skill 未在 catalog 中登记: systemagent-debugger",
+          "severity": "advisory"
+        },
+        {
+          "file": "Workspace/SystemAgent/Registry/skills.yaml",
+          "kind": "missing-in-catalog",
+          "detail": "实际 skill 未在 catalog 中登记: systemagent-design-critic",
+          "severity": "advisory"
+        },
+        {
+          "file": "Workspace/SystemAgent/Registry/skills.yaml",
+          "kind": "missing-in-catalog",
+          "detail": "实际 skill 未在 catalog 中登记: systemagent-planner",
+          "severity": "advisory"
+        },
+        {
+          "file": "Workspace/SystemAgent/Registry/skills.yaml",
+          "kind": "missing-in-catalog",
+          "detail": "实际 skill 未在 catalog 中登记: systemagent-research-analyst",
+          "severity": "advisory"
+        },
+        {
+          "file": "Workspace/SystemAgent/Registry/skills.yaml",
+          "kind": "missing-in-catalog",
+          "detail": "实际 skill 未在 catalog 中登记: systemagent-reviewer",
+          "severity": "advisory"
+        },
+        {
+          "file": "Workspace/SystemAgent/Registry/skills.yaml",
+          "kind": "missing-in-catalog",
+          "detail": "实际 skill 未在 catalog 中登记: systemagent-test-designer",
+          "severity": "advisory"
+        },
+        {
+          "file": "Workspace/SystemAgent/Registry/skills.yaml",
+          "kind": "missing-in-catalog",
+          "detail": "实际 skill 未在 catalog 中登记: systemagent-verifier",
+          "severity": "advisory"
+        },
+        {
+          "file": "Workspace/SystemAgent/Registry/skills.yaml",
+          "kind": "extra-in-catalog",
+          "detail": "catalog 登记了不存在的 skill: resource-path-migration",
+          "severity": "advisory"
+        }
+      ]
+    },
+    "R006": {
+      "name": "no-direct-copy-edits",
+      "pass": 20,
+      "fail": 0,
+      "violations": []
+    }
+  },
+  "criticalFailures": 0,
+  "advisoryWarnings": 9,
+  "exitCode": 0
+}

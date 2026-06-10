@@ -1,13 +1,13 @@
 # 功能 Owner Log 文档与分析流程
 
-> 更新：2026-06-09
+> 更新：2026-06-10
 > 状态：current design note
 
 ## 1. 定位
 
 Log 重构不能只改 `Log.cs`。每个 Runtime / Capability / Tools / UI owner 都必须说明自己“打什么日志、为什么打、怎么分析、哪些默认关闭”。否则后续 AI 仍会在代码里随手加日志，最后又变成全量 stdout 交给 AI 猜。
 
-本文件定义 owner 级 `Log.md` 模板和 `logctl analyze/query` 输出后的固定 AI 分析流程。
+本文件定义 owner 级 `Log.md` 模板和 `logctl analyze/query` 输出后的固定 AI 分析流程。2026-06-10 样本复查见 `07-当前样本日志问题与整理方案.md`：当前 `raw/scene-log.jsonl` 已经是 JSONL，但缺少足够强的 `summary.md`、`ai-context.md`、noise/missing-fields markdown digest 和正确 flow 边界。
 
 ## 2. Owner Log 文档位置
 
@@ -182,6 +182,31 @@ AI 分析失败时优先看这些字段，不优先读 message。
   ai-context.md
 ```
 
+第一版实现若只能输出 JSON 文件，也必须同时生成 markdown digest。AI 默认读 markdown digest，JSONL / JSON 只作为可查询证据源。
+
+### 5.1 `ai-context.md` 最小内容
+
+`ai-context.md` 不能只列 run metadata 和 query 示例，至少要包含：
+
+- resultSource、status、entries、validationEntries、artifacts。
+- top failures，若没有失败则说明是否只是 `no-failure-observed`。
+- top noisy owner/context/operation，带计数和建议动作。
+- missing-fields digest，按 owner 说明缺字段、空 fields、`operation == context`。
+- flow digest，只列真正的 `channel=Flow` / OperationTrace，不把普通 `operation` 当 flow。
+- owner `Log.md` 或 README `## Log` 链接。
+- 下一轮建议 query / profile override。
+
+### 5.2 raw 读取限制
+
+AI 只有在以下情况才读取 `raw/scene-log.jsonl`：
+
+- `summary.md` / `ai-context.md` 指向了具体 source line。
+- `missing-fields` 说明 analyzer 信息不足，需要查看原始 entry。
+- owner `Log.md` 要求核对某个字段或 flow step。
+- `logctl query` 无法覆盖需要的筛选条件。
+
+默认禁止把 raw JSONL 直接复制进提示词。
+
 AI 默认只读：
 
 1. `summary.md`
@@ -209,7 +234,7 @@ logctl query --analysis-dir <run>/analysis operation=DamageProcess severity>=War
 1. **确认 run 结果来源**：artifact / structured-log / stdout-pattern-fallback。
 2. **确认 phase**：失败发生在 Boot、DataLoad、Validation、Gameplay、Combat 还是 Unknown。
 3. **确认 owner**：优先从 structured owner 字段判断，不从自然语言 message 猜。
-4. **确认 flow**：读失败 flow summary，再读失败 step。
+4. **确认 flow**：只读真正的 `channel=Flow` / OperationTrace flow；普通 `operation` 先按 owner/context 分析，不当作 flow。
 5. **确认检查项**：读 Validation check expected/actual/reasonCode。
 6. **确认噪声**：看 `noise/top-contexts.md` 和 `suppressed.md`，判断是否需要调整 profile。
 7. **确认日志缺口**：看 `missing-fields/index.md`，区分“代码错了”和“日志不够判断”。
@@ -250,3 +275,5 @@ AI 分析时必须使用固定分类：
 - TODO：实现后补 analyzer 示例 artifact，并用一次失败 run 验证 AI 不读全量 stdout 也能定位问题。
 - TODO：根据真实运行日志统计第一版 noise budget，当前文档只给结构和默认策略。
 - TODO：明确未来是否需要 live socket/file watcher 实时控制；第一版默认环境变量 + override 文件即可。
+- TODO：`logctl analyze` 补 `summary.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`flows/index.md`，并让 `ai-context.md` 包含 top noise、missing field 和 owner 文档链接。
+- TODO：修正 `flows/flows.json` 识别规则，不再把所有有 `operation` 的 entry 自动归入 flow。

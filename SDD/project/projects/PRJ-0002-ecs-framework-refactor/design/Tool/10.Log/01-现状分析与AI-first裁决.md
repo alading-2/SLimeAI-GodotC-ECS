@@ -1,54 +1,63 @@
 # 现状分析与 AI-first 裁决
 
-> 更新：2026-06-09
+> 更新：2026-06-10
 > 状态：current design note
 
 ## 1. 当前事实
 
-当前 `Src/ECS/Tools/Logger/Log.cs` 仍是传统文本日志：
+当前 `Src/ECS/Tools/Logger/Log.cs` 已经从旧文本 Logger 进入结构化雏形，但还没有完成 AI-first Log 闭环：
 
-- 6 个等级：`Trace / Debug / Info / Success / Warning / Error`。
-- 支持全局等级和按 context 设置等级。
-- `Trace` / `Debug` 依赖 `Conditional("DEBUG")`。
-- `Warn` / `Error` 会额外推送到 Godot Debugger。
-- 输出主体仍是 `GD.PrintRich` 的字符串拼接。
+- 已有 `LogEntry` envelope，包含 `runElapsedMs / frame / physicsFrame / severity / outcome / validationStatus / channel / owner / context / operation / phase / fields`。
+- 已有 `LogSeverity / LogOutcome / LogValidationStatus` 拆分，legacy `LogLevel.Success` 仍作为兼容入口存在。
+- 已有 `OperationTrace`、`JsonlBufferedFileSink`、`StdoutSummarySink`、`MemorySink`、`ArtifactSink`、可选 `GodotEditorSink`。
+- 已有 `LogProfileDocument / LogRulesDocument / LogOverridesDocument` 和每秒 budget 雏形。
+- 已有 `ValidationSession`，但项目测试尚未全面迁移。
+- 已有 `Workspace/Tools/logctl/logctl.mjs analyze/query/suggest`，但 analyzer 输出仍偏薄。
 
-这套设计能工作，但不适合 AI-first 的高密度调试场景。
+因此当前问题已经从“Logger 是否结构化”推进到：**结构化字段是否有业务语义、raw JSONL 是否被整理成 AI 可读目录、Validation artifact 是否成为主事实源、owner 是否有固定 Log 分析流程。**
 
 ### 1.1 本轮本地扫描证据
 
-本轮扫描范围覆盖 `Src/ECS/Tools/Logger/Log.cs`、`Src/ECS/**/*Test*.cs`、`.ai-config/skills/godot/godot-scene-test/scripts/godot-scene-runner.mjs` 和 `/home/slime/Code/SlimeAI/SlimeAI-AiFirst/GameOS/Observation/**`。
+本轮扫描范围覆盖 `Src/ECS/Tools/Logger/Log.cs`、`Src/ECS/Tools/Logger/ValidationSession.cs`、`Workspace/Tools/logctl/logctl.mjs`、`.ai-config/skills/godot/godot-scene-test/scripts/*`、`.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl`、`Src/ECS/**/*Test*.cs`、`DocsAI/ECS/Tools/Logger/*`。
 
 | 证据 | 当前形态 | 结论 |
 | --- | --- | --- |
-| `Log.cs` | `GlobalLevel` + `_contextFilters` + `ShowTimestamp` + `GD.PrintRich` | 只有文本显示和等级过滤，没有结构化 envelope、owner、operation、phase、entity、correlation、budget。 |
-| `godot-scene-runner.mjs` | `FAILURE_PATTERNS` 包含 `[FAIL]`、`FAIL:`、`Exception`，摘要保留 `[PASS]` / `[OK]` | runner 仍以字符串 pattern 做主判断，说明测试事实源没有统一到 artifact。 |
-| `DataSceneTestBase.cs` | `GD.Print("PASS ...")`、`GD.PushError("FAIL ...")` | PASS/FAIL 直接写 Godot 输出，无法携带 expected/actual/category/check id。 |
-| `SystemCoreRuntimeTest.cs` 等 | `_log.Info("[PASS]")`、`_log.Error("[FAIL]")` | Log 和 Test 结果混在一起，AI 只能靠 message 文本判断。 |
-| `GameOSObservationSession` 原型 | JSONL sink、memory sink、Validation artifact | 方向可复用，但仍缺 frame/phase/correlation/budget/profile/CLI。 |
+| `Log.cs` | `LogEntry`、sink、budget、profile、`OperationTrace` 已存在 | Logger core 方向已启动；下一步不是再证明要 JSON，而是补 owner 语义、flow 契约和 analyzer digest。 |
+| `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` | 约 4914 行；`TargetSelector/TargetQueryEntities` 约 3041 条；约 1109 条 `fields:{}`；约 1109 条 `operation == context` | JSONL 解决了机器可读，但没有完成信息整理、字段语义和噪声压缩。 |
+| `logctl analyze` | 产出 `by-owner/*.jsonl`、`by-phase/*.jsonl`、`noise/summary.json`、`missing-fields/missing-fields.json`、`ai-context.md` | 拆分雏形存在，但缺 `summary.md`、markdown noise/missing-fields/flow index；`ai-context.md` 太薄。 |
+| `logctl flows/flows.json` | 当前把几乎所有有 `operation` 的 entry 都纳入 flow | flow 识别过宽，应只接受 `channel=Flow`、`entryType` 或完整 OperationTrace 契约。 |
+| `.ai-config/skills/godot/godot-scene-test/scripts/godot-scene-runner.mjs` | 仍保留 `[FAIL]`、`FAIL:`、`Exception` 等 stdout fallback；也尝试调用 `logctl analyze` | 过渡 fallback 合理，但长期日志整理规则必须留在 Log CLI。 |
+| `ValidationSession.cs` | 能写 check、artifact、Validation channel | 测试统一入口已有雏形，但样本 run `validationEntries=0`、`artifacts=0`，说明测试/场景还没全面接入。 |
 
-这些证据证明：当前问题不是“日志级别设置不够细”，而是 Log、Validation、runner 和 AI 分析之间没有统一契约。
+这些证据证明：当前问题不是“日志级别设置不够细”，也不是“是否要 JSON”。真实问题是 Log、Validation、runner、Log CLI analyzer 和 owner 文档之间还没有形成闭环。
 
 ### 1.2 外部资料校准
 
-本轮按用户要求补了 Context7 / Web 资料：
+本轮按用户要求补了 Context7 / Web 资料。Context7 解析到 Godot stable 文档，并补查了 Microsoft Learn、OpenTelemetry 和 Grafana Loki 文档；这些资料只用于校准方向，不作为引入外部日志框架的依据。
 
 | 来源 | 采纳点 | 不采纳点 |
 | --- | --- | --- |
-| Context7 `/godotengine/godot-docs` + Godot docs `@GlobalScope` / `Engine` / `Time` | `GD.PushError` / `GD.PushWarning` 是 debugger + terminal 输出；`Engine.GetProcessFrames()`、`Engine.GetPhysicsFrames()`、`Time.GetTicksMsec()` / `GetTicksUsec()` 可支撑 run elapsed / frame 字段。 | 不把 Godot error 输出当测试断言主事实源。 |
-| Context7 `/godotengine/godot-docs` + Godot logging docs | `print_rich` / `GD.PrintRich` 支持 BBCode rich text，会显示到 editor Output 和标准输出。 | AI-first 不需要 BBCode 颜色，不把 rich print 作为默认 sink。 |
-| Context7 `/dotnet/docs` + Microsoft Learn `Console.WriteLine` / high-performance logging | `Console.WriteLine` 写标准输出，.NET logging 示例先 `IsEnabled` 再输出，高性能 logging 建议 source-generated / `LoggerMessage`。 | 不把每条高频日志都直接 `Console.WriteLine`；默认仍应 buffered JSONL 文件 + stdout summary。 |
+| Context7 `/websites/godotengine_en_stable` + Godot 官方 docs `@GlobalScope` / `Engine` / `Time` | `push_error` / `push_warning` 输出到 debugger 和 terminal；`print_rich` 是 BBCode 富文本输出；`get_ticks_msec/usec` 是单调时间；`get_process_frames/get_physics_frames` 可支撑 frame 字段。 | 不把 Godot error 输出当测试断言主事实源；不把 rich print 作为 AI 默认 sink。 |
+| Microsoft Learn high-performance logging | source-generated / `LoggerMessage` 的价值是减少 boxing、临时分配和运行时模板解析；结构化占位符应稳定命名。 | 不直接迁到 `ILogger` 或新增依赖；SlimeAI 先保留本地 `LogEntry` 契约。 |
 | OpenTelemetry Logs Data Model | 采纳 severity、attributes、trace/span correlation 的结构化思想。 | 不复制 OpenTelemetry exporter / collector 作为当前依赖。 |
-| Microsoft .NET Logging | 采纳 category/filter、结构化占位符、高性能日志需要避免关闭日志时构造消息的原则。 | 不直接迁到 `ILogger`，避免先引入依赖和 DI 复杂度。 |
-| Google Cloud structured logging | 采纳 JSON structured fields / severity / labels 适合后处理。 | 不接云端日志平台。 |
+| Grafana Loki `logcli` | 现实日志系统需要对已有日志做查询和探索，不只是在运行时开关。 | 不接 Loki；`logctl query` 做本地版结构化筛选即可。 |
 
-官方链接记录在项目 `Core/notes.md`，本文件只保留采用/不采用裁决，避免设计正文变成资料堆叠。
+参考链接：
+
+- `https://docs.godotengine.org/en/stable/classes/class_%40globalscope.html`
+- `https://docs.godotengine.org/en/stable/classes/class_engine.html`
+- `https://docs.godotengine.org/en/stable/classes/class_time.html`
+- `https://learn.microsoft.com/dotnet/core/extensions/high-performance-logging`
+- `https://opentelemetry.io/docs/specs/otel/logs/data-model/`
+- `https://grafana.com/docs/loki/latest/query/logcli/`
+
+本文件只保留采用/不采用裁决，避免设计正文变成资料堆叠。
 
 ## 2. 当前主要问题
 
 ### 2.1 信息密度不够
 
-现在日志大多是自然语言句子。AI 要判断一条日志是否有用，必须靠上下文猜：
+现在日志已经有 envelope，但很多业务事实仍停在自然语言 message。AI 要判断一条日志是否有用，仍然常常要靠上下文猜：
 
 - 这是谁打的。
 - 属于哪个阶段。
@@ -87,9 +96,9 @@
 
 这会让 scene runner 只能靠字符串 pattern 猜结果，不能把测试结果当成统一观测事实。
 
-### 2.4 runner 仍在做字符串扫描
+### 2.4 runner 仍保留字符串 fallback
 
-`godot-scene-runner.mjs` 和 `analyze-logs.sh` 仍依赖：
+`godot-scene-runner.mjs` 和 `analyze-logs.sh` 仍保留：
 
 - `[FAIL]`
 - `FAIL:`
@@ -97,7 +106,7 @@
 - `Failed to load`
 - `scene not found`
 
-这不是坏实现，但它说明当前日志还没有足够结构化，runner 只能做兜底识别。
+这不是坏实现，过渡期需要 fallback。但 gate report 必须标出 `resultSource=stdout-pattern-fallback`，并把它视为待迁移信号。长期主判断必须来自 artifact / structured validation / structured log。
 
 ### 2.5 过程日志分散
 
@@ -134,22 +143,17 @@ Boot / DataLoad / SceneReady / Validation / Gameplay / Wave / Combat / Paused / 
 
 没有阶段时填 `Unknown`，但 analyzer 必须把 Unknown 作为待补 owner 问题列出来。
 
-### 2.7 默认 sink 用错了
+### 2.7 默认 sink 已开始切换，但调用点和 analyzer 还没闭环
 
-当前 `LogInternal` 的最终输出是：
+旧 `LogInternal` 的最终输出曾是 `GD.PrintRich(...)`，这条路径的设计目标是人类在 Godot editor 里看彩色日志。当前源码已经引入 `JsonlBufferedFileSink` 和 `StdoutSummarySink`，但仍要防止两个方向的回退：
 
-```csharp
-GD.PrintRich($"[color={color}]{timestampStr}[{tag}]{contextInfoStr} {message}[/color]");
-```
-
-这条路径的设计目标是人类在 Godot editor 里看彩色日志。现在用户明确目标是 AI 分析，彩色 Output 面板不再是核心价值。
-
-AI-first 角度看，默认走 Godot API 有几个问题：
+AI-first 角度看，默认走 Godot API 或逐条 stdout 都有问题：
 
 - 结构化事实被先格式化成字符串，后续 analyzer 只能再解析文本。
 - `GD.PrintRich` 的 BBCode / rich text 对 JSONL 没有价值。
 - 每条日志都过 Godot C# binding / Godot String / editor output 路径，不适合高密度机器日志。
-- headless runner 最终需要的还是 stdout、JSONL 和 artifact。
+- `Console.WriteLine` 虽然避开 Godot API，但逐条刷 stdout 仍会制造 IO 噪声。
+- headless runner 最终需要的是 stdout summary、JSONL 和 artifact。
 
 但也不能简单说“C# 打印一定更高性能”。`Console.WriteLine` 本身也是同步文本 IO，刷几百上千条一样会慢。正确裁决是：
 
@@ -166,7 +170,19 @@ AI-first 角度看，默认走 Godot API 有几个问题：
 - 误读 A：继续保留 `GD.PrintRich` 作为默认实现，只在外面包一层 profile。
 - 误读 B：把所有详细日志逐条改成 `Console.WriteLine`。
 
-正确方向是先生成结构化 `LogEntry`，再按 sink 策略输出；`Console.WriteLine` 只负责摘要，JSONL / artifact 承载详细事实。
+正确方向是继续坚持结构化 `LogEntry`，再按 sink 策略输出；`Console.WriteLine` 只负责摘要，JSONL / artifact 承载详细事实。
+
+### 2.8 原始信息整理不足
+
+样本 run 已经证明：即使 raw 是 JSONL，也不能直接交给 AI。当前 `logctl analyze` 还缺：
+
+- `summary.md`：一屏说明结果来源、top owner、top noise、缺字段和下一步。
+- `noise/top-contexts.md`：把 `TargetSelector`、`ObjectPool`、`Damage`、`HealthBarUI` 这类高频点转成可执行降噪建议。
+- `missing-fields/index.md`：按 owner 解释 `fields:{}`、`operation == context`、unknown owner/phase。
+- `flows/index.md`：只展示真正的 `channel=Flow` / OperationTrace 流程，不把普通 operation 全算 flow。
+- 更厚的 `ai-context.md`：必须包含 failure focus、flow digest、noise digest、owner 文档链接和建议 query。
+
+结论：**Log 的第一目标是产出事实，Log Analyzer 的第一目标是把事实整理成 AI 可消费的目录。两者缺一不可。**
 
 ## 3. AI-first 裁决
 

@@ -42,9 +42,9 @@
 - Data GC hard cutover 实施前仍需确认 public object API 删除/internal/obsolete debug-only 的具体处置，以及 `PropertyChanged(object?)` 是否改 typed/domain event + debug snapshot。
 - Event / Feature / Ability 非 Data GC hard cutover 已由 SDD-0033 完成；后续不要恢复 `EmitDynamic` / `OnDynamic` / `Action<object>` 主链路，也不要恢复 `object? OnExecute`。
 - ObjectPool manager 反射与 TargetSelector ownership 基础 facade 已由 SDD-0033 完成；后续 pooled lease / deterministic RNG / allocation artifact 必须从 TargetQueryEngine owner 继续。
-- Logger 本轮明确不改；只有 profiler 或明确热路径证据出现后再进入 Logger lazy / interpolated string handler 小切片。
+- Logger GC 热路径小切片本轮明确不改；只有 profiler 或明确热路径证据出现后再进入 Logger lazy / interpolated string handler。这个结论不阻止 Log AI-first Observation 的 analyzer、owner 文档和 Validation artifact 设计。
 - Log 工具 2026-06-08 已作为 AI-first Observation 重新设计；它覆盖 Logger core、Validation helper、runner analyzer、owner Log 文档和 AI 分析流程。该设计不同于上条 Logger 热路径 GC 小切片，后续执行时应从 `design/Tool/10.Log/README.md` 进入。
-- Log hard cutover 执行前需确认是否一个 SDD 同批改 Logger、Validation helper 和 runner analyzer；默认同批，否则测试事实源仍分裂。
+- Log hard cutover 已由 SDD-0040 建立结构化主链路；2026-06-10 样本复查新增 follow-up：`logctl analyze` 需补 `summary.md`、更强 `ai-context.md`、noise/missing-fields markdown digest、正确 flow 边界和 Validation artifact 状态区分。
 - Log profile 默认建议放 `Config/Log/`，但执行前可再确认是否改为 `Data/Log/` 或游戏仓本地配置。
 - `Success` 建议从 severity 中删除，改为 `outcome=Succeeded` 或 `validationStatus=pass`；执行前若用户不同意，需要更新 `design/Tool/10.Log/README.md` 和 `02-目标架构与数据契约.md`。
 - Log sink 已由 2026-06-09 裁决更新：默认 `jsonl-buffered-file` + `stdout-summary` + `memory/artifact`，`godot-editor` 默认关闭；执行时不要把 `Console.WriteLine` 当详细日志主路径，详细日志应 buffered 写 JSONL。

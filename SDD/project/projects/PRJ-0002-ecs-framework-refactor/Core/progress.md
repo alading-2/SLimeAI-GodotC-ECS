@@ -6,10 +6,10 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-09
+- **Updated**: 2026-06-10
 - **Current SDD**: SDD-0040
-- **Last Conclusion**: `SDD-0040 Log AI-first Observation Hard Cutover` 的 T1.1~T1.10 已执行完成：Logger core、structured sinks、ValidationSession、`logctl`、godot-scene-test wrapper、第一批 owner flow、DocsAI 和 skill 同步均已落地；可用非 Godot 门禁已通过。
-- **Next Action**: 恢复或提供能验证当前框架工作树的承载游戏 runner 后，运行 Godot scene smoke、`logctl analyze/query` 和 gate report；通过后再解除 SDD-0040 blocked 并收口为 done。
+- **Last Conclusion**: `SDD-0040 Log AI-first Observation Hard Cutover` 的结构化主链路已落地；2026-06-10 基于 `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 复查后确认新设计缺口：raw JSONL 不能作为 AI 默认入口，`logctl analyze` 仍需补 `summary.md`、更强 `ai-context.md`、noise/missing-fields markdown digest、正确 flow 边界和 Validation artifact 状态区分。
+- **Next Action**: 恢复或提供能验证当前框架工作树的承载游戏 runner 后，运行 Godot scene smoke、`logctl analyze/query` 和 gate report；同时按 `design/Tool/10.Log/07-当前样本日志问题与整理方案.md` 处理 analyzer/owner Log follow-up。
 - **Open Blockers**: Godot scene smoke blocked：当前没有可验证本框架工作树的承载游戏 runner。`Games/BrotatoLike` 不是 git 仓，且缺少 `Tools/run-godot-scene.sh` 与 `SlimeAI`；`Games/BrotatoLikeOld` 虽有 runner，但 wrapper 指向缺失路径且 `SlimeAI` submodule commit 与当前框架工作树不一致。
 
 ## Project Status Board
@@ -36,7 +36,7 @@
 | SDD-0036 | done | `design/Tool/其他Tool/05-TargetSelector查询契约.md` | Target Query Engine Hard Cutover 已完成；`TargetQueryEngine` / diagnostics / candidate source / deterministic RNG 成为 current API，旧 list-only facade 删除 |
 | SDD-0037 | done | `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` | Resource Loading And Common Utilities Hard Cutover 已完成；`ResourceLoading` current facade、strict lookup、source diagnostics、ResourceCatalogDiagnostics 和 CommonUtilities 边界已收口 |
 | SDD-0038 | done | `design/Tool/其他Tool/03-Math目标架构与验证.md` | Math Formula And Deterministic Random Cutover 已完成；`ProbabilityTool` / `DeterministicRandom` 接管概率随机，Damage/Ability 公式归 owner，`MyMath` / `GeometryCalculator` 删除 |
-| SDD-0040 | blocked | `design/Tool/10.Log/` | Log AI-first Observation hard cutover 实现任务已完成；可用构建、DataOS、SDD、AI 配置、Node 脚本和 diff check 门禁已通过；Godot scene smoke blocked 于当前无有效承载游戏 runner |
+| SDD-0040 | blocked | `design/Tool/10.Log/` | 结构化 Logger、sink、ValidationSession、`logctl` 和 runner wrapper 已落地；2026-06-10 样本复查追加 analyzer digest / flow 边界 / owner Log 缺口；Godot scene smoke blocked 于当前无有效承载游戏 runner |
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
 | SDD-0028 | done | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已完成；后续对象池改动按 ObjectPool owner 新建小切片 |
 | SDD-0029 | done | `design/Runtime/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |

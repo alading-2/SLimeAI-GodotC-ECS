@@ -24,5 +24,5 @@ description: 把需求变成标准答案和验证场景。用于新行为、Godo
 ## 禁止
 
 - 不复制 `Workspace/SystemAgent/Actors/TestDesigner.md` 正文。
-- 不直接修改 `.codex/skills/`、`.claude/skills/`、`.trae/skills/` 同步副本作为源。
+- 不直接修改 `.ai-config/sync-targets.json` 定义的 skill 同步副本作为源。
 - 不把 owner capability skill 迁入 `.ai-config/skills/systemagent-skill/`。

@@ -20,16 +20,7 @@ hook / subagent 不属于本同步规则：
 
 这些是工具项目运行配置，直接维护，不放进 `.ai-config`。
 
-禁止直接手改：
-
-- `.codex/skills/`
-- `.claude/skills/`
-- `.windsurf/skills/`
-- `.claude/commands/opsx/`
-- `CLAUDE.md`
-- `.windsurf/rules/windsurfrules.md`
-
-这些路径只允许由同步脚本生成。
+禁止直接手改 `.ai-config/sync-targets.json` 中定义的 skill/rule 同步目标（如 `.codex/skills/`、`.claude/skills/`、`CLAUDE.md` 等）。这些路径只允许由同步脚本生成。
 
 ## 同步命令
 
@@ -47,7 +38,6 @@ bash Workspace/Tools/ai-config-sync/sync-ai-config.sh
 find .ai-config/skills/ai/ai-feature-development -type f | sort
 find .codex/skills/ai-feature-development -type f | sort
 find .claude/skills/ai-feature-development -type f | sort
-find .windsurf/skills/ai-feature-development -type f | sort
 git status --short
 ```
 

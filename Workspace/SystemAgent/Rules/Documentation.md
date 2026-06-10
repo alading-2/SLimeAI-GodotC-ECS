@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | historical | 已完成 SDD、归档目录或 git log 中的旧路径引用 | 不修改 |
 | migration pointer | 旧入口文件保留为迁移说明（如 `Workspace/DocsAI/AgentWorkflow/`） | 不修改 |
-| archive | `openspec/` 归档目录中的旧路径 | 不修改 |
+| archive | 已废弃目录（如 `openspec/`）中的旧路径 | 不修改 |
 | violation | 当前正文或运行配置中的旧路径 | 必须修复 |
 
 ## 事实源层级

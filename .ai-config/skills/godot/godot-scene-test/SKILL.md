@@ -30,6 +30,7 @@ Tools/run-godot-scene.sh run res://Scenes/Main.tscn --build --timeout 3 --log-di
 Tools/analyze-godot-scene-logs.sh
 Workspace/Tools/logctl/logctl analyze --run-dir <latest-run-dir> --out <latest-run-dir>/analysis
 Workspace/Tools/logctl/logctl query --analysis-dir <latest-run-dir>/analysis owner=Ability
+Workspace/Tools/logctl/logctl query --analysis-dir <latest-run-dir>/analysis severity>=Warn
 Workspace/Tools/logctl/logctl profile show --config-dir Config/Log
 ```
 
@@ -44,6 +45,8 @@ Workspace/Tools/logctl/logctl profile show --config-dir Config/Log
 - runner 源：`.ai-config/skills/godot/godot-scene-test/scripts/godot-scene-runner.mjs`
 - analyzer wrapper 源：`.ai-config/skills/godot/godot-scene-test/scripts/analyze-logs.sh`
 - 日志整理和 AI 分析入口属于 `Workspace/Tools/logctl/logctl analyze/query`；`godot-scene-test` 只负责运行 Godot、保存 run dir、调用 Log CLI、读取 gate report。
+- AI 默认读取 `analysis/summary.md`（若存在）、`analysis/ai-context.md`、`analysis/noise/`、`analysis/missing-fields/` 和目标 owner 分桶；不要把 `raw/scene-log.jsonl` 直接作为默认提示词输入。
+- 若 `analysis/summary.md` 不存在或 `ai-context.md` 只含 run metadata，应记录为 `Log CLI issue` / `Log gap`，再用 `logctl query` 缩小范围；不要退回复制全量 raw。
 - 目标游戏若提供 `Tools/run-godot-scene.sh` / `Tools/analyze-godot-scene-logs.sh`，应作为 runner / Log CLI 的薄封装。
 - 游戏仓里的 `SlimeAI/` 是框架仓 git submodule 镜像。框架仓新增或修改 `Src/Validation` 后，跑 Godot 前必须先选定承载游戏；当前初始开发阶段默认用 BrotatoLike，并直接同步到 `Games/BrotatoLike/SlimeAI/` 工作树。
 - 不默认同步所有游戏仓。后续多游戏 / 成品阶段按每个游戏的框架版本策略更新 submodule 指针，再选择对应游戏跑验证。
@@ -64,8 +67,9 @@ Workspace/Tools/logctl/logctl profile show --config-dir Config/Log
 - 跑框架级 Godot 场景前，当前阶段先直接同步到本轮承载游戏的 submodule 镜像，例如 BrotatoLike：`cp -a SlimeAI/Src/Validation/... Games/BrotatoLike/SlimeAI/Src/Validation/...` 和 `cp -a SlimeAI/Src/Validation/... Games/BrotatoLike/SlimeAI/Src/Validation/...`；以后多游戏版本管理成熟后再改成按游戏更新 submodule 指针。
 - 承载游戏的 `.csproj` 需要排除框架源码但重新包含 `SlimeAI/Src/Validation/**/*.cs`，否则 submodule 场景脚本会因未编译而无法实例化。
 - `Tools/run-godot-smoke.sh` 只是兼容入口，优先用统一 runner。
-- 日志和截图 artifacts 保持在 `.ai-temp/scene-tests/runs`，优先读取 `index.json`、`result.json`、scene artifact、`raw/scene-log.jsonl` 和 `analysis/ai-context.md`；`combined.log` 只作为摘要和 fallback 排查入口。
+- 日志和截图 artifacts 保持在 `.ai-temp/scene-tests/runs`，优先读取 `index.json`、`result.json`、scene artifact、`analysis/summary.md`、`analysis/ai-context.md`、`analysis/noise/`、`analysis/missing-fields/`；`raw/scene-log.jsonl` 和 `combined.log` 只作为 query/raw 证据和 fallback 排查入口。
 - 需要筛选某个 owner / sourceFile / operation / entityId 时，不要复制 console 文本给 AI；调用 `logctl query --analysis-dir <run>/analysis ...`。
+- 如果 gate report 显示 `validationEntries=0` 且 `artifacts=0`，只能说明未观察到 structured failure，不能当作行为已通过完整验证；新验证场景必须补 Validation artifact。
 
 ## UnitComposition 专项场景
 

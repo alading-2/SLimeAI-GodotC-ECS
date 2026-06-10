@@ -36,4 +36,4 @@ bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summa
 ## 禁止
 
 - 不复制 runner 实现或 wrapper policy 正文。
-- 不直接修改 `.codex/skills/`、`.claude/skills/`、`.windsurf/skills/` 作为源。
+- 不直接修改 `.ai-config/sync-targets.json` 定义的 skill 同步副本作为源。

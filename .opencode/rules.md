@@ -48,7 +48,6 @@ SystemAgent 不作为 ECS 业务事实源第一入口；它只作为流程工具
 - `Workspace/SystemAgent/`：流程、角色、gate、hook、skill-test 工具。
 - `Workspace/SDD/`：SDD CLI、模板和校验规则。
 - `Workspace/DocsAI/`：工作区级文档（Git submodule、多游戏架构、AI 流程），与框架文档分离。
-- `openspec/`：历史资产，已不再维护兼容入口。
 
 ## 修改规则
 

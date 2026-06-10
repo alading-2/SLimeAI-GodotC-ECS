@@ -65,5 +65,5 @@ python3 Workspace/SDD/sdd.py done SDD-0001 --validation "..." --conclusion "..."
 
 - 不把 SDD 实例放入 `Workspace/SystemAgent/`。
 - 不把 SDD 设计文档交给 SystemAgent 归档。
-- 不直接修改 `.codex/skills/`、`.claude/skills/`、`.windsurf/skills/` 作为源。
-- 不删除 OpenSpec；已有 OpenSpec change 仍按兼容流程收尾。
+- 不直接修改 `.ai-config/sync-targets.json` 定义的 skill 同步副本作为源。
+- `openspec/` 已废弃，新任务不进入 OpenSpec。

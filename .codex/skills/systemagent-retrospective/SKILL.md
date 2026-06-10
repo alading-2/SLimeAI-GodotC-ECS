@@ -25,5 +25,5 @@ conclusion/verdict 一致性结论、证据化 findings、process updates 与 fo
 ## 禁止
 
 - 不复制 `Workspace/SystemAgent/Routes/`、`Roles/`、`Gates/` 或 `Policies/` 正文。
-- 不直接修改 `.codex/skills/`、`.claude/skills/`、`.windsurf/skills/` 同步副本作为源。
+- 不直接修改 `.ai-config/sync-targets.json` 定义的 skill 同步副本作为源。
 - 不把 owner capability skill 迁入 `.ai-config/skills/systemagent-skill/` 或 `.ai-config/skills/systemagent-workflow/`。

@@ -1,5 +1,7 @@
 # Log 工具设计包
 
+> 2026-06-10 superseded note：本文件是 SDD-0040 的 2026-06-09 执行快照。当前 Log 设计事实源已更新到 `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/README.md`、`source-request.md` 和 `07-当前样本日志问题与整理方案.md`。若本快照仍写旧 `Log.cs` / `GD.PrintRich` 现状，以项目级 current 设计为准。
+
 > 更新：2026-06-09
 > 状态：current design package
 > 入口：`README.md`
