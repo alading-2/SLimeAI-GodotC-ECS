@@ -41,7 +41,7 @@ SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/source-r
 | `04-测试统一与Observation接入.md` | validation-observation | 定义测试如何统一通过 Log/Validation artifact 表达 PASS/FAIL。 |
 | `05-调用点迁移与验证计划.md` | migration-test-plan | 旧日志调用点、测试 helper、runner 规则和验证门禁。 |
 | `06-功能OwnerLog文档与分析流程.md` | owner-log-analysis | 定义每个 Runtime / Capability / Tools / UI owner 的 `Log.md` 模板、过程聚合日志和脚本拆分分析流程。 |
-| `07-当前样本日志问题与整理方案.md` | sample-analysis | 基于 `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 的真实问题、现有 analyzer 缺口和修复方向。 |
+| `07-当前样本日志问题与整理方案.md` | sample-analysis | 基于 `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 的真实问题、为什么 T1 没完成“打印信息整理”、T2 analyzer/owner 实现路线和验收门禁。 |
 
 ## 3. 总裁决
 
@@ -131,6 +131,15 @@ raw/scene-log.jsonl
 | 测试事实缺失 | 样本 `validationEntries=0`、`artifacts=0` | 运行通过不等于行为被验证；Validation artifact 必须成为 gate 主事实源。 |
 
 完整分析见 `07-当前样本日志问题与整理方案.md`。
+
+### 4.1 2026-06-10 复盘裁决
+
+用户追问“为什么需求写出来了，重构 Log 时仍没有完成打印信息整理”。裁决如下：
+
+- SDD-0040 T1 完成的是 `LogEntry`、sink、profile、budget、`OperationTrace`、`ValidationSession` 和最小 `logctl` 管道。
+- T1 没完成的是 analyzer digest、semantic missing-fields、正确 flow 边界、owner 字段契约、Validation gate 状态区分和真实样本验收。
+- 因此不能把当前状态描述为“Log 目标已完成，只剩 Godot scene smoke blocker”。更准确的状态是：Logger core 已完成，AI-first 日志整理闭环仍有 T2 follow-up。
+- T2 的第一验收样本就是 `.ai-temp/log-runs/20260610-013907`；只有 `summary.md` / `ai-context.md` / `noise/top-contexts.md` / `missing-fields/index.md` / `flows/index.md` 足以让 AI 不读 raw 也能判断问题分类，才算完成用户要求的“打印信息整理”。
 
 ## 5. AI-first 原则
 

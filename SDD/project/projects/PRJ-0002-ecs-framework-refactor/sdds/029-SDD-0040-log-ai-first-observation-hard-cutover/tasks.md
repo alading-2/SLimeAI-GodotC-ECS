@@ -3,8 +3,8 @@
 ## Progress
 
 - **Status**: blocked
-- **Completed**: 12/12
-- **Current**: done
+- **Completed**: 12/19
+- **Current**: T2.1 analyzer digest contract
 
 ## Task List
 
@@ -34,3 +34,26 @@
 
 - [x] T1.12 补齐 logctl profile show / suggest profilePatch、DocsAI/skill 同步和用户质疑状态校正
   - **Validation**: `node --check Workspace/Tools/logctl/logctl.mjs`；合成 run 验证 `analyze/query/suggest --dry-run`；`bash Workspace/Tools/ai-config-sync/sync-ai-config.sh`；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only`
+
+## T2 Log 整理闭环 Follow-up
+
+- [ ] T2.1 analyzer digest contract：`logctl analyze` 生成 `summary.md`、更强 `ai-context.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`flows/index.md`、`failures/index.md`
+  - **Validation**: 对 `.ai-temp/log-runs/20260610-013907` 复跑 analyze，AI 默认入口不需要读取 raw JSONL 就能看到 status、top noise、missing semantic fields、flow digest 和下一步 query。
+
+- [ ] T2.2 gate status semantics：区分 `passed`、`failed`、`no-failure-observed`、`stdout-pattern-fallback`、`invalid-input`
+  - **Validation**: 当前样本 `validationEntries=0` 且 `artifacts=0` 时不得输出 `status=passed`；invalid JSONL line 必须出现在 summary/gate warning。
+
+- [ ] T2.3 flow boundary and aggregation：修正 `flows` 识别规则，不再把普通 `operation` 归为 flow；高频成功 flow 支持 sample / aggregate / suppressed summary
+  - **Validation**: 当前样本的 `flows/index.md` 不包含全部 4914 条普通 operation；TargetSelector 高频成功路径不再默认逐条作为 AI 入口。
+
+- [ ] T2.4 semantic missing-fields：按 owner 检测 `fields:{}`、`operation==context`、缺 `entityId/reasonCode/durationMs/sourceFile` 等 AI 判断缺口
+  - **Validation**: `missing-fields/index.md` 至少列出 Runtime/HealthBarUI、TargetSelector、ObjectPool、Damage、System 的字段任务和分类。
+
+- [ ] T2.5 owner hot-spot cleanup：按样本 top noise 先处理 TargetSelector、ObjectPool、HealthBarUI、Damage、System
+  - **Validation**: 同类成功文本合并或降级；失败/阻断保留 structured fields；`logctl suggest --dry-run` 不再为同 owner/context/operation 重复 message 生成多条等价建议。
+
+- [ ] T2.6 Validation artifact adoption：承载样本或后续场景的验证事实进入 `ValidationSession` / artifact；没有 artifact 的 run 只能是 no-failure-observed
+  - **Validation**: runner gate report 优先 artifact/Validation；legacy `PASS/FAIL` 文本只作为 fallback。
+
+- [ ] T2.7 verification and SDD sync：用真实样本和可用非 Godot 门禁验证 T2，并同步 DocsAI / design / SDD 状态
+  - **Validation**: `node --check Workspace/Tools/logctl/logctl.mjs`；`Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-next`；`python3 Workspace/SDD/sdd.py validate SDD-0040`；`git diff --check`。

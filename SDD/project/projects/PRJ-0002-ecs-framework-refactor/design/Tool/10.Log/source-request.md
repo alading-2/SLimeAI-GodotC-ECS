@@ -58,3 +58,18 @@ SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log
 - 设计文档应该如何改，才能把“原始信息整理”和“AI 分析流程”写清楚？
 - `godot-scene-test` 和 Log CLI 的职责边界如何写，避免测试 skill 再维护第二套 analyzer？
 
+## 5. 2026-06-10 追加追问
+
+用户进一步指出前一轮文档仍没有回答执行失败本身：
+
+> 需求全部写出来了，为什么让你重构log的时候没有完成目标？那你做了什么？为什么会这样？我明确要求你对打印信息整理，现在没有完成。
+
+> 更重要的是下一步你要怎么完成，怎么实现这些需求，07-当前样本日志问题与整理方案.md，这个我认为不够完整，你要深度思考完成这些需要要怎么做，怎么实现。
+
+这次补充必须回答：
+
+- 原始目标和已完成实现之间的差距是什么。
+- 哪些代码或文档确实落地了，哪些只落到结构雏形，没有达到“整理打印信息”的验收。
+- 为什么会把 `LogEntry` / sink / minimal analyzer 当成完成，而没有继续做到 analyzer digest、owner 字段契约和 Validation artifact。
+- 下一步要按什么顺序实现，每一步改哪些文件、产出哪些 artifact、用什么样本或命令验收。
+- SDD-0040 的状态文档不能继续表达为“只剩 Godot scene smoke blocker”；必须记录 analyzer / flow / owner 语义 follow-up。

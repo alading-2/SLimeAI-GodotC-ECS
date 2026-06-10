@@ -67,14 +67,14 @@
 | `Tool/Input/02-目标架构与优化路线.md` | input-architecture-roadmap | current | 2026-06-01 | InputActionId、InputManifest、InputContext、typed facade 和分阶段优化路线 |
 | `Tool/Input/03-调用点迁移与验证计划.md` | input-migration-test-plan | current | 2026-06-01 | Gameplay/UI/Debug/Test 输入调用点分层、grep gate、构建测试和 Godot 场景验证计划 |
 | `Tool/10.Log/source-request.md` | log-source-request | current | 2026-06-10 | 本轮用户原始问题摘录、去重提示词和必须回答的问题；正文设计文档引用本文件，避免长提示词淹没入口 |
-| `Tool/10.Log/README.md` | log-design-index | current | 2026-06-10 | Log AI-first Observation 设计包入口；2026-06-10 校准为“已有 JSONL/structured core，但 raw 信息整理、owner 语义、flow 边界和 Validation artifact 仍需补齐” |
+| `Tool/10.Log/README.md` | log-design-index | current | 2026-06-10 | Log AI-first Observation 设计包入口；2026-06-10 复盘校准为“Logger core / 最小 analyzer 已落地，但 analyzer digest、owner 语义、flow 边界、Validation gate 和真实样本验收仍属 T2 follow-up” |
 | `Tool/10.Log/01-现状分析与AI-first裁决.md` | log-research-decision | current | 2026-06-10 | 基于当前 `Log.cs` 结构化雏形、样本 `scene-log.jsonl`、`logctl analyze` 产物、runner fallback、ValidationSession 和官方资料的现实检查 |
 | `Tool/10.Log/02-目标架构与数据契约.md` | log-architecture-contract | current | 2026-06-09 | 定义 `LogEntry`、severity/outcome/validationStatus、phase、`OperationTrace`、C# stdout/file sink、optional Godot editor sink、analyzer 输出和字段禁用规则 |
 | `Tool/10.Log/03-控制面与CLI设计.md` | log-control-cli | current | 2026-06-09 | 定义 `Config/Log` profile/rules/overrides、sink 控制、`logctl` 临时覆盖、AI 建议回写、预算和环境变量注入 |
 | `Tool/10.Log/04-测试统一与Observation接入.md` | log-validation-observation | current | 2026-06-08 | 定义 ValidationSession、CheckResult、artifact 主事实源、runner resultSource 和 `GD.PushError` sink 边界 |
 | `Tool/10.Log/05-调用点迁移与验证计划.md` | log-migration-test-plan | current | 2026-06-08 | 定义 Logger core、Validation helper、runner analyzer、业务 flow、owner Log 文档、BDD 和 grep gate |
 | `Tool/10.Log/06-功能OwnerLog文档与分析流程.md` | log-owner-analysis-template | current | 2026-06-10 | 定义每个 owner 的 `Log.md` 模板、flow 聚合规则、analyzer 目录、`ai-context.md` 最小内容和 AI 固定分析流程 |
-| `Tool/10.Log/07-当前样本日志问题与整理方案.md` | log-sample-analysis | current | 2026-06-10 | 基于 `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 的真实问题分析；指出 4914 行 raw、top noise、空 fields、flow 识别过宽和 analyzer digest 缺口 |
+| `Tool/10.Log/07-当前样本日志问题与整理方案.md` | log-sample-analysis | current | 2026-06-10 | 基于 `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 的复盘与实现路线；回答为什么 T1 没完成“打印信息整理”、实际做了什么、T2 如何实现 analyzer digest / flow 边界 / semantic missing-fields / owner 降噪 / Validation gate |
 | `Tool/Timer/README.md` | timer-design-index | current | 2026-06-02 | Timer 最终架构裁决入口；保留 TimerManager facade，内部改纯 C# scheduler，补 debug diagnostics 和压力场景门禁 |
 | `Tool/Timer/01-现状证据与AI-first裁决.md` | timer-research-decision | current | 2026-06-02 | 当前 TimerManager/GameTimer 热路径、Debug/压力验证缺口、外部计时器资料对照和采纳/拒绝裁决 |
 | `Tool/Timer/02-目标架构与优化路线.md` | timer-architecture-roadmap | current | 2026-06-02 | 纯 C# TimerScheduler、min-heap、handle、owner/purpose、clock、主线程派发、debug diagnostics 和 timing wheel 后续触发条件 |

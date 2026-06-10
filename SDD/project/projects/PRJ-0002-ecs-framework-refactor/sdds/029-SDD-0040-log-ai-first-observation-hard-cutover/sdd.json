@@ -21,10 +21,10 @@
     "hard-cutover"
   ],
   "progress": {
-    "current_task": "done",
+    "current_task": "T2.1 analyzer digest contract",
     "completed_tasks": 12,
-    "total_tasks": 12,
-    "percent": 100
+    "total_tasks": 19,
+    "percent": 63
   },
   "bdd": {
     "required": true,
