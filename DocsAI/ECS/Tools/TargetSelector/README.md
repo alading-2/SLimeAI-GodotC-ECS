@@ -32,6 +32,7 @@ TargetSelector owner 使用 `owner=TargetSelector`。当前 `TargetQueryEngine` 
 - diagnostics 仍是查询结果合同的一部分；日志只输出 AI-first flow summary，不能替代 `TargetQueryResult<T>.Diagnostics`。
 - `TargetSorting.Random` 问题必须同时记录 seed/source；不要用当前时间补随机。
 - Ability / AI / Feature 调用 TargetSelector 时，调用方保留 owner flow；TargetSelector 只记录查询事实。
+- 默认 profile 对 `owner=TargetSelector` 使用 `minimumSeverity=Info` 和较低 `budgetPerSecond`；成功查询由 budget / `logctl analyze` success template 聚合，失败、warning、truncated 仍保留结构化字段。
 
 ```bash
 Workspace/Tools/logctl/logctl query --analysis-dir <run>/analysis owner=TargetSelector operation=TargetQueryEntities

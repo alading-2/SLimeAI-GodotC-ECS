@@ -26,7 +26,7 @@ Log 重构不能只改 `Log.cs`。每个 Runtime / Capability / Tools / UI owner
 
 > status: current
 > sourcePaths: <source paths>
-> analyzerInputs: raw / by-owner / by-phase / flows / failures / noise / missing-fields
+> analyzerInputs: summary / ai-context / flows / failures / noise / missing-fields / rawRef
 > lastReviewed: YYYY-MM-DD
 
 ## 1. Log 思路
@@ -64,11 +64,11 @@ Log 重构不能只改 `Log.cs`。每个 Runtime / Capability / Tools / UI owner
 
 ## 6. 怎么分析 Log 判断是否有问题
 
-1. 先读 `ai-context.md` 的 owner 摘要。
-2. 再读 `flows/<Owner>/` 中失败或异常 outcome 的 flow。
-3. 再读 `failures/<Owner>.md`。
-4. 再看 `missing-fields/<Owner>.md` 判断是不是日志本身不够。
-5. 最后只在需要时读 `raw/scene-log.jsonl`。
+1. 先读 `summary.md` 和 `ai-context.md` 的 owner 摘要。
+2. 再读 `flows/index.md` 与 `flows/flows.jsonl` 中失败或异常 outcome 的 flow conclusion。
+3. 再读 `noise/templates.md` 判断成功路径是否已被模板聚合。
+4. 再看 `missing-fields/index.md` 判断是不是日志本身不够。
+5. 最后只在需要时按 `rawRef` 或 `logctl query --file analysis/raw/entries.jsonl` 回查原始 entry。
 
 ## 7. 测试与 artifact
 
@@ -153,36 +153,29 @@ AI 分析失败时优先看这些字段，不优先读 message。
 
 ## 5. Analyzer 目录
 
-`logctl analyze` 输出目录应固定：
+`logctl analyze` 默认输出目录应固定为语义入口：
 
 ```text
 <run>/analysis/
   raw/
-    stdout.log
-    stderr.log
-    scene-log.jsonl
-  by-phase/
-    Validation.md
-    Gameplay.md
-    Unknown.md
-  by-owner/
-    Ability.md
-    Damage.md
+    entries.jsonl
   flows/
-    AbilityCast/
-    DamageProcess/
+    flows.jsonl
+    index.md
   failures/
     index.md
   noise/
     top-contexts.md
-    suppressed.md
+    templates.jsonl
+    templates.md
   missing-fields/
     index.md
   summary.md
   ai-context.md
 ```
 
-第一版实现若只能输出 JSON 文件，也必须同时生成 markdown digest。AI 默认读 markdown digest，JSONL / JSON 只作为可查询证据源。
+默认不生成 `by-owner` / `by-phase` raw 复制分桶，也不生成 pretty `flows/flows.json`。owner / phase 维度通过 `logctl query` 从 flow conclusion、success template 或显式 raw file 二次筛选。
+`query --analysis-dir` 只查语义索引；如果要按 `sourceFile` 或其它原始 entry 字段下钻，必须显式 `--file analysis/raw/entries.jsonl`。
 
 ### 5.1 `ai-context.md` 最小内容
 
@@ -211,9 +204,10 @@ AI 默认只读：
 
 1. `summary.md`
 2. `ai-context.md`
-3. 目标 owner 的 `by-owner/<Owner>.md`
-4. 相关 `flows/<Flow>/`
-5. 必要时才读 `raw/scene-log.jsonl`
+3. `flows/index.md`
+4. `noise/templates.md`
+5. `missing-fields/index.md`
+6. 必要时才按 `rawRef` 或 `query --file analysis/raw/entries.jsonl` 读 raw
 
 这能避免“把所有打印信息放进一个文档再丢给 AI”。
 
@@ -221,8 +215,8 @@ AI 默认只读：
 
 ```text
 logctl query --analysis-dir <run>/analysis owner=Ability
-logctl query --analysis-dir <run>/analysis sourceFile=Src/ECS/Capabilities/Ability/System/AbilitySystem.cs
 logctl query --analysis-dir <run>/analysis operation=DamageProcess severity>=Warn
+logctl query --file <run>/analysis/raw/entries.jsonl sourceFile=Src/ECS/Capabilities/Ability/System/AbilitySystem.cs
 ```
 
 二次筛选输出不替代 `ai-context.md`，它用于在已有分析结果上缩小范围。AI 仍必须先读 summary / ai-context，再按 owner Log.md 判断。
@@ -275,5 +269,5 @@ AI 分析时必须使用固定分类：
 - TODO：实现后补 analyzer 示例 artifact，并用一次失败 run 验证 AI 不读全量 stdout 也能定位问题。
 - TODO：根据真实运行日志统计第一版 noise budget，当前文档只给结构和默认策略。
 - TODO：明确未来是否需要 live socket/file watcher 实时控制；第一版默认环境变量 + override 文件即可。
-- TODO：`logctl analyze` 补 `summary.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`flows/index.md`，并让 `ai-context.md` 包含 top noise、missing field 和 owner 文档链接。
-- TODO：修正 `flows/flows.json` 识别规则，不再把所有有 `operation` 的 entry 自动归入 flow。
+- DONE：`logctl analyze` 已补 `summary.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`flows/index.md`，并让 `ai-context.md` 包含 top noise、missing field、flow digest、success templates 和 owner 文档链接。
+- DONE：默认不再输出 `flows/flows.json` 和 owner/phase raw 分桶；`flows/flows.jsonl` 每行是 flow conclusion，普通 `operation` 不再自动等同于 flow。

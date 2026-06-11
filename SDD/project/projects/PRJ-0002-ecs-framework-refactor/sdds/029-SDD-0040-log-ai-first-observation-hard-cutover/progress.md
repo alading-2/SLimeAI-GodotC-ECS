@@ -2,13 +2,20 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-10 15:17
-- **Updated**: 2026-06-10 16:38
-- **Current Task**: T2.5 owner hot-spot cleanup
-- **Last Conclusion**: T2.1~T2.4 已完成第一批实现闭环：`logctl analyze` 现在输出 `summary.md`、强 `ai-context.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`flows/index.md` 和 `failures/index.md`；当前样本 `.ai-temp/log-runs/20260610-013907` 的 gate 为 `status=no-failure-observed`、`confidence=low`、`resultSource=structured-log`，不再把 `validationEntries=0` / `artifacts=0` 误报为 `passed`。`flows/index.md` 只收 `channel=Flow`、显式 `entryType` 或完整 OperationTrace-like contract；semantic missing-fields 已列出 `fields:{}`、`operation==context`、缺 `durationMs/reasonCode/entityId/sourceFile/sourceLine`、unknown owner/phase。HealthBarUI 和 Damage 已做第一批 owner 字段补强，Logger `OperationTrace` 已写 `entryType/durationMs/sourceFile/sourceLine`，DocsAI 和 skill 源已同步本轮契约。
-- **Next Action**: 继续 T2.5：TargetSelector / ObjectPool / System 的运行时 aggregate summary 仍未完成，当前只是由 analyzer digest 明确暴露为下一步 owner task；随后推进 T2.6，让承载样本或后续场景接入 `ValidationSession` / artifact。先跑本轮验证并把结果追加到 P031。
-- **Open Blockers**: 最终 Godot scene smoke blocked：当前没有可验证本框架工作树的承载游戏 runner。该 blocker 不阻止 T2.5 剩余 owner cleanup 或 T2.6 在有 runner 后继续推进。
+- **Updated**: 2026-06-11 16:40
+- **Current Task**: T2.6 Validation artifact adoption
+- **Last Conclusion**: 已完成本轮 Log 设计/实现复查和文档收口：项目级第二部分新增 `04-当前实现审查报告.md`，按 G1~G8 确认 analyzer 默认语义入口 DONE，并把 SDD-0040 内部 2026-06-09 快照统一标为 historical，避免旧 `by-owner` / `by-phase` / pretty `flows.json` 被当成 current 入口。复跑 `.ai-temp/log-runs/20260610-013907` 到 `analysis-semantic` 后为 `rawLines=4915`、`defaultReadableLines=303`、`defaultReadableRatio=0.062`、`flowConclusions=3730`、`outputFlowConclusions=5`、`templatedSuccessFlows=3725`、`noiseTemplates=6`；`query --analysis-dir owner=TargetSelector operation=TargetQueryEntities` 返回 1 条 `success-template(count=3041)`，不是 raw 3041 条。gate 仍是 `status=no-failure-observed` / `confidence=low` / `resultSource=structured-log`，因为当前样本没有 Validation artifact。
+- **Next Action**: 继续 T2.6：让可运行的承载场景或后续验证 run 输出 `ValidationSession` / artifact；在有效 Godot runner 可用前，不应声称 scene smoke 或行为通过。若只分析现有旧样本，结论只能是 analyzer 已提炼、样本缺 Validation/step evidence。
+- **Open Blockers**: 最终 Godot scene smoke blocked：当前没有可验证本框架工作树的承载游戏 runner。该 blocker 不阻止 logctl / DocsAI / skill 非 Godot 门禁，但阻止 SDD 完成态和场景行为通过声明。
 ## Timeline
+
+### P023 — 2026-06-11 16:40 — validation
+
+- **Context**: 用户继续要求从整个 Log 功能重新分析，确认哪些完成、哪些未完成，并用 code-review 审查当前实现。
+- **Conclusion**: 当前用户批评的“整理后更复杂、没有语义提炼、现实时间戳默认出现”问题已经在 analyzer 默认入口和 Logger 默认时间字段上修正；当前文档新增实现审查报告，明确 analyzer G1~G8 为 DONE，T2.6 Validation artifact adoption 和最终 Godot scene smoke 仍未完成。
+- **Evidence**: `node --check Workspace/Tools/logctl/logctl.mjs` passed；`node --test Workspace/Tools/logctl/tests/logctl-analyze.test.mjs` passed（3 tests）；`Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-semantic` passed，`analysisQuality.defaultReadableLines=303` / `rawLines=4915` / `defaultReadableRatio=0.062`；`test ! -d analysis-semantic/by-owner`、`test ! -d analysis-semantic/by-phase`、`test ! -f analysis-semantic/flows/flows.json` passed；`query --analysis-dir ... owner=TargetSelector operation=TargetQueryEntities --format json` returned 1 success-template with `count=3041`；`dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly` passed；`bash Data/DataOS/Tools/validate-dataos.sh Data/DataOS/Authoring/slimeainew.authoring.db` passed；`python3 Workspace/SDD/sdd.py validate SDD-0040` and `validate --all` passed 0 error / 0 warning；`bash Workspace/Tools/ai-config-sync/sync-ai-config.sh` passed；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only` reported Critical:0 / Advisory:10；`git diff --check` passed.
+- **Impact**: 后续恢复必须先读项目级 `design/Tool/10.Log/第二部分-语义提炼整理/03-最终设计与完成清单.md` 和 `04-当前实现审查报告.md`，不能把 SDD-0040 内部 2026-06-09 快照里的旧分桶目录当 current contract。
+- **Resume**: 继续 T2.6。没有 Validation artifact / Godot runner 前，不能将 SDD-0040 标 done，也不能声明场景行为通过。
 
 ### P001 — 2026-06-09 15:33 — resume
 
@@ -257,3 +264,11 @@
 - **Evidence**: `bash Workspace/Tools/ai-config-sync/sync-ai-config.sh` passed；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only` passed with Critical:0 / Advisory:9；`node --check Workspace/Tools/logctl/logctl.mjs` passed；`Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-next` passed and reported status=`no-failure-observed`, confidence=`low`, resultSource=`structured-log`, entries=4915, invalidJsonl=1, validationEntries=0, artifacts=0；required digest files `summary.md`、`ai-context.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`flows/index.md` exist；`Workspace/Tools/logctl/logctl query --analysis-dir .ai-temp/log-runs/20260610-013907/analysis-next owner=TargetSelector operation=TargetQueryEntities --format md` returned 3041 matches；`Workspace/Tools/logctl/logctl suggest --run-dir .ai-temp/log-runs/20260610-013907 --dry-run` grouped suggestions by owner/context/operation；`dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly` passed with 0 errors / 1290 warnings；`bash Data/DataOS/Tools/validate-dataos.sh Data/DataOS/Authoring/slimeainew.authoring.db` passed；`python3 Workspace/SDD/sdd.py validate SDD-0040` passed 0 error / 0 warning；targeted `git diff --check` passed。
 - **Impact**: 当前样本默认入口已从 raw JSONL 转为 `analysis-next/summary.md`、`ai-context.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`flows/index.md`；AI 无需直接读取 4915 行 raw 即可判断 gate 可信度、top noise、flow 与缺字段任务。
 - **Resume**: 跑验证后继续 T2.5 TargetSelector / ObjectPool / System aggregate summary，或先做 T2.6 Validation artifact adoption；Godot scene smoke blocker 仍保留。
+
+### P032 — 2026-06-11 15:00 — validation
+
+- **Context**: 用户要求从整个 Log 功能重新审查完成/缺失，并一次性补齐剩余 AI-first 整理要求。
+- **Conclusion**: 代码审查确认用户对“整理后更复杂”的批评已经被第二部分设计修正；本轮又补了两个防复发实现：`analyze()` 复跑到已有 output 时会删除 stale `by-owner` / `by-phase` / `flows/flows.json`，`query --analysis-dir` 不再在语义索引为空时回退 raw。DocsAI、第二部分设计、BDD、test-system 和 godot-scene-test skill 源已同步该契约。T2.5 当前按 analyzer success template + TargetSelector/ObjectPool/System budget 规则视为完成；T2.6 仍需要有效承载场景输出 Validation artifact。
+- **Evidence**: `node --check Workspace/Tools/logctl/logctl.mjs` passed；`node --test Workspace/Tools/logctl/tests/logctl-analyze.test.mjs` passed（3 tests，覆盖 flow conclusion、success template、stale 输出清理、semantic query no raw fallback）；`Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-semantic` passed，`analysisQuality.defaultReadableLines=303`、`rawLines=4915`、`defaultReadableRatio=0.062`；`test ! -d analysis-semantic/by-owner`、`test ! -d analysis-semantic/by-phase`、`test ! -f analysis-semantic/flows/flows.json` passed；`query --analysis-dir ... owner=TargetSelector operation=TargetQueryEntities --format json` returned 1 success-template with `count=3041`；`dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly` passed；`bash Data/DataOS/Tools/validate-dataos.sh Data/DataOS/Authoring/slimeainew.authoring.db` passed；`bash Workspace/Tools/ai-config-sync/sync-ai-config.sh` passed。
+- **Impact**: AI 默认入口现在既不会读取 raw 复制分桶，也不会因旧 output 残留或 query fallback 把 raw 重新塞回分析上下文。当前样本仍是旧样本，含 `timestampUtc` 和 single-entry flow，这应作为 stale evidence / Log gap，不代表新 Logger 默认仍写墙钟。
+- **Resume**: 从 T2.6 Validation artifact adoption 继续；若 runner blocker 未解除，只能继续做非 Godot analyzer/文档/skill 门禁，不能把 SDD 标 done。

@@ -1,7 +1,8 @@
 # 功能 Owner Log 文档与分析流程
 
-> 更新：2026-06-09
-> 状态：current design note
+> 更新：2026-06-11
+> 状态：historical design note；当前 analyzer 默认入口以项目级第二部分 `03-最终设计与完成清单.md` 为准
+> 提醒：本文保留 owner Log.md 模板和分析流程思路；旧 `by-owner` / `by-phase` raw 分桶已经废弃，owner/phase 筛选改走 `logctl query --analysis-dir` 的语义索引。
 
 ## 1. 定位
 
@@ -26,7 +27,7 @@ Log 重构不能只改 `Log.cs`。每个 Runtime / Capability / Tools / UI owner
 
 > status: current
 > sourcePaths: <source paths>
-> analyzerInputs: raw / by-owner / by-phase / flows / failures / noise / missing-fields
+> analyzerInputs: summary / ai-context / flows / success templates / failures / noise / missing-fields / rawRef
 > lastReviewed: YYYY-MM-DD
 
 ## 1. Log 思路
@@ -64,11 +65,10 @@ Log 重构不能只改 `Log.cs`。每个 Runtime / Capability / Tools / UI owner
 
 ## 6. 怎么分析 Log 判断是否有问题
 
-1. 先读 `ai-context.md` 的 owner 摘要。
-2. 再读 `flows/<Owner>/` 中失败或异常 outcome 的 flow。
-3. 再读 `failures/<Owner>.md`。
-4. 再看 `missing-fields/<Owner>.md` 判断是不是日志本身不够。
-5. 最后只在需要时读 `raw/scene-log.jsonl`。
+1. 先读 `summary.md` 和 `ai-context.md` 的 owner 摘要。
+2. 再用 `logctl query --analysis-dir <analysis> owner=<Owner>` 筛选 `flows/flows.jsonl` 和 `noise/templates.jsonl` 的语义结论。
+3. 再读 `flows/index.md`、`failures/index.md` 和 `missing-fields/index.md` 判断失败、警告或日志缺口。
+4. 只有结论对象的 `rawRef` 不足以解释问题时，才显式 `logctl query --file <analysis>/raw/entries.jsonl ...` 下钻原始 entry。
 
 ## 7. 测试与 artifact
 
@@ -153,51 +153,45 @@ AI 分析失败时优先看这些字段，不优先读 message。
 
 ## 5. Analyzer 目录
 
-`logctl analyze` 输出目录应固定：
+2026-06-11 后，`logctl analyze` 默认输出目录固定为语义入口：
 
 ```text
 <run>/analysis/
+  summary.md
+  ai-context.md
+  gate-report.json
   raw/
-    stdout.log
-    stderr.log
-    scene-log.jsonl
-  by-phase/
-    Validation.md
-    Gameplay.md
-    Unknown.md
-  by-owner/
-    Ability.md
-    Damage.md
+    entries.jsonl
   flows/
-    AbilityCast/
-    DamageProcess/
+    index.md
+    flows.jsonl
   failures/
     index.md
   noise/
+    templates.jsonl
+    templates.md
     top-contexts.md
-    suppressed.md
   missing-fields/
     index.md
-  summary.md
-  ai-context.md
 ```
 
 AI 默认只读：
 
 1. `summary.md`
 2. `ai-context.md`
-3. 目标 owner 的 `by-owner/<Owner>.md`
-4. 相关 `flows/<Flow>/`
-5. 必要时才读 `raw/scene-log.jsonl`
+3. `flows/index.md` 与 `flows/flows.jsonl` 中失败或异常 outcome 的 flow conclusion
+4. `noise/templates.md` 判断高频成功路径是否已聚合
+5. `missing-fields/index.md` 和 `failures/index.md`
+6. 必要时才通过 `rawRef` 显式下钻 `raw/entries.jsonl`
 
-这能避免“把所有打印信息放进一个文档再丢给 AI”。
+默认不生成 `by-owner` / `by-phase` raw 复制分桶，也不生成 pretty `flows/flows.json`。这能避免“把所有打印信息按目录复制一遍再丢给 AI”。
 
 `logctl query` 必须能在该目录上做二次筛选：
 
 ```text
 logctl query --analysis-dir <run>/analysis owner=Ability
-logctl query --analysis-dir <run>/analysis sourceFile=Src/ECS/Capabilities/Ability/System/AbilitySystem.cs
 logctl query --analysis-dir <run>/analysis operation=DamageProcess severity>=Warn
+logctl query --file <run>/analysis/raw/entries.jsonl sourceFile=Src/ECS/Capabilities/Ability/System/AbilitySystem.cs
 ```
 
 二次筛选输出不替代 `ai-context.md`，它用于在已有分析结果上缩小范围。AI 仍必须先读 summary / ai-context，再按 owner Log.md 判断。

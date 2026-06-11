@@ -467,6 +467,20 @@ Validation matrix
 
 这比泛泛的“AI 自动写功能”更重要。
 
+### 8.4 Observation 要提炼语义，不是堆更多日志
+
+Log / Observation 的 AI-first 目标不是“记录更多字段、生成更多文件”。如果 raw 日志几千行，整理后变成几万行，说明系统只是复制和展开，不是在帮助 AI debug。
+
+当前 Log 方向固定为：
+
+- raw JSONL 是证据库，不是默认提示词输入。
+- `logctl analyze` 必须输出 `summary.md / ai-context.md / flows / noise / missing-fields / failures` 这类结论层。
+- 默认入口要比 raw 更短，并能直接看到 flow 成功/失败、失败步骤、原因码和 rawRef。
+- 高频成功路径进入模板统计，失败和警告保留结论对象。
+- 现实时间戳不是默认重点；默认时间语义是 `runElapsedMs / frame / physicsFrame / frameRange`。
+
+这条原则适用于后续所有 Observation 设计：AI-first 的衡量标准是“AI 能不能更快定位问题”，不是 artifact 数量、字段数量或目录数量。
+
 ---
 
 ## 9. 推荐的长期形态
@@ -521,7 +535,7 @@ AI-first 工程层:
 | Event / Entity / Relationship / System 怎么改 | 待 PRJ-0002 或后续 SDD 设计确认 |
 | 是否引入第三方 ECS | 否 |
 | 是否复制 GAS / AttributeSet | 否，不复制外部框架整套 API |
-| AI 最需要什么 | 清晰入口、可查事实源、Debug artifact、测试闭环 |
+| AI 最需要什么 | 清晰入口、可查事实源、语义提炼后的 Debug artifact、测试闭环 |
 
 ---
 

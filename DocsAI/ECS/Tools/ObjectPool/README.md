@@ -65,6 +65,7 @@ ObjectPool owner 使用 `owner=ObjectPool`。当前 `ObjectPool<T>.Get` / `Relea
 - `budgetKey` 固定为 `ObjectPool.<PoolName>.Acquire` 或 `ObjectPool.<PoolName>.Release`，用于后续预算和 suppressed summary 聚合。
 - 池化碰撞验证主事实仍是 scene artifact；ObjectPool 日志只证明池生命周期，不证明 Damage / Movement 业务命中。
 - 重复归还、非 active 归还用 `outcome=Skipped`，不要写成成功或失败 severity。
+- 默认 profile 对 `owner=ObjectPool` 使用 `minimumSeverity=Info` 和收紧后的 `budgetPerSecond`；正常 acquire/release 成功路径由 budget / success template 聚合，Skipped/容量丢弃/类型错误等异常路径保留结构化字段。
 
 ```bash
 Workspace/Tools/logctl/logctl query --analysis-dir <run>/analysis owner=ObjectPool operation=ObjectPoolRelease

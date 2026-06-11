@@ -99,7 +99,7 @@ scene runner 的职责应保持很薄：
 Log CLI 的职责是：
 
 - 根据 artifact 和 structured logs 判断 pass/fail 的事实来源。
-- 把 raw log 拆成 `by-owner`、`by-phase`、`flows`、`failures`、`noise`、`missing-fields`。
+- 调用 `logctl analyze` 把 raw log 整理成 `summary`、`ai-context`、`flows`、`failures`、`noise`、`missing-fields` 和必要 raw 证据；不维护 `by-owner` / `by-phase` raw 复制分桶。
 - 生成 AI 分析入口 `ai-context.md`。
 - 支持 `logctl query` 对已整理 run 做二次筛选。
 

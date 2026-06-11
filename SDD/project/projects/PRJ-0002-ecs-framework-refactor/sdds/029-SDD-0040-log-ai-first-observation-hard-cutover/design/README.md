@@ -1,9 +1,9 @@
 # Log 工具设计包
 
-> 2026-06-10 superseded note：本文件是 SDD-0040 的 2026-06-09 执行快照。当前 Log 设计事实源已更新到 `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/README.md`、`source-request.md` 和 `07-当前样本日志问题与整理方案.md`。若本快照仍写旧 `Log.cs` / `GD.PrintRich` 现状，以项目级 current 设计为准。
+> 2026-06-11 superseded note：本文件是 SDD-0040 的 2026-06-09 执行快照。当前 Log 设计事实源已更新到 `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/README.md`；整理层最终契约以 `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/第二部分-语义提炼整理/03-最终设计与完成清单.md` 为准。若本快照仍写旧 `Log.cs` / `GD.PrintRich` / `by-owner` / `by-phase` / pretty `flows.json` 现状，以项目级 current 设计为准。
 
 > 更新：2026-06-09
-> 状态：current design package
+> 状态：historical design package
 > 入口：`README.md`
 > 裁决：Log 不是“输出文本”的工具，而是 AI-first 观测入口；必须同时服务运行调试、测试验证、scene runner 分析和人工排障。
 
@@ -236,7 +236,7 @@ Log 重构完成不是“还能打印”。
 - 同一类重复噪声能被合并或降级。
 - AI 能从日志中直接读出模块、阶段、实体、操作和失败原因，而不是猜。
 - 每个改动过的 Runtime / Capability / Tools / UI owner 至少有 `Log.md` 或 README 中的 `## Log` 小节，说明日志思路和分析流程。
-- runner 产物中存在 `raw/`、`by-phase/`、`by-owner/`、`flows/`、`failures/`、`noise/`、`ai-context.md` 等分层目录或等价结构，AI 不再直接消费全量 stdout。
+- runner / analyzer 产物中存在 `summary.md`、`ai-context.md`、`flows/flows.jsonl`、`noise/templates.jsonl`、`failures/`、`noise/`、`missing-fields/` 和 `raw/entries.jsonl` 等语义入口；默认不生成 `by-phase` / `by-owner` raw 复制分桶，也不生成 pretty `flows.json`，AI 不再直接消费全量 stdout 或全量 raw JSONL。
 
 ## 9. DeepThink 确认包
 

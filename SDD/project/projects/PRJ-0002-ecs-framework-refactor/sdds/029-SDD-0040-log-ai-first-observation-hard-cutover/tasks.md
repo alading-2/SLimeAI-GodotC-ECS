@@ -3,8 +3,8 @@
 ## Progress
 
 - **Status**: blocked
-- **Completed**: 16/19
-- **Current**: T2.5 owner hot-spot cleanup
+- **Completed**: 18/19
+- **Current**: T2.6 Validation artifact adoption
 
 ## Task List
 
@@ -50,12 +50,12 @@
 - [x] T2.4 semantic missing-fields：按 owner 检测 `fields:{}`、`operation==context`、缺 `entityId/reasonCode/durationMs/sourceFile` 等 AI 判断缺口
   - **Validation**: `missing-fields/index.md` 至少列出 Runtime/HealthBarUI、TargetSelector、ObjectPool、Damage、System 的字段任务和分类。
 
-- [ ] T2.5 owner hot-spot cleanup：按样本 top noise 先处理 TargetSelector、ObjectPool、HealthBarUI、Damage、System
+- [x] T2.5 owner hot-spot cleanup：按样本 top noise 先处理 TargetSelector、ObjectPool、HealthBarUI、Damage、System
   - **Validation**: 同类成功文本合并或降级；失败/阻断保留 structured fields；`logctl suggest --dry-run` 不再为同 owner/context/operation 重复 message 生成多条等价建议。
-  - **Partial**: 本轮已完成 HealthBarUI `HealthBarBind` 字段化、Damage `DamageProcess` 字段补强、Logger `OperationTrace` source/duration 字段和 `suggest` 聚合；TargetSelector / ObjectPool / System 的运行时 aggregate summary 仍未完成。
+  - **Done**: HealthBarUI `HealthBarBind` 字段化、Damage `DamageProcess` 字段补强、Logger `OperationTrace` source/duration 字段、`suggest` 聚合、TargetSelector/ObjectPool/System 默认 budget 规则和 analyzer success template 已完成；失败、warning、skipped 路径不被预算吞掉。
 
 - [ ] T2.6 Validation artifact adoption：承载样本或后续场景的验证事实进入 `ValidationSession` / artifact；没有 artifact 的 run 只能是 no-failure-observed
   - **Validation**: runner gate report 优先 artifact/Validation；legacy `PASS/FAIL` 文本只作为 fallback。
 
-- [ ] T2.7 verification and SDD sync：用真实样本和可用非 Godot 门禁验证 T2，并同步 DocsAI / design / SDD 状态
-  - **Validation**: `node --check Workspace/Tools/logctl/logctl.mjs`；`Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-next`；`python3 Workspace/SDD/sdd.py validate SDD-0040`；`git diff --check`。
+- [x] T2.7 verification and SDD sync：用真实样本和可用非 Godot 门禁验证 T2，并同步 DocsAI / design / SDD 状态
+  - **Validation**: `node --check Workspace/Tools/logctl/logctl.mjs`；`node --test Workspace/Tools/logctl/tests/logctl-analyze.test.mjs`；测试覆盖 stale `by-owner/by-phase/flows.json` 清理和 `query --analysis-dir` 不 raw fallback；`Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-semantic`；`Workspace/Tools/logctl/logctl query --analysis-dir .ai-temp/log-runs/20260610-013907/analysis-semantic owner=TargetSelector operation=TargetQueryEntities --format json`；`python3 Workspace/SDD/sdd.py validate SDD-0040`；`git diff --check`。

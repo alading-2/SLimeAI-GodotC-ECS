@@ -4,7 +4,7 @@
 
 - **Status**: blocked
 - **Created**: 2026-06-09
-- **Updated**: 2026-06-10
+- **Updated**: 2026-06-11
 - **Type**: refactor
 - **Scope**: SlimeAI
 - **Git Boundary**: /home/slime/Code/SlimeAI/SlimeAI
@@ -27,16 +27,18 @@
 1. `design/INDEX.md` — 设计文档列表和主设计入口
 2. `design/main.md` — SDD-0040 的范围、取舍、DeepThink 确认包和 DesignCritic 结论
 3. `design/source-request.md` — 用户原始问题与去重后的不可丢失约束
-4. `design/07-当前样本日志问题与整理方案.md` — 当前样本的 T2 复盘、实现顺序和验收门禁
-5. `execution-prompt.md` — 新会话执行提示词
-6. `tasks.md` — 当前任务拆分
-7. `progress.md` — 最近结论和恢复点
-8. `bdd.md` — 行为场景或不适用说明
-9. `notes.md` — 参考与开放问题
+4. `../../design/Tool/10.Log/第二部分-语义提炼整理/03-最终设计与完成清单.md` — 当前整理契约、完成清单和样本验证数据
+5. `../../design/Tool/10.Log/第二部分-语义提炼整理/04-当前实现审查报告.md` — 当前实现逐条审查，区分 analyzer DONE 与 Validation/Godot 未完成
+6. `design/07-当前样本日志问题与整理方案.md` — 历史 T2 复盘和修复路线快照
+7. `execution-prompt.md` — 新会话执行提示词
+8. `tasks.md` — 当前任务拆分
+9. `progress.md` — 最近结论和恢复点
+10. `bdd.md` — 行为场景或不适用说明
+11. `notes.md` — 参考与开放问题
 
 ## Current Resume
 
-- **Current Task**: T2.5 owner hot-spot cleanup
-- **Last Conclusion**: T2.1~T2.4 已完成第一批闭环：`logctl analyze` 现在能为当前样本生成 `summary.md`、强 `ai-context.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`flows/index.md` 和 `failures/index.md`；gate 不再把无 artifact / Validation 的 structured log 误报为 `passed`，当前样本为 `no-failure-observed`。
-- **Next Action**: 继续 T2.5：TargetSelector / ObjectPool / System 的运行时 aggregate summary 仍未完成；HealthBarUI、Damage 和 Logger source/duration 字段已做第一批补强。随后推进 T2.6，让承载样本或后续场景输出 Validation artifact。
-- **Open Blockers**: 最终 Godot scene smoke 仍 blocked：当前没有可验证本框架工作树的承载游戏 runner。该 blocker 不阻止 T2 analyzer/owner follow-up 在现有样本上推进。
+- **Current Task**: T2.6 Validation artifact adoption
+- **Last Conclusion**: T2 analyzer 语义整理已补齐并复验：默认输出 flow conclusion、success template、failure-first summary 和 semantic missing-fields；复跑同一 output 会清理 stale `by-owner` / `by-phase` / `flows/flows.json`；`query --analysis-dir` 只查语义索引，语义索引为空时返回空结果，不再回退 raw。当前样本 `analysis-semantic` 为 `rawLines=4915`、`defaultReadableLines=303`、`defaultReadableRatio=0.062`；TargetSelector 高频查询返回 1 条 success-template(`count=3041`)；gate 仍是 `no-failure-observed`，因为没有 Validation artifact。
+- **Next Action**: 继续 T2.6：让可运行的承载场景或后续验证 run 输出 `ValidationSession` / artifact；在有效 Godot runner 可用前，不声称 scene smoke 或行为通过。
+- **Open Blockers**: 最终 Godot scene smoke 仍 blocked：当前没有可验证本框架工作树的承载游戏 runner。该 blocker 不阻止 logctl / DocsAI / skill 非 Godot 门禁，但阻止 SDD 完成态。

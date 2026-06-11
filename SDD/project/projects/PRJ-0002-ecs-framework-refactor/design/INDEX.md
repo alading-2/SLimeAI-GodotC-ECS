@@ -66,15 +66,22 @@
 | `Tool/Input/01-现状证据与AI-first裁决.md` | input-research-decision | current | 2026-06-01 | 当前 InputManager、project.godot、调用点分散、DocsAI 漂移和外部输入框架对照裁决 |
 | `Tool/Input/02-目标架构与优化路线.md` | input-architecture-roadmap | current | 2026-06-01 | InputActionId、InputManifest、InputContext、typed facade 和分阶段优化路线 |
 | `Tool/Input/03-调用点迁移与验证计划.md` | input-migration-test-plan | current | 2026-06-01 | Gameplay/UI/Debug/Test 输入调用点分层、grep gate、构建测试和 Godot 场景验证计划 |
-| `Tool/10.Log/source-request.md` | log-source-request | current | 2026-06-10 | 本轮用户原始问题摘录、去重提示词和必须回答的问题；正文设计文档引用本文件，避免长提示词淹没入口 |
-| `Tool/10.Log/README.md` | log-design-index | current | 2026-06-10 | Log AI-first Observation 设计包入口；2026-06-10 复盘校准为“Logger core / 最小 analyzer 已落地，但 analyzer digest、owner 语义、flow 边界、Validation gate 和真实样本验收仍属 T2 follow-up” |
-| `Tool/10.Log/01-现状分析与AI-first裁决.md` | log-research-decision | current | 2026-06-10 | 基于当前 `Log.cs` 结构化雏形、样本 `scene-log.jsonl`、`logctl analyze` 产物、runner fallback、ValidationSession 和官方资料的现实检查 |
-| `Tool/10.Log/02-目标架构与数据契约.md` | log-architecture-contract | current | 2026-06-09 | 定义 `LogEntry`、severity/outcome/validationStatus、phase、`OperationTrace`、C# stdout/file sink、optional Godot editor sink、analyzer 输出和字段禁用规则 |
-| `Tool/10.Log/03-控制面与CLI设计.md` | log-control-cli | current | 2026-06-09 | 定义 `Config/Log` profile/rules/overrides、sink 控制、`logctl` 临时覆盖、AI 建议回写、预算和环境变量注入 |
-| `Tool/10.Log/04-测试统一与Observation接入.md` | log-validation-observation | current | 2026-06-08 | 定义 ValidationSession、CheckResult、artifact 主事实源、runner resultSource 和 `GD.PushError` sink 边界 |
-| `Tool/10.Log/05-调用点迁移与验证计划.md` | log-migration-test-plan | current | 2026-06-08 | 定义 Logger core、Validation helper、runner analyzer、业务 flow、owner Log 文档、BDD 和 grep gate |
-| `Tool/10.Log/06-功能OwnerLog文档与分析流程.md` | log-owner-analysis-template | current | 2026-06-10 | 定义每个 owner 的 `Log.md` 模板、flow 聚合规则、analyzer 目录、`ai-context.md` 最小内容和 AI 固定分析流程 |
-| `Tool/10.Log/07-当前样本日志问题与整理方案.md` | log-sample-analysis | current | 2026-06-10 | 基于 `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 的复盘与实现路线；回答为什么 T1 没完成“打印信息整理”、实际做了什么、T2 如何实现 analyzer digest / flow 边界 / semantic missing-fields / owner 降噪 / Validation gate |
+| `Tool/10.Log/README.md` | log-design-entry | current | 2026-06-11 | Log 工具设计入口；分两部分（记录管道与现状 / 语义提炼整理），先读本文确定该看哪部分 |
+| `Tool/10.Log/第一部分-记录管道与现状/source-request.md` | log-source-request | current | 2026-06-10 | 本轮用户原始问题摘录、去重提示词和必须回答的问题；正文设计文档引用本文件，避免长提示词淹没入口 |
+| `Tool/10.Log/第一部分-记录管道与现状/README.md` | log-part1-index | current | 2026-06-10 | 第一部分入口；记录层 AI-first Observation 设计包；复盘校准为“Logger core / 最小 analyzer 已落地，但整理层验收口径有缺陷” |
+| `Tool/10.Log/第一部分-记录管道与现状/01-现状分析与AI-first裁决.md` | log-research-decision | current | 2026-06-10 | 基于当前 `Log.cs` 结构化雏形、样本 `scene-log.jsonl`、`logctl analyze` 产物、runner fallback、ValidationSession 和官方资料的现实检查 |
+| `Tool/10.Log/第一部分-记录管道与现状/02-目标架构与数据契约.md` | log-architecture-contract | current | 2026-06-09 | 定义 `LogEntry`、severity/outcome/validationStatus、phase、`OperationTrace`、C# stdout/file sink、optional Godot editor sink、analyzer 输出和字段禁用规则 |
+| `Tool/10.Log/第一部分-记录管道与现状/03-控制面与CLI设计.md` | log-control-cli | current | 2026-06-09 | 定义 `Config/Log` profile/rules/overrides、sink 控制、`logctl` 临时覆盖、AI 建议回写、预算和环境变量注入 |
+| `Tool/10.Log/第一部分-记录管道与现状/04-测试统一与Observation接入.md` | log-validation-observation | current | 2026-06-08 | 定义 ValidationSession、CheckResult、artifact 主事实源、runner resultSource 和 `GD.PushError` sink 边界 |
+| `Tool/10.Log/第一部分-记录管道与现状/05-调用点迁移与验证计划.md` | log-migration-test-plan | current | 2026-06-08 | 定义 Logger core、Validation helper、runner analyzer、业务 flow、owner Log 文档、BDD 和 grep gate |
+| `Tool/10.Log/第一部分-记录管道与现状/06-功能OwnerLog文档与分析流程.md` | log-owner-analysis-template | current | 2026-06-10 | 定义每个 owner 的 `Log.md` 模板、flow 聚合规则、analyzer 目录、`ai-context.md` 最小内容和 AI 固定分析流程 |
+| `Tool/10.Log/第一部分-记录管道与现状/07-当前样本日志问题与整理方案.md` | log-sample-analysis | current | 2026-06-10 | 基于 `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 的复盘与实现路线；T2 实现 analyzer digest / flow 边界 / semantic missing-fields / owner 降噪 / Validation gate（验收口径在第二部分被升级） |
+| `Tool/10.Log/第二部分-语义提炼整理/README.md` | log-part2-index | current | 2026-06-11 | 第二部分入口；把整理单位从“一条日志”改为“一次操作(flow 树)”，产物以结论为主、行数显著下降、失败一眼可见 |
+| `Tool/10.Log/第二部分-语义提炼整理/00-为什么需要第二部分.md` | log-part2-retrospective | current | 2026-06-11 | 复盘：deepthink 做了、需求写了，为什么整理功能仍没落地；根因是把“结果(提炼)”翻译成了“形状(目录)”，验收只查存在性 |
+| `Tool/10.Log/第二部分-语义提炼整理/01-语义提炼整理设计.md` | log-semantic-distill-design | current | 2026-06-11 | flow 树模型(correlationId=trace)、结论对象、字段上提、failure-first 呈现、Drain 式模板聚合、时间字段修正、以结果而非存在性做验收 |
+| `Tool/10.Log/第二部分-语义提炼整理/02-代码审查与落地修正.md` | log-semantic-distill-code-review | current | 2026-06-11 | 修复前代码审查快照与 G1~G8 gate 清单；当前完成状态以 `03-最终设计与完成清单.md` 为准 |
+| `Tool/10.Log/第二部分-语义提炼整理/03-最终设计与完成清单.md` | log-semantic-distill-current-contract | current | 2026-06-11 | 第二部分当前事实源；记录最终 analyzer/query 契约、已完成/未完成清单、样本验证数据和验收命令 |
+| `Tool/10.Log/第二部分-语义提炼整理/04-当前实现审查报告.md` | log-semantic-distill-current-review | current | 2026-06-11 | 按 G1~G8 和 SDD-0040 T2.6 / final smoke 审查当前实现，区分 analyzer 已完成与 Validation/Godot 仍未完成 |
 | `Tool/Timer/README.md` | timer-design-index | current | 2026-06-02 | Timer 最终架构裁决入口；保留 TimerManager facade，内部改纯 C# scheduler，补 debug diagnostics 和压力场景门禁 |
 | `Tool/Timer/01-现状证据与AI-first裁决.md` | timer-research-decision | current | 2026-06-02 | 当前 TimerManager/GameTimer 热路径、Debug/压力验证缺口、外部计时器资料对照和采纳/拒绝裁决 |
 | `Tool/Timer/02-目标架构与优化路线.md` | timer-architecture-roadmap | current | 2026-06-02 | 纯 C# TimerScheduler、min-heap、handle、owner/purpose、clock、主线程派发、debug diagnostics 和 timing wheel 后续触发条件 |

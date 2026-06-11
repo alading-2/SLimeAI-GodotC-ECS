@@ -1,7 +1,8 @@
 # 控制面与 CLI 设计
 
-> 更新：2026-06-09
-> 状态：current design note
+> 更新：2026-06-11
+> 状态：historical design note；CLI 控制面思路仍可参考，analyze/query 默认语义入口以项目级第二部分 `03-最终设计与完成清单.md` 为准
+> 提醒：本文是 SDD-0040 初始快照。旧 `by-owner` / `by-phase` raw 分桶和 pretty `flows.json` 不再是默认 analyzer 产物。
 
 ## 1. 原则
 
@@ -147,8 +148,8 @@ AI 不只是看日志，也要帮忙做策略优化。
 ```text
 scene run
   -> runner 收集 stdout / JSONL / artifact
-  -> logctl analyze 拆分 raw/by-owner/by-phase/flows/failures/noise
-  -> 生成 ai-context.md
+  -> logctl analyze 生成 summary / ai-context / flow conclusions / success templates / failures / noise / missing-fields / raw evidence
+  -> AI 默认读取语义入口，raw 下钻必须显式 query --file
   -> AI 按 owner Log.md 读取热度 / 重复 / 缺字段 / 无价值日志
   -> 输出建议
   -> 人类确认或自动应用

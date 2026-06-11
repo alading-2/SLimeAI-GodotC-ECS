@@ -85,7 +85,7 @@ CLI 不应该只做“开关某个等级”，而应该直接面向 AI 调试任
 - `logctl top --last 10s`
 - `logctl analyze --run-dir <path> --out <path>`
 - `logctl query --run-dir <path> owner=Ability operation=Cast severity>=Warn`
-- `logctl query --analysis-dir <path> sourceFile=Src/ECS/Capabilities/Ability/System/AbilitySystem.cs --format md`
+- `logctl query --file <path>/raw/entries.jsonl sourceFile=Src/ECS/Capabilities/Ability/System/AbilitySystem.cs --format md`
 - `logctl query --file <path/to/scene-log.jsonl> context=DamageService --fields entityId,reasonCode,expected,actual`
 - `logctl ingest --stdin --source legacy-stdout --out <run-dir>`
 - `logctl suggest --run-dir <path>`
@@ -129,14 +129,14 @@ SlimeAI 的 `logctl` 因此应分两类命令：
 
 ```text
 logctl query --run-dir .ai-temp/scene-tests/runs/2026-06-09/12-30-00 owner=Ability operation=Cast
-logctl query --analysis-dir <run>/analysis sourceFile=Src/ECS/Capabilities/Ability/System/AbilitySystem.cs
+logctl query --file <run>/analysis/raw/entries.jsonl sourceFile=Src/ECS/Capabilities/Ability/System/AbilitySystem.cs
 logctl query --file <run>/raw/scene-log.jsonl entityId=player_001 severity>=Warn
 logctl query --run-dir <run> --contains "cooldown" --format json
 ```
 
 `sourceFile` / `sourceMember` / `sourceLine` 是可选但建议保留的字段。它可以通过 C# caller info 或 Log API 显式传入；如果日志来自 legacy stdout，则只能降级为 `source=legacy-stdout`，不能假装知道文件来源。
 
-结论：**`logctl` 必须支持对 raw JSONL、analysis dir 和 legacy stdout fallback 的二次查询；否则 AI 和用户仍会回到“复制一大段日志再人工筛”的旧流程。**
+结论：**`logctl` 必须支持对 raw JSONL、analysis dir 和 legacy stdout fallback 的二次查询；其中 `analysis-dir` 只查语义索引，raw JSONL 必须显式 `--file` 下钻，否则 AI 和用户仍会回到“复制一大段日志再人工筛”的旧流程。**
 
 ## 5. AI 建议回写
 
@@ -147,7 +147,7 @@ AI 不只是看日志，也要帮忙做策略优化。
 ```text
 scene run
   -> runner 收集 stdout / JSONL / artifact
-  -> logctl analyze 拆分 raw/by-owner/by-phase/flows/failures/noise
+  -> logctl analyze 生成 summary/ai-context/flows/noise/failures/missing-fields/raw
   -> 生成 ai-context.md
   -> AI 按 owner Log.md 读取热度 / 重复 / 缺字段 / 无价值日志
   -> 输出建议

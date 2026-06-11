@@ -98,6 +98,8 @@ namespace Slime.Test
             AssertTrue(root.GetProperty("outcome").GetString() == "Completed", "jsonl records outcome");
             AssertTrue(root.GetProperty("owner").GetString() == "Tools.Logger", "jsonl records owner");
             AssertTrue(root.GetProperty("fields").GetProperty("budgetKey").GetString() == "logger-test", "jsonl records fields");
+            AssertTrue(!root.TryGetProperty("timestampUtc", out _), "jsonl does not write legacy wall clock timestamp by default");
+            AssertTrue(!root.TryGetProperty("wallClockUtc", out _), "jsonl omits wall clock by default");
         }
 
         private static void TestValidationSessionWritesArtifactAndStructuredChecks()
@@ -161,6 +163,7 @@ namespace Slime.Test
             {
               "profile": "profile-contract",
               "defaultSeverity": "Warn",
+              "includeWallClockUtc": true,
               "sinks": {
                 "stdoutSummary": false,
                 "jsonlFile": true,
@@ -230,6 +233,8 @@ namespace Slime.Test
             var jsonlPath = Path.Combine(runDir, "raw", "scene-log.jsonl");
             using var jsonl = JsonDocument.Parse(File.ReadAllLines(jsonlPath).First());
             AssertTrue(jsonl.RootElement.TryGetProperty("runElapsedMs", out _), "jsonl uses camelCase envelope fields");
+            AssertTrue(jsonl.RootElement.TryGetProperty("wallClockUtc", out _), "profile can opt in wall clock for cross artifact alignment");
+            AssertTrue(!jsonl.RootElement.TryGetProperty("timestampUtc", out _), "profile opt-in uses wallClockUtc instead of timestampUtc");
         }
 
         private static void TestBudgetSuppressesRepeatedEntriesAndWritesSummary()

@@ -41,7 +41,7 @@ SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log
 
 ## 3. 去重后的核心意图
 
-1. **不要再让 AI 直接读全量日志**：raw log 只能是事实源，必须先由 `logctl analyze` 整理成 `summary / ai-context / by-owner / by-phase / flows / failures / noise / missing-fields`。
+1. **不要再让 AI 直接读全量日志**：raw log 只能是事实源，必须先由 `logctl analyze` 整理成 `summary / ai-context / flows / success templates / failures / noise / missing-fields`。2026-06-11 校准：`by-owner / by-phase` raw 复制分桶不再是默认入口；owner / phase 筛选改用 `logctl query --analysis-dir` 的语义索引，raw 下钻必须显式 `--file`。
 2. **JSONL 是正确方向，但不等于信息整理完成**：JSON 解决机器可读，不能自动解决字段语义、重复噪声、过程聚合和 owner 分析规则。
 3. **过程优先于散点**：技能释放、伤害结算、目标查询、对象池租还等必须输出 flow summary 和结构化 step，AI 不应自己从几百行里拼流程。
 4. **Log 和 Test 必须统一**：`PASS` / `FAIL`、`GD.Print`、`GD.PushError`、`throw`、`Log.Error("[FAIL]")` 不能继续作为分裂事实源；测试结果进入 Validation artifact。

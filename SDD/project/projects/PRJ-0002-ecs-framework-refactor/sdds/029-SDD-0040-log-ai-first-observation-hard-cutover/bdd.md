@@ -34,8 +34,8 @@ And 游戏逻辑执行次数不受日志预算影响。
 
 Given 一次失败 run 已生成 `analysis/`
 When AI 分析问题
-Then AI 先读 `summary.md`、`ai-context.md`、owner `Log.md` 和目标 flow/failure
-And 只有证据不足时才读取 `raw/scene-log.jsonl`。
+Then AI 先读 `summary.md`、`ai-context.md`、`flows/index.md`、`noise/templates.md`、`missing-fields/index.md`、owner `Log.md` 和目标 flow/failure
+And 只有证据不足时才按 `rawRef` 或 `logctl query --file analysis/raw/entries.jsonl` 读取 raw。
 
 ### Scenario: Run without validation artifact is not reported as passed
 
@@ -63,9 +63,29 @@ Then 普通 runtime operation 不自动进入 flow
 And flow 只来自 `channel=Flow`、明确 `entryType` 或完整 OperationTrace 契约
 And 高频成功 flow 以 summary / sample / aggregate 呈现，不让 AI 默认读全部 completion。
 
+### Scenario: Analyzer default output is smaller than raw
+
+Given 一个 run 有几千行 raw JSONL
+When `logctl analyze` 生成默认 analysis
+Then `gate-report.json.analysisQuality.defaultReadableLines` 小于 `rawLines`
+And 默认不生成或保留 stale `by-owner/`、`by-phase/` 或 `flows/flows.json`
+And 高频成功路径进入 `noise/templates.jsonl`。
+
 ### Scenario: Query existing logs without rerun
 
 Given 用户只想看某个 owner、sourceFile、operation 或 entityId 的日志
-When 执行 `logctl query --analysis-dir <run>/analysis owner=Ability` 或 `sourceFile=...`
-Then CLI 输出筛选后的摘要和原始 JSONL 引用
+When 执行 `logctl query --analysis-dir <run>/analysis owner=Ability`
+Then CLI 默认输出 flow conclusion 或 success template，而不是 raw entry 批量复制
+And 如果语义索引为空，`query --analysis-dir` 返回空结果而不是回退 raw
+And 需要 `sourceFile=...` 等原始字段下钻时，显式执行 `logctl query --file <run>/analysis/raw/entries.jsonl sourceFile=...`
 And 不要求重新运行 Godot 场景。
+
+### Scenario: Wall clock is opt-in
+
+Given 默认 Log profile
+When JSONL sink 写出一条 structured entry
+Then entry 不包含旧 `timestampUtc`
+And 默认也不包含 `wallClockUtc`
+When profile 或 override 设置 `includeWallClockUtc=true`
+Then entry 可包含 `wallClockUtc`
+And AI 默认 analysis 不把 wall clock 当作主要时间基准。

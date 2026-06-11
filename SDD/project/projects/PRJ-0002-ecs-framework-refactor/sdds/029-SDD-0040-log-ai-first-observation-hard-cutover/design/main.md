@@ -1,5 +1,7 @@
 # Log AI-first Observation Hard Cutover
 
+> 2026-06-11 note：本文件是 SDD-0040 初始执行设计快照。Log 记录层仍参考本文件；整理层当前契约以项目级 `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/第二部分-语义提炼整理/03-最终设计与完成清单.md` 为准。旧 `by-owner` / `by-phase` raw 分桶和 pretty `flows.json` 不再是默认 analyzer 产物。
+
 ## Goal
 
 把 SlimeAI 当前 Logger 从“文本打印工具”升级为 AI-first Observation 入口。目标不是多加几个日志等级，而是让运行调试、测试验证、scene runner 分析和 AI 排障都消费同一套结构化事实。
@@ -51,10 +53,10 @@ Log source / Validation check / Flow step
       -> StdoutSummarySink
       -> JsonlBufferedFileSink
       -> MemorySink
-      -> ArtifactSink
+  -> ArtifactSink
       -> optional GodotEditorSink
   -> logctl analyze/query
-  -> analysis/raw/by-owner/by-phase/flows/failures/noise/missing-fields/ai-context.md
+  -> analysis/summary.md + ai-context.md + flows/flows.jsonl + noise/templates.jsonl + failures + missing-fields + raw/entries.jsonl
 ```
 
 ### 核心契约
@@ -62,7 +64,7 @@ Log source / Validation check / Flow step
 - `LogEntry` 必须包含运行内时间、路由、过程、目标、结果、负载和噪声字段，至少能表达 `runElapsedMs / frame / severity / channel / owner / context / operation / message / fields`。
 - `OperationTrace` 用于 AbilityCast、DamageProcess、TargetQuery、ObjectPoolRelease、TimerDispatch、SystemPreflight、ValidationSceneRun 等跨步骤过程。
 - `ValidationSession` 写出 `CheckResult`、expected/actual、reasonCode、failureReasons、artifact path 和 final verdict。
-- `logctl analyze` 固定生成 `raw/`、`by-phase/`、`by-owner/`、`flows/`、`failures/`、`noise/`、`missing-fields/`、`summary.md`、`ai-context.md`。
+- `logctl analyze` 固定生成 `summary.md`、`ai-context.md`、`flows/flows.jsonl`、`noise/templates.jsonl`、`failures/`、`noise/`、`missing-fields/` 和 `raw/entries.jsonl`；默认不生成 `by-owner` / `by-phase` raw 复制分桶或 pretty `flows.json`。
 - `logctl query` 支持对 run dir、analysis dir、raw JSONL 和 legacy stdout ingest 后产物按 owner/sourceFile/operation/entityId/severity/reasonCode 过滤。
 - `Config/Log` profile/rules/overrides 是稳定事实源；CLI override 必须带 reason、expires 和 run metadata。
 

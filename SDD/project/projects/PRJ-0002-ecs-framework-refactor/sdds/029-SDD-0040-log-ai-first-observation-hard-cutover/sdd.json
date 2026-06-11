@@ -5,7 +5,7 @@
   "status": "blocked",
   "type": "refactor",
   "created_at": "2026-06-09",
-  "updated_at": "2026-06-10",
+  "updated_at": "2026-06-11",
   "scope": "SlimeAI",
   "git_boundaries": [
     "/home/slime/Code/SlimeAI/SlimeAI"
@@ -24,10 +24,10 @@
     "hard-cutover"
   ],
   "progress": {
-    "current_task": "T2.5 owner hot-spot cleanup",
-    "completed_tasks": 16,
+    "current_task": "T2.6 Validation artifact adoption",
+    "completed_tasks": 18,
     "total_tasks": 19,
-    "percent": 84
+    "percent": 95
   },
   "bdd": {
     "required": true,

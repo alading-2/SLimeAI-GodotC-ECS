@@ -47,6 +47,7 @@ System owner 使用 `owner=System`。当前第一批 flow 已覆盖：
 - 机器判断用 `SystemBlockedReasonCode`、`SystemPreflightIssue.RuleId` 和 `Severity`；中文 `blockedReason` 只作 UI / 日志说明。
 - `SystemLifecycleTrace` 仍是 ring buffer；不默认长期写文件。需要场景证据时 dump 到 validation artifact。
 - `SystemPreflight` 只读 config / registry / preset；日志也只记录检查结果，不写回配置。
+- 默认 profile 对 `owner=System` 使用 `minimumSeverity=Info` 和 budget；启动、状态切换和 diagnostics 应优先输出 summary / snapshot，不把逐系统状态报告作为 AI 默认入口。
 
 ```bash
 Workspace/Tools/logctl/logctl query --analysis-dir <run>/analysis owner=System operation=SystemPreflight

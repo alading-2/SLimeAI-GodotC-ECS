@@ -106,6 +106,16 @@ Log.Configure(options);
 
 预算规则只限制日志输出，不限制游戏逻辑执行。重复日志超过 profile 或 rule 的 `budgetPerSecond` 后，会写 `operation=SuppressedSummary`，并保留 `budgetKey / suppressedCount / budgetPerSecond` 字段。
 
+现实时间戳默认不写入每条 JSONL。需要跨进程或跨 artifact 对齐时，才在 profile 或 override 中显式开启：
+
+```json
+{
+  "includeWallClockUtc": true
+}
+```
+
+开启后字段名是 `wallClockUtc`；不要恢复旧 `timestampUtc`。
+
 Godot editor sink 默认关闭。只有人工 editor debug 才显式配置：
 
 ```csharp
@@ -122,9 +132,12 @@ Log.Configure(new LogOptions
 Workspace/Tools/logctl/logctl profile show --config-dir Config/Log
 Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/manual --out .ai-temp/log-runs/manual/analysis
 Workspace/Tools/logctl/logctl query --analysis-dir .ai-temp/log-runs/manual/analysis owner=Damage operation=DamageProcess
+Workspace/Tools/logctl/logctl query --file .ai-temp/log-runs/manual/analysis/raw/entries.jsonl sourceFile=Src/ECS/Capabilities/Damage/Services/DamageService.cs
 Workspace/Tools/logctl/logctl ingest --stdin --source legacy-stdout --out .ai-temp/log-ingest/manual
 Workspace/Tools/logctl/logctl suggest --run-dir .ai-temp/log-runs/manual --dry-run
 ```
+
+`query --analysis-dir` 只筛选语义索引，也就是 `flows/flows.jsonl` 和 `noise/templates.jsonl`；语义索引为空时返回空结果，不会自动回退到 raw。只有需要原始 entry 下钻时，才显式 `--file analysis/raw/entries.jsonl`。
 
 ## 迁移提醒
 

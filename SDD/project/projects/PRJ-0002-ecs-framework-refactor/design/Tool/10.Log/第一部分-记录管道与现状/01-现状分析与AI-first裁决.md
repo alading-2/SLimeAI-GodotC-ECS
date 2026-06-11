@@ -2,6 +2,7 @@
 
 > 更新：2026-06-10
 > 状态：current design note
+> 提醒：本文保留第一部分记录层和修复前 analyzer 现状分析；整理层当前最终契约以 `../第二部分-语义提炼整理/03-最终设计与完成清单.md` 为准。
 
 ## 1. 当前事实
 
@@ -261,11 +262,13 @@ AI 不应直接消费完整 stdout。runner/analyzer 应固定生成：
 raw/
   stdout.log
   scene-log.jsonl
-by-phase/
-by-owner/
 flows/
+  flows.jsonl
+  index.md
 failures/
 noise/
+  templates.jsonl
+  templates.md
 missing-fields/
 summary.md
 ai-context.md

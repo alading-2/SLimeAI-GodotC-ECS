@@ -18,7 +18,7 @@
     {
       "owner": "ObjectPool",
       "minimumSeverity": "Info",
-      "budgetPerSecond": 80
+      "budgetPerSecond": 30
     },
     {
       "owner": "Timer",
@@ -28,7 +28,12 @@
     {
       "owner": "TargetSelector",
       "minimumSeverity": "Info",
-      "budgetPerSecond": 80
+      "budgetPerSecond": 20
+    },
+    {
+      "owner": "System",
+      "minimumSeverity": "Info",
+      "budgetPerSecond": 40
     }
   ]
 }

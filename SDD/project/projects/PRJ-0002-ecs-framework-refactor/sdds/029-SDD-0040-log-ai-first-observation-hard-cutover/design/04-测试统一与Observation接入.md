@@ -1,7 +1,8 @@
 # 测试统一与 Observation 接入
 
-> 更新：2026-06-09
-> 状态：current design note
+> 更新：2026-06-11
+> 状态：historical design note；Validation/artifact 裁决仍可参考，analyzer 默认目录以项目级第二部分 `03-最终设计与完成清单.md` 为准
+> 提醒：本文是 SDD-0040 初始快照。旧 `by-owner` / `by-phase` raw 分桶和 pretty `flows.json` 不再是默认 analyzer 产物。
 
 ## 1. 当前问题
 
@@ -99,7 +100,7 @@ scene runner 的职责应保持很薄：
 Log CLI 的职责是：
 
 - 根据 artifact 和 structured logs 判断 pass/fail 的事实来源。
-- 把 raw log 拆成 `by-owner`、`by-phase`、`flows`、`failures`、`noise`、`missing-fields`。
+- 调用 `logctl analyze` 把 raw log 提炼成 `summary.md`、`ai-context.md`、`flows/flows.jsonl`、`noise/templates.jsonl`、`failures`、`noise`、`missing-fields` 和 `raw/entries.jsonl`；不默认维护 `by-owner` / `by-phase` raw 复制分桶。
 - 生成 AI 分析入口 `ai-context.md`。
 - 支持 `logctl query` 对已整理 run 做二次筛选。
 

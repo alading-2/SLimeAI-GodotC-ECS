@@ -1,6 +1,6 @@
 # SDD-0040 T2 Execution Prompt
 
-你是 SDD-0040 的当前执行者。目标不是继续证明 `LogEntry`、sink 和最小 `logctl` 能跑，而是补完用户明确要求的 **打印信息整理闭环**：让 `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 经过 `logctl analyze` 后，不需要 AI 直接读 raw JSONL，也能判断 gate 可信度、top noise、flow、缺字段和下一步修复任务。
+你是 SDD-0040 的当前执行者。T2.1~T2.5 和 T2.7 已把用户明确要求的 **打印信息整理闭环** 收口到语义 analyzer：`.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 经过 `logctl analyze` 后，不需要 AI 直接读 raw JSONL，也能判断 gate 可信度、top noise、flow conclusion、success template、缺字段和下一步修复任务。后续默认从 T2.6 Validation artifact adoption 和 Godot runner blocker 继续。
 
 ## 必读
 
@@ -9,34 +9,36 @@
 3. `DocsAI/ECS/README.md`
 4. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/README.md`
 5. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/README.md`
-6. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/source-request.md`
-7. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/07-当前样本日志问题与整理方案.md`
+6. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/第一部分-记录管道与现状/source-request.md`
+7. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/第二部分-语义提炼整理/03-最终设计与完成清单.md`
 8. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/029-SDD-0040-log-ai-first-observation-hard-cutover/README.md`
 9. 同目录下 `tasks.md`、`bdd.md`、`progress.md`、`notes.md`
 10. `DocsAI/ECS/Tools/Logger/README.md`
 
 ## 当前裁决
 
-- 用户质疑成立：T1 完成的是结构化记录管道，不是完整的打印信息整理。
+- 用户质疑成立：T1 完成的是结构化记录管道，不是完整的打印信息整理；T2 已把 analyzer 默认入口改成语义提炼。
 - 不新建 SDD-0041；继续使用 SDD-0040 的 T2.1~T2.7，避免 Log hard cutover 出现两个互相覆盖的事实源。
 - SDD 当前 `blocked` 只表示最终 Godot scene smoke 没有有效承载游戏 runner；它不阻止 T2 analyzer/owner 整理在现有样本上推进。
 - 当前样本 `.ai-temp/log-runs/20260610-013907` 是 T2 第一验收样本。
 - `passed` 只能由 artifact 或 Validation channel 明确通过得出；只有 structured log 且没有 failure 时必须是 `no-failure-observed`，不能伪装成通过。
-- raw JSONL 是证据源，不是默认提示词输入。默认入口必须是 `summary.md`、`ai-context.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`flows/index.md`。
+- raw JSONL 是证据源，不是默认提示词输入。默认入口必须是 `summary.md`、`ai-context.md`、`flows/index.md`、`noise/templates.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`failures/index.md`。
 
 ## 执行范围
 
-优先完成 `tasks.md` 的 T2.1~T2.4：
+当前已完成：
 
-1. T2.1：升级 `Workspace/Tools/logctl/logctl.mjs analyze`，生成 markdown digest。
-2. T2.2：修正 gate status 语义，区分 `passed / failed / no-failure-observed / stdout-pattern-fallback / invalid-input`。
-3. T2.3：修正 flow 边界，不再把普通 `operation` 当 flow；按 `channel=Flow`、显式 `entryType` 或完整 OperationTrace 契约聚合。
-4. T2.4：实现 semantic missing-fields，检测 `fields:{}`、`operation==context`、缺 `durationMs/reasonCode/entityId/sourceFile/sourceLine`、unknown owner/phase。
+1. T2.1：`logctl analyze` 生成语义 digest。
+2. T2.2：gate status 区分 `passed / failed / no-failure-observed / stdout-pattern-fallback / invalid-input`。
+3. T2.3：普通 `operation` 不再自动当 flow；flow conclusion 来自 `channel=Flow`、显式 `entryType` 或完整 OperationTrace 契约。
+4. T2.4：semantic missing-fields 检测 `fields:{}`、`operation==context`、缺 `durationMs/reasonCode/entityId/sourceFile/sourceLine`、unknown owner/phase。
+5. T2.5：TargetSelector / ObjectPool / HealthBarUI / Damage / System 已通过字段补强、budget 规则和 success template 收口。
+6. T2.7：可用非 Godot 门禁和 DocsAI/SDD 同步已完成。
 
-T2.5~T2.6 在 analyzer digest 能暴露问题后再做：
+继续执行：
 
-- T2.5：只处理样本 top hot-spot：TargetSelector、ObjectPool、HealthBarUI、Damage、System。
 - T2.6：Validation artifact adoption；没有 artifact 的 run 不能报告 `passed`。
+- 最终 Godot scene smoke：仍需要有效承载游戏 runner，不允许伪造通过。
 
 ## 第一批代码入口
 
@@ -59,18 +61,17 @@ sed -n '1,260p' Src/ECS/Capabilities/Damage/System/DamageService.cs
 
 ## T2.1 产物契约
 
-`logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-next` 后必须至少生成：
+`logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-semantic` 后必须至少生成：
 
 ```text
-analysis-next/
+analysis-semantic/
   summary.md
   ai-context.md
   gate-report.json
   raw/
-  by-owner/
-  by-phase/
+    entries.jsonl
   flows/
-    flows.json
+    flows.jsonl
     index.md
   failures/
     failures.json
@@ -78,6 +79,8 @@ analysis-next/
   noise/
     summary.json
     top-contexts.md
+    templates.jsonl
+    templates.md
   missing-fields/
     missing-fields.json
     index.md
@@ -87,7 +90,7 @@ analysis-next/
 
 - gate status、confidence、resultSource。
 - entries、invalid JSONL、validationEntries、artifacts、structuredFailures。
-- top owner、top operation、top phase、top noise。
+- flow outcomes、failed/warned flows、top owner、top operation、top phase、top noise、aggregated success templates。
 - `fields:{}`、`operation==context`、unknown owner/phase、缺 source 是否存在。
 - 下一步先读哪些文件，哪些 raw 不应该直接读。
 
@@ -95,7 +98,8 @@ analysis-next/
 
 - 没有 artifact / Validation 时，只能说 `no-failure-observed`。
 - top noisy owner/context/operation 和动作：`budget`、`sample`、`aggregate`、`owner field contract`、`move to Validation`。
-- flow digest，只展示真正 flow summary 和异常 flow。
+- flow digest，只展示真正 flow conclusion 和异常 flow。
+- success templates，用模板统计承载高频成功路径。
 - semantic missing-fields digest。
 - owner 文档链接和下一轮 query / profile override 建议。
 
@@ -132,7 +136,7 @@ const flowEntries = run.entries.filter((entry) => normalizeStatus(entry.channel)
 
 目标：
 
-- 普通 `operation` 只进 `by-owner`、`by-phase`、`noise`，不能自动进入 `flows`。
+- 普通 `operation` 只进 noise / missing-fields / raw 证据，不能自动进入 `flows`。
 - `flows/index.md` 只纳入 `channel=Flow`、显式 `entryType=flow_*` 或完整 OperationTrace 契约。
 - 按 `correlationId` / `flowId` / owner-context-operation 聚合 start、step、complete；无法聚合时标记为 `Log gap`。
 - 高频成功 flow 以 summary / sample / aggregate 呈现，不让 AI 默认读全部 completion。
@@ -165,13 +169,18 @@ const flowEntries = run.entries.filter((entry) => normalizeStatus(entry.channel)
 
 ```bash
 node --check Workspace/Tools/logctl/logctl.mjs
-Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-next
-test -f .ai-temp/log-runs/20260610-013907/analysis-next/summary.md
-test -f .ai-temp/log-runs/20260610-013907/analysis-next/ai-context.md
-test -f .ai-temp/log-runs/20260610-013907/analysis-next/noise/top-contexts.md
-test -f .ai-temp/log-runs/20260610-013907/analysis-next/missing-fields/index.md
-test -f .ai-temp/log-runs/20260610-013907/analysis-next/flows/index.md
-Workspace/Tools/logctl/logctl query --analysis-dir .ai-temp/log-runs/20260610-013907/analysis-next owner=TargetSelector operation=TargetQueryEntities --format md
+node --test Workspace/Tools/logctl/tests/logctl-analyze.test.mjs
+Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-semantic
+test -f .ai-temp/log-runs/20260610-013907/analysis-semantic/summary.md
+test -f .ai-temp/log-runs/20260610-013907/analysis-semantic/ai-context.md
+test -f .ai-temp/log-runs/20260610-013907/analysis-semantic/noise/templates.md
+test -f .ai-temp/log-runs/20260610-013907/analysis-semantic/noise/top-contexts.md
+test -f .ai-temp/log-runs/20260610-013907/analysis-semantic/missing-fields/index.md
+test -f .ai-temp/log-runs/20260610-013907/analysis-semantic/flows/index.md
+test ! -d .ai-temp/log-runs/20260610-013907/analysis-semantic/by-owner
+test ! -d .ai-temp/log-runs/20260610-013907/analysis-semantic/by-phase
+test ! -f .ai-temp/log-runs/20260610-013907/analysis-semantic/flows/flows.json
+Workspace/Tools/logctl/logctl query --analysis-dir .ai-temp/log-runs/20260610-013907/analysis-semantic owner=TargetSelector operation=TargetQueryEntities --format md
 Workspace/Tools/logctl/logctl suggest --run-dir .ai-temp/log-runs/20260610-013907 --dry-run
 python3 Workspace/SDD/sdd.py validate SDD-0040
 git diff --check -- SDD/project/projects/PRJ-0002-ecs-framework-refactor Workspace/Tools/logctl DocsAI/ECS/Tools/Logger
@@ -198,6 +207,6 @@ T2.1~T2.4 的完成定义：
 
 T2 全部完成定义：
 
-- T2.1~T2.7 全部 checkbox 完成。
+- T2.1~T2.5、T2.7 checkbox 完成；T2.6 需要 artifact 接入和可运行场景后才能完成。
 - 当前样本和可用本地门禁通过。
 - 最终 Godot scene smoke 如果仍无有效 runner，必须保留 blocker，不能把 SDD 标记为 done。

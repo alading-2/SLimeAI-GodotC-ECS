@@ -136,6 +136,7 @@ public sealed class LogProfileDocument
     public string Profile { get; set; } = "ai-default";
     public LogSeverity? DefaultSeverity { get; set; }
     public LogSeverity? MinimumSeverity { get; set; }
+    public bool? IncludeWallClockUtc { get; set; }
     public LogSinkOptions Sinks { get; set; } = new();
     public LogBudgetOptions? Budget { get; set; }
     public List<LogRule> Rules { get; set; } = new();
@@ -153,6 +154,7 @@ public sealed class LogOverridesDocument
     public string? Expires { get; set; }
     public LogSeverity? DefaultSeverity { get; set; }
     public LogSeverity? MinimumSeverity { get; set; }
+    public bool? IncludeWallClockUtc { get; set; }
     public LogSinkOptions Sinks { get; set; } = new();
     public LogBudgetOptions? Budget { get; set; }
     public List<LogRule> Rules { get; set; } = new();
@@ -173,6 +175,7 @@ public sealed class LogOptions
     public bool EnableArtifactSink { get; set; } = true;
     public bool EnableGodotEditorSink { get; set; }
     public bool EnableGodotFrameCounters { get; set; } = true;
+    public bool IncludeWallClockUtc { get; set; }
     public LogBudgetOptions Budget { get; set; } = new();
     public List<LogRule> Rules { get; set; } = new();
     public List<string> ConfigWarnings { get; set; } = new();
@@ -181,10 +184,10 @@ public sealed class LogOptions
 
 public sealed class LogEntry
 {
-    public string TimestampUtc { get; set; } = DateTimeOffset.UtcNow.ToString("O");
     public long RunElapsedMs { get; set; }
     public ulong Frame { get; set; }
     public ulong PhysicsFrame { get; set; }
+    public string? WallClockUtc { get; set; }
     public LogSeverity Severity { get; set; } = LogSeverity.Info;
     public LogOutcome Outcome { get; set; } = LogOutcome.None;
     public LogValidationStatus ValidationStatus { get; set; } = LogValidationStatus.None;
@@ -825,6 +828,7 @@ public class Log
             EnableArtifactSink = true,
             EnableGodotEditorSink = false,
             EnableGodotFrameCounters = true,
+            IncludeWallClockUtc = false,
             Budget = new LogBudgetOptions { Enabled = true, DefaultPerSecond = 200 },
             Stdout = stdout
         };
@@ -878,6 +882,7 @@ public class Log
                 EnableArtifactSink = true,
                 EnableGodotEditorSink = false,
                 EnableGodotFrameCounters = false,
+                IncludeWallClockUtc = false,
                 Budget = new LogBudgetOptions { Enabled = false, DefaultPerSecond = 0 },
             });
         }
@@ -1093,10 +1098,10 @@ public class Log
 
     private static void PrepareEntry(LogEntry entry)
     {
-        entry.TimestampUtc = DateTimeOffset.UtcNow.ToString("O");
         entry.RunElapsedMs = RunStopwatch.ElapsedMilliseconds;
         entry.Frame = _options.EnableGodotFrameCounters ? TryGetProcessFrames() : 0;
         entry.PhysicsFrame = _options.EnableGodotFrameCounters ? TryGetPhysicsFrames() : 0;
+        entry.WallClockUtc = _options.IncludeWallClockUtc ? DateTimeOffset.UtcNow.ToString("O") : null;
         entry.Owner = string.IsNullOrWhiteSpace(entry.Owner) ? "Unknown" : entry.Owner;
         entry.Context = string.IsNullOrWhiteSpace(entry.Context) ? "Unknown" : entry.Context;
         entry.Operation = string.IsNullOrWhiteSpace(entry.Operation) ? entry.Context : entry.Operation;
@@ -1170,6 +1175,7 @@ public class Log
         }
 
         ApplySeverity(options, profile.DefaultSeverity ?? profile.MinimumSeverity);
+        ApplyWallClock(options, profile.IncludeWallClockUtc);
         ApplySinks(options, profile.Sinks);
 
         if (profile.Budget is not null)
@@ -1188,6 +1194,7 @@ public class Log
         }
 
         ApplySeverity(options, overrides.DefaultSeverity ?? overrides.MinimumSeverity);
+        ApplyWallClock(options, overrides.IncludeWallClockUtc);
         ApplySinks(options, overrides.Sinks);
 
         if (overrides.Budget is not null)
@@ -1203,6 +1210,14 @@ public class Log
         if (severity.HasValue)
         {
             options.MinimumSeverity = severity.Value;
+        }
+    }
+
+    private static void ApplyWallClock(LogOptions options, bool? includeWallClockUtc)
+    {
+        if (includeWallClockUtc.HasValue)
+        {
+            options.IncludeWallClockUtc = includeWallClockUtc.Value;
         }
     }
 
@@ -1307,7 +1322,8 @@ public class Log
                     memory = _options.EnableMemorySink,
                     artifact = _options.EnableArtifactSink,
                     godotEditor = _options.EnableGodotEditorSink,
-                    godotFrameCounters = _options.EnableGodotFrameCounters
+                    godotFrameCounters = _options.EnableGodotFrameCounters,
+                    includeWallClockUtc = _options.IncludeWallClockUtc
                 },
                 minimumSeverity = _options.MinimumSeverity,
                 budget = _options.Budget,

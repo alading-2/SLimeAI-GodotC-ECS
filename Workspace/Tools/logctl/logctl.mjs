@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -152,6 +152,14 @@ async function readJsonl(filePath) {
   return entries;
 }
 
+async function readJsonlIfExists(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return [];
+  }
+
+  return readJsonl(filePath);
+}
+
 function normalizeStatus(value) {
   return String(value ?? "").trim().toLowerCase();
 }
@@ -236,6 +244,15 @@ async function writeJsonl(filePath, entries) {
 async function writeText(filePath, text) {
   await mkdir(path.dirname(filePath), { recursive: true });
   await writeFile(filePath, text.endsWith("\n") ? text : `${text}\n`, "utf8");
+}
+
+// 复跑到旧 analysis 目录时，先移除已废弃的 raw 复制入口，避免 AI 误读 stale 产物。
+async function removeDeprecatedAnalysisCopies(outDir) {
+  await Promise.all([
+    rm(path.join(outDir, "by-owner"), { recursive: true, force: true }),
+    rm(path.join(outDir, "by-phase"), { recursive: true, force: true }),
+    rm(path.join(outDir, "flows", "flows.json"), { force: true }),
+  ]);
 }
 
 async function loadRun(runDir) {
@@ -643,12 +660,146 @@ function isFlowCompletion(entry) {
   return isFlowEntry(entry) && (entryType === "flow_summary" || ["completed", "succeeded", "failed", "skipped"].includes(outcome));
 }
 
-function flowDigest(flowEntries) {
+function rawRef(entries) {
+  if (entries.length === 0) {
+    return "";
+  }
+
+  const source = entries[0].__source ?? "unknown";
+  const firstLine = entries[0].__line;
+  const lastLine = entries[entries.length - 1].__line;
+  return firstLine === lastLine ? `${source}:${firstLine}` : `${source}:${firstLine}-${lastLine}`;
+}
+
+function numericValue(value) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function rawKeyFields(entry) {
+  const ignored = new Set([
+    "entryType",
+    "durationMs",
+    "stepIndex",
+    "stepName",
+    "stepCount",
+    "reasonCode",
+    "failedStep",
+    "lastSuccessfulStep",
+  ]);
+  const fields = {};
+  for (const [key, value] of Object.entries(fieldsOf(entry))) {
+    if (!ignored.has(key)) {
+      fields[key] = value;
+    }
+  }
+
+  for (const key of ["entityId", "targetId", "sourceEntityId", "ownerEntityId", "abilityId", "poolName"]) {
+    const value = getField(entry, key);
+    if (hasValue(value) && fields[key] === undefined) {
+      fields[key] = value;
+    }
+  }
+
+  return fields;
+}
+
+function firstValue(entries, keys) {
+  for (const entry of entries) {
+    for (const key of keys) {
+      const value = getField(entry, key);
+      if (hasValue(value)) {
+        return value;
+      }
+    }
+  }
+  return undefined;
+}
+
+function buildFlowConclusions(entries) {
   const groups = new Map();
-  for (const entry of flowEntries) {
-    const owner = displayValue(getField(entry, "owner"));
-    const context = displayValue(getField(entry, "context"));
-    const operation = displayValue(getField(entry, "operation"));
+  let syntheticIndex = 0;
+  for (const entry of entries.filter(isFlowEntry)) {
+    const correlationId = getField(entry, "correlationId");
+    const groupKey = hasValue(correlationId)
+      ? String(correlationId)
+      : `single-${syntheticIndex += 1}-${entry.__source}:${entry.__line}`;
+    if (!groups.has(groupKey)) {
+      groups.set(groupKey, []);
+    }
+    groups.get(groupKey).push(entry);
+  }
+
+  return [...groups.entries()]
+    .map(([groupKey, groupEntries]) => {
+      groupEntries.sort((a, b) => (a.__line ?? 0) - (b.__line ?? 0));
+      const completion = [...groupEntries].reverse().find(isFlowCompletion) ?? groupEntries[groupEntries.length - 1];
+      const failedEntry = groupEntries.find((entry) => normalizeStatus(getField(entry, "outcome")) === "failed")
+        ?? groupEntries.find((entry) => ["warn", "warning", "error", "fatal"].includes(normalizeStatus(getField(entry, "severity"))));
+      const warningCount = groupEntries.filter((entry) => ["warn", "warning"].includes(normalizeStatus(getField(entry, "severity")))).length;
+      const failedCount = groupEntries.filter((entry) => normalizeStatus(getField(entry, "outcome")) === "failed" || ["error", "fatal"].includes(normalizeStatus(getField(entry, "severity")))).length;
+      const stepEntries = groupEntries.filter((entry) => normalizeStatus(getField(entry, "entryType")) === "flow_step");
+      const frames = groupEntries.map((entry) => numericValue(getField(entry, "frame"))).filter((value) => value !== null);
+      const runElapsedValues = groupEntries.map((entry) => numericValue(getField(entry, "runElapsedMs"))).filter((value) => value !== null);
+      const outcome = failedCount > 0 ? "Failed" : displayValue(getField(completion, "outcome"), "Completed");
+      const reasonCode = firstValue(failedEntry ? [failedEntry, completion] : [completion], ["reasonCode", "reason"]);
+      const failedStep = failedEntry
+        ? firstValue([failedEntry], ["failedStep", "stepName", "operation"])
+        : undefined;
+      const stepCount = numericValue(getField(completion, "stepCount")) ?? stepEntries.length;
+      const qualityFlags = [];
+      if (groupEntries.length === 1) {
+        qualityFlags.push("single_entry_flow");
+      }
+      if (stepEntries.length === 0) {
+        qualityFlags.push("flow_steps_missing");
+      }
+      if (!hasValue(getField(completion, "durationMs"))) {
+        qualityFlags.push("duration_missing");
+      }
+      if ((outcome === "Failed" || warningCount > 0) && !hasValue(reasonCode)) {
+        qualityFlags.push("reason_missing");
+      }
+
+      return {
+        flowId: hasValue(getField(completion, "correlationId")) ? String(getField(completion, "correlationId")) : groupKey,
+        type: `${displayValue(getField(completion, "owner"))}/${displayValue(getField(completion, "operation"))}`,
+        owner: displayValue(getField(completion, "owner")),
+        context: displayValue(getField(completion, "context")),
+        operation: displayValue(getField(completion, "operation")),
+        phase: displayValue(getField(completion, "phase")),
+        outcome,
+        durationMs: numericValue(getField(completion, "durationMs")),
+        frameRange: frames.length === 0 ? null : [Math.min(...frames), Math.max(...frames)],
+        runElapsedRangeMs: runElapsedValues.length === 0 ? null : [Math.min(...runElapsedValues), Math.max(...runElapsedValues)],
+        steps: stepCount,
+        failedStep: failedStep === undefined ? null : String(failedStep),
+        reasonCode: reasonCode === undefined ? null : String(reasonCode),
+        keyFields: rawKeyFields(completion),
+        entryCount: groupEntries.length,
+        warningCount,
+        failedCount,
+        qualityFlags,
+        rawRef: rawRef(groupEntries),
+      };
+    })
+    .sort((a, b) => {
+      const aStart = a.runElapsedRangeMs?.[0] ?? 0;
+      const bStart = b.runElapsedRangeMs?.[0] ?? 0;
+      return aStart - bStart || a.rawRef.localeCompare(b.rawRef);
+    });
+}
+
+function flowDigest(flowConclusions) {
+  const groups = new Map();
+  for (const flow of flowConclusions) {
+    const owner = flow.owner;
+    const context = flow.context;
+    const operation = flow.operation;
     const key = [owner, context, operation].join("|");
     if (!groups.has(key)) {
       groups.set(key, {
@@ -656,29 +807,128 @@ function flowDigest(flowEntries) {
         context,
         operation,
         count: 0,
-        started: 0,
         completed: 0,
+        succeeded: 0,
         failed: 0,
-        missingDurationMs: 0,
+        skipped: 0,
+        warnings: 0,
+        singleEntry: 0,
+        missingDuration: 0,
         sampleLines: [],
         ownerDoc: ownerDoc(owner, context),
       });
     }
     const group = groups.get(key);
     group.count += 1;
-    const outcome = normalizeStatus(getField(entry, "outcome"));
-    if (outcome === "started") group.started += 1;
-    if (["completed", "succeeded", "skipped"].includes(outcome)) group.completed += 1;
+    const outcome = normalizeStatus(flow.outcome);
+    if (outcome === "completed") group.completed += 1;
+    if (outcome === "succeeded") group.succeeded += 1;
+    if (outcome === "skipped") group.skipped += 1;
     if (outcome === "failed") group.failed += 1;
-    if (isFlowCompletion(entry) && !hasValue(getField(entry, "durationMs"))) group.missingDurationMs += 1;
+    if (flow.warningCount > 0) group.warnings += 1;
+    if (flow.qualityFlags.includes("single_entry_flow")) group.singleEntry += 1;
+    if (flow.qualityFlags.includes("duration_missing")) group.missingDuration += 1;
     if (group.sampleLines.length < 3) {
-      group.sampleLines.push(`${entry.__source}:${entry.__line}`);
+      group.sampleLines.push(flow.rawRef);
     }
   }
 
   return [...groups.values()]
     .sort((a, b) => b.count - a.count || `${a.owner}/${a.context}/${a.operation}`.localeCompare(`${b.owner}/${b.context}/${b.operation}`))
     .slice(0, 100);
+}
+
+function metricSummary(values) {
+  if (values.length === 0) {
+    return null;
+  }
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const avg = Number((values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(3));
+  return { min, avg, max };
+}
+
+function buildNoiseTemplates(flowConclusions) {
+  const groups = new Map();
+  for (const flow of flowConclusions) {
+    if (normalizeStatus(flow.outcome) === "failed" || flow.warningCount > 0 || flow.failedCount > 0) {
+      continue;
+    }
+
+    const key = [flow.owner, flow.context, flow.operation, flow.outcome].join("|");
+    if (!groups.has(key)) {
+      groups.set(key, {
+        owner: flow.owner,
+        context: flow.context,
+        operation: flow.operation,
+        outcome: flow.outcome,
+        count: 0,
+        rawRefs: [],
+        metricValues: {},
+        ownerDoc: ownerDoc(flow.owner, flow.context),
+      });
+    }
+
+    const group = groups.get(key);
+    group.count += 1;
+    if (group.rawRefs.length < 5) {
+      group.rawRefs.push(flow.rawRef);
+    }
+    for (const [field, value] of Object.entries(flow.keyFields ?? {})) {
+      const numeric = numericValue(value);
+      if (numeric === null) {
+        continue;
+      }
+      if (!group.metricValues[field]) {
+        group.metricValues[field] = [];
+      }
+      group.metricValues[field].push(numeric);
+    }
+    if (flow.durationMs !== null) {
+      if (!group.metricValues.durationMs) {
+        group.metricValues.durationMs = [];
+      }
+      group.metricValues.durationMs.push(flow.durationMs);
+    }
+  }
+
+  return [...groups.values()]
+    .map((group) => {
+      const metrics = {};
+      for (const [field, values] of Object.entries(group.metricValues)) {
+        const summary = metricSummary(values);
+        if (summary) {
+          metrics[field] = summary;
+        }
+      }
+      return {
+        groupKey: [group.owner, group.context, group.operation, group.outcome].join("|"),
+        owner: group.owner,
+        context: group.context,
+        operation: group.operation,
+        outcome: group.outcome,
+        count: group.count,
+        metrics,
+        rawRefs: group.rawRefs,
+        ownerDoc: group.ownerDoc,
+        recommendedAction: recommendNoiseAction(group),
+      };
+    })
+    .sort((a, b) => b.count - a.count || `${a.owner}/${a.context}/${a.operation}`.localeCompare(`${b.owner}/${b.context}/${b.operation}`))
+    .slice(0, 100);
+}
+
+function flowTemplateKey(flow) {
+  return [flow.owner, flow.context, flow.operation, flow.outcome].join("|");
+}
+
+function shouldKeepFlowConclusion(flow, templatedSuccessKeys) {
+  if (normalizeStatus(flow.outcome) === "failed" || flow.warningCount > 0 || flow.failedCount > 0) {
+    return true;
+  }
+
+  return !templatedSuccessKeys.has(flowTemplateKey(flow));
 }
 
 function mergeProfileView(configDir) {
@@ -752,8 +1002,20 @@ async function profile(options) {
   console.log(lines.join("\n"));
 }
 
-function buildDigest(run, gateReport, flowEntries, noise, semanticMissing) {
+function buildDigest(run, gateReport, flowConclusions, noise, semanticMissing, templates) {
   const validEntries = run.entries.filter((entry) => !entry.__invalidJsonl);
+  const flowStats = flowConclusions.reduce((stats, flow) => {
+    stats.total += 1;
+    const outcome = normalizeStatus(flow.outcome);
+    if (outcome === "failed") stats.failed += 1;
+    else if (outcome === "skipped") stats.skipped += 1;
+    else if (outcome === "succeeded") stats.succeeded += 1;
+    else stats.completed += 1;
+    if (flow.warningCount > 0) stats.warned += 1;
+    if (flow.qualityFlags.includes("single_entry_flow")) stats.singleEntry += 1;
+    return stats;
+  }, { total: 0, completed: 0, succeeded: 0, failed: 0, skipped: 0, warned: 0, singleEntry: 0 });
+
   return {
     generatedAtUtc: gateReport.generatedAtUtc,
     runDir: gateReport.runDir,
@@ -770,7 +1032,11 @@ function buildDigest(run, gateReport, flowEntries, noise, semanticMissing) {
     topNoise: noise.slice(0, 8),
     semanticMissing: semanticMissing.totals,
     semanticMissingGroups: semanticMissing.groups.slice(0, 12),
-    flows: flowDigest(flowEntries),
+    flowStats,
+    flowConclusions,
+    flows: flowDigest(flowConclusions),
+    noiseTemplates: templates.slice(0, 12),
+    failedFlows: flowConclusions.filter((flow) => normalizeStatus(flow.outcome) === "failed" || flow.warningCount > 0).slice(0, 20),
     failures: gateReport.failures.slice(0, 20),
   };
 }
@@ -811,6 +1077,22 @@ function summaryMd(digest) {
       : "",
     digest.gate.warnings.length === 0 ? "" : ["", "## Gate Warnings", "", ...digest.gate.warnings.map((warning) => `- ${warning.code}: ${warning.message}${warning.count ? ` (${warning.count})` : ""}`)].join("\n"),
     "",
+    "## Flow Outcomes",
+    "",
+    markdownTable(
+      ["total", "completed", "succeeded", "failed", "skipped", "warned", "singleEntry"],
+      [[digest.flowStats.total, digest.flowStats.completed, digest.flowStats.succeeded, digest.flowStats.failed, digest.flowStats.skipped, digest.flowStats.warned, digest.flowStats.singleEntry]],
+    ),
+    "",
+    "## Failed Or Warned Flows",
+    "",
+    digest.failedFlows.length === 0
+      ? "- none"
+      : markdownTable(
+        ["flow", "outcome", "failedStep", "reasonCode", "rawRef"],
+        digest.failedFlows.slice(0, 12).map((flow) => [flow.type, flow.outcome, flow.failedStep ?? "", flow.reasonCode ?? "", flow.rawRef]),
+      ),
+    "",
     "## Top Owner",
     "",
     markdownTable(["owner", "count"], countRows(digest.topOwners.slice(0, 5))),
@@ -830,6 +1112,13 @@ function summaryMd(digest) {
       digest.topNoise.slice(0, 5).map((item) => [item.owner, item.context, item.operation, item.count, item.recommendedAction]),
     ),
     "",
+    "## Aggregated Success Templates",
+    "",
+    markdownTable(
+      ["owner", "context", "operation", "outcome", "count", "metrics"],
+      digest.noiseTemplates.slice(0, 5).map((template) => [template.owner, template.context, template.operation, template.outcome, template.count, Object.entries(template.metrics).map(([key, value]) => `${key}:${value.min}/${value.avg}/${value.max}`).join(", ")]),
+    ),
+    "",
     "## Semantic Missing Fields",
     "",
     markdownTable(
@@ -844,6 +1133,7 @@ function summaryMd(digest) {
     "- missing-fields/index.md",
     "- flows/index.md",
     "- failures/index.md",
+    "- noise/templates.md",
     "",
     "Do not read raw/entries.jsonl by default. Use logctl query first when these digest files are insufficient.",
     "",
@@ -870,9 +1160,12 @@ function aiContext(digest) {
     "",
     "## Failure Focus",
     "",
-    digest.failures.length === 0
-      ? "- No structured failure entries were found."
-      : digest.failures.map((failure) => `- ${failure.source}: ${failure.owner ?? ""}/${failure.operation ?? ""} ${failure.message ?? failure.path}`).join("\n"),
+    digest.failedFlows.length === 0 && digest.failures.length === 0
+      ? "- No failed/warned flow or structured failure entries were found."
+      : [
+        ...digest.failedFlows.map((flow) => `- flow ${flow.type} outcome=${flow.outcome} failedStep=${flow.failedStep ?? ""} reasonCode=${flow.reasonCode ?? ""} rawRef=${flow.rawRef}`),
+        ...digest.failures.map((failure) => `- ${failure.source}: ${failure.owner ?? ""}/${failure.operation ?? ""} ${failure.message ?? failure.path}`),
+      ].join("\n"),
     "",
     "## Top Noise And Actions",
     "",
@@ -884,8 +1177,15 @@ function aiContext(digest) {
     "## Flow Digest",
     "",
     markdownTable(
-      ["owner", "context", "operation", "entries", "completed", "failed", "missingDurationMs"],
-      digest.flows.slice(0, 12).map((item) => [item.owner, item.context, item.operation, item.count, item.completed, item.failed, item.missingDurationMs]),
+      ["owner", "context", "operation", "flows", "completed", "succeeded", "failed", "singleEntry", "missingDuration"],
+      digest.flows.slice(0, 12).map((item) => [item.owner, item.context, item.operation, item.count, item.completed, item.succeeded, item.failed, item.singleEntry, item.missingDuration]),
+    ),
+    "",
+    "## Aggregated Success Templates",
+    "",
+    markdownTable(
+      ["owner", "context", "operation", "outcome", "count", "metrics"],
+      digest.noiseTemplates.slice(0, 12).map((template) => [template.owner, template.context, template.operation, template.outcome, template.count, Object.entries(template.metrics).map(([key, value]) => `${key}:${value.min}/${value.avg}/${value.max}`).join(", ")]),
     ),
     "",
     "## Semantic Missing Fields",
@@ -937,6 +1237,27 @@ function noiseMd(noise) {
   ].join("\n");
 }
 
+function templatesMd(templates) {
+  return [
+    "# Aggregated Success Templates",
+    "",
+    markdownTable(
+      ["rank", "owner", "context", "operation", "outcome", "count", "metrics", "raw refs"],
+      templates.slice(0, 25).map((item, index) => [
+        index + 1,
+        item.owner,
+        item.context,
+        item.operation,
+        item.outcome,
+        item.count,
+        Object.entries(item.metrics).map(([key, value]) => `${key}:${value.min}/${value.avg}/${value.max}`).join(", "),
+        item.rawRefs.join(", "),
+      ]),
+    ),
+    "",
+  ].join("\n");
+}
+
 function missingFieldsMd(semanticMissing, requiredMissing) {
   return [
     "# Missing Fields",
@@ -975,26 +1296,43 @@ function missingFieldsMd(semanticMissing, requiredMissing) {
   ].join("\n");
 }
 
-function flowsIndexMd(flows) {
+function flowsIndexMd(flows, flowConclusions) {
   return [
     "# Flow Index",
     "",
-    "Only entries with channel=Flow, explicit flow entryType, or a complete OperationTrace-like contract are included here. Ordinary runtime operation fields are excluded.",
+    "Each JSONL line in `flows.jsonl` is one flow conclusion object. Raw entries are only referenced by rawRef.",
+    "",
+    "## Outcome Summary",
     "",
     markdownTable(
-      ["owner", "context", "operation", "entries", "started", "completed", "failed", "missingDurationMs", "sample lines"],
+      ["owner", "context", "operation", "flows", "completed", "succeeded", "failed", "skipped", "warnings", "singleEntry", "missingDuration", "sample refs"],
       flows.slice(0, 50).map((item) => [
         item.owner,
         item.context,
         item.operation,
         item.count,
-        item.started,
         item.completed,
+        item.succeeded,
         item.failed,
-        item.missingDurationMs,
+        item.skipped,
+        item.warnings,
+        item.singleEntry,
+        item.missingDuration,
         item.sampleLines.join(", "),
       ]),
     ),
+    "",
+    "## Failed Or Warned Flow Conclusions",
+    "",
+    flowConclusions.filter((flow) => normalizeStatus(flow.outcome) === "failed" || flow.warningCount > 0).length === 0
+      ? "- none"
+      : markdownTable(
+        ["flowId", "type", "outcome", "failedStep", "reasonCode", "rawRef"],
+        flowConclusions
+          .filter((flow) => normalizeStatus(flow.outcome) === "failed" || flow.warningCount > 0)
+          .slice(0, 50)
+          .map((flow) => [flow.flowId, flow.type, flow.outcome, flow.failedStep ?? "", flow.reasonCode ?? "", flow.rawRef]),
+      ),
     "",
   ].join("\n");
 }
@@ -1013,44 +1351,105 @@ function failuresIndexMd(gateReport) {
   ].join("\n");
 }
 
+function countTextLines(text) {
+  if (!text) {
+    return 0;
+  }
+  return text.endsWith("\n") ? text.split(/\r?\n/).length - 1 : text.split(/\r?\n/).length;
+}
+
 async function analyze(options) {
   const run = await loadRun(options.runDir);
   const outDir = resolveInside(options.out ?? path.join(options.runDir, "analysis"), "out");
   const gateReport = buildGateReport(run);
-  const flowEntries = run.entries.filter(isFlowEntry);
+  const flowConclusions = buildFlowConclusions(run.entries);
+  const templates = buildNoiseTemplates(flowConclusions);
+  const templatedSuccessKeys = new Set(templates.filter((template) => template.count > 10).map((template) => template.groupKey));
+  const flowConclusionsForOutput = flowConclusions.filter((flow) => shouldKeepFlowConclusion(flow, templatedSuccessKeys));
   const noise = noiseSummary(run.entries);
   const requiredMissing = missingFields(run.entries);
   const semanticMissing = semanticMissingFields(run.entries);
-  const digest = buildDigest(run, gateReport, flowEntries, noise, semanticMissing);
+  const digest = buildDigest(run, gateReport, flowConclusions, noise, semanticMissing, templates);
+  const flowJsonlText = `${flowConclusionsForOutput.map((entry) => JSON.stringify(entry)).join("\n")}${flowConclusionsForOutput.length > 0 ? "\n" : ""}`;
+  const templatesJsonlText = `${templates.map((entry) => JSON.stringify(entry)).join("\n")}${templates.length > 0 ? "\n" : ""}`;
+  const flowsIndexText = flowsIndexMd(digest.flows, flowConclusions);
+  const failuresIndexText = failuresIndexMd(gateReport);
+  const noiseText = noiseMd(noise);
+  const templatesText = templatesMd(templates);
+  const missingText = missingFieldsMd(semanticMissing, requiredMissing);
+  const summaryText = summaryMd(digest);
+  const aiContextText = aiContext(digest);
+  const readableLineCount = [
+    flowJsonlText,
+    templatesJsonlText,
+    flowsIndexText,
+    failuresIndexText,
+    noiseText,
+    templatesText,
+    missingText,
+    summaryText,
+    aiContextText,
+  ].reduce((sum, text) => sum + countTextLines(text), 0);
+  gateReport.counts.flowConclusions = flowConclusions.length;
+  gateReport.counts.outputFlowConclusions = flowConclusionsForOutput.length;
+  gateReport.counts.templatedSuccessFlows = flowConclusions.length - flowConclusionsForOutput.length;
+  gateReport.counts.noiseTemplates = templates.length;
+  gateReport.analysisQuality = {
+    rawLines: run.entries.length,
+    defaultReadableLines: readableLineCount,
+    defaultReadableRatio: run.entries.length === 0 ? 0 : Number((readableLineCount / run.entries.length).toFixed(3)),
+    defaultReadableWithinRaw: readableLineCount < run.entries.length,
+    removedDefaultCopies: true,
+  };
 
   await mkdir(outDir, { recursive: true });
+  await removeDeprecatedAnalysisCopies(outDir);
   await writeJsonl(path.join(outDir, "raw", "entries.jsonl"), run.entries);
   await writeJson(path.join(outDir, "raw", "results.json"), run.results);
   await writeJson(path.join(outDir, "raw", "artifacts.json"), run.artifacts);
 
-  for (const [owner, entries] of groupBy(run.entries, "owner")) {
-    await writeJsonl(path.join(outDir, "by-owner", `${owner}.jsonl`), entries);
-  }
-  for (const [phase, entries] of groupBy(run.entries, "phase")) {
-    await writeJsonl(path.join(outDir, "by-phase", `${phase}.jsonl`), entries);
-  }
-
-  await writeJson(path.join(outDir, "flows", "flows.json"), flowEntries);
-  await writeText(path.join(outDir, "flows", "index.md"), flowsIndexMd(digest.flows));
+  await writeText(path.join(outDir, "flows", "flows.jsonl"), flowJsonlText);
+  await writeText(path.join(outDir, "flows", "index.md"), flowsIndexText);
   await writeJson(path.join(outDir, "failures", "failures.json"), gateReport.failures);
-  await writeText(path.join(outDir, "failures", "index.md"), failuresIndexMd(gateReport));
+  await writeText(path.join(outDir, "failures", "index.md"), failuresIndexText);
   await writeJson(path.join(outDir, "noise", "summary.json"), noise);
-  await writeText(path.join(outDir, "noise", "top-contexts.md"), noiseMd(noise));
+  await writeText(path.join(outDir, "noise", "top-contexts.md"), noiseText);
+  await writeText(path.join(outDir, "noise", "templates.jsonl"), templatesJsonlText);
+  await writeText(path.join(outDir, "noise", "templates.md"), templatesText);
   await writeJson(path.join(outDir, "missing-fields", "missing-fields.json"), {
     envelope: requiredMissing,
     semantic: semanticMissing,
   });
-  await writeText(path.join(outDir, "missing-fields", "index.md"), missingFieldsMd(semanticMissing, requiredMissing));
+  await writeText(path.join(outDir, "missing-fields", "index.md"), missingText);
   await writeJson(path.join(outDir, "gate-report.json"), gateReport);
-  await writeText(path.join(outDir, "summary.md"), summaryMd(digest));
-  await writeText(path.join(outDir, "ai-context.md"), aiContext(digest));
+  await writeText(path.join(outDir, "summary.md"), summaryText);
+  await writeText(path.join(outDir, "ai-context.md"), aiContextText);
 
   console.log(JSON.stringify({ analysisDir: toRel(outDir), gateReport: toRel(path.join(outDir, "gate-report.json")), ...gateReport }, null, 2));
+}
+
+function semanticQueryRecord(entry, queryKind) {
+  const owner = displayValue(getField(entry, "owner"));
+  const operation = displayValue(getField(entry, "operation"));
+  const message = queryKind === "success-template"
+    ? `success template ${owner}/${operation} count=${entry.count ?? 0}`
+    : `flow conclusion ${owner}/${operation} outcome=${entry.outcome ?? "unknown"}`;
+  return {
+    ...entry,
+    queryKind,
+    severity: entry.severity ?? "Info",
+    validationStatus: entry.validationStatus ?? "None",
+    message: entry.message ?? message,
+  };
+}
+
+async function loadAnalysisQueryEntries(analysisDir) {
+  const root = resolveInside(analysisDir, "analysis-dir");
+  const flowConclusions = (await readJsonlIfExists(path.join(root, "flows", "flows.jsonl")))
+    .map((entry) => semanticQueryRecord(entry, "flow-conclusion"));
+  const successTemplates = (await readJsonlIfExists(path.join(root, "noise", "templates.jsonl")))
+    .map((entry) => semanticQueryRecord(entry, "success-template"));
+  return [...flowConclusions, ...successTemplates];
 }
 
 async function loadQueryEntries(options) {
@@ -1058,8 +1457,7 @@ async function loadQueryEntries(options) {
     return readJsonl(resolveInside(options.file, "file"));
   }
   if (options.analysisDir) {
-    const file = path.join(resolveInside(options.analysisDir, "analysis-dir"), "raw", "entries.jsonl");
-    return readJsonl(file);
+    return loadAnalysisQueryEntries(options.analysisDir);
   }
   if (options.runDir) {
     return (await loadRun(options.runDir)).entries;

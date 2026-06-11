@@ -2,17 +2,17 @@
 
 > 状态：current
 > 定位：ECS Tools/Logger owner 入口。
-> 更新：2026-06-10
+> 更新：2026-06-11
 
 ## 一句话定位
 
-`Src/ECS/Tools/Logger/Log.cs` 是 AI-first Observation 入口。默认详细事实写 buffered JSONL，默认可见输出写 stdout summary，Validation 写 artifact；Godot editor 输出只作为可选 sink。
+`Src/ECS/Tools/Logger/Log.cs` 是 AI-first Observation 入口。默认详细事实写 buffered JSONL，默认可见输出写 stdout summary，Validation 写 artifact；Godot editor 输出只作为可选 sink。`logctl analyze` 负责把 raw 证据提炼成语义入口，不能把 raw 复制成更多默认文件。
 
 ## 当前实现事实
 
 当前 `Log.cs`：
 
-- `LogEntry` envelope 包含 `runElapsedMs / frame / physicsFrame / severity / outcome / validationStatus / channel / owner / context / operation / phase / fields`。
+- `LogEntry` envelope 包含 `runElapsedMs / frame / physicsFrame / severity / outcome / validationStatus / channel / owner / context / operation / phase / fields`；`wallClockUtc` 默认不写，只有 profile/overrides 显式 `includeWallClockUtc=true` 才写。
 - `LogSeverity` 只表达运行健康度；`LogOutcome` 表达流程结果；`LogValidationStatus` 表达测试断言结果。
 - `OperationTrace` 用于长过程，start/step/complete 进入 Flow channel；新 run 会写 `entryType / durationMs / stepCount / sourceFile / sourceLine`，stdout 只展示完成摘要，完整字段写 JSONL。
 - 默认 sinks 是 `StdoutSummarySink`、`JsonlBufferedFileSink`、`MemorySink`、`ArtifactSink`。
@@ -37,25 +37,39 @@
 T2 analyzer 已修正默认分析入口。对该样本执行：
 
 ```bash
-Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-next
+Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-semantic
 ```
 
-当前 `analysis-next/summary.md` 会第一屏报告 `status=no-failure-observed`、`confidence=low`、`resultSource=structured-log`、`entries=4915`、`invalidJsonl=1`、`validationEntries=0`、`artifacts=0`、top noise 和 semantic missing fields。`ai-context.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`flows/index.md` 是 AI 默认入口；raw JSONL 只作为二级证据。
+当前 `analysis-semantic/summary.md` 会第一屏报告 `status=no-failure-observed`、`confidence=low`、`resultSource=structured-log`、`entries=4915`、`invalidJsonl=1`、`validationEntries=0`、`artifacts=0`、flow outcomes、failed/warned flows、aggregated success templates、top noise 和 semantic missing fields。`ai-context.md`、`flows/index.md`、`flows/flows.jsonl`、`noise/templates.md`、`noise/top-contexts.md`、`missing-fields/index.md` 是 AI 默认入口；raw JSONL 只作为二级证据。
+
+当前样本的语义整理质量：
+
+```text
+rawLines=4915
+defaultReadableLines=303
+defaultReadableRatio=0.062
+flowConclusions=3730
+outputFlowConclusions=5
+templatedSuccessFlows=3725
+noiseTemplates=6
+```
 
 后续 Log 分析必须遵循：
 
 ```text
 raw/scene-log.jsonl
   -> logctl analyze
-  -> analysis/summary.md + ai-context.md + noise + missing-fields + flows
+  -> analysis/summary.md + ai-context.md + flows + noise + missing-fields + failures
   -> AI 按 owner Log.md 分析
-  -> 证据不足时才 query/raw
+  -> 证据不足时先 query 语义索引，最后才显式 raw 下钻
 ```
+
+`analyze` 复跑到已有 output 目录时会清理旧 `by-owner`、`by-phase` 和 pretty `flows/flows.json`，防止 stale 旧入口继续误导 AI。`query --analysis-dir` 只查 `flows/flows.jsonl` 和 `noise/templates.jsonl`；语义索引为空时返回空结果，不会自动回退到 raw。需要原始 entry 时必须显式使用 `query --file <analysis>/raw/entries.jsonl ...`。
 
 完整设计入口：
 
 ```text
-SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/07-当前样本日志问题与整理方案.md
+SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/README.md
 ```
 
 ## Sink 裁决
@@ -92,8 +106,8 @@ SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/README.m
 - `Config/Log` profile + CLI override。
 - C# stdout summary + buffered JSONL file 作为默认 sink。
 - Validation artifact 作为测试主事实源。
-- `logctl analyze` 先拆分日志目录，再给 AI 分析。
-- `logctl query` 对已整理 run 做二次筛选，例如 owner / sourceFile / operation / entityId / severity。
+- `logctl analyze` 把 raw 整理成 flow conclusion、success template、failure-first summary 和 missing-fields 任务清单。
+- `logctl query --analysis-dir` 对语义索引做二次筛选；需要 raw entry 时显式 `--file analysis/raw/entries.jsonl`。
 - 每个 owner 写 `Log.md` 或 README `## Log`，固定怎么打、怎么分析、哪些默认关闭。
 
 ## CLI 边界
@@ -103,8 +117,8 @@ SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/README.m
 | 类别 | 作用 |
 | --- | --- |
 | 运行控制 | `profile show` 查看 `Config/Log` 有效 profile；后续扩展 sink、owner/context/operation 开关和 override snapshot。 |
-| 离线分析 | `analyze --run-dir` 生成 `summary.md`、`ai-context.md`、`gate-report.json`、`raw/`、`by-owner/`、`by-phase/`、`flows/`、`failures/`、`noise/`、`missing-fields/`。 |
-| 二次查询 | `query --analysis-dir` 或 `query --file` 按 owner、sourceFile、operation、entityId、severity 过滤。 |
+| 离线分析 | `analyze --run-dir` 生成 `summary.md`、`ai-context.md`、`gate-report.json`、`raw/`、`flows/`、`failures/`、`noise/`、`missing-fields/`；默认不生成并清理 stale `by-owner`、`by-phase` 和 pretty `flows.json`。 |
+| 二次查询 | `query --analysis-dir` 只筛 flow conclusion + success template；语义索引为空不回退 raw；`query --file analysis/raw/entries.jsonl` 才筛 raw entry。 |
 | 建议 | `suggest --run-dir --dry-run` 输出 noisy context 和可审查 `profilePatch`，不直接静默改配置。 |
 
 Godot scene runner 只负责运行场景、保存 run dir 和调用 Log CLI；不要在 godot-scene-test skill 中长期维护日志拆分规则。
