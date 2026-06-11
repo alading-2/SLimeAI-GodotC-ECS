@@ -115,7 +115,29 @@ ui.Bind(targetEntity);
 - 一个 AutoLoad 单例。
 - 负责监听单位生成/销毁，自动管理头顶血条 (`HealthBarUI`)。
 
-## 4. 常见问题
+## 4. Log
+
+UI owner 默认不把绑定过程拆成多条自然语言日志。持久绑定类 UI 使用稳定 operation 和字段，让 `logctl analyze` 可以按 entity / pool / outcome 聚合。
+
+`HealthBarUI` 当前绑定日志：
+
+| operation | phase | outcome | 关键字段 |
+| --- | --- | --- | --- |
+| `HealthBarBind` | `Runtime` | `Succeeded` / `Skipped` / `Failed` | `entityId`、`entityType`、`poolName`、`reasonCode` |
+
+规则：
+
+- 成功绑定只写一条 `HealthBarBind` summary，不再输出 `OnUnitCreated`、`准备绑定`、`成功绑定` 三段重复文本。
+- 跳过和失败必须写 `reasonCode`，例如 `not_unit`、`missing_current_hp`、`healthbar_hidden`、`bind_failed`。
+- UI 绑定日志只表达 View 绑定事实；不要在 UI 日志里修改 Damage / Ability / Entity 业务状态。
+
+查询示例：
+
+```bash
+Workspace/Tools/logctl/logctl query --analysis-dir <run>/analysis owner=Runtime operation=HealthBarBind
+```
+
+## 5. 常见问题
 
 - **Q: 为什么 UI 不做成 Component Component?**
   - A: UI 是显示层(View)，Component 是逻辑层(Logic)。由各种 Layout Container 管理 UI 的层级比挂在 Entity 下更合理（避免随 Entity 旋转、缩放导致的显示问题）。

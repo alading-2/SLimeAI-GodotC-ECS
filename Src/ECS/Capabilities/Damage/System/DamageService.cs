@@ -113,7 +113,15 @@ public partial class DamageService : Node
         // 基础合法性检查
         if (info == null || info.Victim == null)
         {
-            _log.Warn("伤害系统：无效的伤害信息或受害者。");
+            _log.Warn(
+                "DamageProcess skipped: invalid info",
+                outcome: LogOutcome.Skipped,
+                fields: new LogFields
+                {
+                    ["reasonCode"] = info == null ? "damage_info_null" : "victim_null"
+                },
+                operation: "DamageProcess",
+                phase: "Combat");
             return new DamageProcessResult(false, "无效的伤害信息或受害者");
         }
 
@@ -146,13 +154,70 @@ public partial class DamageService : Node
             info.IsDodged);
         trace.Complete(LogOutcome.Completed, "DamageProcess completed", new LogFields
         {
+            ["damageId"] = info.Id.ToString("N"),
+            ["attackerId"] = GetEntityId(info.Attacker),
+            ["victimId"] = GetEntityId(info.Victim),
+            ["entityId"] = GetEntityId(info.Victim),
+            ["damageType"] = info.Type.ToString(),
+            ["damageTags"] = info.Tags.ToString(),
+            ["baseDamage"] = info.Damage,
             ["processed"] = result.Processed,
             ["appliedDamage"] = result.AppliedDamage,
             ["actualDamage"] = result.ActualDamage,
             ["finalDamage"] = result.FinalDamage,
+            ["isCritical"] = info.IsCritical,
             ["isDodged"] = result.WasDodged,
-            ["processorCount"] = _processors.Count
+            ["isBlocked"] = info.IsBlocked,
+            ["isSimulation"] = info.IsSimulation,
+            ["isEnd"] = info.IsEnd,
+            ["processorCount"] = _processors.Count,
+            ["processorDigest"] = string.Join(" -> ", info.Logs),
+            ["reasonCode"] = ResolveDamageReasonCode(info, result)
         });
         return result;
+    }
+
+    private static string GetEntityId(object? entity)
+    {
+        if (entity is not IEntity runtimeEntity)
+        {
+            return "unknown";
+        }
+
+        try
+        {
+            return runtimeEntity.Data.Has(GeneratedDataKey.Id)
+                ? runtimeEntity.Data.Get<string>(GeneratedDataKey.Id)
+                : "unknown";
+        }
+        catch
+        {
+            return "unknown";
+        }
+    }
+
+    private static string ResolveDamageReasonCode(DamageInfo info, DamageProcessResult result)
+    {
+        if (!result.Processed)
+        {
+            return "not_processed";
+        }
+
+        if (info.IsDodged)
+        {
+            return "dodged";
+        }
+
+        if (info.IsBlocked)
+        {
+            return "blocked";
+        }
+
+        if (info.IsEnd && !result.AppliedDamage)
+        {
+            return "ended_without_damage";
+        }
+
+        return result.AppliedDamage ? "damage_applied" : "no_actual_damage";
     }
 }

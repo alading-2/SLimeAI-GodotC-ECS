@@ -1,0 +1,16 @@
+{
+  "generatedAtUtc": "2026-06-10T07:33:04.967Z",
+  "runDir": ".ai-temp/log-runs/20260610-013907",
+  "resultSource": "structured-log",
+  "status": "passed",
+  "counts": {
+    "entries": 19660,
+    "validationEntries": 0,
+    "artifacts": 0,
+    "artifactPasses": 0,
+    "artifactFailures": 0,
+    "structuredFailures": 0,
+    "stdoutFallbackFiles": 0
+  },
+  "failures": []
+}

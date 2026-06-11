@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -207,16 +208,21 @@ public sealed class OperationTrace : IDisposable
     private readonly string _operation;
     private readonly string _phase;
     private readonly string _correlationId;
+    private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
     private readonly List<string> _steps = new();
     private bool _completed;
+    private readonly string? _sourceFile;
+    private readonly int? _sourceLine;
 
-    internal OperationTrace(string owner, string context, string operation, string phase, string? correlationId)
+    internal OperationTrace(string owner, string context, string operation, string phase, string? correlationId, string? sourceFile, int? sourceLine)
     {
         _owner = owner;
         _context = context;
         _operation = operation;
         _phase = phase;
         _correlationId = string.IsNullOrWhiteSpace(correlationId) ? Guid.NewGuid().ToString("N") : correlationId;
+        _sourceFile = sourceFile;
+        _sourceLine = sourceLine;
         Log.Emit(new LogEntry
         {
             Severity = LogSeverity.Debug,
@@ -227,7 +233,10 @@ public sealed class OperationTrace : IDisposable
             Operation = _operation,
             Phase = _phase,
             CorrelationId = _correlationId,
-            Message = "flow started"
+            SourceFile = _sourceFile,
+            SourceLine = _sourceLine,
+            Message = "flow started",
+            Fields = new Dictionary<string, object?> { ["entryType"] = "flow_start" }
         });
     }
 
@@ -249,8 +258,15 @@ public sealed class OperationTrace : IDisposable
             Operation = _operation,
             Phase = _phase,
             CorrelationId = _correlationId,
+            SourceFile = _sourceFile,
+            SourceLine = _sourceLine,
             Message = message,
-            Fields = new Dictionary<string, object?> { ["stepIndex"] = _steps.Count }
+            Fields = new Dictionary<string, object?>
+            {
+                ["entryType"] = "flow_step",
+                ["stepIndex"] = _steps.Count,
+                ["durationMs"] = _stopwatch.ElapsedMilliseconds
+            }
         });
     }
 
@@ -263,6 +279,8 @@ public sealed class OperationTrace : IDisposable
 
         _completed = true;
         var values = fields is null ? new Dictionary<string, object?>() : new Dictionary<string, object?>(fields);
+        values["entryType"] = "flow_summary";
+        values["durationMs"] = _stopwatch.ElapsedMilliseconds;
         values["stepCount"] = _steps.Count;
 
         Log.Emit(new LogEntry
@@ -275,6 +293,8 @@ public sealed class OperationTrace : IDisposable
             Operation = _operation,
             Phase = _phase,
             CorrelationId = _correlationId,
+            SourceFile = _sourceFile,
+            SourceLine = _sourceLine,
             Message = message ?? $"[FLOW:{_operation}] {outcome}",
             Fields = values
         });
@@ -876,9 +896,16 @@ public class Log
         ContextFilters[contextName] = ToSeverity(level);
     }
 
-    public static OperationTrace BeginTrace(string owner, string context, string operation, string phase = "Runtime", string? correlationId = null)
+    public static OperationTrace BeginTrace(
+        string owner,
+        string context,
+        string operation,
+        string phase = "Runtime",
+        string? correlationId = null,
+        [CallerFilePath] string? sourceFile = null,
+        [CallerLineNumber] int sourceLine = 0)
     {
-        return new OperationTrace(owner, context, operation, phase, correlationId);
+        return new OperationTrace(owner, context, operation, phase, correlationId, sourceFile, sourceLine);
     }
 
     public static void Emit(LogEntry entry)
@@ -937,9 +964,11 @@ public class Log
         LogFields? fields = null,
         LogChannel channel = LogChannel.Runtime,
         string? operation = null,
-        string? phase = null)
+        string? phase = null,
+        [CallerFilePath] string? sourceFile = null,
+        [CallerLineNumber] int sourceLine = 0)
     {
-        Write(LogSeverity.Trace, message, outcome, validationStatus, fields, channel, operation, phase);
+        Write(LogSeverity.Trace, message, outcome, validationStatus, fields, channel, operation, phase, sourceFile, sourceLine);
     }
 
     [Conditional("DEBUG")]
@@ -950,9 +979,11 @@ public class Log
         LogFields? fields = null,
         LogChannel channel = LogChannel.Runtime,
         string? operation = null,
-        string? phase = null)
+        string? phase = null,
+        [CallerFilePath] string? sourceFile = null,
+        [CallerLineNumber] int sourceLine = 0)
     {
-        Write(LogSeverity.Debug, message, outcome, validationStatus, fields, channel, operation, phase);
+        Write(LogSeverity.Debug, message, outcome, validationStatus, fields, channel, operation, phase, sourceFile, sourceLine);
     }
 
     public void Info(
@@ -962,9 +993,11 @@ public class Log
         LogFields? fields = null,
         LogChannel channel = LogChannel.Runtime,
         string? operation = null,
-        string? phase = null)
+        string? phase = null,
+        [CallerFilePath] string? sourceFile = null,
+        [CallerLineNumber] int sourceLine = 0)
     {
-        Write(LogSeverity.Info, message, outcome, validationStatus, fields, channel, operation, phase);
+        Write(LogSeverity.Info, message, outcome, validationStatus, fields, channel, operation, phase, sourceFile, sourceLine);
     }
 
     public void Success(
@@ -974,9 +1007,11 @@ public class Log
         LogFields? fields = null,
         LogChannel channel = LogChannel.Runtime,
         string? operation = null,
-        string? phase = null)
+        string? phase = null,
+        [CallerFilePath] string? sourceFile = null,
+        [CallerLineNumber] int sourceLine = 0)
     {
-        Write(LogSeverity.Info, message, outcome, validationStatus, fields, channel, operation, phase);
+        Write(LogSeverity.Info, message, outcome, validationStatus, fields, channel, operation, phase, sourceFile, sourceLine);
     }
 
     public void Warn(
@@ -986,9 +1021,11 @@ public class Log
         LogFields? fields = null,
         LogChannel channel = LogChannel.Runtime,
         string? operation = null,
-        string? phase = null)
+        string? phase = null,
+        [CallerFilePath] string? sourceFile = null,
+        [CallerLineNumber] int sourceLine = 0)
     {
-        Write(LogSeverity.Warn, message, outcome, validationStatus, fields, channel, operation, phase);
+        Write(LogSeverity.Warn, message, outcome, validationStatus, fields, channel, operation, phase, sourceFile, sourceLine);
     }
 
     public void Error(
@@ -998,9 +1035,11 @@ public class Log
         LogFields? fields = null,
         LogChannel channel = LogChannel.Runtime,
         string? operation = null,
-        string? phase = null)
+        string? phase = null,
+        [CallerFilePath] string? sourceFile = null,
+        [CallerLineNumber] int sourceLine = 0)
     {
-        Write(LogSeverity.Error, message, outcome, validationStatus, fields, channel, operation, phase);
+        Write(LogSeverity.Error, message, outcome, validationStatus, fields, channel, operation, phase, sourceFile, sourceLine);
     }
 
     public void Write(
@@ -1011,7 +1050,9 @@ public class Log
         LogFields? fields = null,
         LogChannel channel = LogChannel.Runtime,
         string? operation = null,
-        string? phase = null)
+        string? phase = null,
+        [CallerFilePath] string? sourceFile = null,
+        [CallerLineNumber] int sourceLine = 0)
     {
         if (!ShouldLog(severity, channel, operation ?? _operation) && channel != LogChannel.Validation)
         {
@@ -1029,6 +1070,8 @@ public class Log
             Operation = operation ?? _operation,
             Phase = phase ?? (channel == LogChannel.Validation ? "Validation" : "Runtime"),
             Message = message?.ToString() ?? string.Empty,
+            SourceFile = sourceFile,
+            SourceLine = sourceLine,
             Fields = fields is null ? new Dictionary<string, object?>() : new Dictionary<string, object?>(fields)
         });
     }

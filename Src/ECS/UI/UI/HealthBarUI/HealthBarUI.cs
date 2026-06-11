@@ -98,19 +98,19 @@ public partial class HealthBarUI : UIBase, IPoolable
     {
         var entity = evt.Entity;
         var entityTypeName = entity.GetType().Name;
-        _log.Info($"[事件回调] OnUnitCreated 被调用: EntityType={entityTypeName}");
+        var entityId = GetEntityId(entity);
 
         // 只处理 IUnit 类型的实体
         if (entity is not IUnit)
         {
-            _log.Debug($"[事件回调] 跳过非 IUnit 实体: {entityTypeName}");
+            LogHealthBarBind(entityId, entityTypeName, LogOutcome.Skipped, "not_unit");
             return;
         }
 
         // 只为有 HP 的单位创建血条
         if (!entity.Data.Has(GeneratedDataKey.CurrentHp))
         {
-            _log.Debug($"[事件回调] 跳过无 HP 的实体: {entityTypeName}");
+            LogHealthBarBind(entityId, entityTypeName, LogOutcome.Skipped, "missing_current_hp");
             return;
         }
 
@@ -118,21 +118,55 @@ public partial class HealthBarUI : UIBase, IPoolable
         bool showHealthBar = entity.Data.Get<bool>(GeneratedDataKey.IsShowHealthBar);
         if (!showHealthBar)
         {
-            _log.Debug($"[事件回调] 跳过不显示血条的实体: {entityTypeName}");
+            LogHealthBarBind(entityId, entityTypeName, LogOutcome.Skipped, "healthbar_hidden");
             return;
         }
-
-        _log.Info($"[事件回调] 准备为 {entityTypeName} 绑定血条");
 
         // 使用 UIManager 从对象池获取并绑定血条
         var healthBar = UIManager.BindUI<HealthBarUI>(entity, ObjectPoolNames.HealthBarPool);
         if (healthBar == null)
         {
-            _log.Error($"绑定血条失败: Entity {entity.Data.Get<string>(GeneratedDataKey.Id)}");
+            LogHealthBarBind(entityId, entityTypeName, LogOutcome.Failed, "bind_failed", LogSeverity.Error);
         }
         else
         {
-            _log.Info($"[事件回调] 成功为 {entityTypeName} 绑定血条");
+            LogHealthBarBind(entityId, entityTypeName, LogOutcome.Succeeded, "bound");
+        }
+    }
+
+    private static void LogHealthBarBind(
+        string entityId,
+        string entityTypeName,
+        LogOutcome outcome,
+        string reasonCode,
+        LogSeverity severity = LogSeverity.Info)
+    {
+        _log.Write(
+            severity,
+            "HealthBarBind",
+            outcome,
+            fields: new LogFields
+            {
+                ["entityId"] = entityId,
+                ["entityType"] = entityTypeName,
+                ["poolName"] = ObjectPoolNames.HealthBarPool,
+                ["reasonCode"] = reasonCode
+            },
+            operation: "HealthBarBind",
+            phase: "Runtime");
+    }
+
+    private static string GetEntityId(IEntity entity)
+    {
+        try
+        {
+            return entity.Data.Has(GeneratedDataKey.Id)
+                ? entity.Data.Get<string>(GeneratedDataKey.Id)
+                : "unknown";
+        }
+        catch
+        {
+            return "unknown";
         }
     }
 

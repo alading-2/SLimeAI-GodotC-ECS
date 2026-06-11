@@ -25,6 +25,9 @@ description: 迁移或设计 SlimeAI / BrotatoLike UI、HUD、响应式绑定、
 - UI 读取 Entity 状态通过 Runtime Data / Entity.Events，不直接改业务状态。
 - UI 不绕过 Damage / Ability / Feature / Schedule 服务修改核心逻辑。
 - 游戏特定 UI 先放 BrotatoLike；复用稳定后再抽到框架。
+- 持久绑定类 UI 的日志使用稳定 operation 和字段，不写多段重复自然语言文本；`HealthBarUI` 绑定使用 `owner=Runtime`、`operation=HealthBarBind`，字段包含 `entityId / entityType / poolName / reasonCode`。
+- UI 成功绑定默认一条 summary；跳过和失败必须写 `reasonCode`，例如 `not_unit / missing_current_hp / healthbar_hidden / bind_failed`。
+- 分析 UI 绑定问题先跑 `logctl analyze` 并读 `summary.md`、`ai-context.md`、`missing-fields/index.md`，再用 `logctl query --analysis-dir <run>/analysis owner=Runtime operation=HealthBarBind` 缩小范围。
 
 ## 验证
 

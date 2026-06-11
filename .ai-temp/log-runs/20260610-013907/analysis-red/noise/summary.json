@@ -1,0 +1,352 @@
+[
+  {
+    "owner": "TargetSelector",
+    "context": "TargetQueryEngine",
+    "operation": "TargetQueryEntities",
+    "message": "TargetQueryEntities completed",
+    "count": 12164
+  },
+  {
+    "owner": "ObjectPool",
+    "context": "ObjectPool",
+    "operation": "ObjectPoolAcquire",
+    "message": "ObjectPoolAcquire completed",
+    "count": 1084
+  },
+  {
+    "owner": "ObjectPool",
+    "context": "ObjectPool",
+    "operation": "ObjectPoolRelease",
+    "message": "ObjectPoolRelease completed",
+    "count": 716
+  },
+  {
+    "owner": "TargetSelector",
+    "context": "TargetQueryEngine",
+    "operation": "TargetQueryPositions",
+    "message": "TargetQueryPositions completed",
+    "count": 492
+  },
+  {
+    "owner": "Damage",
+    "context": "DamageService",
+    "operation": "DamageProcess",
+    "message": "DamageProcess completed",
+    "count": 444
+  },
+  {
+    "owner": "Runtime",
+    "context": "HealthBarUI",
+    "operation": "HealthBarUI",
+    "message": "[事件回调] OnUnitCreated 被调用: EntityType=EnemyEntity",
+    "count": 332
+  },
+  {
+    "owner": "Runtime",
+    "context": "HealthBarUI",
+    "operation": "HealthBarUI",
+    "message": "[事件回调] 准备为 EnemyEntity 绑定血条",
+    "count": 332
+  },
+  {
+    "owner": "Runtime",
+    "context": "HealthBarUI",
+    "operation": "HealthBarUI",
+    "message": "[事件回调] 成功为 EnemyEntity 绑定血条",
+    "count": 332
+  },
+  {
+    "owner": "Entity",
+    "context": "EntityManager",
+    "operation": "EntityManager",
+    "message": "从对象池获取 Entity: EnemyEntity (池名: EnemyPool)",
+    "count": 328
+  },
+  {
+    "owner": "TargetSelector",
+    "context": "TargetQueryEngine",
+    "operation": "SuppressedSummary",
+    "message": "[FLOW:SuppressedSummary] log budget suppressed repeated entries",
+    "count": 300
+  },
+  {
+    "owner": "Entity",
+    "context": "EntitySpawnPipeline",
+    "operation": "EntitySpawnPipeline",
+    "message": "已加载 VisualScene: res://assets/Unit/Enemy/yuren/AnimatedSprite2D/yuren.tscn",
+    "count": 232
+  },
+  {
+    "owner": "Entity",
+    "context": "EntitySpawnPipeline",
+    "operation": "EntitySpawnPipeline",
+    "message": "已加载 VisualScene: res://assets/Unit/Enemy/chailangren/AnimatedSprite2D/chailangren.tscn",
+    "count": 100
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "      IsEnabled: True, IsStateAllowed: True, IsRunning: True, BlockedReason: ",
+    "count": 84
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "      MountGroup: Base, Tags: Core, Runtime",
+    "count": 32
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "      MountGroup: Combat, Tags: Core, Combat, Runtime",
+    "count": 32
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "      IsEnabled: True, IsStateAllowed: False, IsRunning: False, BlockedReason: FlowState=FrontEnd 不在允许范围 Gameplay",
+    "count": 28
+  },
+  {
+    "owner": "Ability",
+    "context": "AbilitySystem",
+    "operation": "AbilityTryTrigger",
+    "message": "AbilityTryTrigger completed",
+    "count": 20
+  },
+  {
+    "owner": "Runtime",
+    "context": "CooldownComponent",
+    "operation": "CooldownComponent",
+    "message": "技能开始冷却: 冲刺, 时长: 1.00s",
+    "count": 20
+  },
+  {
+    "owner": "Runtime",
+    "context": "CooldownComponent",
+    "operation": "CooldownComponent",
+    "message": "技能冷却完成: 冲刺",
+    "count": 20
+  },
+  {
+    "owner": "Runtime",
+    "context": "EffectComponent",
+    "operation": "EffectComponent",
+    "message": "动画播放完毕，自动销毁",
+    "count": 20
+  },
+  {
+    "owner": "Runtime",
+    "context": "EventBus",
+    "operation": "EventBus",
+    "message": "EventBus 已清空",
+    "count": 20
+  },
+  {
+    "owner": "Entity",
+    "context": "EntityManager_Component",
+    "operation": "EntityManager_Component",
+    "message": "Entity EffectPool_d810f3d5 共注册 3 个 Component",
+    "count": 12
+  },
+  {
+    "owner": "Entity",
+    "context": "EntityManager_Component",
+    "operation": "EntityManager_Component",
+    "message": "Entity EffectPool_d810f3d5 共注销 3 个 Component",
+    "count": 12
+  },
+  {
+    "owner": "Runtime",
+    "context": "LifecycleComponent",
+    "operation": "LifecycleComponent",
+    "message": "状态变化: Alive -> Dead",
+    "count": 12
+  },
+  {
+    "owner": "Runtime",
+    "context": "LifecycleComponent",
+    "operation": "LifecycleComponent",
+    "message": "单位死亡, 类型: Hero",
+    "count": 12
+  },
+  {
+    "owner": "Runtime",
+    "context": "LifecycleComponent",
+    "operation": "LifecycleComponent",
+    "message": "状态变化: Dead -> Reviving",
+    "count": 12
+  },
+  {
+    "owner": "Runtime",
+    "context": "LifecycleComponent",
+    "operation": "LifecycleComponent",
+    "message": "状态变化: Reviving -> Alive",
+    "count": 12
+  },
+  {
+    "owner": "Runtime",
+    "context": "LifecycleComponent",
+    "operation": "LifecycleComponent",
+    "message": "单位复活完成",
+    "count": 12
+  },
+  {
+    "owner": "Entity",
+    "context": "EntityManager_Component",
+    "operation": "EntityManager_Component",
+    "message": "Entity EffectPool_3a6d32ba 共注册 3 个 Component",
+    "count": 8
+  },
+  {
+    "owner": "Entity",
+    "context": "EntityManager_Component",
+    "operation": "EntityManager_Component",
+    "message": "Entity EffectPool_3a6d32ba 共注销 3 个 Component",
+    "count": 8
+  },
+  {
+    "owner": "Runtime",
+    "context": "ActiveSkillBarUI",
+    "operation": "ActiveSkillBarUI",
+    "message": "尝试高亮槽位: 0",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "========== 系统状态报告 ==========",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "已加载系统总数: 14",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "  [Running] ObjectPoolInit",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "  [Running] TimerManager",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "  [Running] ProjectStateBridge",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "  [Running] EntityManager",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "      MountGroup: Gameplay, Tags: Gameplay, Runtime",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "      MountGroup: UI, Tags: UI, Runtime",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "  [Running] UIManager",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "      MountGroup: UI, Tags: Core, UI, Runtime",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "      MountGroup: UI, Tags: Combat, UI, Runtime",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "  [Running] TestSystem",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "      MountGroup: Test, Tags: Debug, Test",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "  [Running] MouseSelectionSystem",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "      MountGroup: Debug, Tags: Debug, Test",
+    "count": 8
+  },
+  {
+    "owner": "System",
+    "context": "SystemManager",
+    "operation": "SystemManager",
+    "message": "==================================",
+    "count": 8
+  },
+  {
+    "owner": "Damage",
+    "context": "DamageNumberSystem",
+    "operation": "DamageNumberSystem",
+    "message": "DamageNumberSystem 已启用（全局事件模式）",
+    "count": 4
+  },
+  {
+    "owner": "Entity",
+    "context": "EntityManager_Component",
+    "operation": "EntityManager_Component",
+    "message": "🔥 开始预热 Entity Component 缓存...",
+    "count": 4
+  },
+  {
+    "owner": "Entity",
+    "context": "EntityManager_Component",
+    "operation": "EntityManager_Component",
+    "message": "  - 预热警告: res://Src/ECS/Capabilities/Ability/Entity/AbilityEntity.tscn 未找到任何 Component (可能结构特殊)",
+    "count": 4
+  }
+]

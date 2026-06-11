@@ -174,7 +174,7 @@ Log source / Validation check / Flow step
 
 ```bash
 python3 Workspace/SDD/sdd.py validate SDD-0040
-python3 Workspace/SDD/sdd.py validate PRJ-0002
+python3 Workspace/SDD/sdd.py validate --all
 python3 Workspace/SDD/sdd.py index
 git diff --check
 ```

@@ -3,10 +3,11 @@
 ## Latest Resume
 
 - **Updated**: 2026-06-10 15:17
-- **Current Task**: T2.1 analyzer digest contract
-- **Last Conclusion**: 用户关于“需求写出来但 Log 重构仍没有完成打印信息整理”的质疑成立。T1 完成了 `LogEntry`、sink、profile、budget、`OperationTrace`、`ValidationSession` 和最小 `logctl` 管道，但当前样本仍缺 `summary.md`、强 `ai-context.md`、noise/missing-fields markdown digest、正确 flow 边界、semantic missing-fields、owner hot-spot cleanup 和 Validation artifact 状态区分；原 `12/12 done` 表达失真，已修正为 `12/19`。执行提示词已改为 T2 版本，并把 `source-request.md` 与 `07-当前样本日志问题与整理方案.md` 导入本 SDD `design/`。
-- **Next Action**: 按 `execution-prompt.md` 执行 T2.1：先改 `Workspace/Tools/logctl/logctl.mjs`，让 `.ai-temp/log-runs/20260610-013907` 生成可读 digest，并将无 artifact / Validation 的 run 从 `passed` 降为 `no-failure-observed` 或带 invalid-input warning。
-- **Open Blockers**: 最终 Godot scene smoke blocked：当前没有可验证本框架工作树的承载游戏 runner。该 blocker 不阻止 T2.1~T2.5 在现有样本和本地 CLI 上推进。
+- **Updated**: 2026-06-10 16:38
+- **Current Task**: T2.5 owner hot-spot cleanup
+- **Last Conclusion**: T2.1~T2.4 已完成第一批实现闭环：`logctl analyze` 现在输出 `summary.md`、强 `ai-context.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`flows/index.md` 和 `failures/index.md`；当前样本 `.ai-temp/log-runs/20260610-013907` 的 gate 为 `status=no-failure-observed`、`confidence=low`、`resultSource=structured-log`，不再把 `validationEntries=0` / `artifacts=0` 误报为 `passed`。`flows/index.md` 只收 `channel=Flow`、显式 `entryType` 或完整 OperationTrace-like contract；semantic missing-fields 已列出 `fields:{}`、`operation==context`、缺 `durationMs/reasonCode/entityId/sourceFile/sourceLine`、unknown owner/phase。HealthBarUI 和 Damage 已做第一批 owner 字段补强，Logger `OperationTrace` 已写 `entryType/durationMs/sourceFile/sourceLine`，DocsAI 和 skill 源已同步本轮契约。
+- **Next Action**: 继续 T2.5：TargetSelector / ObjectPool / System 的运行时 aggregate summary 仍未完成，当前只是由 analyzer digest 明确暴露为下一步 owner task；随后推进 T2.6，让承载样本或后续场景接入 `ValidationSession` / artifact。先跑本轮验证并把结果追加到 P031。
+- **Open Blockers**: 最终 Godot scene smoke blocked：当前没有可验证本框架工作树的承载游戏 runner。该 blocker 不阻止 T2.5 剩余 owner cleanup 或 T2.6 在有 runner 后继续推进。
 ## Timeline
 
 ### P001 — 2026-06-09 15:33 — resume
@@ -248,3 +249,11 @@
 - **Evidence**: `SDD-0040/design/INDEX.md` 已包含 `source-request.md` 与 `07-当前样本日志问题与整理方案.md`；`README.md` 阅读顺序已补齐；`execution-prompt.md` 已改为 T2 版。
 - **Impact**: 新会话可直接从 SDD-0040 恢复 T2 analyzer/owner follow-up，不会再误读为 T1 旧提示词。
 - **Resume**: 从 `execution-prompt.md` 的 T2.1 开始执行。
+
+### P031 — 2026-06-10 16:38 — validation
+
+- **Context**: 执行 T2.1~T2.4，并同步第一批 owner 字段补强状态。
+- **Conclusion**: `Workspace/Tools/logctl/logctl.mjs` 已升级 analyzer digest、gate status、flow 边界、semantic missing-fields 和 `suggest` 聚合；`Src/ECS/Tools/Logger/Log.cs` 已让 `OperationTrace` / structured writes 写入 caller source 与 flow duration；`HealthBarUI` 重复文本已合并为 `HealthBarBind` structured log；`DamageService` 的 `DamageProcess` 已补 damage/source/result/processor/reason 字段。DocsAI Logger / Damage / UI 和 `.ai-config` test/tools/damage/ui skill 源已同步。T2.1~T2.4 标记完成，T2.5 保持未完成且记录 partial。
+- **Evidence**: `bash Workspace/Tools/ai-config-sync/sync-ai-config.sh` passed；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only` passed with Critical:0 / Advisory:9；`node --check Workspace/Tools/logctl/logctl.mjs` passed；`Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-next` passed and reported status=`no-failure-observed`, confidence=`low`, resultSource=`structured-log`, entries=4915, invalidJsonl=1, validationEntries=0, artifacts=0；required digest files `summary.md`、`ai-context.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`flows/index.md` exist；`Workspace/Tools/logctl/logctl query --analysis-dir .ai-temp/log-runs/20260610-013907/analysis-next owner=TargetSelector operation=TargetQueryEntities --format md` returned 3041 matches；`Workspace/Tools/logctl/logctl suggest --run-dir .ai-temp/log-runs/20260610-013907 --dry-run` grouped suggestions by owner/context/operation；`dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly` passed with 0 errors / 1290 warnings；`bash Data/DataOS/Tools/validate-dataos.sh Data/DataOS/Authoring/slimeainew.authoring.db` passed；`python3 Workspace/SDD/sdd.py validate SDD-0040` passed 0 error / 0 warning；targeted `git diff --check` passed。
+- **Impact**: 当前样本默认入口已从 raw JSONL 转为 `analysis-next/summary.md`、`ai-context.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`flows/index.md`；AI 无需直接读取 4915 行 raw 即可判断 gate 可信度、top noise、flow 与缺字段任务。
+- **Resume**: 跑验证后继续 T2.5 TargetSelector / ObjectPool / System aggregate summary，或先做 T2.6 Validation artifact adoption；Godot scene smoke blocker 仍保留。

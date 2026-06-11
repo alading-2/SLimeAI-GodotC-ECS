@@ -1,0 +1,1072 @@
+{
+  "envelope": [
+    {
+      "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+      "line": 4915,
+      "missing": [
+        "runElapsedMs",
+        "frame",
+        "physicsFrame"
+      ]
+    }
+  ],
+  "semantic": {
+    "totals": {
+      "fieldsEmpty": 1109,
+      "operationEqualsContext": 1109,
+      "flowMissingDurationMs": 3730,
+      "missingReasonCode": 11,
+      "missingEntityId": 937,
+      "missingSource": 4914,
+      "unknownOwner": 0,
+      "unknownPhase": 0
+    },
+    "groups": [
+      {
+        "owner": "TargetSelector",
+        "context": "TargetQueryEngine",
+        "operation": "TargetQueryEntities",
+        "count": 3041,
+        "issues": {
+          "flow_missing_durationMs": 3041,
+          "missing_source": 3041
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 233,
+            "message": "TargetQueryEntities completed"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 277,
+            "message": "TargetQueryEntities completed"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 278,
+            "message": "TargetQueryEntities completed"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Tools/TargetSelector/README.md",
+        "recommendedAction": "add durationMs and query shape fields; aggregate successful queries and keep warning/failure details."
+      },
+      {
+        "owner": "ObjectPool",
+        "context": "ObjectPool",
+        "operation": "ObjectPoolAcquire",
+        "count": 271,
+        "issues": {
+          "flow_missing_durationMs": 271,
+          "missing_source": 271
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 196,
+            "message": "ObjectPoolAcquire completed"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 211,
+            "message": "ObjectPoolAcquire completed"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 220,
+            "message": "ObjectPoolAcquire completed"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Tools/ObjectPool/README.md",
+        "recommendedAction": "add durationMs/entryType and poolName-based batch summary; keep skipped/discarded reasonCode."
+      },
+      {
+        "owner": "Runtime",
+        "context": "HealthBarUI",
+        "operation": "HealthBarUI",
+        "count": 256,
+        "issues": {
+          "fields_empty": 256,
+          "operation_equals_context": 256,
+          "missing_entityId": 256,
+          "missing_source": 256
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 13,
+            "message": "[ModuleInitializer] HealthBarUI.Initialize() 开始执行"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 14,
+            "message": "[ModuleInitializer] HealthBarUI 全局事件监听已初始化完成"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 194,
+            "message": "[事件回调] OnUnitCreated 被调用: EntityType=PlayerEntity"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/UI/Usage.md",
+        "recommendedAction": "add HealthBarBind operation and fields {entityId, entityType, poolName, outcome, reasonCode}; success path should be counted, not printed as three text lines."
+      },
+      {
+        "owner": "ObjectPool",
+        "context": "ObjectPool",
+        "operation": "ObjectPoolRelease",
+        "count": 179,
+        "issues": {
+          "flow_missing_durationMs": 179,
+          "missing_source": 179
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 239,
+            "message": "ObjectPoolRelease completed"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 286,
+            "message": "ObjectPoolRelease completed"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 407,
+            "message": "ObjectPoolRelease completed"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Tools/ObjectPool/README.md",
+        "recommendedAction": "add durationMs/entryType and poolName-based batch summary; keep skipped/discarded reasonCode."
+      },
+      {
+        "owner": "Entity",
+        "context": "EntityManager",
+        "operation": "EntityManager",
+        "count": 171,
+        "issues": {
+          "fields_empty": 171,
+          "operation_equals_context": 171,
+          "missing_entityId": 171,
+          "missing_source": 171
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 186,
+            "message": "从场景实例化 Entity: PlayerEntity"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 187,
+            "message": "已将 Entity 添加到场景树: PlayerEntity -> ECS/Entity/PlayerEntity"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 188,
+            "message": "[Player] 已同步碰撞模板并删除 VisualRoot/CollisionShape2D"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/Entity/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "Runtime",
+        "context": "AIComponent",
+        "operation": "AIComponent",
+        "count": 166,
+        "issues": {
+          "fields_empty": 166,
+          "operation_equals_context": 166,
+          "missing_entityId": 166,
+          "missing_source": 166
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 206,
+            "message": "[Enemy] 行为树已设置: 近战敌人"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 207,
+            "message": "[Enemy] AI 组件注册完成"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 245,
+            "message": "[EnemyPool_73046cc4] 行为树已设置: 近战敌人"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "TargetSelector",
+        "context": "TargetQueryEngine",
+        "operation": "TargetQueryPositions",
+        "count": 123,
+        "issues": {
+          "flow_missing_durationMs": 123,
+          "missing_source": 123
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 279,
+            "message": "TargetQueryPositions completed"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 282,
+            "message": "TargetQueryPositions completed"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 285,
+            "message": "TargetQueryPositions completed"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Tools/TargetSelector/README.md",
+        "recommendedAction": "add durationMs and query shape fields; aggregate successful queries and keep warning/failure details."
+      },
+      {
+        "owner": "System",
+        "context": "SystemManager",
+        "operation": "SystemManager",
+        "count": 114,
+        "issues": {
+          "fields_empty": 114,
+          "operation_equals_context": 114,
+          "missing_source": 114
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 15,
+            "message": "SystemManager _Ready 开始启动系统框架"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 33,
+            "message": "根据预设计算，应加载 14 个系统"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 34,
+            "message": "当前已注册系统描述符数量: 14"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/System/README.md",
+        "recommendedAction": "replace context-named text logs with stable operations such as SystemStartup, SystemPreflight or SystemDiagnosticsSnapshot."
+      },
+      {
+        "owner": "Damage",
+        "context": "DamageService",
+        "operation": "DamageProcess",
+        "count": 111,
+        "issues": {
+          "flow_missing_durationMs": 111,
+          "missing_entityId": 111,
+          "missing_source": 111
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 235,
+            "message": "DamageProcess completed"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 238,
+            "message": "DamageProcess completed"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 394,
+            "message": "DamageProcess completed"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Capabilities/Damage/README.md",
+        "recommendedAction": "add durationMs plus DamageInfo entity/source ids and processor chain digest."
+      },
+      {
+        "owner": "Entity",
+        "context": "EntitySpawnPipeline",
+        "operation": "EntitySpawnPipeline",
+        "count": 85,
+        "issues": {
+          "fields_empty": 85,
+          "operation_equals_context": 85,
+          "missing_entityId": 85,
+          "missing_source": 85
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 189,
+            "message": "已加载 VisualScene: res://assets/Unit/Player/deluyi/AnimatedSprite2D/deluyi.tscn"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 205,
+            "message": "已加载 VisualScene: res://assets/Unit/Enemy/chailangren/AnimatedSprite2D/chailangren.tscn"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 222,
+            "message": "[AbilityPool_91d602ba] 未配置 VisualScene，跳过视觉注入"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/Entity/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "Runtime",
+        "context": "UIManager",
+        "operation": "UIManager",
+        "count": 85,
+        "issues": {
+          "fields_empty": 85,
+          "operation_equals_context": 85,
+          "missing_source": 85
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 76,
+            "message": "UIManager 初始化完成"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 197,
+            "message": "已绑定 UI: HealthBarUI -> Entity 90110430851"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 212,
+            "message": "已绑定 UI: HealthBarUI -> Entity 114437394392"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/UI/Usage.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "Runtime",
+        "context": "UnitAnimationComponent",
+        "operation": "UnitAnimationComponent",
+        "count": 84,
+        "issues": {
+          "fields_empty": 84,
+          "operation_equals_context": 84,
+          "missing_entityId": 84,
+          "missing_source": 84
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 192,
+            "message": "[Player] 缓存了 8 个可用动画: attack1, beattacked, castingidle, celebrate, dead, idle, run, skill"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 208,
+            "message": "[Enemy] 缓存了 8 个可用动画: attack1, beattacked, castingidle, celebrate, dead, idle, run, skill"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 247,
+            "message": "[EnemyPool_73046cc4] 缓存了 8 个可用动画: attack1, attack2, beattacked, celebrate, dead, idle, run, skill"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "TargetSelector",
+        "context": "TargetQueryEngine",
+        "operation": "SuppressedSummary",
+        "count": 75,
+        "issues": {
+          "missing_source": 75
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 361,
+            "message": "[FLOW:SuppressedSummary] log budget suppressed repeated entries"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 362,
+            "message": "[FLOW:SuppressedSummary] log budget suppressed repeated entries"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 446,
+            "message": "[FLOW:SuppressedSummary] log budget suppressed repeated entries"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Tools/TargetSelector/README.md",
+        "recommendedAction": "add durationMs and query shape fields; aggregate successful queries and keep warning/failure details."
+      },
+      {
+        "owner": "Entity",
+        "context": "EntityManager_Component",
+        "operation": "EntityManager_Component",
+        "count": 27,
+        "issues": {
+          "fields_empty": 27,
+          "operation_equals_context": 27,
+          "missing_entityId": 27,
+          "missing_source": 27,
+          "missing_reasonCode": 11
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 48,
+            "message": "🔥 开始预热 Entity Component 缓存..."
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 49,
+            "message": "  - 预热警告: res://Src/ECS/Capabilities/Ability/Entity/AbilityEntity.tscn 未找到任何 Component (可能结构特殊)"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 50,
+            "message": "  - 预热警告: res://Src/ECS/Runtime/Entity/Tests/ComponentRegistrarRuntimeTest.tscn 未找到任何 Component (可能结构特殊)"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/Entity/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "Runtime",
+        "context": "LifecycleComponent",
+        "operation": "LifecycleComponent",
+        "count": 15,
+        "issues": {
+          "fields_empty": 15,
+          "operation_equals_context": 15,
+          "missing_entityId": 15,
+          "missing_source": 15
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 1693,
+            "message": "状态变化: Alive -> Dead"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 1694,
+            "message": "单位死亡, 类型: Hero"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 1841,
+            "message": "状态变化: Dead -> Reviving"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "System",
+        "context": "SystemConfigService",
+        "operation": "SystemConfigService",
+        "count": 15,
+        "issues": {
+          "fields_empty": 15,
+          "operation_equals_context": 15,
+          "missing_source": 15
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 16,
+            "message": "加载系统配置: DamageNumberRuntimeBridge"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 17,
+            "message": "加载系统配置: DamageService"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 18,
+            "message": "加载系统配置: DamageStatisticsSystem"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/System/README.md",
+        "recommendedAction": "replace context-named text logs with stable operations such as SystemStartup, SystemPreflight or SystemDiagnosticsSnapshot."
+      },
+      {
+        "owner": "Runtime",
+        "context": "MainTest",
+        "operation": "MainTest",
+        "count": 14,
+        "issues": {
+          "fields_empty": 14,
+          "operation_equals_context": 14,
+          "missing_entityId": 14,
+          "missing_source": 14
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 181,
+            "message": "=== 开始测试: 主动技能输入系统 ==="
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 182,
+            "message": "操作说明:"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 183,
+            "message": "  LB/RB - 切换技能"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "Runtime",
+        "context": "FeatureHandlerRegistry",
+        "operation": "FeatureHandlerRegistry",
+        "count": 12,
+        "issues": {
+          "fields_empty": 12,
+          "operation_equals_context": 12,
+          "missing_source": 12
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 1,
+            "message": "注册 FeatureHandler: 技能.主动.连锁闪电"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 2,
+            "message": "注册 FeatureHandler: 技能.被动.圆环伤害"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3,
+            "message": "注册 FeatureHandler: 技能.投射物.圆弧射击"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "Runtime",
+        "context": "CooldownComponent",
+        "operation": "CooldownComponent",
+        "count": 10,
+        "issues": {
+          "fields_empty": 10,
+          "operation_equals_context": 10,
+          "missing_source": 10
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3295,
+            "message": "技能开始冷却: 冲刺, 时长: 1.00s"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3431,
+            "message": "技能冷却完成: 冲刺"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3433,
+            "message": "技能开始冷却: 冲刺, 时长: 1.00s"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "Runtime",
+        "context": "DashExecutor",
+        "operation": "DashExecutor",
+        "count": 10,
+        "issues": {
+          "fields_empty": 10,
+          "operation_equals_context": 10,
+          "missing_source": 10
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3296,
+            "message": "冲刺执行: 方向=(1, 0), 位移距离=300, 伤害半径=300"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3389,
+            "message": "冲刺结束: 落点=(439.32697, 669.57574), 伤害半径=300, 命中=3"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3434,
+            "message": "冲刺执行: 方向=(0.8689071, -0.49497533), 位移距离=300, 伤害半径=300"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "ObjectPool",
+        "context": "ObjectPool",
+        "operation": "ObjectPool",
+        "count": 8,
+        "issues": {
+          "fields_empty": 8,
+          "operation_equals_context": 8,
+          "missing_source": 8
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 35,
+            "message": "创建对象池: TimerPool, 初始大小: 50, 最大大小: 300, 父节点路径: Tool/GameTimer"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 36,
+            "message": "创建对象池: EnemyPool, 初始大小: 100, 最大大小: 500, 父节点路径: ECS/Entity/Unit/EnemyPool"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 37,
+            "message": "创建对象池: AbilityPool, 初始大小: 50, 最大大小: 300, 父节点路径: ECS/Entity/Ability/AbilityPool"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Tools/ObjectPool/README.md",
+        "recommendedAction": "add durationMs/entryType and poolName-based batch summary; keep skipped/discarded reasonCode."
+      },
+      {
+        "owner": "Runtime",
+        "context": "ActiveSkillBarUI",
+        "operation": "ActiveSkillBarUI",
+        "count": 6,
+        "issues": {
+          "fields_empty": 6,
+          "operation_equals_context": 6,
+          "missing_source": 6
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 216,
+            "message": "已通过静态布局加载 4 个技能槽位"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 217,
+            "message": "更新技能槽位，共 0 个主动技能"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 218,
+            "message": "尝试高亮槽位: 0"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/UI/Usage.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "Ability",
+        "context": "AbilitySystem",
+        "operation": "AbilityTryTrigger",
+        "count": 5,
+        "issues": {
+          "flow_missing_durationMs": 5,
+          "missing_entityId": 5,
+          "missing_source": 5
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3297,
+            "message": "AbilityTryTrigger completed"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3435,
+            "message": "AbilityTryTrigger completed"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3623,
+            "message": "AbilityTryTrigger completed"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Capabilities/Ability/README.md",
+        "recommendedAction": "replace context-named text logs with stable operations such as SystemStartup, SystemPreflight or SystemDiagnosticsSnapshot."
+      },
+      {
+        "owner": "Runtime",
+        "context": "EffectComponent",
+        "operation": "EffectComponent",
+        "count": 5,
+        "issues": {
+          "fields_empty": 5,
+          "operation_equals_context": 5,
+          "missing_source": 5
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3527,
+            "message": "动画播放完毕，自动销毁"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3626,
+            "message": "动画播放完毕，自动销毁"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3832,
+            "message": "动画播放完毕，自动销毁"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "Runtime",
+        "context": "EffectTool",
+        "operation": "EffectTool",
+        "count": 5,
+        "issues": {
+          "fields_empty": 5,
+          "operation_equals_context": 5,
+          "missing_source": 5
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3382,
+            "message": "生成独立特效: 冲刺落地特效 位置: (439.32697, 669.57574)"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3521,
+            "message": "生成独立特效: 冲刺落地特效 位置: (780.24915, 543.32104)"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3632,
+            "message": "生成独立特效: 冲刺落地特效 位置: (563.2271, 309.20398)"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "Runtime",
+        "context": "EventBus",
+        "operation": "EventBus",
+        "count": 5,
+        "issues": {
+          "fields_empty": 5,
+          "operation_equals_context": 5,
+          "missing_source": 5
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3529,
+            "message": "EventBus 已清空"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3628,
+            "message": "EventBus 已清空"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 3834,
+            "message": "EventBus 已清空"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "System",
+        "context": "RecoverySystem",
+        "operation": "RecoverySystem",
+        "count": 3,
+        "issues": {
+          "fields_empty": 3,
+          "operation_equals_context": 3,
+          "missing_source": 3
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 68,
+            "message": "恢复计时器已启动，配置间隔: 1s"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 69,
+            "message": "RecoverySystem 已启动，恢复间隔: 1s"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 190,
+            "message": "注册实体: Player，当前待处理总数: 1"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/System/README.md",
+        "recommendedAction": "replace context-named text logs with stable operations such as SystemStartup, SystemPreflight or SystemDiagnosticsSnapshot."
+      },
+      {
+        "owner": "System",
+        "context": "SpawnSystem",
+        "operation": "SpawnSystem",
+        "count": 2,
+        "issues": {
+          "fields_empty": 2,
+          "operation_equals_context": 2,
+          "missing_entityId": 2,
+          "missing_source": 2
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 71,
+            "message": "SpawnSystem (TimerManager Architecture) 初始化完成"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 131,
+            "message": "波次 1 开始! 持续时间: 60s, 激活规则数: 2"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/System/README.md",
+        "recommendedAction": "replace context-named text logs with stable operations such as SystemStartup, SystemPreflight or SystemDiagnosticsSnapshot."
+      },
+      {
+        "owner": "System",
+        "context": "SystemPresetService",
+        "operation": "SystemPresetService",
+        "count": 2,
+        "issues": {
+          "fields_empty": 2,
+          "operation_equals_context": 2,
+          "missing_source": 2
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 31,
+            "message": "加载系统预设: Default (Active=True)"
+          },
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 32,
+            "message": "SystemPresetService 初始化完成，共加载 1 个预设，激活预设: Default"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/System/README.md",
+        "recommendedAction": "replace context-named text logs with stable operations such as SystemStartup, SystemPreflight or SystemDiagnosticsSnapshot."
+      },
+      {
+        "owner": "Damage",
+        "context": "DamageNumberSystem",
+        "operation": "DamageNumberSystem",
+        "count": 1,
+        "issues": {
+          "fields_empty": 1,
+          "operation_equals_context": 1,
+          "missing_entityId": 1,
+          "missing_source": 1
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 133,
+            "message": "DamageNumberSystem 已启用（全局事件模式）"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Capabilities/Damage/README.md",
+        "recommendedAction": "add durationMs plus DamageInfo entity/source ids and processor chain digest."
+      },
+      {
+        "owner": "ObjectPool",
+        "context": "ObjectPoolInit",
+        "operation": "ObjectPoolInit",
+        "count": 1,
+        "issues": {
+          "fields_empty": 1,
+          "operation_equals_context": 1,
+          "missing_source": 1
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 43,
+            "message": "ObjectPoolInit 初始化完成"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Tools/ObjectPool/README.md",
+        "recommendedAction": "add durationMs/entryType and poolName-based batch summary; keep skipped/discarded reasonCode."
+      },
+      {
+        "owner": "Runtime",
+        "context": "ActiveSkillInputComponent",
+        "operation": "ActiveSkillInputComponent",
+        "count": 1,
+        "issues": {
+          "fields_empty": 1,
+          "operation_equals_context": 1,
+          "missing_source": 1
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 193,
+            "message": "主动技能输入组件已注册到实体: Player"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "Runtime",
+        "context": "RecoveryComponent",
+        "operation": "RecoveryComponent",
+        "count": 1,
+        "issues": {
+          "fields_empty": 1,
+          "operation_equals_context": 1,
+          "missing_source": 1
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 191,
+            "message": "已注册到 RecoverySystem: Player"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "Runtime",
+        "context": "TriggerComponent",
+        "operation": "TriggerComponent",
+        "count": 1,
+        "issues": {
+          "fields_empty": 1,
+          "operation_equals_context": 1,
+          "missing_source": 1
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 223,
+            "message": "触发组件初始化: 冲刺, 模式: Manual"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/README.md",
+        "recommendedAction": "define stable operation and fields in the owner Log contract."
+      },
+      {
+        "owner": "System",
+        "context": "FeatureSystem",
+        "operation": "FeatureSystem",
+        "count": 1,
+        "issues": {
+          "fields_empty": 1,
+          "operation_equals_context": 1,
+          "missing_source": 1
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 229,
+            "message": "Feature Granted: 冲刺 -> <CharacterBody2D#90110430851>"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/System/README.md",
+        "recommendedAction": "replace context-named text logs with stable operations such as SystemStartup, SystemPreflight or SystemDiagnosticsSnapshot."
+      },
+      {
+        "owner": "System",
+        "context": "PauseMenuSystem",
+        "operation": "PauseMenuSystem",
+        "count": 1,
+        "issues": {
+          "fields_empty": 1,
+          "operation_equals_context": 1,
+          "missing_source": 1
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 74,
+            "message": "PauseMenuSystem 初始化完成"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/System/README.md",
+        "recommendedAction": "replace context-named text logs with stable operations such as SystemStartup, SystemPreflight or SystemDiagnosticsSnapshot."
+      },
+      {
+        "owner": "System",
+        "context": "TestSystem",
+        "operation": "TestSystem",
+        "count": 1,
+        "issues": {
+          "fields_empty": 1,
+          "operation_equals_context": 1,
+          "missing_source": 1
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 79,
+            "message": "TestSystem 初始化完成"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Runtime/System/README.md",
+        "recommendedAction": "replace context-named text logs with stable operations such as SystemStartup, SystemPreflight or SystemDiagnosticsSnapshot."
+      },
+      {
+        "owner": "TargetSelector",
+        "context": "TargetingManager",
+        "operation": "TargetingManager",
+        "count": 1,
+        "issues": {
+          "fields_empty": 1,
+          "operation_equals_context": 1,
+          "missing_source": 1
+        },
+        "examples": [
+          {
+            "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+            "line": 132,
+            "message": "TargetingManager 已启用"
+          }
+        ],
+        "ownerDoc": "DocsAI/ECS/Tools/TargetSelector/README.md",
+        "recommendedAction": "add durationMs and query shape fields; aggregate successful queries and keep warning/failure details."
+      }
+    ]
+  }
+}

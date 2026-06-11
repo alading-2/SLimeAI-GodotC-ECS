@@ -36,7 +36,7 @@
 
 ## Current Resume
 
-- **Current Task**: T2.1 analyzer digest contract
-- **Last Conclusion**: 用户追问成立：T1 只完成 Log 结构化管道和最小 analyzer，未完成“打印信息整理”。当前样本仍需要 AI 读 raw 才能判断 top noise、missing semantic fields 和 gate 可信度。
-- **Next Action**: 先实现 T2.1~T2.4，让当前样本生成 `summary.md`、更强 `ai-context.md`、`noise/top-contexts.md`、`missing-fields/index.md` 和正确 `flows/index.md`；随后处理 T2.5 owner hot-spot 和 T2.6 Validation artifact。
+- **Current Task**: T2.5 owner hot-spot cleanup
+- **Last Conclusion**: T2.1~T2.4 已完成第一批闭环：`logctl analyze` 现在能为当前样本生成 `summary.md`、强 `ai-context.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`flows/index.md` 和 `failures/index.md`；gate 不再把无 artifact / Validation 的 structured log 误报为 `passed`，当前样本为 `no-failure-observed`。
+- **Next Action**: 继续 T2.5：TargetSelector / ObjectPool / System 的运行时 aggregate summary 仍未完成；HealthBarUI、Damage 和 Logger source/duration 字段已做第一批补强。随后推进 T2.6，让承载样本或后续场景输出 Validation artifact。
 - **Open Blockers**: 最终 Godot scene smoke 仍 blocked：当前没有可验证本框架工作树的承载游戏 runner。该 blocker 不阻止 T2 analyzer/owner follow-up 在现有样本上推进。

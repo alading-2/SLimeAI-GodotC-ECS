@@ -1,0 +1,50 @@
+[
+  {
+    "source": ".ai-temp/log-runs/20260610-013907/analysis-check/by-owner/unknown.jsonl",
+    "line": 1,
+    "missing": [
+      "runElapsedMs",
+      "frame",
+      "physicsFrame",
+      "owner",
+      "context",
+      "operation"
+    ]
+  },
+  {
+    "source": ".ai-temp/log-runs/20260610-013907/analysis-check/by-phase/unknown.jsonl",
+    "line": 1,
+    "missing": [
+      "runElapsedMs",
+      "frame",
+      "physicsFrame",
+      "owner",
+      "context",
+      "operation"
+    ]
+  },
+  {
+    "source": ".ai-temp/log-runs/20260610-013907/analysis-check/raw/entries.jsonl",
+    "line": 4915,
+    "missing": [
+      "runElapsedMs",
+      "frame",
+      "physicsFrame",
+      "owner",
+      "context",
+      "operation"
+    ]
+  },
+  {
+    "source": ".ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl",
+    "line": 4915,
+    "missing": [
+      "runElapsedMs",
+      "frame",
+      "physicsFrame",
+      "owner",
+      "context",
+      "operation"
+    ]
+  }
+]

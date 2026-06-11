@@ -11,7 +11,10 @@
     "/home/slime/Code/SlimeAI/SlimeAI"
   ],
   "affected_areas": [
-    "ecs/tools/logger"
+    "ecs/tools/logger",
+    "ecs/capabilities/damage",
+    "ecs/ui",
+    "ai-config/skills"
   ],
   "tags": [
     "tools",
@@ -21,10 +24,10 @@
     "hard-cutover"
   ],
   "progress": {
-    "current_task": "T2.1 analyzer digest contract",
-    "completed_tasks": 12,
+    "current_task": "T2.5 owner hot-spot cleanup",
+    "completed_tasks": 16,
     "total_tasks": 19,
-    "percent": 63
+    "percent": 84
   },
   "bdd": {
     "required": true,

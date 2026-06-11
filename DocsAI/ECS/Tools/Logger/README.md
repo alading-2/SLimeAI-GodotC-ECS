@@ -14,7 +14,7 @@
 
 - `LogEntry` envelope 包含 `runElapsedMs / frame / physicsFrame / severity / outcome / validationStatus / channel / owner / context / operation / phase / fields`。
 - `LogSeverity` 只表达运行健康度；`LogOutcome` 表达流程结果；`LogValidationStatus` 表达测试断言结果。
-- `OperationTrace` 用于长过程，start/step/complete 进入 Flow channel；stdout 只展示完成摘要，完整字段写 JSONL。
+- `OperationTrace` 用于长过程，start/step/complete 进入 Flow channel；新 run 会写 `entryType / durationMs / stepCount / sourceFile / sourceLine`，stdout 只展示完成摘要，完整字段写 JSONL。
 - 默认 sinks 是 `StdoutSummarySink`、`JsonlBufferedFileSink`、`MemorySink`、`ArtifactSink`。
 - `GodotEditorSink` 默认关闭；只有显式启用时才调用 `GD.PrintRich` / `GD.PushWarning` / `GD.PushError`。
 - 默认 profile 事实源是 `Config/Log/log.profile.json`、`Config/Log/log.rules.json`、`Config/Log/log.overrides.json`；运行时会写 `<runDir>/metadata/log-profile.json`。
@@ -27,12 +27,20 @@
 
 `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 证明：JSONL 是必要基础，但不是 AI 分析入口本身。
 
-当前问题集中在：
+该样本暴露的问题集中在：
 
 - raw JSONL 约 4914 行，AI 不能默认直接读 raw。
 - `TargetSelector/TargetQueryEngine/TargetQueryEntities` 单项约 3041 条，说明 owner/operation 预算和 flow summary 仍要补强。
 - 约 1109 条 `fields:{}`，约 1109 条 `operation == context`，说明很多日志还缺业务字段和稳定 operation。
-- 当前 `logctl analyze` 已能输出 `by-owner` / `by-phase` / `noise` / `missing-fields`，但 `ai-context.md` 仍太薄，缺 `summary.md`、top noise、missing-fields markdown digest、flow digest 和 owner 文档链接。
+- 该样本没有 Validation channel 或 artifact，不能报告为 `passed`，只能是 `no-failure-observed`。
+
+T2 analyzer 已修正默认分析入口。对该样本执行：
+
+```bash
+Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-next
+```
+
+当前 `analysis-next/summary.md` 会第一屏报告 `status=no-failure-observed`、`confidence=low`、`resultSource=structured-log`、`entries=4915`、`invalidJsonl=1`、`validationEntries=0`、`artifacts=0`、top noise 和 semantic missing fields。`ai-context.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`flows/index.md` 是 AI 默认入口；raw JSONL 只作为二级证据。
 
 后续 Log 分析必须遵循：
 
@@ -95,11 +103,21 @@ SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/README.m
 | 类别 | 作用 |
 | --- | --- |
 | 运行控制 | `profile show` 查看 `Config/Log` 有效 profile；后续扩展 sink、owner/context/operation 开关和 override snapshot。 |
-| 离线分析 | `analyze --run-dir` 生成 `analysis/raw/by-owner/by-phase/flows/failures/noise/missing-fields/summary.md/ai-context.md`。 |
+| 离线分析 | `analyze --run-dir` 生成 `summary.md`、`ai-context.md`、`gate-report.json`、`raw/`、`by-owner/`、`by-phase/`、`flows/`、`failures/`、`noise/`、`missing-fields/`。 |
 | 二次查询 | `query --analysis-dir` 或 `query --file` 按 owner、sourceFile、operation、entityId、severity 过滤。 |
 | 建议 | `suggest --run-dir --dry-run` 输出 noisy context 和可审查 `profilePatch`，不直接静默改配置。 |
 
 Godot scene runner 只负责运行场景、保存 run dir 和调用 Log CLI；不要在 godot-scene-test skill 中长期维护日志拆分规则。
+
+Gate status 语义固定为：
+
+| status | 使用条件 |
+| --- | --- |
+| `passed` | artifact pass 或 Validation channel 明确 pass，且没有 structured failure。 |
+| `failed` | artifact fail、Validation fail、structured error/fail。 |
+| `no-failure-observed` | 有 structured log，但没有 Validation/artifact，也没有失败。 |
+| `stdout-pattern-fallback` | 只能靠 legacy stdout pattern。 |
+| `invalid-input` | raw JSONL 或关键 artifact 损坏到不能信任本 run。 |
 
 用户手动运行游戏时，不应复制整段 console 给 AI。应保留 `SLIMEAI_LOG_RUN_DIR` 下的 JSONL / artifact，然后执行 `logctl analyze`；只有旧日志文本才用 `logctl ingest --stdin --source legacy-stdout` 降级处理。
 

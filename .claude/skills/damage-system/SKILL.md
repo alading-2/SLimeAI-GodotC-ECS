@@ -33,8 +33,9 @@ description: 修改 SlimeAI ECS Damage Capability、DamageInfo、处理器管线
 - `DamageService` 命令执行成功不等于实际扣血；`DamageProcessResult.Processed` 表示管线处理完成，`AppliedDamage / ActualDamage` 才表示 HealthComponent 实际扣血。`DamageTool.ApplyToList` 和技能命中计数必须只把 `AppliedDamage=true` 算作实际命中。
 - `DamageInfo.Attacker` 是直接来源；暴击、吸血、统计和击杀归属通过 `EntityAttributionResolver.ResolveUnit/ResolveChain` 读取 Projectile / Effect / Source / Origin projection。不要恢复 `EntityRelationshipTraversal.FindAncestorOfType` 或 parent-chain attribution。
 - `GodotContactDamageComponent` 是 GodotBridge Adapter legacy class name，`DamageService` / `TimerManager` 可替换；默认进程级入口只允许在 adapter boundary 使用。
-- Damage process flow 使用 `owner=Damage`、`operation=DamageProcess`，关键字段是 `processed / appliedDamage / actualDamage / finalDamage / isDodged / processorCount`。
+- Damage process flow 使用 `owner=Damage`、`operation=DamageProcess`，关键字段是 `damageId / attackerId / victimId / entityId / damageType / damageTags / baseDamage / processed / appliedDamage / actualDamage / finalDamage / isCritical / isDodged / isBlocked / isSimulation / isEnd / processorCount / processorDigest / reasonCode`。
 - `DamageProcessResult.Processed` 不等于实际扣血；日志、测试和命中计数必须以 `AppliedDamage / ActualDamage` 区分。
+- invalid `DamageInfo` 或缺 victim 走 `outcome=Skipped`，必须写稳定 `reasonCode`；processor chain 默认写摘要字段，不恢复逐 processor 文本刷屏。
 - Damage 测试断言走 `ValidationSession` / artifact / structured log，不新增 `[PASS]` / `[FAIL]`。
 
 ## 验证
