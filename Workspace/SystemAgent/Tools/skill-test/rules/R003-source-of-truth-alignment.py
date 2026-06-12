@@ -1,6 +1,6 @@
 """R003 — source-of-truth-alignment (critical)
 
-SKILL.md 不得在正文中引用 .codex/.claude/.devin/.trae/skills/ 副本路径。
+SKILL.md 不得在正文中引用 .codex/.claude/.trae/skills/ 副本路径。
 必须只引用 .ai-config/skills/ 源或其他实际路径。
 """
 from __future__ import annotations
@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from lint import Violation  # noqa: E402
 
 _COPY_PATH_RE = re.compile(
-    r"`(\.codex/skills/|\.claude/skills/|\.devin/skills/|\.trae/skills/)[^`\s]*\.(md|sh|yaml|yml|py|toml|json)`"
+    r"`(\.codex/skills/|\.claude/skills/|\.trae/skills/)[^`\s]*\.(md|sh|yaml|yml|py|toml|json)`"
 )
 
 

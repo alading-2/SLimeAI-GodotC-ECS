@@ -29,11 +29,9 @@ sources_of_truth:
 sync_targets:
   - .codex/skills/<name>/
   - .claude/skills/<name>/
-  - .devin/skills/<name>/
   - .trae/skills/<name>/
   - .claude/commands/opsx/*.md
   - CLAUDE.md
-  - .devin/rules/devinrules.md
   - AGENTS.md
 
 components:

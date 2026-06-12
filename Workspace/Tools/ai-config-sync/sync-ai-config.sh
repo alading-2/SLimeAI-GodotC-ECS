@@ -63,7 +63,7 @@ sync_rule() {
 
     mkdir -p "$(dirname "$target")"
 
-    # 写入 prepend 行（如 devin 的 frontmatter）
+    # 写入 prepend 行（如有 frontmatter 差异）
     prepend_count=$(echo "$prepend_json" | jq 'length')
     if [[ "$prepend_count" -gt 0 ]]; then
         echo "$prepend_json" | jq -r '.[]' > "$target"

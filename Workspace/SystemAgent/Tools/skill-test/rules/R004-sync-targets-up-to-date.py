@@ -31,7 +31,6 @@ def check(
     copy_roots = [
         root / ".codex" / "skills",
         root / ".claude" / "skills",
-        root / ".devin" / "skills",
         root / ".trae" / "skills",
     ]
     for f in skill_files:
