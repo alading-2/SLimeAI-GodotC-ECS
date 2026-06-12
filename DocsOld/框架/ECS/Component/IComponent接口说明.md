@@ -264,7 +264,7 @@ public void OnComponentRegistered(Node entity)
 
 - **EntityManager API 文档**：`Docs/框架/ECS/Entity/EntityManager_API文档.md`
 - **Entity 架构设计理念**：`Docs/框架/ECS/Entity/Entity架构设计理念.md`
-- **项目规则**：`.trae/rules/project_rules.md`
+- **项目规则**：`.ai-config/rules/rules.md`
 
 ---
 

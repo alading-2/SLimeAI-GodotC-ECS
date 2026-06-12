@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-10 16:19",
+  "generated_at": "2026-06-11 19:35",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -32,7 +32,7 @@
       "slug": "ecs-framework-optimization",
       "title": "ECS Framework Optimization",
       "status": "active",
-      "updated_at": "2026-06-09",
+      "updated_at": "2026-06-11",
       "scope": "SlimeAI",
       "tags": [
         "ecs",
@@ -985,10 +985,13 @@
       "title": "Log AI-first Observation Hard Cutover",
       "status": "blocked",
       "type": "refactor",
-      "updated_at": "2026-06-10",
+      "updated_at": "2026-06-11",
       "scope": "SlimeAI",
       "affected_areas": [
         "ecs/tools/logger",
+        "ecs/runtime",
+        "ecs/capabilities",
+        "ecs/test",
         "ecs/capabilities/damage",
         "ecs/ui",
         "ai-config/skills"
@@ -1002,7 +1005,7 @@
       ],
       "project_id": "PRJ-0002",
       "project_order": 29,
-      "current_task": "T2.5 owner hot-spot cleanup",
+      "current_task": "T3.0 源码调用点语义化方向冻结",
       "path": "SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/029-SDD-0040-log-ai-first-observation-hard-cutover"
     }
   ]

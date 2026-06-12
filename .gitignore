@@ -10,3 +10,4 @@ obj/
 参考/
 Workspace/DocsAI/ChatHistory/
 *.uid
+.ai-temp/

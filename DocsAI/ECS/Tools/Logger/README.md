@@ -8,6 +8,20 @@
 
 `Src/ECS/Tools/Logger/Log.cs` 是 AI-first Observation 入口。默认详细事实写 buffered JSONL，默认可见输出写 stdout summary，Validation 写 artifact；Godot editor 输出只作为可选 sink。`logctl analyze` 负责把 raw 证据提炼成语义入口，不能把 raw 复制成更多默认文件。
 
+它不是 SystemAgent control plane 本体，而是 AI-first 工程层中的 **Observation / evidence substrate**：SystemAgent 的 DebugFix、Reviewer、Verifier、Retrospective 依赖它来读取运行时证据，而不是依赖 AI 猜测。
+
+进一步定位见：
+
+```text
+DocsAI/ECS/Tools/Logger/Log与AI-first Observation.md
+```
+
+当前不能把这句话理解成“整个 Log 已改完”。Logger core 和 analyzer 默认入口已经改过，但 `Src/ECS` 仍有大量业务、测试、Debug UI 调用点使用普通 `_log.Info` / `_log.Debug` / `_log.Success` 或少量直接打印。用户运行游戏时看到 live 打印仍然分离，根因就是源码调用点语义化还没有完成。后续方向见：
+
+```text
+SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/第三部分-源码调用点语义化/README.md
+```
+
 ## 当前实现事实
 
 当前 `Log.cs`：
@@ -71,6 +85,8 @@ raw/scene-log.jsonl
 ```text
 SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/README.md
 ```
+
+其中第二部分只证明离线 analyzer 默认入口已完成；第三部分才处理 live stdout 和 `Src/ECS` 调用点迁移。
 
 ## Sink 裁决
 

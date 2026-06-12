@@ -3,8 +3,8 @@
 ## Progress
 
 - **Status**: blocked
-- **Completed**: 18/19
-- **Current**: T2.6 Validation artifact adoption
+- **Completed**: 18/24
+- **Current**: T3.0 源码调用点语义化方向冻结
 
 ## Task List
 
@@ -59,3 +59,20 @@
 
 - [x] T2.7 verification and SDD sync：用真实样本和可用非 Godot 门禁验证 T2，并同步 DocsAI / design / SDD 状态
   - **Validation**: `node --check Workspace/Tools/logctl/logctl.mjs`；`node --test Workspace/Tools/logctl/tests/logctl-analyze.test.mjs`；测试覆盖 stale `by-owner/by-phase/flows.json` 清理和 `query --analysis-dir` 不 raw fallback；`Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-semantic`；`Workspace/Tools/logctl/logctl query --analysis-dir .ai-temp/log-runs/20260610-013907/analysis-semantic owner=TargetSelector operation=TargetQueryEntities --format json`；`python3 Workspace/SDD/sdd.py validate SDD-0040`；`git diff --check`。
+
+## T3 源码调用点语义化 Follow-up
+
+- [ ] T3.0 方向冻结：确认 live stdout 默认策略、第一批迁移链路、Debug UI / TestSystem 默认可见性和是否继续归入 SDD-0040
+  - **Validation**: `design/Tool/10.Log/第三部分-源码调用点语义化/README.md` 写清 Must Confirm、默认假设、推荐方案和不进入实现的门禁。
+
+- [ ] T3.1 调用点盘点：按 owner 分类当前 `_log.*`、`GD.Print`、`Console.WriteLine`、测试说明和 Debug UI 输出
+  - **Validation**: 产出 owner 级迁移清单，按流程型、验证型、高频成功型、启动快照型、Debug UI 型、真异常型分类；不能只提交 grep 原始列表。
+
+- [ ] T3.2 Owner flow contract：为第一批 owner 固定 flow / summary / Validation / debug profile 契约
+  - **Validation**: Runtime/System、Ability、Spawn、TargetSelector、ObjectPool、Test/Validation、TestSystem/Debug UI 的 README `## Log` 或 `Log.md` 与第三部分契约一致。
+
+- [ ] T3.3 第一批源码迁移：迁移 MainTest / ECSTest、SystemManager、Ability + Spawn、TargetSelector + ObjectPool、TestSystem / Debug UI 的 live 可见调用点
+  - **Validation**: 成功路径默认 summary 或模板聚合；失败路径保留 structured fields；测试断言进入 `ValidationSession`；没有机械全仓替换 `_log.Info`。
+
+- [ ] T3.4 新 run 验收：用用户实际运行或有效 Godot runner 产生的新 run 验证 live stdout 和 analyzer 结果
+  - **Validation**: live stdout 默认只包含 warn/error、validation、flow summary、run summary；`logctl analyze` 默认可读入口小于 raw；关键业务 flow 可判断成功/失败/跳过；没有 artifact 时仍不得 `passed`。

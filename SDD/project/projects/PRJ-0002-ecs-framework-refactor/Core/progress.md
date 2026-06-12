@@ -6,10 +6,10 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-10
+- **Updated**: 2026-06-11
 - **Current SDD**: SDD-0040
-- **Last Conclusion**: `SDD-0040 Log AI-first Observation Hard Cutover` 的 T1 结构化记录管道已落地，但用户要求的“打印信息整理”未完成。2026-06-10 基于 `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 二次复查后，已把 SDD-0040 从 `12/12 done` 修正为 `12/19`：T2 仍需补 `summary.md`、更强 `ai-context.md`、noise/missing-fields markdown digest、正确 flow 边界、semantic missing-fields、owner hot-spot cleanup 和 Validation artifact 状态区分。
-- **Next Action**: 优先执行 T2.1 analyzer digest contract，先用当前样本复跑 `logctl analyze` 验证 AI 不读 raw 也能判断问题；最终 Godot scene smoke 等有效承载游戏 runner 恢复后再运行。
+- **Last Conclusion**: `SDD-0040 Log AI-first Observation Hard Cutover` 的 T1 结构化记录层和 T2 离线语义整理层已分别落地，但用户运行游戏时 live 打印仍然分离，说明 `Src/ECS` 源码调用点语义化未完成。2026-06-11 已新增 `design/Tool/10.Log/第三部分-源码调用点语义化/README.md`，并把 SDD-0040 当前任务改为 T3.0 方向冻结：先确认 live stdout policy、owner flow contract、Debug UI/TestSystem 可见性，再按 owner 迁移 `_log.Info`、测试打印和高频成功路径。
+- **Next Action**: 先完成 T3.0 Must Confirm。默认推荐：live stdout 严格收口到 warn/error/validation/flow summary/run summary；T3 继续归入 SDD-0040；第一验收链路以 MainTest / 主场景启动 / 释放技能 / 生成怪物为准；Debug UI/TestSystem 默认进入 debug profile。
 - **Open Blockers**: Godot scene smoke blocked：当前没有可验证本框架工作树的承载游戏 runner。`Games/BrotatoLike` 不是 git 仓，且缺少 `Tools/run-godot-scene.sh` 与 `SlimeAI`；`Games/BrotatoLikeOld` 虽有 runner，但 wrapper 指向缺失路径且 `SlimeAI` submodule commit 与当前框架工作树不一致。
 
 ## Project Status Board
@@ -36,7 +36,7 @@
 | SDD-0036 | done | `design/Tool/其他Tool/05-TargetSelector查询契约.md` | Target Query Engine Hard Cutover 已完成；`TargetQueryEngine` / diagnostics / candidate source / deterministic RNG 成为 current API，旧 list-only facade 删除 |
 | SDD-0037 | done | `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` | Resource Loading And Common Utilities Hard Cutover 已完成；`ResourceLoading` current facade、strict lookup、source diagnostics、ResourceCatalogDiagnostics 和 CommonUtilities 边界已收口 |
 | SDD-0038 | done | `design/Tool/其他Tool/03-Math目标架构与验证.md` | Math Formula And Deterministic Random Cutover 已完成；`ProbabilityTool` / `DeterministicRandom` 接管概率随机，Damage/Ability 公式归 owner，`MyMath` / `GeometryCalculator` 删除 |
-| SDD-0040 | blocked | `design/Tool/10.Log/` | T1 结构化 Logger、sink、ValidationSession、最小 `logctl` 和 runner wrapper 已落地；T2 analyzer digest / gate 状态 / flow 边界 / semantic missing-fields / owner hot-spot cleanup 未完成；Godot scene smoke blocked 于当前无有效承载游戏 runner |
+| SDD-0040 | blocked | `design/Tool/10.Log/` | T1 结构化 Logger 和 T2 离线语义 analyzer 默认入口已落地；T3 源码调用点语义化未完成，当前需先冻结 live stdout policy 与 owner flow contract；Godot scene smoke blocked 于当前无有效承载游戏 runner |
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
 | SDD-0028 | done | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已完成；后续对象池改动按 ObjectPool owner 新建小切片 |
 | SDD-0029 | done | `design/Runtime/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |

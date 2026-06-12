@@ -4,7 +4,7 @@
 
 - **Status**: active
 - **Created**: 2026-05-25
-- **Updated**: 2026-06-10
+- **Updated**: 2026-06-11
 - **Scope**: SlimeAI
 - **Current SDD**: SDD-0040
 - **Tags**: ecs, optimization, data, event, entity, component, relationship, directory-architecture, capability, docsai, tools, timer, objectpool, collision, system
@@ -13,7 +13,7 @@
 
 本项目用于重新梳理 `Src/ECS` 旧 ECS 框架的真实问题，并形成“保留旧 ECS 主线、按问题域优化完善”的设计事实源。当前框架仓和 SDD 均位于 `/home/slime/Code/SlimeAI/SlimeAI`；外层 `/home/slime/Code/SlimeAI` 只作为包含游戏仓、Resources 和框架仓的父目录。
 
-当前方向已经纠偏：不再把旧 ECS 作为迁移输入，不再以整体替换或复制外部参考结构为目标。旧框架整体可保留；Data 子系统已按 SDD-0012 至 SDD-0022 完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 收口，并按 SDD-0031 / SDD-0032 完成 runtime generic slot hard cutover 和 typed contract completion：typed `DataKey<T>` 主链路、modifier 和 computed cache 现在使用 `DataSlot<T> + IDataSlot`，业务 Capability 和 AI 可调用 Data 协议不再使用 string key / untyped write / object payload 作为主链路。Data 完成后的 GC/装箱优化已按 SDD-0033 完成非 Data 边界收口：Event dynamic object 主链路删除，Feature / Ability Execute 边界改为 typed payload/result helper，ObjectPoolManager 改 `IObjectPoolRuntime` 非泛型管理接口，TargetSelector 新增 `TargetQueryEngine + TargetQueryResult` ownership / diagnostics facade。2026-06-09 至 2026-06-10 已按 SDD-0040 完成 Log AI-first Observation T1：结构化 envelope、C# stdout summary + buffered JSONL file、optional Godot editor sink、profile/rules/overrides、budget、`OperationTrace`、`ValidationSession`、最小 `logctl analyze/query/suggest` 和第一批 owner `Log.md` 已落地；但这不等于用户要求的“打印信息整理”完成。2026-06-10 基于 `.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 复查后补充裁决：JSONL 不是最终分析入口，T2 仍需补 `summary.md`、更强 `ai-context.md`、noise/missing-fields markdown digest、正确 flow 边界、semantic missing-fields、owner 降噪和 Validation artifact 状态区分。当前最终 Godot scene smoke 仍因缺少能验证本框架工作树的承载游戏 runner 阻塞，且未伪造通过。Entity / Relationship 已按 SDD-0024 完成 hard cutover。SDD-0025 已把 ECS 物理目录和 DocsAI 路由重构为 `Runtime + Capabilities + Tools + UI`，同时保留 ECS 语义；`design/Tool/其他Tool/` 已按 2026-06-04 至 2026-06-07 用户复核更新为功能优先 hard cutover：RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、Common Utilities、MathFormula 后续只保功能，不保旧 API 长期兼容；已确认 `/root/SlimeAIRuntime`、资源 strict fail-fast、Common Utilities 放 `Src/ECS/Tools/CommonUtilities/`、NodeLifecycle 迁 Runtime、TargetSelector 不做兼容桥。SDD-0035 至 SDD-0038 已完成剩余 Tools hard cutover：Runtime mount + NodeLifecycle、TargetQueryEngine、ResourceLoading + CommonUtilities、Math formula + deterministic RNG 均已完成并同步 DocsAI/skill。SDD-0026 已完成 Input Contract 业务语义 facade、调用点迁移和验证闭环。SDD-0027 Timer 重构已完成可执行代码/文档主链路但被当前 BrotatoLike runner/Godot CLI 缺失阻塞在场景验证。SDD-0028 已完成 ObjectPool / Collision ParkedInTree cutover。SDD-0029 已完成 Runtime System manifest / preflight / diagnostics / trace 收口。SDD-0030 已完成 Component 默认组合从 `.tscn` Preset 到 C# profile / composer 的切换，并补齐 Component manifest、DocsAI 和 owner skill 规则。
+当前方向已经纠偏：不再把旧 ECS 作为迁移输入，不再以整体替换或复制外部参考结构为目标。旧框架整体可保留；Data 子系统已按 SDD-0012 至 SDD-0022 完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 收口，并按 SDD-0031 / SDD-0032 完成 runtime generic slot hard cutover 和 typed contract completion：typed `DataKey<T>` 主链路、modifier 和 computed cache 现在使用 `DataSlot<T> + IDataSlot`，业务 Capability 和 AI 可调用 Data 协议不再使用 string key / untyped write / object payload 作为主链路。Data 完成后的 GC/装箱优化已按 SDD-0033 完成非 Data 边界收口：Event dynamic object 主链路删除，Feature / Ability Execute 边界改为 typed payload/result helper，ObjectPoolManager 改 `IObjectPoolRuntime` 非泛型管理接口，TargetSelector 新增 `TargetQueryEngine + TargetQueryResult` ownership / diagnostics facade。2026-06-09 起按 SDD-0040 推进 Log AI-first Observation：T1 结构化记录层已落地，T2 离线语义整理层也已把 `logctl analyze` 默认入口改为 flow conclusion / success template / failure-first digest；但用户运行游戏看到的 live 打印仍然分离，说明 `Src/ECS` 源码调用点语义化未完成。2026-06-11 已新增 `design/Tool/10.Log/第三部分-源码调用点语义化/README.md` 和 SDD-0040 T3：先冻结 live stdout policy、owner flow contract、Debug UI/TestSystem 可见性，再按 owner 迁移 `_log.Info`、测试打印和高频成功路径。当前最终 Godot scene smoke 仍因缺少能验证本框架工作树的承载游戏 runner 阻塞，且未伪造通过。Entity / Relationship 已按 SDD-0024 完成 hard cutover。SDD-0025 已把 ECS 物理目录和 DocsAI 路由重构为 `Runtime + Capabilities + Tools + UI`，同时保留 ECS 语义；`design/Tool/其他Tool/` 已按 2026-06-04 至 2026-06-07 用户复核更新为功能优先 hard cutover：RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、Common Utilities、MathFormula 后续只保功能，不保旧 API 长期兼容；已确认 `/root/SlimeAIRuntime`、资源 strict fail-fast、Common Utilities 放 `Src/ECS/Tools/CommonUtilities/`、NodeLifecycle 迁 Runtime、TargetSelector 不做兼容桥。SDD-0035 至 SDD-0038 已完成剩余 Tools hard cutover：Runtime mount + NodeLifecycle、TargetQueryEngine、ResourceLoading + CommonUtilities、Math formula + deterministic RNG 均已完成并同步 DocsAI/skill。SDD-0026 已完成 Input Contract 业务语义 facade、调用点迁移和验证闭环。SDD-0027 Timer 重构已完成可执行代码/文档主链路但被当前 BrotatoLike runner/Godot CLI 缺失阻塞在场景验证。SDD-0028 已完成 ObjectPool / Collision ParkedInTree cutover。SDD-0029 已完成 Runtime System manifest / preflight / diagnostics / trace 收口。SDD-0030 已完成 Component 默认组合从 `.tscn` Preset 到 C# profile / composer 的切换，并补齐 Component manifest、DocsAI 和 owner skill 规则。
 
 ## Reading Order
 
@@ -38,10 +38,10 @@
 19. `Core/roadmap.md` — 设计文档到 SDD 的映射、执行顺序、依赖和状态
 20. `Core/progress.md` — 项目级关键结论和恢复点
 21. `design/Tool/10.Log/README.md` — Log AI-first Observation 设计包入口
-22. `design/Tool/10.Log/source-request.md` — 本轮 Log 用户原始问题与去重提示词
-23. `design/Tool/10.Log/07-当前样本日志问题与整理方案.md` — 2026-06-10 样本日志复盘、T1 未完成原因、T2 analyzer/owner 整理方案和验收门禁
+22. `design/Tool/10.Log/第二部分-语义提炼整理/03-最终设计与完成清单.md` — Log 离线语义整理层当前契约和完成边界
+23. `design/Tool/10.Log/第三部分-源码调用点语义化/README.md` — live 打印仍分离的根因、T3 方向、Must Confirm 和 DoD 草案
 24. `sdds/029-SDD-0040-log-ai-first-observation-hard-cutover/README.md` — Log hard cutover 执行型 SDD 胶囊
-25. `sdds/029-SDD-0040-log-ai-first-observation-hard-cutover/execution-prompt.md` — SDD-0040 新会话执行提示词
+25. `sdds/029-SDD-0040-log-ai-first-observation-hard-cutover/execution-prompt.md` — SDD-0040 T3 新会话执行提示词
 26. `design/Tool/Timer/README.md` — Timer 当前共享设计包入口
 27. `sdds/017-SDD-0027-timer-scheduler-full-rewrite/README.md` — Timer 执行型 SDD 胶囊
 28. `sdds/017-SDD-0027-timer-scheduler-full-rewrite/execution-prompt.md` — Timer 新会话执行提示词

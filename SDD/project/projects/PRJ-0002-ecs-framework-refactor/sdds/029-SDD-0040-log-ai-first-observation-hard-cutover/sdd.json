@@ -12,6 +12,9 @@
   ],
   "affected_areas": [
     "ecs/tools/logger",
+    "ecs/runtime",
+    "ecs/capabilities",
+    "ecs/test",
     "ecs/capabilities/damage",
     "ecs/ui",
     "ai-config/skills"
@@ -24,10 +27,10 @@
     "hard-cutover"
   ],
   "progress": {
-    "current_task": "T2.6 Validation artifact adoption",
+    "current_task": "T3.0 源码调用点语义化方向冻结",
     "completed_tasks": 18,
-    "total_tasks": 19,
-    "percent": 95
+    "total_tasks": 24,
+    "percent": 75
   },
   "bdd": {
     "required": true,

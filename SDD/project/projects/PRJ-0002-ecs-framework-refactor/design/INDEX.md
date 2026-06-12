@@ -66,7 +66,7 @@
 | `Tool/Input/01-现状证据与AI-first裁决.md` | input-research-decision | current | 2026-06-01 | 当前 InputManager、project.godot、调用点分散、DocsAI 漂移和外部输入框架对照裁决 |
 | `Tool/Input/02-目标架构与优化路线.md` | input-architecture-roadmap | current | 2026-06-01 | InputActionId、InputManifest、InputContext、typed facade 和分阶段优化路线 |
 | `Tool/Input/03-调用点迁移与验证计划.md` | input-migration-test-plan | current | 2026-06-01 | Gameplay/UI/Debug/Test 输入调用点分层、grep gate、构建测试和 Godot 场景验证计划 |
-| `Tool/10.Log/README.md` | log-design-entry | current | 2026-06-11 | Log 工具设计入口；分两部分（记录管道与现状 / 语义提炼整理），先读本文确定该看哪部分 |
+| `Tool/10.Log/README.md` | log-design-entry | current | 2026-06-11 | Log 工具设计入口；分三部分（记录管道与现状 / 语义提炼整理 / 源码调用点语义化），先读本文确定该看哪部分 |
 | `Tool/10.Log/第一部分-记录管道与现状/source-request.md` | log-source-request | current | 2026-06-10 | 本轮用户原始问题摘录、去重提示词和必须回答的问题；正文设计文档引用本文件，避免长提示词淹没入口 |
 | `Tool/10.Log/第一部分-记录管道与现状/README.md` | log-part1-index | current | 2026-06-10 | 第一部分入口；记录层 AI-first Observation 设计包；复盘校准为“Logger core / 最小 analyzer 已落地，但整理层验收口径有缺陷” |
 | `Tool/10.Log/第一部分-记录管道与现状/01-现状分析与AI-first裁决.md` | log-research-decision | current | 2026-06-10 | 基于当前 `Log.cs` 结构化雏形、样本 `scene-log.jsonl`、`logctl analyze` 产物、runner fallback、ValidationSession 和官方资料的现实检查 |
@@ -82,6 +82,7 @@
 | `Tool/10.Log/第二部分-语义提炼整理/02-代码审查与落地修正.md` | log-semantic-distill-code-review | current | 2026-06-11 | 修复前代码审查快照与 G1~G8 gate 清单；当前完成状态以 `03-最终设计与完成清单.md` 为准 |
 | `Tool/10.Log/第二部分-语义提炼整理/03-最终设计与完成清单.md` | log-semantic-distill-current-contract | current | 2026-06-11 | 第二部分当前事实源；记录最终 analyzer/query 契约、已完成/未完成清单、样本验证数据和验收命令 |
 | `Tool/10.Log/第二部分-语义提炼整理/04-当前实现审查报告.md` | log-semantic-distill-current-review | current | 2026-06-11 | 按 G1~G8 和 SDD-0040 T2.6 / final smoke 审查当前实现，区分 analyzer 已完成与 Validation/Godot 仍未完成 |
+| `Tool/10.Log/第三部分-源码调用点语义化/README.md` | log-callsite-semantic-direction | draft | 2026-06-11 | 第三部分入口；确认 live 打印仍分离的根因是 `Src/ECS` 调用点未完成迁移，定义 T3 方向、Must Confirm、迁移路线和 DoD 草案 |
 | `Tool/Timer/README.md` | timer-design-index | current | 2026-06-02 | Timer 最终架构裁决入口；保留 TimerManager facade，内部改纯 C# scheduler，补 debug diagnostics 和压力场景门禁 |
 | `Tool/Timer/01-现状证据与AI-first裁决.md` | timer-research-decision | current | 2026-06-02 | 当前 TimerManager/GameTimer 热路径、Debug/压力验证缺口、外部计时器资料对照和采纳/拒绝裁决 |
 | `Tool/Timer/02-目标架构与优化路线.md` | timer-architecture-roadmap | current | 2026-06-02 | 纯 C# TimerScheduler、min-heap、handle、owner/purpose、clock、主线程派发、debug diagnostics 和 timing wheel 后续触发条件 |

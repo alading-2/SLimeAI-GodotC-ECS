@@ -9,6 +9,8 @@
 
 当前 Log 是 AI-first Observation 入口。它保留 legacy `LogLevel` API 兼容旧调用点，但默认事实链路已经切到 structured `LogEntry`、stdout summary、buffered JSONL、memory 和 artifact sink。
 
+它负责 evidence plane，不负责 SystemAgent 的 workflow / actor / gate / retrospective；Debug workflow 如何消费这些证据，见 `Workspace/SystemAgent/Docs/10-Debug工作流与证据链.md`。
+
 2026-06-09 sink 裁决：Godot rich/editor 输出只保留为人工调试 sink；AI-first 默认详细事实写 C# buffered JSONL file，runner 可见摘要写 C# stdout summary，Validation 事实写 memory/artifact。
 
 用户已确认：C# 输出链路更适合 AI-first 默认主链路，但不是逐条 `Console.WriteLine` 替代 `GD.PrintRich`；正确方案是 C# structured sink，也就是 buffered JSONL + stdout summary + artifact。

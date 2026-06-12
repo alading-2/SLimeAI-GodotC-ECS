@@ -1,6 +1,6 @@
-# SDD-0040 T2 Execution Prompt
+# SDD-0040 T3 Execution Prompt
 
-你是 SDD-0040 的当前执行者。T2.1~T2.5 和 T2.7 已把用户明确要求的 **打印信息整理闭环** 收口到语义 analyzer：`.ai-temp/log-runs/20260610-013907/raw/scene-log.jsonl` 经过 `logctl analyze` 后，不需要 AI 直接读 raw JSONL，也能判断 gate 可信度、top noise、flow conclusion、success template、缺字段和下一步修复任务。后续默认从 T2.6 Validation artifact adoption 和 Godot runner blocker 继续。
+你是 SDD-0040 的当前执行者。不要从“T2.6 + Godot runner blocker”直接继续实现；用户已经指出 live 打印仍然分离，根因是 `Src/ECS` 源码调用点语义化未完成。
 
 ## 必读
 
@@ -9,7 +9,7 @@
 3. `DocsAI/ECS/README.md`
 4. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/README.md`
 5. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/README.md`
-6. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/第一部分-记录管道与现状/source-request.md`
+6. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/第三部分-源码调用点语义化/README.md`
 7. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Tool/10.Log/第二部分-语义提炼整理/03-最终设计与完成清单.md`
 8. `SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/029-SDD-0040-log-ai-first-observation-hard-cutover/README.md`
 9. 同目录下 `tasks.md`、`bdd.md`、`progress.md`、`notes.md`
@@ -17,196 +17,122 @@
 
 ## 当前裁决
 
-- 用户质疑成立：T1 完成的是结构化记录管道，不是完整的打印信息整理；T2 已把 analyzer 默认入口改成语义提炼。
-- 不新建 SDD-0041；继续使用 SDD-0040 的 T2.1~T2.7，避免 Log hard cutover 出现两个互相覆盖的事实源。
-- SDD 当前 `blocked` 只表示最终 Godot scene smoke 没有有效承载游戏 runner；它不阻止 T2 analyzer/owner 整理在现有样本上推进。
-- 当前样本 `.ai-temp/log-runs/20260610-013907` 是 T2 第一验收样本。
-- `passed` 只能由 artifact 或 Validation channel 明确通过得出；只有 structured log 且没有 failure 时必须是 `no-failure-observed`，不能伪装成通过。
-- raw JSONL 是证据源，不是默认提示词输入。默认入口必须是 `summary.md`、`ai-context.md`、`flows/index.md`、`noise/templates.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`failures/index.md`。
+- T1 记录层已落地：`LogEntry`、sink、profile、budget、`OperationTrace`、`ValidationSession`。
+- T2 离线整理层已落地：`logctl analyze` 默认输出 flow conclusion、success template、failure-first digest，并避免 raw 默认分桶。
+- 这两个完成不等于整个 Log 完成。`Src/ECS` 仍有大量普通 `_log.*` 调用和少量直接打印，新运行的 live stdout 仍可能分离。
+- 当前任务是 T3.0 方向冻结，不是马上全仓替换 `_log.Info`。
+- 最终 Godot scene smoke 仍 blocked 于缺有效承载游戏 runner；这个 blocker 不阻止 T3 设计和静态盘点，但阻止行为通过声明。
 
-## 执行范围
+## T3 默认建议
 
-当前已完成：
+未获用户新裁决时，使用这些默认假设推进设计和盘点：
 
-1. T2.1：`logctl analyze` 生成语义 digest。
-2. T2.2：gate status 区分 `passed / failed / no-failure-observed / stdout-pattern-fallback / invalid-input`。
-3. T2.3：普通 `operation` 不再自动当 flow；flow conclusion 来自 `channel=Flow`、显式 `entryType` 或完整 OperationTrace 契约。
-4. T2.4：semantic missing-fields 检测 `fields:{}`、`operation==context`、缺 `durationMs/reasonCode/entityId/sourceFile/sourceLine`、unknown owner/phase。
-5. T2.5：TargetSelector / ObjectPool / HealthBarUI / Damage / System 已通过字段补强、budget 规则和 success template 收口。
-6. T2.7：可用非 Godot 门禁和 DocsAI/SDD 同步已完成。
+- 默认 live stdout 严格收口：只显示 warn/error/validation verdict/关键 flow summary/run summary/suppressed summary。
+- T3 继续归入 SDD-0040，因为它是 Log hard cutover 未完成的同一目标；若后续规模失控，再拆新 SDD。
+- 第一验收链路以 MainTest / 主场景启动 / 释放技能 / 生成怪物为准。
+- Debug UI / TestSystem 操作日志默认进 debug profile，不污染 AI live stdout。
+- 允许短期保留低频、非默认 stdout 的 `_log.Info`；live 可见路径和第一批 owner 必须语义化。
 
-继续执行：
+## 执行顺序
 
-- T2.6：Validation artifact adoption；没有 artifact 的 run 不能报告 `passed`。
-- 最终 Godot scene smoke：仍需要有效承载游戏 runner，不允许伪造通过。
+### T3.0 方向冻结
 
-## 第一批代码入口
+先把第三部分 Must Confirm 回答清楚并写入 `progress.md`。未确认前不做大规模源码迁移。
 
-先读后改：
+### T3.1 调用点盘点
+
+盘点时不要只提交 grep 原始列表。按 owner 和事实类型分类：
+
+```text
+流程型 -> OperationTrace / flow summary
+验证型 -> ValidationSession / artifact
+高频成功型 -> window aggregate / success template / sample
+启动快照型 -> summary / diagnostics snapshot
+Debug UI 型 -> debug profile
+真异常型 -> warn/error + reasonCode + key fields
+```
+
+建议入口：
 
 ```bash
-cd /home/slime/Code/SlimeAI/SlimeAI
-git status --short
-sed -n '1,360p' Workspace/Tools/logctl/logctl.mjs
-rg -n "buildGateReport|aiContext|flowEntries|missing-fields|suggest|writeJsonl|analyze" Workspace/Tools/logctl/logctl.mjs
-sed -n '1,320p' Src/ECS/Tools/Logger/Log.cs
-sed -n '1,260p' Src/ECS/Tools/Logger/ValidationSession.cs
-sed -n '1,260p' Src/ECS/Tools/TargetSelector/TargetQueryEngine.cs
-sed -n '1,260p' Src/ECS/Tools/ObjectPool/Core/ObjectPool.cs
-sed -n '1,240p' Src/ECS/UI/UI/HealthBarUI/HealthBarUI.cs
-sed -n '1,260p' Src/ECS/Capabilities/Damage/System/DamageService.cs
+rg -n "(_log\\.(Trace|Debug|Info|Success|Warn|Error|Validation)|GD\\.Print|GD\\.Push|Console\\.WriteLine|PrintRich)" Src/ECS -g "*.cs"
+rg -n "BeginTrace|CompleteTrace|OperationTrace" Src/ECS -g "*.cs"
 ```
 
-不要先全仓清理所有 `_log.Info`。先让 analyzer 能把当前样本整理清楚，再按 digest 处理 owner hot-spot。
+### T3.2 Owner flow contract
 
-## T2.1 产物契约
+第一批 owner 至少覆盖：
 
-`logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-semantic` 后必须至少生成：
+- Runtime/System：`SystemStartup`、`SystemStatusSnapshot`、`SystemLoadFailure`
+- Ability：`AbilityCast`、`AbilityTrigger`、`AbilityInventoryChange`
+- Spawn：`WaveSpawn`、`EntitySpawnBatch`、`SpawnFailure`
+- TargetSelector：`TargetQuerySummary`、异常 query detail
+- ObjectPool：`PoolAcquireSummary`、`PoolReleaseSummary`、异常 detail
+- Test / Validation：`ValidationSceneRun`、`CheckResult`
+- TestSystem / Debug UI：`DebugAction`，默认 debug profile
 
-```text
-analysis-semantic/
-  summary.md
-  ai-context.md
-  gate-report.json
-  raw/
-    entries.jsonl
-  flows/
-    flows.jsonl
-    index.md
-  failures/
-    failures.json
-    index.md
-  noise/
-    summary.json
-    top-contexts.md
-    templates.jsonl
-    templates.md
-  missing-fields/
-    missing-fields.json
-    index.md
-```
+### T3.3 第一批源码迁移
 
-`summary.md` 第一屏必须回答：
+优先处理 live 可见和 AI debug 主链路：
 
-- gate status、confidence、resultSource。
-- entries、invalid JSONL、validationEntries、artifacts、structuredFailures。
-- flow outcomes、failed/warned flows、top owner、top operation、top phase、top noise、aggregated success templates。
-- `fields:{}`、`operation==context`、unknown owner/phase、缺 source 是否存在。
-- 下一步先读哪些文件，哪些 raw 不应该直接读。
+1. `Src/ECS/Test/GlobalTest/MainTest/MainTest.cs`
+2. `Src/ECS/Runtime/Tests/ECSTest/ECSTest.cs`
+3. `Src/ECS/Runtime/System/SystemManager.cs`
+4. `Src/ECS/Capabilities/Ability/**`
+5. `Src/ECS/Capabilities/Spawn/**`
+6. `Src/ECS/Tools/TargetSelector/**`
+7. `Src/ECS/Tools/ObjectPool/**`
+8. `Src/ECS/Capabilities/TestSystem/**`
 
-`ai-context.md` 必须回答：
+原则：
 
-- 没有 artifact / Validation 时，只能说 `no-failure-observed`。
-- top noisy owner/context/operation 和动作：`budget`、`sample`、`aggregate`、`owner field contract`、`move to Validation`。
-- flow digest，只展示真正 flow conclusion 和异常 flow。
-- success templates，用模板统计承载高频成功路径。
-- semantic missing-fields digest。
-- owner 文档链接和下一轮 query / profile override 建议。
+- 不机械全仓替换 `_log.Info`。
+- 单次操作内多条成功日志合成一个 flow conclusion。
+- 成功路径默认 summary，失败路径保留 detail。
+- 字段进入 `fields`，message 只保留短摘要。
+- 测试断言进入 `ValidationSession`，不再靠文本 pattern。
 
-## T2.2 Gate 语义
+### T3.4 新 run 验收
 
-当前错误样本不能再出现：
+需要用户实际运行或有效 Godot runner 产出新 run。没有新 run 时，不声称 live 行为通过。
 
-```text
-resultSource=structured-log
-status=passed
-validationEntries=0
-artifacts=0
-```
+验收至少检查：
 
-目标规则：
-
-| status | 条件 |
-| --- | --- |
-| `passed` | artifact pass 或 Validation channel 明确 pass，且没有 structured failure |
-| `failed` | artifact fail、Validation fail、structured error/fail |
-| `no-failure-observed` | 有 structured log，但没有 Validation/artifact，也没有失败 |
-| `stdout-pattern-fallback` | 只能靠 legacy stdout pattern |
-| `invalid-input` | raw JSONL 截断或关键 artifact 解析失败，且严重到不能信任本 run |
-
-当前样本至少应从 `passed` 改为 `no-failure-observed`，并在 summary/gate warning 中写出 1 条 invalid JSONL。
-
-## T2.3 Flow 边界
-
-禁止：
-
-```js
-const flowEntries = run.entries.filter((entry) => normalizeStatus(entry.channel) === "flow" || entry.operation);
-```
-
-目标：
-
-- 普通 `operation` 只进 noise / missing-fields / raw 证据，不能自动进入 `flows`。
-- `flows/index.md` 只纳入 `channel=Flow`、显式 `entryType=flow_*` 或完整 OperationTrace 契约。
-- 按 `correlationId` / `flowId` / owner-context-operation 聚合 start、step、complete；无法聚合时标记为 `Log gap`。
-- 高频成功 flow 以 summary / sample / aggregate 呈现，不让 AI 默认读全部 completion。
-
-## T2.4 Semantic Missing Fields
-
-`missing-fields` 不只检查 envelope required fields。它要输出 AI 为什么不能判断问题：
-
-- `fields:{}`。
-- `operation == context`。
-- flow complete 缺 `durationMs`。
-- warn/fail 缺 `reasonCode`。
-- owner 相关日志缺 `entityId`、`targetId`、`poolName`、`processorCount` 等关键字段。
-- 缺 `sourceFile/sourceLine`。
-- unknown owner / phase。
-
-`missing-fields/index.md` 必须按 owner/context/operation 分组，给出分类和任务，例如：
-
-```text
-## Runtime / HealthBarUI
-- 问题：operation==context，fields 为空，无法按 entity 聚合 bind 过程。
-- 样本：83 x OnUnitCreated / 83 x 准备绑定 / 83 x 成功绑定。
-- 分类：Log gap / Owner field gap。
-- 任务：补 HealthBarBind operation，fields={entityId, entityType, outcome, reasonCode}。
-```
+- live stdout 默认只含 warn/error、validation、flow summary、run summary。
+- `logctl analyze` 默认可读入口小于 raw。
+- 关键业务 flow 能判断 success / failed / skipped。
+- 没有 Validation artifact 时仍不得 `passed`。
 
 ## 验证命令
 
-每完成 T2.1~T2.4 一批后运行：
+文档和静态盘点阶段：
 
 ```bash
-node --check Workspace/Tools/logctl/logctl.mjs
-node --test Workspace/Tools/logctl/tests/logctl-analyze.test.mjs
-Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/20260610-013907 --out .ai-temp/log-runs/20260610-013907/analysis-semantic
-test -f .ai-temp/log-runs/20260610-013907/analysis-semantic/summary.md
-test -f .ai-temp/log-runs/20260610-013907/analysis-semantic/ai-context.md
-test -f .ai-temp/log-runs/20260610-013907/analysis-semantic/noise/templates.md
-test -f .ai-temp/log-runs/20260610-013907/analysis-semantic/noise/top-contexts.md
-test -f .ai-temp/log-runs/20260610-013907/analysis-semantic/missing-fields/index.md
-test -f .ai-temp/log-runs/20260610-013907/analysis-semantic/flows/index.md
-test ! -d .ai-temp/log-runs/20260610-013907/analysis-semantic/by-owner
-test ! -d .ai-temp/log-runs/20260610-013907/analysis-semantic/by-phase
-test ! -f .ai-temp/log-runs/20260610-013907/analysis-semantic/flows/flows.json
-Workspace/Tools/logctl/logctl query --analysis-dir .ai-temp/log-runs/20260610-013907/analysis-semantic owner=TargetSelector operation=TargetQueryEntities --format md
-Workspace/Tools/logctl/logctl suggest --run-dir .ai-temp/log-runs/20260610-013907 --dry-run
 python3 Workspace/SDD/sdd.py validate SDD-0040
-git diff --check -- SDD/project/projects/PRJ-0002-ecs-framework-refactor Workspace/Tools/logctl DocsAI/ECS/Tools/Logger
+python3 Workspace/SDD/sdd.py validate --all
+git diff --check -- SDD/project/projects/PRJ-0002-ecs-framework-refactor DocsAI/ECS/Tools/Logger
 ```
 
-注意：`python3 Workspace/SDD/sdd.py validate PRJ-0002` 当前 CLI 不支持 project id 作为 validate target，不要把这个命令写入通过证据。
+实现阶段再加：
 
-## SDD 同步要求
+```bash
+dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly
+node --check Workspace/Tools/logctl/logctl.mjs
+node --test Workspace/Tools/logctl/tests/logctl-analyze.test.mjs
+Workspace/Tools/logctl/logctl analyze --run-dir <new-run> --out <new-run>/analysis
+```
 
-- 完成 T2 子任务时，同步更新 `tasks.md` checkbox、`progress.md` Latest Resume 和必要的 `bdd.md` / `notes.md`。
-- 如果改 `DocsAI/ECS/Tools/Logger` 或 owner 文档，保持项目级 `design/Tool/10.Log` 与 SDD-0040 恢复点一致。
-- 如果改 `.ai-config/skills/`，必须只改 `.ai-config` 源，随后运行 `bash Workspace/Tools/ai-config-sync/sync-ai-config.sh` 和 `bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only`。
-- 不把无 artifact / Validation 的 run 记录为通过；可以记录为 `no-failure-observed`。
+涉及 `.ai-config/skills/` 时必须只改 `.ai-config` 源，并运行：
 
-## 完成定义
+```bash
+bash Workspace/Tools/ai-config-sync/sync-ai-config.sh
+bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only
+```
 
-T2.1~T2.4 的完成定义：
+## 禁止
 
-- 当前样本生成完整 markdown digest。
-- `gate-report.json` 不再误报 `passed`。
-- `flows/index.md` 不再包含全部普通 operation。
-- `missing-fields/index.md` 明确列出 `fields:{}`、`operation==context` 和第一批 owner 字段任务。
-- `ai-context.md` 足以让下一轮 AI 从摘要和 query 入口继续，不需要直接读取 4915 行 raw JSONL。
-
-T2 全部完成定义：
-
-- T2.1~T2.5、T2.7 checkbox 完成；T2.6 需要 artifact 接入和可运行场景后才能完成。
-- 当前样本和可用本地门禁通过。
-- 最终 Godot scene smoke 如果仍无有效 runner，必须保留 blocker，不能把 SDD 标记为 done。
+- 不再说“Log 已全部改完”，除非 T3.4 新 run 验收通过。
+- 不用 analyzer DONE 证明 live stdout 已经 AI-first。
+- 不把旧样本压缩比例当成新源码调用点迁移完成证明。
+- 不在方向未冻结时大规模改 `Src/ECS`。
+- 不把普通 `_log.Info` 机械替换为 `BeginTrace`。

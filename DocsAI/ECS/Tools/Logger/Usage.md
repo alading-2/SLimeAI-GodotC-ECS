@@ -128,6 +128,14 @@ Log.Configure(new LogOptions
 
 ## logctl
 
+调试或验证新 run 时，默认阅读顺序应是：
+
+1. `logctl analyze --run-dir ... --out ...`
+2. 先读 `summary.md`
+3. 再读 `ai-context.md`
+4. 再看 `flows/`、`failures/`、`missing-fields/`
+5. 最后才 `query --file analysis/raw/entries.jsonl ...` 下钻 raw
+
 ```bash
 Workspace/Tools/logctl/logctl profile show --config-dir Config/Log
 Workspace/Tools/logctl/logctl analyze --run-dir .ai-temp/log-runs/manual --out .ai-temp/log-runs/manual/analysis

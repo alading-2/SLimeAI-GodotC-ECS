@@ -139,7 +139,8 @@ raw/scene-log.jsonl
 - SDD-0040 T1 完成的是 `LogEntry`、sink、profile、budget、`OperationTrace`、`ValidationSession` 和最小 `logctl` 管道。
 - T1 没完成的是 analyzer digest、semantic missing-fields、正确 flow 边界、owner 字段契约、Validation gate 状态区分和真实样本验收。
 - 2026-06-11 的 T2 修正已经把 analyzer 默认入口改成 `summary.md`、`ai-context.md`、`flows/flows.jsonl`、`noise/templates.jsonl`、`missing-fields` 和 `failures`，并清理 stale `by-owner` / `by-phase` / pretty `flows.json`。
-- 因此当前状态不能再描述为“只剩 Godot scene smoke blocker”，也不能描述为“整理仍是 raw 分桶”。更准确的状态是：记录层和 analyzer 默认语义入口已落地；T2.6 Validation artifact adoption 与最终 Godot runner smoke 仍未完成。
+- 2026-06-11 19:26 再校正：T2 analyzer 完成也不能代表 live 打印已经 AI-first。`Src/ECS` 源码调用点语义化仍未完成，后续进入第三部分 T3。
+- 因此当前状态不能再描述为“只剩 Godot scene smoke blocker”，也不能描述为“整理仍是 raw 分桶”。更准确的状态是：记录层和 analyzer 默认语义入口已落地；源码调用点语义化、T2.6 Validation artifact adoption 与最终 Godot runner smoke 仍未完成。
 - T2 的第一验收样本就是 `.ai-temp/log-runs/20260610-013907`；当前样本语义整理结果是 `rawLines=4915`、`defaultReadableLines=303`、`defaultReadableRatio=0.062`。这证明默认入口已从 raw 复制转为语义提炼；但旧样本仍缺 Validation artifact 和完整 flow step，不能据此声明行为通过。
 
 ## 5. AI-first 原则

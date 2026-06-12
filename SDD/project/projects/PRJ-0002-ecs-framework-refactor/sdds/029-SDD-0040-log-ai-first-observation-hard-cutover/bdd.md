@@ -89,3 +89,12 @@ And 默认也不包含 `wallClockUtc`
 When profile 或 override 设置 `includeWallClockUtc=true`
 Then entry 可包含 `wallClockUtc`
 And AI 默认 analysis 不把 wall clock 当作主要时间基准。
+
+### Scenario: Live stdout is not fragmented after callsite migration
+
+Given 用户运行主场景、MainTest 或技能释放链路
+When 默认 Log profile 生效
+Then live stdout 不应逐条显示普通 `_log.Info` 步骤说明、成功查询、成功绑定、成功租还或 Debug UI 操作
+And live stdout 只显示 warn/error、validation verdict、关键 flow summary、run summary 和 suppressed summary
+And 完整过程细节进入 JSONL / artifact
+And `logctl analyze` 能从新 run 的 flow conclusion 判断关键业务动作成功、失败或跳过。

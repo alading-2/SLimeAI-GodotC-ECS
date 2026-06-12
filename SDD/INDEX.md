@@ -28,7 +28,7 @@
 | ID | Project | Title | Updated | Scope | Current Task |
 | --- | --- | --- | --- | --- | --- |
 | SDD-0027 | PRJ-0002 | Timer Scheduler Full Rewrite | 2026-06-03 | SlimeAI | T1.8 |
-| SDD-0040 | PRJ-0002 | Log AI-first Observation Hard Cutover | 2026-06-10 | SlimeAI | T2.5 owner hot-spot cleanup |
+| SDD-0040 | PRJ-0002 | Log AI-first Observation Hard Cutover | 2026-06-11 | SlimeAI | T3.0 源码调用点语义化方向冻结 |
 
 ## Done
 

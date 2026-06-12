@@ -2,12 +2,20 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-11 16:40
-- **Current Task**: T2.6 Validation artifact adoption
-- **Last Conclusion**: 已完成本轮 Log 设计/实现复查和文档收口：项目级第二部分新增 `04-当前实现审查报告.md`，按 G1~G8 确认 analyzer 默认语义入口 DONE，并把 SDD-0040 内部 2026-06-09 快照统一标为 historical，避免旧 `by-owner` / `by-phase` / pretty `flows.json` 被当成 current 入口。复跑 `.ai-temp/log-runs/20260610-013907` 到 `analysis-semantic` 后为 `rawLines=4915`、`defaultReadableLines=303`、`defaultReadableRatio=0.062`、`flowConclusions=3730`、`outputFlowConclusions=5`、`templatedSuccessFlows=3725`、`noiseTemplates=6`；`query --analysis-dir owner=TargetSelector operation=TargetQueryEntities` 返回 1 条 `success-template(count=3041)`，不是 raw 3041 条。gate 仍是 `status=no-failure-observed` / `confidence=low` / `resultSource=structured-log`，因为当前样本没有 Validation artifact。
-- **Next Action**: 继续 T2.6：让可运行的承载场景或后续验证 run 输出 `ValidationSession` / artifact；在有效 Godot runner 可用前，不应声称 scene smoke 或行为通过。若只分析现有旧样本，结论只能是 analyzer 已提炼、样本缺 Validation/step evidence。
-- **Open Blockers**: 最终 Godot scene smoke blocked：当前没有可验证本框架工作树的承载游戏 runner。该 blocker 不阻止 logctl / DocsAI / skill 非 Godot 门禁，但阻止 SDD 完成态和场景行为通过声明。
+- **Updated**: 2026-06-11 19:26
+- **Current Task**: T3.0 源码调用点语义化方向冻结
+- **Last Conclusion**: 用户指出“运行游戏时打印仍然分离，所以 Src 代码还没有改完”的判断成立。T2 analyzer 默认入口已经能把旧 raw 提炼成 flow conclusion 和 success template，但这只解决离线整理，不证明 live stdout 或所有 `Src/ECS` 调用点已经 AI-first。静态扫描显示 `Src/ECS` 仍有大量 `_log.*` 调用和少量直接打印；因此新增项目级第三部分 `design/Tool/10.Log/第三部分-源码调用点语义化/README.md`，把后续工作重新定义为 T3：先冻结 live stdout policy、owner flow contract、Debug UI/TestSystem 可见性，再按 owner 迁移调用点。
+- **Next Action**: 先完成 T3.0 方向确认；未确认前不做大规模源码迁移。默认推荐：live stdout 严格收口到 warn/error/validation/flow summary/run summary；T3 继续归入 SDD-0040；第一验收链路以 MainTest / 主场景启动 / 释放技能 / 生成怪物为准；Debug UI/TestSystem 默认进入 debug profile，不污染 AI live stdout。
+- **Open Blockers**: 最终 Godot scene smoke blocked：当前没有可验证本框架工作树的承载游戏 runner。该 blocker 不阻止 T3 设计和静态盘点，但阻止 SDD 完成态和场景行为通过声明。
 ## Timeline
+
+### P033 — 2026-06-11 19:26 — design-correction
+
+- **Context**: 用户指出 live 打印仍然分离，质疑之前“Log 已改完”的说法。
+- **Conclusion**: 之前完成声明边界错误：记录层和 analyzer 离线整理层已改，但源码调用点语义化未完成。新增第三部分设计，明确 T3 源码调用点语义化为未实现大阶段，并把 SDD 当前任务从 T2.6 改为 T3.0 方向冻结。
+- **Evidence**: `rg` 静态扫描显示 `Src/ECS` 仍有约 547 处 `_log.Trace/Debug/Info/Success/Warn/Error/Validation` 调用、约 5 处 `GD.Print/GD.Push/Console.WriteLine/PrintRich` 直接打印相关命中、约 13 处 `BeginTrace/CompleteTrace/OperationTrace` 命中；第三部分文档已新增到项目级 Log 设计入口。
+- **Impact**: 后续不能再用 analyzer DONE 或旧样本压缩比例声称“Log 全部改完”。源码迁移必须先确认 live stdout 策略和 owner flow contract，再按 T3.1~T3.4 推进。
+- **Resume**: 从 T3.0 Must Confirm 继续；没有用户确认或明确接受默认假设前，不进入大规模源码改造。
 
 ### P023 — 2026-06-11 16:40 — validation
 
