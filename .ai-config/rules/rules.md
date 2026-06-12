@@ -43,8 +43,6 @@ SystemAgent 不作为 ECS 业务事实源第一入口；它只作为流程工具
 - `Src/ECS/**`：源码入口；框架 Markdown 文档统一由 `DocsAI/ECS/` 管理，`Src/ECS` 不保留框架文档。
 - `.ai-config/skills/*`：唯一可维护 skill 源，保存 skill 路由、reference 和脚本入口；`.ai-config/sync-targets.json` 定义同步目标。
 - `.ai-config/rules/rules.md`：rule 源。
-- `.claude/.codex/.trae/skills`、`AGENTS.md`、`.trae/rules/rules.md` 等：同步副本，不直接维护；实际目标由 `.ai-config/sync-targets.json` 配置。
-- `.claude/settings.json`、`.claude/agents/`、`.codex/hooks.json`、`.codex/agents/`、`.codex/config.toml`：hook/subagent 运行配置，直接维护，不走 `.ai-config` 同步。
 - `Workspace/SystemAgent/`：流程、角色、gate、hook、skill-test 工具。
 - `Workspace/SDD/`：SDD CLI、模板和校验规则。
 - `Workspace/DocsAI/`：工作区级文档（Git submodule、多游戏架构、AI 流程），与框架文档分离。
@@ -94,18 +92,12 @@ SystemAgent 不作为 ECS 业务事实源第一入口；它只作为流程工具
 
 ## AI 配置统一源
 
-本仓同时维护多个 AI 工具的 skill 和 rule。**同步目标由 `.ai-config/sync-targets.json` 配置，修改配置即可增减目标，无需改脚本。**
+**改 skill 或 rule，只改 `.ai-config/`**。同步目标由 `.ai-config/sync-targets.json` 定义。
 
-- **Skill 源**：`.ai-config/skills/<category>/<name>/SKILL.md`；同步副本在 `.ai-config/sync-targets.json` 的 `skills` 数组中定义。
-- **Rule 源**：`.ai-config/rules/rules.md`；同步副本在 `.ai-config/sync-targets.json` 的 `rules` 数组中定义。
-- **Hook/Subagent**：`.claude/settings.json`、`.claude/agents/`、`.codex/hooks.json`、`.codex/agents/`、`.codex/config.toml` — 直接维护，不走 `.ai-config` 同步。
+- **Skill 源**：`.ai-config/skills/<category>/<name>/SKILL.md`
+- **Rule 源**：`.ai-config/rules/rules.md`
 
-**skill/rule 只改 `.ai-config/`，不改副本**。同步目标和排除规则定义在 `.ai-config/sync-targets.json`；脚本读取配置动态执行，不硬编码目标。
-
-**禁止直接修改同步副本**：`.ai-config/sync-targets.json` 中 `skills` 和 `rules` 数组定义的所有目标路径。
 改完后**必须**运行 `bash Workspace/Tools/ai-config-sync/sync-ai-config.sh`，否则副本会被下次同步覆盖。
-
-**允许直接修改项目运行配置**：`.claude/settings.json`、`.claude/agents/`、`.codex/hooks.json`、`.codex/agents/`、`.codex/config.toml`。这些不是 `.ai-config` 同步副本。
 
 ## SDD 工作流
 
