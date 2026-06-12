@@ -22,7 +22,7 @@ SDD tasks/progress、相关源文件、owner skill、验证契约。
 
 **Rubric（PASS/FAIL）**：
 - **IM-P1 Scope boundary**：只修改 SDD task / owner skill 授权范围内的文件；越界修改前必须明确说明理由。
-- **IM-P2 No copy edits**：不修改 `.codex/skills/`、`.claude/skills/`、`.devin/skills/`、`.trae/skills/`、`CLAUDE.md`、`devinrules.md` 等同步副本作为源。
+- **IM-P2 No copy edits**：不修改 `.ai-config/sync-targets.json` 中定义的 skill/rule 同步副本作为源。
 - **IM-P3 Task checkbox update**：每完成一个 subtask 立即更新 `tasks.md` checkbox；不批量"最后一次性更新"。
 
 ## Forbidden behavior

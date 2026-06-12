@@ -2,7 +2,7 @@
 
 ## Source-of-truth boundary
 
-`.ai-config/` 只维护 skill、rule 和 command 源。`.codex/skills/`、`.claude/skills/`、`.devin/skills/`、`.trae/skills/`、`.claude/commands/opsx/`、`CLAUDE.md`、`.devin/rules/devinrules.md` 是同步副本。Hook 和 subagent 是 `.claude/.codex` 直接运行配置，不从 `.ai-config` 生成。
+`.ai-config/` 只维护 skill、rule 和 command 源。`.ai-config/sync-targets.json` 中 `skills` 和 `rules` 数组定义的所有目标路径是同步副本。Hook 和 subagent 是 `.claude/.codex` 直接运行配置，不从 `.ai-config` 生成。
 
 ## Allowed actions
 

@@ -95,7 +95,7 @@ Godot validation claim 必须同时检查：
 - `REJECT` — 触碰禁改副本作为源，或修改了未授权跨仓库文件。
 
 **Special handling**:
-- 发现直接修改 `.codex/skills/`、`.claude/skills/`、`.devin/skills/`、`.trae/skills/`、`CLAUDE.md`、`.devin/rules/devinrules.md` 作为源时一律 `REJECT`。
+- 发现直接修改 `.ai-config/sync-targets.json` 中定义的 skill/rule 同步副本作为源时一律 `REJECT`。
 
 ### Gate: RV-INTEGRATION-BEHAVIOR
 

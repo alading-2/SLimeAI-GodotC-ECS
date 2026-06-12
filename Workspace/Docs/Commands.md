@@ -28,7 +28,7 @@ DataOS 仅校验：没改数据生成物，只想检查当前 DB、snapshot、Da
 bash Data/DataOS/Tools/validate-dataos.sh Data/DataOS/Authoring/slimeainew.authoring.db
 ```
 
-AI 配置同步：改 `.ai-config/skills` 或 `.ai-config/rules` 后跑这个；会同步 Claude、Codex、Devin、Trae、OpenCode 副本，并自动跑 changed skill lint。
+AI 配置同步：改 `.ai-config/skills` 或 `.ai-config/rules` 后跑这个；会按 `.ai-config/sync-targets.json` 同步所有目标，并自动跑 changed skill lint。
 
 ```bash
 bash Workspace/Tools/ai-config-sync/sync-ai-config.sh
