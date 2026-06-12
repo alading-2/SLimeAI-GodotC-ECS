@@ -15,18 +15,18 @@
 
 | File | Role | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
-| `TDD-测试系统优化设计.md` | design | proposed | 2026-06-11 | 分析 TDD/Test 规则与执行基础设施断裂，提出 NUnit 项目、共享测试基类、ValidationSession 采用、Flow 打印与 BDD 追溯方案 |
-| `Hook系统重启设计.md` | design | proposed | 2026-06-11 | 将 Hook 从高频检查器重设计为低噪音提醒器，并与 review mode 集成 |
-| `Code-Review优化设计.md` | design | proposed | 2026-06-11 | 将 code review 与 TDD artifact、ValidationSession、Retrospective 根因统计联动 |
+| `TDD-测试系统优化设计.md` | design | proposed | 2026-06-12 | 纠正脱离 Godot 的测试框架方向；Data 试点改为行为标准答案先行、Godot scene 与 Validation artifact 证据 |
+| `Hook系统重启设计.md` | design | proposed | 2026-06-11 | 将 Hook 从高频检查器重设计为低噪音提醒器；当前只记录可用节点，不启用 |
+| `Code-Review优化设计.md` | design | proposed | 2026-06-12 | 重新定位 Code Review：功能实现度优先，补充必要质量维度，测试 artifact 只作为 evidenceRef |
 | `Worktree激活设计.md` | design | proposed | 2026-06-11 | 在不默认开启的前提下，通过 skill + SDD 关联激活 git worktree 使用 |
-| `SDD精简设计.md` | design | proposed | 2026-06-11 | 压缩 progress.md 膨胀、增加行数上限和去重规则，回到 AI-first 恢复上下文最小集 |
+| `SDD精简设计.md` | design | proposed | 2026-06-12 | 参考 OpenSpec 的轻量思想，改成薄任务状态面板，停止逐任务流水账、设计快照复制和冗余 BDD |
 
 ## Recommended Order
 
 1. `SDD精简设计.md`
-2. `TDD-测试系统优化设计.md`
-3. `Hook系统重启设计.md`
-4. `Code-Review优化设计.md`
+2. `TDD-测试系统优化设计.md`（Data Godot/Validation 试点）
+3. `Code-Review优化设计.md`
+4. `Hook系统重启设计.md`（仅记录节点，暂不启用）
 5. `Worktree激活设计.md`
 
 ## Reference Handoff

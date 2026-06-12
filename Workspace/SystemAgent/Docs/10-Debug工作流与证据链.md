@@ -116,17 +116,17 @@ Evidence Plane
 
 不能自动升级成 `passed`。
 
-### 4. SDD 恢复证据
+### 4. SDD 状态证据
 
 对于中大型问题，还需要：
 - `tasks.md`
-- `progress.md`
-- `bdd.md`
-- Latest Resume
+- `progress.md` 的 State / Next / Blocker
+- `bdd.md` 或设计旁行为验收引用
+- validation artifact / logctl analysis 引用
 
 否则下次会话不知道：
 - 已经验证到哪一步
-- 哪个假设被排除
+- 哪个行为场景已覆盖
 - 为什么当前状态算 blocked / concerns / resolved
 
 ## Log / Validation / Test 在 Debug 中分别扮演什么角色

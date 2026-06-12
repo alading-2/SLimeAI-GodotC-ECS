@@ -66,9 +66,9 @@ python3 Workspace/SDD/sdd.py list --json
 
 ### `show <id>`
 
-显示单个 SDD 的 README 和 Latest Resume。
+显示单个 SDD 的 README 和当前 State。
 
-若 SDD 任务涉及 worktree 判断，Latest Resume 应能恢复 Git Boundary、Worktree、Branch、Baseline Status、Cleanup Status 和 Submodule Boundary；未使用 worktree 时也应说明 `Worktree: none` 的原因。
+若 SDD 任务涉及 worktree 判断，State 或 Decision 应能恢复 Git Boundary、Worktree、Branch、Baseline Status、Cleanup Status 和 Submodule Boundary；未使用 worktree 时可简单说明 `Worktree: none` 的原因。
 
 ### `start <id>`
 
@@ -76,7 +76,7 @@ python3 Workspace/SDD/sdd.py list --json
 
 ### `note <id>`
 
-追加 progress 记录。
+追加 progress 记录。`note` 是手动工具，只用于方向裁决、阻塞、关键验证或用户裁决；不要把每个 task done、每个命令或文件清单都写入 progress。
 
 ```bash
 python3 Workspace/SDD/sdd.py note SDD-0001 --type decision "README is an entry card."
@@ -99,13 +99,13 @@ python3 Workspace/SDD/sdd.py task SDD-0001 todo T1.1
 
 ### `done <id>`
 
-将 SDD 的 `sdd.json.status` 更新为 `done` 并写入验证摘要。命令不移动目录。默认继承当前 `Latest Resume` 的 `Last Conclusion`，不会把结论降级为泛化的完成句。需要更明确的最终结论时使用 `--conclusion` 和 `--next-action`。
+将 SDD 的 `sdd.json.status` 更新为 `done` 并写入简短验证摘要。命令不移动目录。需要更明确的最终结论时使用 `--conclusion` 和 `--next-action`，但不要生成长 Resume 或复制完整输出。
 
 ```bash
-python3 Workspace/SDD/sdd.py done SDD-0001 --validation "python3 Workspace/SDD/sdd.py validate --all passed"
+python3 Workspace/SDD/sdd.py done SDD-0001 --validation "dotnet build ... passed; python3 Workspace/SDD/sdd.py validate SDD-0001 passed"
 python3 Workspace/SDD/sdd.py done SDD-0001 \
-  --validation "python3 Workspace/SDD/sdd.py validate SDD-0001: 0 error / 0 warning" \
-  --conclusion "README 写入边界已修复，validate 增加信息质量检查。" \
+  --validation "dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly passed; python3 Workspace/SDD/sdd.py validate SDD-0001: 0 error / 0 warning" \
+  --conclusion "README 写入边界已修复，SDD 结构校验通过，业务验证另见 build/test 摘要。" \
   --next-action "无需继续；后续问题创建新 SDD 引用本任务。"
 ```
 
@@ -124,11 +124,15 @@ python3 Workspace/SDD/sdd.py design-import SDD-0001 \
 - `--notes`：补充说明，默认记录来源路径。
 - `--force`：覆盖已存在的目标文件。
 
+`design-import` 只用于保存任务特定设计或必要历史材料。项目子 SDD 默认引用项目级 `design/` 路径，不复制完整快照。
+
 ### `validate [id|--all]`
 
-校验结构、metadata 状态、项目容器、任务进度、BDD、全局索引和信息质量。结构错误、状态错误、done 保留模板残留和 done 未完成任务会返回 error；弱摘要、弱 validation、缺追溯入口、冗余风险和 design 不自包含先返回 warning。
+校验结构、metadata 状态、项目容器、任务进度、BDD、全局索引和基本状态一致性。结构错误、状态错误、done 保留模板残留和 done 未完成任务会返回 error；弱摘要、弱 validation、缺追溯入口和冗余风险先返回 warning。
 
-质量检查不会要求记录更多流水账。它只提醒明显低价值或难恢复的信息，例如 README 摘要等于标题、Latest Resume 只有 `ok/done`、validation 缺命令与结果摘要、Key Files 过长、artifacts 未被引用、notes 过长且无结构、design/ 过于单薄或引用外部路径但未复制。
+质量检查不会要求记录更多流水账。它只提醒明显空壳或状态矛盾的信息，例如 README 摘要等于标题、validation 只有 `ok/done` 且没有命令或 artifact/ref、Key Files 过长、artifacts 未被引用、notes 过长且无结构。项目子 SDD 只引用 project/design 或 BDD Source 不应视为错误。
+
+`validate` 只能证明 SDD artifact 的结构和状态没有明显问题，不能证明任务实现正确。代码、数据、Godot、skill 或文档变更仍需要各自的 build/test/scene/sync/lint 或人工审查证据。
 
 项目 roadmap 的设计追踪表是人工维护契约；当前 `validate` 只校验项目容器结构和 metadata，不对路线图语义做强制推断。
 

@@ -48,7 +48,7 @@ dotnet build Brotato_my.sln
 
 ## 功能类型追加要求
 
-- 纯 Runtime / Capability 逻辑：补 `Tests/SlimeAI.GameOS.Tests/` 最小行为断言。
+- Runtime / Capability 逻辑：补当前 owner 可运行验证，优先使用 Godot headless scene、Validation artifact、DataOS validator 或 `DocsAI/ECS/` 指定入口，先写清行为标准答案。
 - DataOS 新字段：覆盖 schema / migration / seed 或 snapshot generator / validator / Runtime loader 断言，并同步 descriptor mirror。
 - GodotBridge 或游戏侧胶水：补独立 Godot 验证场景；`run-main-smoke` / `Scenes/Main.tscn` 只能作为回归补充。
 - 框架级 Godot 场景：场景写在框架仓 `Src/Validation/...`，脚本写在 `Src/Validation/...`；当前阶段跑 Godot 前同步到 `Games/BrotatoLike/SlimeAI/` 工作树。

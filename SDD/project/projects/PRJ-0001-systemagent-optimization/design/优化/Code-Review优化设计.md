@@ -1,122 +1,72 @@
 # Code Review 优化设计
 
-> 来源：SystemAgent 深度分析
-> 日期：2026-06-11
+> 来源：用户指出 Code Review 方向偏向 TDD 后的 SystemAgent 深度分析
+> 日期：2026-06-12
 > 优先级：P1
 
-## 当前状态
+## 用户原始问题
 
-systemagent-code-review skill（121 行）定义了完整的三阶段审查流程：
+用户指出当前 Code Review 方向可能错了：Code Review 不应只是 TDD 或测试覆盖检查，最重要的是看代码是否按要求实现功能；测试结果可以参考，但审查核心是代码本身、功能实现和必要代码质量。
 
-1. **Phase 1**：从 SDD 设计文档提取需求清单
-2. **Phase 2**：逐项审查（DONE/PARTIAL/MISSING/WRONG + 根因分析）
-3. **Phase 3**：结构化报告
+## 真实问题
 
-**做得好的部分**：
-- 根因分类（需求误解/接受标准低/概念边界模糊/技术限制/遗漏）
-- 明确禁止行为（不写代码、不接受"应该能通过"、不把编译通过当完成）
-- 与 test-designer 和 verifier 的职责边界清晰
+用户判断成立。当前 `systemagent-code-review` 的主流程是从 SDD 提取需求清单，再逐条判断 `DONE/PARTIAL/MISSING/WRONG`。这个方向保留了“功能是否实现”的优点，但缺两个边界：
 
-## 问题分析
+1. **它容易被误解成 TDD gate**：如果把“有测试且通过”当作 DONE 的必要条件，Code Review 就会退化为 `RV-TEST-COVERAGE` 的重复。
+2. **它没有明确代码质量审查维度**：只看需求条目是否出现，可能漏掉明显低质量实现、架构红线、热路径性能问题和错误处理问题。
 
-### 核心问题：Code Review 与 TDD 脱节
+Code Review 的第一责任不是证明测试通过，而是回答：**代码是否按设计实现了用户要的功能，并且没有用明显不合格的方式实现。**
 
-Code Review 的 Phase 2 做的是"需求 vs 实现"对比，但它不读取测试结果。这意味着：
+## 职责边界
 
-- 不知道哪些功能有测试覆盖
-- 不知道测试是否通过
-- 不知道 ValidationSession 产出了什么 artifact
-- 只能做代码级别的静态审查，不能做运行时验证审查
+| 能力 | 主要问题 | 不负责什么 |
+| --- | --- | --- |
+| TDD / RV-TEST-COVERAGE | 测试是否先 RED 后 GREEN、标准答案和 artifact 是否可复验 | 不评价整体代码设计好坏 |
+| Verifier | 完成声明是否有可复查证据 | 不逐行审查实现质量 |
+| Reviewer / Review Gates | 流程、边界、集成、文档、配置是否合规 | 不替代功能实现审查 |
+| Code Review | 功能是否实现、代码是否明显偏离设计或质量底线 | 不把缺测试直接等同于功能未实现 |
 
-### 次要问题
+测试结果、ValidationSession artifact、构建结果都是 Code Review 的 evidenceRef。它们能帮助发现风险，但不能替代读代码。
 
-1. **没有自动化执行**：全靠 AI 手动触发 skill，没有 hook 自动在 Execute 阶段后触发
-2. **没有与 Retrospective 联动**：Retrospective 做效率分析，Code Review 做需求分析，但两者不共享信息
-3. **根因分析只是分类**：有分类（需求误解等）但没有量化（哪个根因最常见、需要系统性改进）
+## 审查维度
 
-## 设计方案
+规则必须够用，不做复杂评分。Code Review 只检查 6 类问题：
 
-### 方案 1：Code Review + TDD Artifact 联动（P1）
+1. **功能/设计实现度（最高优先级）**：用户需求、SDD 设计、BDD 场景、完成定义是否真的在代码中实现；实现方向是否和设计一致。
+2. **ECS 架构红线**：是否违反 Entity 生命周期、DataKey、EventBus、ResourceManagement、TimerManager、TargetSelector、DamageService、对象池等项目硬约束。
+3. **修改范围和依赖边界**：是否越界改无关模块、引入不必要依赖、绕过 owner skill 或跨 git 边界混改。
+4. **可维护性底线**：命名是否误导、重复是否明显、函数是否过长或嵌套过深；只抓会影响后续维护的明显问题，不做风格洁癖。
+5. **热路径性能和日志噪音**：`_Process`、高频循环、调度器、查询器中是否新增 `new`、LINQ、过量日志或不必要分配。
+6. **失败语义和错误处理**：失败是否有明确返回、异常、日志或 artifact；是否吞错、伪造成功、用默认值掩盖错误。
 
-在 Phase 2 中增加"测试证据"维度：
+安全问题不作为默认主轴，只在本轮涉及外部输入、脚本执行、路径处理、网络、数据库、密钥或用户数据时进入审查。
 
-```
-Phase 2 逐项审查：
-  对每个需求项：
-    1. 定位实现代码 → file:line
-    2. 定位测试代码 → file:line ← 新增
-    3. 读取测试 artifact → ValidationSession JSON ← 新增
-    4. 判定状态：
-       - DONE + 有测试 + 测试通过 → DONE
-       - DONE + 无测试 → PARTIAL（缺少测试覆盖）
-       - DONE + 测试失败 → WRONG（实现可能有问题）
-       - MISSING → MISSING
-```
+## 判定方式
 
-新增判定维度：
+继续使用现有状态词，不新增复杂等级：
 
-| 实现状态 | 测试状态 | 最终判定 |
-|----------|----------|----------|
-| DONE | 有测试，通过 | DONE |
-| DONE | 无测试 | PARTIAL（缺测试） |
-| DONE | 有测试，失败 | WRONG |
-| PARTIAL | 任意 | PARTIAL |
-| MISSING | 任意 | MISSING |
+| 状态 | 含义 |
+| --- | --- |
+| `DONE` | 功能实现完整，代码质量和架构边界没有阻塞问题。 |
+| `PARTIAL` | 有实现但缺行为、边界或质量问题；也可用于“功能实现了但证据不足/测试缺口明显”。 |
+| `MISSING` | 需求或关键行为没有实现。 |
+| `WRONG` | 实现方向错误、违反明确设计或触碰架构红线。 |
 
-### 方案 2：根因统计（P2）
+测试缺失通常是 evidence/test gap，默认不直接把功能判为 `MISSING`。只有当缺少可复验标准导致无法判断功能是否实现，或测试失败暴露实现错误时，才影响功能状态。
 
-在报告中增加根因分布统计：
+## Skill 触发
 
-```
-## Root Cause Distribution
+Code Review 应作为 skill 存在，可手动也可自动触发：
 
-| 根因 | 数量 | 占比 | 趋势 |
-|------|------|------|------|
-| 需求理解偏差 | 2 | 40% | ↑ 与上次 review 相比 |
-| 接受标准太低 | 1 | 20% | → |
-| 概念边界模糊 | 1 | 20% | ↓ |
-| 技术限制 | 0 | 0% | — |
-| 遗漏 | 1 | 20% | → |
-```
-
-**价值**：如果"需求理解偏差"持续是最高根因，说明 needs-read 入口链不够清晰，需要系统性改进。
-
-### 方案 3：自动触发（P2，依赖 Hook 重启）
-
-在 NewFeature 工作流的 Validate 阶段自动触发 Code Review：
-
-```
-Execute (Implementer) 完成
-  ↓
-自动触发 Code Review (Phase 2)
-  ↓
-如果全部 DONE → 继续到 Verifier
-如果有 PARTIAL/MISSING/WRONG → 返回 Implementer
-```
-
-### 方案 4：与 Retrospective 共享数据（P3）
-
-Code Review 的根因数据和 Retrospective 的效率数据应该合并分析：
-
-```
-Code Review 输出:
-  - 需求完成率: DONE/Total
-  - 根因分布: {误解: 2, 遗漏: 1, ...}
-  
-Retrospective 输出:
-  - 效率指标: {验证循环: 3次, 文件放大: 2x, ...}
-  - sessionEvidence: {tool_failures: [...]}
-  
-合并分析:
-  - "需求误解"高 + "验证循环"多 → 需求入口链需要改进
-  - "遗漏"高 + "文件放大"多 → must-read 列表不完整
-```
+- 用户说“Code Review”“代码审查”“审查实现”“检查代码质量”“看实现是否符合需求”时触发。
+- SDD task 勾选完成前、实现完成后最终汇报前可以手动触发。
+- 未来 Hook 重启后，只能在验证或准备收尾节点提醒运行 Code Review；Hook 不直接做审查，也不强制高频触发。
 
 ## 实施路径
 
-| 阶段 | 内容 | 工作量 |
-|------|------|--------|
-| Phase 1 | Code Review + TDD Artifact 联动 | Skill 更新 |
-| Phase 2 | 根因统计 | Skill 更新 |
-| Phase 3 | 自动触发（依赖 Hook 重启） | Hook + Route 更新 |
-| Phase 4 | 与 Retrospective 数据共享 | 跨 Skill 设计 |
+| 阶段 | 内容 | 说明 |
+| --- | --- | --- |
+| Phase 1 | 更新 `systemagent-code-review` skill | 明确“功能实现度优先 + 6 个质量维度 + 测试证据辅助”。 |
+| Phase 2 | 更新 Review Gate / Docs 边界 | 避免把 Code Review 写成 TDD gate 的重复。 |
+| Phase 3 | Data 试点后再接入 artifact | 等 Runtime/Data 测试试点稳定后，Code Review 再引用 Data 测试 artifact。 |
+| Phase 4 | Hook 仅做提醒 | Hook 系统未重启前不做自动触发实现。 |

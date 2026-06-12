@@ -208,7 +208,7 @@ Godot validation claim 必须同时检查：
 
 **Prompt**:
 检查 retrospective 是否覆盖计划偏差、测试覆盖、日志质量、文档同步、skill/rule/hook/subagent 缺口、外部资源策略、触发的 senior findings 处理状态和剩余风险。
-若当前任务使用 SDD，还必须检查 `progress.md` 是否存在、是否包含 Latest Resume、selected workflow / must-read 状态、关键决策、验证证据和下一步，且是否与 `tasks.md`、`bdd.md` 状态一致；缺失或明显过期时不得把结论判为通过。
+若当前任务使用 SDD，还必须检查 `progress.md` 是否存在、是否包含 State / Next / Blocker / Validation summary，且是否与 `tasks.md`、`bdd.md` 或设计旁行为验收引用一致；缺失或明显过期时不得把结论判为通过。
 
 **Verdicts**:
 - `APPROVE` — 缺口已处理或无缺口，证据完整。

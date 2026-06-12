@@ -1,145 +1,133 @@
 # SDD 系统详解
 
-## 什么是 SDD
+## 当前定位
 
-SDD（Software Design Document）是 SlimeAI 的**任务上下文胶囊系统**。它管理中大型工程任务的设计、执行、验证和恢复。
+SDD 是 SlimeAI 的轻量任务状态系统，不是完整工作日志，也不是设计文档仓库。
 
-### 一句话定位
+一句话定位：
 
-**让 AI 跨会话记住"做到哪了、怎么做的、下一步做什么"。**
-
-### 解决的核心问题
-
-AI 会话是无状态的。没有 SDD：
-- 第一次会话做了设计，第二次会话不记得设计
-- 改了一半的代码，下次来不知道改了什么
-- 验证过的结论，下次来重新验证
-- 阻塞的问题，下次来不知道为什么阻塞
-
-SDD 通过结构化文件解决这些问题。
-
-## SDD 文件结构
-
-```
-SDD/
-├── INDEX.md                ← 全局索引（CLI 自动生成）
-├── catalog.json            ← 机器可读索引
-├── templates/              ← 模板目录
-└── project/
-    └── projects/
-        ├── PRJ-0001-systemagent-optimization/
-        │   ├── README.md   ← 项目入口
-        │   ├── design/     ← 项目级设计（所有 SDD 共享）
-        │   └── sdds/       ← 子 SDD 目录
-        │       ├── 001-SDD-0001-xxx/
-        │       ├── 002-SDD-0003-xxx/
-        │       └── ...
-        └── PRJ-0002-ecs-framework-refactor/
-            ├── README.md
-            ├── design/
-            └── sdds/
+```text
+SDD 只记录任务做到哪、下一步是什么、是否阻塞、验证入口在哪里。
 ```
 
-### 单个 SDD 实例的文件
+长期事实源分别放在：
 
-```
-<SDD-name>/
-├── README.md               ← 入口卡（状态、范围、摘要、阅读顺序、恢复点）
-├── sdd.json                ← CLI 元数据（id, status, progress, links）
-├── tasks.md                ← 任务清单（带验证命令的 checkbox）
-├── progress.md             ← 时间线（决策、验证、阻塞、Latest Resume）
-├── design/                 ← 设计文档（INDEX.md + main.md + 其他）
-│   ├── INDEX.md
-│   └── main.md
-├── bdd.md                  ← 行为场景（Given/When/Then）
-├── notes.md                ← 参考和待定问题
-├── execution-prompt.md     ← 新会话执行提示词（可选）
-└── artifacts/              ← 验证产物（可选）
-```
+- `project/design/`：设计结论。
+- `DocsAI/`：当前框架使用说明。
+- `tasks.md`：任务完成状态。
+- Validation artifact / logctl / build 输出：行为证据。
+- git：文件变化和 diff。
 
-## SDD CLI
+## 为什么要精简
 
-```bash
-# 创建
-python3 Workspace/SDD/sdd.py project-new <project-name>
-python3 Workspace/SDD/sdd.py new <sdd-id> <title>
+PRJ-0002 后期 SDD 已经明显膨胀：
 
-# 管理
-python3 Workspace/SDD/sdd.py list
-python3 Workspace/SDD/sdd.py show <sdd-id>
-python3 Workspace/SDD/sdd.py start <sdd-id>
-python3 Workspace/SDD/sdd.py task <sdd-id> "task description"
-python3 Workspace/SDD/sdd.py note <sdd-id> "note content"
-python3 Workspace/SDD/sdd.py block <sdd-id> "block reason"
-python3 Workspace/SDD/sdd.py done <sdd-id>
+| 样本 | 行数 | 主要问题 |
+| --- | --- | --- |
+| SDD-0040 `progress.md` | 282 | task command、长验证摘要、重复 Resume |
+| SDD-0031 `progress.md` | 218 | RED/GREEN 证据过长，任务完成流水账 |
+| SDD-0024 `progress.md` | 210 | 每个切片都写长 timeline |
+| SDD-0040 `bdd.md` | 100 | 设计要求复述过多 |
+| PRJ-0002 `Core/progress.md` | 476 | 项目状态、历史过程和子 SDD 信息混杂 |
 
-# 验证
-python3 Workspace/SDD/sdd.py validate <sdd-id>
-python3 Workspace/SDD/sdd.py validate --all
-python3 Workspace/SDD/sdd.py index
-python3 Workspace/SDD/sdd.py doctor
-```
+这些内容大多不能帮助 AI 更快恢复，反而让 AI 读入口时先被过程噪音淹没。
 
-## 当前状态
+## 与 OpenSpec 的关系
 
-- **PRJ-0001**（SystemAgent 优化）：11 个 SDD，全部 done
-- **PRJ-0002**（ECS 框架重构）：28 个 SDD，26 done，2 blocked
-  - SDD-0027（Timer 调度器重写）：blocked，缺 Godot runner
-  - SDD-0040（Log AI-first 观测硬切）：blocked，18/19 任务完成，缺 Godot runner
+SDD 参考 OpenSpec 的轻量 change 思想：proposal / tasks / design 按需存在，完成状态主要看 tasks，不把每个操作都写成日志。
 
-## SDD 膨胀问题（重点分析）
+SlimeAI 比 OpenSpec 多保留少量内容：
 
-### 问题现象
+- 当前 SDD / 当前任务。
+- blocker。
+- 下一步。
+- 最小验证入口。
 
-后期 SDD 的 `progress.md` 严重膨胀。以 SDD-0040（Log）为最极端案例：
+除此之外，SDD 应尽量回到轻量模型。
 
-| 文件 | 行数 | 问题 |
-|------|------|------|
-| progress.md | 266 行 | 32 个时间线条目，大量样板重复 |
-| design/ | 2683 行 | 从项目级 design 导入的快照（会过时） |
-| execution-prompt.md | 212 行 | 非原始模板的一部分 |
-| bdd.md | 91 行 | 合理 |
-| tasks.md | 61 行 | 合理（19 个任务） |
-| README.md | 42 行 | 合理 |
+## 文件边界
 
-### 膨胀原因
+| 文件 | 职责 |
+| --- | --- |
+| `README.md` | 入口卡：状态、目标一句话、当前任务、下一步、关键链接。 |
+| `sdd.json` | CLI metadata。 |
+| `tasks.md` | 唯一任务进度事实源。 |
+| `progress.md` | 状态面板：current / next / blocker / 少量 decision / validation summary。 |
+| `design/INDEX.md` | shared design refs 或本 SDD 局部设计引用。 |
+| `design/main.md` | 可选，只写本 SDD 独有差异。 |
+| `bdd.md` | 行为场景摘录、设计旁 BDD 引用或 not required reason。 |
+| `notes.md` | 可选参考和开放问题。 |
+| `artifacts/` | 必须留档且没有稳定外部路径的证据。 |
 
-1. **样板任务完成条目**：P005-P010 是 6 个格式完全相同的"完成任务 T1.X"条目，没有任何有区分度的信息
-2. **Conclusion 和 Resume 重复**：验证条目中 Conclusion 和 Resume 包含完全相同的文字（5-7 行），纯重复
-3. **验证证据过于详细**：嵌入完整命令行和完整输出摘要，违反了 SDD 格式规范中"不推荐：完整终端输出"的指导
-4. **design 快照过时**：SDD-0040 导入了项目级 design 的完整快照（2683 行），README 注明是"历史快照"，项目级 design 才是权威源
+## progress.md 新规则
 
-### AI-First 视角分析
+默认格式：
 
-从 AI-first 角度看，SDD 膨胀的本质是：**AI 不知道什么信息是"恢复上下文"必需的，什么只是过程记录。**
+```markdown
+# Progress
 
-AI 倾向于记录一切（因为它的训练是"更多信息更好"），但实际上：
-- 恢复上下文只需要：Latest Resume + 最后 2-3 个关键决策 + 当前阻塞项
-- 过程记录只需要：关键转折点（不是每完成一个任务都记录）
-- 验证证据只需要：通过/不通过 + 产物路径（不需要完整命令输出）
+## State
 
-### 建议的简化方向
+- Status: active
+- Current: T2.1
+- Next: ...
+- Blocker: none
 
-1. **progress.md 行数上限**：建议不超过 100 行，超过时压缩早期条目
-2. **禁止 Conclusion/Resume 重复**：Resume 只写"下一步做什么"，不重复 Conclusion
-3. **任务完成条目合并**：连续的任务完成可以合并为一个条目
-4. **验证证据引用化**：只写产物路径，不嵌入命令输出
-5. **design 不导入快照**：SDD 只引用项目级 design，不复制
+## Decisions
 
----
+- 2026-06-12: ...
 
-## SDD 与 TDD 的关系
+## Validation
 
-SDD 的 `bdd.md` 定义行为场景，TestDesigner 将 BDD 转化为验证场景，Implementer 将验证场景实现为测试代码。
-
-```
-SDD bdd.md (Given/When/Then)
-    ↓
-TestDesigner (5 字段标准答案)
-    ↓
-Implementer (测试代码)
-    ↓
-ValidationSession (artifact)
+- pending
 ```
 
-**当前问题**：这个链条的连接是手动的，没有自动追溯性。
+不再默认写：
+
+- P001/P002 timeline。
+- 每个 task done 记录。
+- `Context / Conclusion / Evidence / Impact / Resume` 五段式。
+- 完整命令输出。
+- 修改文件列表。
+- “继续处理下一个未完成任务”。
+
+只有方向改变、阻塞、用户裁决或最终验证时，才值得写入 progress。
+
+## BDD 新规则
+
+BDD 有意义的前提是它能指导测试 check。
+
+新规则：
+
+- 长期 BDD 靠近设计文档，或写在设计文档的“行为验收”小节。
+- 子 SDD `bdd.md` 只摘录本任务要执行的场景，或链接设计旁 BDD。
+- 非行为任务可以 `Required: false`。
+- 不要求每个 SDD 都写 Given/When/Then。
+
+## project 容器边界
+
+项目级文件也要分工：
+
+| 文件 | 职责 |
+| --- | --- |
+| `README.md` | 项目入口，最多保留少量必读链接。 |
+| `Core/roadmap.md` | 设计到 SDD 的执行路线和下一步。 |
+| `Core/progress.md` | 当前项目状态、跨 SDD blocker、少量阶段裁决。 |
+| `design/INDEX.md` | 设计事实源索引，不追踪执行进度。 |
+
+避免 README、roadmap、progress、design index 四处重复同一份状态。
+
+## validate 边界
+
+`python3 Workspace/SDD/sdd.py validate` 只检查：
+
+- 必要文件和 metadata 是否存在。
+- 状态是否合法。
+- done 是否仍有未完成任务。
+- blocked 是否有 blocker。
+- BDD 是否有场景、Source 引用或 not-required reason。
+- 是否存在明显模板残留或空壳完成。
+
+它不证明业务实现正确，也不应该鼓励写更多过程记录。
+
+代码、数据、Godot、skill 或文档变更仍要跑各自验证。

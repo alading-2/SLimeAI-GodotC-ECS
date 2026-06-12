@@ -1,281 +1,150 @@
 # TDD 与测试系统优化设计
 
-> 来源：SystemAgent 深度分析
-> 日期：2026-06-11
+> 来源：用户纠正脱离 Godot 运行语义的测试框架方向后的 SystemAgent 深度分析
+> 日期：2026-06-12
 > 优先级：P0
 
-## 问题陈述
+## 用户原始问题
 
-SystemAgent 的 TDD 规则写得完整（RED-GREEN-REFACTOR 微循环、铁律、RV-TEST-COVERAGE 门），但执行基础设施严重断裂：
+用户指出：脱离 Godot 运行语义的测试框架方向错了。SlimeAI 是 Godot C# 项目，Runtime/Data 也要在 Godot 运行环境、资源路径、Node 生命周期、Log / Validation artifact 语义下验证；不能为了追求“纯代码快速测试”硬写一套不可控测试。TDD/Test 最重要的是先和用户确认行为、标准答案和试点范围，再写测试。
 
-1. **NUnit 测试项目不存在**：规则引用的 `SlimeAI/Tests/SlimeAI.GameOS.Tests/` 目录不存在
-2. **没有共享测试基类**：每个测试文件重复 20-30 行断言方法
-3. **ValidationSession 未被采用**：设计良好的 API 但几乎没有测试使用
-4. **所有测试都是 Godot 场景测试**：每次 3-8 秒启动开销
-5. **没有 CI 集成**：没有 `dotnet test` 可用
-6. **BDD 到测试无追溯**：SDD 的 bdd.md 和实际测试代码之间没有自动连接
+## 真实问题
 
-**结果**：TDD 是"纸面规则"——AI 可以声称"我遵循了 TDD"，但实际上 RED 步骤（快速运行测试看它失败）无法高效执行。
+用户判断成立。旧方案把“测试跑得快”当成了主目标，把“能证明真实行为”放到了次要位置。
 
-## 根因分析
+当前真正的问题不是“缺某个测试框架”，而是：
 
-### 为什么测试写不好
+1. **测试设计先行不足**：AI 容易直接写测试代码，但没有先确认行为、标准答案、输入、观察点、失败标准和 artifact 路径。
+2. **测试证据不稳定**：旧测试里仍有 `PASS/FAIL` 文本、分散 Log、退出码和人工判断混用。
+3. **ValidationSession 没有成为默认断言载体**：结构化 artifact 才适合 AI 审查 RED/GREEN，而不是 stdout。
+4. **BDD 与设计文档位置割裂**：BDD 写在 SDD 里，常常变成任务归档文档，没有跟设计变更实时同步。
+5. **TDD 被流程化口号化**：强调 RED/GREEN，但没有把“先和用户确认要测什么”作为写测试前的门槛。
 
-1. **没有标准模板**：AI 不知道"好的测试"长什么样，所以每次都从零发明
-2. **断言方法不统一**：有的用字符串比较 `"PASS: ..."`, 有的用 Log 结构化, 有的用 ValidationSession
-3. **测试粒度不明确**：单元测试 vs 功能测试 vs 集成测试的边界不清晰
-4. **验证标准不明确**：什么算"测试通过"？exit code 0？stdout 有 PASS？artifact 有 Pass？
-5. **Flow 信息不足**：测试打印的信息散乱，AI 无法快速判断功能是否正常
+因此，脱离 Godot 运行语义的新测试框架不应作为当前方向。后续如有极小工具库确实脱离 Godot，也必须单独论证，不作为 SystemAgent TDD 默认路线。
 
-### 为什么需要 Log
+## 新定位
 
-Log 系统是连接"测试执行"和"AI 判断"的桥梁：
+TDD/Test 在 SlimeAI 里不是“先选测试框架”，而是先固定四件事：
 
-```
-测试代码 → Log (Validation channel) → MemorySink (程序化断言)
-                                    → ArtifactSink (JSON artifact)
-                                    → JsonlBufferedFileSink (完整日志)
-                                    → StdoutSummarySink (人类可读)
-```
+1. **行为**：这个功能到底应该发生什么。
+2. **标准答案**：输入、观察、通过条件、失败条件、artifact 路径是什么。
+3. **运行环境**：是否必须通过 Godot headless scene、DataOS validator、build 或 logctl 分析证明。
+4. **证据形态**：RED/GREEN 是否有同一个 check 的结构化 artifact 支撑。
 
-AI 不能直接"看"测试运行结果，但可以读 Log 产出的 artifact 和结构化日志。
+测试代码只是这些标准答案的实现，不是需求分析的替代品。
 
-## 设计方案
+## Data 试点方向
 
-### 方案 1：创建 NUnit 测试项目（P0）
+用户已指定先从 `Src/ECS/Runtime/Data` 试点。新的试点不新增测试框架，而是选一个 Data 行为，在 Godot headless scene 中验证。
 
-#### 目标
+推荐试点范围：
 
-让纯逻辑测试（不涉及 Godot 引擎的测试）可以在毫秒级运行。
+- 只选 1 个 Data 行为，例如 typed `DataKey<T>` 写入读取、range policy、snapshot record apply 或 modifier effective value。
+- 先写设计旁 BDD / 标准答案，确认 `expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath`。
+- 再改或新增现有 Data Godot 测试场景，让目标 check 先 RED。
+- 最小实现后让同一个 check GREEN。
+- 不扩到 Entity/Event/System，不重构整套测试目录。
 
-#### 实现
+为什么仍选 Data：
 
-1. 创建 `SlimeAI/Tests/SlimeAI.GameOS.Tests.csproj`
-2. 引用 NUnit + 框架项目
-3. 创建共享测试基类
-4. 迁移第一批纯逻辑测试
+- Data 是 Runtime 核心，验证价值高。
+- Data 已有 Godot 场景测试入口，可在现有运行方式上试点，不引入新依赖。
+- Data 行为和 DataOS / snapshot / generated handle 有强事实源关系，适合验证“标准答案先行”是否有效。
 
-#### 共享测试基类设计
+## 测试设计流程
 
-```csharp
-namespace SlimeAI.GameOS.Tests;
+### Step 1：先问行为，不先写测试
 
-/// <summary>
-/// 所有 SlimeAI 测试的共享基类。
-/// 提供统一的断言方法、日志集成和退出码管理。
-/// </summary>
-public abstract class TestBase
-{
-    private int _passedCount;
-    private int _failedCount;
-    private readonly string _owner;
+AI 必须先把用户需求压成可确认行为：
 
-    protected TestBase(string owner = "UnitTest")
-    {
-        _owner = owner;
-    }
-
-    /// <summary>
-    /// 断言条件为真，记录到 Validation channel。
-    /// </summary>
-    protected void AssertTrue(string checkName, bool condition, string? message = null)
-    {
-        if (condition)
-        {
-            _passedCount++;
-            // 使用 Log 结构化记录
-            Log.Write(LogChannel.Validation, LogSeverity.Info, checkName,
-                owner: _owner,
-                outcome: LogOutcome.Succeeded,
-                validationStatus: LogValidationStatus.Pass);
-        }
-        else
-        {
-            _failedCount++;
-            Log.Write(LogChannel.Validation, LogSeverity.Error, checkName,
-                owner: _owner,
-                outcome: LogOutcome.Failed,
-                validationStatus: LogValidationStatus.Fail,
-                message: message ?? "Condition was false");
-        }
-    }
-
-    /// <summary>
-    /// 断言两个值相等。
-    /// </summary>
-    protected void AssertEqual<T>(string checkName, T expected, T actual)
-    {
-        bool pass = EqualityComparer<T>.Default.Equals(expected, actual);
-        AssertTrue(checkName, pass, $"Expected: {expected}, Actual: {actual}");
-    }
-
-    /// <summary>
-    /// 断言条件为假。
-    /// </summary>
-    protected void AssertFalse(string checkName, bool condition, string? message = null)
-    {
-        AssertTrue(checkName, !condition, message);
-    }
-
-    /// <summary>
-    /// 断言抛出指定类型的异常。
-    /// </summary>
-    protected void AssertThrows<TException>(string checkName, Action action) where TException : Exception
-    {
-        try
-        {
-            action();
-            AssertTrue(checkName, false, $"Expected {typeof(TException).Name} but no exception was thrown");
-        }
-        catch (TException)
-        {
-            AssertTrue(checkName, true);
-        }
-        catch (Exception ex)
-        {
-            AssertTrue(checkName, false, $"Expected {typeof(TException).Name} but got {ex.GetType().Name}");
-        }
-    }
-
-    /// <summary>
-    /// 通过计数。
-    /// </summary>
-    protected int PassedCount => _passedCount;
-
-    /// <summary>
-    /// 失败计数。
-    /// </summary>
-    protected int FailedCount => _failedCount;
-
-    /// <summary>
-    /// 退出码：0 = 全部通过，1 = 有失败。
-    /// </summary>
-    protected int ExitCode => _failedCount == 0 ? 0 : 1;
-}
+```text
+行为：Data 写入超出 range 的值时应该失败，并保留旧值。
+输入：catalog 中有 key=CurrentHp，range=[0,100]，初始值=50，写入值=120。
+观察：TrySet 返回 false；CurrentHp 仍为 50；artifact 有 reasonCode=range_violation。
+通过：目标 check 为 pass，failureReasons 为空。
+失败：写入成功、旧值被覆盖、没有 reasonCode 或 artifact 缺字段。
 ```
 
-#### ValidationSession 集成版本
+用户确认后才进入测试实现。若用户未确认，只能用明确默认假设推进，并在回复里写清影响。
 
-```csharp
-/// <summary>
-/// 使用 ValidationSession 的测试基类。
-/// 产出 JSON artifact 作为主要证据源。
-/// </summary>
-public abstract class ValidationTestBase : TestBase, IDisposable
-{
-    private ValidationSession? _session;
+### Step 2：把标准答案放在设计旁
 
-    /// <summary>
-    /// 开始验证会话。在 [SetUp] 中调用。
-    /// </summary>
-    protected void BeginValidation(ValidationSessionOptions options)
-    {
-        _session = ValidationSession.Start(options);
-    }
+BDD 不应远离设计文档。新的建议是：重要行为场景优先放在对应设计文档附近，或在设计文档中直接维护“行为验收”小节；SDD 的 `bdd.md` 只引用或摘录当前任务真正要执行的场景。
 
-    /// <summary>
-    /// 执行一个 check，同时记录到基类和 ValidationSession。
-    /// </summary>
-    protected CheckResult Check(string name, bool condition,
-        string? expected = null, string? actual = null, string? reasonCode = null, string? message = null)
-    {
-        AssertTrue(name, condition, message);
-        return _session!.Check(name, condition, expected, actual, reasonCode, message);
-    }
+这样设计变了，BDD 跟着变；SDD 归档后不会变成过期事实源。
 
-    public void Dispose()
-    {
-        _session?.Dispose();
-    }
-}
-```
+### Step 3：写 RED check
 
-### 方案 2：测试分类规范（P0）
+RED 的目标是证明 check 能抓住缺失行为。
 
-#### 三类测试
+可接受 RED：
 
-| 类型 | 运行方式 | 启动时间 | 适用范围 |
-|------|----------|----------|----------|
-| **单元测试** | `dotnet test` | < 100ms | 纯逻辑、无 Godot 依赖 |
-| **场景测试** | `run-godot-scene.sh` | 3-8s | 需要 Godot 引擎的功能 |
-| **集成测试** | `run-godot-scene.sh` | 5-15s | 多系统交互、游戏场景 |
+- Godot runner 指向目标 scene failed。
+- `result.json` 或 scene artifact 中目标 check 为 fail。
+- fail reason 指向目标行为缺失，而不是编译错误、资源路径错误或 runner 环境错误。
 
-#### 分类判定规则
+不可接受 RED：
 
-```
-需要 Godot 引擎？（Node, SceneTree, Physics, Input, Resource）
-├─ 是 → 场景测试 / 集成测试
-└─ 否 → 单元测试（NUnit）
-```
+- 只有 stderr。
+- 只有 exit code 非 0。
+- stdout 有 `FAIL` 文本但没有 artifact。
+- 测试因为语法错、资源缺失或环境坏而失败。
 
-### 方案 3：Flow 打印规范（P1）
+### Step 4：最小实现后 GREEN
 
-#### 功能测试必须使用 Flow 模式
+GREEN 必须引用同一个 scene、同一个 artifact、同一个 check。
 
-```csharp
-// 开始
-log.FlowStart("EntitySpawnPipeline", "spawning 3 entities");
+可接受 GREEN：
 
-// 每步
-log.FlowStep("EntitySpawnPipeline", "probe1: spawn → register → lifecycle");
+- `index.json` / `result.json` 显示 scene passed。
+- artifact `status=pass`、`failureReasons=[]`。
+- 标准答案五字段非空。
+- 目标 check 从 fail 变为 pass。
 
-// 通过
-log.FlowComplete("EntitySpawnPipeline", "3/3 passed, 12 entries, 0 errors");
+`无 error`、`exit code 0`、stdout clean 只能作为辅助，不能单独证明通过。
 
-// 失败
-log.FlowFail("EntitySpawnPipeline", "probe2: spawn failed, registry returned null");
-```
+## 测试工具边界
 
-**优势**：
-- AI 可以直接从 Flow 判断功能是否正常
-- 不需要逐条分析每个 Log entry
-- 失败时可以快速定位是哪一步出了问题
+| 工具 | 用途 | 不做什么 |
+| --- | --- | --- |
+| `dotnet build Brotato_my.csproj --no-restore /clp:ErrorsOnly` | 编译门禁 | 不证明行为正确 |
+| DataOS validator | descriptor / authoring / snapshot 数据规则 | 不替代 Runtime/Godot 行为测试 |
+| Godot headless scene | Runtime / Capability / Godot 生命周期下的行为验证 | 不用裸 stdout 当主证据 |
+| `ValidationSession` / artifact | 测试标准答案和 RED/GREEN 主证据 | 不写成自然语言日志堆 |
+| `logctl analyze/query` | 运行后证据整理和下钻 | 不替代测试断言 |
 
-### 方案 4：TestDesigner 输出规范强化（P1）
+## 与 Log 的关系
 
-TestDesigner 的 5 字段标准答案需要增加：
+Log / Validation 是 evidence plane。TDD 不能只看 terminal 输出，应默认读：
 
-| 新增字段 | 含义 |
-|----------|------|
-| testType | 单元/场景/集成 |
-| flowSteps | 预期 Flow 步骤（用于 Flow 打印） |
-| logOwner | Log owner 名称（用于 logctl 过滤） |
+- scene runner 的 `index.json`
+- per-scene `result.json`
+- Validation artifact
+- 必要时再用 `logctl analyze` 的 `summary.md / ai-context.md / flows/ / failures/`
 
-### 方案 5：BDD 到测试追溯（P2）
+Log 第三层“源码调用点语义化”未完成时，测试仍可能有分散 live stdout；这不影响 artifact 作为主证据，但后续 Log 重构要继续收口调用点。
 
-在 bdd.md 中增加 `testRef` 字段：
+## 与 Code Review 的关系
 
-```markdown
-## Scenario: Entity 注册后生命周期回调触发
+TDD/Test 产物可以作为 Code Review 的 `evidenceRef`，但不替代读代码。
 
-Given 一个新的 EntityRegistry
-When 注册一个 probe entity
-Then entity 收到 OnSpawned 回调
-And 注册计数 +1
-
-<!-- testRef: EntitySpawnPipelineRuntimeTest.cs::ProbeEntity_Registration_TriggersLifecycle -->
-```
+Code Review 第一问题仍是：功能是否按用户需求、设计和行为场景实现。测试失败暴露实现错误时会影响判定；测试缺失或 artifact 不足通常作为证据缺口记录。
 
 ## 实施路径
 
-| 阶段 | 内容 | 预计工作量 |
-|------|------|-----------|
-| Phase 1 | 创建 NUnit 项目 + 共享基类 | 1 SDD |
-| Phase 2 | 迁移第一批纯逻辑测试 | 1 SDD |
-| Phase 3 | Flow 打印规范 + TestDesigner 增强 | 1 SDD |
-| Phase 4 | BDD 追溯 + CI 集成 | 1 SDD |
+| 阶段 | 内容 | 边界 |
+| --- | --- | --- |
+| Phase 1 | 选 Data 1 个行为，写设计旁标准答案 | 必须先给用户看思路 |
+| Phase 2 | 在现有 Godot Data 测试场景做 RED check | 不新增测试框架 |
+| Phase 3 | 最小实现或测试基础设施调整，让同一 check GREEN | 不扩散到其他 Runtime owner |
+| Phase 4 | 总结 Data 试点是否可推广 | 用户确认后再改规则/模板 |
+| Phase 5 | 将成功模式推广到 Entity/Event/System 或 Capability | 每个 owner 单独试点 |
 
-## 与 Code Review 的联动
+## 不做什么
 
-TDD 产出的 artifact（ValidationSession JSON）应该成为 Code Review 的输入：
-
-```
-Code Review Phase 2（逐项审查）
-  ├─ 读取 SDD 需求
-  ├─ 读取实现代码
-  ├─ 读取测试 artifact ← 新增
-  │   ├─ ValidationSession JSON（check 通过率）
-  │   ├─ Log JSONL（Flow 结构）
-  │   └─ Exit code（0/1）
-  └─ 判定 DONE/PARTIAL/MISSING/WRONG
-```
+- 不新增脱离 Godot 运行语义的测试框架。
+- 不创建新的测试项目来绕开 Godot 场景验证。
+- 不把“纯 Runtime”理解成“脱离 Godot 环境”。
+- 不硬写测试代码来倒推需求。
+- 不把 BDD 写成归档摆设。
+- 不用 stdout PASS/FAIL 当主要证据。

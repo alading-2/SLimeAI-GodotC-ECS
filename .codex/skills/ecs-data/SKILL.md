@@ -30,7 +30,7 @@ description: 修改 SlimeAI ECS Runtime Data、DataKey、DataCatalog、RuntimeDa
 - system_only / debug_only 字段用 `TrySetSystem<T>` / `TrySetDebug<T>`，不要为了写入来源绕回 stable key string。
 - Data 业务变更通知通过 `GameEventType.Data.Changed<T>`；`PropertyChanged(string, object?, object?)` 只允许 TestSystem/debug diagnostic 兼容层使用。
 - DataOS SQLite 只在生成 / 校验 / snapshot 阶段使用，运行时热路径读取 `RuntimeDataSnapshot`；snapshot loader 对 unknown key、wrong type、descriptor drift 必须报错。
-- Runtime Data 变更至少补纯 C# Runtime tests；若影响 Godot Node / 场景加载 / 游戏胶水，追加独立 Godot 验证场景。
+- Runtime Data 变更至少补可运行的 Data 验证；当前默认走 Godot headless Data 场景、DataOS validator 和 Validation artifact，不新增脱离 Godot 运行语义的测试框架。
 - Data owner 使用 `owner=Data`；Data runtime 热路径不默认为每次 `Get/Set` 写日志，snapshot loader / descriptor 校验 / record apply / DataOS validation 才写 artifact 和 structured log。
 - Data 测试断言走 `ValidationSession` / artifact / structured log，不新增 `[PASS]` / `[FAIL]` 或裸 stdout marker。
 - PRJ-0002 旧 ECS Data 完整重构按 `SDD-0012` → `SDD-0019` 顺序执行；`runtime_snapshot.json.descriptors` 是字段定义事实源，旧 `DataMeta` / `DataRegistry` / 手写 `DataKey` 只允许作为一次性审计输入，不新增长期 adapter 或 runtime fallback。

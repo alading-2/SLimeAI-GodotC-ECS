@@ -25,7 +25,7 @@ description: 修改 SlimeAI ECS 测试、Validation、Observation、日志分析
 
 ## 规则
 
-- 框架纯逻辑优先补 Runtime tests。
+- 框架行为变更优先补可运行验证；当前默认验证链路是 Godot headless scene、DataOS validator、Validation artifact 和 structured log，不因“纯逻辑”默认引入新的单测框架。
 - **新 Runtime / Capability 测试优先使用显式隔离状态，不要复用全局单例造成测试污染**。旧 backlog 用例若暂未支持显式注入，必须在当前 SDD 或 DocsAI 对应 owner 文档登记。
 - **Capability Service 测试必须用 `new XxxService()` 独立实例，禁用 `Default / Instance`**。例如 `new DamageService()`、`new DamageService(new HealService())`、`new AbilityService(timerManager)`。两个 scoped world 测试共享 `XxxService.Default` 会导致状态污染。
 - RuntimeWorld dispose 顺序以当前 SDD design 和 `DocsAI/ECS/` 文档为准。
@@ -40,7 +40,7 @@ description: 修改 SlimeAI ECS 测试、Validation、Observation、日志分析
 - 新 Godot 验证场景遵守 scene gate 规则：`Src/Validation/...`、旁置 `README.md`、JSON artifact 和结构化日志是主事实源；旧 PASS/FAIL marker 只允许作为 runner 过渡 fallback。
 - 新或改动 Godot 验证场景必须通过 scene gate：README 包含 `expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath`，最近 PASS run 的 `index.json`、`result.json` 和 scene artifact 存在且 artifact 标准答案五字段非空。
 - 新测试不要用裸 `GD.Print("PASS")`、`GD.PushError("FAIL")`、`[PASS]`、`[FAIL]` 作为断言事实；断言结果必须进入 Validation artifact / structured log，Godot editor sink 默认关闭。
-- 新 Runtime / Capability / Godot validation 断言优先使用 `ValidationSession` / `CheckResult`；artifact 和 structured log 是 runner 判定主事实源，stdout pattern 只能是 `stdout-pattern-fallback`。
+- 新 Runtime / Capability / Godot validation 断言优先使用 `ValidationSession` / `CheckResult`；artifact 和 structured log 是 runner 判定主事实源，stdout pattern 只能是 `stdout-pattern-fallback`。写测试前先确认 expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath，不用测试代码倒推需求。
 - Log profile 默认事实源是 `Config/Log/log.profile.json`、`Config/Log/log.rules.json`、`Config/Log/log.overrides.json`；排查测试前可先跑 `Workspace/Tools/logctl/logctl profile show --config-dir Config/Log` 确认可用 sink、budget 和 rules。
 - 排查场景日志时先运行 `Workspace/Tools/logctl/logctl analyze --run-dir <run> --out <run>/analysis`，默认先读 `summary.md`、`ai-context.md`、`flows/index.md`、`noise/templates.md`、`noise/top-contexts.md`、`missing-fields/index.md`、`failures/index.md`，再用 `logctl query --analysis-dir` 按 `owner / operation / validationStatus / severity` 缩小语义结论范围；`query --analysis-dir` 只查 flow conclusion 和 success template，语义索引为空时不回退 raw。需要原始 entry 时才显式 `logctl query --file <run>/analysis/raw/entries.jsonl ...`。不要把全量 stdout 或 raw JSONL 直接交给 AI。
 - Gate status 只允许 artifact pass 或 Validation channel pass 报 `passed`；只有 structured log 且没有 artifact/Validation 时必须是 `no-failure-observed`，legacy stdout pattern 只能是 `stdout-pattern-fallback`。

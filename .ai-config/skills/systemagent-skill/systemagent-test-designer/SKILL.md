@@ -21,6 +21,8 @@ description: 把需求变成标准答案和验证场景。用于新行为、Godo
 
 按 `TestDesigner.md` 正文的 Output shape 输出：expectedInputs、expectedObservations、passCriteria、failCriteria、artifactPath 和最小验证项。
 
+先把行为和标准答案讲清楚，再进入测试实现。SlimeAI 当前默认优先使用 Godot headless scene、DataOS validator、ValidationSession artifact 和 structured log；不要为了“快速测试”默认引入脱离 Godot 运行语义的新测试框架。
+
 ## 禁止
 
 - 不复制 `Workspace/SystemAgent/Actors/TestDesigner.md` 正文。

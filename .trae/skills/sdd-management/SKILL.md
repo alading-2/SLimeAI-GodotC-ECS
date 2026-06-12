@@ -44,23 +44,26 @@ python3 Workspace/SDD/sdd.py index
 ## 管理规则
 
 1. `README.md` 是入口卡片，不写完整设计正文；CLI 写操作不得整体覆盖人工维护摘要。
-2. `design/` 保存完整设计文档，`design/INDEX.md` 标注 main/current。
+2. `design/` 保存任务特定设计差异或项目级共享设计引用，`design/INDEX.md` 标注 main/current/reference。
 3. `tasks.md` 只表达任务、依赖、验证和 checkbox 状态。
-4. `progress.md` 记录核心结论、验证、阻塞和恢复点，不保存完整命令日志。
-5. `bdd.md` 覆盖关键行为；纯研究可标记不适用。
+4. `progress.md` 是状态面板，只记录 current / next / blocker / 少量真正改变方向的 decision / 最终 validation summary；不记录 task timeline、完整命令日志或文件清单。
+5. `bdd.md` 只摘录本任务要执行的关键行为，优先引用设计文档旁的行为验收；纯研究、文档治理或配置治理可标记不适用。
 6. 项目级任务优先放入 `SDD/project/projects/<project>/sdds/`；项目完成后使用 `project-archive` 归档。
 7. SDD 和项目真实状态以 `sdd.json.status` / `project.json.status` 为准，不以目录名推断。
 8. 写操作后运行 `index` 或确认 CLI 已自动更新索引。
-9. 结束前运行 `validate`，有 error 不应标记 `done`。
-10. `artifacts/` 只保存必要证据；多个 artifact 必须在 progress 或 notes 中引用。
-11. validation 摘要应包含命令和结果，不写只有 `ok`、`done`、`passed` 的弱证据。
-12. `Key Files` 不复制 git diff；同步副本、自动生成文件和机械路径替换通常不列为核心文件。
+9. `validate` 只证明 SDD 结构和恢复信息质量，不证明业务实现正确；代码/数据/Godot/skill 仍需各自验证。
+10. 完成前可运行目标 SDD 或 `--all` validate；有 error 时不应标记 `done`，warning 需要解释是否影响恢复。
+11. `artifacts/` 只保存必要证据；多个 artifact 必须在 progress 或 notes 中引用。
+12. validation 摘要只需包含命令、结果和 artifact/ref；不要复制完整输出。
+13. `Key Files` 不复制 git diff；同步副本、自动生成文件和机械路径替换通常不列为核心文件。
+14. 项目子 SDD 默认引用项目级 `design/`，不复制完整设计快照；只在本 SDD 的 `design/` 写任务特定差异。
 
 ## 输出要求
 
 - 操作前后的 SDD/项目状态、路径和关键文件。
 - 变更的任务编号、progress 记录类型和验证命令。
 - `validate` 的 error/warn 摘要。
+- 明确区分 SDD validate 结果和业务验证结果。
 
 ## 禁止
 

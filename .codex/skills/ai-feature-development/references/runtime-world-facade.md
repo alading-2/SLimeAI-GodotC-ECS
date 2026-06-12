@@ -40,4 +40,4 @@ Schedule -> Commands -> Pools -> Resources -> Lifecycle -> Entities -> Events
 
 - Contract / API：`DocsAI/ECS/` 文档、当前 SDD design
 - Historical specs：`openspec/specs/runtime-world-container/spec.md`、`openspec/specs/runtime-command-buffer/spec.md`
-- Tests：`Tests/SlimeAI.GameOS.Tests/World/RuntimeWorldTests.cs`
+- Tests：按当前 owner 现有 Godot headless scene、Validation artifact 或 `DocsAI/ECS/` 指定验证入口补行为证据。

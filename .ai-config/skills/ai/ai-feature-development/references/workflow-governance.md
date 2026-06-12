@@ -29,7 +29,7 @@
 - `design/`：技术方案、风险、回滚。
 - `bdd.md`：可测试需求（如任务涉及行为验收）。
 - `tasks.md`：实现任务和验证任务。
-- `progress.md`：Latest Resume、关键决策、验证证据和下一步。
+- `progress.md`：State / Next / Blocker、少量关键决策和验证入口。
 
 执行中发现新增测试、文档、skill、artifact 或风险时，立即更新 `tasks.md`，不要等最终汇报补。
 
@@ -37,7 +37,7 @@
 
 这里的 TDD 是“先定义可复验标准答案”，不局限单元测试。
 
-- Runtime / Capability：补 `Tests/SlimeAI.GameOS.Tests/`，写清输入、期望状态、期望事件或期望错误。
+- Runtime / Capability：优先补可运行的 Godot headless scene、Validation artifact 或 owner 现有验证入口，写清输入、期望状态、期望事件或期望错误。
 - DataOS：补 schema / migration / seed / generator / validator / runtime loader 断言，写清 source 与 generated snapshot。
 - GodotBridge / 游戏 adapter：补独立 Godot validation scene，README 和 artifact 写清 `expectedInputs`、`expectedObservations`、`passCriteria`、`failCriteria`、`artifactPath`。
 - 文档 / skill / rule：补 SDD validate、文件清单、sync 检查和 git status。
