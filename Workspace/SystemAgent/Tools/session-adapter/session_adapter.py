@@ -75,7 +75,7 @@ FINAL_CONCLUSION_RE = re.compile(
     re.IGNORECASE,
 )
 PATH_RE = re.compile(
-    r"(?:(?:Workspace|SDD|DocsAI|Src|Data|Games|Tools|\.ai-config|\.codex|\.claude|\.devin|\.trae|"
+    r"(?:(?:Workspace|SDD|DocsAI|Src|Data|Games|Tools|\.ai-config|\.codex|\.claude|\.trae|"
     r"\.opencode|Brotato_my\.csproj)[\w./@+=:,~\-\u4e00-\u9fff]*|"
     r"[\w./@+=:,~\-\u4e00-\u9fff]+\.(?:py|md|cs|json|toml|yaml|yml|sh|csproj|ts|tsx|js|mjs|gd|tscn|uid))"
 )
