@@ -4,13 +4,13 @@
 
 本文件是 `PRJ-0001-systemagent-optimization` 的项目级进度事实源，用于记录项目当前状态、阶段结论、验证证据和下一步。项目级设计资料只放在 `design/`；子 SDD 的任务级执行细节仍放在各自 `sdds/<order>-SDD-xxxx/progress.md`。
 
-## Latest Resume
+## State
 
-- **Updated**: 2026-06-10 15:20
-- **Current SDD**: SDD-0041
-- **Last Conclusion**: 已完成 session-adapter 二次审查，并根据用户最新裁决补充“重构就完整重构，不维护旧兼容”的项目规则。`transcript.visible.md` 作为 Codex 可见证据层方向成立，但 digest 层仍有关键缺口：`sdd.py validate/show` 被误判为 edit 导致 `verification_loops` 高估；ChatHistory 当前缺 6/10 digest，6/9 也缺 2 个 late session；`ai-context.md` 的 title/goal/outcome 会被 resume boilerplate、`continue` 和中间状态污染；Retrospective 只有“如果存在就读 efficiency.md”，缺 current digest 定位协议；SystemAgent GitPolicy / actor 仍有“不 push”旧约束，和顶层规则冲突。
-- **Next Action**: 执行 `SDD-0041 Session Adapter Digest Accuracy and Retrospective Handoff`，从 T1.1 失败先行测试开始；允许破坏性升级 index / digest schema，不维护旧格式 fallback；暂不接自动 hook。
-- **Open Blockers**: 等待用户确认是否进入执行型 SDD；10 日 digest 目前只在 `/tmp/slimeai-chat-2026-06-10` 临时生成，尚未写入仓库。
+- **Status**: active
+- **Current SDD**: none
+- **Next**: 下一批建议新建 Worktree Skill SDD；TDD 与 Log/Validation evidence plane 后续单独定，Hook 仍不启用。
+- **Blocker**: none
+
 ## Project Status Board
 
 | SDD | Status | Design Docs | Current Result |
@@ -27,7 +27,16 @@
 | SDD-0010 | done | `04-Git与Worktree策略.md`, `10-Subagent使用场景与采纳策略.md` | Git / Worktree / Subagent 安全策略已落地 |
 | SDD-0039 | done | `优化/2026-06-08-SystemAgent工作流内化与核心优化裁决.md`, `会话记录适配器参考设计/2026-06-08-AI会话管理工具选型分析.md`, `会话记录适配器参考设计/2026-06-09-参考项目驱动的Cross-agent-Session-Adapter设计.md` | Cross-agent Session Adapter 已完成；`list/index/summarize` 可用，Codex 2026-06 已导出为分日 visible transcript |
 | next | pending | `会话记录适配器参考设计/2026-06-09-ChatHistory-AI-first整理与价值评分设计.md` | 建议创建 `ChatHistory AI-first Session Digest`，补 Digest Gate、locator-only skip、工具失败记录、index v3 和 per-session digest |
-| SDD-0041 | pending | `会话记录适配器参考设计/2026-06-10-Session-Adapter二次审查与会话分析流程设计.md` | 已生成 `Session Adapter Digest Accuracy and Retrospective Handoff`；完整重构 efficiency 误判、ChatHistory stale、tool failure 分类和 Retrospective current digest 定位；允许破坏性 schema/digest 重建 |
+| SDD-0041 | done | `会话记录适配器参考设计/2026-06-10-Session-Adapter二次审查与会话分析流程设计.md` | 已完成 session-adapter digest schema v4、stale report、tool failure、Retrospective/DeepThink/Git handoff |
+| SDD-0042 | done | `优化/SDD精简设计.md`, `优化/FeatureSpec-功能实现规格设计.md` | 已完成 SDD CLI/模板/validate 精简和 FeatureSpec 集成；暂不包含 Worktree/TDD/Hook |
+
+## Decisions
+
+- 2026-06-13: SDD-0042 已完成第一批执行范围；Worktree 后续单独做，TDD 等 Log/Validation evidence plane 一起定，Hook 不启用。
+
+## Validation
+
+- 2026-06-13: `python3 -m unittest discover Workspace/SDD/tests` 21 tests OK；`python3 Workspace/SDD/sdd.py validate SDD-0042` 0 error / 0 warning；`python3 Workspace/SDD/sdd.py validate --all` 0 error / 0 warning；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only` Critical 0 / Advisory 10；`git diff --check` pass。
 
 ## Timeline
 

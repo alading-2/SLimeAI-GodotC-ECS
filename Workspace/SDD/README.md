@@ -36,16 +36,16 @@ bash Workspace/SDD/sdd.sh <command>
 ## MVP 命令
 
 - `init-root`：创建 `SDD/` 根目录、状态目录、模板、`INDEX.md` 和 `catalog.json`。
-- `project-new <title>`：创建项目级 SDD 容器，并生成带设计到 SDD 映射表的 `roadmap.md` 和项目状态板。
+- `project-new <title>`：创建项目级 SDD 容器，并生成 `Core/roadmap.md` 设计映射和 `Core/progress.md` 状态面板。
 - `new <title>`：创建新的 `pending` SDD。
 - `list`：列出 SDD，可按状态、范围或标签过滤。
-- `show <id>`：显示单个 SDD 的 README 和 Latest Resume。
-- `start <id>`：将 `pending` 或 `blocked` SDD 移入 `active`。
-- `note <id>`：追加 progress 记录。
-- `task <id>`：列出、添加、勾选或取消任务。
-- `block <id>`：将 SDD 移入 `blocked` 并记录原因。
-- `done <id>`：将 SDD 移入 `done` 并记录验证摘要。
-- `validate [id|--all]`：校验结构、状态一致性和恢复信息。
+- `show <id>`：显示单个 SDD 的 README 和当前 State。
+- `start <id>`：将 metadata 状态更新为 `active`，不移动目录。
+- `note <id>`：把用户裁决或验证摘要写入 `Decisions` / `Validation` 面板。
+- `task <id>`：列出、添加、勾选或取消任务，并同步 State 当前任务。
+- `block <id>`：将 metadata 状态更新为 `blocked` 并记录 blocker。
+- `done <id>`：将 metadata 状态更新为 `done` 并记录最终验证摘要。
+- `validate [id|--all]`：校验结构、状态一致性、FeatureSpec/BDD 摘录和恢复信息。
 - `index`：重建 `SDD/INDEX.md` 和 `SDD/catalog.json`。
 - `doctor`：检查 CLI、根目录和常用文件状态。
 

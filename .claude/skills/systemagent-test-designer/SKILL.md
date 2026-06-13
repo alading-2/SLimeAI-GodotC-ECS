@@ -13,7 +13,8 @@ description: 把需求变成标准答案和验证场景。用于新行为、Godo
 ## 必读
 
 - `Workspace/SystemAgent/Actors/TestDesigner.md`
-- FeatureSpec、SDD design/tasks/bdd、BDDSceneFormat。
+- 设计旁 `.FeatureSpec.md`，优先读取 `TDD Handoff`。
+- SDD design/tasks/bdd、BDDSceneFormat。
 - 相关 gameplay lifecycle BDD（涉及多系统时）。
 - 现有 tests/scene README、失败模式。
 

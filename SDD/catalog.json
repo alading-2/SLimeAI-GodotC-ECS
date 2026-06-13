@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-11 19:35",
+  "generated_at": "2026-06-13 20:15",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -18,12 +18,12 @@
       "slug": "systemagent-optimization",
       "title": "SystemAgent Optimization",
       "status": "active",
-      "updated_at": "2026-06-10",
+      "updated_at": "2026-06-13",
       "scope": "Workspace/SystemAgent",
       "tags": [
         "systemagent"
       ],
-      "current_sdd": "SDD-0041",
+      "current_sdd": "none",
       "bucket": "projects",
       "path": "SDD/project/projects/PRJ-0001-systemagent-optimization"
     },
@@ -327,6 +327,29 @@
       "project_order": 11,
       "current_task": "done",
       "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/011-SDD-0041-session-adapter-digest-accuracy-and-retrospective-handoff"
+    },
+    {
+      "id": "SDD-0042",
+      "slug": "systemagent-sdd-slimming-and-featurespec-integration",
+      "title": "SystemAgent SDD Slimming and FeatureSpec Integration",
+      "status": "done",
+      "type": "workflow",
+      "updated_at": "2026-06-13",
+      "scope": "Workspace/SDD",
+      "affected_areas": [
+        "Workspace/SDD",
+        "Workspace/SystemAgent",
+        ".ai-config/skills"
+      ],
+      "tags": [
+        "systemagent",
+        "sdd",
+        "featurespec"
+      ],
+      "project_id": "PRJ-0001",
+      "project_order": 12,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/012-SDD-0042-systemagent-sdd-slimming-and-featurespec-integration"
     },
     {
       "id": "SDD-0011",

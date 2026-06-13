@@ -6,7 +6,7 @@ from typing import Any
 
 from .config import PROJECT_STATUSES, REQUIRED_FILES, STATUSES, TEMPLATE_MARKERS, WEAK_TEXT_VALUES
 from .io import read_json
-from .progress import extract_latest_resume
+from .progress import extract_latest_resume, extract_state
 from .tasks import task_counts
 
 
@@ -73,7 +73,10 @@ def latest_resume_is_weak(progress_path: Path) -> bool:
     latest = extract_latest_resume(progress_path)
     conclusion = latest.get("last_conclusion", "")
     next_action = latest.get("next_action", "")
-    return is_weak_text(conclusion) or is_weak_text(next_action)
+    if conclusion:
+        return is_weak_text(conclusion) or is_weak_text(next_action)
+    state = extract_state(progress_path)
+    return is_weak_text(state.get("next", ""))
 
 
 def validation_summaries(metadata: dict[str, Any],
@@ -92,6 +95,13 @@ def validation_summaries(metadata: dict[str, Any],
         evidence = evidence_match.group(1).strip() if evidence_match else ""
         if evidence:
             summaries.append(evidence)
+    validation_panel = markdown_section(progress_text, "Validation")
+    for line in validation_panel.splitlines():
+        if not line.startswith("- "):
+            continue
+        summary = line[2:].strip()
+        if summary and normalize_quality_text(summary) != "pending":
+            summaries.append(summary)
     return summaries
 
 
@@ -189,6 +199,49 @@ def design_has_external_refs(path: Path) -> bool:
     return False
 
 
+def shared_design_refs_are_valid(path: Path, metadata: dict[str, Any]) -> bool:
+    refs = metadata.get("shared_design_refs", [])
+    if not isinstance(refs, list):
+        return False
+    for ref in refs:
+        ref_text = str(ref).strip().strip("`")
+        if not ref_text:
+            continue
+        ref_path = ref_text.split("#", 1)[0]
+        if not ref_path:
+            continue
+        candidate = Path(ref_path)
+        if not candidate.is_absolute():
+            candidate = path / candidate
+        if candidate.resolve().exists():
+            return True
+    return False
+
+
+def bdd_required_value(metadata: dict[str, Any], bdd_text: str) -> bool:
+    match = re.search(r"Required\*\*:\s*(true|false)", bdd_text,
+                      flags=re.IGNORECASE)
+    if match:
+        return match.group(1).lower() == "true"
+    return metadata.get("bdd", {}).get("required") is True
+
+
+def bdd_has_execution_reference(text: str) -> bool:
+    if "Scenario:" in text:
+        return True
+    checks = [
+        r"Source\*\*:\s*.+",
+        r"^Source:\s*.+",
+        r"Executed features\*\*:\s*.+",
+        r"^Executed features:\s*.+",
+        r"Executed scenarios\*\*:\s*.+",
+        r"^Executed scenarios:\s*.+",
+        r"\.FeatureSpec\.md",
+    ]
+    return any(re.search(pattern, text, flags=re.IGNORECASE | re.MULTILINE)
+               for pattern in checks)
+
+
 def notes_are_too_long_without_index(notes_text: str) -> bool:
     lines = notes_text.splitlines()
     subheadings = [
@@ -250,16 +303,22 @@ def validate_instance(root: Path,
         warnings.append(
             f"WARN SDD006 task-progress-mismatch: {path / 'tasks.md'}")
     design_index = path / "design" / "INDEX.md"
+    has_shared_design_refs = (
+        bool(metadata.get("project_id"))
+        and shared_design_refs_are_valid(path, metadata)
+    )
     if design_index.exists():
         text = design_index.read_text(encoding="utf-8")
-        if "main" not in text.lower() and "current" not in text.lower():
+        if ("main" not in text.lower() and "current" not in text.lower()
+                and not has_shared_design_refs):
             warnings.append(
                 f"WARN SDD007 missing-main-design-marker: {design_index}")
     progress_path = path / "progress.md"
     progress_text = read_existing_text(progress_path)
     notes_text = read_existing_text(path / "notes.md")
-    if progress_path.exists() and "## Latest Resume" not in progress_text:
-        warnings.append(f"WARN SDD008 missing-latest-resume: {progress_path}")
+    if progress_path.exists(
+    ) and "## State" not in progress_text and "## Latest Resume" not in progress_text:
+        warnings.append(f"WARN SDD008 missing-state: {progress_path}")
     elif progress_path.exists() and latest_resume_is_weak(progress_path):
         warnings.append(f"WARN SDD017 weak-latest-resume: {progress_path}")
     if progress_entry_count(progress_text) > 5 and latest_resume_is_weak(
@@ -274,13 +333,13 @@ def validate_instance(root: Path,
     if notes_are_too_long_without_index(notes_text):
         warnings.append(
             f"WARN SDD024 long-notes-without-index: {path / 'notes.md'}")
-    if design_is_thin(path):
+    if design_is_thin(path) and not has_shared_design_refs:
         if status == "done":
             warnings.append(
                 f"WARN SDD025 thin-design-in-done: {path / 'design'}")
         else:
             warnings.append(f"WARN SDD025 thin-design: {path / 'design'}")
-    if design_has_external_refs(path):
+    if design_has_external_refs(path) and not has_shared_design_refs:
         warnings.append(
             f"WARN SDD025 design-refs-external: {path / 'design' / 'main.md'}")
     has_templates = has_template_markers(path)
@@ -289,13 +348,13 @@ def validate_instance(root: Path,
             errors.append(f"ERROR SDD015 template-residue-in-done: {path}")
         else:
             warnings.append(f"WARN SDD015 template-residue: {path}")
-    bdd = metadata.get("bdd", {})
     bdd_path = path / "bdd.md"
     if bdd_path.exists():
         text = bdd_path.read_text(encoding="utf-8")
-        if bdd.get("required") is True and "Scenario:" not in text:
+        required = bdd_required_value(metadata, text)
+        if required and not bdd_has_execution_reference(text):
             errors.append(f"ERROR SDD011 missing-bdd-scenario: {bdd_path}")
-        if bdd.get("required") is False and "Reason" not in text:
+        if not required and "Reason" not in text:
             warnings.append(f"WARN SDD011 missing-bdd-reason: {bdd_path}")
     if status == "blocked":
         if "blocker" not in progress_text.lower(

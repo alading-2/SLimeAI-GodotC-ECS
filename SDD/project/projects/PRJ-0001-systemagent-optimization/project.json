@@ -4,12 +4,12 @@
   "title": "SystemAgent Optimization",
   "status": "active",
   "created_at": "2026-05-25",
-  "updated_at": "2026-06-10",
+  "updated_at": "2026-06-13",
   "scope": "Workspace/SystemAgent",
   "tags": [
     "systemagent"
   ],
-  "current_sdd": "SDD-0041",
+  "current_sdd": "none",
   "sdds": [
     {
       "order": 1,
@@ -85,8 +85,15 @@
       "order": 11,
       "id": "SDD-0041",
       "title": "Session Adapter Digest Accuracy and Retrospective Handoff",
-      "status": "pending",
+      "status": "done",
       "path": "sdds/011-SDD-0041-session-adapter-digest-accuracy-and-retrospective-handoff"
+    },
+    {
+      "order": 12,
+      "id": "SDD-0042",
+      "title": "SystemAgent SDD Slimming and FeatureSpec Integration",
+      "status": "done",
+      "path": "sdds/012-SDD-0042-systemagent-sdd-slimming-and-featurespec-integration"
     }
   ],
   "links": {

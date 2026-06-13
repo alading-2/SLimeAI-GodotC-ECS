@@ -5,14 +5,14 @@
 - **pending**: 0
 - **active**: 0
 - **blocked**: 2
-- **done**: 39
+- **done**: 40
 - **projects**: 2
 
 ## Projects
 
 | ID | Title | Status | Bucket | Current SDD | Path |
 | --- | --- | --- | --- | --- | --- |
-| PRJ-0001 | SystemAgent Optimization | active | projects | SDD-0041 | SDD/project/projects/PRJ-0001-systemagent-optimization |
+| PRJ-0001 | SystemAgent Optimization | active | projects | none | SDD/project/projects/PRJ-0001-systemagent-optimization |
 | PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0040 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
 
 ## Pending
@@ -46,6 +46,7 @@
 | SDD-0010 | PRJ-0001 | Git Worktree Subagent Safety Strategy | 2026-05-25 | Workspace/SystemAgent | completed |
 | SDD-0039 | PRJ-0001 | Cross-agent Session Adapter | 2026-06-09 | Workspace/SystemAgent | done |
 | SDD-0041 | PRJ-0001 | Session Adapter Digest Accuracy and Retrospective Handoff | 2026-06-10 | Workspace/SystemAgent | done |
+| SDD-0042 | PRJ-0001 | SystemAgent SDD Slimming and FeatureSpec Integration | 2026-06-13 | Workspace/SDD | done |
 | SDD-0011 | PRJ-0002 | DataKey Type Safety and Runtime Snapshot Loader | 2026-05-27 | SlimeAI | done |
 | SDD-0012 | PRJ-0002 | Data System Full Rewrite - Catalog TDD Slice | 2026-05-28 | SlimeAI | done |
 | SDD-0013 | PRJ-0002 | DataOS Descriptor Authoring and Snapshot Schema | 2026-05-28 | SlimeAI | done |
@@ -114,6 +115,7 @@
 - SDD-0003 — SDD CLI Information Quality Hardening
 - SDD-0004 — SDD Project Container Model
 - SDD-0005 — SDD CLI Source Modularization
+- SDD-0042 — SystemAgent SDD Slimming and FeatureSpec Integration
 
 ### Workspace/SystemAgent
 
@@ -274,6 +276,10 @@
 - SDD-0032 — Data Runtime Typed Contract Completion
 - SDD-0033 — Non-Data GC Boundary Completion
 
+### featurespec
+
+- SDD-0042 — SystemAgent SDD Slimming and FeatureSpec Integration
+
 ### gate
 
 - SDD-0007 — Hook and Gate P0 Stability
@@ -405,6 +411,7 @@
 - SDD-0003 — SDD CLI Information Quality Hardening
 - SDD-0004 — SDD Project Container Model
 - SDD-0005 — SDD CLI Source Modularization
+- SDD-0042 — SystemAgent SDD Slimming and FeatureSpec Integration
 - SDD-0023 — SystemAgent Root Migration Rule Sync
 
 ### session-adapter
@@ -439,6 +446,7 @@
 - SDD-0010 — Git Worktree Subagent Safety Strategy
 - SDD-0039 — Cross-agent Session Adapter
 - SDD-0041 — Session Adapter Digest Accuracy and Retrospective Handoff
+- SDD-0042 — SystemAgent SDD Slimming and FeatureSpec Integration
 - SDD-0023 — SystemAgent Root Migration Rule Sync
 
 ### target-selector

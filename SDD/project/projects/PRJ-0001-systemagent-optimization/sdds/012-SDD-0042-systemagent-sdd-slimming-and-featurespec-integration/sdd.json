@@ -1,0 +1,58 @@
+{
+  "id": "SDD-0042",
+  "slug": "systemagent-sdd-slimming-and-featurespec-integration",
+  "title": "SystemAgent SDD Slimming and FeatureSpec Integration",
+  "status": "done",
+  "type": "workflow",
+  "created_at": "2026-06-13",
+  "updated_at": "2026-06-13",
+  "scope": "Workspace/SDD",
+  "git_boundaries": [
+    "/home/slime/Code/SlimeAI/SlimeAI"
+  ],
+  "affected_areas": [
+    "Workspace/SDD",
+    "Workspace/SystemAgent",
+    ".ai-config/skills"
+  ],
+  "tags": [
+    "systemagent",
+    "sdd",
+    "featurespec"
+  ],
+  "progress": {
+    "current_task": "done",
+    "completed_tasks": 6,
+    "total_tasks": 6,
+    "percent": 100
+  },
+  "bdd": {
+    "required": true,
+    "reason": "This SDD changes CLI or workflow behavior."
+  },
+  "links": {
+    "design_index": "design/INDEX.md",
+    "main_design": "design/main.md",
+    "tasks": "tasks.md",
+    "progress": "progress.md",
+    "bdd": "bdd.md",
+    "notes": "notes.md"
+  },
+  "project_id": "PRJ-0001",
+  "project_order": 12,
+  "shared_design_refs": [
+    "../../design/INDEX.md",
+    "../../design/优化/SDD精简设计.md",
+    "../../design/优化/FeatureSpec-功能实现规格设计.md",
+    "../../design/优化/SDD精简与FeatureSpec集成.FeatureSpec.md"
+  ],
+  "feature_spec_refs": [
+    "../../design/优化/SDD精简与FeatureSpec集成.FeatureSpec.md"
+  ],
+  "validation": [
+    {
+      "at": "2026-06-13 20:07",
+      "summary": "python3 -m unittest discover Workspace/SDD/tests: 21 tests OK; python3 Workspace/SDD/sdd.py validate SDD-0042: 0 error / 0 warning; python3 Workspace/SDD/sdd.py validate --all: 0 error / 0 warning; bash Workspace/Tools/ai-config-sync/sync-ai-config.sh: success; bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only: Critical 0 / Advisory 10; python3 Workspace/SDD/sdd.py doctor: PASS; git diff --check: pass"
+    }
+  ]
+}

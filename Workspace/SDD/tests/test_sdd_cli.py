@@ -39,6 +39,15 @@ class SDDCliTests(unittest.TestCase):
             )
         return result
 
+    def assert_progress_is_state_panel(self, text):
+        self.assertIn("## State", text)
+        self.assertIn("## Decisions", text)
+        self.assertIn("## Validation", text)
+        self.assertNotIn("## Timeline", text)
+        self.assertNotRegex(text, r"(?m)^### P\d{3}\b")
+        self.assertNotIn("task command", text)
+        self.assertNotIn("继续处理下一个未完成任务", text)
+
     def test_init_root_creates_sdd_root_structure(self):
         self.run_sdd("init-root")
 
@@ -108,6 +117,18 @@ class SDDCliTests(unittest.TestCase):
         self.assertIn("SDD-0001", list_result.stdout)
         self.assertIn("pending", list_result.stdout)
 
+    def test_new_progress_defaults_to_state_panel(self):
+        self.run_sdd("init-root")
+        self.run_sdd("new", "State Panel", "--scope", "Workspace/SDD")
+        instance = self.root / "pending" / "SDD-0001-state-panel"
+
+        progress = (instance / "progress.md").read_text(encoding="utf-8")
+
+        self.assert_progress_is_state_panel(progress)
+        self.assertIn("- **Status**: pending", progress)
+        self.assertIn("- **Current**: T1.1", progress)
+        self.assertIn("- **Blocker**: none", progress)
+
     def test_start_block_done_update_metadata_without_moving_directory(self):
         self.run_sdd("init-root")
         self.run_sdd("new", "State Flow", "--scope", "Workspace/SDD")
@@ -138,7 +159,31 @@ class SDDCliTests(unittest.TestCase):
             (instance / "sdd.json").read_text(encoding="utf-8"))
         self.assertEqual(metadata["status"], "done")
 
-    def test_note_and_show_expose_latest_resume(self):
+    def test_state_commands_update_panel_without_timeline_entries(self):
+        self.run_sdd("init-root")
+        self.run_sdd("new", "Panel Commands", "--scope", "Workspace/SDD")
+        instance = self.root / "pending" / "SDD-0001-panel-commands"
+
+        self.run_sdd("start", "SDD-0001")
+        self.run_sdd("note", "SDD-0001", "--type", "decision",
+                     "使用状态面板记录关键裁决。")
+        self.run_sdd("block", "SDD-0001", "Need user decision")
+        self.run_sdd("start", "SDD-0001")
+        self.run_sdd("task", "SDD-0001", "done", "T1.1")
+        self.run_sdd(
+            "done",
+            "SDD-0001",
+            "--validation",
+            "python3 Workspace/SDD/sdd.py validate SDD-0001: 0 error / 0 warning",
+        )
+
+        progress = (instance / "progress.md").read_text(encoding="utf-8")
+        self.assert_progress_is_state_panel(progress)
+        self.assertIn("使用状态面板记录关键裁决。", progress)
+        self.assertIn("Need user decision", progress)
+        self.assertIn("python3 Workspace/SDD/sdd.py validate SDD-0001", progress)
+
+    def test_note_records_decision_and_show_exposes_state(self):
         self.run_sdd("init-root")
         self.run_sdd("new", "Resume Context", "--scope", "Workspace/SDD")
         self.run_sdd("note", "SDD-0001", "--type", "decision",
@@ -146,8 +191,11 @@ class SDDCliTests(unittest.TestCase):
 
         show = self.run_sdd("show", "SDD-0001")
         self.assertIn("Resume Context", show.stdout)
-        self.assertIn("Latest Resume", show.stdout)
-        self.assertIn("Use README as entry card", show.stdout)
+        self.assertIn("## State", show.stdout)
+        self.assertIn("T1.1", show.stdout)
+        progress = (self.root / "pending" / "SDD-0001-resume-context" /
+                    "progress.md").read_text(encoding="utf-8")
+        self.assertIn("Use README as entry card", progress)
 
     def test_validate_accepts_metadata_status_independent_from_directory(self):
         self.run_sdd("init-root")
@@ -256,13 +304,11 @@ class SDDCliTests(unittest.TestCase):
         instance = self.root / "pending" / "SDD-0001-done-resume"
         progress = (instance / "progress.md").read_text(encoding="utf-8")
 
-        self.assertIn(
-            "- **Last Conclusion**: 核心结论：CLI 已保护 README 并增强 validate。",
-            progress)
-        self.assertNotIn("- **Last Conclusion**: SDD 已进入 done。", progress)
+        self.assertIn("核心结论：CLI 已保护 README 并增强 validate。", progress)
         self.assertIn(
             "python3 Workspace/SDD/sdd.py validate SDD-0001: 0 error / 0 warning",
             progress)
+        self.assertIn("- **Status**: done", progress)
 
     def test_validate_reports_quality_warnings_and_template_errors(self):
         self.run_sdd("init-root")
@@ -270,6 +316,16 @@ class SDDCliTests(unittest.TestCase):
         self.run_sdd("start", "SDD-0001")
         self.run_sdd("task", "SDD-0001", "done", "T1.1")
         self.run_sdd("done", "SDD-0001", "--validation", "ok")
+        instance = self.root / "pending" / "SDD-0001-weak-done"
+        (instance / "notes.md").write_text(
+            "# Notes\n\n一句话说明这个 SDD 要解决什么问题\n",
+            encoding="utf-8")
+        progress_path = instance / "progress.md"
+        progress_text = progress_path.read_text(encoding="utf-8")
+        progress_path.write_text(
+            progress_text.replace("- **Next**: 无需继续；如有新问题创建新 SDD 引用本任务。",
+                                  "- **Next**: ok"),
+            encoding="utf-8")
 
         result = self.run_sdd("validate", "SDD-0001", expect_success=False)
 
@@ -375,6 +431,44 @@ class SDDCliTests(unittest.TestCase):
         self.assertIn("SDD025", result.stdout)
         self.assertIn("design-refs-external", result.stdout)
 
+    def test_validate_accepts_featurespec_source_without_scenario_copy(self):
+        self.run_sdd("init-root")
+        self.run_sdd("new", "FeatureSpec BDD", "--scope", "Workspace/SDD")
+        instance = self.root / "pending" / "SDD-0001-featurespec-bdd"
+        (instance / "design" / "FeatureSpec示例.FeatureSpec.md").write_text(
+            "# FeatureSpec\n\n## FS-1\n\n行为规格。\n",
+            encoding="utf-8")
+        (instance / "bdd.md").write_text(
+            "# BDD\n\n"
+            "## Applicability\n\n"
+            "- **Required**: true\n"
+            "- **Reason**: 测试 FeatureSpec 引用。\n"
+            "- **Source**: `design/FeatureSpec示例.FeatureSpec.md`\n"
+            "- **Executed features**: FS-1\n",
+            encoding="utf-8")
+
+        result = self.run_sdd("validate", "SDD-0001")
+
+        self.assertNotIn("SDD011", result.stdout)
+
+    def test_validate_project_child_shared_design_refs_are_not_thin_design(self):
+        self.run_sdd("init-root")
+        self.run_sdd("project-new", "Shared Design Project", "--scope",
+                     "Workspace/SystemAgent")
+        self.run_sdd("new", "Shared Ref Child", "--project", "PRJ-0001",
+                     "--scope", "Workspace/SDD")
+        child = (self.root / "project" / "projects" /
+                 "PRJ-0001-shared-design-project" / "sdds" /
+                 "001-SDD-0001-shared-ref-child")
+        (child / "design" / "main.md").write_text(
+            "# Shared Ref Child\n\n## Goal\n\n只记录当前 SDD 的局部目标。\n",
+            encoding="utf-8")
+
+        result = self.run_sdd("validate", "SDD-0001")
+
+        self.assertNotIn("thin-design", result.stdout)
+        self.assertNotIn("design-refs-external", result.stdout)
+
     def test_project_cli_creates_lists_shows_and_archives_project(self):
         self.run_sdd("init-root")
 
@@ -387,12 +481,12 @@ class SDDCliTests(unittest.TestCase):
         self.assertTrue((project / "README.md").exists())
         self.assertTrue((project / "project.json").exists())
         self.assertTrue((project / "design" / "INDEX.md").exists())
-        self.assertTrue((project / "roadmap.md").exists())
-        roadmap = (project / "roadmap.md").read_text(encoding="utf-8")
+        self.assertTrue((project / "Core" / "roadmap.md").exists())
+        roadmap = (project / "Core" / "roadmap.md").read_text(encoding="utf-8")
         self.assertIn("## Design Progress", roadmap)
         self.assertIn("## Next SDDs", roadmap)
         self.assertIn("Done", roadmap)
-        progress = (project / "progress.md").read_text(encoding="utf-8")
+        progress = (project / "Core" / "progress.md").read_text(encoding="utf-8")
         self.assertIn("## Project Status Board", progress)
         self.assertIn("Design Docs", progress)
         metadata = json.loads(

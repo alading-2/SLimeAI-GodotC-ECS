@@ -19,6 +19,7 @@
 | `Hook系统重启设计.md` | design | proposed | 2026-06-11 | 将 Hook 从高频检查器重设计为低噪音提醒器；当前只记录可用节点，不启用 |
 | `Code-Review优化设计.md` | design | proposed | 2026-06-12 | 重新定位 Code Review：功能实现度优先，补充必要质量维度，测试 artifact 只作为 evidenceRef |
 | `FeatureSpec-功能实现规格设计.md` | design | proposed | 2026-06-13 | 将旧 BDD 升级为设计冻结后的功能实现规格，默认使用 `.FeatureSpec.md` 旁路文档承载功能、代码指引和 TDD 交接 |
+| `SDD精简与FeatureSpec集成.FeatureSpec.md` | feature-spec | current | 2026-06-13 | SDD-0042 功能实现规格；把 SDD 精简和 FeatureSpec 集成落到 CLI、模板、validate、docs 和 skill |
 | `Worktree激活设计.md` | design | proposed | 2026-06-11 | 在不默认开启的前提下，通过 skill + SDD 关联激活 git worktree 使用 |
 | `SDD精简设计.md` | design | proposed | 2026-06-12 | 参考 OpenSpec 的轻量思想，改成薄任务状态面板，停止逐任务流水账、设计快照复制和冗余 BDD |
 

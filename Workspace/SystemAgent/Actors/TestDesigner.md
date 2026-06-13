@@ -10,7 +10,7 @@
 
 ## Required context
 
-FeatureSpec、SDD design/tasks/bdd、BDDSceneFormat、相关 gameplay lifecycle BDD（涉及多系统时）、现有 tests/scene README、失败模式。
+设计旁 `.FeatureSpec.md`（优先读取 `TDD Handoff`）、SDD design/tasks/bdd、BDDSceneFormat、相关 gameplay lifecycle BDD（涉及多系统时）、现有 tests/scene README、失败模式。
 
 ## Output shape
 

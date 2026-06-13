@@ -8,7 +8,7 @@
   "updated_at": "YYYY-MM-DD",
   "scope": "Workspace/SDD",
   "git_boundaries": [
-    "/home/slime/Code/SlimeAI"
+    "/home/slime/Code/SlimeAI/SlimeAI"
   ],
   "affected_areas": [
     "Workspace/SDD"

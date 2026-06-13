@@ -11,7 +11,7 @@ from .config import CLI_PATH, PROJECT_BUCKETS, PROJECT_STATUSES, STATUSES, resol
 from .errors import SDDCliError
 from .instance_ops import create_instance, refresh_progress_metadata, save_instance
 from .io import now, read_json, today, write_json, write_text
-from .progress import append_progress, extract_latest_resume
+from .progress import append_decision, extract_latest_resume, extract_state, record_validation
 from .project_ops import create_project
 from .repository import collect_instances, collect_projects, locate_instance, locate_project
 from .root_ops import ensure_root
@@ -150,17 +150,16 @@ def command_show(args: argparse.Namespace) -> int:
     progress = path / "progress.md"
     if readme.exists():
         print(readme.read_text(encoding="utf-8").rstrip())
-    latest = extract_latest_resume(progress)
-    print("\n## Latest Resume")
+    state = extract_state(progress)
+    print("\n## State")
     for key, label in [
-        ("updated", "Updated"),
-        ("current_task", "Current Task"),
-        ("last_conclusion", "Last Conclusion"),
-        ("next_action", "Next Action"),
-        ("open_blockers", "Open Blockers"),
+        ("status", "Status"),
+        ("current", "Current"),
+        ("next", "Next"),
+        ("blocker", "Blocker"),
     ]:
-        if latest.get(key):
-            print(f"- **{label}**: {latest[key]}")
+        if state.get(key):
+            print(f"- **{label}**: {state[key]}")
     return 0
 
 
@@ -251,11 +250,13 @@ def command_start(args: argparse.Namespace) -> int:
     new_path = item["_path"]
     metadata = read_json(new_path / "sdd.json")
     metadata["status"] = "active"
+    metadata.pop("blockers", None)
     refresh_progress_metadata(new_path, metadata)
-    append_progress(new_path, "resume", "启动或恢复 SDD。", "SDD 已进入 active。",
-                    "start command", "任务可以继续推进。", "按 tasks.md 的 Current 继续。")
-    save_instance(new_path, metadata, "SDD 已进入 active。",
-                  "按 tasks.md 的 Current 继续。")
+    current = metadata.get("progress", {}).get("current_task", "none")
+    next_action = (f"继续执行 {current}。"
+                   if current not in {"done", "none"} else
+                   "检查 tasks.md，确认是否需要记录最终验证。")
+    save_instance(new_path, metadata, "SDD 已进入 active。", next_action)
     write_catalog_and_index(root)
     print(f"Started {metadata['id']}: {new_path.relative_to(root.parent)}")
     return 0
@@ -269,8 +270,7 @@ def command_block(args: argparse.Namespace) -> int:
     metadata["status"] = "blocked"
     metadata["blockers"] = [args.reason]
     refresh_progress_metadata(new_path, metadata)
-    append_progress(new_path, "blocker", "任务进入 blocked。", args.reason,
-                    "block command", "继续执行前需要解除阻塞。", args.reason)
+    append_decision(new_path, "blocker", args.reason)
     save_instance(new_path, metadata, args.reason, "解除 blocker 后运行 start。",
                   args.reason)
     write_catalog_and_index(root)
@@ -298,8 +298,7 @@ def command_done(args: argparse.Namespace) -> int:
     conclusion = args.conclusion or latest.get(
         "last_conclusion") or "任务已完成并记录验证摘要。"
     next_action = args.next_action or "无需继续；如有新问题创建新 SDD 引用本任务。"
-    append_progress(new_path, "validation", "任务完成。", conclusion,
-                    args.validation, "任务已完成并保留归档上下文。", next_action)
+    record_validation(new_path, args.validation)
     save_instance(new_path, metadata, conclusion, next_action)
     write_catalog_and_index(root)
     print(f"Done {metadata['id']}: {args.validation}")
@@ -312,10 +311,13 @@ def command_note(args: argparse.Namespace) -> int:
     path = item["_path"]
     metadata = read_json(path / "sdd.json")
     refresh_progress_metadata(path, metadata)
-    append_progress(path, args.type, "用户或 AI 追加记录。", args.text, "note command",
-                    "作为后续恢复上下文。", args.text)
+    if args.type == "validation":
+        record_validation(path, args.text)
+    else:
+        append_decision(path, args.type, args.text)
     save_instance(
-        path, metadata, args.text, "按 tasks.md 的 Current 继续。",
+        path, metadata, args.text,
+        f"保持当前任务 {metadata.get('progress', {}).get('current_task', 'none')}，按最新记录继续。",
         metadata.get("blockers", ["none"])[0]
         if metadata.get("status") == "blocked" else "none")
     write_catalog_and_index(root)
@@ -398,10 +400,12 @@ def command_task(args: argparse.Namespace) -> int:
         update_task_checkbox(tasks_path, args.task_ref, checked)
         conclusion = f"已{'完成' if checked else '取消完成'}任务 {args.task_ref}。"
     refresh_progress_metadata(path, metadata)
-    append_progress(path, "change", "更新任务状态。", conclusion, "task command",
-                    "任务进度已同步。", "继续处理下一个未完成任务。")
+    current = metadata.get("progress", {}).get("current_task", "none")
+    next_action = (f"继续执行 {current}。"
+                   if current not in {"done", "none"} else
+                   "所有任务已勾选，运行 done 时写入最终验证摘要。")
     save_instance(
-        path, metadata, conclusion, "继续处理下一个未完成任务。",
+        path, metadata, conclusion, next_action,
         metadata.get("blockers", ["none"])[0]
         if metadata.get("status") == "blocked" else "none")
     write_catalog_and_index(root)

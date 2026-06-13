@@ -4,6 +4,8 @@
 
 - **Required**: true
 - **Reason**: This SDD changes CLI or workflow behavior.
+- **Source**: `design/main.md`
+- **Executed features**: T1.1
 
 ## Scenarios
 

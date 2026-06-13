@@ -10,7 +10,7 @@ from .catalog import write_catalog_and_index
 from .config import REPO_ROOT, STATUSES
 from .errors import SDDCliError
 from .io import now, slugify, today, write_json, write_text
-from .progress import extract_latest_resume, replace_latest_resume
+from .progress import extract_latest_resume, replace_state
 from .repository import (
     instance_dir_name,
     load_instance,
@@ -170,8 +170,7 @@ def save_instance(instance: Path,
                   blockers: str = "none") -> None:
     save_metadata(instance, metadata)
     update_tasks_header(instance / "tasks.md", metadata)
-    replace_latest_resume(instance / "progress.md", metadata, conclusion,
-                          next_action, blockers)
+    replace_state(instance / "progress.md", metadata, next_action, blockers)
     patch_readme_fields(instance, metadata, blockers)
 
 

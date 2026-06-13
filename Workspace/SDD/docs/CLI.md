@@ -76,7 +76,7 @@ python3 Workspace/SDD/sdd.py list --json
 
 ### `note <id>`
 
-追加 progress 记录。`note` 是手动工具，只用于方向裁决、阻塞、关键验证或用户裁决；不要把每个 task done、每个命令或文件清单都写入 progress。
+写入 `progress.md` 的 `Decisions` 或 `Validation` 面板。`note` 是手动工具，只用于方向裁决、阻塞、关键验证或用户裁决；不要把每个 task done、每个命令或文件清单都写入 progress。
 
 ```bash
 python3 Workspace/SDD/sdd.py note SDD-0001 --type decision "README is an entry card."
@@ -95,11 +95,11 @@ python3 Workspace/SDD/sdd.py task SDD-0001 todo T1.1
 
 ### `block <id>`
 
-将 SDD 的 `sdd.json.status` 更新为 `blocked` 并写入阻塞原因。命令不移动目录。
+将 SDD 的 `sdd.json.status` 更新为 `blocked`，同步 State 的 blocker，并在 Decisions 中保留阻塞原因。命令不移动目录。
 
 ### `done <id>`
 
-将 SDD 的 `sdd.json.status` 更新为 `done` 并写入简短验证摘要。命令不移动目录。需要更明确的最终结论时使用 `--conclusion` 和 `--next-action`，但不要生成长 Resume 或复制完整输出。
+将 SDD 的 `sdd.json.status` 更新为 `done`，并把简短验证摘要写入 `Validation` 面板。命令不移动目录。需要更明确的最终结论时使用 `--conclusion` 和 `--next-action`，但不要生成长 Resume、timeline 或复制完整输出。
 
 ```bash
 python3 Workspace/SDD/sdd.py done SDD-0001 --validation "dotnet build ... passed; python3 Workspace/SDD/sdd.py validate SDD-0001 passed"

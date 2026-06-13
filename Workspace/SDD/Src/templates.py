@@ -38,7 +38,7 @@ python3 Workspace/SDD/sdd.py index
 - 小任务不强制创建 SDD。
 - 中大型任务、跨模块重构、AI 配置治理和长期恢复任务应创建 SDD。
 - 单个 SDD 的 `README.md` 是入口卡片，不承载完整设计正文。
-- 完整设计放入 `design/`，运行结论和恢复点写入 `progress.md`。
+- 完整设计放入项目 `design/` 或任务 `design/`，`progress.md` 只保留状态面板和验证摘要。
 """
 
 
@@ -65,8 +65,8 @@ def template_readme() -> str:
 
 1. `design/INDEX.md` — 设计文档列表和主设计入口
 2. `tasks.md` — 当前任务拆分
-3. `progress.md` — 最近结论和恢复点
-4. `bdd.md` — 行为场景或不适用说明
+3. `progress.md` — State / Decisions / Validation 状态面板
+4. `bdd.md` — FeatureSpec 引用、行为摘录或不适用说明
 5. `notes.md` — 参考与开放问题
 
 ## Current Resume
@@ -167,23 +167,20 @@ def template_tasks() -> str:
 def template_progress() -> str:
     return """# Progress
 
-## Latest Resume
+## State
 
-- **Updated**: YYYY-MM-DD HH:MM
-- **Current Task**: T1.1
-- **Last Conclusion**: SDD 已创建，等待补充设计与任务。
-- **Next Action**: 阅读设计并更新任务。
-- **Open Blockers**: none
+- **Status**: pending
+- **Current**: T1.1
+- **Next**: 阅读设计并更新任务。
+- **Blocker**: none
 
-## Timeline
+## Decisions
 
-### P001 — YYYY-MM-DD HH:MM — resume
+- none
 
-- **Context**: SDD 创建。
-- **Conclusion**: 已建立最小上下文胶囊。
-- **Evidence**: README、sdd.json、design、tasks、progress、bdd、notes 已生成。
-- **Impact**: 后续围绕 tasks 和 progress 推进。
-- **Resume**: 从 README 的 Current Resume 继续。
+## Validation
+
+- pending
 """
 
 
@@ -194,6 +191,8 @@ def template_bdd() -> str:
 
 - **Required**: true
 - **Reason**: This SDD changes CLI or workflow behavior.
+- **Source**: `design/main.md`
+- **Executed features**: T1.1
 
 ## Scenarios
 
@@ -284,17 +283,12 @@ def build_project_roadmap(metadata: dict[str, Any]) -> str:
 def build_project_progress(project_id: str, title: str, timestamp: str) -> str:
     return f"""# Project Progress
 
-## Purpose
+## State
 
-本文件是 `{project_id}` 的项目级进度事实源，用于记录项目状态、设计覆盖、阶段结论、验证证据和下一步。项目级设计资料放在 `design/`；子 SDD 执行细节放在各自 `sdds/<order>-SDD-xxxx/progress.md`。
-
-## Latest Resume
-
-- **Updated**: {timestamp}
+- **Status**: active
 - **Current SDD**: none
-- **Last Conclusion**: {project_id} 已创建，用于组织 {title}。
-- **Next Action**: 阅读 project.json、design/INDEX.md 和 Core/roadmap.md，补充设计到 SDD 的映射后继续推进。
-- **Open Blockers**: none
+- **Next**: 阅读 project.json、design/INDEX.md 和 Core/roadmap.md，补充设计到 SDD 的映射后继续推进。
+- **Blocker**: none
 
 ## Project Status Board
 
@@ -302,15 +296,13 @@ def build_project_progress(project_id: str, title: str, timestamp: str) -> str:
 | --- | --- | --- | --- |
 | none | — | `design/main.md` | 已创建项目容器 |
 
-## Timeline
+## Decisions
 
-### P001 — {timestamp} — resume
+- {timestamp}: {project_id} 已创建，用于组织 {title}。
 
-- **Context**: 创建项目级 SDD 容器。
-- **Conclusion**: 已建立项目级设计、路线图、进度和子 SDD 目录。
-- **Evidence**: README、project.json、design、roadmap、progress、notes、sdds 已生成。
-- **Impact**: 后续子 SDD 可共享项目级设计。
-- **Resume**: 从 README 的 Reading Order 继续。
+## Validation
+
+- pending
 """
 
 
@@ -344,8 +336,8 @@ def build_readme(metadata: dict[str, Any],
 
 1. `design/INDEX.md` — 设计文档列表和主设计入口
 2. `tasks.md` — 当前任务拆分
-3. `progress.md` — 最近结论和恢复点
-4. `bdd.md` — 行为场景或不适用说明
+3. `progress.md` — State / Decisions / Validation 状态面板
+4. `bdd.md` — FeatureSpec 引用、行为摘录或不适用说明
 5. `notes.md` — 参考与开放问题
 
 ## Current Resume
@@ -391,21 +383,18 @@ def build_tasks(status: str, sdd_id: str) -> str:
 def build_progress(sdd_id: str, title: str, timestamp: str) -> str:
     return f"""# Progress
 
-## Latest Resume
+## State
 
-- **Updated**: {timestamp}
-- **Current Task**: T1.1
-- **Last Conclusion**: {sdd_id} 已创建，用于跟踪 {title}。
-- **Next Action**: 阅读 README、design/INDEX.md 和 tasks.md 后继续推进。
-- **Open Blockers**: none
+- **Status**: pending
+- **Current**: T1.1
+- **Next**: 阅读 README、design/INDEX.md 和 tasks.md 后继续推进。
+- **Blocker**: none
 
-## Timeline
+## Decisions
 
-### P001 — {timestamp} — resume
+- {timestamp}: {sdd_id} 已创建，用于跟踪 {title}。
 
-- **Context**: 创建 SDD。
-- **Conclusion**: 已建立任务上下文胶囊。
-- **Evidence**: README、sdd.json、design、tasks、progress、bdd、notes 已生成。
-- **Impact**: 后续围绕 tasks.md 和 progress.md 记录执行。
-- **Resume**: 从 README 的 Current Resume 继续。
+## Validation
+
+- pending
 """

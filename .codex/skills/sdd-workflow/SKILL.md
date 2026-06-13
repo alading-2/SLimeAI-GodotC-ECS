@@ -40,6 +40,7 @@ description: SlimeAI SDD 中大型任务流程入口。用户要求使用 SDD、
 - 项目子 SDD 默认引用项目级 `design/`，不复制完整设计快照；本地 `design/main.md` 可只写局部差异和不做什么。
 - SDD 和项目真实状态来自 `sdd.json.status` / `project.json.status`，目录只表达组织或归档位置。
 - `Key Files` 只列改变系统行为、事实源、门禁、公共接口或验证方式的文件；超过 8 个时改写 `Key Areas`。
+- `start/block/task/done/note` 只维护 State / Decisions / Validation；不期待或补写 `Latest Resume` / `P001` timeline。
 - `done` 只需要最终 validation summary 和 next=none / follow-up；必要时使用 `--conclusion` 和 `--next-action` 明确最终结论，不生成长 Resume。
 
 ## CLI 入口
