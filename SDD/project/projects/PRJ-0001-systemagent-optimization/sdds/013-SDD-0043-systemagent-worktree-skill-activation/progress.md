@@ -12,7 +12,7 @@
 - **Worktree**: `/home/slime/Code/SlimeAI/SlimeAI/.worktrees/systemagent-worktree-skill-260613`
 - **Branch**: `sdd-0043-systemagent-worktree-skill`
 - **Baseline Status**: main dirty before worktree creation；已有 `.uid` 删除、`Workspace/Resources/tool/codlogs` 未跟踪和若干 `__pycache__` 修改，均非 SDD-0043 生成范围；worktree baseline `python3 Workspace/SDD/sdd.py validate --all` 为 0 error / 0 warning。
-- **Cleanup Status**: dirty-preserve；当前 worktree 正在执行 SDD-0043，完成前不清理。
+- **Cleanup Status**: removed；SDD-0043 分支已 fast-forward 合并到 `main` 并推送，临时 worktree 已移除。
 - **Submodule Boundary**: 未涉及游戏仓或 submodule；禁止在 `Games/*/SlimeAI/` 镜像内执行框架业务改动。
 
 ## Decisions
