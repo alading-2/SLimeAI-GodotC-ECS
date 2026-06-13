@@ -1,6 +1,8 @@
 # Godot 4+ specific ignores
 .history/
 .godot/
+# 本仓 git worktree 默认目录，避免隔离工作区被纳入主仓状态
+.worktrees/
 # C# builds (如果你在外部编译，或者是 Godot 3 的习惯)
 .mono/
 bin/
