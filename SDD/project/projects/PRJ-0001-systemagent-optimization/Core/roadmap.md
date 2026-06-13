@@ -17,6 +17,7 @@
 | `会话记录适配器参考设计/2026-06-10-Session-Adapter二次审查与会话分析流程设计.md` | done | SDD-0041 | 已完成 `Session Adapter Digest Accuracy and Retrospective Handoff`；重构 digest schema v4、命令分类、goal/outcome 去噪、tool failure 根因分类、ChatHistory stale report、Retrospective current digest 定位和 GitPolicy/actor push 规则残留冲突 |
 | `优化/SDD精简设计.md` | done | SDD-0042 | 已完成：新 SDD 模板使用 State / Decisions / Validation，状态命令不再追加 task timeline，validate 放宽项目子 SDD shared design refs |
 | `优化/FeatureSpec-功能实现规格设计.md` | done | SDD-0042 | 已完成：设计旁 `.FeatureSpec.md` 成为功能实现规格源，SDD `bdd.md` 可用 Source / Executed features 作为摘录入口 |
+| `优化/Worktree激活设计.md` | done | SDD-0043 | 已完成 Phase 1：新增 `systemagent-worktree` skill，先解决手动/语义触发的 worktree lifecycle；SDD CLI worktree 参数留给后续 |
 | `01-独立SDD转向方案.md` | done | SDD-0001, SDD-0002 | SDD-first 策略已落地 |
 | `02-Workflow与Skill触发优化方案.md` | pending | SDD-0006, SDD-0008 | 信息架构部分已落地；workflow/skill/role 执行分层已生成待执行 SDD |
 | `03-Hook与Gate重写方案.md` | pending | SDD-0007 | Hook / Gate P0 稳定性 SDD 已生成 |
@@ -42,5 +43,5 @@
 | P2 | `优化/2026-06-08-SystemAgent工作流内化与核心优化裁决.md`, `会话记录适配器参考设计/2026-06-08-AI会话管理工具选型分析.md`, `会话记录适配器参考设计/2026-06-09-参考项目驱动的Cross-agent-Session-Adapter设计.md` | SDD-0039：done；已完成 session 基础能力。后续只读资料 subagent pilot、Claude/OpenCode 高保真导出和 retrospective 接入需另建 SDD |
 | P2 | `会话记录适配器参考设计/2026-06-09-ChatHistory-AI-first整理与价值评分设计.md` | 建议新建：ChatHistory AI-first Session Digest；Codex first，Digest Gate，短会话 locator-only，批量整理可跳过无结果中断会话，工具失败单独记录，不删除旧 transcript |
 | P0 | `优化/SDD精简设计.md`, `优化/FeatureSpec-功能实现规格设计.md` | SDD-0042：done；SDD CLI/模板/validate 精简和 FeatureSpec 集成已完成，Worktree 后续单独处理 |
-| P1 | `优化/Worktree激活设计.md` | 下一批建议新建 Worktree Skill SDD；依赖 SDD-0042 的 progress/worktree record 规则稳定 |
+| P1 | `优化/Worktree激活设计.md` | SDD-0043：done；Worktree Skill Phase 1 已完成，后续 SDD CLI 自动 worktree / hook 提醒另建 SDD |
 | P1 | `会话记录适配器参考设计/2026-06-10-Session-Adapter二次审查与会话分析流程设计.md` | SDD-0041：done；后续若要正式重建仓库 ChatHistory digest 或清理 R005 advisory，另建 SDD |

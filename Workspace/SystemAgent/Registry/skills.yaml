@@ -267,6 +267,18 @@ skills:
     canonical_docs:
       - Workspace/SystemAgent/Tools/skill-test/README.md
       - Workspace/SystemAgent/Skills/WrapperSkillPolicy.md
+  - id: systemagent-worktree
+    source: .ai-config/skills/systemagent-skill/systemagent-worktree/SKILL.md
+    category: systemagent-skill
+    function_category: utility
+    role: capability
+    status: active
+    priority: high
+    canonical_docs:
+      - Workspace/SystemAgent/Rules/Git.md
+      - Workspace/SDD/docs/SDDFormat.md
+      - SDD/project/projects/PRJ-0001-systemagent-optimization/design/优化/Worktree激活设计.md
+      - SDD/project/projects/PRJ-0001-systemagent-optimization/design/优化/Worktree激活.FeatureSpec.md
   - id: systemagent-validation-release-workflow
     source: .ai-config/skills/systemagent-workflow/systemagent-validation-release-workflow/SKILL.md
     category: systemagent-workflow

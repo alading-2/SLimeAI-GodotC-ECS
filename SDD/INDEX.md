@@ -5,7 +5,7 @@
 - **pending**: 0
 - **active**: 0
 - **blocked**: 2
-- **done**: 40
+- **done**: 41
 - **projects**: 2
 
 ## Projects
@@ -47,6 +47,7 @@
 | SDD-0039 | PRJ-0001 | Cross-agent Session Adapter | 2026-06-09 | Workspace/SystemAgent | done |
 | SDD-0041 | PRJ-0001 | Session Adapter Digest Accuracy and Retrospective Handoff | 2026-06-10 | Workspace/SystemAgent | done |
 | SDD-0042 | PRJ-0001 | SystemAgent SDD Slimming and FeatureSpec Integration | 2026-06-13 | Workspace/SDD | done |
+| SDD-0043 | PRJ-0001 | SystemAgent Worktree Skill Activation | 2026-06-13 | Workspace/SystemAgent | done |
 | SDD-0011 | PRJ-0002 | DataKey Type Safety and Runtime Snapshot Loader | 2026-05-27 | SlimeAI | done |
 | SDD-0012 | PRJ-0002 | Data System Full Rewrite - Catalog TDD Slice | 2026-05-28 | SlimeAI | done |
 | SDD-0013 | PRJ-0002 | DataOS Descriptor Authoring and Snapshot Schema | 2026-05-28 | SlimeAI | done |
@@ -127,6 +128,7 @@
 - SDD-0010 — Git Worktree Subagent Safety Strategy
 - SDD-0039 — Cross-agent Session Adapter
 - SDD-0041 — Session Adapter Digest Accuracy and Retrospective Handoff
+- SDD-0043 — SystemAgent Worktree Skill Activation
 
 ## By Tag
 
@@ -412,6 +414,7 @@
 - SDD-0004 — SDD Project Container Model
 - SDD-0005 — SDD CLI Source Modularization
 - SDD-0042 — SystemAgent SDD Slimming and FeatureSpec Integration
+- SDD-0043 — SystemAgent Worktree Skill Activation
 - SDD-0023 — SystemAgent Root Migration Rule Sync
 
 ### session-adapter
@@ -447,6 +450,7 @@
 - SDD-0039 — Cross-agent Session Adapter
 - SDD-0041 — Session Adapter Digest Accuracy and Retrospective Handoff
 - SDD-0042 — SystemAgent SDD Slimming and FeatureSpec Integration
+- SDD-0043 — SystemAgent Worktree Skill Activation
 - SDD-0023 — SystemAgent Root Migration Rule Sync
 
 ### target-selector
@@ -483,3 +487,4 @@
 ### worktree
 
 - SDD-0010 — Git Worktree Subagent Safety Strategy
+- SDD-0043 — SystemAgent Worktree Skill Activation

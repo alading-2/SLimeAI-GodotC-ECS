@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-13 20:15",
+  "generated_at": "2026-06-13 23:01",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -350,6 +350,28 @@
       "project_order": 12,
       "current_task": "done",
       "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/012-SDD-0042-systemagent-sdd-slimming-and-featurespec-integration"
+    },
+    {
+      "id": "SDD-0043",
+      "slug": "systemagent-worktree-skill-activation",
+      "title": "SystemAgent Worktree Skill Activation",
+      "status": "done",
+      "type": "workflow",
+      "updated_at": "2026-06-13",
+      "scope": "Workspace/SystemAgent",
+      "affected_areas": [
+        "Workspace/SystemAgent",
+        ".ai-config/skills"
+      ],
+      "tags": [
+        "systemagent",
+        "worktree",
+        "sdd"
+      ],
+      "project_id": "PRJ-0001",
+      "project_order": 13,
+      "current_task": "done",
+      "path": "SDD/project/projects/PRJ-0001-systemagent-optimization/sdds/013-SDD-0043-systemagent-worktree-skill-activation"
     },
     {
       "id": "SDD-0011",

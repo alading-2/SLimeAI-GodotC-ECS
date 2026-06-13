@@ -21,6 +21,7 @@
 | `FeatureSpec-功能实现规格设计.md` | design | proposed | 2026-06-13 | 将旧 BDD 升级为设计冻结后的功能实现规格，默认使用 `.FeatureSpec.md` 旁路文档承载功能、代码指引和 TDD 交接 |
 | `SDD精简与FeatureSpec集成.FeatureSpec.md` | feature-spec | current | 2026-06-13 | SDD-0042 功能实现规格；把 SDD 精简和 FeatureSpec 集成落到 CLI、模板、validate、docs 和 skill |
 | `Worktree激活设计.md` | design | proposed | 2026-06-11 | 在不默认开启的前提下，通过 skill + SDD 关联激活 git worktree 使用 |
+| `Worktree激活.FeatureSpec.md` | feature-spec | current | 2026-06-13 | SDD-0043 功能实现规格；覆盖 worktree 触发判断、生命周期 skill、SDD worktree record 和 AI 配置同步 |
 | `SDD精简设计.md` | design | proposed | 2026-06-12 | 参考 OpenSpec 的轻量思想，改成薄任务状态面板，停止逐任务流水账、设计快照复制和冗余 BDD |
 
 ## Recommended Order

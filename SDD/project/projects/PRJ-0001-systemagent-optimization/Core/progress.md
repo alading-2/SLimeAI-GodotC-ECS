@@ -8,7 +8,7 @@
 
 - **Status**: active
 - **Current SDD**: none
-- **Next**: 下一批建议新建 Worktree Skill SDD；TDD 与 Log/Validation evidence plane 后续单独定，Hook 仍不启用。
+- **Next**: 后续如需 `sdd start --worktree` / `done --merge-worktree` 或 hook 提醒，另建 SDD；TDD 与 Log/Validation evidence plane 后续单独定，Hook 仍不启用。
 - **Blocker**: none
 
 ## Project Status Board
@@ -29,14 +29,17 @@
 | next | pending | `会话记录适配器参考设计/2026-06-09-ChatHistory-AI-first整理与价值评分设计.md` | 建议创建 `ChatHistory AI-first Session Digest`，补 Digest Gate、locator-only skip、工具失败记录、index v3 和 per-session digest |
 | SDD-0041 | done | `会话记录适配器参考设计/2026-06-10-Session-Adapter二次审查与会话分析流程设计.md` | 已完成 session-adapter digest schema v4、stale report、tool failure、Retrospective/DeepThink/Git handoff |
 | SDD-0042 | done | `优化/SDD精简设计.md`, `优化/FeatureSpec-功能实现规格设计.md` | 已完成 SDD CLI/模板/validate 精简和 FeatureSpec 集成；暂不包含 Worktree/TDD/Hook |
+| SDD-0043 | done | `优化/Worktree激活设计.md`, `优化/Worktree激活.FeatureSpec.md` | 已新增 `systemagent-worktree` skill，激活 create/list/status/switch/merge/clean 安全流程 |
 
 ## Decisions
 
 - 2026-06-13: SDD-0042 已完成第一批执行范围；Worktree 后续单独做，TDD 等 Log/Validation evidence plane 一起定，Hook 不启用。
+- 2026-06-13: SDD-0043 按 Worktree 设计 Phase 1 执行；只新增 `systemagent-worktree` skill 和同步/文档登记，不做 SDD CLI 自动 worktree 或 hook 自动创建。
 
 ## Validation
 
 - 2026-06-13: `python3 -m unittest discover Workspace/SDD/tests` 21 tests OK；`python3 Workspace/SDD/sdd.py validate SDD-0042` 0 error / 0 warning；`python3 Workspace/SDD/sdd.py validate --all` 0 error / 0 warning；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only` Critical 0 / Advisory 10；`git diff --check` pass。
+- 2026-06-13: SDD-0043 validation: `bash Workspace/Tools/ai-config-sync/sync-ai-config.sh` success；`bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only` Critical 0 / Advisory 10；`python3 Workspace/SDD/sdd.py validate SDD-0043` 0 error / 0 warning；`python3 Workspace/SDD/sdd.py validate --all` 0 error / 0 warning；`git diff --check` pass。
 
 ## Timeline
 

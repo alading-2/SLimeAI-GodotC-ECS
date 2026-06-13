@@ -17,7 +17,7 @@ metadata:
 | Skill           | `.ai-config/skills/<category>/<name>/SKILL.md` | `.ai-config/sync-targets.json` 定义的 skill 同步目标（打平） |
 | Rule            | `.ai-config/rules/rules.md`                    | `.ai-config/sync-targets.json` 定义的 rule 同步目标 |
 | Command         | `.ai-config/skills/<category>/<name>/SKILL.md` | `.claude/commands/opsx/*.md`（兼容命令按脚本转换）               |
-| Claude hook     | Claude 项目 settings 文件（当前仓为 `.claude/settings.local.json`） | 无副本，直接运行                                                 |
+| Claude hook     | Claude 项目 settings 文件（存在时直接维护，不作为同步源） | 无副本，直接运行                                                 |
 | Claude subagent | Claude 项目 agents 目录（存在时直接维护）       | 无副本，直接运行                                                 |
 | Codex hook      | Codex 项目 hook 配置（存在时直接维护）          | 无副本，直接运行                                                 |
 | Codex subagent  | Codex 项目 agent/config 配置（存在时直接维护）  | 无副本，直接运行                                                 |

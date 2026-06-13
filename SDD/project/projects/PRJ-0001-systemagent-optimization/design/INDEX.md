@@ -24,6 +24,7 @@
 | `优化/Hook系统重启设计.md` | design | proposed | 2026-06-11 | 重新设计低噪音 Hook 提醒机制，恢复 SessionStart / PreStop / PostValidation 支持 |
 | `优化/Code-Review优化设计.md` | design | proposed | 2026-06-11 | 让 code review 从静态需求对比升级到读取测试 artifact 和根因统计 |
 | `优化/Worktree激活设计.md` | design | proposed | 2026-06-11 | 用 skill + SDD 关联激活 worktree，解决多对话改动混杂问题 |
+| `优化/Worktree激活.FeatureSpec.md` | feature-spec | current | 2026-06-13 | SDD-0043 功能实现规格；覆盖 worktree 触发、生命周期 skill、SDD 记录和 sync/lint 验证 |
 | `优化/SDD精简设计.md` | design | proposed | 2026-06-11 | 压缩 progress.md 膨胀，回到 AI-first 最小恢复上下文 |
 | `优化/SDD精简与FeatureSpec集成.FeatureSpec.md` | feature-spec | current | 2026-06-13 | SDD-0042 功能实现规格；覆盖 SDD progress 状态面板、CLI 写入、FeatureSpec/BDD validate、shared design refs 和 skill/docs 同步 |
 | `会话记录适配器参考设计/2026-06-08-AI会话管理工具选型分析.md` | research | reference-current | 2026-06-09 | Linux 会话管理工具选型已降级为参考资料；`codbash` 作为跨工具入口，`codlogs` 作 Codex 高保真补充，`tracebase` 作复盘维度参考 |

@@ -94,6 +94,13 @@
       "title": "SystemAgent SDD Slimming and FeatureSpec Integration",
       "status": "done",
       "path": "sdds/012-SDD-0042-systemagent-sdd-slimming-and-featurespec-integration"
+    },
+    {
+      "order": 13,
+      "id": "SDD-0043",
+      "title": "SystemAgent Worktree Skill Activation",
+      "status": "done",
+      "path": "sdds/013-SDD-0043-systemagent-worktree-skill-activation"
     }
   ],
   "links": {

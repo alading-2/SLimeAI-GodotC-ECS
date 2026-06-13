@@ -19,6 +19,7 @@
 - AI 可按顶层 Git Safety、当前 SDD 和用户任务边界自动 commit/push，但必须先确认范围、写清 What/Why/来源 SDD（如有），并且不混入用户既有改动。
 - 文档和配置治理默认只在 `/home/slime/Code/SlimeAI` 根仓处理。
 - 中大型、高风险、实验性或主工作区 dirty 的任务，可以建议使用 worktree；小修、只读审计和低风险文档修改不强制。
+- 用户明确要求 worktree / 隔离 / 单独分支，或 AI 判断需要隔离时，使用 `systemagent-worktree` skill 执行 create/list/status/switch/merge/clean 流程。
 - clean worktree 完成验证后可以建议 `git worktree remove` 和 `git worktree prune`；dirty worktree 只报告状态，不自动删除。
 
 ## Forbidden actions
@@ -48,3 +49,13 @@
 最终汇报必须给出本轮目标 git boundary 的 `git status --short` 结果摘要，并区分本轮改动和任务前已有用户改动。
 
 如果任务没有使用 worktree，最终汇报应说明原因，例如“只读审计”“低风险文档修改”或“用户要求直接在当前工作区执行”。如果任务建议但未创建 worktree，必须说明未创建原因和 dirty workspace 风险。
+
+## Trigger guidance
+
+| Scenario | Action |
+| --- | --- |
+| 单文件小修复或低风险文档修改 | 默认不创建 worktree，记录 `Worktree: none` 原因 |
+| 单 owner / 少量文件改动 | 可直接在当前边界执行，除非主工作区 dirty 或用户要求隔离 |
+| 跨 owner、中大型、实验性或可能回滚的任务 | 建议使用 `systemagent-worktree` 创建隔离 worktree |
+| 主工作区已有无关 dirty 改动 | 强烈建议 worktree，避免提交时混入用户既有改动 |
+| 用户明确要求隔离 | 创建或切换到 worktree，并在 SDD progress 记录六字段 |
