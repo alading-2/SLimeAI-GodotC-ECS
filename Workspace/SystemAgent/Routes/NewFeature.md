@@ -12,7 +12,7 @@ Route 输出必须包含 workflow、task_size、sdd、must_read、mode、subagen
 
 ## SDD strategy
 
-small 默认不创建 SDD；medium 可选，用户要求深度分析、后续继续或有恢复需求时创建或选用；large 必须使用 SDD，并优先读取当前 SDD 的 README、tasks、progress Latest Resume 和 bdd。
+small 默认不创建 SDD；medium 可选，用户要求深度分析、后续继续或有恢复需求时创建或选用；large 必须使用 SDD，并优先读取当前 SDD 的 README、tasks、progress Latest Resume、bdd 和设计旁 FeatureSpec。
 
 ## Phases
 
@@ -21,7 +21,7 @@ small 默认不创建 SDD；medium 可选，用户要求深度分析、后续继
 3. Plan：用 SDD 或本次上下文冻结任务切片、验收标准、owner skill 和验证方式。
 4. Execute：按 owner capability skill 做最小范围实现，不把 workflow、role 或 gate 正文复制到 skill。
 5. Validate：按影响面运行 owner、interaction、feature-slice 或 release-batch 验证并保存证据。
-6. Close：更新 SDD progress/tasks/bdd，执行 retrospective，输出剩余风险和 git status。
+6. Close：更新 SDD progress/tasks/bdd 或 FeatureSpec 引用，执行 retrospective，输出剩余风险和 git status。
 
 ## Required inputs
 
@@ -45,7 +45,7 @@ Conditional senior roles: when the change touches multi-system gameplay, GodotBr
 
 ## Validation and evidence
 
-SDD tasks/progress、Runtime/DataOS/Godot/文档验证证据、必要时 BDD 场景。若当前任务使用 SDD，应提供 `progress.md` Latest Resume 和最近一次更新的证据。
+SDD tasks/progress、FeatureSpec、Runtime/DataOS/Godot/文档验证证据、必要时 BDD 场景。若当前任务使用 SDD，应提供 `progress.md` Latest Resume 和最近一次更新的证据。
 
 DeepThink 输出的是方向分析，不是设计文档模板。使用 SDD 时，关键结论、默认假设和必须确认的问题不得只保留在聊天中；用户裁决和采用的默认假设写入 `progress.md`。如需要写入 `design/`，按 `Workspace/SystemAgent/Rules/DesignDocument.md` / `systemagent-design-document` 保留用户原始问题、问题分析和解决思路，不把 DeepThink 内部检查点原样写成标题。
 
@@ -67,4 +67,4 @@ Validation scope must be reported separately from pass/fail as `owner`、`intera
 
 全部 tasks 与验证证据闭环，DocsAI/skill/rule/hook/subagent 如受影响已同步；SDD 长任务的 `progress.md` 已同步更新并写入 Latest Resume。
 
-新功能、迁移或重构若改变 capability / GodotBridge / DataOS / 测试入口的路由、源码位置、验证命令或门禁，必须同步对应 owner skill 的 `.ai-config/skills/<category>/<name>/SKILL.md`，运行 `bash Workspace/Tools/ai-config-sync/sync-ai-config.sh` 与 `Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only`，并在最终验证摘要说明 sync/lint 结果。涉及 GodotBridge、Godot Node 生命周期、Physics、Input、Resource、UI、动画或游戏侧 glue 的新功能，必须新增或更新独立 Godot 验证场景；主场景 smoke 只能作为回归补充。涉及 ≥2 个 Capability 或 GodotBridge 表现层的改动，必须对照相关 gameplay lifecycle BDD 或当前 SDD `bdd.md` 检查集成场景覆盖，并参照 `SlimeAI/DocsAI/GameOS/GodotPitfalls.md` 排除已知陷阱。
+新功能、迁移或重构若改变 capability / GodotBridge / DataOS / 测试入口的路由、源码位置、验证命令或门禁，必须同步对应 owner skill 的 `.ai-config/skills/<category>/<name>/SKILL.md`，运行 `bash Workspace/Tools/ai-config-sync/sync-ai-config.sh` 与 `Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only`，并在最终验证摘要说明 sync/lint 结果。涉及 GodotBridge、Godot Node 生命周期、Physics、Input、Resource、UI、动画或游戏侧 glue 的新功能，必须新增或更新独立 Godot 验证场景；主场景 smoke 只能作为回归补充。涉及 ≥2 个 Capability 或 GodotBridge 表现层的改动，必须对照相关 FeatureSpec、gameplay lifecycle BDD 或当前 SDD `bdd.md` 检查集成场景覆盖，并参照 `SlimeAI/DocsAI/GameOS/GodotPitfalls.md` 排除已知陷阱。

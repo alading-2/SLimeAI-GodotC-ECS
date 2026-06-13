@@ -1,25 +1,29 @@
 # BDD 场景文档格式
 
-> BDD 在 SystemAgent 中就是"把自然语言需求写成 Given-When-Then 结构化文档"。不需要 parser、runner、框架依赖。对 AI 来说，BDD 场景是可读的行为验收清单。
+> BDD 在当前 SystemAgent 中是 FeatureSpec 的行为场景层：把自然语言需求写成 Given-When-Then 或等价结构化行为例子。不需要 parser、runner、框架依赖。对 AI 来说，BDD 场景是可读的行为验收清单。
 
 ## 定位
 
-- **SDD** = 计划/进度/技术方案（做什么、怎么做、什么时候做）
-- **BDD 场景** = 行为验收契约（在什么情况下、做了什么、期望得到什么结果）
+- **设计文档** = 问题、方向、取舍和边界
+- **FeatureSpec** = 功能、实现指引和 TDD 交接
+- **BDD 场景** = FeatureSpec 中的行为验收契约（在什么情况下、做了什么、期望得到什么结果）
+- **SDD** = 任务状态、进度、阻塞和验证入口
 - **TDD/测试** = 代码级验证（断言、scene test、runtime test）
 
-三者互补。SDD 管方向与恢复，BDD 管验收，TDD 管实现。
+这些 artifact 互补。设计文档管方向，FeatureSpec 管功能与代码落点，BDD 场景管行为验收，TDD 管验证执行，SDD 管任务恢复。
 
 ## 文件位置
 
 ```text
-SDD/active/<sdd-id>/
-  design/
-    main.md      <- 技术方案（接口、约束、架构）
-  bdd.md         <- 行为场景（可选，验收场景多时才需要）
+SDD/project/projects/<project>/design/
+  <design>.md              <- 设计文档（问题、方向、取舍）
+  <design>.FeatureSpec.md  <- 功能实现规格（功能、行为、代码落点、TDD 交接）
+
+SDD/project/projects/<project>/sdds/<sdd-id>/
+  bdd.md                   <- 当前任务行为摘录或 FeatureSpec Source 引用
 ```
 
-如果 SDD design 里已有清晰的 WHEN/THEN 描述，可以直接写在 design 里，不需要单独 `bdd.md`。
+如果 FeatureSpec 里已有清晰的行为场景，SDD `bdd.md` 只需要引用 Source 和列出本轮执行的 feature / scenario。
 
 ## 格式：Markdown + Gherkin 代码块
 
@@ -54,7 +58,7 @@ SDD/active/<sdd-id>/
 1. **一个 Scenario 只测一个行为。** 不要把多个独立行为塞到一个 Scenario 里。
 2. **Given 描述状态，When 描述动作，Then 描述可验证的结果。** 不要混用。
 3. **Then 必须能验收。** 写完后问自己："AI 能根据这个 Then 判断是否做对吗？"
-4. **不要写实现细节。** "调用 ServiceX.MethodY" 是 TDD 的事，BDD 说"发送攻击请求后敌人血量减少"。
+4. **不要把 BDD 场景写成完整实现方案。** 代码落点写在 FeatureSpec 的 Implementation Guidance；BDD 场景说"发送攻击请求后敌人血量减少"。
 5. **边界条件单独写 Scenario。** "成功登录"和"密码错误"是两个 Scenario。
 
 ## 什么时候写 BDD 场景
@@ -63,27 +67,28 @@ SDD/active/<sdd-id>/
 |------|-----------|
 | 新 capability / 框架级功能 | 推荐写 |
 | 用户给了明确验收条件 | 必须写 |
-| 现有 spec 的 WHEN/THEN 已足够清晰 | 不需要单独写 |
+| FeatureSpec 的 WHEN/THEN 已足够清晰 | 不需要单独写 |
 | typo / 链接 / 注释修复 | 不需要 |
 | Godot scene validation 场景 | 推荐写（已有 WHEN/THEN 基础） |
 
-## 与 SDD design 的分工
+## 与 FeatureSpec / SDD 的分工
 
-| 内容 | 写在 SDD design | 写在 bdd.md |
+| 内容 | 写在 FeatureSpec | 写在 SDD bdd.md |
 |------|-------------|-------------|
-| Requirement 标题 | 是 | 否 |
+| Feature 标题 | 是 | 可摘录 |
 | 技术约束/接口签名 | 是 | 否 |
-| WHEN/THEN 行为描述 | 简化或省略 | 详细写 |
-| 具体输入/输出示例 | 简化 | 详细写 |
-| 边界条件/错误场景 | 简化 | 详细写 |
+| WHEN/THEN 行为描述 | 是 | 当前任务摘录 |
+| 具体输入/输出示例 | 是 | 当前任务摘录 |
+| 边界条件/错误场景 | 是 | 当前任务摘录 |
+| SDD 当前执行范围 | 否 | 是 |
 
 ## AI 写场景的步骤
 
-1. 读完当前 SDD 的 `design/`、`tasks.md` 和 `progress.md`，理解技术方案。
+1. 读完设计文档、FeatureSpec、当前 SDD 的 `tasks.md` 和 `progress.md`，理解方向、功能和当前任务范围。
 2. 识别任务中**需要验收的关键行为**（不是全部功能）。
 3. 每个关键行为写一个 Scenario。
 4. 检查 Then 是否可验证。
-5. 在 SDD design 或 `progress.md` 中引用 bdd.md（如单独写了文件）。
+5. 在 FeatureSpec、SDD design 或 `progress.md` 中引用 bdd.md（如单独写了文件）。
 
 ## BDD Scenario 到 Godot 验证场景的映射
 
@@ -123,8 +128,8 @@ scope 必须和验证命令分开报告。一个场景 pass 不等于 release-ba
 
 ### 连接到 TDD 微循环
 
-BDD Scenario 是 TestDesigner 的输出（验收标准），TDD 微循环是 Implementer 的执行方式：
-- TestDesigner 写 BDD Scenario → 输出映射表（目标 .tscn + check 名）
+BDD Scenario 是 FeatureSpec / TestDesigner 的验收标准，TDD 微循环是 Implementer 的执行方式：
+- FeatureSpec / TestDesigner 写 BDD Scenario → 输出映射表（目标 .tscn + check 名）
 - Implementer 按 TDDProtocol 在目标 .tscn 中先写 `SceneValidationSession.Check()` → RED
 - Implementer 实现功能 → GREEN
 - Verifier 跑 Godot scene → 确认 artifact `status=pass` → DONE

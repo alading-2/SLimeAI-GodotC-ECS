@@ -40,7 +40,7 @@ DesignCritic:
 **Rubric（PASS/FAIL）**：
 - **DC-R1 Assumption visibility**：必须列出设计依赖的关键假设；如果没有未知项，也要说明为什么可安全默认。
 - **DC-R2 Alternative check**：必须至少检查一个更小、更安全或更易验证的替代方案；不能只重复 Planner 方案。
-- **DC-R3 Artifact handoff**：如果任务使用 SDD，必须说明哪些结论应写入 `design/`、`progress.md`、`tasks.md`、`bdd.md` 或 `notes.md`。
+- **DC-R3 Artifact handoff**：如果任务使用 SDD，必须说明哪些结论应写入 `design/`、FeatureSpec、`progress.md`、`tasks.md`、`bdd.md` 或 `notes.md`。
 
 ## Boundary with Planner and Reviewer
 

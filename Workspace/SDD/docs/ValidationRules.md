@@ -13,7 +13,7 @@
 | `SDD008` | warn | `progress.md` 应包含可读 State。 |
 | `SDD009` | error/warn | `catalog.json` 不应登记不存在的实例；缺少真实实例时给 warning。 |
 | `SDD010` | warn | active SDD 数量过多时提醒清理。 |
-| `SDD011` | error/warn | BDD required=true 时必须有 Scenario 或 Source 引用；required=false 时必须有 Reason。 |
+| `SDD011` | error/warn | `bdd.md` required=true 时必须有 Scenario、Executed features 或 FeatureSpec / Source 引用；required=false 时必须有 Reason。 |
 | `SDD012` | error | blocked SDD 必须有 blocker 记录。 |
 | `SDD013` | error | done SDD 必须有 validation 记录。 |
 | `SDD014` | error | done SDD 不允许保留未完成任务。 |
@@ -38,6 +38,7 @@
 - 除结构错误、metadata 状态错误、done 保留模板和 done 未完成任务外，大部分信息质量问题先作为 warning。
 - 核心证据只需写验证命令、结果摘要和追溯入口；完整输出交给 git、artifact 或对话记录。
 - SDD validate 只校验 SDD artifact 结构和状态一致性，不证明业务实现正确，也不替代 build/test/scene/sync/lint/Code Review。
+- FeatureSpec 是长期功能实现规格；SDD `bdd.md` 只是兼容摘录和引用入口，validate 不应鼓励复制完整 FeatureSpec。
 - 核心文件按影响判断，不按 diff 数量判断；同步副本和自动生成文件通常不列为核心文件。
 
 ## Exit Code

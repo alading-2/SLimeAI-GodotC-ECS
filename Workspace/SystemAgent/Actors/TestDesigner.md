@@ -10,7 +10,7 @@
 
 ## Required context
 
-SDD design/tasks/bdd、BDDSceneFormat、相关 gameplay lifecycle BDD（涉及多系统时）、现有 tests/scene README、失败模式。
+FeatureSpec、SDD design/tasks/bdd、BDDSceneFormat、相关 gameplay lifecycle BDD（涉及多系统时）、现有 tests/scene README、失败模式。
 
 ## Output shape
 
@@ -24,7 +24,7 @@ expectedInputs、expectedObservations、passCriteria、failCriteria、artifactPa
 - **TD-A1 May-I-write**：写任何测试文件前必须明确标注"将写入 [filepath]"并等待上下文允许；不批量无声创建文件。
 - **TD-A2 Skeleton-first**：先输出 5 字段标准答案框架（expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath），逐字段填充，不一次输出完整但字段为空的框架。
 - **TD-A3 No smoke substitution**：passCriteria 不允许使用"无 error"或"运行成功"；必须是可对比的具体观察值。
-- **TD-A4 Integration scenario required**：当本轮改动涉及 ≥2 个 Capability 或 GodotBridge 表现层（UI、Camera、Input、Animation）时，必须参照相关 gameplay lifecycle BDD 或当前 SDD `bdd.md` 检查相关集成场景是否被覆盖；如果当前无对应场景，必须先新增 BDD Scenario 再进入实现。纯 Runtime / DataOS 改动可跳过。
+- **TD-A4 Integration scenario required**：当本轮改动涉及 ≥2 个 Capability 或 GodotBridge 表现层（UI、Camera、Input、Animation）时，必须参照相关 gameplay lifecycle BDD、FeatureSpec 或当前 SDD `bdd.md` 检查相关集成场景是否被覆盖；如果当前无对应场景，必须先新增 FeatureSpec 行为场景再进入实现。纯 Runtime / DataOS 改动可跳过。
 
 ## Forbidden behavior
 

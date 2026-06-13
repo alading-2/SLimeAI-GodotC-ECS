@@ -55,7 +55,7 @@ SlimeAI 比 OpenSpec 多保留少量内容：
 | `progress.md` | 状态面板：current / next / blocker / 少量 decision / validation summary。 |
 | `design/INDEX.md` | shared design refs 或本 SDD 局部设计引用。 |
 | `design/main.md` | 可选，只写本 SDD 独有差异。 |
-| `bdd.md` | 行为场景摘录、设计旁 BDD 引用或 not required reason。 |
+| `bdd.md` | FeatureSpec 行为场景摘录、Source 引用或 not required reason。 |
 | `notes.md` | 可选参考和开放问题。 |
 | `artifacts/` | 必须留档且没有稳定外部路径的证据。 |
 
@@ -93,16 +93,17 @@ SlimeAI 比 OpenSpec 多保留少量内容：
 
 只有方向改变、阻塞、用户裁决或最终验证时，才值得写入 progress。
 
-## BDD 新规则
+## FeatureSpec / BDD 新规则
 
-BDD 有意义的前提是它能指导测试 check。
+FeatureSpec 是设计冻结后的功能实现规格，负责描述功能、行为、实现指引和 TDD 交接。BDD 收缩为 FeatureSpec 中的行为场景层，不再承担完整实现规格职责。
 
 新规则：
 
-- 长期 BDD 靠近设计文档，或写在设计文档的“行为验收”小节。
-- 子 SDD `bdd.md` 只摘录本任务要执行的场景，或链接设计旁 BDD。
+- 长期功能事实源优先使用设计文档旁的 `.FeatureSpec.md`。
+- 子 SDD `bdd.md` 只摘录本任务要执行的 FeatureSpec 行为场景，或链接 FeatureSpec。
 - 非行为任务可以 `Required: false`。
 - 不要求每个 SDD 都写 Given/When/Then。
+- TDD 和 Code Review 优先读取 FeatureSpec；SDD `bdd.md` 只说明本轮执行范围。
 
 ## project 容器边界
 
@@ -125,7 +126,7 @@ BDD 有意义的前提是它能指导测试 check。
 - 状态是否合法。
 - done 是否仍有未完成任务。
 - blocked 是否有 blocker。
-- BDD 是否有场景、Source 引用或 not-required reason。
+- `bdd.md` 是否有场景、FeatureSpec / Source 引用或 not-required reason。
 - 是否存在明显模板残留或空壳完成。
 
 它不证明业务实现正确，也不应该鼓励写更多过程记录。

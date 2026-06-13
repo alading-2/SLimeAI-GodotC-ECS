@@ -18,7 +18,7 @@ python3 Workspace/SDD/sdd.py list
 python3 Workspace/SDD/sdd.py show <sdd-id>
 ```
 
-3. 读取 SDD `README.md`、`design/`、`tasks.md`、`progress.md`、`bdd.md`（如存在），不要猜 artifact 路径。
+3. 读取 SDD `README.md`、`design/`、`tasks.md`、`progress.md`、`bdd.md`（如存在）以及设计旁 `.FeatureSpec.md`（如存在），不要猜 artifact 路径。
 4. 对每个关键 symbol 做代码搜索：
 
 ```bash

@@ -27,7 +27,7 @@ description: Godot 验证场景门禁。检查新/改动的场景是否有完整
 3. **index.json 存在**：最近一次 run 的 `.ai-temp/scene-tests/runs/<date>/<time>/index.json` 是否包含该 scene，且 entry `status=passed`、`exitCode=0`
 4. **result.json 存在**：per-scene `result.json` 是否为 `status=passed`、`exitCode=0`、`firstError=null`
 5. **PASS artifact**：最近一次 run 是否有 PASS 状态的 scene artifact，且 artifact 中 `expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath` 非空
-6. **checks[] 覆盖**：artifact `checks[].name` 是否包含 manifest 或 BDD mapping 声明的 check
+6. **checks[] 覆盖**：artifact `checks[].name` 是否包含 manifest、FeatureSpec 或 BDD mapping 声明的 check
 7. **manifest 同步**：scene 是否存在于 manifest，且包含 owner、scope、tags、relatedBddScenarios、checks、artifactFilename、catalogOwner、timeoutSeconds、releaseBatch
 8. **artifact 时效**：artifact 时间是否晚于场景、README、manifest 和对应 catalog 的最后修改时间；旧证据至少 `warn`
 9. **Catalog 同步**：框架场景在框架测试 catalog，游戏场景在游戏侧 `DocsAI/ValidationCatalog.md` 或项目约定索引中包含该场景条目
@@ -66,7 +66,7 @@ Batch evidence 还必须检查：
 - 缺 `index.json`、`result.json` 或 PASS artifact → `block`（没有 artifact oracle，不能接受验证 claim）
 - artifact 中标准答案五字段为空 → `block`
 - manifest-required scene 未跑 → `block`
-- artifact 缺 manifest/BDD 要求的 check → `block`
+- artifact 缺 manifest / FeatureSpec / BDD 要求的 check → `block`
 - artifact 过期但 README 完整 → `warn`
 - 缺 catalog 条目 → `warn`
 - 缺 manifest 条目 → `warn`；release-batch 场景缺 manifest 条目 → `block`

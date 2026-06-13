@@ -17,7 +17,7 @@
 
 ## Required context
 
-- 用户请求、SDD design/tasks/progress/bdd。
+- 用户请求、FeatureSpec、SDD design/tasks/progress/bdd。
 - 本轮修改文件清单、git boundary 和 dirty workspace 状态。
 - 相关 owner skill、workflow、gate、policy 或 capability contract。
 - 验证命令输出、`index.json`、`result.json`、scene artifact、gate report 或缺失证据。

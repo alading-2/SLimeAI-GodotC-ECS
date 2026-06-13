@@ -15,7 +15,7 @@
 **格式**：第一行以 `CONCERNS` 开头，可附分号分隔的问题列表，例如：
 
 ```text
-CONCERNS: 缺 BDD 试点; ProjectState.md 未同步
+CONCERNS: 缺 FeatureSpec 试点; ProjectState.md 未同步
 ```
 
 ## REJECT

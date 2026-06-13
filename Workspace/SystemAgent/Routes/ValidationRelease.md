@@ -12,7 +12,7 @@ Route 输出必须包含 workflow、task_size、sdd、must_read、mode、subagen
 
 ## SDD strategy
 
-已有 SDD 时优先读取 README、tasks、progress Latest Resume、bdd 和 validation evidence；archive 或 large 验证必须使用 SDD，small 单项验证可使用聊天上下文。
+已有 SDD 时优先读取 README、tasks、progress Latest Resume、bdd、FeatureSpec 和 validation evidence；archive 或 large 验证必须使用 SDD，small 单项验证可使用聊天上下文。
 
 ## Phases
 

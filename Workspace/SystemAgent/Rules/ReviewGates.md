@@ -12,7 +12,7 @@ Godot validation claim 必须同时检查：
 - per-scene `result.json` 中 `status=passed`、`exitCode=0` 且无阻塞 `firstError`。
 - scene artifact 中 `status=pass`、`failureReasons=[]`。
 - scene artifact 的 `expectedInputs`、`expectedObservations`、`passCriteria`、`failCriteria`、`artifactPath` 非空。
-- scene artifact `checks[]` 覆盖 BDD mapping、manifest 或本轮声明的关键 check。
+- scene artifact `checks[]` 覆盖 FeatureSpec / BDD mapping、manifest 或本轮声明的关键 check。
 
 缺少上述 artifact oracle 时，Reviewer 必须把验证 claim 标为 `REJECT` 或降级为未验证，不得用 process 成功替代。
 
@@ -37,11 +37,12 @@ Godot validation claim 必须同时检查：
 
 **Context to pass**:
 - SDD `design/` / `tasks.md` / `progress.md` 全文
+- 设计旁 `.FeatureSpec.md`（如存在）
 - `python3 Workspace/SDD/sdd.py show <sdd-id>` 输出
 - selected workflow 与 owner skill ID（可选）
 
 **Prompt**:
-检查任务是否可执行：任务粒度是否独立可验证、设计是否引用真实路径、capability 列表是否与 BDD/设计对齐、是否存在未定义依赖或范围外风险。
+检查任务是否可执行：任务粒度是否独立可验证、设计是否引用真实路径、capability 列表是否与 FeatureSpec / 设计对齐、是否存在未定义依赖或范围外风险。
 
 **Verdicts**:
 - `APPROVE` — 全部检查通过；可进入 Implement。
@@ -57,6 +58,7 @@ Godot validation claim 必须同时检查：
 **Trigger**: Implement 阶段开始前，TestDesigner 的验收标准已写好，Implementer 的 TDD 微循环（RED→GREEN→REFACTOR，见 `Workspace/SystemAgent/Rules/TDDProtocol.md`）中测试已编写并确认 RED 之后。
 
 **Context to pass**:
+- FeatureSpec 的 TDD Handoff / Behavior 段落
 - SDD `design/` / `bdd.md` 相关段落
 - Runtime test、validator 或 Godot scene README / artifact
 - Godot scene 的 `index.json`、per-scene `result.json`、scene artifact 和 `checks[]`（如涉及 Godot）
@@ -65,7 +67,7 @@ Godot validation claim 必须同时检查：
 - 失败模式列表（如有）
 
 **Prompt**:
-检查是否存在可复验标准答案：输入、期望观察、passCriteria、failCriteria、artifactPath 是否非空；artifact checks 是否覆盖 BDD/manifest 声明；smoke 是否被错误替代专项验收；新 capability 是否有对应验证；RED/GREEN 证据是否证明测试能失败再通过；高级审查 findings 是否已处理或转为阻塞/follow-up。
+检查是否存在可复验标准答案：输入、期望观察、passCriteria、failCriteria、artifactPath 是否非空；artifact checks 是否覆盖 FeatureSpec / BDD / manifest 声明；smoke 是否被错误替代专项验收；新 capability 是否有对应验证；RED/GREEN 证据是否证明测试能失败再通过；高级审查 findings 是否已处理或转为阻塞/follow-up。
 
 **Verdicts**:
 - `APPROVE` — 标准答案完整，artifact oracle 对齐，无以 smoke 替代专项的情况，RED/GREEN 证据可复查。
@@ -104,7 +106,7 @@ Godot validation claim 必须同时检查：
 **Context to pass**:
 - `git diff --name-only` 或本轮修改文件清单
 - 涉及的 Capability / GodotBridge 组件列表
-- 相关 gameplay lifecycle BDD 或当前 SDD `bdd.md` 全文
+- 相关 gameplay lifecycle BDD、FeatureSpec 或当前 SDD `bdd.md` 全文
 - `SlimeAI/DocsAI/GameOS/GodotPitfalls.md`（如涉及 UI/Camera/Input）
 - 相关 validation scene 的 `index.json`、`result.json`、scene artifact、manifest/catalog/README 路径和 artifact check names
 - SeniorGameDeveloper / SeniorProgrammer findings（如触发）
@@ -208,7 +210,7 @@ Godot validation claim 必须同时检查：
 
 **Prompt**:
 检查 retrospective 是否覆盖计划偏差、测试覆盖、日志质量、文档同步、skill/rule/hook/subagent 缺口、外部资源策略、触发的 senior findings 处理状态和剩余风险。
-若当前任务使用 SDD，还必须检查 `progress.md` 是否存在、是否包含 State / Next / Blocker / Validation summary，且是否与 `tasks.md`、`bdd.md` 或设计旁行为验收引用一致；缺失或明显过期时不得把结论判为通过。
+若当前任务使用 SDD，还必须检查 `progress.md` 是否存在、是否包含 State / Next / Blocker / Validation summary，且是否与 `tasks.md`、FeatureSpec、`bdd.md` 或设计旁行为验收引用一致；缺失或明显过期时不得把结论判为通过。
 
 **Verdicts**:
 - `APPROVE` — 缺口已处理或无缺口，证据完整。

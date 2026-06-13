@@ -7,7 +7,7 @@ description: 审查代码是否按需求/设计实现并满足必要质量边界
 
 ## 定位
 
-这是只读代码审查 skill。第一优先级是判断**功能有没有按用户需求、SDD 设计或 BDD 场景实现**；第二优先级才是检查必要代码质量边界。
+这是只读代码审查 skill。第一优先级是判断**功能有没有按用户需求、FeatureSpec、SDD 设计或 BDD 场景实现**；第二优先级才是检查必要代码质量边界。
 
 测试结果、ValidationSession artifact、构建输出可以作为 evidenceRef，但不主导判定。缺测试通常记录为证据缺口或交给 `RV-TEST-COVERAGE`；只有测试失败暴露实现错误，或缺少可复验证据导致无法判断功能时，才影响本 skill 的功能判定。
 
@@ -20,6 +20,7 @@ description: 审查代码是否按需求/设计实现并满足必要质量边界
 ## 必读
 
 - SDD design 文档（需求 / 完成定义 / 数据契约 / 目标架构）
+- 设计旁 `.FeatureSpec.md`（如存在）
 - 用户当前明确要求或问题描述
 - 当前实现代码（git diff 或指定文件）
 - 相关 owner skill / DocsAI（如涉及特定模块）
@@ -29,11 +30,12 @@ description: 审查代码是否按需求/设计实现并满足必要质量边界
 
 ### Phase 1: 提取审查目标
 
-从用户请求、SDD design、BDD、tasks 或代码变更说明中提取可审查目标。每项必须是具体、可验证的陈述，不能是模糊的"能"字句。
+从用户请求、FeatureSpec、SDD design、BDD、tasks 或代码变更说明中提取可审查目标。每项必须是具体、可验证的陈述，不能是模糊的"能"字句。
 
 提取规则：
 
 - 用户明确点名的功能或问题 → 独立审查目标
+- FeatureSpec 的每个 Feature item / Review Checklist → 独立审查目标
 - 完成定义（Definition of Done）的每条 → 独立需求项
 - BDD Scenario 的关键 Given/When/Then → 独立行为目标
 - 目标架构中的关键契约（字段、接口、行为）→ 独立需求项
@@ -46,7 +48,7 @@ description: 审查代码是否按需求/设计实现并满足必要质量边界
 | # | 来源 | 审查目标 | 主要证据 |
 |---|------|--------|----------|
 | 1 | 完成定义.1 | 业务日志可通过结构化 envelope 输出 | 实现代码 + artifact |
-| 2 | BDD.2 | Data 修改后能触发目标事件 | 实现代码 + Runtime test |
+| 2 | FeatureSpec.FS-2 | Data 修改后能触发目标事件 | 实现代码 + Runtime test |
 ```
 
 ### Phase 2: 逐条审查
@@ -60,7 +62,7 @@ description: 审查代码是否按需求/设计实现并满足必要质量边界
    - `MISSING` — 完全没有实现。
    - `WRONG` — 实现了但方向错误或违反需求。
 3. **检查必要质量维度**：
-   - 功能/设计实现度：行为是否真的符合用户需求、SDD、BDD 或完成定义。
+   - 功能/设计实现度：行为是否真的符合用户需求、FeatureSpec、SDD、BDD 或完成定义。
    - ECS 架构红线：Entity 生命周期、DataKey、EventBus、ResourceManagement、TimerManager、TargetSelector、DamageService、对象池等硬约束是否被破坏。
    - 修改范围和依赖边界：是否越界改无关模块、引入不必要依赖、跨 git 边界混改。
    - 可维护性底线：命名是否误导、重复是否明显、函数是否过长或嵌套过深；只抓明显影响维护的问题。

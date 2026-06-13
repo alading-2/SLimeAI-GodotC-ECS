@@ -19,15 +19,15 @@ description: SlimeAI SDD 中大型任务流程入口。用户要求使用 SDD、
 - `Workspace/SDD/docs/CLI.md`
 - `Workspace/SDD/docs/ValidationRules.md`
 - `Workspace/SystemAgent/README.md`
-- `Workspace/SystemAgent/README.md`
+- `Workspace/SystemAgent/Docs/11-FeatureSpec功能实现规格.md`
 
 ## 流程
 
 1. 判断任务是否需要 SDD；小修、拼写、一次性排查不强制创建。
 2. 读取或创建匹配的项目 / SDD 实例；优先使用 `project-list`、`list`、`project-show` 和 `show` 恢复上下文。
 3. 若任务尚无设计，先调用 `systemagent-deepthink` 形成问题分析、解决思路、确认点和默认假设；需要写设计文档时使用 `systemagent-design-document` 保证保留用户原始问题并避免模板化冗余。
-4. 项目级共享设计写入项目 `design/`；当前 SDD 默认只写任务级差异、tasks、状态面板、BDD 摘录或设计旁 BDD 引用。
-5. 实现前检查 readiness：目标和边界明确、design 非模板或有有效项目级 design 引用、tasks 可执行、BDD 有场景/引用或不适用原因、当前 next/blocker 清楚、目标 SDD validate 无 error。
+4. 项目级共享设计写入项目 `design/`；设计冻结后默认在同目录写 `.FeatureSpec.md`，当前 SDD 只写任务级差异、tasks、状态面板、FeatureSpec 行为摘录或 Source 引用。
+5. 实现前检查 readiness：目标和边界明确、design 非模板或有有效项目级 design 引用、tasks 可执行、FeatureSpec 或 `bdd.md` 有场景/引用或不适用原因、当前 next/blocker 清楚、目标 SDD validate 无 error。
 6. 实施时按 `tasks.md` 小步推进；`progress.md` 只更新 current / next / blocker / 少量真正改变方向的 decision / 最终 validation summary，不记录每个 task command。
 7. 完成前运行新鲜验证证据；`python3 Workspace/SDD/sdd.py validate --all` 或目标 SDD 校验只证明 SDD 结构和恢复信息质量，不能替代代码/数据/Godot/skill 的实际验证。
 8. 完成后根据验证结果决定是否运行 `done`，或保留 `active/blocked` 状态；项目完成后使用 `project-archive` 归档。

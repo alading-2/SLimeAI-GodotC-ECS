@@ -47,7 +47,7 @@ python3 Workspace/SDD/sdd.py index
 2. `design/` 保存任务特定设计差异或项目级共享设计引用，`design/INDEX.md` 标注 main/current/reference。
 3. `tasks.md` 只表达任务、依赖、验证和 checkbox 状态。
 4. `progress.md` 是状态面板，只记录 current / next / blocker / 少量真正改变方向的 decision / 最终 validation summary；不记录 task timeline、完整命令日志或文件清单。
-5. `bdd.md` 只摘录本任务要执行的关键行为，优先引用设计文档旁的行为验收；纯研究、文档治理或配置治理可标记不适用。
+5. `bdd.md` 只摘录本任务要执行的关键行为，优先引用设计文档旁的 `.FeatureSpec.md`；纯研究、文档治理或配置治理可标记不适用。
 6. 项目级任务优先放入 `SDD/project/projects/<project>/sdds/`；项目完成后使用 `project-archive` 归档。
 7. SDD 和项目真实状态以 `sdd.json.status` / `project.json.status` 为准，不以目录名推断。
 8. 写操作后运行 `index` 或确认 CLI 已自动更新索引。

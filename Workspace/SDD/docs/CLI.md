@@ -128,9 +128,9 @@ python3 Workspace/SDD/sdd.py design-import SDD-0001 \
 
 ### `validate [id|--all]`
 
-校验结构、metadata 状态、项目容器、任务进度、BDD、全局索引和基本状态一致性。结构错误、状态错误、done 保留模板残留和 done 未完成任务会返回 error；弱摘要、弱 validation、缺追溯入口和冗余风险先返回 warning。
+校验结构、metadata 状态、项目容器、任务进度、`bdd.md` 摘录 / FeatureSpec 引用、全局索引和基本状态一致性。结构错误、状态错误、done 保留模板残留和 done 未完成任务会返回 error；弱摘要、弱 validation、缺追溯入口和冗余风险先返回 warning。
 
-质量检查不会要求记录更多流水账。它只提醒明显空壳或状态矛盾的信息，例如 README 摘要等于标题、validation 只有 `ok/done` 且没有命令或 artifact/ref、Key Files 过长、artifacts 未被引用、notes 过长且无结构。项目子 SDD 只引用 project/design 或 BDD Source 不应视为错误。
+质量检查不会要求记录更多流水账。它只提醒明显空壳或状态矛盾的信息，例如 README 摘要等于标题、validation 只有 `ok/done` 且没有命令或 artifact/ref、Key Files 过长、artifacts 未被引用、notes 过长且无结构。项目子 SDD 只引用 project/design、FeatureSpec 或 BDD Source 不应视为错误。
 
 `validate` 只能证明 SDD artifact 的结构和状态没有明显问题，不能证明任务实现正确。代码、数据、Godot、skill 或文档变更仍需要各自的 build/test/scene/sync/lint 或人工审查证据。
 

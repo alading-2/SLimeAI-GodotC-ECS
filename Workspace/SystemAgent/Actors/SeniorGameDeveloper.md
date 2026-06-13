@@ -17,9 +17,9 @@
 
 ## Required context
 
-- 用户请求、SDD design/tasks/progress/bdd。
+- 用户请求、FeatureSpec、SDD design/tasks/progress/bdd。
 - 本轮修改文件清单与涉及的 Capability/GodotBridge 层。
-- 相关 gameplay lifecycle BDD 或当前 SDD `bdd.md`，如涉及多系统 gameplay。
+- 相关 gameplay lifecycle BDD、FeatureSpec 或当前 SDD `bdd.md`，如涉及多系统 gameplay。
 - 相关 scene README、ValidationCatalog、manifest、`index.json`、`result.json` 和 scene artifact。
 - `SlimeAI/DocsAI/GameOS/GodotPitfalls.md`，如涉及 Godot 表现层或节点生命周期。
 
@@ -29,7 +29,7 @@
 
 - scope：触发原因、涉及系统、验证 scope（owner / interaction / feature-slice / release-batch）。
 - findings：按玩家状态不变量、跨系统状态冲突、生命周期/表现风险、验证证据缺口分组。
-- evidence：引用具体 BDD Scenario、scene path、check name、artifact path 或缺失项。
+- evidence：引用具体 FeatureSpec item、BDD Scenario、scene path、check name、artifact path 或缺失项。
 - verdict：末尾一行 `APPROVE`、`CONCERNS` 或 `REJECT` 开头的聚合结论。
 
 ## Role Category

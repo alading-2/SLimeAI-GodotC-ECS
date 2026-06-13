@@ -51,7 +51,7 @@ workflows:
       - id: RV-DOC-SYNC
       - id: RV-RETROSPECTIVE
     external_resources: not_preloaded
-    completion_artifact: SDD design/tasks/progress/bdd, worktree decision record when applicable, DeepThink analysis when used, design-document quality check when design is written, validation output, git status, retrospective verdict
+    completion_artifact: SDD design/tasks/progress/bdd, FeatureSpec when applicable, worktree decision record when applicable, DeepThink analysis when used, design-document quality check when design is written, validation output, git status, retrospective verdict
   debug_fix:
     label: Debug Fix
     description: bug、构建失败、测试失败、验证失败或异常定位。

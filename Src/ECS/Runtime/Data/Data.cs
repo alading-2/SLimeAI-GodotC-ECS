@@ -73,13 +73,6 @@ public class Data
         BindRuntimeCatalog(_owner, catalog);
     }
 
-    /// <summary>
-    /// 当任何数据发生变化时触发的全局事件
-    /// 参数依次为：键名 (Key), 旧值 (OldValue), 新值 (NewValue)
-    /// </summary>
-    // 事件监听移交给 Entity.Events
-
-
     // ================= 基础数据操作 =================
 
     /// <summary>

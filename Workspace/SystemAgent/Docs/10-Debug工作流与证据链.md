@@ -21,7 +21,7 @@ Evidence Plane
   - Log / OperationTrace / ValidationSession
   - artifact
   - logctl analyze/query
-  - Test scene / runtime test / BDD 映射
+  - Test scene / runtime test / FeatureSpec / BDD 映射
 ```
 
 ### 这两个平面分别负责什么
@@ -121,7 +121,7 @@ Evidence Plane
 对于中大型问题，还需要：
 - `tasks.md`
 - `progress.md` 的 State / Next / Blocker
-- `bdd.md` 或设计旁行为验收引用
+- FeatureSpec、`bdd.md` 或设计旁行为验收引用
 - validation artifact / logctl analysis 引用
 
 否则下次会话不知道：

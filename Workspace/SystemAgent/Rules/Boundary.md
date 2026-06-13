@@ -25,7 +25,7 @@ Kernel / Capability / GenreProfile / GameAdapter / GameContent / DataOS / GodotB
 通用必读：
 
 - `SlimeAI/DocsAI/GameOS/Capabilities/CapabilityIndex.md`
-- 当前 SDD 的 `README.md`、`design/`、`tasks.md`、`progress.md`、`bdd.md`（如任务使用 SDD）
+- 当前 SDD 的 `README.md`、`design/`、`tasks.md`、`progress.md`、`bdd.md`（如任务使用 SDD）以及设计旁 FeatureSpec（如存在）
 
 框架任务再读：
 

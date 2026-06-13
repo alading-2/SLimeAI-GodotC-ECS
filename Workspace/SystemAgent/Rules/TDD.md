@@ -18,6 +18,8 @@ TDD 不是硬套某个测试框架。SlimeAI 当前默认验证环境是 Godot C
 ```text
 Planner / DeepThink
   -> 明确目标和边界
+FeatureSpec
+  -> 把设计翻译成功能、行为、实现指引和 TDD Handoff
 TestDesigner
   -> 把目标变成 expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath
 Implementer
@@ -99,14 +101,15 @@ Refactor 后必须重新跑相关 GREEN 证据。
 - 测试日志写到 `.ai-temp/scene-tests/runs/...`，不要污染源码目录。
 - 运行 Godot scene 前先确认承载游戏 runner 是否存在，不能伪造 scene smoke 通过。
 
-## 与 BDD 的关系
+## 与 FeatureSpec / BDD 的关系
 
-BDD 是行为例子，不是归档装饰。
+FeatureSpec 是 TDD 的直接上游。BDD 是 FeatureSpec 中的行为例子，不是归档装饰。
 
-- 长期 BDD 优先靠近设计文档或写在设计文档的“行为验收”小节。
-- SDD `bdd.md` 可以只摘录本任务执行的场景并链接到设计源。
+- 长期功能事实源优先写在设计文档旁的 `.FeatureSpec.md`。
+- SDD `bdd.md` 可以只摘录本任务执行的场景并链接到 FeatureSpec。
 - 每个需要验证的 Scenario 至少应能映射到一个 check、validator rule 或 gate。
 - 非行为任务可以明确 `Required: false`。
+- 如果 FeatureSpec 缺少 `TDD Handoff`，TestDesigner 必须补齐标准答案或说明默认假设，不能直接写测试倒推需求。
 
 ## 在 ReviewGates 中的位置
 

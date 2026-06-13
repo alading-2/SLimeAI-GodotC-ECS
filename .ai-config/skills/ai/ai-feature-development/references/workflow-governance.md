@@ -10,6 +10,7 @@
 用户请求
 -> 任务分类 / 边界判断
 -> SDD
+-> FeatureSpec 功能实现规格
 -> TDD 验收标准先行
 -> 实现
 -> 验证
@@ -27,7 +28,8 @@
 
 - `README.md`：范围和非目标。
 - `design/`：技术方案、风险、回滚。
-- `bdd.md`：可测试需求（如任务涉及行为验收）。
+- `.FeatureSpec.md`：设计冻结后的功能、实现指引和 TDD 交接（如任务涉及功能实现）。
+- `bdd.md`：当前任务行为场景摘录或 FeatureSpec Source 引用（如任务涉及行为验收）。
 - `tasks.md`：实现任务和验证任务。
 - `progress.md`：State / Next / Blocker、少量关键决策和验证入口。
 
@@ -56,7 +58,7 @@
 完成前必须回答：
 
 - 本轮是否主动补了专项测试或验证场景？
-- 标准答案是否写进 test、README、artifact 或 SDD bdd/design？
+- 标准答案是否写进 FeatureSpec、test、README、artifact 或 SDD bdd/design？
 - 日志和 artifact 是否足够 AI 分析失败？
 - `tasks.md` 是否反映执行中发现的新任务？
 - 是否需要更新 DocsAI、owner skill、rule、direct hook/subagent config 或 role prompt？
