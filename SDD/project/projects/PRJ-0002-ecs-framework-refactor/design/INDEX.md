@@ -36,6 +36,11 @@
 | `2.Data系统优化/2.Data无兼容完全重构/05-Data残余问题代码修复分解.md` | data-residual-fix-plan | current | 2026-05-30 | 当前残余问题的代码修改分解；逐文件说明具体怎么改 |
 | `2.Data系统优化/2.Data无兼容完全重构/06-Data文档更新与门禁清单.md` | data-doc-gate-checklist | current | 2026-05-30 | 当前需要同步更新的文档清单和 Data / 文档门禁 |
 | `Runtime/2.Data系统优化/4.Data验证与Registry简化/01-DataComputeRegistry单例与Catalog验证收敛.md` | data-registry-catalog-validation-convergence | current | 2026-06-14 | 用户确认后的方向设计：默认 computed resolver 单例、registry 职责收窄、catalog build report 和 fatal 前 structured observation |
+| `Runtime/2.Data系统优化/5.Data类型系统重构/00-README.md` | data-type-system-restructure-index | draft | 2026-06-14 | Data 类型系统重构入口；裁决保留统一 Data 容器，但把类型契约前移到 DataOS/generator/catalog build，runtime 字典只做 stableKey -> typed slot 索引 |
+| `Runtime/2.Data系统优化/5.Data类型系统重构/01-需求归纳与真实问题.md` | data-type-system-problem-analysis | draft | 2026-06-14 | 归纳用户需求：DataDefinition 冗余、默认值恢复类型、DataValueType/Storage 转换复杂、throw/log 边界和统一 Data 容器是否可行 |
+| `Runtime/2.Data系统优化/5.Data类型系统重构/02-DataDefinition瘦身与分层方案.md` | data-definition-runtime-slimming | draft | 2026-06-14 | 建议拆分 authoring descriptor、runtime definition 和 presentation descriptor；移出 owner/presentation/旧 mirror 字段，保留 runtime 必要策略 |
+| `Runtime/2.Data系统优化/5.Data类型系统重构/03-类型系统与运行时存储重构方案.md` | data-runtime-type-storage-design | draft | 2026-06-14 | 设计 DataValueType 作用域收窄、typed default、slot 类型固定、typed policy、numeric modifier lane 和 generated contract 后续方向 |
+| `Runtime/2.Data系统优化/5.Data类型系统重构/04-确认点与后续SDD建议.md` | data-type-system-confirmation-and-sdd | draft | 2026-06-14 | Must Confirm、默认假设与后续 SDD 拆分建议；当前不进入 runtime 实施 |
 | `3.Entity系统优化/README.md` | entity-design-index | current | 2026-05-31 | Entity 完整重构设计包入口；先读 `1.初级修改/06`，spawn 散点问题读 `2.重构/main.md` |
 | `3.Entity系统优化/1.初级修改/00-研究证据与裁决.md` | entity-research-decision | current | 2026-05-31 | 当前代码事实、外部 ECS / 引擎对照、AiFirst 参考采纳、hard cutover 裁决；Data/Event/DocsAI 以 06 覆盖旧假设 |
 | `3.Entity系统优化/1.初级修改/01-目标架构与模块拆分.md` | entity-architecture | current | 2026-05-31 | AI-first Entity runtime 目标架构、模块职责、Data projection、typed event 和 Observation 边界 |

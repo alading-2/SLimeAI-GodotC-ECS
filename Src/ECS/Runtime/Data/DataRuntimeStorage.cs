@@ -11,9 +11,13 @@ using slime.data.Features;
 /// </summary>
 public enum DataWriteSource
 {
+    /// <summary>普通运行时业务写入。</summary>
     Runtime,
+    /// <summary>Snapshot / Loader 初始数据写入。</summary>
     Loader,
+    /// <summary>系统内部强制写入（如运行时对象引用绑定）。</summary>
     System,
+    /// <summary>调试工具写入。</summary>
     Debug
 }
 
