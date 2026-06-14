@@ -824,6 +824,10 @@ public static class DataValueConverter
             ToStableText(rawValue));
     }
 
+    /// <summary>
+    /// 根据 write policy 和写入来源判断是否允许写入。
+    /// ReadWrite 全放行；LoaderOnly 仅 Loader；SystemOnly 仅 System + Loader；ComputedReadonly 全拒绝；DebugOnly 仅 Debug。
+    /// </summary>
     private static bool CanWrite(DataWritePolicy policy, DataWriteSource source)
     {
         return policy switch
@@ -837,6 +841,9 @@ public static class DataValueConverter
         };
     }
 
+    /// <summary>
+    /// 校验范围策略：None 不检查；ClampRuntime 对 Runtime 来源自动 clamp；Validate/RejectRuntime 超出则拒绝。
+    /// </summary>
     private static bool TryApplyRangePolicy(
         DataDefinition definition,
         object? convertedValue,
@@ -878,6 +885,9 @@ public static class DataValueConverter
         return false;
     }
 
+    /// <summary>
+    /// typed 版本范围策略校验，避免装箱。
+    /// </summary>
     private static bool TryApplyRangePolicy<T>(
         DataDefinition definition,
         T convertedValue,
@@ -919,6 +929,9 @@ public static class DataValueConverter
         return false;
     }
 
+    /// <summary>
+    /// 校验值是否在 descriptor AllowedValues 白名单内。AllowedValues 为空则放行。
+    /// </summary>
     private static bool IsAllowedValue(DataDefinition definition, object? convertedValue)
     {
         if (definition.AllowedValues.Count == 0)
@@ -938,6 +951,9 @@ public static class DataValueConverter
         return false;
     }
 
+    /// <summary>
+    /// typed 版本 allowed values 校验，避免装箱。
+    /// </summary>
     private static bool IsAllowedValue<T>(DataDefinition definition, T convertedValue)
     {
         if (definition.AllowedValues.Count == 0)
@@ -957,6 +973,10 @@ public static class DataValueConverter
         return false;
     }
 
+    /// <summary>
+    /// 将值转为稳定文本表示，用于 allowed values 白名单比较和错误信息。
+    /// bool 用小写，数值用 InvariantCulture，string[] 用逗号连接。
+    /// </summary>
     private static string ToStableText(object? value)
     {
         return value switch
@@ -971,6 +991,7 @@ public static class DataValueConverter
         };
     }
 
+    /// <summary>将原始值转为 string，类型不匹配则抛异常。</summary>
     private static object ConvertString(object rawValue)
     {
         return rawValue is string text
@@ -978,6 +999,7 @@ public static class DataValueConverter
             : throw new InvalidCastException($"期望 string，实际 {rawValue.GetType().Name}");
     }
 
+    /// <summary>将原始值转为 string[]。支持直接传入数组或逗号分隔的文本。</summary>
     private static object ConvertStringArray(object rawValue)
     {
         if (rawValue is string[] arrayValue)
@@ -993,6 +1015,7 @@ public static class DataValueConverter
         throw new InvalidCastException($"期望 string_array，实际 {rawValue.GetType().Name}");
     }
 
+    /// <summary>将原始值转为 FeatureModifierEntryData[]。支持直接传入数组或 JSON array 文本。</summary>
     private static object? ConvertModifierList(object rawValue)
     {
         if (rawValue is FeatureModifierEntryData[] arrayValue)
@@ -1008,6 +1031,7 @@ public static class DataValueConverter
         throw new InvalidCastException($"期望 modifier_list，实际 {rawValue.GetType().Name}");
     }
 
+    /// <summary>将原始值转为 ResourceRef 或运行时对象引用。空字符串返回 null。</summary>
     private static object? ConvertObjectRef(object rawValue)
     {
         if (rawValue is ResourceRef resourceRef)
@@ -1028,6 +1052,7 @@ public static class DataValueConverter
         throw new InvalidCastException($"期望 object_ref，实际 {rawValue.GetType().Name}");
     }
 
+    /// <summary>将原始值转为 int。支持直接传入 int 或数字文本。</summary>
     private static object ConvertInt(object rawValue)
     {
         return rawValue switch
@@ -1038,6 +1063,7 @@ public static class DataValueConverter
         };
     }
 
+    /// <summary>将原始值转为 float。支持 int→float 提升和数字文本解析。</summary>
     private static object ConvertFloat(object rawValue)
     {
         return rawValue switch
@@ -1049,6 +1075,7 @@ public static class DataValueConverter
         };
     }
 
+    /// <summary>将原始值转为 double。支持 float/int→double 提升和数字文本解析。</summary>
     private static object ConvertDouble(object rawValue)
     {
         return rawValue switch
@@ -1061,6 +1088,7 @@ public static class DataValueConverter
         };
     }
 
+    /// <summary>将原始值转为 bool。支持直接传入 bool 或 "true"/"false" 文本。</summary>
     private static object ConvertBool(object rawValue)
     {
         return rawValue switch
@@ -1071,6 +1099,7 @@ public static class DataValueConverter
         };
     }
 
+    /// <summary>将原始值转为 System.Numerics.Vector2。支持 Godot.Vector2 反射读取和 "x,y" 文本解析。</summary>
     private static object ConvertVector2(object rawValue)
     {
         if (TryReadVector2(rawValue, out var x, out var y))
@@ -1097,6 +1126,7 @@ public static class DataValueConverter
         throw new InvalidCastException($"期望 vector2，实际 {rawValue.GetType().Name}");
     }
 
+    /// <summary>将原始值转为 enum 文本。enum 值统一存储为字符串，不存 int。</summary>
     private static object ConvertEnum(object rawValue)
     {
         if (rawValue is string textValue)
@@ -1236,6 +1266,9 @@ public static class DataValueConverter
         return Convert.ChangeType(rawValue, targetType, CultureInfo.InvariantCulture);
     }
 
+    /// <summary>
+    /// 为 modifier_list JSON 反序列化创建序列化选项，启用 StringEnumConverter 支持枚举文本。
+    /// </summary>
     private static JsonSerializerOptions CreateModifierListJsonOptions()
     {
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -1243,6 +1276,9 @@ public static class DataValueConverter
         return options;
     }
 
+    /// <summary>
+    /// 解析 string_array 文本：支持 JSON array 格式 ["a","b"] 和逗号分隔格式 "a,b"。
+    /// </summary>
     private static string[] ParseStringArrayText(string textValue)
     {
         if (string.IsNullOrWhiteSpace(textValue))
@@ -1266,6 +1302,9 @@ public static class DataValueConverter
         return textValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
+    /// <summary>
+    /// 解析 modifier_list 文本：仅接受 JSON array 格式 [{"Type":"Additive","Value":10}]。
+    /// </summary>
     private static FeatureModifierEntryData[] ParseModifierListText(string textValue)
     {
         if (string.IsNullOrWhiteSpace(textValue))
@@ -1295,6 +1334,10 @@ public static class DataValueConverter
         }
     }
 
+    /// <summary>
+    /// 判断是否为运行时对象引用字段：ObjectRef + RuntimeOnly + 有 RuntimeTypeId。
+    /// 此类字段拒绝 string/ResourceRef，只接受运行时对象实例。
+    /// </summary>
     private static bool RequiresRuntimeObjectReference(DataDefinition definition)
     {
         return definition.ValueType == DataValueType.ObjectRef
@@ -1302,6 +1345,10 @@ public static class DataValueConverter
                && !string.IsNullOrWhiteSpace(definition.RuntimeTypeId);
     }
 
+    /// <summary>
+    /// 校验运行时对象值是否匹配 descriptor 声明的 RuntimeTypeId。
+    /// null 视为合法（允许清空引用）；ResourceRef 不合法（应使用对象实例）。
+    /// </summary>
     private static bool MatchesRuntimeObjectReference(DataDefinition definition, object? value)
     {
         if (value == null)
@@ -1317,6 +1364,9 @@ public static class DataValueConverter
         return MatchesRuntimeType(value.GetType(), definition.RuntimeTypeId);
     }
 
+    /// <summary>
+    /// 通过反射匹配类型：检查实际类型的 FullName/Name 及其实现的接口是否与 runtimeTypeId 匹配。
+    /// </summary>
     private static bool MatchesRuntimeType(Type actualType, string runtimeTypeId)
     {
         var expected = runtimeTypeId.Trim();
@@ -1341,11 +1391,18 @@ public static class DataValueConverter
         return false;
     }
 
+    /// <summary>
+    /// 检查类型是否为 Godot.Vector2（通过 FullName 字符串匹配，避免直接引用 Godot 程序集）。
+    /// </summary>
     private static bool IsGodotVector2Type(Type type)
     {
         return string.Equals(type.FullName, "Godot.Vector2", StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// 通过反射读取 Godot.Vector2 的 X/Y 字段值。
+    /// 避免直接引用 Godot 程序集，通过 Property/Field 反射获取。
+    /// </summary>
     private static bool TryReadVector2(object rawValue, out float x, out float y)
     {
         x = 0f;
@@ -1381,6 +1438,9 @@ public static class DataValueConverter
         return true;
     }
 
+    /// <summary>
+    /// 尝试将 object 值转为 double。支持 int/float/double 三种数值类型。
+    /// </summary>
     private static bool TryGetNumeric(object value, out double numericValue)
     {
         switch (value)
@@ -1400,6 +1460,9 @@ public static class DataValueConverter
         }
     }
 
+    /// <summary>
+    /// 泛型版本：尝试将 T 值转为 double，用于 typed modifier 计算路径避免装箱。
+    /// </summary>
     private static bool TryGetNumeric<T>(T value, out double numericValue)
     {
         switch (value)
@@ -1419,6 +1482,9 @@ public static class DataValueConverter
         }
     }
 
+    /// <summary>
+    /// 将 double 值转回原始 CLR 类型（int/float/double），用于 untyped 范围策略 clamp 后恢复原类型。
+    /// </summary>
     private static object ConvertNumericToOriginalType(double value, Type originalType)
     {
         if (originalType == typeof(int))
@@ -1434,6 +1500,9 @@ public static class DataValueConverter
         return value;
     }
 
+    /// <summary>
+    /// 泛型版本：将 double 值转回 T 类型，使用 Unsafe.As 避免装箱。
+    /// </summary>
     private static T ConvertNumericToTyped<T>(double value)
     {
         if (typeof(T) == typeof(int))
@@ -1480,9 +1549,13 @@ public static class DataValueConverter
 /// </summary>
 public sealed class DataRuntimeStorage
 {
+    /// <summary>字段定义 catalog，提供 descriptor 查询和 computed 依赖索引。</summary>
     private readonly DataDefinitionCatalog _catalog;
+    /// <summary>stable key → 运行时槽位，按需创建。</summary>
     private readonly Dictionary<string, IDataSlot> _slots = new(StringComparer.Ordinal);
+    /// <summary>标记为脏的 computed key 集合，下次读取时重新计算。</summary>
     private readonly HashSet<string> _dirtyComputedKeys = new(StringComparer.Ordinal);
+    /// <summary>resolver 读取当前 Data 容器的上下文引用。</summary>
     private readonly Data? _computeContext;
 
     /// <summary>
@@ -2008,6 +2081,9 @@ public sealed class DataRuntimeStorage
         return _dirtyComputedKeys.Contains(stableKey);
     }
 
+    /// <summary>
+    /// 获取或创建 typed 槽位。如果已有槽位但类型不匹配（理论上不应发生），则替换并迁移基础值和修改器。
+    /// </summary>
     private DataSlot<T> GetOrCreateTypedSlot<T>(DataDefinition definition)
     {
         if (_slots.TryGetValue(definition.StableKey, out var existing))
@@ -2025,6 +2101,9 @@ public sealed class DataRuntimeStorage
         return slot;
     }
 
+    /// <summary>
+    /// 获取或创建边界写入槽位。对于 object_ref + runtime_only 字段，使用实际运行时对象类型创建槽位。
+    /// </summary>
     private IDataSlot GetOrCreateBoundarySlot(DataDefinition definition, object? value = null)
     {
         if (_slots.TryGetValue(definition.StableKey, out var slot))
@@ -2037,6 +2116,9 @@ public sealed class DataRuntimeStorage
         return slot;
     }
 
+    /// <summary>
+    /// 读取 computed 字段值。使用 dirty cache：未标脏且有缓存值时直接返回；否则调用 resolver 重新计算并缓存。
+    /// </summary>
     private T GetComputedValue<T>(DataDefinition definition)
     {
         var slot = GetOrCreateTypedSlot<T>(definition);
@@ -2070,6 +2152,9 @@ public sealed class DataRuntimeStorage
             record.NewValueForDiagnostics));
     }
 
+    /// <summary>
+    /// 替换已有槽位：创建新 typed 槽位，迁移旧槽位的基础值和修改器。
+    /// </summary>
     private DataSlot<T> ReplaceSlot<T>(DataDefinition definition, IDataSlot existing)
     {
         var replacement = new DataSlot<T>(definition);
@@ -2088,11 +2173,18 @@ public sealed class DataRuntimeStorage
         return replacement;
     }
 
+    /// <summary>
+    /// 通过反射创建 DataSlot&lt;T&gt; 实例，用于边界写入时无法在编译期确定 T 的场景。
+    /// </summary>
     private static IDataSlot CreateSlot(Type valueType, DataDefinition definition)
     {
         return (IDataSlot)Activator.CreateInstance(typeof(DataSlot<>).MakeGenericType(valueType), definition)!;
     }
 
+    /// <summary>
+    /// 解析边界写入的槽位 CLR 类型。
+    /// runtime_only object_ref 优先使用实际运行时对象类型；否则按 descriptor ValueType 映射。
+    /// </summary>
     private static Type ResolveBoundarySlotType(DataDefinition definition, object? value)
     {
         if (definition.ValueType == DataValueType.ObjectRef
@@ -2128,6 +2220,10 @@ public sealed class DataRuntimeStorage
         };
     }
 
+    /// <summary>
+    /// 校验 modifier 策略：仅数值类型（int/float/double）且 modifierPolicy 允许时可添加。
+    /// Numeric 全放行；DebugOnly 仅 Debug 来源。
+    /// </summary>
     private static bool CanApplyModifier(DataDefinition definition, DataWriteSource source)
     {
         if (!IsNumericValueType(definition.ValueType))
@@ -2143,11 +2239,17 @@ public sealed class DataRuntimeStorage
         };
     }
 
+    /// <summary>
+    /// 判断 descriptor 值类型是否为数值类型（int/float/double），modifier 仅对数值类型有效。
+    /// </summary>
     private static bool IsNumericValueType(DataValueType valueType)
     {
         return valueType is DataValueType.Int or DataValueType.Float or DataValueType.Double;
     }
 
+    /// <summary>
+    /// 当基础值或 modifier 变化时，传递标脏所有直接和间接依赖该 key 的 computed 字段。
+    /// </summary>
     private void MarkDependentComputedDirty(string stableKey)
     {
         var dependents = _catalog.GetDependentComputedKeys(stableKey);
@@ -2157,6 +2259,9 @@ public sealed class DataRuntimeStorage
         }
     }
 
+    /// <summary>
+    /// 递归标脏：将当前 computed key 加入脏集，然后递归标脏依赖它的上层 computed。
+    /// </summary>
     private void MarkComputedDirtyRecursive(string stableKey)
     {
         _dirtyComputedKeys.Add(stableKey);

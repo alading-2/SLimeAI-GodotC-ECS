@@ -6,6 +6,7 @@ using System.Collections.Generic;
 /// </summary>
 public sealed class DataComputeRegistry
 {
+    /// <summary>computeId → resolver 的注册表。</summary>
     private readonly Dictionary<string, IDataComputeResolver> _resolvers = new(StringComparer.Ordinal);
 
     /// <summary>
@@ -84,6 +85,9 @@ public sealed class DataComputeRegistry
         }
     }
 
+    /// <summary>
+    /// 将 descriptor ValueType 映射为 CLR Type，用于校验 resolver 输出类型。
+    /// </summary>
     private static Type ResolveExpectedOutputType(DataDefinition definition)
     {
         return definition.ValueType switch

@@ -136,29 +136,31 @@ public readonly record struct DataModifierSource(string SourceId)
 public class DataModifier
 {
     /// <summary>
-    /// 修改器唯一标识符
+    /// 修改器唯一标识符，用于按 ID 精确移除。同字段内不允许重复。
     /// </summary>
     public string Id { get; init; }
 
     /// <summary>
-    /// 修改器类型（加法/乘法）
+    /// 修改器类型：Additive（加法）、Multiplicative（乘法）、FinalAdditive（后置加法）、Override（覆盖）、Cap（上限）。
     /// </summary>
     public ModifierType Type { get; init; }
 
     /// <summary>
-    /// 修改值
-    /// 加法类型：直接加到基础值
-    /// 乘法类型：作为乘数（1.0 = 100%，1.5 = 150%）
+    /// 修改值。
+    /// Additive/FinalAdditive：直接加到基础值。
+    /// Multiplicative：作为乘数（1.0 = 100%，1.5 = 150%）。
+    /// Override：强制覆盖为该值。
+    /// Cap：上限值（多个 Cap 取最小值）。
     /// </summary>
     public float Value { get; init; }
 
     /// <summary>
-    /// 计算优先级（数值越小越先计算）
+    /// 计算优先级（数值越小越先计算）。同类型内按添加顺序遍历。
     /// </summary>
     public int Priority { get; init; }
 
     /// <summary>
-    /// 修改器稳定来源标识，用于按来源批量移除修改器。
+    /// 修改器稳定来源标识，用于 Feature/Buff/装备回滚时按来源批量移除。
     /// </summary>
     public DataModifierSource SourceId { get; init; }
 

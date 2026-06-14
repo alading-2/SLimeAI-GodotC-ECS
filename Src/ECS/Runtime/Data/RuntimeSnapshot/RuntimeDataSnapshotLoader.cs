@@ -112,6 +112,9 @@ public sealed class RuntimeDataSnapshotLoader
         return catalog;
     }
 
+    /// <summary>
+    /// 将 descriptor DTO 转为运行时 DataDefinition：解析所有 policy 枚举、转换默认值类型。
+    /// </summary>
     private DataDefinition ConvertDescriptor(RuntimeDataDescriptorDto descriptor)
     {
         ArgumentNullException.ThrowIfNull(descriptor);
@@ -155,6 +158,9 @@ public sealed class RuntimeDataSnapshotLoader
         };
     }
 
+    /// <summary>
+    /// 校验 computed 字段的 computeId 是否在注册表中存在。BuildCatalog 阶段的早期校验。
+    /// </summary>
     private void ValidateComputeBinding(DataDefinition definition)
     {
         if (definition.StoragePolicy == DataStoragePolicy.Computed && string.IsNullOrWhiteSpace(definition.ComputeId))
@@ -284,6 +290,9 @@ public sealed class RuntimeDataSnapshotLoader
         };
     }
 
+    /// <summary>
+    /// 将 descriptor default 值转为 typed CLR 对象。JSON 中的值可能是 JsonElement 或已反序列化的对象。
+    /// </summary>
     private static object? ConvertDefaultValue(object? raw, DataValueType valueType, string stableKey)
     {
         var text = NormalizeDefaultValueText(raw);
@@ -312,6 +321,9 @@ public sealed class RuntimeDataSnapshotLoader
         }
     }
 
+    /// <summary>
+    /// 将 descriptor default 原始值归一化为文本：JsonElement 提取字符串或原始 JSON；其他类型用 Convert.ToString。
+    /// </summary>
     private static string NormalizeDefaultValueText(object? raw)
     {
         if (raw == null)
@@ -329,6 +341,10 @@ public sealed class RuntimeDataSnapshotLoader
         return Convert.ToString(raw, CultureInfo.InvariantCulture) ?? string.Empty;
     }
 
+    /// <summary>
+    /// 将 record field 的 JsonElement 值转为 CLR 值：string→string, number→原始文本, true/false→bool, null→null。
+    /// 数值保留原始文本，由下游 TryConvert 按目标类型解析。
+    /// </summary>
     private static object? NormalizeRecordValue(object? raw)
     {
         if (raw is not JsonElement element)

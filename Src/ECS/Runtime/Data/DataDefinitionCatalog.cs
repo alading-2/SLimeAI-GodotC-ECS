@@ -6,9 +6,13 @@ using System.Collections.Generic;
 /// </summary>
 public sealed class DataDefinitionCatalog
 {
+    /// <summary>stable key → DataDefinition 的运行时索引。</summary>
     private readonly Dictionary<string, DataDefinition> _definitions = new(StringComparer.Ordinal);
+    /// <summary>computed 字段的反向依赖索引：被依赖 key → 依赖它的 computed key 列表。</summary>
     private readonly Dictionary<string, List<string>> _dependentComputedKeys = new(StringComparer.Ordinal);
+    /// <summary>computed resolver 注册表，校验时绑定。</summary>
     private DataComputeRegistry? _computeRegistry;
+    /// <summary>索引构建完成后冻结，禁止继续注册。</summary>
     private bool _isFrozen;
 
     /// <summary>
@@ -159,9 +163,13 @@ public sealed class DataDefinitionCatalog
         }
 
         ValidateComputeCycles();
-        _isFrozen = true;
+        _isFrozen = true; // 冻结后禁止继续注册
     }
 
+    /// <summary>
+    /// 使用 DFS 检测 computed 字段依赖环。
+    /// visiting = 灰色（当前遍历路径上的节点），visited = 黑色（已完成遍历）。
+    /// </summary>
     private void ValidateComputeCycles()
     {
         var visiting = new HashSet<string>(StringComparer.Ordinal);
@@ -173,14 +181,17 @@ public sealed class DataDefinitionCatalog
         }
     }
 
+    /// <summary>
+    /// DFS 单节点访问：如果节点在当前路径（visiting）中再次出现则检测到环。
+    /// </summary>
     private void Visit(string stableKey, HashSet<string> visiting, HashSet<string> visited)
     {
-        if (visited.Contains(stableKey))
+        if (visited.Contains(stableKey)) // 黑色节点，已完成遍历
         {
             return;
         }
 
-        if (!visiting.Add(stableKey))
+        if (!visiting.Add(stableKey)) // 灰色节点，已在当前路径 → 成环
         {
             throw new InvalidOperationException($"DataDefinition compute cycle detected：{stableKey}");
         }
@@ -191,11 +202,11 @@ public sealed class DataDefinitionCatalog
             var dependency = definition.Dependencies[i];
             if (TryGet(dependency, out var dependencyDefinition) && dependencyDefinition.IsComputed)
             {
-                Visit(dependency, visiting, visited);
+                Visit(dependency, visiting, visited); // 递归访问 computed 依赖
             }
         }
 
-        visiting.Remove(stableKey);
-        visited.Add(stableKey);
+        visiting.Remove(stableKey); // 退出当前路径，移除灰色标记
+        visited.Add(stableKey);     // 标记为黑色，后续不再访问
     }
 }

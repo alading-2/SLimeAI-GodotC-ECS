@@ -119,6 +119,11 @@ public sealed class DataRuntimeBootstrap
         }
     }
 
+    /// <summary>
+    /// 注册框架内置的 6 个 computed resolver：
+    /// AttributeBonus（属性加成）、Percent（百分比）、AttackInterval（攻击间隔）、
+    /// Regen（恢复）、EffectiveHp（有效生命）、Dps（每秒伤害）。
+    /// </summary>
     private static DataComputeRegistry CreateDefaultComputeRegistry()
     {
         var registry = new DataComputeRegistry();
@@ -138,6 +143,9 @@ public sealed class DataRuntimeBootstrap
         return bootstrap;
     }
 
+    /// <summary>
+    /// 从 AppContext.BaseDirectory 向上遍历查找 runtime_snapshot.json，找不到则回退到 Environment.CurrentDirectory。
+    /// </summary>
     private static string ResolveRuntimeSnapshotPath()
     {
         var current = new DirectoryInfo(AppContext.BaseDirectory);

@@ -84,6 +84,9 @@ public sealed class RuntimeDataRecordQuery
         throw new KeyNotFoundException($"runtime snapshot record 不存在：{table}/displayName:{displayName}");
     }
 
+    /// <summary>
+    /// 构建三级索引：table → records 列表、table+id → 单条 record、table+name → 单条 record。
+    /// </summary>
     private void BuildIndexes(IEnumerable<RuntimeDataRecordDto> records)
     {
         foreach (var record in records)
@@ -108,6 +111,9 @@ public sealed class RuntimeDataRecordQuery
         }
     }
 
+    /// <summary>
+    /// 向索引添加记录，key 重复时 fail-fast。
+    /// </summary>
     private static void AddUnique(
         Dictionary<string, RuntimeDataRecordDto> index,
         string key,
@@ -122,6 +128,9 @@ public sealed class RuntimeDataRecordQuery
         index.Add(key, record);
     }
 
+    /// <summary>
+    /// 生成索引 key：table + （单元分隔符）+ value，避免 table 和 value 拼接冲突。
+    /// </summary>
     private static string MakeKey(string table, string value)
     {
         return $"{table}\u001f{value}";
@@ -313,6 +322,9 @@ public static class RuntimeDataRecordProjection
         return result;
     }
 
+    /// <summary>
+    /// 从 record field 读取 typed 值：校验类型兼容性 → 转换原始值 → 转为目标 CLR 类型。
+    /// </summary>
     private static T Read<T>(RuntimeDataRecordDto record, DataKey<T> key)
     {
         return Read<T>(record, key.StableKey);
@@ -343,6 +355,9 @@ public static class RuntimeDataRecordProjection
         }
     }
 
+    /// <summary>
+    /// 从 record field 读取 string 并解析为 enum。空文本返回 default。
+    /// </summary>
     private static T ReadEnum<T>(RuntimeDataRecordDto record, string fieldKey)
         where T : struct, Enum
     {
@@ -361,6 +376,9 @@ public static class RuntimeDataRecordProjection
         return ReadEnum<T>(record, key.StableKey);
     }
 
+    /// <summary>
+    /// 从 record field 读取逗号分隔的 flags 文本并合并为 flags enum。如 "SystemA,SystemB" → SystemTag.A | SystemTag.B。
+    /// </summary>
     private static T ReadFlags<T>(RuntimeDataRecordDto record, string fieldKey)
         where T : struct, Enum
     {
@@ -393,6 +411,9 @@ public static class RuntimeDataRecordProjection
         return Read(record, key);
     }
 
+    /// <summary>
+    /// 从 record field 读取 string[]。支持直接传入数组或逗号分隔文本。
+    /// </summary>
     private static string[] ReadStringArray(RuntimeDataRecordDto record, string fieldKey)
     {
         var value = Read<object>(record, fieldKey);
@@ -405,6 +426,9 @@ public static class RuntimeDataRecordProjection
         };
     }
 
+    /// <summary>
+    /// 获取 record 中指定 field，不存在时 fail-fast。
+    /// </summary>
     private static RuntimeDataFieldDto GetRequiredField(RuntimeDataRecordDto record, string fieldKey)
     {
         if (record.Fields.TryGetValue(fieldKey, out var field))
@@ -415,6 +439,9 @@ public static class RuntimeDataRecordProjection
         throw new InvalidOperationException($"runtime snapshot projection 缺少字段：{FormatRecord(record)} field={fieldKey}");
     }
 
+    /// <summary>
+    /// 校验 record table 是否与期望值一致，不一致则 fail-fast。
+    /// </summary>
     private static void EnsureTable(RuntimeDataRecordDto record, string expectedTable)
     {
         ArgumentNullException.ThrowIfNull(record);
@@ -424,6 +451,9 @@ public static class RuntimeDataRecordProjection
         }
     }
 
+    /// <summary>
+    /// 解析 snapshot field type 文本为 DataValueType 枚举。支持 camelCase 和 snake_case 两种格式。
+    /// </summary>
     private static DataValueType ParseValueType(string raw, RuntimeDataRecordDto record, string fieldKey)
     {
         var normalized = raw.Trim().ToLowerInvariant();
@@ -448,6 +478,10 @@ public static class RuntimeDataRecordProjection
         };
     }
 
+    /// <summary>
+    /// 将 snapshot record 的 JsonElement 字段值转为 CLR 值：string→string, number→string(原始文本), true/false→bool, null→null。
+    /// 数值保留原始文本而非 double，由下游 TryConvert 按目标类型解析。
+    /// </summary>
     private static object? NormalizeRecordValue(object? raw)
     {
         if (raw is not JsonElement element)
@@ -468,6 +502,9 @@ public static class RuntimeDataRecordProjection
         };
     }
 
+    /// <summary>
+    /// 从 snapshot resource 字典读取 string 值，不存在时 fail-fast。
+    /// </summary>
     private static string ReadResourceString(Dictionary<string, JsonElement> resource, string key)
     {
         if (!resource.TryGetValue(key, out var value))
