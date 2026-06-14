@@ -6,11 +6,11 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-11
-- **Current SDD**: SDD-0040
-- **Last Conclusion**: `SDD-0040 Log AI-first Observation Hard Cutover` 的 T1 结构化记录层和 T2 离线语义整理层已分别落地，但用户运行游戏时 live 打印仍然分离，说明 `Src/ECS` 源码调用点语义化未完成。2026-06-11 已新增 `design/Tool/10.Log/第三部分-源码调用点语义化/README.md`，并把 SDD-0040 当前任务改为 T3.0 方向冻结：先确认 live stdout policy、owner flow contract、Debug UI/TestSystem 可见性，再按 owner 迁移 `_log.Info`、测试打印和高频成功路径。
-- **Next Action**: 先完成 T3.0 Must Confirm。默认推荐：live stdout 严格收口到 warn/error/validation/flow summary/run summary；T3 继续归入 SDD-0040；第一验收链路以 MainTest / 主场景启动 / 释放技能 / 生成怪物为准；Debug UI/TestSystem 默认进入 debug profile。
-- **Open Blockers**: Godot scene smoke blocked：当前没有可验证本框架工作树的承载游戏 runner。`Games/BrotatoLike` 不是 git 仓，且缺少 `Tools/run-godot-scene.sh` 与 `SlimeAI`；`Games/BrotatoLikeOld` 虽有 runner，但 wrapper 指向缺失路径且 `SlimeAI` submodule commit 与当前框架工作树不一致。
+- **Updated**: 2026-06-14
+- **Current SDD**: SDD-0044
+- **Last Conclusion**: 用户确认 `DataComputeRegistry` 默认单例、registry 职责收窄、catalog 验证收敛和 fatal 前 Log / Report observation 的方向无大问题。已创建 `SDD-0044 Data Compute Registry Singleton And Catalog Validation Convergence`，当前状态 pending，尚未开始 runtime 实现。
+- **Next Action**: 从 SDD-0044 T1.1 readiness 开始，确认 Data runtime 源码、DocsAI、DataOS 场景和 dirty workspace 基线，再实施 `DataComputeRegistry.Default` 与 catalog build report。
+- **Open Blockers**: none for SDD-0044。`SDD-0040` 仍 blocked 于 Godot scene smoke：当前没有可验证本框架工作树的承载游戏 runner。
 
 ## Project Status Board
 
@@ -37,6 +37,7 @@
 | SDD-0037 | done | `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` | Resource Loading And Common Utilities Hard Cutover 已完成；`ResourceLoading` current facade、strict lookup、source diagnostics、ResourceCatalogDiagnostics 和 CommonUtilities 边界已收口 |
 | SDD-0038 | done | `design/Tool/其他Tool/03-Math目标架构与验证.md` | Math Formula And Deterministic Random Cutover 已完成；`ProbabilityTool` / `DeterministicRandom` 接管概率随机，Damage/Ability 公式归 owner，`MyMath` / `GeometryCalculator` 删除 |
 | SDD-0040 | blocked | `design/Tool/10.Log/` | T1 结构化 Logger 和 T2 离线语义 analyzer 默认入口已落地；T3 源码调用点语义化未完成，当前需先冻结 live stdout policy 与 owner flow contract；Godot scene smoke blocked 于当前无有效承载游戏 runner |
+| SDD-0044 | pending | `design/Runtime/2.Data系统优化/4.Data验证与Registry简化/01-DataComputeRegistry单例与Catalog验证收敛.md` | 待执行：`DataComputeRegistry.Default` frozen singleton、自定义 registry 显式注入、registry 移除 `DataDefinition` 校验、catalog build report 统一 computed 校验、fatal 前写 Data structured observation |
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
 | SDD-0028 | done | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已完成；后续对象池改动按 ObjectPool owner 新建小切片 |
 | SDD-0029 | done | `design/Runtime/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |
