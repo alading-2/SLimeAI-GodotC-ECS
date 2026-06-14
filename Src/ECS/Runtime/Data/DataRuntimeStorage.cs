@@ -1914,17 +1914,6 @@ public sealed class DataRuntimeStorage
     }
 
     /// <summary>
-    /// 兼容边界：按旧 object 来源移除修改器。
-    /// 新代码应使用 DataModifierSource，避免依赖任意 object identity。
-    /// </summary>
-    /// <param name="source">旧来源对象。</param>
-    [Obsolete("RemoveModifiersBySource(object?) 是兼容边界；新代码请使用 DataModifierSource。")]
-    public int RemoveModifiersBySource(object? source)
-    {
-        return RemoveModifiersBySource(DataModifierSource.FromLegacyObject(source));
-    }
-
-    /// <summary>
     /// 按 id 移除所有字段修改器。
     /// </summary>
     /// <param name="modifierId">修改器 id。</param>

@@ -91,41 +91,6 @@ public readonly record struct DataModifierSource(string SourceId)
             : new DataModifierSource($"entity-object:{entity.GetHashCode()}");
     }
 
-    /// <summary>
-    /// 兼容边界：从旧 object source 生成运行期稳定来源。
-    /// 新业务代码应显式传入 DataModifierSource。
-    /// </summary>
-    /// <param name="source">旧来源对象。</param>
-    public static DataModifierSource FromLegacyObject(object? source)
-    {
-        if (source == null)
-        {
-            return Empty;
-        }
-
-        if (source is DataModifierSource typedSource)
-        {
-            return typedSource;
-        }
-
-        if (source is IEntity entity)
-        {
-            return FromEntity(entity);
-        }
-
-        if (source is string text)
-        {
-            return FromString(text);
-        }
-
-        if (source is Godot.Node node)
-        {
-            return new DataModifierSource($"node:{node.GetInstanceId()}");
-        }
-
-        return new DataModifierSource($"{source.GetType().FullName}:{source.GetHashCode()}");
-    }
-
     public override string ToString() => SourceId;
 }
 
@@ -165,34 +130,14 @@ public class DataModifier
     public DataModifierSource SourceId { get; init; }
 
     /// <summary>
-    /// 兼容边界：旧 object 来源视图。
-    /// 新代码应使用 SourceId，不要继续依赖任意 object identity。
-    /// </summary>
-    [Obsolete("DataModifier.Source 是兼容边界；新代码请使用 SourceId / DataModifierSource。")]
-    public object? Source => SourceId.IsEmpty ? null : SourceId;
-
-    /// <summary>
-    /// 创建数据修改器
-    /// </summary>
-    /// <param name="type">修改器类型</param>
-    /// <param name="value">修改值</param>
-    /// <param name="priority">优先级（默认 0）</param>
-    /// <param name="id">唯一标识符（默认自动生成）</param>
-    /// <param name="source">旧来源对象（兼容边界，新代码优先使用 sourceId）</param>
-    public DataModifier(ModifierType type, float value, int priority = 0, string? id = null, object? source = null)
-        : this(type, value, priority, id, DataModifierSource.FromLegacyObject(source))
-    {
-    }
-
-    /// <summary>
     /// 创建数据修改器。
     /// </summary>
     /// <param name="type">修改器类型。</param>
     /// <param name="value">修改值。</param>
-    /// <param name="priority">优先级。</param>
-    /// <param name="id">唯一标识符。</param>
-    /// <param name="sourceId">稳定来源标识。</param>
-    public DataModifier(ModifierType type, float value, int priority, string? id, DataModifierSource sourceId)
+    /// <param name="priority">优先级（默认 0）。</param>
+    /// <param name="id">唯一标识符（默认自动生成）。</param>
+    /// <param name="sourceId">稳定来源标识（默认空）。</param>
+    public DataModifier(ModifierType type, float value, int priority = 0, string? id = null, DataModifierSource sourceId = default)
     {
         Id = id ?? System.Guid.NewGuid().ToString();
         Type = type;

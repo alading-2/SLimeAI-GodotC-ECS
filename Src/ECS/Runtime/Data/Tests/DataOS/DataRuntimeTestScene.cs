@@ -34,7 +34,6 @@ public partial class DataRuntimeTestScene : DataSceneTestBase
         Data_AddModifier_ShouldRespectModifierPolicy();
         Data_AddModifier_ShouldRejectUnknownTarget();
         Data_AddModifier_ShouldApplyModifierPipeline();
-        Data_RemoveModifiersBySource_ShouldOnlyRemoveMatchingSource();
         Data_RemoveModifiersBySource_ShouldUseTypedSource();
         Data_ModifierChange_ShouldPublishChangeAndDirtyDependents();
         Data_GetComputed_ShouldUseResolverDependenciesAndComputeParams();
@@ -397,19 +396,6 @@ public partial class DataRuntimeTestScene : DataSceneTestBase
 
         data.TryAddModifier("Attribute.Power", new DataModifier(ModifierType.Override, 80f, priority: -1, id: "override"));
         AssertEqual("override modifier", 80f, data.Get(new DataKey<float>("Attribute.Power")));
-    }
-
-    private void Data_RemoveModifiersBySource_ShouldOnlyRemoveMatchingSource()
-    {
-        var sourceA = new object();
-        var sourceB = new object();
-        var storage = CreateRuntimeStorage(Definition("Attribute.Speed", DataValueType.Float, 10f, modifierPolicy: DataModifierPolicy.Numeric));
-        storage.AddModifier("Attribute.Speed", new DataModifier(ModifierType.Additive, 5f, id: "a", source: sourceA));
-        storage.AddModifier("Attribute.Speed", new DataModifier(ModifierType.Additive, 7f, id: "b", source: sourceB));
-
-        AssertEqual("removed source count", 1, storage.RemoveModifiersBySource(sourceA));
-        AssertEqual("only matching source removed", 17f, storage.Get<float>("Attribute.Speed"));
-        AssertEqual("remaining modifier count", 1, storage.GetModifiers("Attribute.Speed").Count);
     }
 
     private void Data_RemoveModifiersBySource_ShouldUseTypedSource()

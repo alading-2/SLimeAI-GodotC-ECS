@@ -527,28 +527,17 @@ public class Data
     }
 
     /// <summary>
-    /// 兼容边界：根据旧来源对象移除所有匹配的修改器。
-    /// 新业务代码应显式使用 DataModifierSource。
+    /// 将另一个 Data 容器的数据转换为修改器应用到当前容器。
+    /// 常用于：装备属性应用到角色。
     /// </summary>
-    /// <param name="source">旧来源对象。</param>
-    [Obsolete("RemoveModifiersBySource(object) 是兼容边界；新代码请使用 DataModifierSource。")]
-    public void RemoveModifiersBySource(object source)
-    {
-        RemoveModifiersBySource(DataModifierSource.FromLegacyObject(source));
-    }
-
-    /// <summary>
-    /// 将另一个 Data 容器的数据转换为修改器应用到当前容器
-    /// 常用于：装备属性应用到角色
-    /// </summary>
-    /// <param name="sourceData">源数据容器</param>
-    /// <param name="sourceEntity">来源实体（作为修改器 Source）</param>
-    public void ApplyDataAsModifiers(Data sourceData, object sourceEntity)
+    /// <param name="sourceData">源数据容器。</param>
+    /// <param name="sourceEntity">来源实体（作为修改器 Source）。</param>
+    public void ApplyDataAsModifiers(Data sourceData, IEntity sourceEntity)
     {
         if (sourceData == null || sourceEntity == null) return;
 
         var allData = sourceData.GetDiagnosticSnapshot();
-        var sourceId = DataModifierSource.FromLegacyObject(sourceEntity);
+        var sourceId = DataModifierSource.FromEntity(sourceEntity);
         foreach (var kvp in allData)
         {
             // 仅处理数值类型

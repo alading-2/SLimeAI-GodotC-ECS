@@ -13,3 +13,6 @@ obj/
 Workspace/DocsAI/ChatHistory/
 *.uid
 .ai-temp/
+# py
+__pycache__/
+*.py[cod]
