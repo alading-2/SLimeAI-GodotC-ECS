@@ -12,7 +12,7 @@
 | ID | Feature | Priority | Status | Notes |
 | --- | --- | --- | --- | --- |
 | FS-1 | Worktree 触发判断 | P0 | planned | 自然语言或 SDD/dirty workspace 场景触发，但不默认创建 |
-| FS-2 | Worktree 生命周期 skill | P0 | planned | create/list/status/switch/merge/clean 的安全流程 |
+| FS-2 | Worktree 生命周期 skill | P0 | planned | 围绕 SDD Start / Execute / Close 管理 worktree，命令只做速查 |
 | FS-3 | SDD worktree record | P0 | planned | 使用或建议 worktree 时写入六字段恢复上下文 |
 | FS-4 | AI 配置同步与目录登记 | P1 | planned | 新 skill 从 `.ai-config` 源生成到工具副本，并登记到 SystemAgent catalog |
 
@@ -66,7 +66,7 @@
 
 ### Goal
 
-提供一个可被用户自然语言触发的 SystemAgent skill，指导 AI 安全执行 create/list/status/switch/merge/clean。
+提供一个可被用户自然语言或 SDD 任务触发的 SystemAgent skill，指导 AI 在 SDD 开始前创建或选择 worktree，在执行中固定 worktree 路径，在完成后验证、提交、合并并清理。`create/list/status/switch/merge/clean` 只是速查语义，不是 skill 主体。
 
 ### Behavior
 
@@ -81,7 +81,7 @@
 ### Implementation Guidance
 
 - Owner: `.ai-config/skills/systemagent-skill/systemagent-worktree/SKILL.md`
-- Public API: skill 子命令语义 `create/list/status/switch/merge/clean`。
+- Public API: SDD lifecycle 语义 `judge/start/execute/close/preserve/remove`；`create/list/status/switch/merge/clean` 只作为命令速查。
 - Log / Validation artifact: sync 输出、skill-test lint、`git worktree list`。
 - Constraints:
   - 创建前必须确认 `.worktrees/` ignore。
@@ -94,15 +94,15 @@
 
 ### TDD Handoff
 
-- expectedInputs: `创建 <name> worktree`、`列出 worktree`、`当前 worktree 状态`、`合并 <name> worktree`、`清理 <name> worktree`。
-- expectedObservations: skill 对每个子命令列出必读上下文、命令顺序、停止条件和输出字段。
+- expectedInputs: SDD 开始前需要隔离、主工作区 dirty、中大型任务执行、SDD 完成后需要合并清理。
+- expectedObservations: skill 主体按判断、Start、Execute、Close、异常处理和 SDD record 组织；命令只在速查中出现。
 - passCriteria: `systemagent-worktree` 源和同步副本一致，lint 不出现 critical failure。
 - failCriteria: skill 允许直接 `git clean -fd`、`git reset --hard`、force push 或在 dirty main 上无检查 merge。
 - artifactPath: `.ai-temp/skill-test/static-*.json`
 
 ### Review Checklist
 
-- 子命令是否覆盖设计中的基础生命周期。
+- skill 主体是否围绕 SDD Start / Execute / Close，而不是围绕 Git 子命令展开。
 - `switch` 是否说明 Codex/Claude 不能依赖单次 shell `cd` 保持会话状态，后续工具调用必须使用 worktree path。
 - `merge` 和 `clean` 是否有 dirty 保护。
 

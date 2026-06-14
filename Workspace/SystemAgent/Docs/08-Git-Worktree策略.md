@@ -4,7 +4,7 @@
 
 **策略已写，SDD-0043 起已通过 `systemagent-worktree` skill 激活 Phase 1。**
 
-SDD-0010 建立了 git worktree 和 subagent 安全策略；SDD-0043 新增 `systemagent-worktree` skill，作为用户或 AI 明确触发时的 create/list/status/switch/merge/clean 操作入口。worktree 仍不是默认行为，低风险小修可以继续记录 `Worktree: none`。
+SDD-0010 建立了 git worktree 和 subagent 安全策略；SDD-0043 新增 `systemagent-worktree` skill，作为 SDD / 中大型任务的 worktree 生命周期入口：开始前判断并创建或选择 worktree，执行中固定 worktree 路径，完成后合并并清理。worktree 仍不是默认行为，低风险小修可以继续记录 `Worktree: none`。
 
 ## 策略要点
 
@@ -102,7 +102,7 @@ SDD-0010 建立了 git worktree 和 subagent 安全策略；SDD-0043 新增 `sys
 
 1. 创建 `systemagent-worktree` skill，作为 worktree 操作的入口
 2. 不默认打开 worktree，需要用户或 AI 明确触发
-3. Skill 管理创建、切换、合并、清理的完整生命周期
+3. Skill 管理 SDD Start / Execute / Close 的完整生命周期，命令只做速查
 4. 与 SDD progress.md 集成，记录 worktree 使用情况
 5. 在 Git.md 规则中添加触发建议（何时应该建议使用 worktree）
 
@@ -122,4 +122,4 @@ SDD-0010 建立了 git worktree 和 subagent 安全策略；SDD-0043 新增 `sys
 1. **没有 WorktreeCreate/WorktreeRemove hook**：settings.json 中没有配置
 2. **SDD CLI 不支持 worktree**：没有 `sdd start --worktree` 选项，Phase 2 再单独设计
 3. **没有 hook 自动提醒**：Hook 重启前不自动提示或创建 worktree
-4. **没有自动清理机制**：dirty worktree 仍必须保留；clean worktree 需要显式执行 `systemagent-worktree clean`
+4. **没有 SDD CLI 自动清理机制**：dirty worktree 仍必须保留；clean worktree 由 `systemagent-worktree` 的 Close 流程显式清理
