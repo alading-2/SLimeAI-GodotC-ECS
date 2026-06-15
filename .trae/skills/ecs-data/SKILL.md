@@ -9,6 +9,8 @@ description: 修改 SlimeAI ECS Runtime Data、DataKey、DataCatalog、RuntimeDa
 
 - `DocsAI/ECS/Runtime/Data/Data系统说明.md` — Data 系统当前实现说明
 - `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/` — Data 重构设计包
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/5.Data类型系统重构/00-README.md` — Data 类型系统重构入口
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` — 2026-06-15 Data 根本重构裁决
 - `Src/ECS/Runtime/Data/` — 当前 Data runtime 实现源码
 - `Src/ECS/Runtime/Data/Tests/DataOS/` — DataOS 场景测试
 
@@ -19,10 +21,14 @@ description: 修改 SlimeAI ECS Runtime Data、DataKey、DataCatalog、RuntimeDa
 - `Data/DataKey/`
 - `Src/ECS/Runtime/Data/Events/`
 - `Src/ECS/Runtime/Data/Tests/DataOS/`
-- Data 重构事实源：`SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/`
+- Data 重构事实源：`SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/`
 
 ## 规则
 
+- 2026-06-15 后续重构默认按 `5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` 执行：功能解耦优先，数据形态统一不是目标；Data 只保留为跨功能共享、需要 AI/validator/diagnostic 追溯的 typed runtime state protocol。
+- 不强制所有数据进入 Data。Capability 内部缓存、索引、临时状态、展示 metadata 和“谁能写”的组织纪律 policy 不默认进 Data；它们应留在 owner service / component / system config / projection / manifest，并补 invalidation、diagnostics 或验证入口。
+- 后续 Data 大改默认 hard cutover，不做长期兼容 adapter；`SDD-0044 DataComputeRegistry` 单例方向仍成立，但不应孤立优先执行，应并入 Data Type Contract hard cutover 或作为其前置子任务。
+- `write_policy` 这类权限约束不作为长期 runtime enforcement 目标；保留真正影响数据形态的 contract：类型、默认值、computed、modifier、range、allowed values、runtime_only / authoring_blob。
 - `Data` 只存运行时状态，不承担 authoring 表职责。
 - 新 DataKey 先写 DataOS descriptor，再由 generated handle 暴露 typed `DataKey<T>`；不恢复旧 `DataMeta` / `DataRegistry` 事实源。
 - `Data` 绑定 frozen `DataCatalog` 并使用 `DataSlot<T> + IDataSlot`；业务代码只用 `Data.Get/Set/TrySet/Has/Remove(DataKey<T>)`，不要新增 string-key 或 untyped 写入。

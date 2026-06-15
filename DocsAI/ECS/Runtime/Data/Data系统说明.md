@@ -1,15 +1,16 @@
 # Data 系统说明
 
-> 状态：当前实现说明；SDD-0032 后业务 Data 主链路使用 typed `DataKey<T>`、typed system/debug write、typed computed resolver 和 typed Data changed event。snapshot / loader / TestSystem / migration diagnostic 边界仍可保留 object，但必须通过 API 名称和注释标明边界。
+> 状态：当前实现说明；SDD-0032 后业务 Data 主链路使用 typed `DataKey<T>`、typed system/debug write、typed computed resolver 和 typed Data changed event。snapshot / loader / TestSystem / migration diagnostic 边界仍可保留 object，但必须通过 API 名称和注释标明边界。2026-06-15 后续重构裁决见“根本重构裁决”，不要把当前实现说明误读为终局架构。
 > 范围：`Src/ECS/Runtime/Data/`、`Data/DataOS/`、`Data/DataKey/Generated/`、`Src/ECS/Capabilities/*/Events/`、`Src/ECS/Runtime/Event/Global/`、`Src/ECS/Runtime/Data/Events/`、`Data/Config/`、`Data/ResourceManagement/`、`Src/ECS/Runtime/Data/Tests/DataOS/`。
-> 设计事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/2.Data系统优化/`。
+> 设计事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/`。
 > GC/装箱优化事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/021-SDD-0031-data-runtime-generic-slot-hard-cutover/`
 > typed contract 收口事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/022-SDD-0032-data-runtime-typed-contract-completion/`
-> 更新：2026-06-07
+> 根本重构裁决：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md`
+> 更新：2026-06-15
 
 ## 1. 一句话定位
 
-Data 是旧 Godot C# ECS 主线的运行时数据容器。字段定义事实源来自 DataOS descriptor，运行时按下面的链路消费生成结果：
+Data 是旧 Godot C# ECS 主线的运行时数据容器。当前实现的字段定义事实源来自 DataOS descriptor，运行时按下面的链路消费生成结果：
 
 ```text
 DataOS SQLite authoring
@@ -23,10 +24,17 @@ DataOS SQLite authoring
 
 核心原则是：字段定义给 DataOS 和 snapshot 管，运行时只消费生成结果；C# 业务代码通过 typed handle 读写稳定 key。
 
+2026-06-15 后续重构裁决修正了 Data 的定位：SlimeAI 首要目标是功能解耦，不是数据形态统一。后续 Data 只保留为跨功能共享、需要 AI/validator/diagnostic 追溯的 typed runtime state protocol；Capability 内部缓存、索引、临时状态、展示 metadata 和“谁能写”的组织纪律 policy 不默认进入 Data。
+
 如果你正在排查当前仍成立的 residual 问题，先读：
 
 - `SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/012-SDD-0022-data-projection-diagnostics-contract-hardening/design/main.md`
 - `SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/012-SDD-0022-data-projection-diagnostics-contract-hardening/tasks.md`
+
+如果你准备继续重构 Data runtime，先读：
+
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/5.Data类型系统重构/00-README.md`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md`
 
 ## 2. 核心概念
 

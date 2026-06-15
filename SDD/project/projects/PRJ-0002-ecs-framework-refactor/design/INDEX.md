@@ -41,6 +41,11 @@
 | `Runtime/2.Data系统优化/5.Data类型系统重构/02-DataDefinition瘦身与分层方案.md` | data-definition-runtime-slimming | draft | 2026-06-14 | 建议拆分 authoring descriptor、runtime definition 和 presentation descriptor；移出 owner/presentation/旧 mirror 字段，保留 runtime 必要策略 |
 | `Runtime/2.Data系统优化/5.Data类型系统重构/03-类型系统与运行时存储重构方案.md` | data-runtime-type-storage-design | draft | 2026-06-14 | 设计 DataValueType 作用域收窄、typed default、slot 类型固定、typed policy、numeric modifier lane 和 generated contract 后续方向 |
 | `Runtime/2.Data系统优化/5.Data类型系统重构/04-确认点与后续SDD建议.md` | data-type-system-confirmation-and-sdd | draft | 2026-06-14 | Must Confirm、默认假设与后续 SDD 拆分建议；当前不进入 runtime 实施 |
+| `Runtime/2.Data系统优化/5.Data类型系统重构/05-Data存储结构与AI-first裁决.md` | data-storage-ai-first-decision | draft | 2026-06-15 | 裁决 stableKey -> typed slot 只作为短期协议层；中期升级 runtimeId -> slot array，长期按 profiler 做 numeric lane；AI-first 不绑定固定存储形式 |
+| `Runtime/2.Data系统优化/5.Data类型系统重构/06-DataOS字段与Policy决策说明.md` | dataos-descriptor-policy-decision | draft | 2026-06-15 | 通俗解释 DataOS descriptor 字段、policy 用途、删留和推荐顺序；`write_policy` 权限约束降级，数据形态契约保留并前移验证 |
+| `Runtime/2.Data系统优化/5.Data类型系统重构/07-类型转换与生成期检查深化.md` | data-type-conversion-generation-gate | draft | 2026-06-15 | 设计类型转换前移到 DB validator / snapshot generator / catalog build，并统一 DataTypeContract / DataValueCodec 边界 |
+| `Runtime/2.Data系统优化/5.Data类型系统重构/08-传统ECS数据存储与SlimeAI对比.md` | data-traditional-ecs-storage-comparison | draft | 2026-06-15 | 单独对比传统 ECS、QFramework、字典、数组、chunk 与 SlimeAI Data；说明字典不是错但不是高频存储终局 |
+| `Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` | data-root-decision-restructure-roadmap | draft | 2026-06-15 | 记录用户授权重大重构后的根本裁决：功能解耦优先，数据形态统一不是目标；后续按 runtime simplification、type contract、runtimeId storage 拆 hard cutover，SDD-0044 不再孤立优先执行 |
 | `3.Entity系统优化/README.md` | entity-design-index | current | 2026-05-31 | Entity 完整重构设计包入口；先读 `1.初级修改/06`，spawn 散点问题读 `2.重构/main.md` |
 | `3.Entity系统优化/1.初级修改/00-研究证据与裁决.md` | entity-research-decision | current | 2026-05-31 | 当前代码事实、外部 ECS / 引擎对照、AiFirst 参考采纳、hard cutover 裁决；Data/Event/DocsAI 以 06 覆盖旧假设 |
 | `3.Entity系统优化/1.初级修改/01-目标架构与模块拆分.md` | entity-architecture | current | 2026-05-31 | AI-first Entity runtime 目标架构、模块职责、Data projection、typed event 和 Observation 边界 |

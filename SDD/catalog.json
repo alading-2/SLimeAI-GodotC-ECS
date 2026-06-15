@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-06-14 19:32",
+  "generated_at": "2026-06-15 15:16",
   "root": "SDD",
   "statuses": [
     "pending",
@@ -32,7 +32,7 @@
       "slug": "ecs-framework-optimization",
       "title": "ECS Framework Optimization",
       "status": "active",
-      "updated_at": "2026-06-14",
+      "updated_at": "2026-06-15",
       "scope": "SlimeAI",
       "tags": [
         "ecs",

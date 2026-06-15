@@ -21,16 +21,15 @@ DataPresentationDescriptor
 
 ## 建议保留在 runtime 的字段
 
-`DataRuntimeDefinition` 建议只保留：
+`DataRuntimeDefinition` 建议只保留。下表中的 `DataKind` 是目标设计名，现有代码可先用收窄后的 `DataStoragePolicy` 承接，后续再决定是否重命名：
 
 | 字段 | 保留理由 |
 | --- | --- |
 | `StableKey` | 字段稳定协议 key，runtime catalog 索引必需。 |
 | `ValueType` 或 `RuntimeType` | 用于 loader 防御、slot 创建、report。长期建议从 `DataValueType` 升级为 runtime type descriptor。 |
 | `DefaultValue` typed | 未写入时的玩法默认值。必须是已转换的 typed 值，不应长期是 text/object。 |
-| `StoragePolicy` | 区分 persisted / runtime_state / runtime_only / computed / authoring_blob。 |
-| `WritePolicy` | 控制 Runtime / Loader / System / Debug 写入来源。 |
-| `RangePolicy`、`MinValue`、`MaxValue` | runtime 写入策略确实需要，尤其 clamp/reject。 |
+| `DataKind` / 收窄后的 `StoragePolicy` | 区分普通值、runtime_only、computed、authoring_blob；这是字段形态，不是权限规则。 |
+| `RangePolicy`、`MinValue`、`MaxValue` | 条件字段。优先在生成期检查，runtime 只保留必要防御。 |
 | `ModifierPolicy` | 决定字段是否允许 modifier。 |
 | `AllowedValues` | 对 enum/string 这类值域有运行时写入保护价值；为空时不应分配复杂结构。 |
 | `ComputeId`、`Dependencies` | computed resolver 与 dirty graph 必需。 |
@@ -42,6 +41,7 @@ DataPresentationDescriptor
 | --- | --- |
 | `RuntimeTypeId` | 仅当 `valueType=enum/object_ref/modifier_list` 且 generator 需要 CLR/Godot 类型补充时保留。普通 `float/int/bool/string` 不需要。 |
 | `MigrationPolicy` | 如果当前没有 Entity profile 迁移读取它，先留 authoring；等迁移功能真实使用时进入 runtime。 |
+| `WritePolicy` | 降级为 authoring/report/规则提示；computed 字段由 `DataKind=computed` 自然禁止写基础值，不建议作为 runtime hot path 权限系统。 |
 
 这里的关键不是把所有条件字段都删掉，而是避免“每个字段都携带全部能力”。runtime definition 可以按能力拆小对象：
 
@@ -50,8 +50,7 @@ DataRuntimeDefinition
   StableKey
   RuntimeType
   TypedDefaultValue
-  StoragePolicy
-  WritePolicy
+  DataKind
   RangePolicy?        仅 numeric/ranged 字段存在
   ModifierPolicy?     仅 modifier 字段存在
   AllowedValues?      仅 enum/string 白名单字段存在
@@ -160,8 +159,7 @@ public sealed class DataRuntimeDefinition
     public required DataValueType ValueType { get; init; }
     public required object? TypedDefaultValueForBoundary { get; init; }
     public Type ValueClrType { get; init; }
-    public DataStoragePolicy StoragePolicy { get; init; }
-    public DataWritePolicy WritePolicy { get; init; }
+    public DataKind DataKind { get; init; }
     public DataRangePolicy RangePolicy { get; init; }
     public float? MinValue { get; init; }
     public float? MaxValue { get; init; }

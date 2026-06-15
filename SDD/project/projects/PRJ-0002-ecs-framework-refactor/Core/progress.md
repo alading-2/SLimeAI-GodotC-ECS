@@ -6,11 +6,11 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-14
+- **Updated**: 2026-06-15
 - **Current SDD**: SDD-0044
-- **Last Conclusion**: 用户确认 `DataComputeRegistry` 默认单例、registry 职责收窄、catalog 验证收敛和 fatal 前 Log / Report observation 的方向无大问题。已创建 `SDD-0044 Data Compute Registry Singleton And Catalog Validation Convergence`，当前状态 pending，尚未开始 runtime 实现。
-- **Next Action**: 从 SDD-0044 T1.1 readiness 开始，确认 Data runtime 源码、DocsAI、DataOS 场景和 dirty workspace 基线，再实施 `DataComputeRegistry.Default` 与 catalog build report。
-- **Open Blockers**: none for SDD-0044。`SDD-0040` 仍 blocked 于 Godot scene smoke：当前没有可验证本框架工作树的承载游戏 runner。
+- **Last Conclusion**: 用户授权 Data 可重大重构、不保兼容，并确认 SlimeAI 的核心是功能解耦，不是数据形态统一。已新增 `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md`：Data 后续只保留为跨功能共享的 typed runtime state protocol，DataOS 退回 authoring / validator / generator 边界，优先拆 Data Runtime Simplification、Data Type Contract、Generated RuntimeId Storage 三个 hard cutover。
+- **Next Action**: 先冻结新的 Data runtime simplification SDD，再决定 SDD-0044 是并入 Data Type Contract 还是作为前置子任务；不建议直接从 SDD-0044 T1.1 孤立开工。
+- **Open Blockers**: none for Data design。`SDD-0040` 仍 blocked 于 Godot scene smoke：当前没有可验证本框架工作树的承载游戏 runner。
 
 ## Project Status Board
 
@@ -37,7 +37,7 @@
 | SDD-0037 | done | `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` | Resource Loading And Common Utilities Hard Cutover 已完成；`ResourceLoading` current facade、strict lookup、source diagnostics、ResourceCatalogDiagnostics 和 CommonUtilities 边界已收口 |
 | SDD-0038 | done | `design/Tool/其他Tool/03-Math目标架构与验证.md` | Math Formula And Deterministic Random Cutover 已完成；`ProbabilityTool` / `DeterministicRandom` 接管概率随机，Damage/Ability 公式归 owner，`MyMath` / `GeometryCalculator` 删除 |
 | SDD-0040 | blocked | `design/Tool/10.Log/` | T1 结构化 Logger 和 T2 离线语义 analyzer 默认入口已落地；T3 源码调用点语义化未完成，当前需先冻结 live stdout policy 与 owner flow contract；Godot scene smoke blocked 于当前无有效承载游戏 runner |
-| SDD-0044 | pending | `design/Runtime/2.Data系统优化/4.Data验证与Registry简化/01-DataComputeRegistry单例与Catalog验证收敛.md` | 待执行：`DataComputeRegistry.Default` frozen singleton、自定义 registry 显式注入、registry 移除 `DataDefinition` 校验、catalog build report 统一 computed 校验、fatal 前写 Data structured observation |
+| SDD-0044 | pending | `design/Runtime/2.Data系统优化/4.Data验证与Registry简化/01-DataComputeRegistry单例与Catalog验证收敛.md` + `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` | 局部方向仍成立，但不应孤立优先执行；建议并入 Data Type Contract hard cutover 或作为其前置子任务 |
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
 | SDD-0028 | done | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已完成；后续对象池改动按 ObjectPool owner 新建小切片 |
 | SDD-0029 | done | `design/Runtime/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |
@@ -46,6 +46,18 @@
 | SDD-0032 | done | `design/Runtime/ECS框架优化/1.拆箱装箱+GC优化/` | Data Runtime Typed Contract Completion 已完成；业务 Data 协议不再以 string/untyped/object 作为主链路，debug / loader / diagnostic 边界保留命名和 grep gate |
 | SDD-0033 | done | `design/Runtime/ECS框架优化/1.拆箱装箱+GC优化/` | Non-Data GC Boundary Completion 已完成；Event dynamic object、Feature / Ability raw object Execute、ObjectPool manager 反射、TargetSelector list-only ownership 已收口；Logger 仍为 P2 / profiler 驱动 |
 | TBD | proposed | `design/Runtime/13-旧ECS框架Event系统问题分析与优化方向.md` | P1：保留 EventBus，优化事件主键、事件定义和请求-响应边界 |
+| TBD | proposed | `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` | P0：Data Runtime Simplification hard cutover，先瘦身 runtime definition / descriptor / policy / presentation 边界 |
+| TBD | proposed | `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` | P0：Data Type Contract hard cutover，统一 `DataTypeContract` / `DataValueCodec` / typed default / fixed slot type / computed type validation |
+| TBD | proposed | `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` | P1：Generated RuntimeId Storage，让 `DataKey<T>` 携带 stable key + runtime id，storage 优先数组索引 |
+
+### P055 — 2026-06-15 — data-root-restructure-decision
+
+- **Context**: 用户基于 QFramework 和传统 ECS 对比，明确认为当前 Data 系统走偏，允许 Data/Runtime 重大重构且不保兼容；强调 SlimeAI 最重要的是功能解耦，数据解耦可能是伪需求。
+- **Conclusion**: 已冻结新根本裁决：Data 不再作为所有状态、配置、展示和权限规则的默认归宿，只保留为跨功能共享的 typed runtime state protocol。后续先做 Data Runtime Simplification，再做 Data Type Contract，最后做 Generated RuntimeId Storage；完整传统 ECS 分支只在这些切片后仍证明 Data 是瓶颈时单独评估。SDD-0044 的 registry 单例方向仍成立，但不应孤立优先执行。
+- **Evidence**: `design/Runtime/2.Data系统优化/5.Data类型系统重构/0.Prompt.md` 保存用户追加裁决；`09-Data系统根本裁决与重构路线.md` 新增根本裁决和路线；`00-README.md`、`04-确认点与后续SDD建议.md`、`design/INDEX.md`、项目 README / roadmap / progress 已同步。
+- **Research Adoption**: externalResources enabled=`engine-framework, official-docs`，scope=QFramework 专项报告与源码摘要、Context7 Bevy ECS StorageType、.NET Dictionary / CA1854、Unity Entities component/chunk docs；copiedCodeOrAssets=none；adoption=采纳“动态索引用于 registry/routing，业务 payload 保持 typed storage”的原则，不复制 QFramework / Unity / Bevy API。
+- **Impact**: 后续执行者不应再把 Data 简化理解成 `DataComputeRegistry` 单例小修，也不应把“AI-first”误读为必须统一 Data 形态。Data 进入条件、runtime definition 瘦身和类型契约前移是下一批 SDD 的主线。
+- **Resume**: 创建新的 `Data Runtime Simplification Hard Cutover` SDD；如继续使用 SDD-0044，先改 scope，把它并入 Data Type Contract 或标为前置子任务。
 
 ## Timeline
 
