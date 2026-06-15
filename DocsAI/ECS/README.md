@@ -2,7 +2,7 @@
 
 > 状态：current
 > 定位：SlimeAI ECS 框架核心文档，按 Runtime / Capabilities / Tools / UI 聚合。
-> 更新：2026-06-01
+> 更新：2026-06-15
 
 ## 阅读顺序
 
@@ -15,6 +15,16 @@
 ## 组织规则
 
 `DocsAI/ECS` 是 ECS 功能文档事实源。原 `Src/ECS/**.md` 长文档已迁入这里；`Src/ECS` 不再保留框架 Markdown 文档。
+
+当前框架第一目标是运行时功能解耦：多游戏功能应能通过 `Runtime + Capabilities + Tools + UI` 组合、裁剪和受控启停。`Component`、`System`、`Data`、`Event` 都是这个目标的实现手段；AI-first 文档、skill、SDD、验证和 Observation 是工程使用层，不替代底层 runtime 目标。
+
+后续大型 Runtime / Capability 改动先检查：
+
+- 功能是否能作为 Capability 被组合或裁剪。
+- System 是否支持启动前 profile/preset 选择，运行中启停是否有 stable blocked reason。
+- Component 默认组合是否来自 C# profile / typed options，而不是 Inspector 默认参数。
+- 跨功能共享状态是否才进入 Data，单 owner cache / 临时状态是否留在 owner 内。
+- 结构变化是否需要 RuntimeCommandBuffer / schedule phase，而不是任意 tick 直接增删。
 
 目录重构后的默认 AI 路由是：
 

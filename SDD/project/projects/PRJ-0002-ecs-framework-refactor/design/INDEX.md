@@ -36,7 +36,7 @@
 | `2.Data系统优化/2.Data无兼容完全重构/05-Data残余问题代码修复分解.md` | data-residual-fix-plan | current | 2026-05-30 | 当前残余问题的代码修改分解；逐文件说明具体怎么改 |
 | `2.Data系统优化/2.Data无兼容完全重构/06-Data文档更新与门禁清单.md` | data-doc-gate-checklist | current | 2026-05-30 | 当前需要同步更新的文档清单和 Data / 文档门禁 |
 | `Runtime/2.Data系统优化/4.Data验证与Registry简化/01-DataComputeRegistry单例与Catalog验证收敛.md` | data-registry-catalog-validation-convergence | current | 2026-06-14 | 用户确认后的方向设计：默认 computed resolver 单例、registry 职责收窄、catalog build report 和 fatal 前 structured observation |
-| `Runtime/2.Data系统优化/5.Data类型系统重构/00-README.md` | data-type-system-restructure-index | draft | 2026-06-14 | Data 类型系统重构入口；裁决保留统一 Data 容器，但把类型契约前移到 DataOS/generator/catalog build，runtime 字典只做 stableKey -> typed slot 索引 |
+| `Runtime/2.Data系统优化/5.Data类型系统重构/00-README.md` | data-type-system-restructure-index | draft | 2026-06-15 | Data 类型系统重构入口；裁决保留统一 Data 容器但瘦身为跨功能共享 typed runtime state protocol，表格驱动排在底层 runtime 解耦之后 |
 | `Runtime/2.Data系统优化/5.Data类型系统重构/01-需求归纳与真实问题.md` | data-type-system-problem-analysis | draft | 2026-06-14 | 归纳用户需求：DataDefinition 冗余、默认值恢复类型、DataValueType/Storage 转换复杂、throw/log 边界和统一 Data 容器是否可行 |
 | `Runtime/2.Data系统优化/5.Data类型系统重构/02-DataDefinition瘦身与分层方案.md` | data-definition-runtime-slimming | draft | 2026-06-14 | 建议拆分 authoring descriptor、runtime definition 和 presentation descriptor；移出 owner/presentation/旧 mirror 字段，保留 runtime 必要策略 |
 | `Runtime/2.Data系统优化/5.Data类型系统重构/03-类型系统与运行时存储重构方案.md` | data-runtime-type-storage-design | draft | 2026-06-14 | 设计 DataValueType 作用域收窄、typed default、slot 类型固定、typed policy、numeric modifier lane 和 generated contract 后续方向 |
@@ -46,6 +46,14 @@
 | `Runtime/2.Data系统优化/5.Data类型系统重构/07-类型转换与生成期检查深化.md` | data-type-conversion-generation-gate | draft | 2026-06-15 | 设计类型转换前移到 DB validator / snapshot generator / catalog build，并统一 DataTypeContract / DataValueCodec 边界 |
 | `Runtime/2.Data系统优化/5.Data类型系统重构/08-传统ECS数据存储与SlimeAI对比.md` | data-traditional-ecs-storage-comparison | draft | 2026-06-15 | 单独对比传统 ECS、QFramework、字典、数组、chunk 与 SlimeAI Data；说明字典不是错但不是高频存储终局 |
 | `Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` | data-root-decision-restructure-roadmap | draft | 2026-06-15 | 记录用户授权重大重构后的根本裁决：功能解耦优先，数据形态统一不是目标；后续按 runtime simplification、type contract、runtimeId storage 拆 hard cutover，SDD-0044 不再孤立优先执行 |
+| `Runtime/2.Data系统优化/5.Data类型系统重构/10-运行时解耦与表格驱动顺序校准.md` | data-runtime-decoupling-table-driven-order | draft | 2026-06-15 | 校准 DataOS 表格驱动顺序：填表组合功能是上层体验，必须排在底层 Runtime 解耦、Data 进入条件和 Type Contract 之后 |
+| `Runtime/2.Data系统优化/6.架构学习/README.md` | data-architecture-learning-index | current | 2026-06-15 | QFramework / FrameworkDesign / Unity Entities / Bevy / Friflo 等成熟框架学习入口；裁决不直接换框架，先学习边界、类型契约、authoring/runtime 分层、deferred command 和 observation 机制 |
+| `Runtime/2.Data系统优化/6.架构学习/01-问题判断与总体裁决.md` | data-architecture-learning-decision | current | 2026-06-15 | 回答“是否直接用成熟框架”：问题真实存在，建议学习后继续 SlimeAI 自研，不引入外部 ECS runtime 或 QFramework 依赖 |
+| `Runtime/2.Data系统优化/6.架构学习/02-QFramework架构学习与采纳边界.md` | qframework-adoption-boundary | current | 2026-06-15 | 专项分析 QFramework / FrameworkDesign；采纳少规则、强类型边界、Command/Query/Event 思路，拒绝 Architecture 静态单例、IController、ICommand 对象层和 BindableProperty 替代 Data |
+| `Runtime/2.Data系统优化/6.架构学习/03-成熟ECS与CSharp框架学习路线.md` | data-ecs-learning-roadmap | current | 2026-06-15 | 给出 QFramework、Unity Entities、Bevy、Friflo、Arch、DefaultEcs、Flecs、EnTT、GAS、ET、IFramework 的源码阅读顺序和学习目标 |
+| `Runtime/2.Data系统优化/6.架构学习/04-Data系统学习落点与重构建议.md` | data-learning-to-restructure-plan | current | 2026-06-15 | 把外部学习落到 Data Runtime Simplification、Data Type Contract、Generated RuntimeId Storage；明确 Data 进入条件和 SDD-0044 并入位置 |
+| `Runtime/2.Data系统优化/6.架构学习/05-证据与采纳决策.md` | data-architecture-learning-evidence | current | 2026-06-15 | ResearchAdoption 证据包；记录 Evidence / Inference / Unknown、Adopt Now / Later / Reject 和外部资料边界 |
+| `Runtime/2.Data系统优化/6.架构学习/06-运行时解耦第一原则与框架目标.md` | runtime-decoupling-first-principle | current | 2026-06-15 | 回答用户补充裁决：SlimeAI 首要目标是多游戏功能可组合、可裁剪、可启停；Component/System 解耦必须保留，表格驱动和 AI-first 都是上层能力 |
 | `3.Entity系统优化/README.md` | entity-design-index | current | 2026-05-31 | Entity 完整重构设计包入口；先读 `1.初级修改/06`，spawn 散点问题读 `2.重构/main.md` |
 | `3.Entity系统优化/1.初级修改/00-研究证据与裁决.md` | entity-research-decision | current | 2026-05-31 | 当前代码事实、外部 ECS / 引擎对照、AiFirst 参考采纳、hard cutover 裁决；Data/Event/DocsAI 以 06 覆盖旧假设 |
 | `3.Entity系统优化/1.初级修改/01-目标架构与模块拆分.md` | entity-architecture | current | 2026-05-31 | AI-first Entity runtime 目标架构、模块职责、Data projection、typed event 和 Observation 边界 |

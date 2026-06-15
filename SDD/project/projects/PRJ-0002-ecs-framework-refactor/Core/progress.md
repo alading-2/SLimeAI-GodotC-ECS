@@ -8,8 +8,8 @@
 
 - **Updated**: 2026-06-15
 - **Current SDD**: SDD-0044
-- **Last Conclusion**: 用户授权 Data 可重大重构、不保兼容，并确认 SlimeAI 的核心是功能解耦，不是数据形态统一。已新增 `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md`：Data 后续只保留为跨功能共享的 typed runtime state protocol，DataOS 退回 authoring / validator / generator 边界，优先拆 Data Runtime Simplification、Data Type Contract、Generated RuntimeId Storage 三个 hard cutover。
-- **Next Action**: 先冻结新的 Data runtime simplification SDD，再决定 SDD-0044 是并入 Data Type Contract 还是作为前置子任务；不建议直接从 SDD-0044 T1.1 孤立开工。
+- **Last Conclusion**: 用户授权 Data 可重大重构、不保兼容，并确认 SlimeAI 的第一目标是运行时功能解耦：多游戏功能应能通过 Component/System/Capability/Profile 组合、裁剪和受控启停；AI-first 和表格驱动都是上层工程能力，不应压过底层 runtime 简单性。已新增 `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md`、`10-运行时解耦与表格驱动顺序校准.md`、`design/Runtime/2.Data系统优化/6.架构学习/06-运行时解耦第一原则与框架目标.md`：Data 后续只保留为跨功能共享的 typed runtime state protocol，DataOS 退回 authoring / validator / generator 边界，表格驱动功能拼装排在 Runtime Simplification、Data Type Contract、Generated RuntimeId Storage 之后。架构学习包确认 QFramework / FrameworkDesign 作为架构纪律学习对象，Unity Entities / Bevy / Flecs / Friflo 等作为 runtime 机制对照；不直接换成熟框架，不复制外部 API。
+- **Next Action**: 先冻结新的 Data Runtime Simplification SDD，再决定 SDD-0044 是并入 Data Type Contract 还是作为前置子任务；Data runtime 简化后再开 Capability/Profile Manifest 与 RuntimeCommandBuffer RFC，不建议直接从 SDD-0044 T1.1 或表格驱动体验孤立开工。
 - **Open Blockers**: none for Data design。`SDD-0040` 仍 blocked 于 Godot scene smoke：当前没有可验证本框架工作树的承载游戏 runner。
 
 ## Project Status Board
@@ -49,6 +49,26 @@
 | TBD | proposed | `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` | P0：Data Runtime Simplification hard cutover，先瘦身 runtime definition / descriptor / policy / presentation 边界 |
 | TBD | proposed | `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` | P0：Data Type Contract hard cutover，统一 `DataTypeContract` / `DataValueCodec` / typed default / fixed slot type / computed type validation |
 | TBD | proposed | `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` | P1：Generated RuntimeId Storage，让 `DataKey<T>` 携带 stable key + runtime id，storage 优先数组索引 |
+| TBD | proposed | `design/Runtime/2.Data系统优化/6.架构学习/06-运行时解耦第一原则与框架目标.md` | P1：Capability/Profile Manifest，先支持启动前功能组合、系统 preset、DataOS trim、资源 catalog 和验证矩阵 |
+| TBD | proposed | `design/Runtime/2.Data系统优化/6.架构学习/04-Data系统学习落点与重构建议.md` + `06-运行时解耦第一原则与框架目标.md` | P1：RuntimeCommandBuffer RFC / Observation SystemPerf Contract；只采纳成熟 ECS 的结构变更 guard、playback 阶段、system enable/disable blocked reason 和 perf snapshot 机制 |
+
+### P057 — 2026-06-15 — runtime-decoupling-first-principle
+
+- **Context**: 用户补充说明 SlimeAI 最核心需求是高度解耦：Component + System 解耦，启动前自由选择系统，运行中受控打开/关闭系统；Data 表格驱动和 AI 结合都是上层能力，底层 runtime 需要先简单直接。
+- **Conclusion**: 用户判断成立。已把项目第一目标校准为“多游戏功能可组合、可裁剪、可启停的 Godot C# runtime”。Component/System 解耦必须保留，但运行中结构变化不能任意手术，后续需要 RuntimeCommandBuffer、schedule phase、blocked reason、diagnostics 和 observation。DataOS 表格驱动体验保留为后续上层能力，不再作为当前 Data runtime 第一目标。
+- **Evidence**: 新增 `design/Runtime/2.Data系统优化/6.架构学习/06-运行时解耦第一原则与框架目标.md`、`design/Runtime/2.Data系统优化/5.Data类型系统重构/10-运行时解耦与表格驱动顺序校准.md`；同步 `DocsAI/ECS框架与AIFirst方向决策.md`、Data 入口、架构学习包、项目 README / INDEX / roadmap。
+- **Research Adoption**: externalResources enabled=`engine-framework, official-docs`，scope=Context7 Bevy / Unity Entities / Flecs、Resources/Engine 报告和现有 SlimeAI System/Component 事实源；copiedCodeOrAssets=none；adoption=采纳启动前 plugin/profile 组合、system run condition / enable-disable、authoring/runtime 分层、command buffer 和 diagnostics 机制，不复制 public API。
+- **Impact**: 后续 Data SDD 必须先做 runtime simplification/type contract；Capability/Profile Manifest 和 RuntimeCommandBuffer 作为 Data 后续 P1；Feature 等上层复杂度先记 TODO，不在底层未稳前继续扩。
+- **Resume**: 创建 Data Runtime Simplification SDD 前先读 `6.架构学习/06` 和 `5.Data类型系统重构/10`；若用户要求实现运行时解耦，先做 Capability/Profile Manifest 或 RuntimeCommandBuffer RFC，不从表格驱动编辑体验开工。
+
+### P056 — 2026-06-15 — data-architecture-learning-decision
+
+- **Context**: 用户要求广泛研究 QFramework、FrameworkDesign、Resources/Engine 克隆框架和当前 web / Context7 资料，判断是否应直接用成熟框架、应该学什么源码和模式，并在 `design/Runtime/2.Data系统优化/6.架构学习/` 生成文档。
+- **Conclusion**: 问题真实存在：框架复杂度已经超过闭门自研能稳定把握的范围。裁决为“学习后继续 SlimeAI 自研”，不直接替换为 QFramework / Unity Entities / Bevy / Friflo / Arch 等成熟框架；QFramework / FrameworkDesign 用来学习少规则分层、Command/Query/Event、共享数据判断和纸上设计，成熟 ECS 用来学习 typed payload、authoring/runtime 分层、deferred command 和 observation。
+- **Evidence**: 新增 `design/Runtime/2.Data系统优化/6.架构学习/source-request.md`、`README.md`、`01-问题判断与总体裁决.md`、`02-QFramework架构学习与采纳边界.md`、`03-成熟ECS与CSharp框架学习路线.md`、`04-Data系统学习落点与重构建议.md`、`05-证据与采纳决策.md`；同步 `design/INDEX.md`、Data 入口、项目 README 和 roadmap。
+- **Research Adoption**: externalResources enabled=`engine-framework, official-docs`，scope=QFramework GitHub/local clone/Context7、FrameworkDesign GitHub 临时 clone、Resources/Engine/Docs 框架报告、Context7 Unity Entities / Bevy ECS / .NET docs；copiedCodeOrAssets=none；adoption=采纳机制和边界，不复制外部 API 或代码。
+- **Impact**: 后续 Data SDD 应把 `6.架构学习/04-Data系统学习落点与重构建议.md` 作为前置读物；Data 进入条件、Runtime Simplification、Type Contract 和 RuntimeId Storage 的裁决更稳，不再把“成熟框架”误读为可直接替换 SlimeAI runtime。
+- **Resume**: 创建 Data Runtime Simplification SDD 前先读 `6.架构学习/README.md`；如另开 RuntimeCommandBuffer 或 Observation SDD，引用 `6.架构学习/03` 和 `04` 的成熟 ECS 机制边界。
 
 ### P055 — 2026-06-15 — data-root-restructure-decision
 
