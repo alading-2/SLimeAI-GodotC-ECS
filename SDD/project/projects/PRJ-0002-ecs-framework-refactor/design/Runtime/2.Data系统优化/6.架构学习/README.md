@@ -47,6 +47,10 @@ SlimeAI 不复制 API，只吸收机制。
    记录 Evidence / Inference / Unknown、Adopt Now / Later / Reject 和后续开放问题。
 6. [`06-运行时解耦第一原则与框架目标.md`](./06-运行时解耦第一原则与框架目标.md)  
    回答用户补充问题：SlimeAI 第一目标是 runtime 功能解耦，Component/System 解耦必须保留；表格驱动和 AI-first 都排在底层 runtime 之后。
+7. [`07-QFramework之后的CSharp源码学习顺序.md`](./07-QFramework之后的CSharp源码学习顺序.md)<br>
+   回答“只会 C#，QFramework 之后看什么”：QFramework 学规则，Friflo 学 runtime 边界，Arch 学 storage/query，DefaultEcs 学易用 API，Bevy / Unity Entities 学概念。
+8. [`08-框架理论学习策略.md`](./08-框架理论学习策略.md)<br>
+   回答“是否需要网上查教程学习框架理论”：需要补少量理论，但只学能约束 Runtime 解耦的内容，不泛搜教程重搭框架。
 
 ## 当前裁决
 
@@ -58,3 +62,5 @@ SlimeAI 不复制 API，只吸收机制。
 - `Adopt Later`：当 SlimeAI Data 简化后仍出现性能瓶颈，再评估 numeric lane、typed sparse lane 或完整 ECS storage 分支。
 - `Reject`：不把 QFramework `Architecture<T>`、`IController`、`ICommand` 对象层、`TypeEventSystem.Global`、`BindableProperty<T>` 直接移入 SlimeAI runtime。
 - `Reject`：不引入外部 ECS runtime 依赖，不把 SlimeAI 改造成 Unity Entities / Bevy / Arch / Friflo 克隆。
+- `Learning Order`：QFramework 之后优先读 Friflo.Engine.ECS，再读 Arch 和 DefaultEcs；Bevy / Unity Entities 暂只学 plugin/schedule/run condition 和 authoring/runtime 分层。
+- `Theory Strategy`：理论学习只占辅助位置，优先读 Game Programming Patterns 和 .NET API 设计规则；所有理论必须回写到 SlimeAI 的 Adopt / Reject、规则表、RFC 或 SDD。

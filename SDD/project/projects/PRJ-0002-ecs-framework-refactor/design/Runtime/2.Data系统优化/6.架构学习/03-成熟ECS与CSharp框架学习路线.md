@@ -2,6 +2,7 @@
 
 > 原始问题：见 [`source-request.md`](./source-request.md)。  
 > 本文目标：回答“应该去看哪些源码、怎么看、学习什么模式”。
+> 当前阶段精简阅读顺序：见 [`07-QFramework之后的CSharp源码学习顺序.md`](./07-QFramework之后的CSharp源码学习顺序.md)。
 
 ## 学习原则
 

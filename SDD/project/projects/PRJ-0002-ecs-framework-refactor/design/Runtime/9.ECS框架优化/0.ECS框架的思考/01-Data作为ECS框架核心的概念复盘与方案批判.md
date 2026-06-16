@@ -118,8 +118,8 @@ loader / snapshot / diagnostic 边界允许 object；
 - `Src/ECS/Runtime/Data/Data.cs`
 - `Src/ECS/Runtime/Data/DataComputeRegistry.cs`
 - `Src/ECS/Runtime/Data/Events/GameEventType_Data.cs`
-- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/ECS框架优化/1.拆箱装箱+GC优化/设计/00-总览与AI-first裁决.md`
-- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/ECS框架优化/1.拆箱装箱+GC优化/设计/01-Data运行时object去除设计.md`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/9.ECS框架优化/1.拆箱装箱+GC优化/设计/00-总览与AI-first裁决.md`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/9.ECS框架优化/1.拆箱装箱+GC优化/设计/01-Data运行时object去除设计.md`
 - `SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/021-SDD-0031-data-runtime-generic-slot-hard-cutover/design/main.md`
 - `Resources/Engine/Docs/FrameworkAnalysis/Reports/` 下 Bevy、Flecs、EnTT、Unity Entities 相关报告
 - Context7 返回的 Bevy / Unity Entities 官方文档片段
