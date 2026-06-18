@@ -1,10 +1,19 @@
 # ECS 框架与 AI-first 方向决策
 
 > 日期：2026-05-28
-> 更新：2026-06-15，运行时第一目标校准为“多游戏功能可组合、可裁剪、可启停”；AI-first 是文档、skill、验证和观察工程层，不是替代底层 runtime 目标。SDD-0025 后当前目录入口为 `DocsAI/ECS/Runtime`、`DocsAI/ECS/Capabilities`、`DocsAI/ECS/Tools`、`DocsAI/ECS/UI`；`Foundation/Foundations` 不再作为当前路由层。ObjectPool / Collision 当前作为 AI-first ECS 生命周期边界案例：保留物理根节点脱树策略，但收口到 ObjectPool / Entity / Collision owner 协作和可观测验证。
-> 状态：方向决策记录，供后续 SDD / DocsAI / Skill / 代码优化参考。
+> 更新：2026-06-16，本文件已被 PRJ-0002 `Runtime/9.ECS框架优化/4.弃用ECS框架/` 覆盖；保留为历史方向记录。
+> 状态：superseded / historical direction record。
 > 范围：旧 Godot C# ECS 主线、历史 AI-first / GameOS 尝试、PRJ-0002 ECS 优化、Resources/Engine 外部框架分析、网上 ECS 资料。
 > 结论类型：架构方向，不是本次代码改造任务。
+
+## Superseded Notice
+
+2026-06-16 用户已作出新裁决：SlimeAI 弃用 ECS 作为框架方向，转为 `AI-first Godot C# Gameplay Framework`。当前文件 2026-06-15 的“保留 ECS 心智模型 / Composable Godot C# Runtime”结论只作为历史材料。
+
+当前方向入口：
+
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/9.ECS框架优化/4.弃用ECS框架/README.md`
+- `DocsAI/思考/框架/ECS框架/README.md`
 
 ## 0. 一句话结论
 

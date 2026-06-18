@@ -1,12 +1,22 @@
 # ECS 框架文档
 
-> 状态：current
-> 定位：SlimeAI ECS 框架核心文档，按 Runtime / Capabilities / Tools / UI 聚合。
-> 更新：2026-06-15
+> 状态：historical path / current owner docs
+> 定位：历史 `ECS` 路径下的 Runtime / Capabilities / Tools / UI owner 文档集合。
+> 更新：2026-06-16
+
+## 方向状态
+
+2026-06-16 后，SlimeAI 已裁决弃用 ECS 作为框架身份，正式框架名为 `SlimeAIFramework`。当前目录仍保留为历史路径名和 owner 文档位置；后续新设计应使用 `Object / Component / System / Feature / Event / Data` 语义，不再把本目录理解为 ECS runtime 目标。
+
+方向入口：
+
+- [`../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/9.ECS框架优化/4.弃用ECS框架/README.md`](../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/9.ECS框架优化/4.弃用ECS框架/README.md)
+- [`../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/10.GodotOOP框架方向/README.md`](../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/10.GodotOOP框架方向/README.md)
+- [`../思考/框架/ECS框架/README.md`](../思考/框架/ECS框架/README.md)
 
 ## 阅读顺序
 
-1. **方向定位**：读 [`../ECS框架与AIFirst方向决策.md`](../ECS框架与AIFirst方向决策.md)。
+1. **方向定位**：读 PRJ-0002 [`SlimeAIFramework Godot OOP 框架方向`](../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/10.GodotOOP框架方向/README.md)。
 2. **共享内核**：改 Entity / Data / Event / System lifecycle 时读 [Runtime/](Runtime/)。
 3. **功能 owner**：改 Ability / Damage / Movement 等功能时读 [Capabilities/](Capabilities/) 下对应 owner。
 4. **通用工具和 UI**：改 Timer、ObjectPool、Input、UI binding 时读 [Tools/](Tools/) 或 [UI/](UI/)。
@@ -14,17 +24,17 @@
 
 ## 组织规则
 
-`DocsAI/ECS` 是 ECS 功能文档事实源。原 `Src/ECS/**.md` 长文档已迁入这里；`Src/ECS` 不再保留框架 Markdown 文档。
+`DocsAI/ECS` 是历史路径下的功能 owner 文档集合。原 `Src/ECS/**.md` 长文档已迁入这里；`Src/ECS` 不再保留框架 Markdown 文档。该目录名暂不改，避免在概念方向冻结前制造大范围路径 churn。
 
-当前框架第一目标是运行时功能解耦：多游戏功能应能通过 `Runtime + Capabilities + Tools + UI` 组合、裁剪和受控启停。`Component`、`System`、`Data`、`Event` 都是这个目标的实现手段；AI-first 文档、skill、SDD、验证和 Observation 是工程使用层，不替代底层 runtime 目标。
+当前框架第一目标已改为 Godot/OOP 功能驱动：快速开发游戏 MVP，功能能通过 Object / Component / System / Feature / Event / Data 组合、裁剪和受控启停。`Runtime + Capabilities + Tools + UI` 仍是历史目录分层，后续新设计不再把 `Component`、`System`、`Data` 理解成 ECS runtime 必备结构。
 
 后续大型 Runtime / Capability 改动先检查：
 
-- 功能是否能作为 Capability 被组合或裁剪。
-- System 是否支持启动前 profile/preset 选择，运行中启停是否有 stable blocked reason。
-- Component 默认组合是否来自 C# profile / typed options，而不是 Inspector 默认参数。
-- 跨功能共享状态是否才进入 Data，单 owner cache / 临时状态是否留在 owner 内。
-- 结构变化是否需要 RuntimeCommandBuffer / schedule phase，而不是任意 tick 直接增删。
+- 功能是否能作为 Feature 被组合或裁剪。
+- 需要 System 的原因是否明确，是否只是 Component 内部逻辑被过度上提。
+- Component 是否职责单一、可启停，并允许保存自己的内部状态。
+- 只有跨功能共享、表格驱动或需要验证追踪的状态才进入 Data；单 owner cache / 临时状态留在 owner 内。
+- 运行中增删 Component / Feature 是否有生命周期、事件注销和 diagnostics 规则。
 
 目录重构后的默认 AI 路由是：
 

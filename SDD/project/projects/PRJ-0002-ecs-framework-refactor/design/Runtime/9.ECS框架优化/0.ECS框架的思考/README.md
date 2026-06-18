@@ -1,8 +1,12 @@
 # ECS 框架的思考
 
-> 状态：current design notes
-> 更新：2026-06-06
+> 状态：superseded design notes
+> 更新：2026-06-16
 > 范围：SlimeAI ECS 框架概念层、Data 作为底层协议的定位、AI-first 框架取舍
+
+## Superseded Notice
+
+2026-06-16 用户已裁决弃用 ECS 框架方向。当前目录保留为历史概念复盘；新的 ECS 概念研究见 `DocsAI/思考/框架/ECS框架/`，SlimeAI 当前方向见 `../4.弃用ECS框架/`。
 
 ## 定位
 

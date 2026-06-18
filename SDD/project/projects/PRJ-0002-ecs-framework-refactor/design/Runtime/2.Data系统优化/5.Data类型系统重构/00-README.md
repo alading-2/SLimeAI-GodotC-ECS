@@ -1,10 +1,19 @@
 # Data 类型系统重构设计入口
 
-> 状态：draft / deepthink 输出，尚未进入 runtime 实施。
+> 状态：superseded / historical problem evidence，尚未进入 runtime 实施。
 > 日期：2026-06-14
-> 更新：2026-06-15，补充 Data 存储结构、传统 ECS/QFramework 对比、DataOS 字段/policy、类型转换前移、Data 根本重构裁决、架构学习包，以及运行时解耦与表格驱动顺序校准。
+> 更新：2026-06-16，弃用 ECS 方向已覆盖本目录旧路线；本目录保留为 Data 问题证据，不再作为后续 SDD 执行路线入口。
 > 原始问题：见同目录 [`0.Prompt.md`](./0.Prompt.md)。
 > 范围：`Src/ECS/Runtime/Data/`、`DocsAI/ECS/Runtime/Data/`、`Data/DataOS/`、`Data/DataKey/`、`Workspace/Else/参考/Data/`、`Resources/Engine/Docs`、`Resources/Engine/Engine`。
+
+## Superseded Notice
+
+2026-06-16 用户已裁决 SlimeAI 弃用 ECS 框架方向。Data 后续不再默认执行本目录提出的 `Data Runtime Simplification -> Data Type Contract -> Generated RuntimeId Storage` 路线。
+
+当前入口改为：
+
+- [`../../9.ECS框架优化/4.弃用ECS框架/03-Data系统问题收敛与重写边界.md`](../../9.ECS框架优化/4.弃用ECS框架/03-Data系统问题收敛与重写边界.md)
+- [`../../9.ECS框架优化/4.弃用ECS框架/05-后续迁移路线与确认点.md`](../../9.ECS框架优化/4.弃用ECS框架/05-后续迁移路线与确认点.md)
 
 ## 一句话结论
 

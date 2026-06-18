@@ -1,13 +1,18 @@
 ---
 name: ecs-system
-description: 修改 SlimeAI ECS Runtime System Core、SystemManager、SystemRegistry、SystemPreflight、SystemDiagnosticsSnapshot、ProjectState、运行条件、系统配置或 SystemCore 验证时使用。
+description: 修改 SlimeAI 历史 ECS 路径下的 Runtime System Core、SystemManager、SystemRegistry、SystemPreflight、SystemDiagnosticsSnapshot、ProjectState、运行条件、系统配置，或新 Service 边界时使用。
 ---
 
 # Runtime System 入口
 
+## 方向状态
+
+2026-06-16 后 SlimeAI 已裁决弃用 ECS 作为框架身份。System 新语义应收窄为 Feature / Runtime Service：只在跨对象协调、全局查询、批处理、资源、生命周期或 diagnostics 需要时存在；不要把所有 Component 内部逻辑强行上提为 System。
+
 ## 必读入口
 
 - `DocsAI/ECS/Runtime/System/README.md`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/9.ECS框架优化/4.弃用ECS框架/02-新框架概念边界.md`
 - `DocsAI/ECS/Runtime/System/Usage.md`
 - `DocsAI/ECS/Runtime/System/SystemManifest.md`
 - `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/8.System优化/README.md`

@@ -1,10 +1,20 @@
 # Data 架构学习入口
 
-> 状态：current / research decision  
+> 状态：superseded / research evidence
 > 日期：2026-06-15  
+> 更新：2026-06-16，弃用 ECS 方向已覆盖本目录旧路线；本目录保留为 QFramework / ECS / C# 框架研究证据。
 > 原始问题：见 [`source-request.md`](./source-request.md)。  
 > 上游设计：[`../5.Data类型系统重构/00-README.md`](../5.Data类型系统重构/00-README.md)、[`../5.Data类型系统重构/09-Data系统根本裁决与重构路线.md`](../5.Data类型系统重构/09-Data系统根本裁决与重构路线.md)、[`06-运行时解耦第一原则与框架目标.md`](./06-运行时解耦第一原则与框架目标.md)。  
 > 资源边界：`externalResources.enabled = engine-framework, official-docs`；读取范围为本地 `Resources/Engine/Docs`、`Resources/Engine/Engine/QFramework`、临时 clone 的 `fanqie404/FrameworkDesign`、Context7 QFramework / Unity Entities / Bevy ECS / Flecs / .NET docs；`copiedCodeOrAssets: none`。
+
+## Superseded Notice
+
+2026-06-16 用户已裁决 SlimeAI 弃用 ECS 作为框架身份。QFramework 仍作为学习资料，但不再用于支撑旧 `Data Runtime Simplification -> Type Contract -> RuntimeId Storage` 执行路线。
+
+当前入口改为：
+
+- [`../../9.ECS框架优化/4.弃用ECS框架/04-QFramework采纳边界.md`](../../9.ECS框架优化/4.弃用ECS框架/04-QFramework采纳边界.md)
+- [`../../9.ECS框架优化/4.弃用ECS框架/03-Data系统问题收敛与重写边界.md`](../../9.ECS框架优化/4.弃用ECS框架/03-Data系统问题收敛与重写边界.md)
 
 ## 一句话结论
 

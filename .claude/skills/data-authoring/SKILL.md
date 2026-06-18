@@ -5,11 +5,18 @@ description: 修改 SlimeAI DataOS schema、migration、snapshot generator、val
 
 # DataOS / Authoring 入口
 
+## 方向状态
+
+2026-06-16 后 SlimeAI 已裁决弃用 ECS 作为框架身份，正式框架名为 `SlimeAIFramework`。DataOS 仍是当前实现和历史 authoring 工具，但新设计应先确认字段是否真的需要进入 Data：跨功能共享、表格驱动、验证追踪、持久化或调试观察；不要把所有 Component / Feature 内部状态默认写成 DataOS runtime field。
+
 ## 必读入口
 
 - `DocsAI/DataOS/Overview.md`
 - `DocsAI/README.md`
 - `DocsAI/ECS/Runtime/Data/Data系统说明.md`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/10.GodotOOP框架方向/Data/README.md`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/10.GodotOOP框架方向/Data/05-外部方案证据与采纳边界.md`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/9.ECS框架优化/4.弃用ECS框架/03-Data系统问题收敛与重写边界.md`
 - `DocsAI/ECS/Capabilities/Ability/README.md`
 - `DocsAI/ECS/Capabilities/Feature/README.md`
 - `DocsAI/ECS/Capabilities/Unit/README.md`
@@ -31,6 +38,7 @@ description: 修改 SlimeAI DataOS schema、migration、snapshot generator、val
 ## 规则
 
 - Authoring 数据写 SQLite seed / migration，运行时消费 generated snapshot。
+- 新字段进入 DataOS 前必须先确认它属于 Data：跨功能共享、需要表格驱动、验证追踪、authoring、持久化或调试观察；单 Component / 单 Feature 内部状态默认留在代码内。
 - DataOS authoring 首选清晰业务表，不把万能 `data_field` / EAV 行作为 Unit、Ability、Feature、System、Spawn 等业务内容的主入口。
 - 新业务内容应写入 `unit_player`、`unit_enemy`、`unit_targeting_indicator`、`ability`、`ability_effect`、`ability_projectile`、`ability_movement_*`、`feature_definition`、`feature_modifier`、`system_config`、`system_preset`、`spawn_config` 等业务表，再由 generator 投影到 Runtime snapshot fields。
 - `data_record / data_field` 只保留兼容和 projection 输出语义；除迁移兼容或测试 fixture 外，不新增手写业务 `data_field` rows。

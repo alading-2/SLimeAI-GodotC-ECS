@@ -1,16 +1,23 @@
 ---
 name: ecs-data
-description: 修改 SlimeAI ECS Runtime Data、DataKey、DataCatalog、RuntimeDataSnapshot 或数据变更事件时使用。
+description: 修改 SlimeAI 历史 ECS 路径下的 Runtime Data、DataKey、DataCatalog、RuntimeDataSnapshot、数据变更事件或 SlimeAIFramework Data 设计时使用。
 ---
 
 # Runtime Data 入口
 
+## 方向状态
+
+2026-06-16 后 SlimeAI 已裁决弃用 ECS 作为框架身份，正式框架名为 `SlimeAIFramework`。本 skill ID 暂保留为 `ecs-data` 以覆盖旧查询；新设计保留 `Data` 名字，Data 语义收窄为受控共享状态、表格驱动、DataBinding、descriptor 约束和 DataModifier。当前 `Data` 实现仍是现状事实源，但后续重构不再默认执行旧 Data Runtime Simplification / Type Contract / RuntimeId Storage 路线。
+
 ## 必读入口
 
 - `DocsAI/ECS/Runtime/Data/Data系统说明.md` — Data 系统当前实现说明
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/9.ECS框架优化/4.弃用ECS框架/README.md` — 2026-06-16 弃用 ECS 方向裁决
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/10.GodotOOP框架方向/Data/README.md` — Data 后续重写方向入口
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/10.GodotOOP框架方向/Data/05-外部方案证据与采纳边界.md` — Godot / Unity Entities / Unreal GAS 对 Data 方案的证据和采纳边界
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/9.ECS框架优化/4.弃用ECS框架/03-Data系统问题收敛与重写边界.md` — Data 后续问题收敛边界
 - `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/` — Data 重构设计包
-- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/5.Data类型系统重构/00-README.md` — Data 类型系统重构入口
-- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` — 2026-06-15 Data 根本重构裁决
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/5.Data类型系统重构/00-README.md` — 历史 Data 问题证据，已 superseded
 - `Src/ECS/Runtime/Data/` — 当前 Data runtime 实现源码
 - `Src/ECS/Runtime/Data/Tests/DataOS/` — DataOS 场景测试
 
@@ -21,13 +28,16 @@ description: 修改 SlimeAI ECS Runtime Data、DataKey、DataCatalog、RuntimeDa
 - `Data/DataKey/`
 - `Src/ECS/Runtime/Data/Events/`
 - `Src/ECS/Runtime/Data/Tests/DataOS/`
-- Data 重构事实源：`SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/`
+- 当前实现事实源：`DocsAI/ECS/Runtime/Data/Data系统说明.md`
+- 新 Data 方向事实源：`SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/10.GodotOOP框架方向/Data/README.md`
+- 新 Data 外部证据边界：`SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/10.GodotOOP框架方向/Data/05-外部方案证据与采纳边界.md`
+- 历史 Data 重构事实源：`SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/`
 
 ## 规则
 
-- 2026-06-15 后续重构默认按 `5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` 执行：功能解耦优先，数据形态统一不是目标；Data 只保留为跨功能共享、需要 AI/validator/diagnostic 追溯的 typed runtime state protocol。
-- 不强制所有数据进入 Data。Capability 内部缓存、索引、临时状态、展示 metadata 和“谁能写”的组织纪律 policy 不默认进 Data；它们应留在 owner service / component / system config / projection / manifest，并补 invalidation、diagnostics 或验证入口。
-- 后续 Data 大改默认 hard cutover，不做长期兼容 adapter；`SDD-0044 DataComputeRegistry` 单例方向仍成立，但不应孤立优先执行，应并入 Data Type Contract hard cutover 或作为其前置子任务。
+- 2026-06-16 后续重构默认按 `Runtime/10.GodotOOP框架方向/Data/README.md` 执行：状态默认留在 Component / Feature / System 内部，证明需要跨功能共享、表格驱动、验证追踪、authoring 或持久化后，才进入 Data。
+- 不强制所有字段进入 Data。Feature 内部缓存、索引、临时状态、展示 metadata 和“谁能写”的组织纪律 policy 不默认进 Data；它们应留在 owner system / component / system config / projection / manifest，并补 invalidation、diagnostics 或验证入口。
+- 后续 Data 大改必须先冻结 Data 进入条件、authority、DataBinding、Component mirror 和对象池同步规则，不继续从 `SDD-0044`、Data Runtime Simplification、Data Type Contract 或 RuntimeId Storage 孤立开工。
 - `write_policy` 这类权限约束不作为长期 runtime enforcement 目标；保留真正影响数据形态的 contract：类型、默认值、computed、modifier、range、allowed values、runtime_only / authoring_blob。
 - `Data` 只存运行时状态，不承担 authoring 表职责。
 - 新 DataKey 先写 DataOS descriptor，再由 generated handle 暴露 typed `DataKey<T>`；不恢复旧 `DataMeta` / `DataRegistry` 事实源。

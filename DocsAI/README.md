@@ -2,7 +2,16 @@
 
 > 状态：current
 > 定位：SlimeAI 框架仓文档统一入口，AI-first 设计。
-> 更新：2026-06-01
+> 更新：2026-06-16
+
+## 方向状态
+
+2026-06-16 起，SlimeAI 框架方向已裁决为弃用 ECS 作为框架身份。`DocsAI/ECS/` 和 `Src/ECS/` 暂时仍是历史路径名，不代表后续继续实现 ECS runtime。
+
+当前方向入口：
+
+- [`../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/9.ECS框架优化/4.弃用ECS框架/README.md`](../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/9.ECS框架优化/4.弃用ECS框架/README.md)
+- [`思考/框架/ECS框架/README.md`](./思考/框架/ECS框架/README.md)
 
 ## 快速导航
 
@@ -11,13 +20,13 @@
 | [INDEX.md](./INDEX.md) | AI 路由索引 |
 | [管理/README.md](./管理/README.md) | DocsAI 治理、索引、迁移和维护规则 |
 | [ECS/README.md](./ECS/README.md) | 框架核心文档（Runtime / Capabilities / Tools / UI） |
-| [ECS框架与AIFirst方向决策.md](./ECS框架与AIFirst方向决策.md) | 方向决策事实源 |
+| [ECS框架与AIFirst方向决策.md](./ECS框架与AIFirst方向决策.md) | 历史方向决策，已被 2026-06-16 弃用 ECS 裁决覆盖 |
 | [思考/README.md](./思考/README.md) | 设计思考与深度分析 |
 | [Archive/README.md](./Archive/README.md) | 历史归档 |
 
 ## 阅读顺序
 
-1. **方向定位**：读 [ECS框架与AIFirst方向决策.md](./ECS框架与AIFirst方向决策.md)。
+1. **方向定位**：先读 PRJ-0002 [`弃用ECS框架`](../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/9.ECS框架优化/4.弃用ECS框架/README.md)，再按需追溯 [ECS框架与AIFirst方向决策.md](./ECS框架与AIFirst方向决策.md) 的历史结论。
 2. **文档规则**：读 [管理/DocsAI统一管理与索引规则.md](./管理/DocsAI统一管理与索引规则.md)，确认事实源和索引规则。
 3. **ECS 文档**：进入 [ECS/README.md](./ECS/README.md)，按 `Runtime/` 或 `Capabilities/` 找 owner。
 4. **执行前**：读 `ECS/README.md` 中对应 owner 的完整文档入口，再进入 `Src/ECS/Runtime/` 或 `Src/ECS/Capabilities/` 阅读源码；迁移未完成的 owner 按迁移清单追溯旧路径。
@@ -29,7 +38,7 @@
 | 内容 | 事实源 |
 | ---- | ---- |
 | DocsAI 管理、索引、迁移规则 | `管理/` |
-| 框架方向决策 | `ECS框架与AIFirst方向决策.md` |
+| 框架方向决策 | `../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/9.ECS框架优化/4.弃用ECS框架/` |
 | 模块概念、使用、测试 | `ECS/Runtime/<owner>/`、`ECS/Capabilities/<owner>/`、`ECS/Tools/<owner>/`、`ECS/UI/`；迁移过渡期旧分类只作追溯 |
 | 设计思考、深度分析 | `思考/<主题>/` |
 | 历史决策参考 | `Archive/<分类>/` |
@@ -43,7 +52,7 @@
 
 ## 非目标
 
-- 不把 `Src/ECS` 默认迁出到新 GameOS。
+- 不在没有 SDD 的情况下把 `Src/ECS` / `DocsAI/ECS` 机械改名。
 - 不引入第三方 ECS 运行时依赖。
 - 不复制 Bevy / Unity DOTS / Unreal GAS / DefaultEcs 的 public API。
 - 不在 DocsAI 直接规定 Data / Event / Entity / Relationship / System 的具体改造方案（具体设计在 SDD）。

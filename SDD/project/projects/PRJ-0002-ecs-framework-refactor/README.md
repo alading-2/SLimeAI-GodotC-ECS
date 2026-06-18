@@ -4,31 +4,30 @@
 
 - **Status**: active
 - **Created**: 2026-05-25
-- **Updated**: 2026-06-15
+- **Updated**: 2026-06-16
 - **Scope**: SlimeAI
-- **Current SDD**: SDD-0044
+- **Current SDD**: none
 - **Tags**: ecs, optimization, data, event, entity, component, relationship, directory-architecture, capability, docsai, tools, timer, objectpool, collision, system
 
 ## What This Project Is About
 
 本项目用于重新梳理 `Src/ECS` 旧 ECS 框架的真实问题，并形成“保留旧 ECS 主线、按问题域优化完善”的设计事实源。当前框架仓和 SDD 均位于 `/home/slime/Code/SlimeAI/SlimeAI`；外层 `/home/slime/Code/SlimeAI` 只作为包含游戏仓、Resources 和框架仓的父目录。
 
-当前方向已经纠偏：不再把旧 ECS 作为迁移输入，不再以整体替换或复制外部参考结构为目标。旧框架整体可保留；2026-06-15 用户进一步确认 SlimeAI 第一目标是运行时功能解耦：同一 Godot C# 框架内的大量游戏功能应能通过 Component/System/Capability/Profile 组合、裁剪和受控启停，AI-first 和表格驱动都是上层工程能力。Data 子系统已按 SDD-0012 至 SDD-0022 完成 descriptor-first / snapshot-first / no-compat / residual contract hardening 收口，并按 SDD-0031 / SDD-0032 完成 runtime generic slot hard cutover 和 typed contract completion：typed `DataKey<T>` 主链路、modifier 和 computed cache 现在使用 `DataSlot<T> + IDataSlot`，业务 Capability 和 AI 可调用 Data 协议不再使用 string key / untyped write / object payload 作为主链路。2026-06-15 用户授权 Data 可重大重构、不保兼容，并确认 Data 只保留为跨功能共享的 typed runtime state protocol；`design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` 和 `10-运行时解耦与表格驱动顺序校准.md` 已冻结新方向：DataOS 退回 authoring / validator / generator 边界，表格驱动功能拼装排在底层 runtime 简化之后，后续优先拆 `Data Runtime Simplification`、`Data Type Contract`、`Generated RuntimeId Storage` 三个 hard cutover。同日新增 `design/Runtime/2.Data系统优化/6.架构学习/README.md` 和 `06-运行时解耦第一原则与框架目标.md`：确认 QFramework / FrameworkDesign 应作为架构学习第一案例，Unity Entities / Bevy / Flecs / Friflo 等作为 runtime 机制对照；不直接换成熟框架，不复制外部 API，只采纳少规则分层、类型契约、authoring/runtime 分层、deferred command、system enable/disable 和 observation 机制。SDD-0044 的 `DataComputeRegistry` 单例方向仍成立，但不应孤立优先执行，应并入 Data Type Contract 或作为其前置子任务。Data 完成后的 GC/装箱优化已按 SDD-0033 完成非 Data 边界收口：Event dynamic object 主链路删除，Feature / Ability Execute 边界改为 typed payload/result helper，ObjectPoolManager 改 `IObjectPoolRuntime` 非泛型管理接口，TargetSelector 新增 `TargetQueryEngine + TargetQueryResult` ownership / diagnostics facade。2026-06-09 起按 SDD-0040 推进 Log AI-first Observation：T1 结构化记录层已落地，T2 离线语义整理层也已把 `logctl analyze` 默认入口改为 flow conclusion / success template / failure-first digest；但用户运行游戏看到的 live 打印仍然分离，说明 `Src/ECS` 源码调用点语义化未完成。2026-06-11 已新增 `design/Tool/10.Log/第三部分-源码调用点语义化/README.md` 和 SDD-0040 T3：先冻结 live stdout policy、owner flow contract、Debug UI/TestSystem 可见性，再按 owner 迁移 `_log.Info`、测试打印和高频成功路径。当前最终 Godot scene smoke 仍因缺少能验证本框架工作树的承载游戏 runner 阻塞，且未伪造通过。Entity / Relationship 已按 SDD-0024 完成 hard cutover。SDD-0025 已把 ECS 物理目录和 DocsAI 路由重构为 `Runtime + Capabilities + Tools + UI`，同时保留 ECS 语义；`design/Tool/其他Tool/` 已按 2026-06-04 至 2026-06-07 用户复核更新为功能优先 hard cutover：RuntimeMountRegistry、TargetQueryEngine、ResourceLoading、NodeLifecycleRegistry、Common Utilities、MathFormula 后续只保功能，不保旧 API 长期兼容；已确认 `/root/SlimeAIRuntime`、资源 strict fail-fast、Common Utilities 放 `Src/ECS/Tools/CommonUtilities/`、NodeLifecycle 迁 Runtime、TargetSelector 不做兼容桥。SDD-0035 至 SDD-0038 已完成剩余 Tools hard cutover：Runtime mount + NodeLifecycle、TargetQueryEngine、ResourceLoading + CommonUtilities、Math formula + deterministic RNG 均已完成并同步 DocsAI/skill。SDD-0026 已完成 Input Contract 业务语义 facade、调用点迁移和验证闭环。SDD-0027 Timer 重构已完成可执行代码/文档主链路但被当前 BrotatoLike runner/Godot CLI 缺失阻塞在场景验证。SDD-0028 已完成 ObjectPool / Collision ParkedInTree cutover。SDD-0029 已完成 Runtime System manifest / preflight / diagnostics / trace 收口。SDD-0030 已完成 Component 默认组合从 `.tscn` Preset 到 C# profile / composer 的切换，并补齐 Component manifest、DocsAI 和 owner skill 规则。
+当前方向已在 2026-06-16 再次重大调整：用户明确裁决弃用 ECS 作为框架身份，正式框架名定为 `SlimeAIFramework`。`DocsAI/ECS` 和 `Src/ECS` 暂时仍是历史路径名，不代表继续实现 ECS runtime；后续设计使用 `Object / Component / System / Feature / Event / Data` 语义。新方向入口是 `design/Runtime/10.GodotOOP框架方向/README.md`，上游裁决和研究入口是 `design/Runtime/9.ECS框架优化/4.弃用ECS框架/README.md` 与 `DocsAI/思考/框架/ECS框架/`。此前 2026-06-15 的 Data Runtime Simplification / Type Contract / RuntimeId Storage 路线已被标记为历史问题证据，不再作为默认执行路线；Data 名字保留，后续按受控共享状态、表格驱动、DataBinding、DataModifier 收窄和 Godot/OOP 功能模型重新设计。用户已删除 SDD-0044，项目不再把它作为 current_sdd 或 pending 恢复入口；只保留其中 fatal 前 structured report 的思想。历史上 Data 子系统已按 SDD-0012 至 SDD-0022 完成 descriptor-first / snapshot-first / no-compat / residual contract hardening，并按 SDD-0031 / SDD-0032 完成 typed slot 主链路；这些实现记录保留为现状事实，不再证明框架必须继续走 ECS/Data 核心方向。Entity / Relationship、目录架构、Component、System、Tools、Input、ObjectPool、Timer、Log 等历史 SDD 状态仍按各自记录追溯；后续代码迁移需另开 SDD，不在本方向文档阶段直接改源码。
 
 ## Reading Order
 
 1. `design/INDEX.md` — 项目共享设计索引
-2. `design/Foundation/06-ECS完全重构执行原则.md` — Data 无兼容复盘后的 hard cutover 项目级原则
-3. `design/Runtime/2.Data系统优化/README.md` — Data 完整重构设计包入口
-4. `design/Runtime/2.Data系统优化/5.Data类型系统重构/00-README.md` — Data 类型系统重构设计入口
-5. `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` — 当前 Data 后续 hard cutover 根本裁决
-6. `design/Runtime/2.Data系统优化/5.Data类型系统重构/10-运行时解耦与表格驱动顺序校准.md` — 表格驱动排在底层 runtime 解耦之后的顺序裁决
-7. `design/Runtime/2.Data系统优化/6.架构学习/06-运行时解耦第一原则与框架目标.md` — SlimeAI 第一目标：多游戏功能可组合、可裁剪、可启停
-8. `design/Runtime/2.Data系统优化/6.架构学习/README.md` — QFramework / FrameworkDesign / 成熟 ECS 学习入口；确认不直接换框架，只采纳机制
-9. `design/Runtime/2.Data系统优化/4.Data验证与Registry简化/01-DataComputeRegistry单例与Catalog验证收敛.md` — SDD-0044 局部方向，后续并入 Data Type Contract
-10. `sdds/030-SDD-0044-data-compute-registry-singleton-and-catalog-validation-convergence/README.md` — 已创建但不建议孤立优先执行的 Data registry / catalog 验证收敛 SDD
-9. `design/Runtime/3.Entity系统优化/README.md` — Entity 完整重构设计包入口
-10. `design/Runtime/6.ECS框架目录架构大重构/README.md` — 当前目录架构重构设计包入口
+2. `design/Runtime/10.GodotOOP框架方向/README.md` — SlimeAIFramework 当前方向：Object / Component / System / Feature / Event / Data
+3. `design/Runtime/10.GodotOOP框架方向/Data/README.md` — Data 名字保留后的受控共享状态、表格驱动、DataBinding 和 DataModifier 方案入口
+4. `design/Runtime/10.GodotOOP框架方向/Data/05-外部方案证据与采纳边界.md` — Godot、Unity Entities、Unreal GAS 对 Data 方案的证据和采纳边界
+5. `design/Runtime/9.ECS框架优化/4.弃用ECS框架/README.md` — 2026-06-16 上游方向裁决：弃用 ECS
+6. `design/Runtime/9.ECS框架优化/4.弃用ECS框架/03-Data系统问题收敛与重写边界.md` — Data 后续问题入口，已校准为不改名
+7. `DocsAI/思考/框架/ECS框架/README.md` — 真正 ECS、Godot 适配性和 SlimeAI 概念取舍研究
+8. `design/Runtime/2.Data系统优化/5.Data类型系统重构/00-README.md` — 历史 Data 问题证据，已 superseded
+9. `design/Runtime/2.Data系统优化/6.架构学习/README.md` — 历史 QFramework / ECS 学习证据，已 superseded
+10. `design/Runtime/3.Entity系统优化/README.md` — Entity 完整重构设计包入口
+11. `design/Runtime/6.ECS框架目录架构大重构/README.md` — 当前目录架构重构设计包入口
 11. `sdds/021-SDD-0031-data-runtime-generic-slot-hard-cutover/README.md` — Data runtime generic slot hard cutover 已完成执行记录
 12. `design/Runtime/ECS框架优化/1.拆箱装箱+GC优化/README.md` — 装箱/GC 设计包入口；Data 与非 Data 明显宽口已由 SDD-0031/0032/0033 完成，后续只从 Logger、TargetQuery pooled lease 或 profiler 证据驱动的 owner 小切片恢复
 13. `sdds/023-SDD-0033-non-data-gc-boundary-completion/README.md` — 非 Data GC 边界收口执行记录

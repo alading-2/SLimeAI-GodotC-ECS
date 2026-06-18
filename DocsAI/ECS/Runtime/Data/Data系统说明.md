@@ -1,12 +1,12 @@
 # Data 系统说明
 
-> 状态：当前实现说明；SDD-0032 后业务 Data 主链路使用 typed `DataKey<T>`、typed system/debug write、typed computed resolver 和 typed Data changed event。snapshot / loader / TestSystem / migration diagnostic 边界仍可保留 object，但必须通过 API 名称和注释标明边界。2026-06-15 后续重构裁决见“根本重构裁决”，不要把当前实现说明误读为终局架构。
+> 状态：当前实现说明 / 历史路径；SDD-0032 后业务 Data 主链路使用 typed `DataKey<T>`、typed system/debug write、typed computed resolver 和 typed Data changed event。snapshot / loader / TestSystem / migration diagnostic 边界仍可保留 object，但必须通过 API 名称和注释标明边界。2026-06-16 后 SlimeAI 已弃用 ECS 作为框架身份，正式方向为 `SlimeAIFramework`；Data 名字保留，后续按受控共享状态、表格驱动、DataBinding、descriptor 约束和 DataModifier 收窄重新设计。不要把当前实现说明误读为终局架构。
 > 范围：`Src/ECS/Runtime/Data/`、`Data/DataOS/`、`Data/DataKey/Generated/`、`Src/ECS/Capabilities/*/Events/`、`Src/ECS/Runtime/Event/Global/`、`Src/ECS/Runtime/Data/Events/`、`Data/Config/`、`Data/ResourceManagement/`、`Src/ECS/Runtime/Data/Tests/DataOS/`。
 > 设计事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/`。
 > GC/装箱优化事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/021-SDD-0031-data-runtime-generic-slot-hard-cutover/`
 > typed contract 收口事实源：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/022-SDD-0032-data-runtime-typed-contract-completion/`
-> 根本重构裁决：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md`
-> 更新：2026-06-15
+> Data 重设方向：`../../../../SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/10.GodotOOP框架方向/Data/README.md`
+> 更新：2026-06-16
 
 ## 1. 一句话定位
 
@@ -24,17 +24,18 @@ DataOS SQLite authoring
 
 核心原则是：字段定义给 DataOS 和 snapshot 管，运行时只消费生成结果；C# 业务代码通过 typed handle 读写稳定 key。
 
-2026-06-15 后续重构裁决修正了 Data 的定位：SlimeAI 首要目标是功能解耦，不是数据形态统一。后续 Data 只保留为跨功能共享、需要 AI/validator/diagnostic 追溯的 typed runtime state protocol；Capability 内部缓存、索引、临时状态、展示 metadata 和“谁能写”的组织纪律 policy 不默认进入 Data。
+2026-06-16 后续方向再次修正：SlimeAI 不再以 ECS 为框架身份，Data 后续不再默认作为核心 runtime protocol 推进。新的默认原则是“状态默认留在 Component / Feature / System 内部，证明需要跨功能共享、表格驱动、验证追踪、authoring 或持久化后，才进入 Data”。
 
 如果你正在排查当前仍成立的 residual 问题，先读：
 
 - `SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/012-SDD-0022-data-projection-diagnostics-contract-hardening/design/main.md`
 - `SDD/project/projects/PRJ-0002-ecs-framework-refactor/sdds/012-SDD-0022-data-projection-diagnostics-contract-hardening/tasks.md`
 
-如果你准备继续重构 Data runtime，先读：
+如果你准备继续重构 Data，先读：
 
-- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/5.Data类型系统重构/00-README.md`
-- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/10.GodotOOP框架方向/Data/README.md`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/9.ECS框架优化/4.弃用ECS框架/03-Data系统问题收敛与重写边界.md`
+- `SDD/project/projects/PRJ-0002-ecs-framework-refactor/design/Runtime/9.ECS框架优化/4.弃用ECS框架/05-后续迁移路线与确认点.md`
 
 ## 2. 核心概念
 

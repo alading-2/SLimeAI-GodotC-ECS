@@ -2,7 +2,7 @@
 
 ## Summary
 
-- **pending**: 1
+- **pending**: 0
 - **active**: 0
 - **blocked**: 2
 - **done**: 41
@@ -13,13 +13,11 @@
 | ID | Title | Status | Bucket | Current SDD | Path |
 | --- | --- | --- | --- | --- | --- |
 | PRJ-0001 | SystemAgent Optimization | active | projects | none | SDD/project/projects/PRJ-0001-systemagent-optimization |
-| PRJ-0002 | ECS Framework Optimization | active | projects | SDD-0044 | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
+| PRJ-0002 | ECS Framework Optimization | active | projects | none | SDD/project/projects/PRJ-0002-ecs-framework-refactor |
 
 ## Pending
 
-| ID | Project | Title | Updated | Scope | Current Task |
-| --- | --- | --- | --- | --- | --- |
-| SDD-0044 | PRJ-0002 | Data Compute Registry Singleton And Catalog Validation Convergence | 2026-06-14 | SlimeAI | T1.1 |
+无。
 
 ## Active
 
@@ -111,7 +109,6 @@
 - SDD-0037 — Resource Loading And Common Utilities Hard Cutover
 - SDD-0038 — Math Formula And Deterministic Random Cutover
 - SDD-0040 — Log AI-first Observation Hard Cutover
-- SDD-0044 — Data Compute Registry Singleton And Catalog Validation Convergence
 
 ### Workspace/SDD
 
@@ -152,7 +149,6 @@
 - SDD-0030 — Component Code Composition And Contract Hardening
 - SDD-0036 — Target Query Engine Hard Cutover
 - SDD-0040 — Log AI-first Observation Hard Cutover
-- SDD-0044 — Data Compute Registry Singleton And Catalog Validation Convergence
 
 ### bootstrap
 
@@ -165,10 +161,6 @@
 ### capability
 
 - SDD-0025 — ECS Framework Directory Architecture Restructure
-
-### catalog
-
-- SDD-0044 — Data Compute Registry Singleton And Catalog Validation Convergence
 
 ### cleanup
 
@@ -201,7 +193,6 @@
 ### compute
 
 - SDD-0016 — Data Compute Resolver Runtime
-- SDD-0044 — Data Compute Registry Singleton And Catalog Validation Convergence
 
 ### controller
 
@@ -223,7 +214,6 @@
 - SDD-0022 — Data Projection Diagnostics Contract Hardening
 - SDD-0031 — Data Runtime Generic Slot Hard Cutover
 - SDD-0032 — Data Runtime Typed Contract Completion
-- SDD-0044 — Data Compute Registry Singleton And Catalog Validation Convergence
 
 ### data-event-docsai-sync
 
@@ -254,7 +244,6 @@
 
 - SDD-0022 — Data Projection Diagnostics Contract Hardening
 - SDD-0029 — System Contract Manifest And Diagnostics Hardening
-- SDD-0044 — Data Compute Registry Singleton And Catalog Validation Convergence
 
 ### directory
 
@@ -490,10 +479,6 @@
 ### typed-contract
 
 - SDD-0032 — Data Runtime Typed Contract Completion
-
-### validation
-
-- SDD-0044 — Data Compute Registry Singleton And Catalog Validation Convergence
 
 ### workflow
 

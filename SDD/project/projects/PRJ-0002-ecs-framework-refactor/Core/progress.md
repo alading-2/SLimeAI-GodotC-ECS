@@ -6,10 +6,10 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-15
-- **Current SDD**: SDD-0044
-- **Last Conclusion**: 用户授权 Data 可重大重构、不保兼容，并确认 SlimeAI 的第一目标是运行时功能解耦：多游戏功能应能通过 Component/System/Capability/Profile 组合、裁剪和受控启停；AI-first 和表格驱动都是上层工程能力，不应压过底层 runtime 简单性。已新增 `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md`、`10-运行时解耦与表格驱动顺序校准.md`、`design/Runtime/2.Data系统优化/6.架构学习/06-运行时解耦第一原则与框架目标.md`：Data 后续只保留为跨功能共享的 typed runtime state protocol，DataOS 退回 authoring / validator / generator 边界，表格驱动功能拼装排在 Runtime Simplification、Data Type Contract、Generated RuntimeId Storage 之后。架构学习包确认 QFramework / FrameworkDesign 作为架构纪律学习对象，Unity Entities / Bevy / Flecs / Friflo 等作为 runtime 机制对照；不直接换成熟框架，不复制外部 API。
-- **Next Action**: 先冻结新的 Data Runtime Simplification SDD，再决定 SDD-0044 是并入 Data Type Contract 还是作为前置子任务；Data runtime 简化后再开 Capability/Profile Manifest 与 RuntimeCommandBuffer RFC，不建议直接从 SDD-0044 T1.1 或表格驱动体验孤立开工。
+- **Updated**: 2026-06-16
+- **Current SDD**: none
+- **Last Conclusion**: 用户在 2026-06-16 进一步裁决：正式框架名为 `SlimeAIFramework`；`Entity` 概念改为 `Object`；`Component`、`System`、`Data` 名字保留但去 ECS 化。已新增 `design/Runtime/10.GodotOOP框架方向/`，其中 `Data/` 单独说明 Data 作为受控共享状态、表格驱动、DataBinding、descriptor 约束和 DataModifier 的重写方向，并补充 Godot / Unity Entities / Unreal GAS 外部证据采纳边界。
+- **Next Action**: 创建 Data 进入条件与 DataBinding 设计 SDD；默认首个实现切片建议为 `Unit + Health + Damage`，先验证 DataOS -> Object.Data -> Component mirror、DataChanged、对象池复用和 DataModifier source 清理。
 - **Open Blockers**: none for Data design。`SDD-0040` 仍 blocked 于 Godot scene smoke：当前没有可验证本框架工作树的承载游戏 runner。
 
 ## Project Status Board
@@ -37,7 +37,7 @@
 | SDD-0037 | done | `design/Tool/其他Tool/02-CommonTool与ResourceManagement裁决.md` | Resource Loading And Common Utilities Hard Cutover 已完成；`ResourceLoading` current facade、strict lookup、source diagnostics、ResourceCatalogDiagnostics 和 CommonUtilities 边界已收口 |
 | SDD-0038 | done | `design/Tool/其他Tool/03-Math目标架构与验证.md` | Math Formula And Deterministic Random Cutover 已完成；`ProbabilityTool` / `DeterministicRandom` 接管概率随机，Damage/Ability 公式归 owner，`MyMath` / `GeometryCalculator` 删除 |
 | SDD-0040 | blocked | `design/Tool/10.Log/` | T1 结构化 Logger 和 T2 离线语义 analyzer 默认入口已落地；T3 源码调用点语义化未完成，当前需先冻结 live stdout policy 与 owner flow contract；Godot scene smoke blocked 于当前无有效承载游戏 runner |
-| SDD-0044 | pending | `design/Runtime/2.Data系统优化/4.Data验证与Registry简化/01-DataComputeRegistry单例与Catalog验证收敛.md` + `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` | 局部方向仍成立，但不应孤立优先执行；建议并入 Data Type Contract hard cutover 或作为其前置子任务 |
+| SDD-0044 | deleted / superseded | `design/Runtime/2.Data系统优化/4.Data验证与Registry简化/01-DataComputeRegistry单例与Catalog验证收敛.md` | 用户已删除；项目不再登记为 current/pending。只保留 fatal 前 structured report 和 catalog/resolver diagnostic 思想，后续并入 DataBinding / modifier / descriptor 瘦身 SDD |
 | SDD-0027 | blocked | `design/Tool/Timer/` | Timer scheduler core、TimerManager adapter、owner/purpose callsite migration、diagnostics、benchmark、TimerStressValidation 文件、DocsAI Timer 文档和 tools skill 同步已完成；当前 blocked 于缺 current BrotatoLike runner/Godot CLI，无法产出 scene artifact / scene-gate / smoke 证据 |
 | SDD-0028 | done | `design/Tool/ObjectPool/` | ObjectPool Collision ParkedInTree Cutover 已完成；后续对象池改动按 ObjectPool owner 新建小切片 |
 | SDD-0029 | done | `design/Runtime/8.System优化/` | Runtime System manifest / preflight / diagnostics / trace 和 DocsAI Runtime/System 同步已完成 |
@@ -46,11 +46,26 @@
 | SDD-0032 | done | `design/Runtime/ECS框架优化/1.拆箱装箱+GC优化/` | Data Runtime Typed Contract Completion 已完成；业务 Data 协议不再以 string/untyped/object 作为主链路，debug / loader / diagnostic 边界保留命名和 grep gate |
 | SDD-0033 | done | `design/Runtime/ECS框架优化/1.拆箱装箱+GC优化/` | Non-Data GC Boundary Completion 已完成；Event dynamic object、Feature / Ability raw object Execute、ObjectPool manager 反射、TargetSelector list-only ownership 已收口；Logger 仍为 P2 / profiler 驱动 |
 | TBD | proposed | `design/Runtime/13-旧ECS框架Event系统问题分析与优化方向.md` | P1：保留 EventBus，优化事件主键、事件定义和请求-响应边界 |
-| TBD | proposed | `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` | P0：Data Runtime Simplification hard cutover，先瘦身 runtime definition / descriptor / policy / presentation 边界 |
-| TBD | proposed | `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` | P0：Data Type Contract hard cutover，统一 `DataTypeContract` / `DataValueCodec` / typed default / fixed slot type / computed type validation |
-| TBD | proposed | `design/Runtime/2.Data系统优化/5.Data类型系统重构/09-Data系统根本裁决与重构路线.md` | P1：Generated RuntimeId Storage，让 `DataKey<T>` 携带 stable key + runtime id，storage 优先数组索引 |
-| TBD | proposed | `design/Runtime/2.Data系统优化/6.架构学习/06-运行时解耦第一原则与框架目标.md` | P1：Capability/Profile Manifest，先支持启动前功能组合、系统 preset、DataOS trim、资源 catalog 和验证矩阵 |
-| TBD | proposed | `design/Runtime/2.Data系统优化/6.架构学习/04-Data系统学习落点与重构建议.md` + `06-运行时解耦第一原则与框架目标.md` | P1：RuntimeCommandBuffer RFC / Observation SystemPerf Contract；只采纳成熟 ECS 的结构变更 guard、playback 阶段、system enable/disable blocked reason 和 perf snapshot 机制 |
+| TBD | proposed | `design/Runtime/10.GodotOOP框架方向/` | P0：SlimeAIFramework 方向已冻结；后续代码迁移前先创建 Data 进入条件与 DataBinding 设计 SDD |
+| TBD | proposed | `design/Runtime/10.GodotOOP框架方向/Data/` | P0：Data 名字保留；后续设计先定义 authority、Component mirror、对象池同步、descriptor 约束和 DataModifier 范围，不复用旧 Data hard cutover 路线；外部证据入口为 `Data/05-外部方案证据与采纳边界.md` |
+
+### P059 — 2026-06-16 — slimeai-framework-godot-oop-data-direction
+
+- **Context**: 用户要求在 `Runtime/10.GodotOOP框架方向/` 新建设计文档，明确框架名 `SlimeAIFramework`，确认 `Entity -> Object`，保留 `Component` / `System` / `Data` 名字，并重点深度分析 Data、DataOS 表格驱动、Component 字段同步、descriptor 约束和 DataModifier。
+- **Conclusion**: 方向成立。SlimeAIFramework 不再实现 ECS storage/query/schedule；Object 是 Godot/OOP 运行时对象，Component 是可持有内部字段的功能组件，System 是跨对象协调/批处理/查询/生命周期/资源等 runtime coordinator，Feature 是玩法 owner，Event 是 typed communication，Data 是受控共享状态和表格驱动协议。`SharedState` 不作为新名字使用。
+- **Evidence**: 新增 `design/Runtime/10.GodotOOP框架方向/README.md`、`01~05`、`source-request.md` 和 `Data/README.md`、`Data/01~05`；同步 `9.ECS框架优化/4.弃用ECS框架` 当前入口、项目 README、roadmap、progress、project.json。
+- **Research Adoption**: externalResources enabled=`official-docs, engine-framework`，scope=Context7 Godot 官方 docs、Unity Entities official docs、Unreal Gameplay Ability System docs、本地 SlimeAI Data runtime / DataOS / Component 事实源；copiedCodeOrAssets=none；adoption=采纳概念和边界，不复制 API。
+- **Impact**: `SDD-0044` 已按用户裁决从项目 current/pending 恢复入口移除；后续 Data SDD 从 DataBinding / Unit+Health+Damage 最小切片进入，而不是 registry singleton 小修或旧 runtimeId storage 路线。
+- **Resume**: 下一步若进入执行，创建 Data 进入条件与 DataBinding 设计 SDD；默认首个代码验证切片为 Unit/Health/Damage，必须覆盖 DataOS -> Data -> Component mirror、DataChanged、对象池复用和 DataModifier source 清理。
+
+### P058 — 2026-06-16 — deprecate-ecs-framework-direction
+
+- **Context**: 用户明确裁决“不用 ECS 这个方向已定”，要求深度搜索真正 ECS、分析 Godot/OOP/QFramework/Data，并落盘到 `DocsAI/思考/框架/ECS框架` 与 `design/Runtime/9.ECS框架优化/4.弃用ECS框架`。
+- **Conclusion**: 裁决成立。真正 ECS 是 data-oriented storage/query/schedule runtime；SlimeAI 当前目标是快速 MVP、Godot Node/OOP 功能组合、事件驱动和 AI-first 验证，不应继续以 ECS 为框架身份。新方向为 `AI-first Godot C# Gameplay Framework`，核心概念改为 Object / Component / Feature / Service / Event / SharedState。
+- **Evidence**: 新增 `DocsAI/思考/框架/ECS框架/README.md`、`01-什么才是真正的ECS框架.md`、`02-Godot与ECS适配性.md`、`03-SlimeAI应保留与放弃的ECS概念.md`、`04-外部研究证据摘要.md`；新增 `design/Runtime/9.ECS框架优化/4.弃用ECS框架/README.md`、`01~05` 和 `source-request.md`；同步 DocsAI 和 PRJ-0002 入口。
+- **Research Adoption**: externalResources enabled=`official-docs, engine-framework`，scope=Godot 官方 FAQ / design philosophy、Unity Entities archetype/chunk docs、Bevy ECS quick start、Flecs manual、Context7 QFramework、本地 QFramework 源码和报告；copiedCodeOrAssets=none；adoption=采纳概念和边界，不复制 API。
+- **Impact**: 旧 Data 类型系统重构和架构学习包改为 superseded evidence；SDD-0044 与 Data Runtime Simplification / Type Contract / RuntimeId Storage 路线暂停，后续先设计 SharedState 进入条件和 Godot OOP 框架边界。
+- **Resume**: 若用户确认默认假设，下一步创建 `Runtime/10.GodotOOP框架方向/` 设计包；不直接改源码、不全仓重命名、不继续执行 SDD-0044。
 
 ### P057 — 2026-06-15 — runtime-decoupling-first-principle
 
