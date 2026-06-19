@@ -6,10 +6,10 @@
 
 ## Latest Resume
 
-- **Updated**: 2026-06-16
+- **Updated**: 2026-06-19
 - **Current SDD**: none
-- **Last Conclusion**: 用户在 2026-06-16 进一步裁决：正式框架名为 `SlimeAIFramework`；`Entity` 概念改为 `Object`；`Component`、`System`、`Data` 名字保留但去 ECS 化。已新增 `design/Runtime/10.GodotOOP框架方向/`，其中 `Data/` 单独说明 Data 作为受控共享状态、表格驱动、DataBinding、descriptor 约束和 DataModifier 的重写方向，并补充 Godot / Unity Entities / Unreal GAS 外部证据采纳边界。
-- **Next Action**: 创建 Data 进入条件与 DataBinding 设计 SDD；默认首个实现切片建议为 `Unit + Health + Damage`，先验证 DataOS -> Object.Data -> Component mirror、DataChanged、对象池复用和 DataModifier source 清理。
+- **Last Conclusion**: 用户在 2026-06-19 进一步裁决：Command 可以用，但由 SlimeAI 自己分析采用形态；Data 不回退旧 `DataMeta`，继续使用 DataOS descriptor / runtime snapshot / generated `DataKey<T>`。新 Data 方向为定义集中、装载统一、承载分区、权威明确、修改受控、同步显式：字段定义仍集中，运行时值按 `Data / Profile / Component / System` 分区承载；共享写入走 typed Command / Request + owner handler / Service Pipeline；`Command = 意图`、`Event = 已发生事实`、`Query = 只读读取`。`AttackState / MoveMode / AIState` 倾向 Component/System authoritative + Data projection；`Velocity` 需按跨系统协议或每帧内部结果继续审计。
+- **Next Action**: 创建 `Data Contract Routing Design` SDD，先冻结 descriptor 增量字段、第一批字段 authority/projection 审计、generated C# contract 和 `Unit + Health + Damage + Recovery` 纵切 FeatureSpec；随后再创建 `RuntimeRecordBinder + Health DataBinding` 实现 SDD。
 - **Open Blockers**: none for Data design。`SDD-0040` 仍 blocked 于 Godot scene smoke：当前没有可验证本框架工作树的承载游戏 runner。
 
 ## Project Status Board
@@ -47,7 +47,16 @@
 | SDD-0033 | done | `design/Runtime/ECS框架优化/1.拆箱装箱+GC优化/` | Non-Data GC Boundary Completion 已完成；Event dynamic object、Feature / Ability raw object Execute、ObjectPool manager 反射、TargetSelector list-only ownership 已收口；Logger 仍为 P2 / profiler 驱动 |
 | TBD | proposed | `design/Runtime/13-旧ECS框架Event系统问题分析与优化方向.md` | P1：保留 EventBus，优化事件主键、事件定义和请求-响应边界 |
 | TBD | proposed | `design/Runtime/10.GodotOOP框架方向/` | P0：SlimeAIFramework 方向已冻结；后续代码迁移前先创建 Data 进入条件与 DataBinding 设计 SDD |
-| TBD | proposed | `design/Runtime/10.GodotOOP框架方向/Data/` | P0：Data 名字保留；后续设计先定义 authority、Component mirror、对象池同步、descriptor 约束和 DataModifier 范围，不复用旧 Data hard cutover 路线；外部证据入口为 `Data/05-外部方案证据与采纳边界.md` |
+| TBD | proposed | `design/Runtime/10.GodotOOP框架方向/Data/` | P0：Data 名字保留；当前路线是不回退 `DataMeta`，保留 DataOS descriptor / runtime snapshot / generated `DataKey<T>`，但运行时值按 Data / Profile / Component / System 分区承载；下一步创建 `Data Contract Routing Design` SDD，冻结 authority、runtimeOwner、bindingPolicy、writeEntry、resetPolicy、Command/Query/Event 边界和 Health/Damage/Recovery 首切片 |
+
+### P060 — 2026-06-19 — slimeai-framework-data-command-routing-redesign
+
+- **Context**: 用户要求继续深度分析 `Data/` 目录：确认 Command 是否可用、QFramework 的 Command / Query / Model / Event 对 SlimeAI Data 是否有启发、数据定义是否回退旧 meta 静态方式、字段应放 Component 还是 Data，以及 `AttackState / MoveMode / Velocity / AIState` 这类运行时状态的权威归属是什么意思。
+- **Conclusion**: Command 可以用，但不照搬 QFramework `AbstractCommand` 对象体系。SlimeAI 采用 typed Command / Request 作为意图载体，交给 owner handler / Feature API / Service Pipeline 处理；Event 表达已发生事实，Query 只做只读读取。Data 不回退旧 `DataMeta`，继续由 DataOS descriptor / runtime snapshot / generated `DataKey<T>` 定义字段，但 descriptor 后续必须补 `authority`、`runtimeOwner`、`bindingPolicy`、`writeEntry`、`resetPolicy`。Data 不再是所有运行时字段的唯一容器，Component / Profile / System 可以保存自己的状态；Data 只承载共享、表格驱动、modifier/computed、约束、UI/debug/test/AI 观察和持久化需要的字段。
+- **Evidence**: 重构 `design/Runtime/10.GodotOOP框架方向/Data/README.md`、`01-Data进入条件与双层状态模型.md`、`02-DataOS到Component同步方案.md`、`03-Descriptor约束与DataModifier裁决.md`、`04-迁移与验证路线.md`、`07-OOP中数据定义与运行时管理方案.md`，新增 `08-Command与数据修改入口.md` 和 `source-request.md`；同步项目 README、design INDEX、roadmap 和本 progress。
+- **Research Adoption**: externalResources enabled=`official-docs, engine-framework`，scope=Context7 QFramework / Godot / Unity Entities、本地 QFramework 资料、Data参考、当前 SlimeAI DataOS/Data/Component 文档与源码；copiedCodeOrAssets=none；adoption=采纳概念和边界，不复制 API。
+- **Impact**: 后续不得把“定义集中”误读为“所有实例值都进 Data”。`AttackState` / `MoveMode` / `AIState` 默认按 Component/System authoritative + Data projection 处理；`Velocity` 先审计语义，只有作为跨系统协议时才可能保留 Data authoritative。DataModifier 收窄到 attribute-like numeric Data 字段，projection / enum / string / object_ref / 每帧临时值不允许 modifier。
+- **Resume**: 下一步创建 `Data Contract Routing Design` SDD，不直接改 runtime；首个实现纵切建议为 `Unit + Health + Damage + Recovery`，先验证 `CurrentHp` / `CurrentMana` 这类 Data authoritative 字段的 Command 写入口、DataBinding mirror、对象池复用 reset 和 DataModifier source 回滚。
 
 ### P059 — 2026-06-16 — slimeai-framework-godot-oop-data-direction
 

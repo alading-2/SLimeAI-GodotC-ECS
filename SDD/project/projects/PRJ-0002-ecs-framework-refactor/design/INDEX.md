@@ -17,8 +17,11 @@
 | `Runtime/9.ECS框架优化/4.弃用ECS框架/README.md` | ecs-deprecation-direction | current | 2026-06-16 | 上游方向裁决：弃用 ECS 作为框架身份；已由 `Runtime/10.GodotOOP框架方向/` 校准为 SlimeAIFramework 当前方向 |
 | `Runtime/9.ECS框架优化/4.弃用ECS框架/03-Data系统问题收敛与重写边界.md` | data-problem-reset | current | 2026-06-16 | 覆盖旧 Data 类型系统和架构学习路线：Data 名字保留，后续按受控共享状态和表格驱动重新设计 |
 | `Runtime/10.GodotOOP框架方向/README.md` | slimeai-framework-godot-oop-direction | current | 2026-06-16 | SlimeAIFramework 当前方向入口：Object / Component / System / Feature / Event / Data 概念边界 |
-| `Runtime/10.GodotOOP框架方向/Data/README.md` | slimeai-framework-data-direction | current | 2026-06-16 | Data 名字保留后的方案入口：DataBinding、Component mirror、descriptor 约束、DataModifier 和迁移验证 |
-| `Runtime/10.GodotOOP框架方向/Data/05-外部方案证据与采纳边界.md` | slimeai-framework-data-external-evidence | current | 2026-06-16 | Godot、Unity Entities、Unreal GAS 对 Data / Component / Modifier 方向的证据与采纳边界 |
+| `Runtime/10.GodotOOP框架方向/Data/source-request.md` | slimeai-framework-data-source-request | current | 2026-06-19 | 本轮 Data 重构用户原始问题与追加确认；正文文档引用本文件避免入口过长 |
+| `Runtime/10.GodotOOP框架方向/Data/README.md` | slimeai-framework-data-direction | current | 2026-06-19 | Data 名字保留后的方案入口：定义集中、运行时承载分区、authority/projection、DataBinding、Command 修改入口和 DataModifier |
+| `Runtime/10.GodotOOP框架方向/Data/07-OOP中数据定义与运行时管理方案.md` | slimeai-framework-data-oop-runtime-management | current | 2026-06-19 | DataOS descriptor 不回退 DataMeta；RuntimeRecordBinder、Profile/Component/System 分区承载、Mutation/Observation 主方案 |
+| `Runtime/10.GodotOOP框架方向/Data/08-Command与数据修改入口.md` | slimeai-framework-data-command-mutation-boundary | current | 2026-06-19 | Command / Event / Query / owner API / Service Pipeline 的语义边界；采用 typed intent，不照搬 QFramework AbstractCommand |
+| `Runtime/10.GodotOOP框架方向/Data/05-外部方案证据与采纳边界.md` | slimeai-framework-data-external-evidence | current | 2026-06-19 | Godot、Unity Entities、Unreal GAS、QFramework 对 Data / Component / Modifier / Command 方向的证据与采纳边界 |
 | `Runtime/9.ECS框架优化/4.弃用ECS框架/04-QFramework采纳边界.md` | qframework-new-direction-boundary | current | 2026-06-16 | 重新判断 QFramework：学习少规则、强类型状态、Command/Query/Event，不直接接入依赖或替代 SlimeAI runtime |
 | `ECS框架优化/1.拆箱装箱+GC优化/README.md` | gc-optimization-index | current | 2026-06-07 | 装箱拆箱与 GC 优化设计包入口；Data 与非 Data 明显宽口已由 SDD-0031/0032/0033 完成，后续只从 Logger、TargetQuery pooled lease 或 profiler 证据驱动 owner 小切片恢复 |
 | `ECS框架优化/1.拆箱装箱+GC优化/设计/README.md` | gc-deepthink-entry | current | 2026-06-07 | DeepThink 确认包；记录 Data 完成后的非 Data 重新分析和 SDD-0033 执行结果，Logger 本轮不改 |
