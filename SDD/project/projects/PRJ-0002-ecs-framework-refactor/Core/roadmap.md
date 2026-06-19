@@ -4,7 +4,7 @@
 
 项目级执行路线图，追踪 `design/` 下每份问题分析文档的完成情况和后续 SDD 拆分建议。
 
-2026-06-19 override：用户已裁决弃用 ECS 作为框架身份，正式框架名为 `SlimeAIFramework`。旧 `Data Runtime Simplification -> Data Type Contract -> Generated RuntimeId Storage` 路线暂停；用户已删除 SDD-0044，项目不再登记为 pending/current。当前 `Runtime/10.GodotOOP框架方向/` 冻结 Object / Component / System / Feature / Event / Data 概念；Data 名字保留，不回退旧 `DataMeta`，继续使用 DataOS descriptor / runtime snapshot / generated `DataKey<T>`。后续 Data 默认路线是：字段定义集中、运行时值按 Data / Profile / Component / System 分区承载、descriptor 补 `authority/runtimeOwner/bindingPolicy/writeEntry/resetPolicy`、共享写入走 typed Command / Request + owner handler / Service Pipeline、DataBinding 只同步 Data authoritative 字段到 Component mirror。历史 Data、Entity、System、Tools 等 SDD 完成记录仍保留为现状证据，但不再证明框架必须继续走 ECS/Data 核心方向。
+2026-06-19 override：用户已裁决弃用 ECS 作为框架身份，正式框架名为 `SlimeAIFramework`。旧 `Data Runtime Simplification -> Data Type Contract -> Generated RuntimeId Storage` 路线暂停；用户已删除 SDD-0044，项目不再登记为 pending/current。当前 `Runtime/10.GodotOOP框架方向/` 冻结 Object / Component / System / Feature / Event / Data 概念；Data 名字保留，不回退旧 `DataMeta`，继续使用 DataOS descriptor / runtime snapshot / generated `DataKey<T>`。后续 Data 默认路线是：字段定义集中、运行时值按 Data / Profile / Component / System 分区承载、descriptor 补 `authority/runtimeOwner/bindingPolicy/writeEntry/resetPolicy`、共享写入走 typed Command / Request + owner handler / Service Pipeline、DataBinding 只同步 Data authoritative 字段到 Component mirror。2026-06-19 追加执行口径：先审阅并确认 `Data/09-Data底层执行草案.FeatureSpec.md`，第一阶段只定 C# runtime Data 底层的 authority、owner write、projection、modifier guard 和 Health 样板；数据库到 Data、DataOS record 加载、RuntimeRecordBinder 和 DataBinding 实现后移。历史 Data、Entity、System、Tools 等 SDD 完成记录仍保留为现状证据，但不再证明框架必须继续走 ECS/Data 核心方向。
 
 ## Design Progress
 
@@ -26,7 +26,7 @@
 | `design/Runtime/2.Data系统优化/5.Data类型系统重构/` | superseded | — | 历史问题证据；2026-06-16 弃用 ECS 后，旧 Data Runtime Simplification / Type Contract / RuntimeId Storage 路线暂停 |
 | `design/Runtime/2.Data系统优化/6.架构学习/` | superseded | — | 历史 QFramework / ECS / C# 框架研究证据；QFramework 仍可学习，但旧执行路线被 `design/Runtime/9.ECS框架优化/4.弃用ECS框架/` 覆盖 |
 | `design/Runtime/9.ECS框架优化/4.弃用ECS框架/` | done | — | 2026-06-16 上游方向裁决：弃用 ECS；已由 `Runtime/10.GodotOOP框架方向/` 校准为 SlimeAIFramework、Object/Component/System/Feature/Event/Data |
-| `design/Runtime/10.GodotOOP框架方向/` | current | — | SlimeAIFramework 当前方向设计包：框架名、Object/Component/System/Feature/Event/Data 边界；Data 子目录已在 2026-06-19 重构为 authority/projection、RuntimeRecordBinder、Command mutation boundary 和 Health/Damage/Recovery 首切片路线 |
+| `design/Runtime/10.GodotOOP框架方向/` | current | — | SlimeAIFramework 当前方向设计包：框架名、Object/Component/System/Feature/Event/Data 边界；Data 子目录已在 2026-06-19 重构为 authority/projection、Command mutation boundary，并新增 `09-Data底层执行草案.FeatureSpec.md` 说明第一阶段先改 runtime Data 底层、不先改数据库/DataOS 链路 |
 | `design/Runtime/4.SystemAgent目录更改到SlimeAI里面/README.md` | done | SDD-0023 | `SDD/`、`Workspace/`、`.ai-config/` 迁入 `SlimeAI/` 后的 rules / skill / DocsAI / SDD template 语义收口已完成 |
 | `design/Runtime/3.Entity系统优化/` | done | SDD-0024 | Entity / Relationship hard cutover 已完成；typed EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除已收口 |
 | `design/Runtime/6.ECS框架目录架构大重构/` | done | SDD-0025 | 已完成目录架构收口；裁决 `Src/ECS/Runtime + Src/ECS/Capabilities`，DocsAI 当前入口为 `Runtime + Capabilities + Tools + UI`，不保留 `Foundation/Foundations` 当前路由层 |
@@ -63,7 +63,7 @@
 | P0 | `design/Runtime/2.Data系统优化/06-无兼容完全重构总审计/README.md` | **SDD-0021 已完成**：按 no-compat hard cutover 删除 generator/validator/generated handle/Data API/旧 authoring/文档兼容残留，修复 `AbilityIcon` / `AvailableAnimations` 类型回归根因 |
 | P0 | `design/Runtime/2.Data系统优化/2.Data无兼容完全重构/03-*`、`04-*`、`05-*`、`06-*` | **SDD-0022 已完成**：Data Projection Diagnostics Contract Hardening，按 record completeness、projection 单一事实源、diagnostics、object_ref、spawn boundary、catalog freeze、display name query 和 docs gate 收口 |
 | P0 | `design/Runtime/10.GodotOOP框架方向/` | **Done for direction**：已创建 SlimeAIFramework 方向设计包，冻结 Object / Component / System / Feature / Event / Data 概念 |
-| P0 | `design/Runtime/10.GodotOOP框架方向/Data/` | **Next**：创建 `Data Contract Routing Design` SDD，先定义 descriptor 增量字段、第一批字段 authority/projection 审计、generated C# contract 和 Health/Damage/Recovery 纵切 FeatureSpec；随后再创建 RuntimeRecordBinder + Health DataBinding 实现 SDD |
+| P0 | `design/Runtime/10.GodotOOP框架方向/Data/09-Data底层执行草案.FeatureSpec.md` | **Next**：先审阅并确认执行草案的三个问题；确认后创建 `Data Runtime Core Contract` 类 SDD，只实现 C# runtime 层 authority / owner write / projection / modifier guard 与 Health 样板。数据库 schema、DataOS generator/snapshot、RuntimeRecordBinder、DataBinding 实现后移到第二阶段 |
 | P0 | `design/Runtime/2.Data系统优化/4.Data验证与Registry简化/01-DataComputeRegistry单例与Catalog验证收敛.md` | **superseded**：用户已删除 SDD-0044；不继续执行 DataComputeRegistry 单例小修 |
 | P0 | `design/Runtime/4.SystemAgent目录更改到SlimeAI里面/README.md` | **SDD-0023**：SystemAgent / AI config 根迁移后的 rules、skill、SDD template、DocsAI 和验证门禁语义收口 |
 | P0 | `design/Runtime/3.Entity系统优化/` + `Core/entity-rewrite-execution-prompt.md` | **SDD-0024 已完成**：Entity Relationship Full Rewrite，按 hard cutover 完成 EntityId、LifecycleTree、typed references、spawn/destroy pipeline、DamageAttribution 和旧 Relationship runtime 删除 |

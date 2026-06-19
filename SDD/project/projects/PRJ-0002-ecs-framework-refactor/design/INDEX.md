@@ -21,7 +21,11 @@
 | `Runtime/10.GodotOOP框架方向/Data/README.md` | slimeai-framework-data-direction | current | 2026-06-19 | Data 名字保留后的方案入口：定义集中、运行时承载分区、authority/projection、DataBinding、Command 修改入口和 DataModifier |
 | `Runtime/10.GodotOOP框架方向/Data/07-OOP中数据定义与运行时管理方案.md` | slimeai-framework-data-oop-runtime-management | current | 2026-06-19 | DataOS descriptor 不回退 DataMeta；RuntimeRecordBinder、Profile/Component/System 分区承载、Mutation/Observation 主方案 |
 | `Runtime/10.GodotOOP框架方向/Data/08-Command与数据修改入口.md` | slimeai-framework-data-command-mutation-boundary | current | 2026-06-19 | Command / Event / Query / owner API / Service Pipeline 的语义边界；采用 typed intent，不照搬 QFramework AbstractCommand |
+| `Runtime/10.GodotOOP框架方向/Data/09-Data底层执行草案.FeatureSpec.md` | slimeai-framework-data-runtime-core-feature-spec | draft | 2026-06-19 | 执行规格草案：先改框架 Data 底层 authority / owner write / projection / modifier guard，不做数据库到 Data 或 DataOS record 加载 |
 | `Runtime/10.GodotOOP框架方向/Data/05-外部方案证据与采纳边界.md` | slimeai-framework-data-external-evidence | current | 2026-06-19 | Godot、Unity Entities、Unreal GAS、QFramework 对 Data / Component / Modifier / Command 方向的证据与采纳边界 |
+| `Runtime/10.GodotOOP框架方向/QFramework二次评估/README.md` | qframework-second-pass-kernel-analysis | candidate | 2026-06-19 | 重新评估“愿意改 QFramework 底层时是否直接采用”：推荐 QFramework-inspired SlimeAI-native Kernel，不引入依赖或 `Architecture<T>` 根 |
+| `Runtime/10.GodotOOP框架方向/QFramework二次评估/06-SlimeAIKernel执行草案.FeatureSpec.md` | slimeai-kernel-qframework-inspired-feature-spec | draft | 2026-06-19 | 执行草案：CommandDispatcher、Data 当前值订阅、FeatureManifest 和能力接口的最小试验切片 |
+| `Runtime/10.GodotOOP框架方向/QFramework二次评估/07-框架根缺失与魔改QFramework可行性.md` | slimeai-framework-root-gap-qframework-prototype | candidate | 2026-06-19 | 回答 SlimeAI 缺框架根的问题：建议深学 QFramework，并用一次性魔改原型训练框架感，最终落成 SlimeAI-native Architecture Contract |
 | `Runtime/9.ECS框架优化/4.弃用ECS框架/04-QFramework采纳边界.md` | qframework-new-direction-boundary | current | 2026-06-16 | 重新判断 QFramework：学习少规则、强类型状态、Command/Query/Event，不直接接入依赖或替代 SlimeAI runtime |
 | `ECS框架优化/1.拆箱装箱+GC优化/README.md` | gc-optimization-index | current | 2026-06-07 | 装箱拆箱与 GC 优化设计包入口；Data 与非 Data 明显宽口已由 SDD-0031/0032/0033 完成，后续只从 Logger、TargetQuery pooled lease 或 profiler 证据驱动 owner 小切片恢复 |
 | `ECS框架优化/1.拆箱装箱+GC优化/设计/README.md` | gc-deepthink-entry | current | 2026-06-07 | DeepThink 确认包；记录 Data 完成后的非 Data 重新分析和 SDD-0033 执行结果，Logger 本轮不改 |

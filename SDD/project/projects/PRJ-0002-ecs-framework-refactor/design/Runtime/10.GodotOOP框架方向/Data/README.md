@@ -67,6 +67,7 @@ DataBinding 负责 Data authoritative 字段到 Component mirror 的初始化和
 | [`06-外部非ECS框架实体数据管理调研.md`](./06-外部非ECS框架实体数据管理调研.md) | 参考资料：非 ECS 框架如何管理异构实体属性。 |
 | [`07-OOP中数据定义与运行时管理方案.md`](./07-OOP中数据定义与运行时管理方案.md) | 完整方案：Definition / Authoring / Assembly / Runtime Holder / Mutation / Observation 分层。 |
 | [`08-Command与数据修改入口.md`](./08-Command与数据修改入口.md) | 专项分析 Command、Event、Query、owner API、Service Pipeline 的边界和 SlimeAI 采用方式。 |
+| [`09-Data底层执行草案.FeatureSpec.md`](./09-Data底层执行草案.FeatureSpec.md) | 执行规格草案：先确定 Data 底层怎么改，暂不做数据库到 Data、DataOS record 加载和 RuntimeRecordBinder。 |
 
 ## 字段归属的直观解释
 
