@@ -5,13 +5,13 @@
 
 # UI 系统开发指南
 
-本文档介绍如何在项目中开发和使用 UI 系统。我们的 UI 系统采用 **"Binding Pattern" (绑定模式)**，UI 并非 Entity 的 Component，而是作为独立的 View 层，通过监听 Entity 的事件来驱动显示。
+本文档介绍如何在项目中开发和使用 UI 系统。我们的 UI 系统采用 **"Binding Pattern" (绑定模式)**，但这里要补一个更新后的框架判断：UI 不只是独立的 View，它在 SlimeAIFramework 里更准确地属于 **Controller / Adapter 层**。也就是说，UI 负责输入、绑定、显示和前端意图转发，但不负责承载玩法状态本体。
 
 ## 1. 核心架构
 
-- **Entity (Model)**: 纯数据和逻辑，不包含任何 UI 节点。
-- **UI (View)**: 继承自 `UIBase` 的 Godot Control 节点，**"绑定"** 到 Entity 上。
-- **Event (Bridge)**: UI 通过订阅 `Entity.Events` 来感知数据变化。
+- **Object / Entity (Model + Runtime Object)**: 纯数据、逻辑和运行时能力组合，不包含 UI 节点。
+- **UI (Controller / View Adapter)**: 继承自 `UIBase` 的 Godot Control 节点，绑定到 Object / Entity，负责输入、展示和前端逻辑转发。
+- **Event / Data (Bridge)**: UI 通过订阅对象事件、读取 Data 来感知状态变化；写入口仍走 Command / owner API / request。
 
 ## 2. 快速开始：创建新的 UI 组件
 

@@ -66,6 +66,8 @@ System 名称保留，但不再表示传统 ECS System。它是 SlimeAIFramework
 - UI 动画、节点表现、一次性缓存。
 - 没有跨对象协作需求的简单功能。
 
+还要补一个这轮新确认：System 在 SlimeAIFramework 里的语义，确实更接近“后端/应用服务层”——负责协调、规则、查询和运行时基础设施；它不是前端交互层，也不应该接管 UI 节点自己的表现逻辑。
+
 ## Feature 与 System 的关系
 
 ```text

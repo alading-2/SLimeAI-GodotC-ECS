@@ -26,6 +26,7 @@
 | `Runtime/10.GodotOOP框架方向/QFramework二次评估/README.md` | qframework-second-pass-kernel-analysis | candidate | 2026-06-19 | 重新评估“愿意改 QFramework 底层时是否直接采用”：推荐 QFramework-inspired SlimeAI-native Kernel，不引入依赖或 `Architecture<T>` 根 |
 | `Runtime/10.GodotOOP框架方向/QFramework二次评估/06-SlimeAIKernel执行草案.FeatureSpec.md` | slimeai-kernel-qframework-inspired-feature-spec | draft | 2026-06-19 | 执行草案：CommandDispatcher、Data 当前值订阅、FeatureManifest 和能力接口的最小试验切片 |
 | `Runtime/10.GodotOOP框架方向/QFramework二次评估/07-框架根缺失与魔改QFramework可行性.md` | slimeai-framework-root-gap-qframework-prototype | candidate | 2026-06-19 | 回答 SlimeAI 缺框架根的问题：建议深学 QFramework，并用一次性魔改原型训练框架感，最终落成 SlimeAI-native Architecture Contract |
+| `Runtime/10.GodotOOP框架方向/QFramework二次评估/08-QFramework优先增量实验路线.md` | qframework-first-incremental-pressure-route | candidate | 2026-06-19 | 回答用户最新路线：先保持 QFramework 清晰原味，再逐步加入 SlimeAI 概念压力源，通过冲突萃取 SlimeAI-native Architecture Contract |
 | `Runtime/9.ECS框架优化/4.弃用ECS框架/04-QFramework采纳边界.md` | qframework-new-direction-boundary | current | 2026-06-16 | 重新判断 QFramework：学习少规则、强类型状态、Command/Query/Event，不直接接入依赖或替代 SlimeAI runtime |
 | `ECS框架优化/1.拆箱装箱+GC优化/README.md` | gc-optimization-index | current | 2026-06-07 | 装箱拆箱与 GC 优化设计包入口；Data 与非 Data 明显宽口已由 SDD-0031/0032/0033 完成，后续只从 Logger、TargetQuery pooled lease 或 profiler 证据驱动 owner 小切片恢复 |
 | `ECS框架优化/1.拆箱装箱+GC优化/设计/README.md` | gc-deepthink-entry | current | 2026-06-07 | DeepThink 确认包；记录 Data 完成后的非 Data 重新分析和 SDD-0033 执行结果，Logger 本轮不改 |

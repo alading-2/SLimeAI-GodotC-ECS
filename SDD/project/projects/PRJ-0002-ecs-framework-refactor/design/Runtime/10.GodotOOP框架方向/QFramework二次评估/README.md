@@ -58,6 +58,8 @@ QFramework 是思想母版，不是事实源和依赖根。
 
 也就是说，“大改 QFramework”适合作为训练轮和原型轮；“新的 SlimeAIFramework”应该是吸收 QFramework 清晰性的自有框架根。
 
+用户最新补充的“先深度了解 QFramework，再把 SlimeAI 概念一点点加到 QFramework 里，通过冲突暴露理念问题”的路线，推荐采纳为 **Architecture Contract discovery**。这不是正式迁移路线，而是学习和压力测试路线：先保护 QFramework 的短规则，再逐个加入 Godot 生命周期、per-object state、DataOS、Feature、ObjectPool、Log/Test 压力，最后只把仍然清晰的规则萃取回 SlimeAI。
+
 ## 为什么不是直接用
 
 QFramework 是应用层分层框架。它解决的是：
@@ -105,6 +107,7 @@ Log / Test / SDD / SystemAgent 的 AI-first 闭环。
 | [`05-迁移路线与验证门禁.md`](./05-迁移路线与验证门禁.md) | 给出最小试验切片、迁移顺序、失败条件和验证入口。 |
 | [`06-SlimeAIKernel执行草案.FeatureSpec.md`](./06-SlimeAIKernel执行草案.FeatureSpec.md) | 如果后续要实施，第一刀怎么切到代码的候选执行规格。 |
 | [`07-框架根缺失与魔改QFramework可行性.md`](./07-框架根缺失与魔改QFramework可行性.md) | 回答“SlimeAI 是否缺框架根、是否应该深学/魔改 QFramework”。 |
+| [`08-QFramework优先增量实验路线.md`](./08-QFramework优先增量实验路线.md) | 回答“先学 QFramework，再逐步加入 SlimeAI 概念暴露理念冲突”是否可行，并给出实验阶梯。 |
 
 ## 当前不改变的裁决
 

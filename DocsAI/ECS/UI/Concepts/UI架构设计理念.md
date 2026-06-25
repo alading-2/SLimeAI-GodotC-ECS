@@ -5,7 +5,21 @@
 
 ## 1. 核心设计哲学
 
-在我们的ECS框架中，UI **不应该** 是Entity的一个Component。
+这轮新的框架判断需要把 UI 的角色重新说清楚：
+
+- **Object / Entity (后端运行时对象)**: 负责逻辑、数据、能力组合和生命周期。它更接近 QFramework 里 Model + System 背后的运行时对象语义。
+- **UI (前端 Controller / View Adapter)**: 负责呈现、输入、绑定和前端逻辑转发。它不是 Object，也不是 gameplay Component，而是连接 Godot `Control` 节点树与运行时对象的一层前端壳。
+
+换句话说，QFramework 让我们更清楚地看到：
+
+```text
+Controller 更像前端逻辑
+System / Model / Utility 更像后端/应用与基础设施逻辑
+```
+
+这也是为什么 QFramework 直接做软件/工具型框架问题不大；但做游戏框架时，必须再补上 `Component = 能力组合单元` 这一层。
+
+在 SlimeAIFramework 里，UI **不应该** 是Entity的一个Component。
 
 - **Entity (Model)**: 负责逻辑和数据（如 HP, 技能CD, 物品数据）。它是"无形"的逻辑载体。
 - **UI (View)**: 负责呈现。它是Godot原生的 `Control` 节点树。

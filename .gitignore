@@ -9,7 +9,7 @@ bin/
 obj/
 备份/
 .specstory/
-参考/
+Workspace/Else/参考
 Workspace/DocsAI/ChatHistory/
 Workspace/Docs/临时/
 *.uid

@@ -16,6 +16,15 @@ Object
 
 Component 名称保留。Component 是 Object 上的功能单元，可以有内部字段、缓存、节点引用和局部状态。
 
+这轮判断需要再补一句最重要的话：
+
+```text
+Object 添加某个 Component = 获得某种能力。
+Object 移除某个 Component = 失去该能力。
+```
+
+也就是说，Component 在 SlimeAIFramework 里不只是“数据挂件”或“脚本拆分单位”，而是玩法能力的最小组合单元。QFramework 做软件框架时可以主要靠 Controller/System/Model 分层，但游戏框架如果没有这层 Component 语义，就很容易重新退化成一堆服务和状态容器。
+
 ## Object 要承担什么
 
 Object 至少需要这些能力：
